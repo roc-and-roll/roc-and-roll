@@ -1,0 +1,128 @@
+{
+  "private": true,
+  "name": "roc-and-roll",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "concurrently --handle-input --kill-others --names server,client --prefix-colors green,blue yarn:dev:server yarn:dev:client",
+    "dev:client": "webpack serve --config webpack.client.dev.js",
+    "dev:server": "concurrently --handle-input --kill-others --names rr,wbpk,rddv --prefix-colors green,gray.dim yarn:dev:server:start yarn:dev:server:build",
+    "test": "jest",
+    "lint": "eslint --ext .ts,.tsx,.js,.jsx src",
+    "build": "concurrently --names client,server --prefix-colors blue,green yarn:build:client yarn:build:server",
+    "build:client": "webpack --config webpack.client.prod.js",
+    "build:server": "webpack --config webpack.server.prod.js",
+    "start": "nodemon --watch dist/server.roc-and-roll.js dist/server.roc-and-roll.js",
+    "dev:server:start": "nodemon --on-change-only --watch dist/server.roc-and-roll.js dist/server.roc-and-roll.js -- --debug",
+    "dev:server:build": "webpack --config webpack.server.dev.js --watch"
+  },
+  "dependencies": {
+    "bufferutil": "^4.0.3",
+    "clsx": "^1.1.1",
+    "core-js": "^3.9.1",
+    "express": "^4.17.1",
+    "express-async-handler": "^1.1.4",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "redux": "^4.0.5",
+    "socket.io": "^4.0.0",
+    "socket.io-client": "^4.0.0",
+    "source-map-support": "^0.5.19",
+    "utf-8-validate": "^5.0.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.13.10",
+    "@babel/plugin-proposal-class-properties": "^7.13.0",
+    "@babel/plugin-syntax-dynamic-import": "^7.8.3",
+    "@babel/preset-env": "^7.13.12",
+    "@babel/preset-react": "^7.13.13",
+    "@babel/preset-typescript": "^7.13.0",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.4.3",
+    "@types/express": "^4.17.11",
+    "@types/jest": "^26.0.21",
+    "@types/node": "14.x",
+    "@types/react": "^17.0.3",
+    "@types/react-dom": "^17.0.3",
+    "@types/socket.io": "^2.1.13",
+    "@types/socket.io-client": "^1.4.36",
+    "@types/source-map-support": "^0.5.3",
+    "@types/webpack-env": "^1.16.0",
+    "@typescript-eslint/eslint-plugin": "^4.19.0",
+    "@typescript-eslint/parser": "^4.19.0",
+    "babel-loader": "^8.2.2",
+    "clean-webpack-plugin": "^3.0.0",
+    "concurrently": "^6.0.0",
+    "copy-webpack-plugin": "^8.1.1",
+    "css-loader": "^5.2.0",
+    "eslint": "^7.22.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-prettier": "^3.3.1",
+    "eslint-plugin-react": "^7.23.1",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "file-loader": "^6.2.0",
+    "fork-ts-checker-webpack-plugin": "^6.2.0",
+    "git-revision-webpack-plugin": "^3.0.6",
+    "html-webpack-plugin": "^5.3.1",
+    "husky": "^4.3.6",
+    "jest": "^26.6.3",
+    "nodemon": "^2.0.7",
+    "prettier": "^2.2.1",
+    "raw-loader": "^4.0.2",
+    "react-refresh": "^0.9",
+    "regenerator-runtime": "^0.13.7",
+    "sass": "^1.32.8",
+    "sass-loader": "^11.0.1",
+    "style-loader": "^2.0.0",
+    "ts-jest": "^26.5.4",
+    "ts-loader": "^8.0.18",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.3",
+    "webpack": "^5.31.2",
+    "webpack-cli": "^4.5.0",
+    "webpack-dev-server": "^3.11.2",
+    "webpack-dev-server-waitpage": "^2.1.1",
+    "webpack-merge": "^5.7.3",
+    "webpack-node-externals": "^2.5.2"
+  },
+  "optionalDependencies": {},
+  "browserslist": "defaults",
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "setupFiles": [],
+    "globals": {
+      "ts-jest": {
+        "tsconfig": "tsconfig.json"
+      }
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
+    "moduleNameMapper": {
+      "src/(.*)": "<rootDir>/src/$1"
+    },
+    "roots": [
+      "<rootDir>/src"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn run lint"
+    }
+  },
+  "nodemonConfig": {
+    "signal": "SIGTERM"
+  },
+  "engines": {
+    "node": "14.x"
+  }
+}

@@ -1,0 +1,47 @@
+{
+    "editor.tabSize": 2,
+    "editor.rulers": [
+        80
+    ],
+    "search.exclude": {
+        "/dist": true
+    },
+
+    "typescript.tsdk": "./node_modules/typescript/lib",
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "typescript.preferences.quoteStyle": "double",
+
+    "coverage-gutters.showLineCoverage": false,
+    "coverage-gutters.showRulerCoverage": false,
+    "coverage-gutters.showGutterCoverage": true,
+
+    "browser-preview.startUrl": "http://localhost:3000",
+
+    "jest.autoEnable": true,
+    "jest.debugCodeLens.showWhenTestStateIn": [
+      "fail"
+    ],
+
+    "eslint.validate": [
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact",
+    ],
+
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+    },
+    "[javascript]": {
+      "editor.formatOnSave": false
+    },
+    "[javascriptreact]": {
+      "editor.formatOnSave": false
+    },
+    "[typescript]": {
+      "editor.formatOnSave": false
+    },
+    "[typescriptreact]": {
+      "editor.formatOnSave": false
+    }
+}

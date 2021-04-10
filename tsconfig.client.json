@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "esnext",
+    "lib": ["esnext", "dom"],
+    "noEmit": false
+  },
+   "include": [
+    "src/client/**/*",
+    "src/shared/**/*"
+  ]
+}
