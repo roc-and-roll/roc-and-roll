@@ -17,7 +17,7 @@ export function App() {
     <>
       <h1>Roc & Roll</h1>
       {/* Including a static asset */}
-      <img src="/placeholder.jpg" />
+      <img src="/dice.jpg" />
 
       <p>Count: {count}</p>
 
