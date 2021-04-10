@@ -1,11 +1,15 @@
 import path from "path";
 import express from "express";
+import { Server as SocketIOServer } from "socket.io";
 // These packages speed-up socket.io. Include them here just to verify that they
 // arae installed.
 import "bufferutil";
 import "utf-8-validate";
 // Example
 import { Foo } from "../shared/shared";
+// import { setupStateSync } from "./setupStateSync.ts_";
+import { setupReduxStore } from "./setupReduxStore";
+import { setupStateSync } from "./setupStateSync";
 
 new Foo();
 
@@ -51,6 +55,22 @@ if (process.env.NODE_ENV === "development") {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const http = app.listen(httpPort);
 console.log(`Roc & Roll started at ${url}.`);
+
+// Setup websocket server
+const io = new SocketIOServer(http, {
+  cors: {
+    origin:
+      process.env.NODE_ENV !== "development"
+        ? url
+        : [url, "http://localhost:3001"],
+  },
+});
+
+const store = setupReduxStore();
+setupStateSync(io, store);
+
+setInterval(() => {
+  store.dispatch({ type: "diceRolls/rollDice", payload: 20 });
+}, 1000);
