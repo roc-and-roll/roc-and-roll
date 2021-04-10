@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { MyAction } from "../server/setupReduxStore";
 import { MyState, StatePatch } from "../shared/state";
 import { mergeDeep } from "../shared/util";
@@ -23,7 +23,7 @@ function applyStatePatch(state: MyState, patchData: StatePatch<MyState>) {
 
 const initialState: MyState = {
   diceRolls: {
-    diceRolls: [],
+    rolls: [],
   },
 };
 
@@ -35,17 +35,6 @@ const ServerStateContext = React.createContext<{
   socket: null,
 });
 ServerStateContext.displayName = "ServerStateContext";
-
-export function useServerState<T>(selector: (state: MyState) => T) {
-  return selector(useContext(ServerStateContext).state);
-}
-
-export function useServerActionDispatch() {
-  const socket = useContext(ServerStateContext).socket;
-
-  return (action: MyAction) =>
-    socket?.emit("REDUX_ACTION", JSON.stringify(action));
-}
 
 export function StateProvider({
   socket,
@@ -76,5 +65,33 @@ export function StateProvider({
     <ServerStateContext.Provider value={{ state: serverState, socket }}>
       {props.children}
     </ServerStateContext.Provider>
+  );
+}
+
+// Hooks
+
+export function useServerState<T>(selector: (state: MyState) => T) {
+  return selector(useContext(ServerStateContext).state);
+}
+
+function useServerActionDispatch() {
+  const socket = useContext(ServerStateContext).socket;
+
+  return (action: MyAction) =>
+    socket?.emit("REDUX_ACTION", JSON.stringify(action));
+}
+
+export function useServerActionFunction() {
+  const dispatch = useServerActionDispatch();
+
+  return useMemo(
+    () => ({
+      rollDice: (size: number) =>
+        dispatch({
+          type: "diceRolls/rollDice",
+          payload: size,
+        }),
+    }),
+    [dispatch]
   );
 }

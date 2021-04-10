@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { App } from "./App";
-import { StateProvider } from "./State";
+import { App } from "./components/App";
+import { StateProvider } from "./state";
 
 export function render(socket: SocketIOClient.Socket) {
   const root = document.createElement("div");

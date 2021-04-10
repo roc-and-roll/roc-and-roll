@@ -15,7 +15,7 @@
     "build:client": "webpack --config webpack.client.prod.js",
     "build:server": "webpack --config webpack.server.prod.js",
     "start": "nodemon --watch dist/server.roc-and-roll.js dist/server.roc-and-roll.js",
-    "dev:server:start": "nodemon --on-change-only --watch dist/server.roc-and-roll.js dist/server.roc-and-roll.js -- --debug",
+    "dev:server:start": "nodemon --watch dist/server.roc-and-roll.js dist/server.roc-and-roll.js -- --debug",
     "dev:server:build": "webpack --config webpack.server.dev.js --watch"
   },
   "dependencies": {

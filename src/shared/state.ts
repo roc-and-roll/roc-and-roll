@@ -6,7 +6,7 @@ export interface DiceRoll {
 }
 
 export interface MyState {
-  diceRolls: { diceRolls: DiceRoll[] };
+  diceRolls: { rolls: DiceRoll[] };
 }
 
 export type MyDispatch = Dispatch<AnyAction>;

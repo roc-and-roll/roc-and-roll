@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 // Define a type for the slice state
 interface DiceRollsState {
-  diceRolls: Array<{
+  rolls: Array<{
     what: string;
     result: number;
   }>;
@@ -10,7 +10,7 @@ interface DiceRollsState {
 
 // Define the initial state using that type
 const initialState: DiceRollsState = {
-  diceRolls: [],
+  rolls: [],
 };
 
 export const sliceOfState = createSlice({
@@ -21,7 +21,7 @@ export const sliceOfState = createSlice({
       const what = `1d${action.payload}`;
       const result = 1 + Math.round(Math.random() * (action.payload - 1));
       console.log(`Rolling ${what}, result: ${result}`);
-      state.diceRolls.push({
+      state.rolls.push({
         what,
         result,
       });
