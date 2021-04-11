@@ -77,5 +77,11 @@ export function setupWebServer() {
     },
   });
 
+  process.once("SIGUSR2", function () {
+    http.close(function () {
+      process.kill(process.pid, "SIGUSR2");
+    });
+  });
+
   return { io, url };
 }

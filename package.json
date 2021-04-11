@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "concurrently --handle-input --kill-others --names server,client --prefix-colors green,blue yarn:dev:server yarn:dev:client",
     "dev:client": "webpack serve --config webpack.client.dev.js",
-    "dev:server": "concurrently --handle-input --kill-others --names rr,wbpk,rddv --prefix-colors green,gray.dim yarn:dev:server:start yarn:dev:server:build",
+    "dev:server": "concurrently --handle-input --kill-others --names rr,wbpk --prefix-colors green,gray.dim yarn:dev:server:start yarn:dev:server:build",
     "test": "jest",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx src",
     "format": "yarn run lint --fix",
@@ -126,9 +126,6 @@
     "{src}/**/*.{js,jsx,ts,tsx,json,css,scss,md,html}": [
       "yarn run format"
     ]
-  },
-  "nodemonConfig": {
-    "signal": "SIGTERM"
   },
   "engines": {
     "node": "14.x"
