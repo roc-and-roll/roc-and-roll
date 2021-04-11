@@ -1,19 +1,22 @@
 import { buildPatch, isEmptyObject } from "./util";
-import { MyAction, MyStore } from "./setupReduxStore";
+import { MyStore } from "./setupReduxStore";
 import { Server as SocketIOServer, Socket as SocketIOSocket } from "socket.io";
-import { MyState } from "../shared/state";
+import { SyncedState, SyncedStateAction } from "../shared/state";
 
 export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
-  const lastStateBySocket: Record<string, MyState | undefined> = {};
+  const lastStateBySocket: Record<string, SyncedState | undefined> = {};
   const patchCache = new WeakMap<
-    MyState,
+    SyncedState,
     {
       patch: ReturnType<typeof buildPatch>;
-      currentState: MyState;
+      currentState: SyncedState;
     }
   >();
 
-  const sendStateUpdate = (socket: SocketIOSocket, currentState: MyState) => {
+  const sendStateUpdate = (
+    socket: SocketIOSocket,
+    currentState: SyncedState
+  ) => {
     const lastState = lastStateBySocket[socket.id];
     if (lastState === undefined) {
       socket.emit("SET_STATE", {
@@ -47,7 +50,7 @@ export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
     socket.on(
       "REDUX_ACTION",
       async (actionJSON: string, sendResponse: (r: string) => void) => {
-        const action = JSON.parse(actionJSON) as MyAction;
+        const action = JSON.parse(actionJSON) as SyncedStateAction;
         store.dispatch(action);
       }
     );

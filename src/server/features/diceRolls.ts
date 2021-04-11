@@ -1,21 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-// Define a type for the slice state
-interface DiceRollsState {
-  rolls: Array<{
-    what: string;
-    result: number;
-  }>;
-}
-
-// Define the initial state using that type
-const initialState: DiceRollsState = {
-  rolls: [],
-};
+import { initialSyncedState } from "../../shared/state";
 
 export const sliceOfState = createSlice({
   name: "diceRolls",
-  initialState,
+  initialState: initialSyncedState.diceRolls,
   reducers: {
     rollDice: (state, action: PayloadAction<number>) => {
       const what = `1d${action.payload}`;

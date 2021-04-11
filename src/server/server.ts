@@ -1,17 +1,12 @@
 import path from "path";
 import express from "express";
 import { Server as SocketIOServer } from "socket.io";
-// These packages speed-up socket.io. Include them here just to verify that they
+import { setupReduxStore } from "./setupReduxStore";
+import { setupStateSync } from "./setupStateSync";
+// These two packages speed-up socket.io. Include them here just to verify that they
 // arae installed.
 import "bufferutil";
 import "utf-8-validate";
-// Example
-import { Foo } from "../shared/shared";
-// import { setupStateSync } from "./setupStateSync.ts_";
-import { setupReduxStore } from "./setupReduxStore";
-import { setupStateSync } from "./setupStateSync";
-
-new Foo();
 
 const httpPort = 3000;
 const url = `http://localhost:${httpPort}`;

@@ -1,14 +1,21 @@
-import { AnyAction, DeepPartial, Dispatch } from "redux";
+import { PayloadAction } from "@reduxjs/toolkit";
+import { Dispatch } from "redux";
 
 export interface DiceRoll {
   what: string;
   result: number;
 }
 
-export interface MyState {
+export interface SyncedState {
   diceRolls: { rolls: DiceRoll[] };
 }
 
-export type MyDispatch = Dispatch<AnyAction>;
+export const initialSyncedState: SyncedState = {
+  diceRolls: {
+    rolls: [],
+  },
+};
 
-export type StatePatch<D> = { patch: DeepPartial<D>; deletedKeys: string[] };
+export type SyncedStateAction = PayloadAction<any>;
+
+export type SyncedStateDispatch = Dispatch<SyncedStateAction>;
