@@ -9,6 +9,7 @@ export const sliceOfState = createSlice({
       const what = `1d${action.payload}`;
       const result = 1 + Math.round(Math.random() * (action.payload - 1));
       console.log(`Rolling ${what}, result: ${result}`);
+
       state.rolls.push({
         what,
         result,
@@ -17,6 +18,7 @@ export const sliceOfState = createSlice({
   },
 });
 
+// Do _not_ import this on the client!
 export const { rollDice } = sliceOfState.actions;
 
 export default sliceOfState.reducer;

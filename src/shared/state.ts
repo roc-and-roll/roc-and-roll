@@ -1,13 +1,13 @@
 import { PayloadAction } from "@reduxjs/toolkit";
 import { Dispatch } from "redux";
 
-export interface DiceRoll {
-  what: string;
-  result: number;
-}
-
 export interface SyncedState {
-  diceRolls: { rolls: DiceRoll[] };
+  diceRolls: {
+    rolls: {
+      what: string;
+      result: number;
+    }[];
+  };
 }
 
 export const initialSyncedState: SyncedState = {

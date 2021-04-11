@@ -1,20 +1,8 @@
-import { DeepPartial } from "@reduxjs/toolkit";
 import { isObject } from "../shared/util";
 
 export type ValueOf<T> = T[keyof T];
 
 export type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
-
-export function mapArrayById<T extends { id: string }>(
-  arr: T[]
-): Record<string, T> {
-  return arr.reduce((objectMap: { [k: string]: T }, obj: T) => {
-    objectMap[obj.id] = obj;
-    return objectMap;
-  }, {});
-}
-
-export type Patch<D> = { patch: DeepPartial<D>; deletedKeys: string[] };
 
 export function buildPatch(old: any, cur: any, keyPrefix: string = "") {
   if (typeof old !== "object" || typeof cur !== "object") {
