@@ -1,4 +1,4 @@
-import { createEntityAdapter, PayloadAction } from "@reduxjs/toolkit";
+import { PayloadAction } from "@reduxjs/toolkit";
 import { Dispatch } from "redux";
 import { JsonObject } from "type-fest";
 
@@ -105,6 +105,7 @@ export type RRPrivateChat = {
 // non-serializable properties like Dates.
 // Extending JsonObject makes no difference at runtime.
 interface RRBaseLogEntry extends JsonObject {
+  id: RRID;
   silent: boolean;
   playerId: RRID | null;
   timestamp: RRTimestamp;
@@ -117,12 +118,11 @@ export interface RRLogEntryMessage extends RRBaseLogEntry {
   };
 }
 
-export interface RRLogEntryAchievement extends RRBaseLogEntry {
-  type: "achievement";
-  payload: {
-    todo: string;
-  };
-}
+// export interface RRLogEntryAchievement extends RRBaseLogEntry {
+//   type: "achievement";
+//   payload: {
+//   };
+// }
 
 export interface RRLogEntryDiceRoll extends RRBaseLogEntry {
   type: "diceRoll";
@@ -134,9 +134,10 @@ export interface RRLogEntryDiceRoll extends RRBaseLogEntry {
         faces: number; // 4, 6, 8, 10, 12, 20, 100
         count: number; // number of dice
 
-        used: number; // TODO
-        style: string; // TODO
-        effect: string; // TODO
+        // TODO
+        //         used: number;
+        //         style: string;
+        //         effect: string;
       };
     }>;
   };
@@ -144,65 +145,78 @@ export interface RRLogEntryDiceRoll extends RRBaseLogEntry {
 
 export type RRLogEntry =
   | RRLogEntryMessage
-  | RRLogEntryAchievement
+  //  | RRLogEntryAchievement
   | RRLogEntryDiceRoll;
 
-// This follows the "normalizing state shape" best practices from
-// https://redux.js.org/recipes/structuring-reducers/normalizing-state-shape
-type EntityCollection<E> = {
-  byId: Record<RRID, E>;
-  allIds: RRID[];
-};
+// This must resemble the EntityState type from @reduxjs/toolkit to work with
+// createEntityAdapter
+// https://redux-toolkit.js.org/api/createEntityAdapter
+interface EntityCollection<E extends { id: RRID }> extends JsonObject {
+  entities: Record<RRID, E>;
+  ids: RRID[];
+}
+
+export interface InitiativeTrackerSyncedState extends JsonObject {
+  visible: boolean;
+  entries: EntityCollection<RRInitiativeTrackerEntry>;
+  currentEntryId: RRID | null;
+}
+
+export type PlayersSyncedState = EntityCollection<RRPlayer>;
+
+export type TokensSyncedState = EntityCollection<RRToken>;
+
+export type MapsSyncedState = EntityCollection<RRMap>;
+
+export type PrivateChatsSyncedState = EntityCollection<RRPrivateChat>;
+
+export type LogEntriesSyncedState = EntityCollection<RRLogEntry>;
 
 // We extend JsonObject here just to verify that we do not use any
 // non-serializable properties like Dates.
 // Extending JsonObject makes no difference at runtime.
+// TODO: JsonObject may be the wrong thing. Hmm.
 export interface SyncedState extends JsonObject {
-  initiativeTracker: {
-    visible: boolean;
-    entries: Array<RRInitiativeTrackerEntry>;
-    currentEntryId: RRID | null;
-  };
-
-  players: EntityCollection<RRPlayer>;
-
-  tokens: EntityCollection<RRToken>;
-
-  maps: EntityCollection<RRMap>;
-
-  privateChats: EntityCollection<RRPrivateChat>;
-
-  logEntries: EntityCollection<RRLogEntry>;
+  initiativeTracker: InitiativeTrackerSyncedState;
+  players: PlayersSyncedState;
+  tokens: TokensSyncedState;
+  maps: MapsSyncedState;
+  privateChats: PrivateChatsSyncedState;
+  logEntries: LogEntriesSyncedState;
 }
 
 export const initialSyncedState: SyncedState = {
   initiativeTracker: {
     visible: false,
     currentEntryId: null,
-    entries: [],
+    entries: {
+      entities: {},
+      ids: [],
+    },
   },
   players: {
-    byId: {},
-    allIds: [],
+    entities: {},
+    ids: [],
   },
   tokens: {
-    byId: {},
-    allIds: [],
+    entities: {},
+    ids: [],
   },
   maps: {
-    byId: {},
-    allIds: [],
+    entities: {},
+    ids: [],
   },
   privateChats: {
-    byId: {},
-    allIds: [],
+    entities: {},
+    ids: [],
   },
   logEntries: {
-    byId: {},
-    allIds: [],
+    entities: {},
+    ids: [],
   },
 };
 
+// TODO
 export type SyncedStateAction = PayloadAction<any>;
 
 export type SyncedStateDispatch = Dispatch<SyncedStateAction>;
