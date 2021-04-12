@@ -12,7 +12,9 @@ module.exports = merge(common, {
       // Arguments to pass to the script being watched.
       args: [],
       // Node arguments.
-      nodeArgs: ['--inspect'],
+      // TODO: When enabling this, restarting due to code changes always
+      // triggers an error that says that the debug port is already in use.
+      // nodeArgs: ['--inspect'],
     })
   ],
 });
