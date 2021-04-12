@@ -2,7 +2,11 @@ import { createAction, nanoid, Update } from "@reduxjs/toolkit";
 import {
   InitiativeTrackerSyncedState,
   RRInitiativeTrackerEntry,
+  RRInitiativeTrackerEntryLayerAction,
+  RRInitiativeTrackerEntryToken,
   RRLogEntry,
+  RRLogEntryDiceRoll,
+  RRLogEntryMessage,
   RRMap,
   RRPlayer,
   RRPrivateChat,
@@ -74,16 +78,19 @@ export const privateChatRemove = createAction<RRPrivateChat["id"]>(
 // LogEntries
 ////////////////////////////////////////////////////////////////////////////////
 
-export const logEntryAdd = createAction(
-  "logentry/add",
-  (logEntry: Omit<RRLogEntry, "id">) => ({
-    payload: { id: nanoid(), ...logEntry },
+export const logEntryMessageAdd = createAction(
+  "logentry/message/add",
+  (logEntry: Omit<RRLogEntryMessage, "id" | "type">) => ({
+    payload: { id: nanoid(), type: "message", ...logEntry },
   })
 );
 
-// export const logEntryUpdate = createAction<Update<RRLogEntry>>(
-//   "logentry/update"
-// );
+export const logEntryDiceRollAdd = createAction(
+  "logentry/diceroll/add",
+  (logEntry: Omit<RRLogEntryDiceRoll, "id" | "type">) => ({
+    payload: { id: nanoid(), type: "diceRoll", ...logEntry },
+  })
+);
 
 export const logEntryRemove = createAction<RRLogEntry["id"]>("logentry/remove");
 
@@ -99,17 +106,35 @@ export const initiativeTrackersetCurrentEntry = createAction<
   InitiativeTrackerSyncedState["currentEntryId"]
 >("initiativeTracker/currentEntryId");
 
-export const initiativeTrackerAdd = createAction(
-  "initiativetracker/add",
-  (initiativetrackerEntry: Omit<RRInitiativeTrackerEntry, "id">) => ({
-    payload: { id: nanoid(), ...initiativetrackerEntry },
+export const initiativeTrackerEntryTokenAdd = createAction(
+  "initiativetracker/entry/token/add",
+  (
+    initiativetrackerEntry: Omit<RRInitiativeTrackerEntryToken, "id" | "type">
+  ) => ({
+    payload: { id: nanoid(), type: "token", ...initiativetrackerEntry },
   })
 );
 
-export const initiativeTrackerUpdate = createAction<
-  Update<RRInitiativeTrackerEntry>
->("initiativetracker/update");
+export const initiativeTrackerEntryLayerActionAdd = createAction(
+  "initiativetracker/entry/layeraction/add",
+  (
+    initiativetrackerEntry: Omit<
+      RRInitiativeTrackerEntryLayerAction,
+      "id" | "type"
+    >
+  ) => ({
+    payload: { id: nanoid(), type: "layerAction", ...initiativetrackerEntry },
+  })
+);
 
-export const initiativeTrackerRemove = createAction<
+export const initiativeTrackerEntryTokenUpdate = createAction<
+  Update<RRInitiativeTrackerEntryToken>
+>("initiativetracker/entry/token/update");
+
+export const initiativeTrackerEntryLayerActionUpdate = createAction<
+  Update<RRInitiativeTrackerEntryLayerAction>
+>("initiativetracker/entry/layeraction/update");
+
+export const initiativeTrackerEntryRemove = createAction<
   RRInitiativeTrackerEntry["id"]
->("initiativetracker/remove");
+>("initiativetracker/entry/remove");

@@ -1,20 +1,27 @@
 import { createEntityAdapter, createReducer } from "@reduxjs/toolkit";
 import {
-  logEntryAdd,
-  // logEntryUpdate,
+  logEntryDiceRollAdd,
+  logEntryMessageAdd,
   logEntryRemove,
 } from "../../shared/actions";
-import { initialSyncedState, RRLogEntry } from "../../shared/state";
+import {
+  initialSyncedState,
+  RRLogEntry,
+  RRLogEntryDiceRoll,
+  RRLogEntryMessage,
+} from "../../shared/state";
 
-const logEntriesAdapter = createEntityAdapter<RRLogEntry>();
+const logEntryAdapter = createEntityAdapter<RRLogEntry>();
+const logEntryMessageAdapter = createEntityAdapter<RRLogEntryMessage>();
+const logEntryDiceRollAdapter = createEntityAdapter<RRLogEntryDiceRoll>();
 
 export const logEntriesReducer = createReducer(
   initialSyncedState.logEntries,
   (builder) => {
     // @ts-expect-error Typescript doesn't like me.
     builder
-      .addCase(logEntryAdd, logEntriesAdapter.addOne)
-      // .addCase(logEntryUpdate, logEntriesAdapter.updateOne)
-      .addCase(logEntryRemove, logEntriesAdapter.removeOne);
+      .addCase(logEntryMessageAdd, logEntryMessageAdapter.addOne)
+      .addCase(logEntryDiceRollAdd, logEntryDiceRollAdapter.addOne)
+      .addCase(logEntryRemove, logEntryAdapter.removeOne);
   }
 );

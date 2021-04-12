@@ -1,4 +1,4 @@
-import { logEntryAdd } from "../shared/actions";
+import { logEntryMessageAdd } from "../shared/actions";
 import { setupReduxStore } from "./setupReduxStore";
 import { setupStateSync } from "./setupStateSync";
 import { setupWebServer } from "./setupWebServer";
@@ -12,18 +12,15 @@ setupStateSync(io, store);
 console.log(`Roc & Roll started at ${url}.`);
 
 // Demo: Create a new log message every second
-if (false) {
-  setInterval(() => {
-    store.dispatch(
-      logEntryAdd({
-        type: "message",
-        playerId: "foo",
-        silent: false,
-        timestamp: Date.now(),
-        payload: {
-          text: "Test log message",
-        },
-      })
-    );
-  }, 1000);
-}
+setInterval(() => {
+  store.dispatch(
+    logEntryMessageAdd({
+      playerId: "foo",
+      silent: false,
+      timestamp: Date.now(),
+      payload: {
+        text: "Test log message",
+      },
+    })
+  );
+}, 1000);
