@@ -2,7 +2,7 @@
 
 ## Development
 
-- Install [Node.js](https://nodejs.org/en/), [yarn](https://yarnpkg.com/), and [nvm](https://github.com/nvm-sh/nvm).
+- Install [Node.js](https://nodejs.org/en/) 14+, [yarn](https://yarnpkg.com/), and [nvm](https://github.com/nvm-sh/nvm).
 - Clone this repository
 - `nvm install 14 && nvm use`
 - `yarn install`

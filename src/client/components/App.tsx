@@ -23,7 +23,13 @@ export function App() {
       <p>Count: {count}</p>
 
       <h2>Log</h2>
-      <Map />
+      <Map
+        tokens={[
+          { id: "abc", x: 30, y: 50, color: "red" },
+          { id: "def", x: 80, y: 20, color: "green" },
+        ]}
+      />
+
       <Log />
 
       <div
