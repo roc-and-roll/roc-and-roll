@@ -12,16 +12,18 @@ setupStateSync(io, store);
 console.log(`Roc & Roll started at ${url}.`);
 
 // Demo: Create a new log message every second
-setInterval(() => {
-  store.dispatch(
-    logEntryAdd({
-      type: "message",
-      playerId: "foo",
-      silent: false,
-      timestamp: Date.now(),
-      payload: {
-        text: "Test log message",
-      },
-    })
-  );
-}, 1000);
+if (false) {
+  setInterval(() => {
+    store.dispatch(
+      logEntryAdd({
+        type: "message",
+        playerId: "foo",
+        silent: false,
+        timestamp: Date.now(),
+        payload: {
+          text: "Test log message",
+        },
+      })
+    );
+  }, 1000);
+}

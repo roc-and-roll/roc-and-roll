@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import styles from "./App.module.css";
 import clsx from "clsx";
 import { Log } from "./Log";
+import { Map } from "./Map";
 
 export function App() {
   const [count, setCount] = useState(0);
@@ -22,6 +23,7 @@ export function App() {
       <p>Count: {count}</p>
 
       <h2>Log</h2>
+      <Map />
       <Log />
 
       <div
