@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, WheelEvent } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   scale,
   translate,
@@ -38,8 +38,9 @@ export const Map: React.FC<{ tokens: TokenOnMap[] }> = ({ tokens }) => {
     return [e.clientX - rect.left, e.clientY - rect.top];
   };
 
-  const handleWheel = (e: WheelEvent<SVGElement>) => {
+  const handleWheel = (e: WheelEvent) => {
     e.preventDefault();
+    e.stopPropagation();
 
     const [localX, localY] = localCoords(e);
     setTransform((t) =>
@@ -91,11 +92,15 @@ export const Map: React.FC<{ tokens: TokenOnMap[] }> = ({ tokens }) => {
   useEffect(() => {
     window.addEventListener("mouseup", handleMouseUp);
     window.addEventListener("mousemove", handleMouseMove);
+    svgRef.current &&
+      svgRef.current.addEventListener("wheel", handleWheel, { passive: false });
     return () => {
       window.removeEventListener("mouseup", handleMouseUp);
       window.removeEventListener("mousemove", handleMouseMove);
+      svgRef.current &&
+        svgRef.current.removeEventListener("wheel", handleWheel);
     };
-  });
+  }, [svgRef.current, handleMouseMove, handleWheel, handleMouseUp]);
 
   const withSelectionAreaDo = <T extends any>(
     cb: (x: number, y: number, w: number, h: number) => T,
@@ -121,7 +126,6 @@ export const Map: React.FC<{ tokens: TokenOnMap[] }> = ({ tokens }) => {
   return (
     <svg
       ref={svgRef}
-      onWheel={handleWheel}
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleMouseDown}
     >
