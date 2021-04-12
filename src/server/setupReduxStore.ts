@@ -1,13 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { SyncedState } from "../shared/state";
-import diceRolls from "./features/diceRolls";
 
 const store = configureStore<SyncedState>({
+  // @ts-expect-error TODO: Need to add the reducers here
   reducer: {
     // Add new slices of state here.
     // You need to edit SyncedState and initialSyncedState in shared/state.ts
     // when adding a new slice.
-    diceRolls,
   },
 });
 

@@ -2,7 +2,6 @@ import "./global.scss";
 import React, { useEffect, useState } from "react";
 import styles from "./App.module.css";
 import clsx from "clsx";
-import { DiceRolls } from "./DiceRolls";
 
 export function App() {
   const [count, setCount] = useState(0);
@@ -20,9 +19,6 @@ export function App() {
       <img src="/dice.jpg" />
 
       <p>Count: {count}</p>
-
-      <h2>Dice Rolls</h2>
-      <DiceRolls />
 
       <div
         style={{ width: "1cm", height: "1cm" }}

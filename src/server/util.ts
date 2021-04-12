@@ -1,9 +1,5 @@
 import { isObject } from "../shared/util";
 
-export type ValueOf<T> = T[keyof T];
-
-export type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
-
 export function buildPatch(old: any, cur: any, keyPrefix: string = "") {
   if (typeof old !== "object" || typeof cur !== "object") {
     throw new Error("Can only patch objects!");
