@@ -1,4 +1,4 @@
-import React, { MouseEvent, useRef, useState, WheelEvent } from "react";
+import React, { useEffect, useRef, useState, WheelEvent } from "react";
 import {
   scale,
   translate,
@@ -32,7 +32,7 @@ export const Map: React.FC<{ tokens: TokenOnMap[] }> = ({ tokens }) => {
 
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const localCoords = (e: MouseEvent): [number, number] => {
+  const localCoords = (e: MouseEvent | React.MouseEvent): [number, number] => {
     if (!svgRef.current) return [0, 0];
     const rect = svgRef.current.getBoundingClientRect();
     return [e.clientX - rect.left, e.clientY - rect.top];
@@ -52,7 +52,7 @@ export const Map: React.FC<{ tokens: TokenOnMap[] }> = ({ tokens }) => {
     );
   };
 
-  const handleMouseMove = (e: MouseEvent<SVGElement>) => {
+  const handleMouseMove = (e: MouseEvent) => {
     const [localX, localY] = localCoords(e);
     if (mouseDown === PANNING_BUTTON) {
       setTransform((t) =>
@@ -69,7 +69,7 @@ export const Map: React.FC<{ tokens: TokenOnMap[] }> = ({ tokens }) => {
     setLastMousePos([localX, localY]);
   };
 
-  const handleMouseDown = (e: MouseEvent<SVGElement>) => {
+  const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setMouseDown(e.button);
@@ -83,10 +83,19 @@ export const Map: React.FC<{ tokens: TokenOnMap[] }> = ({ tokens }) => {
     }
   };
 
-  const handleMouseUp = (e: MouseEvent<SVGElement>) => {
+  const handleMouseUp = (e: MouseEvent) => {
     setMouseDown(undefined);
     setSelectionArea(null);
   };
+
+  useEffect(() => {
+    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => {
+      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  });
 
   const withSelectionAreaDo = <T extends any>(
     cb: (x: number, y: number, w: number, h: number) => T,
@@ -115,8 +124,6 @@ export const Map: React.FC<{ tokens: TokenOnMap[] }> = ({ tokens }) => {
       onWheel={handleWheel}
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseMove={handleMouseMove}
     >
       <g transform={toSVG(transform)}>
         {withSelectionAreaDo(
