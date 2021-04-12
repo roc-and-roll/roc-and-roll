@@ -1,3 +1,4 @@
+import { logEntryAdd } from "../shared/actions";
 import { setupReduxStore } from "./setupReduxStore";
 import { setupStateSync } from "./setupStateSync";
 import { setupWebServer } from "./setupWebServer";
@@ -10,7 +11,17 @@ setupStateSync(io, store);
 
 console.log(`Roc & Roll started at ${url}.`);
 
-// Demo: Roll a d20 every second.
+// Demo: Create a new log message every second
 setInterval(() => {
-  store.dispatch({ type: "diceRolls/rollDice", payload: 20 });
+  store.dispatch(
+    logEntryAdd({
+      type: "message",
+      playerId: "foo",
+      silent: false,
+      timestamp: Date.now(),
+      payload: {
+        text: "Test log message",
+      },
+    })
+  );
 }, 1000);

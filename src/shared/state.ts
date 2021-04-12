@@ -1,6 +1,5 @@
 import { PayloadAction } from "@reduxjs/toolkit";
 import { Dispatch } from "redux";
-import { JsonObject } from "type-fest";
 
 export type RRID = string;
 
@@ -21,7 +20,7 @@ export type RRTokenCondition = string;
 
 export type RRTimestamp = number;
 
-interface RRInitiativeTrackerEntryBase extends JsonObject {
+interface RRInitiativeTrackerEntryBase {
   id: RRID;
   initiative: number;
 }
@@ -104,7 +103,7 @@ export type RRPrivateChat = {
 // We extend JsonObject here just to verify that we do not use any
 // non-serializable properties like Dates.
 // Extending JsonObject makes no difference at runtime.
-interface RRBaseLogEntry extends JsonObject {
+interface RRBaseLogEntry {
   id: RRID;
   silent: boolean;
   playerId: RRID | null;
@@ -151,12 +150,12 @@ export type RRLogEntry =
 // This must resemble the EntityState type from @reduxjs/toolkit to work with
 // createEntityAdapter
 // https://redux-toolkit.js.org/api/createEntityAdapter
-interface EntityCollection<E extends { id: RRID }> extends JsonObject {
+interface EntityCollection<E extends { id: RRID }> {
   entities: Record<RRID, E>;
   ids: RRID[];
 }
 
-export interface InitiativeTrackerSyncedState extends JsonObject {
+export interface InitiativeTrackerSyncedState {
   visible: boolean;
   entries: EntityCollection<RRInitiativeTrackerEntry>;
   currentEntryId: RRID | null;
@@ -172,11 +171,7 @@ export type PrivateChatsSyncedState = EntityCollection<RRPrivateChat>;
 
 export type LogEntriesSyncedState = EntityCollection<RRLogEntry>;
 
-// We extend JsonObject here just to verify that we do not use any
-// non-serializable properties like Dates.
-// Extending JsonObject makes no difference at runtime.
-// TODO: JsonObject may be the wrong thing. Hmm.
-export interface SyncedState extends JsonObject {
+export interface SyncedState {
   initiativeTracker: InitiativeTrackerSyncedState;
   players: PlayersSyncedState;
   tokens: TokensSyncedState;
