@@ -1,6 +1,11 @@
-import { createAction, nanoid, Update } from "@reduxjs/toolkit";
+import {
+  createAction,
+  nanoid,
+  Update as OriginalUpdate,
+} from "@reduxjs/toolkit";
 import {
   InitiativeTrackerSyncedState,
+  RRID,
   RRInitiativeTrackerEntry,
   RRInitiativeTrackerEntryLayerAction,
   RRInitiativeTrackerEntryToken,
@@ -12,6 +17,10 @@ import {
   RRPrivateChat,
   RRToken,
 } from "./state";
+
+interface Update<T extends { id: RRID }> extends OriginalUpdate<T> {
+  id: RRID; // tighten the type of id to RRID
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Players
@@ -61,14 +70,14 @@ export const mapRemove = createAction<RRMap["id"]>("map/remove");
 
 export const privateChatAdd = createAction(
   "privatechat/add",
-  (privatechat: Omit<RRPrivateChat, "id">) => ({
-    payload: { id: nanoid(), ...privatechat },
+  (privatechat: Omit<RRPrivateChat, "id" | "timestamp">) => ({
+    payload: { id: nanoid(), timestamp: Date.now(), ...privatechat },
   })
 );
 
-export const privateChatUpdate = createAction<Update<RRPrivateChat>>(
-  "privatechat/update"
-);
+export const privateChatUpdate = createAction<
+  Update<Omit<RRPrivateChat, "timestamp">>
+>("privatechat/update");
 
 export const privateChatRemove = createAction<RRPrivateChat["id"]>(
   "privatechat/remove"
@@ -80,15 +89,25 @@ export const privateChatRemove = createAction<RRPrivateChat["id"]>(
 
 export const logEntryMessageAdd = createAction(
   "logentry/message/add",
-  (logEntry: Omit<RRLogEntryMessage, "id" | "type">) => ({
-    payload: { id: nanoid(), type: "message", ...logEntry },
+  (logEntry: Omit<RRLogEntryMessage, "id" | "type" | "timestamp">) => ({
+    payload: {
+      id: nanoid(),
+      type: "message",
+      timestamp: Date.now(),
+      ...logEntry,
+    },
   })
 );
 
 export const logEntryDiceRollAdd = createAction(
   "logentry/diceroll/add",
-  (logEntry: Omit<RRLogEntryDiceRoll, "id" | "type">) => ({
-    payload: { id: nanoid(), type: "diceRoll", ...logEntry },
+  (logEntry: Omit<RRLogEntryDiceRoll, "id" | "type" | "timestamp">) => ({
+    payload: {
+      id: nanoid(),
+      type: "diceRoll",
+      timestamp: Date.now(),
+      ...logEntry,
+    },
   })
 );
 

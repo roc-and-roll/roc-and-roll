@@ -17,7 +17,6 @@ setInterval(() => {
     logEntryMessageAdd({
       playerId: "foo",
       silent: false,
-      timestamp: Date.now(),
       payload: {
         text: "Test log message",
       },

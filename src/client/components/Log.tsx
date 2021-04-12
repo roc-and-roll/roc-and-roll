@@ -34,7 +34,6 @@ export function Log() {
             logEntryMessageAdd({
               playerId: "bar",
               silent: false,
-              timestamp: Date.now(),
               payload: {
                 text,
               },
