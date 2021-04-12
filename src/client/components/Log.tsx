@@ -1,5 +1,5 @@
 import React from "react";
-import { logEntryAdd } from "../../shared/actions";
+import { logEntryMessageAdd } from "../../shared/actions";
 import { useServerDispatch, useServerState } from "../state";
 
 export function Log() {
@@ -31,8 +31,7 @@ export function Log() {
             return;
           }
           dispatch(
-            logEntryAdd({
-              type: "message",
+            logEntryMessageAdd({
               playerId: "bar",
               silent: false,
               timestamp: Date.now(),
