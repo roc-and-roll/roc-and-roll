@@ -91,14 +91,11 @@ export function useServerState<T>(selector: (state: SyncedState) => T) {
 
 /**
  * Returns a dispatch function that can be used to dispatch an action to the
- * server. This function is not exported (for now), use useServerActionFunction
- * instead.
+ * server.
  *
  * @returns The dispatch function.
  */
-function useServerActionDispatch(): (
-  action: SyncedStateAction
-) => SyncedStateAction {
+export function useServerDispatch() {
   const socket = useContext(ServerStateContext).socket;
 
   return useMemo(
@@ -107,35 +104,5 @@ function useServerActionDispatch(): (
       return action;
     },
     [socket]
-  );
-}
-
-/**
- * This function returns an object that contains all available server actions.
- * Use it like this:
- *
- * ```ts
- * const { rollDice } = useServerActionFunction();
- *
- * // ...
- *
- * <button onClick={() => rollDice(20)}>roll dice</button>
- *
- * ```
- *
- * @returns An object with all available server actions.
- */
-export function useServerActionFunction() {
-  const dispatch = useServerActionDispatch();
-
-  return useMemo(
-    () => ({
-      rollDice: (size: number) =>
-        dispatch({
-          type: "diceRolls/rollDice",
-          payload: size,
-        }),
-    }),
-    [dispatch]
   );
 }
