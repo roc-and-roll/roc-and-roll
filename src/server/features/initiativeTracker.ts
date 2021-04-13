@@ -16,9 +16,26 @@ import {
   RRInitiativeTrackerEntryToken,
 } from "../../shared/state";
 
-const initiativeTrackerEntryAdapter = createEntityAdapter<RRInitiativeTrackerEntry>();
-const initiativeTrackerEntryTokenAdapter = createEntityAdapter<RRInitiativeTrackerEntryToken>();
-const initiativeTrackerEntryLayerActionAdapter = createEntityAdapter<RRInitiativeTrackerEntryLayerAction>();
+// Automatically sort all entries by their initiative
+const config = {
+  sortComparer: <
+    A extends RRInitiativeTrackerEntry,
+    B extends RRInitiativeTrackerEntry
+  >(
+    a: A,
+    b: B
+  ) => a.initiative - b.initiative,
+};
+
+const initiativeTrackerEntryAdapter = createEntityAdapter<RRInitiativeTrackerEntry>(
+  config
+);
+const initiativeTrackerEntryTokenAdapter = createEntityAdapter<RRInitiativeTrackerEntryToken>(
+  config
+);
+const initiativeTrackerEntryLayerActionAdapter = createEntityAdapter<RRInitiativeTrackerEntryLayerAction>(
+  config
+);
 
 const initiativeTrackerEntriesReducer = createReducer(
   initialSyncedState.initiativeTracker.entries,
