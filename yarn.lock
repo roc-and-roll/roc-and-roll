@@ -8366,6 +8366,13 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"modern-css-reset@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "modern-css-reset@npm:1.4.0"
+  checksum: 16062d1f4cf1c125e2563a4fc9ab16d9e58d394ed72a4b9c6ac0de93be0de84bbfd7cf1747a556ee91549334f5d413fd151da96a0b44d7750335c7baaaaf0045
+  languageName: node
+  linkType: hard
+
 "ms@npm:2.0.0":
   version: 2.0.0
   resolution: "ms@npm:2.0.0"
@@ -10231,6 +10238,7 @@ resolve@^2.0.0-next.3:
     husky: ^4.3.6
     jest: ^26.6.3
     lint-staged: ^10.5.4
+    modern-css-reset: ^1.4.0
     multer: ^1.4.2
     nodemon: ^2.0.7
     nodemon-webpack-plugin: ^4.5.2
