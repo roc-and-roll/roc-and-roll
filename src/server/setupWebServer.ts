@@ -5,8 +5,11 @@ import { Server as SocketIOServer } from "socket.io";
 // they are installed.
 import "bufferutil";
 import "utf-8-validate";
+import multer from "multer";
+import { nanoid } from "@reduxjs/toolkit";
+import { RRFile } from "../shared/state";
 
-export function setupWebServer() {
+export function setupWebServer(uploadedFilesDir: string) {
   const httpPort = 3000;
   const url = `http://localhost:${httpPort}`;
 
@@ -14,7 +17,7 @@ export function setupWebServer() {
   const app = express();
 
   if (process.env.NODE_ENV === "development") {
-    // In development, add a CORS header so that the client is allowed to
+    // (1) In development, add a CORS header so that the client is allowed to
     // communicate with the server. This is necessary, because client and
     // server run on different ports in development.
     app.use((req, res, next) => {
@@ -32,7 +35,27 @@ export function setupWebServer() {
     });
   }
 
-  // Serve the client code to the browser
+  // (2) Add an endpoint to upload files
+  const storage = multer.diskStorage({
+    destination: uploadedFilesDir,
+    filename: (req, file, cb) =>
+      cb(null, `${nanoid()}${path.extname(file.originalname)}`),
+  });
+  app.post("/upload", multer({ storage }).array("files"), (req, res, next) => {
+    if (!Array.isArray(req.files)) {
+      res.status(400);
+      return;
+    }
+    const data: RRFile[] = req.files.map((file) => ({
+      originalFilename: file.originalname,
+      filename: file.filename,
+    }));
+    res.json(data);
+  });
+  // (3) Serve uploaded files
+  app.use("/files", express.static(uploadedFilesDir));
+
+  // (4) Serve the client code to the browser
   if (process.env.NODE_ENV === "development") {
     // In development, simply redirect all requests (except websockets) to the
     // webpack dev server, which serves the client code on its own.
@@ -65,7 +88,7 @@ export function setupWebServer() {
   // Spin up the Express JS instance.
   const http = app.listen(httpPort);
 
-  // Now also spin up a websocket server.
+  // (5) Now also spin up a websocket server.
   // In development, we need to allow CORS access not only from the url of the
   // server, but also from the webpack dev server port.
   const io = new SocketIOServer(http, {

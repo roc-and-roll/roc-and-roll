@@ -4,6 +4,7 @@ import styles from "./App.module.css";
 import clsx from "clsx";
 import { Log } from "./Log";
 import { Map } from "./Map";
+import { UploadFileExample } from "./UploadFileExample";
 
 export function App() {
   const [count, setCount] = useState(0);
@@ -22,7 +23,7 @@ export function App() {
 
       <p>Count: {count}</p>
 
-      <h2>Log</h2>
+      <h2>Map</h2>
       <Map
         tokens={[
           { id: "abc", x: 30, y: 50, color: "red" },
@@ -30,6 +31,10 @@ export function App() {
         ]}
       />
 
+      <h2>Upload File Example</h2>
+      <UploadFileExample />
+
+      <h2>Log</h2>
       <Log />
 
       <div
