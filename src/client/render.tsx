@@ -1,4 +1,4 @@
-import React from "react";
+import React, { StrictMode } from "react";
 import ReactDOM from "react-dom";
 import { App } from "./components/App";
 import { ServerStateProvider } from "./state";
@@ -9,10 +9,13 @@ export function render(socket: SocketIOClient.Socket) {
   document.body.appendChild(root);
 
   ReactDOM.render(
-    // The StateProvider provides the server state to the entire app tree.
-    <ServerStateProvider socket={socket}>
-      <App />
-    </ServerStateProvider>,
+    // https://reactjs.org/docs/strict-mode.html
+    <StrictMode>
+      {/* The ServerStateProvider provides the server state to the entire app tree. */}
+      <ServerStateProvider socket={socket}>
+        <App />
+      </ServerStateProvider>
+    </StrictMode>,
     root
   );
 }
