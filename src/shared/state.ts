@@ -14,6 +14,8 @@ export type RRFile = {
 
 export type RRAura = {
   size: number;
+  color: RRColor;
+  shape: "circle" | "square";
 };
 
 export type RRTokenCondition = string;
@@ -59,7 +61,7 @@ export type RRToken = {
   image: RRFile;
   size: number;
 
-  aura: RRAura;
+  auras: RRAura[];
   hp: number;
   maxHP: number;
   conditions: RRTokenCondition[];
