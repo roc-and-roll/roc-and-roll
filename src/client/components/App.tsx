@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { Log } from "./Log";
 import { Map } from "./Map";
 import { UploadFileExample } from "./UploadFileExample";
+import { LocalStateExample } from "./LocalStateExample";
 
 export function App() {
   const [count, setCount] = useState(0);
@@ -30,6 +31,9 @@ export function App() {
           { id: "def", x: 80, y: 20, color: "green" },
         ]}
       />
+
+      <h2>Local state example</h2>
+      <LocalStateExample />
 
       <h2>Upload File Example</h2>
       <UploadFileExample />

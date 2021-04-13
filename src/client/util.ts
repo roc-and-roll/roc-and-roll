@@ -7,3 +7,8 @@ export function apiHost() {
   }
   return `${window.location.protocol}//${window.location.hostname}:${port}`;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+export const noop = () => {};
+
+export const isBrowser = typeof window !== "undefined";
