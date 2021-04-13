@@ -5,7 +5,7 @@
 1. Install [Node.js](https://nodejs.org/en/) version 14 or newer.
    Consider using [nvm](https://github.com/nvm-sh/nvm) if your package manager
    does not support Node.js 14 yet.
-2. Install the [yarn](https://yarnpkg.com/) package manager.
+2. Install the [yarn](https://yarnpkg.com/) package manager by executing `npm install -g yarn`.
 3. Clone this repository.
 4. If using nvm, execute: `nvm install 14 && nvm use`
 5. Install dependencies: `yarn install`
