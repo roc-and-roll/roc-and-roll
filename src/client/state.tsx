@@ -1,5 +1,13 @@
 import { DeepPartial } from "@reduxjs/toolkit";
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import ReactDOM from "react-dom";
 import {
   initialSyncedState,
   SyncedState,
@@ -9,45 +17,97 @@ import { mergeDeep } from "../shared/util";
 
 type StatePatch<D> = { patch: DeepPartial<D>; deletedKeys: string[] };
 
+// This context is subscribed to using the useServerState and useServerDispatch
+// hooks. It is deliberately not exported. The context must not change on state
+// updates (that means, e.g., that it cannot contain the state object itself),
+// because that would cause all subscribed components to re-render on every
+// state update, regardless of what piece of the state they are interested in.
+//
+// Instead, the context contains a reference to the state, which the hooks can
+// use to get the current state when executing the hook, but which can not be
+// used to re-render the component using the hook on updates.
+// To re-render components when a selected part of the state changes, the
+// useServerState hook subscribes and unsubscribes to state changes through the
+// context and uses useState internally.
 const ServerStateContext = React.createContext<{
-  state: SyncedState;
+  subscribe: (subscriber: (newState: SyncedState) => void) => void;
+  unsubscribe: (subscriber: (newState: SyncedState) => void) => void;
+  stateRef: React.MutableRefObject<SyncedState>;
   socket: SocketIOClient.Socket | null;
 }>({
-  state: initialSyncedState,
+  subscribe: () => {
+    // do nothing
+  },
+  unsubscribe: () => {
+    // do nothing
+  },
+  stateRef: { current: initialSyncedState },
   socket: null,
 });
 ServerStateContext.displayName = "ServerStateContext";
 
 export function ServerStateProvider({
   socket,
-  ...props
+  children,
 }: React.PropsWithChildren<{ socket: SocketIOClient.Socket }>) {
-  const [serverState, setServerState] = useState<SyncedState>(
-    initialSyncedState
-  );
+  // We must not useState in this component, because we do not want to cause
+  // re-renders of this component and its children when the state changes.
+  const stateRef = useRef<SyncedState>(initialSyncedState);
+  const subscribers = useRef<Set<(newState: SyncedState) => void>>(new Set());
 
   useEffect(() => {
-    socket.on("SET_STATE", (msg: { state: string }) => {
+    const onSetState = (msg: { state: string }) => {
       const state: SyncedState = JSON.parse(msg.state);
       console.log("Server -> Client | SET_STATE | state = ", state);
-      setServerState(state);
-    });
 
-    socket.on("PATCH_STATE", (msg: string) => {
+      stateRef.current = state;
+      ReactDOM.unstable_batchedUpdates(() => {
+        subscribers.current.forEach((subscriber) =>
+          subscriber(stateRef.current)
+        );
+      });
+    };
+
+    const onPatchState = (msg: string) => {
       const patch: StatePatch<SyncedState> = JSON.parse(msg);
       console.log("Server -> Client | PATCH_STATE | patch = ", patch);
-      setServerState((state) => applyStatePatch(state, patch));
-    });
+
+      stateRef.current = applyStatePatch(stateRef.current, patch);
+      ReactDOM.unstable_batchedUpdates(() => {
+        subscribers.current.forEach((subscriber) =>
+          subscriber(stateRef.current)
+        );
+      });
+    };
+
+    socket.on("SET_STATE", onSetState);
+    socket.on("PATCH_STATE", onPatchState);
 
     return () => {
-      socket.off("SET_STATE");
-      socket.off("PATCH_STATE");
+      socket.off("SET_STATE", onSetState);
+      socket.off("PATCH_STATE", onPatchState);
     };
   }, [socket]);
 
+  const subscribe = useCallback(
+    (subscriber: (newState: SyncedState) => void) => {
+      subscribers.current.add(subscriber);
+    },
+    []
+  );
+
+  const unsubscribe = useCallback(
+    (subscriber: (newState: SyncedState) => void) => {
+      subscribers.current.delete(subscriber);
+    },
+    []
+  );
+
   return (
-    <ServerStateContext.Provider value={{ state: serverState, socket }}>
-      {props.children}
+    <ServerStateContext.Provider
+      value={{ stateRef, subscribe, unsubscribe, socket }}
+    >
+      {children}
     </ServerStateContext.Provider>
   );
 }
@@ -73,7 +133,9 @@ function applyStatePatch(
   return patchedState;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // Hooks
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Get a piece of the server state. Will re-render the component whenever that
@@ -84,9 +146,22 @@ function applyStatePatch(
  * @returns The selected piece of server state.
  */
 export function useServerState<T>(selector: (state: SyncedState) => T) {
-  // FIXME: Currently, all components using useServerState will re-render on
-  // _every_ server state change, regardless of the selector.
-  return selector(useContext(ServerStateContext).state);
+  const selectorRef = useRef(selector);
+  selectorRef.current = selector;
+
+  const { subscribe, unsubscribe, stateRef } = useContext(ServerStateContext);
+
+  const [state, setState] = useState(selectorRef.current(stateRef.current));
+
+  useEffect(() => {
+    const subscriber = (newState: SyncedState) => {
+      setState(selectorRef.current(newState));
+    };
+    subscribe(subscriber);
+    return () => unsubscribe(subscriber);
+  }, [subscribe, unsubscribe]);
+
+  return state;
 }
 
 /**
@@ -96,7 +171,7 @@ export function useServerState<T>(selector: (state: SyncedState) => T) {
  * @returns The dispatch function.
  */
 export function useServerDispatch() {
-  const socket = useContext(ServerStateContext).socket;
+  const { socket } = useContext(ServerStateContext);
 
   return useMemo(
     () => (action: SyncedStateAction) => {
