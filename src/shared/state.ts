@@ -16,6 +16,8 @@ export type RRAura = {
   size: number;
   color: RRColor;
   shape: "circle" | "square";
+  visibility: "playerOnly" | "playerAndGM" | "everyone";
+  visibileWhen: "always" | "onTurn" | "hover";
 };
 
 export type RRTokenCondition = string;
