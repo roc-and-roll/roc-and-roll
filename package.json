@@ -17,6 +17,7 @@
     "start": "nodemon --watch dist/server.roc-and-roll.js dist/server.roc-and-roll.js"
   },
   "dependencies": {
+    "@react-three/fiber": "^6.0.14",
     "@reduxjs/toolkit": "^1.5.1",
     "bufferutil": "^4.0.3",
     "clsx": "^1.1.1",
@@ -31,6 +32,7 @@
     "socket.io": "^4.0.0",
     "socket.io-client": "^4.0.0",
     "source-map-support": "^0.5.19",
+    "three": "^0.127.0",
     "transformation-matrix": "^2.7.0",
     "utf-8-validate": "^5.0.4"
   },
@@ -51,6 +53,7 @@
     "@types/socket.io": "^2.1.13",
     "@types/socket.io-client": "^1.4.36",
     "@types/source-map-support": "^0.5.3",
+    "@types/three": "^0.127.1",
     "@types/webpack-env": "^1.16.0",
     "@typescript-eslint/eslint-plugin": "^4.19.0",
     "@typescript-eslint/parser": "^4.19.0",

@@ -1249,7 +1249,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.8.4":
+"@babel/runtime@npm:^7.13.10, @babel/runtime@npm:^7.8.4":
   version: 7.13.10
   resolution: "@babel/runtime@npm:7.13.10"
   dependencies:
@@ -1624,6 +1624,31 @@ __metadata:
     webpack-plugin-serve:
       optional: true
   checksum: 718853bf7b8a517616e1b136d698fdd600998c667b556982c7f460ba628da7575248f1c75a3b2b8fe0e2a458121c81039038d25ed1c79f4517c783e407417585
+  languageName: node
+  linkType: hard
+
+"@react-three/fiber@npm:^6.0.14":
+  version: 6.0.14
+  resolution: "@react-three/fiber@npm:6.0.14"
+  dependencies:
+    "@babel/runtime": ^7.13.10
+    react-merge-refs: ^1.1.0
+    react-reconciler: ^0.26.2
+    react-three-fiber: 0.0.0-deprecated
+    react-use-measure: ^2.0.4
+    resize-observer-polyfill: ^1.5.1
+    scheduler: ^0.20.2
+    use-asset: ^1.0.4
+    utility-types: ^3.10.0
+    zustand: ^3.3.3
+  peerDependencies:
+    react: ">=17.0"
+    react-dom: ">=17.0"
+    three: ">=0.126"
+  peerDependenciesMeta:
+    react-dom:
+      optional: true
+  checksum: 69beb275a9978e00a6fefdd68d6b3cc547bc6f4f71b33ceee5f98ef108b59ce84cb6157d56c99319d03ddbb4c07701f1049b97945a7d3da366dced5a6cd1dda5
   languageName: node
   linkType: hard
 
@@ -2092,6 +2117,13 @@ __metadata:
   version: 1.0.7
   resolution: "@types/tapable@npm:1.0.7"
   checksum: af30bb7429d590c7df1f3f5b8ef55fcf2c5498cd2d972c40b0ee543a2e7c3df988b5ac29e231b22b09b712ea1df3dbf3eb145dcbbd43544534cbfb0f1cebdfac
+  languageName: node
+  linkType: hard
+
+"@types/three@npm:^0.127.1":
+  version: 0.127.1
+  resolution: "@types/three@npm:0.127.1"
+  checksum: 9e17f928b7d65fe041cf831da142ea87edb0d6dc3562b6907524f1444231ae75f959b1c6caf9af0ce4702182cd7e7eafa4dc4afa49037273ade205f118c37be5
   languageName: node
   linkType: hard
 
@@ -4178,6 +4210,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"debounce@npm:^1.2.0":
+  version: 1.2.1
+  resolution: "debounce@npm:1.2.1"
+  checksum: 04a00c6c45173ac6fb03ad3a7cf742fa4a86f6bf86b22f5b867085f739d0010ad98cbb92e80d60293faf6efb5452c637941092bd8d783cfeabe55c2000b1b07f
+  languageName: node
+  linkType: hard
+
 "debug@npm:2.6.9, debug@npm:^2.2.0, debug@npm:^2.3.3":
   version: 2.6.9
   resolution: "debug@npm:2.6.9"
@@ -5308,7 +5347,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-deep-equal@npm:^3.1.1":
+"fast-deep-equal@npm:^3.1.1, fast-deep-equal@npm:^3.1.3":
   version: 3.1.3
   resolution: "fast-deep-equal@npm:3.1.3"
   checksum: 451526766b219503131d11e823eaadd1533080b0be4860e316670b039dcaf31cd1007c2fe036a9b922abba7c040dfad5e942ed79d21f2ff849e50049f36e0fb7
@@ -9683,10 +9722,49 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"react-merge-refs@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "react-merge-refs@npm:1.1.0"
+  checksum: 20819f9fb3dd9cbf6eeccb49ac9cc6db139a4084e458d3df36cf3b6a7b9464b8abc244137c40b5c32dd7ca37929f0c411e8cec3ff3d4ba40203394f58416b656
+  languageName: node
+  linkType: hard
+
+"react-reconciler@npm:^0.26.2":
+  version: 0.26.2
+  resolution: "react-reconciler@npm:0.26.2"
+  dependencies:
+    loose-envify: ^1.1.0
+    object-assign: ^4.1.1
+    scheduler: ^0.20.2
+  peerDependencies:
+    react: ^17.0.2
+  checksum: 5abd10272cd4c57f76ba1cc8c1c3c190b3a1208434bb9bb39f90816944b6780e59021d79d9d1d46f1d05276a0db9cd66f2ccc7f8bbb51bcf970320bcd1b21f69
+  languageName: node
+  linkType: hard
+
 "react-refresh@npm:^0.9":
   version: 0.9.0
   resolution: "react-refresh@npm:0.9.0"
   checksum: 300dc431389f4c532bdfec08d5bc59b591c8c440486a7d5770c8954adf3afe62501b659c5acbdb7831751e8be506eb90a6f72491fab40352f3b3fba16897acf6
+  languageName: node
+  linkType: hard
+
+"react-three-fiber@npm:0.0.0-deprecated":
+  version: 0.0.0-deprecated
+  resolution: "react-three-fiber@npm:0.0.0-deprecated"
+  checksum: ba3963e829a8fc19da95336af965757a43c3c11debaef34e3a69d21c20c3752e4a495e906c7644c8f0fee22d2c49b6a2b3ff15164d40c9393f19680f810869fc
+  languageName: node
+  linkType: hard
+
+"react-use-measure@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "react-use-measure@npm:2.0.4"
+  dependencies:
+    debounce: ^1.2.0
+  peerDependencies:
+    react: ">=16.13"
+    react-dom: ">=16.13"
+  checksum: 5328749ed9700b43aff6f61ba9925c220efff3477dac55605a9e411ac28832ab4ff142675ff084712f48f9a2baed3f829974785e7dac47636f6fd1d14e339113
   languageName: node
   linkType: hard
 
@@ -10044,6 +10122,13 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"resize-observer-polyfill@npm:^1.5.1":
+  version: 1.5.1
+  resolution: "resize-observer-polyfill@npm:1.5.1"
+  checksum: ba14bfaf584eda299eafd6a06233a65c76586bc2bab3cdfdd1edd25fc6479f4270788ddd082e65390049b3ed542558f02bdf1f123bd912624de5b11d48857ac8
+  languageName: node
+  linkType: hard
+
 "resolve-cwd@npm:^2.0.0":
   version: 2.0.0
   resolution: "resolve-cwd@npm:2.0.0"
@@ -10203,6 +10288,7 @@ resolve@^2.0.0-next.3:
     "@babel/preset-react": ^7.13.13
     "@babel/preset-typescript": ^7.13.0
     "@pmmmwh/react-refresh-webpack-plugin": ^0.4.3
+    "@react-three/fiber": ^6.0.14
     "@reduxjs/toolkit": ^1.5.1
     "@types/express": ^4.17.11
     "@types/jest": ^26.0.21
@@ -10213,6 +10299,7 @@ resolve@^2.0.0-next.3:
     "@types/socket.io": ^2.1.13
     "@types/socket.io-client": ^1.4.36
     "@types/source-map-support": ^0.5.3
+    "@types/three": ^0.127.1
     "@types/webpack-env": ^1.16.0
     "@typescript-eslint/eslint-plugin": ^4.19.0
     "@typescript-eslint/parser": ^4.19.0
@@ -10255,6 +10342,7 @@ resolve@^2.0.0-next.3:
     socket.io-client: ^4.0.0
     source-map-support: ^0.5.19
     style-loader: ^2.0.0
+    three: ^0.127.0
     transformation-matrix: ^2.7.0
     ts-jest: ^26.5.4
     ts-loader: ^8.0.18
@@ -11463,6 +11551,13 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
+"three@npm:^0.127.0":
+  version: 0.127.0
+  resolution: "three@npm:0.127.0"
+  checksum: 7e1013918a5972e2e8fd98a4516381eeb07238b979a7041921b2a90095c74a02e64346e4693ed658b0208adc01df58dc7fbe43b1fedf7360e063719e6f22099a
+  languageName: node
+  linkType: hard
+
 "throat@npm:^5.0.0":
   version: 5.0.0
   resolution: "throat@npm:5.0.0"
@@ -12018,6 +12113,17 @@ typescript@^4.2.3:
   languageName: node
   linkType: hard
 
+"use-asset@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "use-asset@npm:1.0.4"
+  dependencies:
+    fast-deep-equal: ^3.1.3
+  peerDependencies:
+    react: ">=17.0"
+  checksum: 124ee3c80f37fd56cc1f86539e8e165807fbd4468cf3eb91672c10e5567121b62dd1d47c0aca882998d42eaf5eb3bd1daf821427754430c1dc727407e87ae9bc
+  languageName: node
+  linkType: hard
+
 "use@npm:^3.1.0":
   version: 3.1.1
   resolution: "use@npm:3.1.1"
@@ -12046,6 +12152,13 @@ typescript@^4.2.3:
   version: 0.4.0
   resolution: "utila@npm:0.4.0"
   checksum: 6799b0a5666ac26fb547068e6967e51b534e290174b10ae26e500c216197b0faed9be8a12108bc408ce475ce1002c866aac2d1d4e1453dc72b441d8900f2063a
+  languageName: node
+  linkType: hard
+
+"utility-types@npm:^3.10.0":
+  version: 3.10.0
+  resolution: "utility-types@npm:3.10.0"
+  checksum: 0d2add8ad7057883548a328076dd5eaa8ccb3660df053645fec332253f047fa0882da766dfa676c6a530f6a80023f1f519e1bc3f90088c4fcede303c33de0e4a
   languageName: node
   linkType: hard
 
@@ -12717,5 +12830,14 @@ typescript@^4.2.3:
   version: 0.1.0
   resolution: "yocto-queue@npm:0.1.0"
   checksum: 096c3b40beb2804659539be1605a35c58eb0c85285f94b77b3e924f42ee265c1a40bf9f4153770039517146b469a964d51742395f35ca8135fc9f7e4982b785d
+  languageName: node
+  linkType: hard
+
+"zustand@npm:^3.3.3":
+  version: 3.4.1
+  resolution: "zustand@npm:3.4.1"
+  peerDependencies:
+    react: ">=16.8"
+  checksum: d86719ad9fcfc9f9ab601957507a5f18b2cdba0710dcf77497765ba4cf0f70197cb3744e1aa6c9a062ceb187b987faae623c9635ebd4f154c67a8e64e1810e78
   languageName: node
   linkType: hard

@@ -7,6 +7,7 @@ import { Log } from "./Log";
 import { Map } from "./Map";
 import { UploadFileExample } from "./UploadFileExample";
 import { LocalStateExample } from "./LocalStateExample";
+import { DiceRoller } from "./DiceRoller";
 
 export function App() {
   const [count, setCount] = useState(0);
@@ -20,6 +21,7 @@ export function App() {
   return (
     <>
       <h1>Roc & Roll</h1>
+      <DiceRoller />
       {/* Including a static asset */}
       <img src="/dice.jpg" />
 
