@@ -10,8 +10,8 @@
       "name": "Attach to Server",
       "restart": true,
       "skipFiles": [
-        "<node_internals>/**",
-      ],
+        "<node_internals>/**"
+      ]
     },
     {
       "name": "Debug Tests",
@@ -22,13 +22,6 @@
         "${workspaceRoot}/node_modules/.bin/jest",
         "--runInBand"
       ],
-      "windows": {
-        "runtimeArgs": [
-          "--inspect-brk",
-          "${workspaceRoot}/node_modules/jest/bin/jest.js",
-          "--runInBand"
-        ]
-      },
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "port": 9229,
@@ -36,7 +29,35 @@
       "skipFiles": [
         "<node_internals>/**",
         "node_modules/**"
-      ],
+      ]
+    },
+    {
+      "name": "[client][chrome] debug",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:3001",
+      "skipFiles": ["${workspaceRoot}/node_modules/**"],
+      "smartStep": true,
+    },
+    {
+      "name": "[client][edge] debug",
+      "type": "pwa-msedge",
+      "request": "launch",
+      "url": "http://localhost:3001",
+      "skipFiles": ["${workspaceRoot}/node_modules/**"],
+      "smartStep": true,
+    },
+    {
+      "name": "[client][firefox] debug",
+      "type": "firefox",
+      "request": "launch",
+      "url": "http://localhost:3001",
+      "skipFiles": ["${workspaceRoot}/node_modules/**"],
+      "reAttach": false,
+      "pathMappings": [
+        { "url": "webpack://roc-and-roll/./", "path": "${workspaceFolder}/" },
+        { "url": "webpack://roc-and-roll/",   "path": "${workspaceFolder}/" },
+      ]
     }
   ]
 }

@@ -25,3 +25,15 @@ To run the application:
 To build the application:
 
 - execute `yarn build`
+
+### [Client] Debugging in VSCode
+
+To debug the client, press `CTRL+P` and type `>workbench.view.debug`.
+Then select one of the provided debug configurations:
+
+- `[client][chrome] debug`
+- `[client][edge] debug`
+- `[client][firefox] debug`
+
+This will open a new browser that can be used to debug the client code.
+If you use Firefox, some breakpoints might only work after refreshing the page.
