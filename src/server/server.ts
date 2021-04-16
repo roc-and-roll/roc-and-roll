@@ -24,7 +24,7 @@ console.log(`Roc & Roll started at ${url}.`);
 console.log(`Files are stored in ${uploadedFilesDir}.`);
 
 // Demo: Create a new log message every second
-/*setInterval(() => {
+setInterval(() => {
   store.dispatch(
     logEntryMessageAdd({
       playerId: "foo",
@@ -34,4 +34,4 @@ console.log(`Files are stored in ${uploadedFilesDir}.`);
       },
     })
   );
-}, 1000);*/
+}, 1000);

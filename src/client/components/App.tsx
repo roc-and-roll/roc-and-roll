@@ -1,6 +1,6 @@
 import "modern-css-reset";
 import "./global.scss";
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import styles from "./App.module.css";
 import clsx from "clsx";
 import { Log } from "./Log";
@@ -21,7 +21,12 @@ export function App() {
   return (
     <>
       <h1>Roc & Roll</h1>
-      <DiceRoller />
+      {false && (
+        <Suspense fallback={null}>
+          <DiceRoller />
+        </Suspense>
+      )}
+
       {/* Including a static asset */}
       <img src="/dice.jpg" />
 

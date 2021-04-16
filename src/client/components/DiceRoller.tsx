@@ -1,6 +1,13 @@
 import * as THREE from "three";
-import React, { Suspense, useMemo, useRef, useState } from "react";
+import React, {
+  cloneElement,
+  Suspense,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import { GLTFLoader, GLTF } from "three/examples/jsm/loaders/GLTFLoader";
 
 function getD4() {
   return new THREE.TetrahedronBufferGeometry();
@@ -72,14 +79,16 @@ const Dice: React.FC<JSX.IntrinsicElements["mesh"]> = (props) => {
   const [rotationAxis, setRotationAxis] = useState(new THREE.Vector3());
 
   useFrame((state, delta) => {
-    // mesh.current.quaternion.rotateTowards(finalRotation, delta * 10)
-    if (velocity.current > 0.01) {
-      velocity.current *= 0.99;
+    if (velocity.current > 0.1) {
+      velocity.current *= 0.96;
       mesh.current.rotateOnAxis(rotationAxis, delta * velocity.current);
+    } else {
+      // mesh.current.quaternion.rotateTowards(finalRotation, delta * 10);
     }
   });
 
-  // const [img] = useLoader(THREE.TextureLoader, ["/test_uv.png"]);
+  const [image] = useLoader(THREE.TextureLoader, ["/dice/dice-faces.png"]);
+  image && (image.flipY = false);
 
   const randomAxis = () => {
     return new THREE.Vector3(
@@ -111,18 +120,36 @@ const Dice: React.FC<JSX.IntrinsicElements["mesh"]> = (props) => {
       onPointerOver={(event) => setHover(true)}
       onPointerOut={(event) => setHover(false)}
     >
-      <meshStandardMaterial color={hovered ? "hotpink" : "orange"} />
+      <meshStandardMaterial
+        map={image}
+        color={hovered ? "hotpink" : "orange"}
+      />
     </mesh>
   );
 };
 
 export const DiceRoller: React.FC = () => {
-  const d4 = useMemo(() => getD4(), []);
+  /*const d4 = useMemo(() => getD4(), []);
   const d6 = useMemo(() => getD6(), []);
   const d8 = useMemo(() => getD8(), []);
   const d10 = useMemo(() => getD10(), []);
   const d12 = useMemo(() => getD12(), []);
-  const d20 = useMemo(() => getD20(), []);
+  const d20 = useMemo(() => getD20(), []);*/
+
+  const [d4, d6, d8, d10, d12, d20] = useLoader(GLTFLoader, [
+    "/dice/d4.glb",
+    "/dice/d6.glb",
+    "/dice/d8.glb",
+    "/dice/d10.glb",
+    "/dice/d12.glb",
+    "/dice/d20.glb",
+  ]);
+
+  const geometryFrom = (die: GLTF | undefined) => {
+    return die
+      ? (die.scene.children[0]! as THREE.Mesh).clone().geometry
+      : undefined;
+  };
 
   return (
     <Canvas
@@ -131,14 +158,14 @@ export const DiceRoller: React.FC = () => {
       camera={{ near: 0.1, far: 20, zoom: 50 }}
     >
       <ambientLight />
-      <pointLight position={[10, 10, 10]} />
+      <pointLight position={[10, 10, 10]} intensity={2} />
       <Suspense fallback={null}>
-        <Dice geometry={d4} position={[-12, 0, 0]} />
-        <Dice geometry={d6} position={[-7, 0, 0]} />
-        <Dice geometry={d8} position={[-2, 0, 0]} />
-        <Dice geometry={d10} position={[3, 0, 0]} />
-        <Dice geometry={d12} position={[8, 0, 0]} />
-        <Dice geometry={d20} position={[13, 0, 0]} />
+        <Dice geometry={geometryFrom(d4)} position={[-12, 0, 0]} />
+        <Dice geometry={geometryFrom(d6)} position={[-7, 0, 0]} />
+        <Dice geometry={geometryFrom(d8)} position={[-2, 0, 0]} />
+        <Dice geometry={geometryFrom(d10)} position={[3, 0, 0]} />
+        <Dice geometry={geometryFrom(d12)} position={[8, 0, 0]} />
+        <Dice geometry={geometryFrom(d20)} position={[13, 0, 0]} />
       </Suspense>
     </Canvas>
   );
