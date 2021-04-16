@@ -6,14 +6,14 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "concurrently --handle-input --kill-others --names server,client --prefix-colors green,blue yarn:dev:server yarn:dev:client",
-    "dev:client": "webpack serve --config webpack.client.dev.js",
-    "dev:server": "webpack --config webpack.server.dev.js --watch",
+    "dev:client": "webpack serve   --config webpack.client.js --env development",
+    "dev:server": "webpack --watch --config webpack.server.js --env development",
     "test": "jest",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx src",
     "format": "yarn run lint --fix",
     "build": "concurrently --names client,server --prefix-colors blue,green yarn:build:client yarn:build:server",
-    "build:client": "webpack --config webpack.client.prod.js",
-    "build:server": "webpack --config webpack.server.prod.js",
+    "build:client": "webpack --config webpack.client.js --env production",
+    "build:server": "webpack --config webpack.server.js --env production",
     "start": "nodemon --watch dist/server.roc-and-roll.js dist/server.roc-and-roll.js"
   },
   "dependencies": {
@@ -89,7 +89,6 @@
     "webpack-cli": "^4.5.0",
     "webpack-dev-server": "^3.11.2",
     "webpack-dev-server-waitpage": "^2.1.1",
-    "webpack-merge": "^5.7.3",
     "webpack-node-externals": "^2.5.2"
   },
   "browserslist": "defaults",

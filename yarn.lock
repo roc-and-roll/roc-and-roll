@@ -10266,7 +10266,6 @@ resolve@^2.0.0-next.3:
     webpack-cli: ^4.5.0
     webpack-dev-server: ^3.11.2
     webpack-dev-server-waitpage: ^2.1.1
-    webpack-merge: ^5.7.3
     webpack-node-externals: ^2.5.2
   languageName: unknown
   linkType: soft
