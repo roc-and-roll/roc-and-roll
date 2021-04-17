@@ -92,7 +92,9 @@ html,
 .log-title {
   display: flex;
   justify-content: space-between;
-  button {
+}
+
+.toggle-button {
     padding: 0px;
     border: none;
     width: 32px;
@@ -102,5 +104,9 @@ html,
     background-color: #fff;
     cursor: pointer;
     &:hover { background-color: #ccc; }
-  }
+}
+
+.collapsible-header {
+  display: flex;
+  justify-content: space-between;
 }

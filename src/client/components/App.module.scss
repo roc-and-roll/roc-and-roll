@@ -9,6 +9,12 @@
   width: 450px;
   padding: 1rem;
   background: #222;
+
+  & > div {
+    margin-bottom: 3rem;
+    border-top: 1px solid #333;
+    border-bottom: 1px solid #333;
+  }
 }
 
 .map {
