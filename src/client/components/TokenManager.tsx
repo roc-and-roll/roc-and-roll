@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { tokenAdd, tokenUpdate } from "../../shared/actions";
-import { EntityCollection, RRFile, RRID, RRToken } from "../../shared/state";
+import { EntityCollection, RRID, RRToken } from "../../shared/state";
 import { fileUrl, useFileUpload } from "../files";
 import { useServerDispatch, useServerState } from "../state";
+import { useDrag } from "react-dnd";
 
 const mapEntities = <E extends { id: RRID }, J>(
   map: EntityCollection<E>,
@@ -44,21 +45,40 @@ export function TokenManager() {
       )}
       <div className="token-list">
         {mapEntities(tokens, (t) => (
-          <div
+          <TokenPreview
+            token={t}
             key={t.id}
-            onClick={() => setSelectedToken(t)}
-            className="token-preview"
-          >
-            {t.name}
-            <div
-              className="token-image"
-              style={{
-                backgroundImage: t.image ? `url(${fileUrl(t.image)})` : "none",
-              }}
-            />
-          </div>
+            onSelect={() => setSelectedToken(t)}
+          />
         ))}
       </div>
+    </div>
+  );
+}
+
+function TokenPreview({
+  token,
+  onSelect,
+}: {
+  token: RRToken;
+  onSelect: () => void;
+}) {
+  const [, dragRef] = useDrag<RRToken, void, null>(() => ({
+    type: "token",
+    item: token,
+  }));
+
+  return (
+    <div onClick={onSelect} ref={dragRef} className="token-preview">
+      {token.name}
+      <div
+        className="token-image"
+        style={{
+          backgroundImage: token.image
+            ? `url(${fileUrl(token.image)})`
+            : "none",
+        }}
+      />
     </div>
   );
 }

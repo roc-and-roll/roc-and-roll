@@ -9,6 +9,8 @@ import {
   toSVG,
   inverse,
 } from "transformation-matrix";
+import { useDrop } from "react-dnd";
+import { RRToken } from "../../shared/state";
 
 type Rectangle = [number, number, number, number];
 
@@ -24,16 +26,24 @@ interface TokenOnMap {
 
 const ZOOM_SCALE_FACTOR = 0.2;
 
-export const Map: React.FC<{ tokens: TokenOnMap[]; className: string }> = ({
-  tokens,
-  className,
-}) => {
+export const Map: React.FC<{
+  onAddToken: (token: RRToken) => void;
+  tokens: TokenOnMap[];
+  className: string;
+}> = ({ tokens, className, onAddToken }) => {
   const [transform, setTransform] = useState<Matrix>(identity());
   // TODO can't handle overlapping clicks
   const [mouseDown, setMouseDown] = useState<number | undefined>(undefined);
   const [lastMousePos, setLastMousePos] = useState<[number, number]>([0, 0]);
 
   const [selectionArea, setSelectionArea] = useState<Rectangle | null>(null);
+
+  const [, dropRef] = useDrop<RRToken, void, never>(() => ({
+    accept: "token",
+    drop: (item) => {
+      onAddToken(item);
+    },
+  }));
 
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -141,30 +151,32 @@ export const Map: React.FC<{ tokens: TokenOnMap[]; className: string }> = ({
   );
 
   return (
-    <svg
-      ref={svgRef}
-      onContextMenu={(e) => e.preventDefault()}
-      onMouseDown={handleMouseDown}
-      className={className}
-    >
-      <g transform={toSVG(transform)}>
-        {withSelectionAreaDo(
-          (x, y, w, h) => (
-            <rect x={x} y={y} width={w} height={h} />
-          ),
-          <></>
-        )}
-        {tokens.map((t) => (
-          <MapToken
-            key={t.id}
-            x={t.x}
-            y={t.y}
-            color={t.color}
-            selected={selectedTokens.includes(t)}
-          />
-        ))}
-      </g>
-    </svg>
+    <div ref={dropRef}>
+      <svg
+        ref={svgRef}
+        onContextMenu={(e) => e.preventDefault()}
+        onMouseDown={handleMouseDown}
+        className={className}
+      >
+        <g transform={toSVG(transform)}>
+          {withSelectionAreaDo(
+            (x, y, w, h) => (
+              <rect x={x} y={y} width={w} height={h} />
+            ),
+            <></>
+          )}
+          {tokens.map((t) => (
+            <MapToken
+              key={t.id}
+              x={t.x}
+              y={t.y}
+              color={t.color}
+              selected={selectedTokens.includes(t)}
+            />
+          ))}
+        </g>
+      </svg>
+    </div>
   );
 };
 
