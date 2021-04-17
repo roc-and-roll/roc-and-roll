@@ -14,25 +14,28 @@ export function MapContainer({ className }: { className: string }) {
   const [selectedTokens, setSelectedTokens] = useState<RRID[]>([]);
 
   // TODO introduce separate add function
-  const [, dropRef] = useDrop<RRToken, void, never>(() => ({
-    accept: "token",
-    drop: (item) => {
-      if (!map.tokens.find((t) => t.tokenId === item.id)) {
-        const newToken = {
-          position: { x: Math.random() * 10, y: Math.random() * 10 },
-          tokenId: item.id,
-        };
-        dispatch(
-          mapUpdate({
-            id: map.id,
-            changes: {
-              tokens: [...map.tokens, newToken],
-            },
-          })
-        );
-      }
-    },
-  }));
+  const [, dropRef] = useDrop<RRToken, void, never>(
+    () => ({
+      accept: "token",
+      drop: (item) => {
+        if (!map.tokens.find((t) => t.tokenId === item.id)) {
+          const newToken = {
+            position: { x: Math.random() * 10, y: Math.random() * 10 },
+            tokenId: item.id,
+          };
+          dispatch(
+            mapUpdate({
+              id: map.id,
+              changes: {
+                tokens: [...map.tokens, newToken],
+              },
+            })
+          );
+        }
+      },
+    }),
+    [dispatch, map.id, map.tokens]
+  );
 
   const handleKeyDown = (e: KeyboardEvent) => {
     switch (e.key) {

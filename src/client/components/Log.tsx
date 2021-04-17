@@ -66,7 +66,7 @@ export function Log() {
         <h2>Log</h2>
         <button
           onClick={() => {
-            setCollapsed(!collapsed);
+            setCollapsed((collapsed) => !collapsed);
           }}
         >
           {collapsed ? "▲" : "▼"}

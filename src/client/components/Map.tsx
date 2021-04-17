@@ -49,23 +49,27 @@ export const Map: React.FC<{
   const [transform, setTransform] = useState<Matrix>(identity());
   // TODO can't handle overlapping clicks
   const [mouseAction, setMouseAction] = useState<MouseAction>(MouseAction.NONE);
-  const [lastMousePos, setLastMousePos] = useState<[number, number]>([0, 0]);
+  const [dragState, setDragState] = useState({
+    start: { x: 0, y: 0 },
+    lastMouse: { x: 0, y: 0 },
+    delta: { x: 0, y: 0 },
+  });
 
   const [selectionArea, setSelectionArea] = useState<Rectangle | null>(null);
 
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const localCoords = (e: MouseEvent | React.MouseEvent): [number, number] => {
-    if (!svgRef.current) return [0, 0];
+  const localCoords = (e: MouseEvent | React.MouseEvent) => {
+    if (!svgRef.current) return { x: 0, y: 0 };
     const rect = svgRef.current.getBoundingClientRect();
-    return [e.clientX - rect.left, e.clientY - rect.top];
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
 
   const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const [localX, localY] = localCoords(e);
+    const { x, y } = localCoords(e);
     setTransform((t) => {
       // debugger;
       // https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
@@ -78,9 +82,9 @@ export const Map: React.FC<{
             3;
 
       return compose(
-        translate(localX, localY),
+        translate(x, y),
         scale(Math.pow(1.05, -delta)),
-        translate(-localX, -localY),
+        translate(-x, -y),
         t
       );
     });
@@ -88,32 +92,45 @@ export const Map: React.FC<{
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
-      const [localX, localY] = localCoords(e);
+      const { x, y } = localCoords(e);
+
       switch (mouseAction) {
         case MouseAction.PAN: {
           setTransform((t) =>
             compose(
-              translate(localX - lastMousePos[0], localY - lastMousePos[1]),
+              translate(x - dragState.lastMouse.x, y - dragState.lastMouse.y),
               t
             )
           );
           break;
         }
         case MouseAction.SELECTION_AREA: {
-          const innerLocal = applyToPoint(inverse(transform), [localX, localY]);
+          const innerLocal = applyToPoint(inverse(transform), [x, y]);
           setSelectionArea((a) => a && [a[0], a[1], ...innerLocal]);
           break;
         }
         case MouseAction.MOVE_TOKEN: {
-          const [localX, localY] = localCoords(e);
-          onMoveTokens(localX - lastMousePos[0], localY - lastMousePos[1]);
+          // const [localX, localY] = localCoords(e);
+          // onMoveTokens(localX - lastMousePos[0], localY - lastMousePos[1]);
           break;
         }
       }
 
-      if (mouseAction !== MouseAction.NONE) setLastMousePos([localX, localY]);
+      if (mouseAction !== MouseAction.NONE) {
+        setDragState((p) => {
+          console.log("setDragState", {
+            old: p.delta,
+            new: { x: x - p.start.x, y: y - p.start.y },
+          });
+          return {
+            ...p,
+            lastMouse: { x, y },
+            delta: { x: x - p.start.x, y: y - p.start.y },
+          };
+        });
+      }
     },
-    [lastMousePos, mouseAction, transform, onMoveTokens]
+    [dragState, mouseAction, transform]
   );
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -128,10 +145,14 @@ export const Map: React.FC<{
     );
 
     const local = localCoords(e);
-    setLastMousePos(local);
+    setDragState({
+      start: local,
+      lastMouse: local,
+      delta: { x: 0, y: 0 },
+    });
 
     if (e.button === SELECTION_BUTTON) {
-      const innerLocal = applyToPoint(inverse(transform), local);
+      const innerLocal = applyToPoint(inverse(transform), [local.x, local.y]);
       setSelectionArea([...innerLocal, ...innerLocal]);
     }
   };
@@ -168,8 +189,11 @@ export const Map: React.FC<{
         onSelectTokens(hoveredTokens);
         setSelectionArea(null);
       }
+      if (mouseAction === MouseAction.MOVE_TOKEN) {
+        onMoveTokens(dragState.delta.x, dragState.delta.y);
+      }
     },
-    [hoveredTokens, onSelectTokens]
+    [mouseAction, onSelectTokens, hoveredTokens, onMoveTokens, dragState]
   );
 
   useEffect(() => {
@@ -213,18 +237,34 @@ export const Map: React.FC<{
           ),
           <></>
         )}
-        {tokensOnMap.map((t) => (
-          <MapToken
-            key={t.tokenId}
-            onStartMove={() => handleStartMoveToken(t)}
-            x={t.position.x}
-            y={t.position.y}
-            token={tokens.entities[t.tokenId]!}
-            selected={
-              hoveredTokens.includes(t) || selectedTokens.includes(t.tokenId)
-            }
-          />
-        ))}
+        {tokensOnMap.map((t) => {
+          const position = selectedTokens.includes(t.tokenId)
+            ? {
+                x: t.position.x + dragState.delta.x,
+                y: t.position.y + dragState.delta.y,
+              }
+            : t.position;
+          return (
+            <MapToken
+              key={t.tokenId}
+              onStartMove={(e: React.MouseEvent) => {
+                const local = localCoords(e);
+                setDragState({
+                  start: local,
+                  lastMouse: local,
+                  delta: { x: 0, y: 0 },
+                });
+                handleStartMoveToken(t);
+              }}
+              x={position.x}
+              y={position.y}
+              token={tokens.entities[t.tokenId]!}
+              selected={
+                hoveredTokens.includes(t) || selectedTokens.includes(t.tokenId)
+              }
+            />
+          );
+        })}
       </g>
     </svg>
   );
@@ -235,7 +275,7 @@ export const MapToken: React.FC<{
   x: number;
   y: number;
   selected: boolean;
-  onStartMove: () => void;
+  onStartMove: (e: React.MouseEvent) => void;
 }> = ({ token, x, y, selected, onStartMove }) => {
   /*const [moving, setMoving] = useState(false);
 
@@ -258,7 +298,7 @@ export const MapToken: React.FC<{
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onStartMove();
+    onStartMove(e);
   };
 
   return (
