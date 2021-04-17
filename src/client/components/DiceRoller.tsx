@@ -80,9 +80,7 @@ const Dice: React.FC<
       }
     }
 
-    if (numFaces != normals.length) {
-      console.log("expected", numFaces, "was", normals.length);
-    }
+    // numFaces != normals.length && console.log("expected", numFaces, "was", normals.length);
 
     return normals;
   };
