@@ -70,10 +70,16 @@ function getD10() {
   return new THREE.PolyhedronGeometry(vertices, faces, radius, 0);
 }
 
-const Dice: React.FC<JSX.IntrinsicElements["mesh"]> = (props) => {
+const Dice: React.FC<
+  JSX.IntrinsicElements["mesh"] & { verticesPerFace: number; numFaces: number }
+> = (props) => {
   const mesh = useRef<THREE.Mesh>(null!);
   const velocity = useRef<number>(0);
   const [hovered, setHover] = useState(false);
+  const [faceIndex, setFaceIndex] = useState(0);
+
+  const [startRotation, setStartRotation] = useState(new THREE.Quaternion());
+  const [endRotation, setEndRotation] = useState(new THREE.Quaternion());
 
   const [finalRotation, setFinalRotation] = useState(new THREE.Quaternion());
   const [rotationAxis, setRotationAxis] = useState(new THREE.Vector3());
@@ -98,6 +104,56 @@ const Dice: React.FC<JSX.IntrinsicElements["mesh"]> = (props) => {
     ).normalize();
   };
 
+  /**
+   * We have a long buffer of vertices and an index buffer that forms
+   * faces from these vertices. Each face is a vertex. Here, we find all
+   * vertices belong to a proper face of our die (so maybe a 5-gon) and
+   * find their center.
+   */
+  const faceRotationsFrom = (
+    geometry: THREE.BufferGeometry,
+    verticesPerFace: number,
+    numFaces: number
+  ) => {
+    const vertices = geometry.getAttribute("position")!;
+    const faces = geometry.getIndex()!;
+
+    if (verticesPerFace * numFaces != faces.array.length) {
+      console.error(
+        "expected",
+        verticesPerFace * numFaces,
+        "was",
+        faces.array.length
+      );
+    }
+
+    return new Array(numFaces).map((_, offset) => {
+      const faceVertices: THREE.Vector3[] = [];
+      for (let i = offset; i < offset + verticesPerFace; i++) {
+        const faceIndex = faces.getX(i);
+        faceVertices.push(
+          new THREE.Vector3(
+            vertices.getX(faceIndex),
+            vertices.getY(faceIndex),
+            vertices.getZ(faceIndex)
+          )
+        );
+      }
+      return new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        faceVertices
+          .reduce((vec, sum) => sum.add(vec))
+          .divideScalar(faceVertices.length)
+      );
+    });
+  };
+
+  const faceRotations = useMemo(
+    () =>
+      faceRotationsFrom(props.geometry!, props.numFaces, props.verticesPerFace),
+    [props.geometry, props.numFaces, props.verticesPerFace]
+  );
+
   return (
     <mesh
       {...props}
@@ -107,6 +163,10 @@ const Dice: React.FC<JSX.IntrinsicElements["mesh"]> = (props) => {
         const PI = 3.14 * 10;
         setRotationAxis(randomAxis());
         velocity.current = 30;
+
+        setFinalRotation(faceRotations[faceIndex]!);
+        setFaceIndex((f) => (f + 1) % faceRotations.length);
+
         setFinalRotation(
           new THREE.Quaternion().setFromEuler(
             new THREE.Euler(
@@ -146,9 +206,7 @@ export const DiceRoller: React.FC = () => {
   ]);
 
   const geometryFrom = (die: GLTF | undefined) => {
-    return die
-      ? (die.scene.children[0]! as THREE.Mesh).clone().geometry
-      : undefined;
+    return die ? (die.scene.children[0]! as THREE.Mesh).geometry : undefined;
   };
 
   return (
@@ -160,12 +218,42 @@ export const DiceRoller: React.FC = () => {
       <ambientLight />
       <pointLight position={[10, 10, 10]} intensity={2} />
       <Suspense fallback={null}>
-        <Dice geometry={geometryFrom(d4)} position={[-12, 0, 0]} />
-        <Dice geometry={geometryFrom(d6)} position={[-7, 0, 0]} />
-        <Dice geometry={geometryFrom(d8)} position={[-2, 0, 0]} />
-        <Dice geometry={geometryFrom(d10)} position={[3, 0, 0]} />
-        <Dice geometry={geometryFrom(d12)} position={[8, 0, 0]} />
-        <Dice geometry={geometryFrom(d20)} position={[13, 0, 0]} />
+        <Dice
+          numFaces={4}
+          verticesPerFace={3}
+          geometry={geometryFrom(d4)}
+          position={[-12, 0, 0]}
+        />
+        <Dice
+          numFaces={6}
+          verticesPerFace={6}
+          geometry={geometryFrom(d6)}
+          position={[-7, 0, 0]}
+        />
+        <Dice
+          numFaces={8}
+          verticesPerFace={3}
+          geometry={geometryFrom(d8)}
+          position={[-2, 0, 0]}
+        />
+        <Dice
+          numFaces={10}
+          verticesPerFace={6}
+          geometry={geometryFrom(d10)}
+          position={[3, 0, 0]}
+        />
+        <Dice
+          numFaces={12}
+          verticesPerFace={9}
+          geometry={geometryFrom(d12)}
+          position={[8, 0, 0]}
+        />
+        <Dice
+          numFaces={20}
+          verticesPerFace={3}
+          geometry={geometryFrom(d20)}
+          position={[13, 0, 0]}
+        />
       </Suspense>
     </Canvas>
   );

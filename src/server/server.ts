@@ -24,14 +24,15 @@ console.log(`Roc & Roll started at ${url}.`);
 console.log(`Files are stored in ${uploadedFilesDir}.`);
 
 // Demo: Create a new log message every second
-setInterval(() => {
-  store.dispatch(
-    logEntryMessageAdd({
-      playerId: "foo",
-      silent: false,
-      payload: {
-        text: "Test log message",
-      },
-    })
-  );
-}, 1000);
+false &&
+  setInterval(() => {
+    store.dispatch(
+      logEntryMessageAdd({
+        playerId: "foo",
+        silent: false,
+        payload: {
+          text: "Test log message",
+        },
+      })
+    );
+  }, 1000);
