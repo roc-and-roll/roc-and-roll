@@ -27,10 +27,7 @@ export function setupWebServer(uploadedFilesDir: string) {
       if (!res.headersSent) {
         // Only set header if the headers have not already been sent.
         // This happens, e.g., when calling res.redirect()
-        res.setHeader(
-          "Access-Control-Allow-Origin",
-          `${req.protocol}://${req.hostname}:3001`
-        );
+        res.setHeader("Access-Control-Allow-Origin", `*`);
       }
     });
   }
@@ -93,10 +90,7 @@ export function setupWebServer(uploadedFilesDir: string) {
   // server, but also from the webpack dev server port.
   const io = new SocketIOServer(http, {
     cors: {
-      origin:
-        process.env.NODE_ENV !== "development"
-          ? url
-          : [url, "http://localhost:3001"],
+      origin: process.env.NODE_ENV !== "development" ? url : "*",
     },
   });
 
