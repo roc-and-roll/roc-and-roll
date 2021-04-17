@@ -3,23 +3,32 @@ import { logEntryMessageAdd } from "../../shared/actions";
 import { useServerDispatch, useServerState } from "../state";
 
 export function Log() {
-  const { ids, entities } = useServerState((state) => state.logEntries);
+  const { ids: logEntryIds, entities: logEntries } = useServerState(
+    (state) => state.logEntries
+  );
+  const { entities: players } = useServerState((state) => state.players);
   const dispatch = useServerDispatch();
 
   return (
     <>
       <ul>
-        {ids.map((id) => {
-          const logEntry = entities[id]!;
+        {logEntryIds.map((id) => {
+          const logEntry = logEntries[id]!;
+          const player = logEntry.playerId ? players[logEntry.playerId] : null;
+
           if (logEntry.type === "diceRoll") {
+            const rolls = logEntry.payload.dice.map((die) => {
+              return die.result;
+            });
             return (
-              <li key={id}>
-                {logEntry.playerId} (
-                {new Date(logEntry.timestamp).toLocaleString()}
-                ):{" "}
-                {logEntry.payload.dice.map((die) => {
-                  return die.result;
-                })}
+              <li
+                key={id}
+                title={new Date(logEntry.timestamp).toLocaleString()}
+              >
+                {player?.name ?? "system"}:{" "}
+                {rolls.join(" + ") +
+                  " = " +
+                  rolls.reduce((acc, val) => acc + val).toString()}
               </li>
             );
           }
