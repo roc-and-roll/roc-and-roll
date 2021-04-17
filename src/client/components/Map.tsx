@@ -24,7 +24,10 @@ interface TokenOnMap {
 
 const ZOOM_SCALE_FACTOR = 0.2;
 
-export const Map: React.FC<{ tokens: TokenOnMap[] }> = ({ tokens }) => {
+export const Map: React.FC<{ tokens: TokenOnMap[]; className: string }> = ({
+  tokens,
+  className,
+}) => {
   const [transform, setTransform] = useState<Matrix>(identity());
   // TODO can't handle overlapping clicks
   const [mouseDown, setMouseDown] = useState<number | undefined>(undefined);
@@ -142,7 +145,7 @@ export const Map: React.FC<{ tokens: TokenOnMap[] }> = ({ tokens }) => {
       ref={svgRef}
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleMouseDown}
-      style={{ border: "1px solid black" }}
+      className={className}
     >
       <g transform={toSVG(transform)}>
         {withSelectionAreaDo(
