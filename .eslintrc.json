@@ -47,7 +47,7 @@
     "@typescript-eslint/no-floating-promises": "error",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": [
-      "warn", {
+      "error", {
         "additionalHooks": "(useRecoilCallback|useEventCallback|useDrop|useDrag)"
       }
     ],

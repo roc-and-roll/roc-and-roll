@@ -65,30 +65,35 @@ export const Map: React.FC<{
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
 
-  const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    const { x, y } = localCoords(e);
-    setTransform((t) => {
-      // debugger;
-      // https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
-      const delta =
-        e.deltaMode === 0x00 // pixel mode
-          ? (e.deltaY / 100) * 16 * ZOOM_SCALE_FACTOR
-          : e.deltaMode === 0x01 // line mode
-          ? e.deltaY
-          : // weird page mode
-            3;
+      if (mouseAction !== MouseAction.NONE) return;
 
-      return compose(
-        translate(x, y),
-        scale(Math.pow(1.05, -delta)),
-        translate(-x, -y),
-        t
-      );
-    });
-  }, []);
+      const { x, y } = localCoords(e);
+      setTransform((t) => {
+        // debugger;
+        // https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
+        const delta =
+          e.deltaMode === 0x00 // pixel mode
+            ? (e.deltaY / 100) * 16 * ZOOM_SCALE_FACTOR
+            : e.deltaMode === 0x01 // line mode
+            ? e.deltaY
+            : // weird page mode
+              3;
+
+        return compose(
+          translate(x, y),
+          scale(Math.pow(1.05, -delta)),
+          translate(-x, -y),
+          t
+        );
+      });
+    },
+    [mouseAction]
+  );
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
@@ -184,13 +189,19 @@ export const Map: React.FC<{
 
   const handleMouseUp = useCallback(
     (e: MouseEvent) => {
+      if (mouseAction === MouseAction.MOVE_TOKEN) {
+        // commit change to server
+        onMoveTokens(
+          dragState.delta.x / transform.a,
+          dragState.delta.y / transform.a
+        );
+      }
+
       setMouseAction(MouseAction.NONE);
-      if (e.button === SELECTION_BUTTON) {
+
+      if (mouseAction === MouseAction.SELECTION_AREA) {
         onSelectTokens(hoveredTokens);
         setSelectionArea(null);
-      }
-      if (mouseAction === MouseAction.MOVE_TOKEN) {
-        onMoveTokens(dragState.delta.x, dragState.delta.y);
       }
     },
     [mouseAction, onSelectTokens, hoveredTokens, onMoveTokens, dragState]
@@ -238,12 +249,14 @@ export const Map: React.FC<{
           <></>
         )}
         {tokensOnMap.map((t) => {
-          const position = selectedTokens.includes(t.tokenId)
-            ? {
-                x: t.position.x + dragState.delta.x,
-                y: t.position.y + dragState.delta.y,
-              }
-            : t.position;
+          const position =
+            mouseAction === MouseAction.MOVE_TOKEN &&
+            selectedTokens.includes(t.tokenId)
+              ? {
+                  x: t.position.x + dragState.delta.x / transform.a,
+                  y: t.position.y + dragState.delta.y / transform.a,
+                }
+              : t.position;
           return (
             <MapToken
               key={t.tokenId}
