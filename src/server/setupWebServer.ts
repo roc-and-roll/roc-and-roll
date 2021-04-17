@@ -83,7 +83,7 @@ export function setupWebServer(uploadedFilesDir: string) {
   }
 
   // Spin up the Express JS instance.
-  const http = app.listen(httpPort);
+  const http = app.listen(httpPort, "0.0.0.0");
 
   // (5) Now also spin up a websocket server.
   // In development, we need to allow CORS access not only from the url of the

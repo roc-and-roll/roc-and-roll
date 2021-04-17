@@ -233,6 +233,29 @@ export const Map: React.FC<{
     setMouseAction(MouseAction.MOVE_TOKEN);
   };
 
+  const grid = () => (
+    <>
+      <defs>
+        <pattern id="grid" width="70" height="70" patternUnits="userSpaceOnUse">
+          <path
+            d="M 70 0 L 0 0 0 70"
+            fill="none"
+            stroke="gray"
+            strokeWidth="1"
+          />
+        </pattern>
+      </defs>
+
+      <rect
+        x={-transform.e / transform.a}
+        y={-transform.f / transform.a}
+        width={`${100 / transform.a}%`}
+        height={`${100 / transform.a}%`}
+        fill="url(#grid)"
+      />
+    </>
+  );
+
   return (
     <svg
       className="map"
@@ -241,6 +264,7 @@ export const Map: React.FC<{
       onMouseDown={handleMouseDown}
     >
       <g transform={toSVG(transform)}>
+        {grid()}
         {withSelectionAreaDo(
           (x, y, w, h) => (
             <rect
@@ -313,7 +337,6 @@ export const MapToken: React.FC<{
           width={SIZE}
           height={SIZE}
           href={fileUrl(token.image)}
-          className={selected ? "selection-area-highlight" : ""}
         />
       ) : (
         <circle
@@ -322,7 +345,6 @@ export const MapToken: React.FC<{
           cy={y + SIZE / 2}
           r="35"
           fill="red"
-          className={selected ? "selection-area-highlight" : ""}
         />
       )}
       {selected && (
@@ -330,7 +352,7 @@ export const MapToken: React.FC<{
           onMouseDown={handleMouseDown}
           cx={x + SIZE / 2}
           cy={y + SIZE / 2}
-          r="35"
+          r={SIZE / 2 - 2}
           fill="transparent"
           className="selection-area-highlight"
         />

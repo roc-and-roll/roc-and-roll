@@ -160,6 +160,7 @@ module.exports = (webpackEnv) => {
       contentBase: [path.join(__dirname, "src", "public")],
       watchContentBase: true,
       hot: true,
+      host: '0.0.0.0',
       port: 3001,
       historyApiFallback: {
         // Paths with dots should still use the history fallback.
