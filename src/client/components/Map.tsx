@@ -205,10 +205,10 @@ export const Map: React.FC<{
     (x, y, w, h) =>
       tokensOnMap.filter(
         (t) =>
-          t.position.x >= x &&
-          t.position.y >= y &&
-          t.position.x <= x + w &&
-          t.position.y <= y + h
+          t.position.x + GRID_SIZE >= x &&
+          x + w >= t.position.x &&
+          t.position.y + GRID_SIZE >= y &&
+          y + h >= t.position.y
       ),
     []
   );

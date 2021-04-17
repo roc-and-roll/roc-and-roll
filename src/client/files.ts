@@ -9,42 +9,45 @@ export function fileUrl(file: RRFile) {
 export function useFileUpload(endpoint: string = "upload") {
   const [isUploading, setIsUploading] = useState(false);
 
-  const upload = useCallback(async (fileList: FileList | null | undefined) => {
-    setIsUploading(true);
+  const upload = useCallback(
+    async (fileList: FileList | null | undefined) => {
+      setIsUploading(true);
 
-    try {
-      if (fileList === null || fileList === undefined) {
-        return [];
-      }
-
-      const files: File[] = [];
-      for (let i = 0; i < fileList.length; i++) {
-        const file = fileList.item(i);
-        if (file) {
-          files.push(file);
+      try {
+        if (fileList === null || fileList === undefined) {
+          return [];
         }
+
+        const files: File[] = [];
+        for (let i = 0; i < fileList.length; i++) {
+          const file = fileList.item(i);
+          if (file) {
+            files.push(file);
+          }
+        }
+
+        if (files.length === 0) {
+          return [];
+        }
+
+        const formData = new FormData();
+        files.forEach((file) => formData.append("files", file));
+
+        const result = await fetch(`${apiHost()}/${endpoint}`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (result.status === 200) {
+          return (await result.json()) as RRFile[];
+        }
+        throw new Error("something went wrong");
+      } finally {
+        setIsUploading(false);
       }
-
-      if (files.length === 0) {
-        return [];
-      }
-
-      const formData = new FormData();
-      files.forEach((file) => formData.append("files", file));
-
-      const result = await fetch(`${apiHost()}/${endpoint}`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (result.status === 200) {
-        return (await result.json()) as RRFile[];
-      }
-      throw new Error("something went wrong");
-    } finally {
-      setIsUploading(false);
-    }
-  }, []);
+    },
+    [endpoint]
+  );
 
   return [isUploading, upload] as const;
 }
