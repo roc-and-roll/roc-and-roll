@@ -9,7 +9,6 @@ import useLocalState from "../useLocalState";
 import { RRID } from "../../shared/state";
 import { playerAdd } from "../../shared/actions";
 import { MyselfContext } from "../myself";
-import { nanoid } from "@reduxjs/toolkit";
 
 export function App() {
   const players = useServerState((state) => state.players);
