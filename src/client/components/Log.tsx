@@ -65,6 +65,7 @@ export function Log() {
       <div className="log-title">
         <h2>Log</h2>
         <button
+          className="toggle-button"
           onClick={() => {
             setCollapsed((collapsed) => !collapsed);
           }}

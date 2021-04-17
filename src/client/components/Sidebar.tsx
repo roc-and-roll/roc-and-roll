@@ -7,6 +7,7 @@ import { UploadFileExample } from "./UploadFileExample";
 import styles from "./Sidebar.module.css";
 import { useMyself } from "../myself";
 import { TokenManager } from "./TokenManager";
+import { Collapsible } from "./Collapsible";
 
 export function Sidebar({
   className,
@@ -33,31 +34,42 @@ export function Sidebar({
           <DiceRoller />
         </Suspense>
       )}
-      {/* Including a static asset */}
-      <img src="/dice.jpg" />
-      <TokenManager />
-      <p>Count: {count}</p>
-      <h2>Local state example</h2>
-      <LocalStateExample />
-      <h2>Upload File Example</h2>
-      <UploadFileExample />
-      <DiceInput />
-      <div
-        style={{ width: "1cm", height: "1cm" }}
-        className={clsx("globalClass_background_yellow", {
-          [styles["localClass_text_red"]!]: count % 2,
-        })}
-      />
+      <Collapsible title="Tokens">
+        <TokenManager />
+      </Collapsible>
 
-      <h2>Player</h2>
-      <p>Name: {myself.name}</p>
-      <p>Is GM: {myself.isGM ? "yes" : "no"}</p>
-      <button onClick={logout}>logout</button>
+      <Collapsible title="Dice">
+        <DiceInput />
+      </Collapsible>
 
-      <h2>Version</h2>
-      <p>Environment: {process.env.NODE_ENV}</p>
-      {/* Git commit */}
-      <p>Version: {__VERSION__}</p>
+      <Collapsible title="Player">
+        <p>Name: {myself.name}</p>
+        <p>Is GM: {myself.isGM ? "yes" : "no"}</p>
+        <button onClick={logout}>logout</button>
+      </Collapsible>
+
+      <Collapsible title="Debug" defaultCollapsed={true}>
+        {/* Including a static asset */}
+        <img src="/dice.jpg" />
+
+        <p>Count: {count}</p>
+        <div
+          style={{ width: "1cm", height: "1cm" }}
+          className={clsx("globalClass_background_yellow", {
+            [styles["localClass_text_red"]!]: count % 2,
+          })}
+        />
+
+        <h2>Local state example</h2>
+        <LocalStateExample />
+        <h2>Upload File Example</h2>
+        <UploadFileExample />
+
+        <h2>Version</h2>
+        <p>Environment: {process.env.NODE_ENV}</p>
+        {/* Git commit */}
+        <p>Version: {__VERSION__}</p>
+      </Collapsible>
     </div>
   );
 }
