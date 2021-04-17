@@ -21,7 +21,7 @@ export function App() {
   return (
     <>
       <h1>Roc & Roll</h1>
-      {true && (
+      {false && (
         <Suspense fallback={null}>
           <DiceRoller />
         </Suspense>

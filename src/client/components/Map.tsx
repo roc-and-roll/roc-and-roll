@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   scale,
   translate,
@@ -22,6 +22,8 @@ interface TokenOnMap {
   color: string;
 }
 
+const ZOOM_SCALE_FACTOR = 0.2;
+
 export const Map: React.FC<{ tokens: TokenOnMap[] }> = ({ tokens }) => {
   const [transform, setTransform] = useState<Matrix>(identity());
   // TODO can't handle overlapping clicks
@@ -38,37 +40,50 @@ export const Map: React.FC<{ tokens: TokenOnMap[] }> = ({ tokens }) => {
     return [e.clientX - rect.left, e.clientY - rect.top];
   };
 
-  const handleWheel = (e: WheelEvent) => {
+  const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     const [localX, localY] = localCoords(e);
-    setTransform((t) =>
-      compose(
+    setTransform((t) => {
+      // debugger;
+      // https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
+      const delta =
+        e.deltaMode === 0x00 // pixel mode
+          ? (e.deltaY / 100) * 16 * ZOOM_SCALE_FACTOR
+          : e.deltaMode === 0x01 // line mode
+          ? e.deltaY
+          : // weird page mode
+            3;
+
+      return compose(
         translate(localX, localY),
-        scale(Math.pow(1.05, -(e.deltaY || 1))),
+        scale(Math.pow(1.05, -delta)),
         translate(-localX, -localY),
         t
-      )
-    );
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    const [localX, localY] = localCoords(e);
-    if (mouseDown === PANNING_BUTTON) {
-      setTransform((t) =>
-        compose(
-          translate(localX - lastMousePos[0], localY - lastMousePos[1]),
-          t
-        )
       );
-    }
-    if (mouseDown === SELECTION_BUTTON) {
-      const innerLocal = applyToPoint(inverse(transform), [localX, localY]);
-      setSelectionArea((a) => a && [a[0], a[1], ...innerLocal]);
-    }
-    setLastMousePos([localX, localY]);
-  };
+    });
+  }, []);
+
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      const [localX, localY] = localCoords(e);
+      if (mouseDown === PANNING_BUTTON) {
+        setTransform((t) =>
+          compose(
+            translate(localX - lastMousePos[0], localY - lastMousePos[1]),
+            t
+          )
+        );
+      }
+      if (mouseDown === SELECTION_BUTTON) {
+        const innerLocal = applyToPoint(inverse(transform), [localX, localY]);
+        setSelectionArea((a) => a && [a[0], a[1], ...innerLocal]);
+      }
+      setLastMousePos([localX, localY]);
+    },
+    [lastMousePos, mouseDown, transform]
+  );
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -84,23 +99,22 @@ export const Map: React.FC<{ tokens: TokenOnMap[] }> = ({ tokens }) => {
     }
   };
 
-  const handleMouseUp = (e: MouseEvent) => {
+  const handleMouseUp = useCallback((e: MouseEvent) => {
     setMouseDown(undefined);
     setSelectionArea(null);
-  };
+  }, []);
 
   useEffect(() => {
     window.addEventListener("mouseup", handleMouseUp);
     window.addEventListener("mousemove", handleMouseMove);
-    svgRef.current &&
-      svgRef.current.addEventListener("wheel", handleWheel, { passive: false });
+    const svg = svgRef.current;
+    svg?.addEventListener("wheel", handleWheel, { passive: false });
     return () => {
       window.removeEventListener("mouseup", handleMouseUp);
       window.removeEventListener("mousemove", handleMouseMove);
-      svgRef.current &&
-        svgRef.current.removeEventListener("wheel", handleWheel);
+      svg?.removeEventListener("wheel", handleWheel);
     };
-  }, [svgRef.current, handleMouseMove, handleWheel, handleMouseUp]);
+  }, [handleMouseMove, handleWheel, handleMouseUp]);
 
   const withSelectionAreaDo = <T extends any>(
     cb: (x: number, y: number, w: number, h: number) => T,
@@ -128,6 +142,7 @@ export const Map: React.FC<{ tokens: TokenOnMap[] }> = ({ tokens }) => {
       ref={svgRef}
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleMouseDown}
+      style={{ border: "1px solid black" }}
     >
       <g transform={toSVG(transform)}>
         {withSelectionAreaDo(
