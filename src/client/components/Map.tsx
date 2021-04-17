@@ -296,6 +296,7 @@ export const MapToken: React.FC<{
   onStartMove: (e: React.MouseEvent) => void;
 }> = ({ token, x, y, selected, onStartMove }) => {
   const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     onStartMove(e);
   };
