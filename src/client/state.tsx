@@ -174,7 +174,7 @@ export function useServerDispatch() {
   const { socket } = useContext(ServerStateContext);
 
   return useMemo(
-    () => (action: SyncedStateAction) => {
+    () => <A extends SyncedStateAction>(action: A): A => {
       socket?.emit("REDUX_ACTION", JSON.stringify(action));
       return action;
     },

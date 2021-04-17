@@ -1,64 +1,77 @@
 import "modern-css-reset";
 import "./global.scss";
-import React, { Suspense, useEffect, useState } from "react";
-import styles from "./App.module.css";
-import clsx from "clsx";
-import { Log } from "./Log";
+import React from "react";
+import { Sidebar } from "./Sidebar";
 import { Map } from "./Map";
-import { UploadFileExample } from "./UploadFileExample";
-import { LocalStateExample } from "./LocalStateExample";
-import { DiceRoller } from "./DiceRoller";
+import styles from "./App.module.scss";
+import { useServerDispatch, useServerState } from "../state";
+import useLocalState from "../useLocalState";
+import { RRID } from "../../shared/state";
+import { playerAdd } from "../../shared/actions";
+import { MyselfContext } from "../myself";
+import { nanoid } from "@reduxjs/toolkit";
 
 export function App() {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => {
-      setCount((count) => count + 1);
-    }, 1000);
-    return () => clearInterval(t);
-  }, []);
+  const players = useServerState((state) => state.players);
+  const dispatch = useServerDispatch();
+  const [
+    myPlayerId,
+    setMyPlayerId,
+    forgetMyPlayerId,
+  ] = useLocalState<RRID | null>("myPlayerId", null);
 
-  return (
+  const myself = myPlayerId ? players.entities[myPlayerId] : null;
+
+  const joinAsNewPlayer = () => {
+    const name = prompt("What is your name?");
+    if (name === null) {
+      return;
+    }
+    const action = dispatch(
+      playerAdd({
+        name,
+        color: { r: 0, g: 0, b: 0 },
+        currentMap: "foo", // TODO
+        isGM: true,
+        isOnline: false, // TODO
+        tokenIds: [],
+      })
+    );
+    setMyPlayerId(action.payload.id);
+  };
+
+  return myself ? (
+    <MyselfContext.Provider value={myself}>
+      <div className={styles["wrapper"]}>
+        <Sidebar className={styles["sidebar"]!} logout={forgetMyPlayerId} />
+        <Map
+          className={styles["map"]!}
+          tokens={[
+            { id: "abc", x: 30, y: 50, color: "red" },
+            { id: "def", x: 80, y: 20, color: "green" },
+          ]}
+        />
+      </div>
+    </MyselfContext.Provider>
+  ) : (
     <>
-      <h1>Roc & Roll</h1>
-      {true && (
-        <Suspense fallback={null}>
-          <DiceRoller />
-        </Suspense>
-      )}
+      <h1>Join Game</h1>
+      <ul>
+        {players.ids.map((id) => {
+          const player = players.entities[id]!;
 
-      {/* Including a static asset */}
-      <img src="/dice.jpg" />
-
-      <p>Count: {count}</p>
-
-      <h2>Map</h2>
-      <Map
-        tokens={[
-          { id: "abc", x: 30, y: 50, color: "red" },
-          { id: "def", x: 80, y: 20, color: "green" },
-        ]}
-      />
-
-      <h2>Local state example</h2>
-      <LocalStateExample />
-
-      <h2>Upload File Example</h2>
-      <UploadFileExample />
-
-      <h2>Log</h2>
-      <Log />
-
-      <div
-        style={{ width: "1cm", height: "1cm" }}
-        className={clsx("globalClass_background_yellow", {
-          [styles["localClass_text_red"]!]: count % 2,
+          return (
+            <li
+              key={id}
+              onClick={() => setMyPlayerId(id)}
+              className={styles["playerName"]}
+            >
+              {player.name}
+            </li>
+          );
         })}
-      />
-      <p>Environment: {process.env.NODE_ENV}</p>
-
-      {/* Git commit */}
-      <p>Version: {__VERSION__}</p>
+        <button onClick={joinAsNewPlayer}>join as new player</button>
+      </ul>
     </>
   );
 }

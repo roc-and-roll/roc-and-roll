@@ -6,6 +6,7 @@ import { ServerStateProvider } from "./state";
 export function render(socket: SocketIOClient.Socket) {
   // Create a new div element, add it to the DOM, and render our app into it.
   const root = document.createElement("div");
+  root.className = "root";
   document.body.appendChild(root);
 
   ReactDOM.render(

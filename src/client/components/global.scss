@@ -1,5 +1,12 @@
-body {
-  background: orange;
+body, html, .root {
+  height: 100%;
+  width: 100%;
+}
+
+.root {
+  font-family: sans-serif;
+  background: #111;
+  color: white;
 }
 
 .globalClass_background_yellow {

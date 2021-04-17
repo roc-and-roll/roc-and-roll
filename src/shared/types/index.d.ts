@@ -10,6 +10,11 @@ declare module "*.css" {
   export = classNames;
 }
 
+declare module "*.scss" {
+  const classNames: Record<string, string>;
+  export = classNames;
+}
+
 declare namespace NodeJS {
   interface ProcessEnv {
     readonly NODE_ENV: "development" | "production" | "test";

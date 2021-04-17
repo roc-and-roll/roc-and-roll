@@ -63,11 +63,9 @@ module.exports = (webpackEnv) => {
     plugins: [
       new HtmlWebpackPlugin({
         title: "Roc & Roll",
-        // meta: {
-        //   viewport: "initial-scale=1, maximum-scale=1, user-scalable=no, minimum-scale=1, width=device-width, height=device-height",
-        //   "apple-mobile-web-app-capable": "yes",
-        //   "mobile-web-app-capable": "yes",
-        // },
+        meta: {
+           viewport: "initial-scale=1, maximum-scale=1, user-scalable=no, minimum-scale=1, width=device-width, height=device-height",
+        },
         ...isEnvProduction
             ? {
                 minify: {
