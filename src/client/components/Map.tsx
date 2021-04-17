@@ -1,3 +1,4 @@
+import { transform } from "@babel/core";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   scale,
@@ -20,10 +21,14 @@ import { byId } from "../state";
 
 type Rectangle = [number, number, number, number];
 
+const GRID_SIZE = 70;
+
 const PANNING_BUTTON = 2;
 const SELECTION_BUTTON = 0;
 
 const ZOOM_SCALE_FACTOR = 0.2;
+
+type Point = { x: number; y: number };
 
 enum MouseAction {
   NONE,
@@ -64,6 +69,11 @@ export const Map: React.FC<{
     if (!svgRef.current) return { x: 0, y: 0 };
     const rect = svgRef.current.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
+  const globalToLocal = (p: Point) => {
+    const [x, y] = applyToPoint(inverse(transform), [p.x, p.y]);
+    return { x, y };
   };
 
   const handleWheel = useCallback(
@@ -111,8 +121,10 @@ export const Map: React.FC<{
           break;
         }
         case MouseAction.SELECTION_AREA: {
-          const innerLocal = applyToPoint(inverse(transform), [x, y]);
-          setSelectionArea((a) => a && [a[0], a[1], ...innerLocal]);
+          const innerLocal = globalToLocal({ x, y });
+          setSelectionArea(
+            (a) => a && [a[0], a[1], innerLocal.x, innerLocal.y]
+          );
           break;
         }
         case MouseAction.MOVE_TOKEN: {
@@ -132,7 +144,7 @@ export const Map: React.FC<{
         });
       }
     },
-    [dragState, mouseAction, transform]
+    [dragState.lastMouse.x, dragState.lastMouse.y, globalToLocal, mouseAction]
   );
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -154,9 +166,24 @@ export const Map: React.FC<{
     });
 
     if (e.button === SELECTION_BUTTON) {
-      const innerLocal = applyToPoint(inverse(transform), [local.x, local.y]);
-      setSelectionArea([...innerLocal, ...innerLocal]);
+      const innerLocal = globalToLocal(local);
+      setSelectionArea([
+        innerLocal.x,
+        innerLocal.y,
+        innerLocal.x,
+        innerLocal.y,
+      ]);
     }
+  };
+
+  const handleDragStart = (e: React.MouseEvent, token: RRTokenOnMap) => {
+    const local = localCoords(e);
+    setDragState({
+      start: local,
+      lastMouse: local,
+      delta: { x: 0, y: 0 },
+    });
+    handleStartMoveToken(token);
   };
 
   const withSelectionAreaDo = <T extends any>(
@@ -233,12 +260,25 @@ export const Map: React.FC<{
     setMouseAction(MouseAction.MOVE_TOKEN);
   };
 
+  const tokenPosition = (t: RRTokenOnMap) =>
+    mouseAction === MouseAction.MOVE_TOKEN && selectedTokens.includes(t.tokenId)
+      ? {
+          x: t.position.x + dragState.delta.x / transform.a,
+          y: t.position.y + dragState.delta.y / transform.a,
+        }
+      : t.position;
+
   const grid = () => (
     <>
       <defs>
-        <pattern id="grid" width="70" height="70" patternUnits="userSpaceOnUse">
+        <pattern
+          id="grid"
+          width={GRID_SIZE}
+          height={GRID_SIZE}
+          patternUnits="userSpaceOnUse"
+        >
           <path
-            d="M 70 0 L 0 0 0 70"
+            d={`M ${GRID_SIZE} 0 L 0 0 0 ${GRID_SIZE}`}
             fill="none"
             stroke="gray"
             strokeWidth="1"
@@ -278,26 +318,11 @@ export const Map: React.FC<{
           <></>
         )}
         {tokensOnMap.map((t) => {
-          const position =
-            mouseAction === MouseAction.MOVE_TOKEN &&
-            selectedTokens.includes(t.tokenId)
-              ? {
-                  x: t.position.x + dragState.delta.x / transform.a,
-                  y: t.position.y + dragState.delta.y / transform.a,
-                }
-              : t.position;
+          const position = tokenPosition(t);
           return (
             <MapToken
               key={t.tokenId}
-              onStartMove={(e: React.MouseEvent) => {
-                const local = localCoords(e);
-                setDragState({
-                  start: local,
-                  lastMouse: local,
-                  delta: { x: 0, y: 0 },
-                });
-                handleStartMoveToken(t);
-              }}
+              onStartMove={(e) => handleDragStart(e, t)}
               x={position.x}
               y={position.y}
               token={byId(tokens.entities, t.tokenId)!}
@@ -307,25 +332,66 @@ export const Map: React.FC<{
             />
           );
         })}
+        {mouseAction === MouseAction.MOVE_TOKEN && (
+          <MapMeasureBar
+            from={globalToLocal(dragState.start)}
+            to={globalToLocal(dragState.lastMouse)}
+            zoom={transform.a}
+          />
+        )}
       </g>
     </svg>
   );
 };
 
-export const MapToken: React.FC<{
+function MapMeasureBar({
+  from,
+  to,
+  zoom,
+}: {
+  from: Point;
+  to: Point;
+  zoom: number;
+}) {
+  const distance =
+    (Math.sqrt(Math.pow(from.x - to.x, 2) + Math.pow(from.y - to.y, 2)) /
+      GRID_SIZE) *
+    5;
+  return (
+    <>
+      <line
+        x1={from.x}
+        y1={from.y}
+        x2={to.x}
+        y2={to.y}
+        style={{ strokeDasharray: "10", strokeWidth: 5 }}
+        stroke="rgba(255, 255, 255, 0.3)"
+      />
+      <text x={to.x + GRID_SIZE} y={to.y} fill="#fff" fontSize={14 / zoom}>
+        {distance.toFixed(1) + "ft"}
+      </text>
+    </>
+  );
+}
+
+function MapToken({
+  token,
+  x,
+  y,
+  selected,
+  onStartMove,
+}: {
   token: RRToken;
   x: number;
   y: number;
   selected: boolean;
   onStartMove: (e: React.MouseEvent) => void;
-}> = ({ token, x, y, selected, onStartMove }) => {
+}) {
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     onStartMove(e);
   };
-
-  const SIZE = 70;
 
   return (
     <>
@@ -334,15 +400,15 @@ export const MapToken: React.FC<{
           onMouseDown={handleMouseDown}
           x={x}
           y={y}
-          width={SIZE}
-          height={SIZE}
+          width={GRID_SIZE}
+          height={GRID_SIZE}
           href={fileUrl(token.image)}
         />
       ) : (
         <circle
           onMouseDown={handleMouseDown}
-          cx={x + SIZE / 2}
-          cy={y + SIZE / 2}
+          cx={x + GRID_SIZE / 2}
+          cy={y + GRID_SIZE / 2}
           r="35"
           fill="red"
         />
@@ -350,13 +416,13 @@ export const MapToken: React.FC<{
       {selected && (
         <circle
           onMouseDown={handleMouseDown}
-          cx={x + SIZE / 2}
-          cy={y + SIZE / 2}
-          r={SIZE / 2 - 2}
+          cx={x + GRID_SIZE / 2}
+          cy={y + GRID_SIZE / 2}
+          r={GRID_SIZE / 2 - 2}
           fill="transparent"
           className="selection-area-highlight"
         />
       )}
     </>
   );
-};
+}
