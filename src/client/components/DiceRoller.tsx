@@ -1,15 +1,20 @@
 import * as THREE from "three";
-import React, { Suspense, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Canvas, invalidate, useFrame, useLoader } from "@react-three/fiber";
 import { GLTFLoader, GLTF } from "three/examples/jsm/loaders/GLTFLoader";
 
 const Dice: React.FC<
-  JSX.IntrinsicElements["mesh"] & { verticesPerFace: number; numFaces: number }
+  JSX.IntrinsicElements["mesh"] & {
+    verticesPerFace: number;
+    numFaces: number;
+    onChange: (changing: boolean) => void;
+  }
 > = (props) => {
   const mesh = useRef<THREE.Mesh>(null!);
   const velocity = useRef<number>(0);
   const [hovered, setHover] = useState(false);
   const [faceIndex, setFaceIndex] = useState(0);
+  const [isChanging, setIsChanging] = useState(false);
 
   const [startRotation, setStartRotation] = useState(new THREE.Quaternion());
   const [endRotation, setEndRotation] = useState(new THREE.Quaternion());
@@ -26,6 +31,15 @@ const Dice: React.FC<
       // mesh.current.rotateOnAxis(rotationAxis, delta * velocity.current);
     } else {
       mesh.current.quaternion.rotateTowards(endRotation, delta * 3);
+      if (mesh.current.quaternion.angleTo(endRotation) < 0.001) {
+        mesh.current.rotation.setFromQuaternion(endRotation);
+        setIsChanging((isChanging) => {
+          if (isChanging) {
+            props.onChange(false);
+          }
+          return false;
+        });
+      }
     }
   });
 
@@ -102,6 +116,12 @@ const Dice: React.FC<
         // setRotationAxis(randomAxis());
         velocity.current = 30;
 
+        setIsChanging((isChanging) => {
+          if (!isChanging) {
+            props.onChange(true);
+          }
+          return true;
+        });
         const r = faceRotations[faceIndex]!;
         setStartRotation(
           new THREE.Quaternion().setFromAxisAngle(randomAxis(), 10000)
@@ -122,14 +142,7 @@ const Dice: React.FC<
   );
 };
 
-export const DiceRoller: React.FC = () => {
-  /*const d4 = useMemo(() => getD4(), []);
-  const d6 = useMemo(() => getD6(), []);
-  const d8 = useMemo(() => getD8(), []);
-  const d10 = useMemo(() => getD10(), []);
-  const d12 = useMemo(() => getD12(), []);
-  const d20 = useMemo(() => getD20(), []);*/
-
+const DiceContainer: React.FC = () => {
   const [d4, d6, d8, d10, d12, d20] = useLoader(GLTFLoader, [
     "/dice/d4.glb",
     "/dice/d6.glb",
@@ -139,55 +152,81 @@ export const DiceRoller: React.FC = () => {
     "/dice/d20.glb",
   ]);
 
+  const [changingCount, setChangingCount] = useState(0);
   const geometryFrom = (die: GLTF | undefined) => {
     return die ? (die.scene.children[0]! as THREE.Mesh).geometry : undefined;
   };
 
+  const registerChanging = (isChanging: boolean) => {
+    setChangingCount((c) => c + (isChanging ? 1 : -1));
+  };
+
+  useFrame(() => {
+    if (changingCount > 0) {
+      invalidate();
+    }
+  });
+
+  return (
+    <>
+      <Dice
+        numFaces={4}
+        verticesPerFace={3}
+        geometry={geometryFrom(d4)}
+        position={[-12, 0, 0]}
+        onChange={registerChanging}
+      />
+      <Dice
+        numFaces={6}
+        verticesPerFace={6}
+        geometry={geometryFrom(d6)}
+        position={[-7, 0, 0]}
+        onChange={registerChanging}
+      />
+      <Dice
+        numFaces={8}
+        verticesPerFace={3}
+        geometry={geometryFrom(d8)}
+        position={[-2, 0, 0]}
+        onChange={registerChanging}
+      />
+      <Dice
+        numFaces={10}
+        verticesPerFace={6}
+        geometry={geometryFrom(d10)}
+        position={[3, 0, 0]}
+        onChange={registerChanging}
+      />
+      <Dice
+        numFaces={12}
+        verticesPerFace={9}
+        geometry={geometryFrom(d12)}
+        position={[8, 0, 0]}
+        onChange={registerChanging}
+      />
+      <Dice
+        numFaces={20}
+        verticesPerFace={3}
+        geometry={geometryFrom(d20)}
+        position={[13, 0, 0]}
+        onChange={registerChanging}
+      />
+    </>
+  );
+};
+
+export const DiceRoller: React.FC = () => {
   return (
     <Canvas
       style={{ width: "1500px", height: "400px" }}
       orthographic
+      frameloop={"demand"}
       camera={{ near: 0.1, far: 20, zoom: 50 }}
     >
       <ambientLight />
       <pointLight position={[10, 10, 10]} intensity={2} />
       <Suspense fallback={null}>
-        <Dice
-          numFaces={4}
-          verticesPerFace={3}
-          geometry={geometryFrom(d4)}
-          position={[-12, 0, 0]}
-        />
-        <Dice
-          numFaces={6}
-          verticesPerFace={6}
-          geometry={geometryFrom(d6)}
-          position={[-7, 0, 0]}
-        />
-        <Dice
-          numFaces={8}
-          verticesPerFace={3}
-          geometry={geometryFrom(d8)}
-          position={[-2, 0, 0]}
-        />
-        <Dice
-          numFaces={10}
-          verticesPerFace={6}
-          geometry={geometryFrom(d10)}
-          position={[3, 0, 0]}
-        />
-        <Dice
-          numFaces={12}
-          verticesPerFace={9}
-          geometry={geometryFrom(d12)}
-          position={[8, 0, 0]}
-        />
-        <Dice
-          numFaces={20}
-          verticesPerFace={3}
-          geometry={geometryFrom(d20)}
-          position={[13, 0, 0]}
-        />
+        <DiceContainer />
       </Suspense>
     </Canvas>
   );
