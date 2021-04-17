@@ -123,10 +123,6 @@ export const Map: React.FC<{
 
       if (mouseAction !== MouseAction.NONE) {
         setDragState((p) => {
-          console.log("setDragState", {
-            old: p.delta,
-            new: { x: x - p.start.x, y: y - p.start.y },
-          });
           return {
             ...p,
             lastMouse: { x, y },
@@ -204,7 +200,15 @@ export const Map: React.FC<{
         setSelectionArea(null);
       }
     },
-    [mouseAction, onSelectTokens, hoveredTokens, onMoveTokens, dragState]
+    [
+      mouseAction,
+      onMoveTokens,
+      dragState.delta.x,
+      dragState.delta.y,
+      transform.a,
+      onSelectTokens,
+      hoveredTokens,
+    ]
   );
 
   useEffect(() => {
