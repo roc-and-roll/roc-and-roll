@@ -3,7 +3,6 @@ import React, { Suspense, useEffect, useState } from "react";
 import { DiceRoller } from "./DiceRoller";
 import { LocalStateExample } from "./LocalStateExample";
 import { DiceInput } from "./DiceInput";
-import { Log } from "./Log";
 import { UploadFileExample } from "./UploadFileExample";
 import styles from "./Sidebar.module.css";
 import { useMyself } from "../myself";
@@ -43,8 +42,6 @@ export function Sidebar({
       <h2>Upload File Example</h2>
       <UploadFileExample />
       <DiceInput />
-      <h2>Log</h2>
-      <Log />
       <div
         style={{ width: "1cm", height: "1cm" }}
         className={clsx("globalClass_background_yellow", {

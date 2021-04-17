@@ -70,3 +70,37 @@ html,
   align-items: center;
   cursor: pointer;
 }
+
+// log
+.log {
+  position: fixed;
+  padding: 5px;
+  width: 40%;
+  min-width: 300px;
+  bottom: 0px;
+  right: 0px;
+  background-color: rgba(51, 51, 51, 0.6);
+}
+
+.log-text {
+  overflow-y: auto;
+  max-height: 40vh;
+  font-size: 0.8rem;
+  padding-left: 17px;
+}
+
+.log-title {
+  display: flex;
+  justify-content: space-between;
+  button {
+    padding: 0px;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 32px;
+    line-height: 32px;
+    background-color: #fff;
+    cursor: pointer;
+    &:hover { background-color: #ccc; }
+  }
+}
