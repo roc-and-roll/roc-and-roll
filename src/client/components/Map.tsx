@@ -295,25 +295,6 @@ export const MapToken: React.FC<{
   selected: boolean;
   onStartMove: (e: React.MouseEvent) => void;
 }> = ({ token, x, y, selected, onStartMove }) => {
-  /*const [moving, setMoving] = useState(false);
-
-  const handleMouseUp = useCallback((e: MouseEvent) => {
-    e.stopPropagation();
-  }, []);
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {}, []);
-
-  useEffect(() => {
-    if (moving) {
-      window.addEventListener("mouseup", handleMouseUp);
-      window.addEventListener("mousemove", handleMouseMove);
-    }
-    return () => {
-      window.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, [handleMouseMove, handleMouseUp, moving]);*/
-
   const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     onStartMove(e);
@@ -345,6 +326,7 @@ export const MapToken: React.FC<{
       )}
       {selected && (
         <circle
+          onMouseDown={handleMouseDown}
           cx={x + SIZE / 2}
           cy={y + SIZE / 2}
           r="35"
