@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
 import { logEntryMessageAdd } from "../../shared/actions";
 import { RRLogEntry } from "../../shared/state";
+import { useMyself } from "../myself";
 import { useServerDispatch, useServerState } from "../state";
 
 function LogEntry(props: { logEntry: RRLogEntry }) {
@@ -24,8 +25,7 @@ function LogEntry(props: { logEntry: RRLogEntry }) {
 
   return (
     <div title={new Date(logEntry.timestamp).toLocaleString()}>
-      {logEntry.playerId} ({new Date(logEntry.timestamp).toLocaleString()}
-      ): {logEntry.payload.text}
+      {player?.name ?? "system"}: {logEntry.payload.text}
     </div>
   );
 }
@@ -34,6 +34,7 @@ export function Log() {
   const { ids: logEntryIds, entities: logEntries } = useServerState(
     (state) => state.logEntries
   );
+  const myself = useMyself();
   const dispatch = useServerDispatch();
   const [collapsed, setCollapsed] = useState(true);
   const lastLogEntry = logEntryIds.length
@@ -91,7 +92,7 @@ export function Log() {
               }
               dispatch(
                 logEntryMessageAdd({
-                  playerId: "bar",
+                  playerId: myself.id,
                   silent: false,
                   payload: {
                     text,
