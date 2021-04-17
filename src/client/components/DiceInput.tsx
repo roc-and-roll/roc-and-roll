@@ -1,3 +1,4 @@
+import { features } from "node:process";
 import React, { useState } from "react";
 import { logEntryDiceRollAdd } from "../../shared/actions";
 import { RRLogEntryDiceRoll } from "../../shared/state";
@@ -20,14 +21,20 @@ export function DiceInput() {
           const regex = /(^| *[+-] *)(?:(\d*)d(\d+)|(\d+))/g;
           const matchArray = [...text.matchAll(regex)];
           const dice = matchArray.map((array) => {
-            if (array[2] && array[3]) {
+            if (array[2] !== undefined && array[3] !== undefined) {
               // die
+              const faces = parseInt(array[3]);
+              const count = array[2] === "" ? 1 : parseInt(array[2]);
+              let result = 0;
+              for (let i = 1; i <= count; i++) {
+                result += Math.floor(Math.random() * faces) + 1;
+              }
               return {
                 damageType: "normal",
-                result: 4, // TODO: vorher
+                result: result,
                 die: {
-                  faces: parseInt(array[3]),
-                  count: parseInt(array[2]),
+                  faces: faces,
+                  count: count,
                 },
               };
             } else if (array[4]) {
