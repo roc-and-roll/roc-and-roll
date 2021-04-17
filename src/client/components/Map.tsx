@@ -9,9 +9,13 @@ import {
   toSVG,
   inverse,
 } from "transformation-matrix";
-import { RRToken, RRTokenOnMap } from "../../shared/state";
+import {
+  RRID,
+  RRToken,
+  RRTokenOnMap,
+  TokensSyncedState,
+} from "../../shared/state";
 import { fileUrl } from "../files";
-import { useServerState } from "../state";
 
 type Rectangle = [number, number, number, number];
 
@@ -20,22 +24,36 @@ const SELECTION_BUTTON = 0;
 
 const ZOOM_SCALE_FACTOR = 0.2;
 
+enum MouseAction {
+  NONE,
+  PAN,
+  SELECTION_AREA,
+  MOVE_TOKEN,
+}
+
 export const Map: React.FC<{
   tokensOnMap: RRTokenOnMap[];
-  selectedTokens: RRTokenOnMap[];
+  tokens: TokensSyncedState;
+  selectedTokens: RRID[];
+  onMoveTokens: (dx: number, dy: number) => void;
   onSelectTokens: (tokens: RRTokenOnMap[]) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
-}> = ({ tokensOnMap, selectedTokens, onSelectTokens, handleKeyDown }) => {
+}> = ({
+  tokensOnMap,
+  selectedTokens,
+  onSelectTokens,
+  handleKeyDown,
+  onMoveTokens,
+  tokens,
+}) => {
   const [transform, setTransform] = useState<Matrix>(identity());
   // TODO can't handle overlapping clicks
-  const [mouseDown, setMouseDown] = useState<number | undefined>(undefined);
+  const [mouseAction, setMouseAction] = useState<MouseAction>(MouseAction.NONE);
   const [lastMousePos, setLastMousePos] = useState<[number, number]>([0, 0]);
 
   const [selectionArea, setSelectionArea] = useState<Rectangle | null>(null);
 
   const svgRef = useRef<SVGSVGElement>(null);
-
-  const tokens = useServerState((s) => s.tokens);
 
   const localCoords = (e: MouseEvent | React.MouseEvent): [number, number] => {
     if (!svgRef.current) return [0, 0];
@@ -71,27 +89,43 @@ export const Map: React.FC<{
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       const [localX, localY] = localCoords(e);
-      if (mouseDown === PANNING_BUTTON) {
-        setTransform((t) =>
-          compose(
-            translate(localX - lastMousePos[0], localY - lastMousePos[1]),
-            t
-          )
-        );
+      switch (mouseAction) {
+        case MouseAction.PAN: {
+          setTransform((t) =>
+            compose(
+              translate(localX - lastMousePos[0], localY - lastMousePos[1]),
+              t
+            )
+          );
+          break;
+        }
+        case MouseAction.SELECTION_AREA: {
+          const innerLocal = applyToPoint(inverse(transform), [localX, localY]);
+          setSelectionArea((a) => a && [a[0], a[1], ...innerLocal]);
+          break;
+        }
+        case MouseAction.MOVE_TOKEN: {
+          const [localX, localY] = localCoords(e);
+          onMoveTokens(localX - lastMousePos[0], localY - lastMousePos[1]);
+          break;
+        }
       }
-      if (mouseDown === SELECTION_BUTTON) {
-        const innerLocal = applyToPoint(inverse(transform), [localX, localY]);
-        setSelectionArea((a) => a && [a[0], a[1], ...innerLocal]);
-      }
-      if (mouseDown !== null) setLastMousePos([localX, localY]);
+
+      if (mouseAction !== MouseAction.NONE) setLastMousePos([localX, localY]);
     },
-    [lastMousePos, mouseDown, transform]
+    [lastMousePos, mouseAction, transform, onMoveTokens]
   );
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setMouseDown(e.button);
+    setMouseAction(
+      e.button === PANNING_BUTTON
+        ? MouseAction.PAN
+        : e.button === SELECTION_BUTTON
+        ? MouseAction.SELECTION_AREA
+        : MouseAction.NONE
+    );
 
     const local = localCoords(e);
     setLastMousePos(local);
@@ -129,7 +163,7 @@ export const Map: React.FC<{
 
   const handleMouseUp = useCallback(
     (e: MouseEvent) => {
-      setMouseDown(undefined);
+      setMouseAction(MouseAction.NONE);
       if (e.button === SELECTION_BUTTON) {
         onSelectTokens(hoveredTokens);
         setSelectionArea(null);
@@ -151,6 +185,13 @@ export const Map: React.FC<{
       svg?.removeEventListener("wheel", handleWheel);
     };
   }, [handleMouseMove, handleWheel, handleMouseUp, handleKeyDown]);
+
+  const handleStartMoveToken = (t: RRTokenOnMap) => {
+    if (!selectedTokens.includes(t.tokenId)) {
+      onSelectTokens([t]);
+    }
+    setMouseAction(MouseAction.MOVE_TOKEN);
+  };
 
   return (
     <svg
@@ -175,11 +216,13 @@ export const Map: React.FC<{
         {tokensOnMap.map((t) => (
           <MapToken
             key={t.tokenId}
-            onSelect={() => onSelectTokens([t])}
+            onStartMove={() => handleStartMoveToken(t)}
             x={t.position.x}
             y={t.position.y}
             token={tokens.entities[t.tokenId]!}
-            selected={hoveredTokens.includes(t) || selectedTokens.includes(t)}
+            selected={
+              hoveredTokens.includes(t) || selectedTokens.includes(t.tokenId)
+            }
           />
         ))}
       </g>
@@ -192,11 +235,30 @@ export const MapToken: React.FC<{
   x: number;
   y: number;
   selected: boolean;
-  onSelect: () => void;
-}> = ({ token, x, y, selected, onSelect }) => {
-  const handleClick = (e: React.MouseEvent) => {
+  onStartMove: () => void;
+}> = ({ token, x, y, selected, onStartMove }) => {
+  /*const [moving, setMoving] = useState(false);
+
+  const handleMouseUp = useCallback((e: MouseEvent) => {
     e.stopPropagation();
-    onSelect();
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {}, []);
+
+  useEffect(() => {
+    if (moving) {
+      window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("mousemove", handleMouseMove);
+    }
+    return () => {
+      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, [handleMouseMove, handleMouseUp, moving]);*/
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onStartMove();
   };
 
   return (
@@ -215,7 +277,7 @@ export const MapToken: React.FC<{
         </defs>
       )}
       <circle
-        onClick={handleClick}
+        onMouseDown={handleMouseDown}
         cx={x}
         cy={y}
         r="20"
