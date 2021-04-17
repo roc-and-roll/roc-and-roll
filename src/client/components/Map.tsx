@@ -318,29 +318,39 @@ export const MapToken: React.FC<{
     onStartMove(e);
   };
 
+  const SIZE = 70;
+
   return (
     <>
-      {token.image && (
-        <defs>
-          <pattern id={`image-${token.id}`} height="40" width="40">
-            <image
-              x="0"
-              y="0"
-              height="40"
-              width="40"
-              xlinkHref={fileUrl(token.image)}
-            ></image>
-          </pattern>
-        </defs>
+      {token.image ? (
+        <image
+          onMouseDown={handleMouseDown}
+          x={x}
+          y={y}
+          width={SIZE}
+          height={SIZE}
+          href={fileUrl(token.image)}
+          className={selected ? "selection-area-highlight" : ""}
+        />
+      ) : (
+        <circle
+          onMouseDown={handleMouseDown}
+          cx={x + SIZE / 2}
+          cy={y + SIZE / 2}
+          r="35"
+          fill="red"
+          className={selected ? "selection-area-highlight" : ""}
+        />
       )}
-      <circle
-        onMouseDown={handleMouseDown}
-        cx={x}
-        cy={y}
-        r="20"
-        fill={token.image ? `url(#image-${token.id})` : "red"}
-        className={selected ? "selection-area-highlight" : ""}
-      />
+      {selected && (
+        <circle
+          cx={x + SIZE / 2}
+          cy={y + SIZE / 2}
+          r="35"
+          fill="transparent"
+          className="selection-area-highlight"
+        />
+      )}
     </>
   );
 };
