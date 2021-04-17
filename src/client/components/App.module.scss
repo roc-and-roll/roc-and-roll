@@ -6,9 +6,10 @@
 }
 
 .sidebar {
-  width: 300px;
+  width: 450px;
   padding: 1rem;
   background: #222;
+  overflow-y: auto;
 }
 
 .map {

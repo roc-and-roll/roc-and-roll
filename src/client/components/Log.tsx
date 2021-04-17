@@ -11,8 +11,17 @@ export function Log() {
       <ul>
         {ids.map((id) => {
           const logEntry = entities[id]!;
-          if (logEntry.type !== "message") {
-            return null;
+          if (logEntry.type === "diceRoll") {
+            return (
+              <li key={id}>
+                {logEntry.playerId} (
+                {new Date(logEntry.timestamp).toLocaleString()}
+                ):{" "}
+                {logEntry.payload.dice.map((die) => {
+                  return die.result;
+                })}
+              </li>
+            );
           }
 
           return (
