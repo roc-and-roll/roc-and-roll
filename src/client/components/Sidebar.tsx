@@ -8,6 +8,8 @@ import styles from "./Sidebar.module.css";
 import { useMyself } from "../myself";
 import { TokenManager } from "./TokenManager";
 import { Collapsible } from "./Collapsible";
+import { useServerDispatch } from "../state";
+import { playerUpdate } from "../../shared/actions";
 
 export function Sidebar({
   className,
@@ -16,6 +18,7 @@ export function Sidebar({
   className: string;
   logout: () => void;
 }) {
+  const dispatch = useServerDispatch();
   const [count, setCount] = useState(0);
   useEffect(() => {
     const t = setInterval(() => {
@@ -44,7 +47,36 @@ export function Sidebar({
 
       <Collapsible title="Player">
         <p>Name: {myself.name}</p>
-        <p>Is GM: {myself.isGM ? "yes" : "no"}</p>
+        <p>
+          Is GM:{" "}
+          <input
+            type="checkbox"
+            checked={myself.isGM}
+            onChange={(e) =>
+              dispatch(
+                playerUpdate({
+                  id: myself.id,
+                  changes: { isGM: e.target.checked },
+                })
+              )
+            }
+          />
+        </p>
+        <p>
+          Color:{" "}
+          <input
+            type="color"
+            value={myself.color}
+            onChange={(e) =>
+              dispatch(
+                playerUpdate({
+                  id: myself.id,
+                  changes: { color: e.target.value },
+                })
+              )
+            }
+          />
+        </p>
         <button onClick={logout}>logout</button>
       </Collapsible>
 
