@@ -4,9 +4,9 @@ import React from "react";
 import { Sidebar } from "./Sidebar";
 import { MapContainer } from "./MapContainer";
 import styles from "./App.module.scss";
-import { useServerDispatch, useServerState } from "../state";
+import { byId, useServerDispatch, useServerState } from "../state";
 import useLocalState from "../useLocalState";
-import { RRID } from "../../shared/state";
+import { RRPlayerID } from "../../shared/state";
 import { playerAdd } from "../../shared/actions";
 import { MyselfContext } from "../myself";
 import { DndProvider } from "react-dnd";
@@ -20,11 +20,11 @@ export function App() {
     myPlayerId,
     setMyPlayerId,
     forgetMyPlayerId,
-  ] = useLocalState<RRID | null>("myPlayerId", null);
+  ] = useLocalState<RRPlayerID | null>("myPlayerId", null);
 
   const maps = useServerState((s) => s.maps);
 
-  const myself = myPlayerId ? players.entities[myPlayerId] : null;
+  const myself = myPlayerId ? byId(players.entities, myPlayerId) : null;
 
   const joinAsNewPlayer = () => {
     const name = prompt("What is your name?");
@@ -59,7 +59,7 @@ export function App() {
       <h1>Join Game</h1>
       <ul>
         {players.ids.map((id) => {
-          const player = players.entities[id]!;
+          const player = byId(players.entities, id)!;
 
           return (
             <li

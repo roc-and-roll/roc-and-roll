@@ -1,3 +1,6 @@
+import { nanoid } from "@reduxjs/toolkit";
+import { RRID } from "./state";
+
 export function isObject(item: any): item is Record<string, any> {
   return item && typeof item === "object" && !Array.isArray(item);
 }
@@ -23,4 +26,8 @@ export function mergeDeep<T>(base: any, patch: any): T {
     });
   }
   return output as T;
+}
+
+export function rrid<E extends { id: RRID }>() {
+  return nanoid() as E["id"];
 }

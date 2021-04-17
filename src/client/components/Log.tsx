@@ -2,12 +2,12 @@ import React, { useLayoutEffect, useRef, useState } from "react";
 import { logEntryMessageAdd } from "../../shared/actions";
 import { RRLogEntry } from "../../shared/state";
 import { useMyself } from "../myself";
-import { useServerDispatch, useServerState } from "../state";
+import { byId, useServerDispatch, useServerState } from "../state";
 
 function LogEntry(props: { logEntry: RRLogEntry }) {
   const { entities: players } = useServerState((state) => state.players);
   const { logEntry } = props;
-  const player = logEntry.playerId ? players[logEntry.playerId] : null;
+  const player = logEntry.playerId ? byId(players, logEntry.playerId) : null;
 
   if (logEntry.type === "diceRoll") {
     const rolls = logEntry.payload.dice.map((die) => {
@@ -38,7 +38,7 @@ export function Log() {
   const dispatch = useServerDispatch();
   const [collapsed, setCollapsed] = useState(true);
   const lastLogEntry = logEntryIds.length
-    ? logEntries[logEntryIds[logEntryIds.length - 1]!]
+    ? byId(logEntries, logEntryIds[logEntryIds.length - 1]!)
     : null;
   const scrollRef = useRef<HTMLUListElement>(null);
 
@@ -76,7 +76,7 @@ export function Log() {
         <>
           <ul ref={scrollRef} className="log-text">
             {logEntryIds.map((id) => {
-              const logEntry = logEntries[id]!;
+              const logEntry = byId(logEntries, id)!;
               return (
                 <li key={id}>
                   <LogEntry logEntry={logEntry} />
