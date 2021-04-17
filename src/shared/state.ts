@@ -1,7 +1,21 @@
-import { nanoid, PayloadAction } from "@reduxjs/toolkit";
+import { PayloadAction } from "@reduxjs/toolkit";
 import { Dispatch } from "redux";
+import { Opaque } from "type-fest";
+import { rrid } from "./util";
 
-export type RRID = string;
+export type RRID = Opaque<string>;
+
+export type RRPlayerID = Opaque<string, "player">;
+
+export type RRTokenID = Opaque<string, "token">;
+
+export type RRMapID = Opaque<string, "map">;
+
+export type RRPrivateChatID = Opaque<string, "privateChat">;
+
+export type RRLogEntryID = Opaque<string, "logEntry">;
+
+export type RRInitiativeTrackerEntryID = Opaque<string, "initiativeEntry">;
 
 export type RRColor = string;
 
@@ -25,14 +39,14 @@ export type RRTokenCondition = string;
 export type RRTimestamp = number;
 
 interface RRInitiativeTrackerEntryBase {
-  id: RRID;
+  id: RRInitiativeTrackerEntryID;
   initiative: number;
 }
 
 export interface RRInitiativeTrackerEntryToken
   extends RRInitiativeTrackerEntryBase {
   type: "token";
-  tokenId: RRID;
+  tokenId: RRTokenID;
 }
 
 export interface RRInitiativeTrackerEntryLayerAction
@@ -46,18 +60,18 @@ export type RRInitiativeTrackerEntry =
   | RRInitiativeTrackerEntryLayerAction;
 
 export type RRPlayer = {
-  id: RRID;
+  id: RRPlayerID;
   name: string;
   color: RRColor;
   isGM: boolean;
-  currentMap: RRID;
-  tokenIds: RRID[];
+  currentMap: RRMapID;
+  tokenIds: RRTokenID[];
 
   isOnline: boolean;
 };
 
 export type RRToken = {
-  id: RRID;
+  id: RRTokenID;
   name: string;
 
   image: RRFile | null;
@@ -72,10 +86,10 @@ export type RRToken = {
   isTemplate: boolean;
 };
 
-export type RRTokenOnMap = { tokenId: RRID; position: RRPoint };
+export type RRTokenOnMap = { tokenId: RRTokenID; position: RRPoint };
 
 export type RRMap = {
-  id: RRID;
+  id: RRMapID;
   name: string;
 
   tokens: Array<RRTokenOnMap>;
@@ -96,9 +110,9 @@ export type RRMap = {
 };
 
 export type RRPrivateChat = {
-  id: RRID;
-  playerAId: RRID;
-  playerBId: RRID;
+  id: RRPrivateChatID;
+  playerAId: RRPlayerID;
+  playerBId: RRPlayerID;
   messages: Array<{
     direction: "a2b" | "b2a";
     text: string;
@@ -110,9 +124,9 @@ export type RRPrivateChat = {
 // non-serializable properties like Dates.
 // Extending JsonObject makes no difference at runtime.
 interface RRBaseLogEntry {
-  id: RRID;
+  id: RRLogEntryID;
   silent: boolean;
-  playerId: RRID | null;
+  playerId: RRPlayerID | null;
   timestamp: RRTimestamp;
 }
 
@@ -157,14 +171,14 @@ export type RRLogEntry =
 // createEntityAdapter
 // https://redux-toolkit.js.org/api/createEntityAdapter
 export interface EntityCollection<E extends { id: RRID }> {
-  entities: Record<RRID, E>;
-  ids: RRID[];
+  entities: Record<E["id"], E>;
+  ids: E["id"][];
 }
 
 export interface InitiativeTrackerSyncedState {
   visible: boolean;
   entries: EntityCollection<RRInitiativeTrackerEntry>;
-  currentEntryId: RRID | null;
+  currentEntryId: RRInitiativeTrackerEntryID | null;
 }
 
 export type PlayersSyncedState = EntityCollection<RRPlayer>;
@@ -193,7 +207,7 @@ const defaultMap: RRMap = {
   grid: { enabled: true, size: { x: 70, y: 70 } },
   name: "unnamed",
   tokens: [],
-  id: nanoid(),
+  id: rrid<RRMap>(),
 };
 
 export const initialSyncedState: SyncedState = {

@@ -3,12 +3,12 @@ import { useDrop } from "react-dnd";
 import { mapUpdate } from "../../shared/actions";
 import { RRID, RRToken } from "../../shared/state";
 import { useMyself } from "../myself";
-import { useServerDispatch, useServerState } from "../state";
+import { byId, useServerDispatch, useServerState } from "../state";
 import { Map } from "./Map";
 
 export function MapContainer({ className }: { className: string }) {
   const myself = useMyself();
-  const map = useServerState((s) => s.maps.entities[myself.currentMap]!);
+  const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
   const dispatch = useServerDispatch();
 
   const [selectedTokens, setSelectedTokens] = useState<RRID[]>([]);

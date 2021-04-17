@@ -31,17 +31,3 @@ setupStatePersistence(store, statePath);
 
 console.log(`Roc & Roll started at ${url}.`);
 console.log(`Files are stored in ${workspaceDir}.`);
-
-// Demo: Create a new log message every second
-false &&
-  setInterval(() => {
-    store.dispatch(
-      logEntryMessageAdd({
-        playerId: "foo",
-        silent: false,
-        payload: {
-          text: "Test log message",
-        },
-      })
-    );
-  }, 1000);

@@ -16,6 +16,7 @@ import {
   TokensSyncedState,
 } from "../../shared/state";
 import { fileUrl } from "../files";
+import { byId } from "../state";
 
 type Rectangle = [number, number, number, number];
 
@@ -275,7 +276,7 @@ export const Map: React.FC<{
               }}
               x={position.x}
               y={position.y}
-              token={tokens.entities[t.tokenId]!}
+              token={byId(tokens.entities, t.tokenId)!}
               selected={
                 hoveredTokens.includes(t) || selectedTokens.includes(t.tokenId)
               }

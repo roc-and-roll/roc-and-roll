@@ -10,6 +10,7 @@ import React, {
 import ReactDOM from "react-dom";
 import {
   initialSyncedState,
+  RRID,
   SyncedState,
   SyncedStateAction,
 } from "../shared/state";
@@ -180,4 +181,11 @@ export function useServerDispatch() {
     },
     [socket]
   );
+}
+
+export function byId<E extends { id: RRID }>(
+  entities: Record<E["id"], E>,
+  id: E["id"]
+) {
+  return entities[id] as E | undefined;
 }

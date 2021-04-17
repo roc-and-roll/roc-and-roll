@@ -1,8 +1,4 @@
-import {
-  createAction,
-  nanoid,
-  Update as OriginalUpdate,
-} from "@reduxjs/toolkit";
+import { createAction, Update as OriginalUpdate } from "@reduxjs/toolkit";
 import {
   InitiativeTrackerSyncedState,
   RRID,
@@ -17,9 +13,10 @@ import {
   RRPrivateChat,
   RRToken,
 } from "./state";
+import { rrid } from "./util";
 
 interface Update<T extends { id: RRID }> extends OriginalUpdate<T> {
-  id: RRID; // tighten the type of id to RRID
+  id: T["id"]; // tighten the type of id to the opaque RRID
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,7 +26,7 @@ interface Update<T extends { id: RRID }> extends OriginalUpdate<T> {
 export const playerAdd = createAction(
   "player/add",
   (player: Omit<RRPlayer, "id">) => ({
-    payload: { id: nanoid(), ...player },
+    payload: { id: rrid<RRPlayer>(), ...player },
   })
 );
 
@@ -44,7 +41,7 @@ export const playerRemove = createAction<RRPlayer["id"]>("player/remove");
 export const tokenAdd = createAction(
   "token/add",
   (token: Omit<RRToken, "id">) => ({
-    payload: { id: nanoid(), ...token },
+    payload: { id: rrid<RRToken>(), ...token },
   })
 );
 
@@ -57,7 +54,7 @@ export const tokenRemove = createAction<RRToken["id"]>("token/remove");
 ////////////////////////////////////////////////////////////////////////////////
 
 export const mapAdd = createAction("map/add", (map: Omit<RRMap, "id">) => ({
-  payload: { id: nanoid(), ...map },
+  payload: { id: rrid<RRMap>(), ...map },
 }));
 
 export const mapUpdate = createAction<Update<RRMap>>("map/update");
@@ -71,7 +68,11 @@ export const mapRemove = createAction<RRMap["id"]>("map/remove");
 export const privateChatAdd = createAction(
   "privatechat/add",
   (privatechat: Omit<RRPrivateChat, "id" | "timestamp">) => ({
-    payload: { id: nanoid(), timestamp: Date.now(), ...privatechat },
+    payload: {
+      id: rrid<RRPrivateChat>(),
+      timestamp: Date.now(),
+      ...privatechat,
+    },
   })
 );
 
@@ -91,7 +92,7 @@ export const logEntryMessageAdd = createAction(
   "logentry/message/add",
   (logEntry: Omit<RRLogEntryMessage, "id" | "type" | "timestamp">) => ({
     payload: {
-      id: nanoid(),
+      id: rrid<RRLogEntryMessage>(),
       type: "message",
       timestamp: Date.now(),
       ...logEntry,
@@ -103,7 +104,7 @@ export const logEntryDiceRollAdd = createAction(
   "logentry/diceroll/add",
   (logEntry: Omit<RRLogEntryDiceRoll, "id" | "type" | "timestamp">) => ({
     payload: {
-      id: nanoid(),
+      id: rrid<RRLogEntryDiceRoll>(),
       type: "diceRoll",
       timestamp: Date.now(),
       ...logEntry,
@@ -130,7 +131,11 @@ export const initiativeTrackerEntryTokenAdd = createAction(
   (
     initiativetrackerEntry: Omit<RRInitiativeTrackerEntryToken, "id" | "type">
   ) => ({
-    payload: { id: nanoid(), type: "token", ...initiativetrackerEntry },
+    payload: {
+      id: rrid<RRPlayer>(),
+      type: "token",
+      ...initiativetrackerEntry,
+    },
   })
 );
 
@@ -142,7 +147,11 @@ export const initiativeTrackerEntryLayerActionAdd = createAction(
       "id" | "type"
     >
   ) => ({
-    payload: { id: nanoid(), type: "layerAction", ...initiativetrackerEntry },
+    payload: {
+      id: rrid<RRInitiativeTrackerEntry>(),
+      type: "layerAction",
+      ...initiativetrackerEntry,
+    },
   })
 );
 
