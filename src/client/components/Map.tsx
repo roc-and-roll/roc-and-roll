@@ -10,6 +10,8 @@ import {
   inverse,
 } from "transformation-matrix";
 import { RRToken, RRTokenOnMap } from "../../shared/state";
+import { fileUrl } from "../files";
+import { useServerState } from "../state";
 
 type Rectangle = [number, number, number, number];
 
@@ -19,8 +21,11 @@ const SELECTION_BUTTON = 0;
 const ZOOM_SCALE_FACTOR = 0.2;
 
 export const Map: React.FC<{
-  tokens: RRTokenOnMap[];
-}> = ({ tokens }) => {
+  tokensOnMap: RRTokenOnMap[];
+  selectedTokens: RRTokenOnMap[];
+  onSelectTokens: (tokens: RRTokenOnMap[]) => void;
+  handleKeyDown: (event: KeyboardEvent) => void;
+}> = ({ tokensOnMap, selectedTokens, onSelectTokens, handleKeyDown }) => {
   const [transform, setTransform] = useState<Matrix>(identity());
   // TODO can't handle overlapping clicks
   const [mouseDown, setMouseDown] = useState<number | undefined>(undefined);
@@ -29,6 +34,8 @@ export const Map: React.FC<{
   const [selectionArea, setSelectionArea] = useState<Rectangle | null>(null);
 
   const svgRef = useRef<SVGSVGElement>(null);
+
+  const tokens = useServerState((s) => s.tokens);
 
   const localCoords = (e: MouseEvent | React.MouseEvent): [number, number] => {
     if (!svgRef.current) return [0, 0];
@@ -76,7 +83,7 @@ export const Map: React.FC<{
         const innerLocal = applyToPoint(inverse(transform), [localX, localY]);
         setSelectionArea((a) => a && [a[0], a[1], ...innerLocal]);
       }
-      setLastMousePos([localX, localY]);
+      if (mouseDown !== null) setLastMousePos([localX, localY]);
     },
     [lastMousePos, mouseDown, transform]
   );
@@ -95,23 +102,6 @@ export const Map: React.FC<{
     }
   };
 
-  const handleMouseUp = useCallback((e: MouseEvent) => {
-    setMouseDown(undefined);
-    setSelectionArea(null);
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener("mouseup", handleMouseUp);
-    window.addEventListener("mousemove", handleMouseMove);
-    const svg = svgRef.current;
-    svg?.addEventListener("wheel", handleWheel, { passive: false });
-    return () => {
-      window.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("mousemove", handleMouseMove);
-      svg?.removeEventListener("wheel", handleWheel);
-    };
-  }, [handleMouseMove, handleWheel, handleMouseUp]);
-
   const withSelectionAreaDo = <T extends any>(
     cb: (x: number, y: number, w: number, h: number) => T,
     otherwise: T
@@ -125,9 +115,9 @@ export const Map: React.FC<{
     return cb(left, top, right - left, bottom - top);
   };
 
-  const selectedTokens = withSelectionAreaDo<RRTokenOnMap[]>(
+  const hoveredTokens = withSelectionAreaDo<RRTokenOnMap[]>(
     (x, y, w, h) =>
-      tokens.filter(
+      tokensOnMap.filter(
         (t) =>
           t.position.x >= x &&
           t.position.y >= y &&
@@ -136,6 +126,31 @@ export const Map: React.FC<{
       ),
     []
   );
+
+  const handleMouseUp = useCallback(
+    (e: MouseEvent) => {
+      setMouseDown(undefined);
+      if (e.button === SELECTION_BUTTON) {
+        onSelectTokens(hoveredTokens);
+        setSelectionArea(null);
+      }
+    },
+    [hoveredTokens, onSelectTokens]
+  );
+
+  useEffect(() => {
+    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("keydown", handleKeyDown);
+    const svg = svgRef.current;
+    svg?.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("keydown", handleKeyDown);
+      svg?.removeEventListener("wheel", handleWheel);
+    };
+  }, [handleMouseMove, handleWheel, handleMouseUp, handleKeyDown]);
 
   return (
     <svg
@@ -147,17 +162,24 @@ export const Map: React.FC<{
       <g transform={toSVG(transform)}>
         {withSelectionAreaDo(
           (x, y, w, h) => (
-            <rect x={x} y={y} width={w} height={h} />
+            <rect
+              x={x}
+              y={y}
+              width={w}
+              height={h}
+              fill="rgba(255, 255, 255, 0.3)"
+            />
           ),
           <></>
         )}
-        {tokens.map((t) => (
+        {tokensOnMap.map((t) => (
           <MapToken
             key={t.tokenId}
+            onSelect={() => onSelectTokens([t])}
             x={t.position.x}
             y={t.position.y}
-            color={"red"}
-            selected={selectedTokens.includes(t)}
+            token={tokens.entities[t.tokenId]!}
+            selected={hoveredTokens.includes(t) || selectedTokens.includes(t)}
           />
         ))}
       </g>
@@ -166,18 +188,40 @@ export const Map: React.FC<{
 };
 
 export const MapToken: React.FC<{
+  token: RRToken;
   x: number;
   y: number;
-  color: string;
   selected: boolean;
-}> = ({ x, y, color, selected }) => {
+  onSelect: () => void;
+}> = ({ token, x, y, selected, onSelect }) => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSelect();
+  };
+
   return (
-    <circle
-      cx={x}
-      cy={y}
-      r="20"
-      fill={color}
-      className={selected ? "selection-area-highlight" : ""}
-    />
+    <>
+      {token.image && (
+        <defs>
+          <pattern id={`image-${token.id}`} height="40" width="40">
+            <image
+              x="0"
+              y="0"
+              height="40"
+              width="40"
+              xlinkHref={fileUrl(token.image)}
+            ></image>
+          </pattern>
+        </defs>
+      )}
+      <circle
+        onClick={handleClick}
+        cx={x}
+        cy={y}
+        r="20"
+        fill={token.image ? `url(#image-${token.id})` : "red"}
+        className={selected ? "selection-area-highlight" : ""}
+      />
+    </>
   );
 };
