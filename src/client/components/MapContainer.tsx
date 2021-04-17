@@ -17,21 +17,20 @@ export function MapContainer({ className }: { className: string }) {
   const [, dropRef] = useDrop<RRToken, void, never>(() => ({
     accept: "token",
     drop: (item) => {
-      if (!map.tokens.find((t) => t.tokenId === item.id))
+      if (!map.tokens.find((t) => t.tokenId === item.id)) {
+        const newToken = {
+          position: { x: Math.random() * 10, y: Math.random() * 10 },
+          tokenId: item.id,
+        };
         dispatch(
           mapUpdate({
             id: map.id,
             changes: {
-              tokens: [
-                ...map.tokens,
-                {
-                  position: { x: Math.random() * 100, y: Math.random() * 100 },
-                  tokenId: item.id,
-                },
-              ],
+              tokens: [...map.tokens, newToken],
             },
           })
         );
+      }
     },
   }));
 
