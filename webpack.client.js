@@ -172,6 +172,7 @@ module.exports = (webpackEnv) => {
         warnings: true,
         errors: true
       },
+      disableHostCheck: true,
       before: (app, server) => {
         if (!process.env.CI) {
           app.use(webpackDevServerWaitpage(server, { theme: "material" }));

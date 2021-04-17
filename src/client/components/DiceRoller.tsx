@@ -87,7 +87,7 @@ const Dice: React.FC<
   useFrame((state, delta) => {
     if (velocity.current > 0.1) {
       velocity.current *= 0.96;
-      mesh.current.rotateOnAxis(rotationAxis, delta * velocity.current);
+      // mesh.current.rotateOnAxis(rotationAxis, delta * velocity.current);
     } else {
       // mesh.current.quaternion.rotateTowards(finalRotation, delta * 10);
     }
@@ -112,53 +112,106 @@ const Dice: React.FC<
    */
   const faceRotationsFrom = (
     geometry: THREE.BufferGeometry,
-    verticesPerFace: number,
-    numFaces: number
+    numFaces: number,
+    verticesPerFace: number
   ) => {
     const vertices = geometry.getAttribute("position")!;
-    const faces = geometry.getIndex()!;
+    const vertexIndices = geometry.getIndex()!;
 
-    if (verticesPerFace * numFaces != faces.array.length) {
-      console.error(
-        "expected",
-        verticesPerFace * numFaces,
-        "was",
-        faces.array.length
+    const normals: THREE.Vector3[] = [];
+    const hasVector = (v: THREE.Vector3) => {
+      return normals.some((n) => n.equals(v));
+    };
+
+    for (let i = 0; i < vertexIndices.array.length; i += 3) {
+      const a = new THREE.Vector3().fromBufferAttribute(
+        vertices,
+        vertexIndices.array[i]!
       );
+      const b = new THREE.Vector3().fromBufferAttribute(
+        vertices,
+        vertexIndices.array[i + 1]!
+      );
+      const c = new THREE.Vector3().fromBufferAttribute(
+        vertices,
+        vertexIndices.array[i + 2]!
+      );
+
+      /*const a = new THREE.Vector3(
+        vertices.getX(triangleIndex + 0),
+        vertices.getY(triangleIndex + 0),
+        vertices.getZ(triangleIndex + 0)
+      );
+      const b = new THREE.Vector3(
+        vertices.getX(triangleIndex + 1),
+        vertices.getY(triangleIndex + 1),
+        vertices.getZ(triangleIndex + 1)
+      );
+      const c = new THREE.Vector3(
+        vertices.getX(triangleIndex + 2),
+        vertices.getY(triangleIndex + 2),
+        vertices.getZ(triangleIndex + 2)
+      );*/
+
+      const e1 = new THREE.Vector3().subVectors(b, a);
+      const e2 = new THREE.Vector3().subVectors(c, b);
+      const n = new THREE.Vector3().crossVectors(e1, e2).normalize();
+      if (!hasVector(n)) {
+        normals.push(n);
+      }
     }
 
-    return new Array(numFaces).map((_, offset) => {
+    if (numFaces != normals.length) {
+      console.log("expected", numFaces, "was", normals.length);
+    }
+
+    return normals;
+
+    /*return Array.from({ length: numFaces }, (_, faceOffset) => {
       const faceVertices: THREE.Vector3[] = [];
-      for (let i = offset; i < offset + verticesPerFace; i++) {
-        const faceIndex = faces.getX(i);
-        faceVertices.push(
-          new THREE.Vector3(
-            vertices.getX(faceIndex),
-            vertices.getY(faceIndex),
-            vertices.getZ(faceIndex)
-          )
+      const used = new Set();
+      for (let i = faceOffset; i < faceOffset + verticesPerFace; i++) {
+        const vertexIndex = vertexIndices.array[i]!;
+        new THREE.Vector3(
+          vertices.getX(vertexIndex),
+          vertices.getY(vertexIndex),
+          vertices.getZ(vertexIndex)
         );
+        used.add(vertexIndex);
       }
-      return new THREE.Quaternion().setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        faceVertices
-          .reduce((vec, sum) => sum.add(vec))
-          .divideScalar(faceVertices.length)
-      );
-    });
+      return faceVertices
+        .reduce((vec, sum) => sum.add(vec))
+        .divideScalar(faceVertices.length)
+        .normalize();
+    });*/
   };
 
-  const faceRotations = useMemo(
-    () =>
-      faceRotationsFrom(props.geometry!, props.numFaces, props.verticesPerFace),
-    [props.geometry, props.numFaces, props.verticesPerFace]
-  );
+  const faceRotations = useMemo(() => {
+    if (props.numFaces === 6) {
+      console.log(
+        "my aray",
+        faceRotationsFrom(
+          props.geometry!,
+          props.numFaces,
+          props.verticesPerFace
+        )
+      );
+    }
+    return faceRotationsFrom(
+      props.geometry!,
+      props.numFaces,
+      props.verticesPerFace
+    ).map((v) =>
+      new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), v)
+    );
+  }, [props.geometry, props.numFaces, props.verticesPerFace]);
 
   return (
     <mesh
       {...props}
       ref={mesh}
       scale={2}
+      quaternion={finalRotation}
       onClick={(event) => {
         const PI = 3.14 * 10;
         setRotationAxis(randomAxis());
