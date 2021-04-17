@@ -21,6 +21,7 @@ export function DiceInput() {
           const regex = /(^| *[+-] *)(?:(\d*)d(\d+)|(\d+))/g;
           const matchArray = [...text.matchAll(regex)];
           const dice = matchArray.map((array) => {
+            const sign = array[1]?.trim() === "-" ? -1 : 1;
             if (array[2] !== undefined && array[3] !== undefined) {
               // die
               const faces = parseInt(array[3]);
@@ -29,6 +30,7 @@ export function DiceInput() {
               for (let i = 1; i <= count; i++) {
                 result += Math.floor(Math.random() * faces) + 1;
               }
+              result *= sign;
               return {
                 damageType: "normal",
                 result: result,
@@ -39,9 +41,10 @@ export function DiceInput() {
               };
             } else if (array[4]) {
               // mod
+              const modifier = parseInt(array[4]) * sign;
               return {
                 damageType: "normal",
-                result: parseInt(array[4]), // TODO: vorher
+                result: modifier,
                 die: null,
               };
             }
