@@ -9,41 +9,24 @@ import {
   toSVG,
   inverse,
 } from "transformation-matrix";
-import { useDrop } from "react-dnd";
-import { RRToken } from "../../shared/state";
+import { RRToken, RRTokenOnMap } from "../../shared/state";
 
 type Rectangle = [number, number, number, number];
 
 const PANNING_BUTTON = 2;
 const SELECTION_BUTTON = 0;
 
-interface TokenOnMap {
-  id: string;
-  x: number;
-  y: number;
-  color: string;
-}
-
 const ZOOM_SCALE_FACTOR = 0.2;
 
 export const Map: React.FC<{
-  onAddToken: (token: RRToken) => void;
-  tokens: TokenOnMap[];
-  className: string;
-}> = ({ tokens, className, onAddToken }) => {
+  tokens: RRTokenOnMap[];
+}> = ({ tokens }) => {
   const [transform, setTransform] = useState<Matrix>(identity());
   // TODO can't handle overlapping clicks
   const [mouseDown, setMouseDown] = useState<number | undefined>(undefined);
   const [lastMousePos, setLastMousePos] = useState<[number, number]>([0, 0]);
 
   const [selectionArea, setSelectionArea] = useState<Rectangle | null>(null);
-
-  const [, dropRef] = useDrop<RRToken, void, never>(() => ({
-    accept: "token",
-    drop: (item) => {
-      onAddToken(item);
-    },
-  }));
 
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -142,41 +125,43 @@ export const Map: React.FC<{
     return cb(left, top, right - left, bottom - top);
   };
 
-  const selectedTokens = withSelectionAreaDo<TokenOnMap[]>(
+  const selectedTokens = withSelectionAreaDo<RRTokenOnMap[]>(
     (x, y, w, h) =>
       tokens.filter(
-        (t) => t.x >= x && t.y >= y && t.x <= x + w && t.y <= y + h
+        (t) =>
+          t.position.x >= x &&
+          t.position.y >= y &&
+          t.position.x <= x + w &&
+          t.position.y <= y + h
       ),
     []
   );
 
   return (
-    <div ref={dropRef}>
-      <svg
-        ref={svgRef}
-        onContextMenu={(e) => e.preventDefault()}
-        onMouseDown={handleMouseDown}
-        className={className}
-      >
-        <g transform={toSVG(transform)}>
-          {withSelectionAreaDo(
-            (x, y, w, h) => (
-              <rect x={x} y={y} width={w} height={h} />
-            ),
-            <></>
-          )}
-          {tokens.map((t) => (
-            <MapToken
-              key={t.id}
-              x={t.x}
-              y={t.y}
-              color={t.color}
-              selected={selectedTokens.includes(t)}
-            />
-          ))}
-        </g>
-      </svg>
-    </div>
+    <svg
+      className="map"
+      ref={svgRef}
+      onContextMenu={(e) => e.preventDefault()}
+      onMouseDown={handleMouseDown}
+    >
+      <g transform={toSVG(transform)}>
+        {withSelectionAreaDo(
+          (x, y, w, h) => (
+            <rect x={x} y={y} width={w} height={h} />
+          ),
+          <></>
+        )}
+        {tokens.map((t) => (
+          <MapToken
+            key={t.tokenId}
+            x={t.position.x}
+            y={t.position.y}
+            color={"red"}
+            selected={selectedTokens.includes(t)}
+          />
+        ))}
+      </g>
+    </svg>
   );
 };
 

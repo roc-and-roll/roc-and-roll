@@ -2,7 +2,7 @@ import "modern-css-reset";
 import "./global.scss";
 import React from "react";
 import { Sidebar } from "./Sidebar";
-import { Map } from "./Map";
+import { MapContainer } from "./MapContainer";
 import styles from "./App.module.scss";
 import { useServerDispatch, useServerState } from "../state";
 import useLocalState from "../useLocalState";
@@ -21,6 +21,8 @@ export function App() {
     forgetMyPlayerId,
   ] = useLocalState<RRID | null>("myPlayerId", null);
 
+  const maps = useServerState((s) => s.maps);
+
   const myself = myPlayerId ? players.entities[myPlayerId] : null;
 
   const joinAsNewPlayer = () => {
@@ -31,8 +33,8 @@ export function App() {
     const action = dispatch(
       playerAdd({
         name,
-        color: { r: 0, g: 0, b: 0 },
-        currentMap: "foo", // TODO
+        color: "#000000",
+        currentMap: maps.ids[0]!,
         isGM: true,
         isOnline: false, // TODO
         tokenIds: [],
@@ -46,14 +48,7 @@ export function App() {
       <DndProvider backend={HTML5Backend}>
         <div className={styles["wrapper"]}>
           <Sidebar className={styles["sidebar"]!} logout={forgetMyPlayerId} />
-          <Map
-            onAddToken={(t) => console.log(t)}
-            className={styles["map"]!}
-            tokens={[
-              { id: "abc", x: 30, y: 50, color: "red" },
-              { id: "def", x: 80, y: 20, color: "green" },
-            ]}
-          />
+          <MapContainer className={styles["map"]!} />
         </div>
       </DndProvider>
     </MyselfContext.Provider>

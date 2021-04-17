@@ -1,9 +1,9 @@
-import { PayloadAction } from "@reduxjs/toolkit";
+import { nanoid, PayloadAction } from "@reduxjs/toolkit";
 import { Dispatch } from "redux";
 
 export type RRID = string;
 
-export type RRColor = { r: number; g: number; b: number };
+export type RRColor = string;
 
 export type RRPoint = { x: number; y: number };
 
@@ -72,11 +72,13 @@ export type RRToken = {
   isTemplate: boolean;
 };
 
+export type RRTokenOnMap = { tokenId: RRID; position: RRPoint };
+
 export type RRMap = {
   id: RRID;
   name: string;
 
-  tokens: Array<{ tokenId: RRID; position: RRPoint }>;
+  tokens: Array<RRTokenOnMap>;
   backgroundImages: Array<{
     image: RRFile;
     position: RRPoint;
@@ -184,6 +186,16 @@ export interface SyncedState {
   logEntries: LogEntriesSyncedState;
 }
 
+const defaultMap: RRMap = {
+  backgroundColor: "#000",
+  backgroundImages: [],
+  gmWorldPosition: { x: 0, y: 0 },
+  grid: { enabled: true, size: { x: 70, y: 70 } },
+  name: "unnamed",
+  tokens: [],
+  id: nanoid(),
+};
+
 export const initialSyncedState: SyncedState = {
   initiativeTracker: {
     visible: false,
@@ -202,8 +214,8 @@ export const initialSyncedState: SyncedState = {
     ids: [],
   },
   maps: {
-    entities: {},
-    ids: [],
+    entities: { [defaultMap.id]: defaultMap },
+    ids: [defaultMap.id],
   },
   privateChats: {
     entities: {},
