@@ -8,6 +8,7 @@ import "utf-8-validate";
 import multer from "multer";
 import { nanoid } from "@reduxjs/toolkit";
 import { RRFile } from "../shared/state";
+import sharp from "sharp";
 
 export function setupWebServer(uploadedFilesDir: string) {
   const httpPort = 3000;
@@ -38,6 +39,82 @@ export function setupWebServer(uploadedFilesDir: string) {
     filename: (req, file, cb) =>
       cb(null, `${nanoid()}${path.extname(file.originalname)}`),
   });
+  app.post(
+    "/upload-token",
+    multer({ storage }).array("files"),
+    async (req, res, next) => {
+      if (!Array.isArray(req.files)) {
+        res.status(400);
+        return;
+      }
+
+      const GRID_SIZE = 70;
+      const CENTER = GRID_SIZE / 2;
+      const RADIUS = GRID_SIZE / 2 - 1;
+      const BORDER_WIDTH = 3;
+      const mask = await sharp(
+        Buffer.from(
+          `<svg viewBox="0 0 ${GRID_SIZE} ${GRID_SIZE}">
+            <circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="#000" />
+          </svg>`,
+          "utf-8"
+        )
+      ).toBuffer();
+      const border = await sharp(
+        Buffer.from(
+          `<svg viewBox="0 0 ${GRID_SIZE} ${GRID_SIZE}">
+            <circle
+              cx="${CENTER}"
+              cy="${CENTER}"
+              r="${RADIUS - BORDER_WIDTH / 2 - 0.5}"
+              fill="transparent"
+              stroke-width="${BORDER_WIDTH}"
+              stroke="#502d16" />
+            <circle
+              cx="${CENTER}"
+              cy="${CENTER}"
+              r="${RADIUS - BORDER_WIDTH / 2}"
+              fill="transparent"
+              stroke-width="${BORDER_WIDTH}"
+              stroke="#b39671" />
+          </svg>`,
+          "utf-8"
+        )
+      ).toBuffer();
+
+      const outputFilename = (filename: string) => {
+        const parts = filename.split(".");
+        return parts.slice(0, parts.length - 1).join(".") + "-res.png";
+      };
+
+      try {
+        const data: RRFile[] = await Promise.all(
+          req.files.map((file) =>
+            sharp(file.path)
+              .resize({
+                width: 70,
+                height: 70,
+                fit: "cover",
+                position: "top",
+              })
+              .composite([
+                { input: mask, blend: "dest-in" },
+                { input: border, blend: "over" },
+              ])
+              .toFile(outputFilename(file.path))
+              .then(() => ({
+                originalFilename: file.originalname,
+                filename: outputFilename(file.filename),
+              }))
+          )
+        );
+        res.json(data);
+      } catch (err) {
+        console.error(err);
+        res.status(500);
+      }
+    }
+  );
   app.post("/upload", multer({ storage }).array("files"), (req, res, next) => {
     if (!Array.isArray(req.files)) {
       res.status(400);

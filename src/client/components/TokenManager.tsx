@@ -92,7 +92,7 @@ function TokenEditor({
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
-  const [isUploading, upload] = useFileUpload();
+  const [isUploading, upload] = useFileUpload("upload-token");
   const [name, setName] = useState(token.name);
 
   const dispatch = useServerDispatch();
