@@ -1,4 +1,3 @@
-import { logEntryMessageAdd } from "../shared/actions";
 import { setupReduxStore } from "./setupReduxStore";
 import { setupStateSync } from "./setupStateSync";
 import { setupWebServer } from "./setupWebServer";

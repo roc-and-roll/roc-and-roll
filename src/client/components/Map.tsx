@@ -1,4 +1,3 @@
-import { transform } from "@babel/core";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   scale,
@@ -71,10 +70,13 @@ export const Map: React.FC<{
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
 
-  const globalToLocal = (p: Point) => {
-    const [x, y] = applyToPoint(inverse(transform), [p.x, p.y]);
-    return { x, y };
-  };
+  const globalToLocal = useCallback(
+    (p: Point) => {
+      const [x, y] = applyToPoint(inverse(transform), [p.x, p.y]);
+      return { x, y };
+    },
+    [transform]
+  );
 
   const handleWheel = useCallback(
     (e: WheelEvent) => {
