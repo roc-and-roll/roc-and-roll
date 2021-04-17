@@ -9,6 +9,8 @@ import useLocalState from "../useLocalState";
 import { RRID } from "../../shared/state";
 import { playerAdd } from "../../shared/actions";
 import { MyselfContext } from "../myself";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 export function App() {
   const players = useServerState((state) => state.players);
@@ -41,16 +43,19 @@ export function App() {
 
   return myself ? (
     <MyselfContext.Provider value={myself}>
-      <div className={styles["wrapper"]}>
-        <Sidebar className={styles["sidebar"]!} logout={forgetMyPlayerId} />
-        <Map
-          className={styles["map"]!}
-          tokens={[
-            { id: "abc", x: 30, y: 50, color: "red" },
-            { id: "def", x: 80, y: 20, color: "green" },
-          ]}
-        />
-      </div>
+      <DndProvider backend={HTML5Backend}>
+        <div className={styles["wrapper"]}>
+          <Sidebar className={styles["sidebar"]!} logout={forgetMyPlayerId} />
+          <Map
+            onAddToken={(t) => console.log(t)}
+            className={styles["map"]!}
+            tokens={[
+              { id: "abc", x: 30, y: 50, color: "red" },
+              { id: "def", x: 80, y: 20, color: "green" },
+            ]}
+          />
+        </div>
+      </DndProvider>
     </MyselfContext.Provider>
   ) : (
     <>
