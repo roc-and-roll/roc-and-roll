@@ -1,74 +1,7 @@
 import * as THREE from "three";
-import React, {
-  cloneElement,
-  Suspense,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { Suspense, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { GLTFLoader, GLTF } from "three/examples/jsm/loaders/GLTFLoader";
-
-function getD4() {
-  return new THREE.TetrahedronBufferGeometry();
-}
-
-function getD6() {
-  return new THREE.BoxBufferGeometry();
-}
-
-function getD8() {
-  return new THREE.OctahedronBufferGeometry();
-}
-
-function getD12() {
-  return new THREE.DodecahedronBufferGeometry();
-}
-
-function getD20() {
-  return new THREE.IcosahedronBufferGeometry();
-}
-
-function getD10() {
-  const sides = 10;
-  const radius = 1;
-
-  const vertices = [
-    [0, 0, 1],
-    [0, 0, -1],
-  ].flat();
-
-  // https://github.com/byWulf/threejs-dice/blob/master/lib/dice.js#L499
-  for (let i = 0; i < sides; ++i) {
-    const b = (i * Math.PI * 2) / sides;
-    vertices.push(-Math.cos(b), -Math.sin(b), 0.105 * (i % 2 ? 1 : -1));
-  }
-
-  const faces = [
-    [0, 2, 3],
-    [0, 3, 4],
-    [0, 4, 5],
-    [0, 5, 6],
-    [0, 6, 7],
-    [0, 7, 8],
-    [0, 8, 9],
-    [0, 9, 10],
-    [0, 10, 11],
-    [0, 11, 2],
-    [1, 3, 2],
-    [1, 4, 3],
-    [1, 5, 4],
-    [1, 6, 5],
-    [1, 7, 6],
-    [1, 8, 7],
-    [1, 9, 8],
-    [1, 10, 9],
-    [1, 11, 10],
-    [1, 2, 11],
-  ].flat();
-
-  return new THREE.PolyhedronGeometry(vertices, faces, radius, 0);
-}
 
 const Dice: React.FC<
   JSX.IntrinsicElements["mesh"] & { verticesPerFace: number; numFaces: number }
@@ -81,15 +14,18 @@ const Dice: React.FC<
   const [startRotation, setStartRotation] = useState(new THREE.Quaternion());
   const [endRotation, setEndRotation] = useState(new THREE.Quaternion());
 
-  const [finalRotation, setFinalRotation] = useState(new THREE.Quaternion());
-  const [rotationAxis, setRotationAxis] = useState(new THREE.Vector3());
+  // const [finalRotation, setFinalRotation] = useState(new THREE.Quaternion());
+  // const [rotationAxis, setRotationAxis] = useState(new THREE.Vector3());
 
   useFrame((state, delta) => {
     if (velocity.current > 0.1) {
       velocity.current *= 0.96;
+      mesh.current.rotation.setFromQuaternion(
+        startRotation.clone().slerp(endRotation, 1 - velocity.current)
+      );
       // mesh.current.rotateOnAxis(rotationAxis, delta * velocity.current);
     } else {
-      // mesh.current.quaternion.rotateTowards(finalRotation, delta * 10);
+      mesh.current.quaternion.rotateTowards(endRotation, delta * 3);
     }
   });
 
@@ -112,8 +48,7 @@ const Dice: React.FC<
    */
   const faceRotationsFrom = (
     geometry: THREE.BufferGeometry,
-    numFaces: number,
-    verticesPerFace: number
+    numFaces: number
   ) => {
     const vertices = geometry.getAttribute("position")!;
     const vertexIndices = geometry.getIndex()!;
@@ -126,7 +61,7 @@ const Dice: React.FC<
     for (let i = 0; i < vertexIndices.array.length; i += 3) {
       const a = new THREE.Vector3().fromBufferAttribute(
         vertices,
-        vertexIndices.array[i]!
+        vertexIndices.array[i + 0]!
       );
       const b = new THREE.Vector3().fromBufferAttribute(
         vertices,
@@ -136,22 +71,6 @@ const Dice: React.FC<
         vertices,
         vertexIndices.array[i + 2]!
       );
-
-      /*const a = new THREE.Vector3(
-        vertices.getX(triangleIndex + 0),
-        vertices.getY(triangleIndex + 0),
-        vertices.getZ(triangleIndex + 0)
-      );
-      const b = new THREE.Vector3(
-        vertices.getX(triangleIndex + 1),
-        vertices.getY(triangleIndex + 1),
-        vertices.getZ(triangleIndex + 1)
-      );
-      const c = new THREE.Vector3(
-        vertices.getX(triangleIndex + 2),
-        vertices.getY(triangleIndex + 2),
-        vertices.getZ(triangleIndex + 2)
-      );*/
 
       const e1 = new THREE.Vector3().subVectors(b, a);
       const e2 = new THREE.Vector3().subVectors(c, b);
@@ -166,69 +85,33 @@ const Dice: React.FC<
     }
 
     return normals;
-
-    /*return Array.from({ length: numFaces }, (_, faceOffset) => {
-      const faceVertices: THREE.Vector3[] = [];
-      const used = new Set();
-      for (let i = faceOffset; i < faceOffset + verticesPerFace; i++) {
-        const vertexIndex = vertexIndices.array[i]!;
-        new THREE.Vector3(
-          vertices.getX(vertexIndex),
-          vertices.getY(vertexIndex),
-          vertices.getZ(vertexIndex)
-        );
-        used.add(vertexIndex);
-      }
-      return faceVertices
-        .reduce((vec, sum) => sum.add(vec))
-        .divideScalar(faceVertices.length)
-        .normalize();
-    });*/
   };
 
   const faceRotations = useMemo(() => {
-    if (props.numFaces === 6) {
-      console.log(
-        "my aray",
-        faceRotationsFrom(
-          props.geometry!,
-          props.numFaces,
-          props.verticesPerFace
-        )
-      );
-    }
-    return faceRotationsFrom(
-      props.geometry!,
-      props.numFaces,
-      props.verticesPerFace
-    ).map((v) =>
-      new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), v)
+    // props.numFaces === 6 && console.log( "my aray", faceRotationsFrom(props.geometry!, props.numFaces));
+    return faceRotationsFrom(props.geometry!, props.numFaces).map((v) =>
+      new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), v)
     );
-  }, [props.geometry, props.numFaces, props.verticesPerFace]);
+  }, [props.geometry, props.numFaces]);
 
   return (
     <mesh
       {...props}
       ref={mesh}
       scale={2}
-      quaternion={finalRotation}
+      quaternion={endRotation}
       onClick={(event) => {
-        const PI = 3.14 * 10;
-        setRotationAxis(randomAxis());
+        // setRotationAxis(randomAxis());
         velocity.current = 30;
 
-        setFinalRotation(faceRotations[faceIndex]!);
+        const r = faceRotations[faceIndex]!;
+        setStartRotation(
+          new THREE.Quaternion().setFromAxisAngle(randomAxis(), 10000)
+        );
+        setEndRotation(r);
         setFaceIndex((f) => (f + 1) % faceRotations.length);
 
-        setFinalRotation(
-          new THREE.Quaternion().setFromEuler(
-            new THREE.Euler(
-              Math.random() * 2 * PI,
-              Math.random() * 2 * PI,
-              Math.random() * 2 * PI
-            )
-          )
-        );
+        // setFinalRotation( new THREE.Quaternion().setFromEuler( new THREE.Euler( Math.random() * 2 * PI, Math.random() * 2 * PI, Math.random() * 2 * PI)));
       }}
       onPointerOver={(event) => setHover(true)}
       onPointerOut={(event) => setHover(false)}
