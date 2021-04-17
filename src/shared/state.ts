@@ -60,7 +60,7 @@ export type RRToken = {
   id: RRID;
   name: string;
 
-  image: RRFile;
+  image: RRFile | null;
   size: number;
 
   auras: RRAura[];
@@ -154,7 +154,7 @@ export type RRLogEntry =
 // This must resemble the EntityState type from @reduxjs/toolkit to work with
 // createEntityAdapter
 // https://redux-toolkit.js.org/api/createEntityAdapter
-interface EntityCollection<E extends { id: RRID }> {
+export interface EntityCollection<E extends { id: RRID }> {
   entities: Record<RRID, E>;
   ids: RRID[];
 }

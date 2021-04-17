@@ -6,6 +6,7 @@ import { Log } from "./Log";
 import { UploadFileExample } from "./UploadFileExample";
 import styles from "./Sidebar.module.css";
 import { useMyself } from "../myself";
+import { TokenManager } from "./TokenManager";
 
 export function Sidebar({
   className,
@@ -34,6 +35,7 @@ export function Sidebar({
       )}
       {/* Including a static asset */}
       <img src="/dice.jpg" />
+      <TokenManager />
       <p>Count: {count}</p>
       <h2>Local state example</h2>
       <LocalStateExample />
