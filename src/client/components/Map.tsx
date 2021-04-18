@@ -10,9 +10,9 @@ import {
   inverse,
 } from "transformation-matrix";
 import {
-  RRID,
   RRToken,
   RRTokenOnMap,
+  RRTokenOnMapID,
   TokensSyncedState,
 } from "../../shared/state";
 import { fileUrl } from "../files";
@@ -39,7 +39,7 @@ enum MouseAction {
 export const Map: React.FC<{
   tokensOnMap: RRTokenOnMap[];
   tokens: TokensSyncedState;
-  selectedTokens: RRID[];
+  selectedTokens: RRTokenOnMapID[];
   onMoveTokens: (dx: number, dy: number) => void;
   onSelectTokens: (tokens: RRTokenOnMap[]) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
@@ -256,14 +256,14 @@ export const Map: React.FC<{
   }, [handleMouseMove, handleWheel, handleMouseUp, handleKeyDown]);
 
   const handleStartMoveToken = (t: RRTokenOnMap) => {
-    if (!selectedTokens.includes(t.tokenId)) {
+    if (!selectedTokens.includes(t.id)) {
       onSelectTokens([t]);
     }
     setMouseAction(MouseAction.MOVE_TOKEN);
   };
 
   const tokenPosition = (t: RRTokenOnMap) =>
-    mouseAction === MouseAction.MOVE_TOKEN && selectedTokens.includes(t.tokenId)
+    mouseAction === MouseAction.MOVE_TOKEN && selectedTokens.includes(t.id)
       ? {
           x: t.position.x + dragState.delta.x / transform.a,
           y: t.position.y + dragState.delta.y / transform.a,
@@ -323,13 +323,13 @@ export const Map: React.FC<{
           const position = tokenPosition(t);
           return (
             <MapToken
-              key={t.tokenId}
+              key={t.id}
               onStartMove={(e) => handleDragStart(e, t)}
               x={position.x}
               y={position.y}
               token={byId(tokens.entities, t.tokenId)!}
               selected={
-                hoveredTokens.includes(t) || selectedTokens.includes(t.tokenId)
+                hoveredTokens.includes(t) || selectedTokens.includes(t.id)
               }
             />
           );
