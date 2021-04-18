@@ -2,6 +2,7 @@ const path = require("path");
 const webpack = require("webpack");
 const GitRevisionPlugin = require("git-revision-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const webpackDevServerWaitpage = require("webpack-dev-server-waitpage");
@@ -63,7 +64,7 @@ module.exports = (webpackEnv) => {
       new HtmlWebpackPlugin({
         title: "Roc & Roll",
         meta: {
-           viewport: "initial-scale=1, maximum-scale=1, user-scalable=no, minimum-scale=1, width=device-width, height=device-height",
+           viewport: "width=device-width, initial-scale=1",
         },
         ...isEnvProduction
             ? {
@@ -98,6 +99,7 @@ module.exports = (webpackEnv) => {
         typescript: { configFile: "tsconfig.client.json" },
         async: isEnvDevelopment,
       }),
+      isEnvProduction && new CleanWebpackPlugin(),
     ].filter(Boolean),
     module: {
       rules: [

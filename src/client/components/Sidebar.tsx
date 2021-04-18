@@ -46,7 +46,21 @@ export function Sidebar({
       </Collapsible>
 
       <Collapsible title="Player">
-        <p>Name: {myself.name}</p>
+        <p>
+          Name:{" "}
+          <input
+            type="text"
+            value={myself.name}
+            onChange={(e) =>
+              dispatch(
+                playerUpdate({
+                  id: myself.id,
+                  changes: { name: e.target.value },
+                })
+              )
+            }
+          />
+        </p>
         <p>
           Is GM:{" "}
           <input
