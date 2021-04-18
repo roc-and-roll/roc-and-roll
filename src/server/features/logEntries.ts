@@ -18,7 +18,6 @@ const logEntryDiceRollAdapter = createEntityAdapter<RRLogEntryDiceRoll>();
 export const logEntriesReducer = createReducer(
   initialSyncedState.logEntries,
   (builder) => {
-    // @ts-expect-error Typescript doesn't like me.
     builder
       .addCase(logEntryMessageAdd, logEntryMessageAdapter.addOne)
       .addCase(logEntryDiceRollAdd, logEntryDiceRollAdapter.addOne)

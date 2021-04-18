@@ -1,3 +1,5 @@
+import { RRTimestamp } from "../shared/state";
+
 export function apiHost() {
   let port = window.location.port;
   // Normally, the port corresponds to the current port.
@@ -12,3 +14,7 @@ export function apiHost() {
 export const noop = () => {};
 
 export const isBrowser = typeof window !== "undefined";
+
+export function formatTimestamp(timestamp: RRTimestamp) {
+  return new Date(timestamp).toLocaleString();
+}

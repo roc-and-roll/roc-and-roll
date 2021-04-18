@@ -13,6 +13,8 @@ export type RRMapID = Opaque<string, "map">;
 
 export type RRPrivateChatID = Opaque<string, "privateChat">;
 
+export type RRPrivateChatMessageID = Opaque<string, "privateChatMessage">;
+
 export type RRLogEntryID = Opaque<string, "logEntry">;
 
 export type RRInitiativeTrackerEntryID = Opaque<string, "initiativeEntry">;
@@ -36,7 +38,7 @@ export type RRAura = {
 
 export type RRTokenCondition = string;
 
-export type RRTimestamp = number;
+export type RRTimestamp = Opaque<number, "timestamp">;
 
 interface RRInitiativeTrackerEntryBase {
   id: RRInitiativeTrackerEntryID;
@@ -109,15 +111,19 @@ export type RRMap = {
   gmWorldPosition: RRPoint;
 };
 
+export type RRPrivateChatMessage = {
+  id: RRPrivateChatMessageID;
+  direction: "a2b" | "b2a";
+  text: string;
+  read: boolean;
+  timestamp: RRTimestamp;
+};
+
 export type RRPrivateChat = {
   id: RRPrivateChatID;
-  playerAId: RRPlayerID;
-  playerBId: RRPlayerID;
-  messages: Array<{
-    direction: "a2b" | "b2a";
-    text: string;
-    timestamp: RRTimestamp;
-  }>;
+  idA: RRPlayerID;
+  idB: RRPlayerID;
+  messages: Array<RRPrivateChatMessage>;
 };
 
 // We extend JsonObject here just to verify that we do not use any

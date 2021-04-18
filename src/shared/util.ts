@@ -1,5 +1,5 @@
 import { nanoid } from "@reduxjs/toolkit";
-import { RRID } from "./state";
+import { RRID, RRTimestamp } from "./state";
 
 export function isObject(item: any): item is Record<string, any> {
   return item && typeof item === "object" && !Array.isArray(item);
@@ -30,4 +30,8 @@ export function mergeDeep<T>(base: any, patch: any): T {
 
 export function rrid<E extends { id: RRID }>() {
   return nanoid() as E["id"];
+}
+
+export function timestamp(): RRTimestamp {
+  return Date.now() as RRTimestamp;
 }

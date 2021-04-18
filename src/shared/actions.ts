@@ -10,10 +10,11 @@ import {
   RRLogEntryMessage,
   RRMap,
   RRPlayer,
+  RRPlayerID,
   RRPrivateChat,
   RRToken,
 } from "./state";
-import { rrid } from "./util";
+import { rrid, timestamp } from "./util";
 
 interface Update<T extends { id: RRID }> extends OriginalUpdate<T> {
   id: T["id"]; // tighten the type of id to the opaque RRID
@@ -25,7 +26,7 @@ interface Update<T extends { id: RRID }> extends OriginalUpdate<T> {
 
 export const playerAdd = createAction(
   "player/add",
-  (player: Omit<RRPlayer, "id">) => ({
+  (player: Omit<RRPlayer, "id">): { payload: RRPlayer } => ({
     payload: { id: rrid<RRPlayer>(), ...player },
   })
 );
@@ -40,7 +41,7 @@ export const playerRemove = createAction<RRPlayer["id"]>("player/remove");
 
 export const tokenAdd = createAction(
   "token/add",
-  (token: Omit<RRToken, "id">) => ({
+  (token: Omit<RRToken, "id">): { payload: RRToken } => ({
     payload: { id: rrid<RRToken>(), ...token },
   })
 );
@@ -67,13 +68,28 @@ export const mapRemove = createAction<RRMap["id"]>("map/remove");
 
 export const privateChatAdd = createAction(
   "privatechat/add",
-  (privatechat: Omit<RRPrivateChat, "id" | "timestamp">) => ({
-    payload: {
-      id: rrid<RRPrivateChat>(),
-      timestamp: Date.now(),
-      ...privatechat,
-    },
-  })
+  (
+    player1Id: RRPlayerID,
+    player2Id: RRPlayerID
+  ): { payload: RRPrivateChat } => {
+    let idA, idB;
+    if (player1Id < player2Id) {
+      idA = player1Id;
+      idB = player2Id;
+    } else {
+      idA = player2Id;
+      idB = player1Id;
+    }
+
+    return {
+      payload: {
+        id: rrid<RRPrivateChat>(),
+        idA,
+        idB,
+        messages: [],
+      },
+    };
+  }
 );
 
 export const privateChatUpdate = createAction<
@@ -90,11 +106,13 @@ export const privateChatRemove = createAction<RRPrivateChat["id"]>(
 
 export const logEntryMessageAdd = createAction(
   "logentry/message/add",
-  (logEntry: Omit<RRLogEntryMessage, "id" | "type" | "timestamp">) => ({
+  (
+    logEntry: Omit<RRLogEntryMessage, "id" | "type" | "timestamp">
+  ): { payload: RRLogEntryMessage } => ({
     payload: {
       id: rrid<RRLogEntryMessage>(),
       type: "message",
-      timestamp: Date.now(),
+      timestamp: timestamp(),
       ...logEntry,
     },
   })
@@ -102,11 +120,13 @@ export const logEntryMessageAdd = createAction(
 
 export const logEntryDiceRollAdd = createAction(
   "logentry/diceroll/add",
-  (logEntry: Omit<RRLogEntryDiceRoll, "id" | "type" | "timestamp">) => ({
+  (
+    logEntry: Omit<RRLogEntryDiceRoll, "id" | "type" | "timestamp">
+  ): { payload: RRLogEntryDiceRoll } => ({
     payload: {
       id: rrid<RRLogEntryDiceRoll>(),
       type: "diceRoll",
-      timestamp: Date.now(),
+      timestamp: timestamp(),
       ...logEntry,
     },
   })
@@ -130,9 +150,9 @@ export const initiativeTrackerEntryTokenAdd = createAction(
   "initiativetracker/entry/token/add",
   (
     initiativetrackerEntry: Omit<RRInitiativeTrackerEntryToken, "id" | "type">
-  ) => ({
+  ): { payload: RRInitiativeTrackerEntryToken } => ({
     payload: {
-      id: rrid<RRPlayer>(),
+      id: rrid<RRInitiativeTrackerEntryToken>(),
       type: "token",
       ...initiativetrackerEntry,
     },
@@ -146,9 +166,9 @@ export const initiativeTrackerEntryLayerActionAdd = createAction(
       RRInitiativeTrackerEntryLayerAction,
       "id" | "type"
     >
-  ) => ({
+  ): { payload: RRInitiativeTrackerEntryLayerAction } => ({
     payload: {
-      id: rrid<RRInitiativeTrackerEntry>(),
+      id: rrid<RRInitiativeTrackerEntryLayerAction>(),
       type: "layerAction",
       ...initiativetrackerEntry,
     },

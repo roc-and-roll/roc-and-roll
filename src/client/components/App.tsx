@@ -10,8 +10,8 @@ import { RRPlayerID } from "../../shared/state";
 import { MyselfContext } from "../myself";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { Log } from "./Log";
 import { JoinGame } from "./JoinGame";
+import { BottomFloats } from "./BottomFloats";
 
 export function App() {
   const players = useServerState((state) => state.players);
@@ -30,7 +30,7 @@ export function App() {
         <div className={styles["wrapper"]}>
           <Sidebar className={styles["sidebar"]!} logout={forgetMyPlayerId} />
           <MapContainer className={styles["map"]!} />
-          <Log />
+          <BottomFloats />
         </div>
       </DndProvider>
     </MyselfContext.Provider>

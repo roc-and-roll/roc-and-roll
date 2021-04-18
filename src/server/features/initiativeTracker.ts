@@ -40,7 +40,6 @@ const initiativeTrackerEntryLayerActionAdapter = createEntityAdapter<RRInitiativ
 const initiativeTrackerEntriesReducer = createReducer(
   initialSyncedState.initiativeTracker.entries,
   (builder) => {
-    // @ts-expect-error Typescript doesn't like me.
     builder
       .addCase(
         initiativeTrackerEntryTokenAdd,

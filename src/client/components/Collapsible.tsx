@@ -1,7 +1,11 @@
 import React, { useState } from "react";
+import { CollapseButton } from "./CollapseButton";
 
 export function Collapsible(
-  props: React.PropsWithChildren<{ defaultCollapsed?: boolean; title: string }>
+  props: React.PropsWithChildren<{
+    defaultCollapsed?: boolean;
+    title: React.ReactNode;
+  }>
 ) {
   const [collapsed, setCollapsed] = useState(props.defaultCollapsed ?? false);
 
@@ -9,14 +13,7 @@ export function Collapsible(
     <div>
       <div className="collapsible-header">
         <h2>{props.title}</h2>
-        <button
-          className="toggle-button"
-          onClick={() => {
-            setCollapsed((collapsed) => !collapsed);
-          }}
-        >
-          {collapsed ? "▲" : "▼"}
-        </button>
+        <CollapseButton collapsed={collapsed} setCollapsed={setCollapsed} />
       </div>
       {!collapsed && props.children}
     </div>

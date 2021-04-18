@@ -1,8 +1,11 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { logEntryMessageAdd } from "../../shared/actions";
 import { RRLogEntry } from "../../shared/state";
 import { useMyself } from "../myself";
 import { byId, useServerDispatch, useServerState } from "../state";
+import { useScrollToBottom } from "../useScrollToBottom";
+import { formatTimestamp } from "../util";
+import { CollapseButton } from "./CollapseButton";
 
 function LogEntry(props: { logEntry: RRLogEntry }) {
   const { entities: players } = useServerState((state) => state.players);
@@ -14,7 +17,7 @@ function LogEntry(props: { logEntry: RRLogEntry }) {
       return die.result;
     });
     return (
-      <div title={new Date(logEntry.timestamp).toLocaleString()}>
+      <div title={formatTimestamp(logEntry.timestamp)}>
         {player?.name ?? "system"}:{" "}
         {rolls.join(" + ") +
           " = " +
@@ -24,7 +27,7 @@ function LogEntry(props: { logEntry: RRLogEntry }) {
   }
 
   return (
-    <div title={new Date(logEntry.timestamp).toLocaleString()}>
+    <div title={formatTimestamp(logEntry.timestamp)}>
       {player?.name ?? "system"}: {logEntry.payload.text}
     </div>
   );
@@ -40,38 +43,13 @@ export function Log() {
   const lastLogEntry = logEntryIds.length
     ? byId(logEntries, logEntryIds[logEntryIds.length - 1]!)
     : null;
-  const scrollRef = useRef<HTMLUListElement>(null);
-
-  useLayoutEffect(() => {
-    const scrollElement = scrollRef.current;
-    if (scrollElement) {
-      scrollElement.scrollTop = scrollElement.scrollHeight;
-    }
-  }, [collapsed]);
-
-  useLayoutEffect(() => {
-    const scrollElement = scrollRef.current;
-    if (scrollElement) {
-      const scrollBottom = scrollElement.scrollTop + scrollElement.clientHeight;
-      // we scroll down with new messages if the user is sufficiently close
-      // enough to the bottom (150px)
-      if (scrollElement.scrollHeight - scrollBottom < 150)
-        scrollElement.scrollTop = scrollElement.scrollHeight;
-    }
-  });
+  const [scrollRef] = useScrollToBottom<HTMLUListElement>([collapsed]);
 
   return (
     <div className="log">
       <div className="log-title">
         <h2>Log</h2>
-        <button
-          className="toggle-button"
-          onClick={() => {
-            setCollapsed((collapsed) => !collapsed);
-          }}
-        >
-          {collapsed ? "▲" : "▼"}
-        </button>
+        <CollapseButton collapsed={collapsed} setCollapsed={setCollapsed} />
       </div>
       {!collapsed ? (
         <>

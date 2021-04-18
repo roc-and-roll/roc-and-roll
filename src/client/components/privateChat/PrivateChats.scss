@@ -1,0 +1,99 @@
+ul.private-chats-contact-list {
+  padding: 8px 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+
+  li {
+    cursor: pointer;
+    padding: 4px 8px;
+
+    &:hover {
+      background-color: #444;
+    }
+
+    &.is-unread {
+      color: orange;
+    }
+  }
+}
+
+.private-chat {
+  padding: 0 8px;
+}
+
+.private-chat-input {
+  display: flex;
+  align-items: stretch;
+
+  textarea {
+    padding: 8px;
+    resize: none;
+    flex-grow: 1;
+    margin-right: 4px;
+    min-height: 2rem;
+    max-height: 20rem;
+  }
+}
+
+.private-chat-header {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+ul.private-chat-messages {
+  padding: 0;
+  max-height: 350px;
+  overflow-y: auto;
+
+  & > li {
+    padding: 8px 16px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+
+    &.sent {
+      background: #111;
+      margin-left: 64px;
+    }
+
+    &.received {
+      background: #222;
+      margin-right: 64px;
+    }
+
+    small {
+      display: block;
+      text-align: right;
+    }
+  }
+}
+
+
+.markdown {
+  ul {
+    padding-left: 16px;
+    list-style-type: none;
+
+    li {
+      &:not(.task-list-item) {
+        &:before {
+          content: "– ";
+        }
+      }
+
+      &.task-list-item {
+        list-style: none;
+
+        input {
+          margin-left: 0;
+          margin-right: 2px;
+        }
+      }
+    }
+  }
+
+  & > ul {
+    padding-left: 0;
+  }
+}

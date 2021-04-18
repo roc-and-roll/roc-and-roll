@@ -14,7 +14,7 @@ const Dice: React.FC<
   const velocity = useRef<number>(0);
   const [hovered, setHover] = useState(false);
   const [faceIndex, setFaceIndex] = useState(0);
-  const [isChanging, setIsChanging] = useState(false);
+  const [_, setIsChanging] = useState(false);
 
   const [startRotation, setStartRotation] = useState(new THREE.Quaternion());
   const [endRotation, setEndRotation] = useState(new THREE.Quaternion());

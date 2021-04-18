@@ -138,6 +138,12 @@ function applyStatePatch(
 // Hooks
 ////////////////////////////////////////////////////////////////////////////////
 
+function useForceRerender() {
+  const [_, setI] = useState(0);
+
+  return useCallback(() => setI((i) => i + 1), []);
+}
+
 /**
  * Get a piece of the server state. Will re-render the component whenever that
  * piece of state changes.
@@ -146,23 +152,26 @@ function applyStatePatch(
  *                 piece of state from it that is of interest.
  * @returns The selected piece of server state.
  */
-export function useServerState<T>(selector: (state: SyncedState) => T) {
-  const selectorRef = useRef(selector);
-  selectorRef.current = selector;
-
+export function useServerState<T>(selector: (state: SyncedState) => T): T {
+  const rerender = useForceRerender();
   const { subscribe, unsubscribe, stateRef } = useContext(ServerStateContext);
 
-  const [state, setState] = useState(selectorRef.current(stateRef.current));
+  const selectorRef = useRef<typeof selector | null>(null);
+  selectorRef.current = selector;
+
+  const selectedStateRef = useRef<T | null>(null);
+  selectedStateRef.current = selectorRef.current(stateRef.current);
 
   useEffect(() => {
     const subscriber = (newState: SyncedState) => {
-      setState(selectorRef.current(newState));
+      selectedStateRef.current = selectorRef.current!(newState);
+      rerender();
     };
     subscribe(subscriber);
     return () => unsubscribe(subscriber);
-  }, [subscribe, unsubscribe]);
+  }, [rerender, subscribe, unsubscribe]);
 
-  return state;
+  return selectedStateRef.current;
 }
 
 /**
