@@ -1,6 +1,6 @@
 import React, { Suspense, useMemo } from "react";
 import { useMyself } from "../../myself";
-import { byId, useServerState } from "../../state";
+import { byId, entries, useServerState } from "../../state";
 import { Collapsible } from "../Collapsible";
 import { wasSentByMe } from "./privateChatUtil";
 
@@ -36,7 +36,7 @@ function useHasUnreadMessages() {
         .map((id) => byId(chats, id)!)
         .some((chat) =>
           chat.idA === myself.id || chat.idB === myself.id
-            ? chat.messages.some(
+            ? entries(chat.messages).some(
                 (message) =>
                   !message.read && !wasSentByMe(chat, message, myself.id)
               )

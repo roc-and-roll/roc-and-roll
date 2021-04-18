@@ -123,7 +123,7 @@ export type RRPrivateChat = {
   id: RRPrivateChatID;
   idA: RRPlayerID;
   idB: RRPlayerID;
-  messages: Array<RRPrivateChatMessage>;
+  messages: EntityCollection<RRPrivateChatMessage>;
 };
 
 // We extend JsonObject here just to verify that we do not use any

@@ -1,10 +1,13 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { RRPrivateChatID, RRPrivateChatMessage } from "../../../shared/state";
 import { useMyself } from "../../myself";
-import { byId, useServerDispatch, useServerState } from "../../state";
+import { byId, entries, useServerDispatch, useServerState } from "../../state";
 import "./PrivateChats.scss";
-import { privateChatAdd, privateChatUpdate } from "../../../shared/actions";
-import { rrid, timestamp } from "../../../shared/util";
+import {
+  privateChatAdd,
+  privateChatMessageAdd,
+  privateChatMessageUpdate,
+} from "../../../shared/actions";
 import { formatTimestamp } from "../../util";
 import { useScrollToBottom } from "../../useScrollToBottom";
 import ReactMarkdown from "react-markdown";
@@ -42,24 +45,21 @@ function Chat({ id, close }: { id: RRPrivateChatID; close: () => void }) {
 
   useEffect(() => {
     if (chat && tabFocused) {
-      const hasMessagesToMarkAsRead = chat?.messages.some(
-        (message) => !wasSentByMe(chat, message, myself.id) && !message.read
-      );
-      if (hasMessagesToMarkAsRead) {
-        dispatch(
-          privateChatUpdate({
-            id: chat.id,
-            changes: {
-              messages: [
-                // TODO: This is a race condition
-                ...chat.messages.map((message) =>
-                  !wasSentByMe(chat, message, myself.id) && !message.read
-                    ? { ...message, read: true }
-                    : message
-                ),
-              ],
-            },
-          })
+      const messagesToMarkAsRead = chat
+        ? entries(chat.messages).filter(
+            (message) => !wasSentByMe(chat, message, myself.id) && !message.read
+          )
+        : [];
+      if (messagesToMarkAsRead) {
+        messagesToMarkAsRead.forEach((message) =>
+          dispatch(
+            privateChatMessageUpdate(chat.id, {
+              id: message.id,
+              changes: {
+                read: true,
+              },
+            })
+          )
         );
       }
     }
@@ -71,21 +71,9 @@ function Chat({ id, close }: { id: RRPrivateChatID; close: () => void }) {
 
   const send = (message: string) => {
     dispatch(
-      privateChatUpdate({
-        id: chat.id,
-        changes: {
-          messages: [
-            // TODO: This is a race condition
-            ...chat.messages,
-            {
-              id: rrid<RRPrivateChatMessage>(),
-              read: false,
-              text: message,
-              timestamp: timestamp(),
-              direction: chat.idA === myself.id ? "a2b" : "b2a",
-            },
-          ],
-        },
+      privateChatMessageAdd(chat.id, {
+        text: message,
+        direction: chat.idA === myself.id ? "a2b" : "b2a",
       })
     );
     scrollDownNow();
@@ -98,7 +86,7 @@ function Chat({ id, close }: { id: RRPrivateChatID; close: () => void }) {
         <button onClick={() => close()}>back</button>
       </div>
       <ul ref={scrollRef} role="list" className="private-chat-messages">
-        {chat.messages.map((message) => (
+        {entries(chat.messages).map((message) => (
           <ChatMessage
             key={message.id}
             message={message}
@@ -212,11 +200,12 @@ function ContactList({
           const chat = myChats.find(
             (chat) => chat.idB === player.id || chat.idA === player.id
           );
-          const numUnread =
-            chat?.messages.filter(
-              (message) =>
-                !wasSentByMe(chat, message, myself.id) && !message.read
-            ).length ?? 0;
+          const numUnread = chat
+            ? entries(chat.messages).filter(
+                (message) =>
+                  !wasSentByMe(chat, message, myself.id) && !message.read
+              ).length
+            : 0;
           return (
             <li
               key={player.id}

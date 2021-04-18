@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import ReactDOM from "react-dom";
 import {
+  EntityCollection,
   initialSyncedState,
   RRID,
   SyncedState,
@@ -197,4 +198,10 @@ export function byId<E extends { id: RRID }>(
   id: E["id"]
 ) {
   return entities[id] as E | undefined;
+}
+
+export function entries<E extends { id: RRID }>(
+  collection: EntityCollection<E>
+): E[] {
+  return collection.ids.map((id) => byId(collection.entities, id)!);
 }

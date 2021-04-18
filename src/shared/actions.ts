@@ -12,11 +12,13 @@ import {
   RRPlayer,
   RRPlayerID,
   RRPrivateChat,
+  RRPrivateChatID,
+  RRPrivateChatMessage,
   RRToken,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
-interface Update<T extends { id: RRID }> extends OriginalUpdate<T> {
+interface Update<T extends { id: RRID }> extends OriginalUpdate<Omit<T, "id">> {
   id: T["id"]; // tighten the type of id to the opaque RRID
 }
 
@@ -86,18 +88,58 @@ export const privateChatAdd = createAction(
         id: rrid<RRPrivateChat>(),
         idA,
         idB,
-        messages: [],
+        messages: {
+          entities: {},
+          ids: [],
+        },
       },
     };
   }
 );
 
 export const privateChatUpdate = createAction<
-  Update<Omit<RRPrivateChat, "timestamp">>
+  Update<Omit<RRPrivateChat, "messages">>
 >("privatechat/update");
 
 export const privateChatRemove = createAction<RRPrivateChat["id"]>(
   "privatechat/remove"
+);
+
+export const privateChatMessageAdd = createAction(
+  "privatechat/message/add",
+  (
+    chatId: RRPrivateChatID,
+    message: Omit<RRPrivateChatMessage, "id" | "timestamp" | "read">
+  ): {
+    payload: { chatId: RRPrivateChatID; message: RRPrivateChatMessage };
+  } => {
+    return {
+      payload: {
+        chatId,
+        message: {
+          id: rrid<RRPrivateChatMessage>(),
+          timestamp: timestamp(),
+          read: false,
+          ...message,
+        },
+      },
+    };
+  }
+);
+
+export const privateChatMessageUpdate = createAction(
+  "privatechat/message/update",
+  (
+    chatId: RRPrivateChatID,
+    update: Update<Omit<RRPrivateChatMessage, "timestamp">>
+  ) => {
+    return {
+      payload: {
+        chatId,
+        update,
+      },
+    };
+  }
 );
 
 ////////////////////////////////////////////////////////////////////////////////
