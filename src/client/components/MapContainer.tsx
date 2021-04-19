@@ -1,9 +1,13 @@
 import React, { useState } from "react";
 import { useDrop } from "react-dnd";
-import { mapUpdate } from "../../shared/actions";
-import { RRID, RRToken } from "../../shared/state";
+import {
+  mapTokenAdd,
+  mapTokenRemove,
+  mapTokenUpdate,
+} from "../../shared/actions";
+import { RRToken, RRTokenOnMapID } from "../../shared/state";
 import { useMyself } from "../myself";
-import { byId, useServerDispatch, useServerState } from "../state";
+import { byId, entries, useServerDispatch, useServerState } from "../state";
 import { Map } from "./Map";
 
 export function MapContainer({ className }: { className: string }) {
@@ -11,45 +15,32 @@ export function MapContainer({ className }: { className: string }) {
   const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
   const dispatch = useServerDispatch();
 
-  const [selectedTokens, setSelectedTokens] = useState<RRID[]>([]);
+  const [selectedTokens, setSelectedTokens] = useState<RRTokenOnMapID[]>([]);
 
   // TODO introduce separate add function
   const [, dropRef] = useDrop<RRToken, void, never>(
     () => ({
       accept: "token",
       drop: (item) => {
-        if (!map.tokens.find((t) => t.tokenId === item.id)) {
-          const newToken = {
+        dispatch(
+          mapTokenAdd(map.id, {
             position: { x: Math.random() * 10, y: Math.random() * 10 },
             tokenId: item.id,
-          };
-          dispatch(
-            mapUpdate({
-              id: map.id,
-              changes: {
-                tokens: [...map.tokens, newToken],
-              },
-            })
-          );
-        }
+          })
+        );
       },
     }),
-    [dispatch, map.id, map.tokens]
+    [dispatch, map.id]
   );
 
   const handleKeyDown = (e: KeyboardEvent) => {
     switch (e.key) {
       case "Delete":
-        dispatch(
-          mapUpdate({
-            id: map.id,
-            changes: {
-              tokens: map.tokens.filter(
-                (t) => !selectedTokens.includes(t.tokenId)
-              ),
-            },
-          })
-        );
+        selectedTokens.forEach((selectedTokenId) => {
+          dispatch(
+            mapTokenRemove({ mapId: map.id, tokenOnMapId: selectedTokenId })
+          );
+        });
         break;
     }
   };
@@ -61,28 +52,26 @@ export function MapContainer({ className }: { className: string }) {
       <Map
         tokens={tokens}
         onMoveTokens={(dx, dy) => {
-          dispatch(
-            mapUpdate({
-              id: map.id,
-              changes: {
-                tokens: map.tokens.map((t) =>
-                  selectedTokens.includes(t.tokenId)
-                    ? {
-                        ...t,
-                        position: {
-                          x: t.position.x + dx,
-                          y: t.position.y + dy,
-                        },
-                      }
-                    : t
-                ),
-              },
-            })
-          );
+          selectedTokens.forEach((selectedTokenId) => {
+            const token = byId(map.tokens.entities, selectedTokenId);
+            if (token) {
+              dispatch(
+                mapTokenUpdate(map.id, {
+                  id: selectedTokenId,
+                  changes: {
+                    position: {
+                      x: token.position.x + dx,
+                      y: token.position.y + dy,
+                    },
+                  },
+                })
+              );
+            }
+          });
         }}
-        tokensOnMap={map.tokens}
+        tokensOnMap={entries(map.tokens)}
         selectedTokens={selectedTokens}
-        onSelectTokens={(t) => setSelectedTokens(t.map((t) => t.tokenId))}
+        onSelectTokens={(t) => setSelectedTokens(t.map((t) => t.id))}
         handleKeyDown={handleKeyDown}
       />
     </div>

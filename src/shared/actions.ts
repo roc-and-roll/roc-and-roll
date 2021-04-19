@@ -9,12 +9,15 @@ import {
   RRLogEntryDiceRoll,
   RRLogEntryMessage,
   RRMap,
+  RRMapID,
   RRPlayer,
   RRPlayerID,
   RRPrivateChat,
   RRPrivateChatID,
   RRPrivateChatMessage,
   RRToken,
+  RRTokenOnMap,
+  RRTokenOnMapID,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -63,6 +66,43 @@ export const mapAdd = createAction("map/add", (map: Omit<RRMap, "id">) => ({
 export const mapUpdate = createAction<Update<RRMap>>("map/update");
 
 export const mapRemove = createAction<RRMap["id"]>("map/remove");
+
+export const mapTokenAdd = createAction(
+  "map/token/add",
+  (
+    mapId: RRMapID,
+    tokenOnMap: Omit<RRTokenOnMap, "id">
+  ): {
+    payload: { mapId: RRMapID; tokenOnMap: RRTokenOnMap };
+  } => {
+    return {
+      payload: {
+        mapId,
+        tokenOnMap: {
+          id: rrid<RRTokenOnMap>(),
+          ...tokenOnMap,
+        },
+      },
+    };
+  }
+);
+
+export const mapTokenUpdate = createAction(
+  "map/token/update",
+  (mapId: RRMapID, update: Update<Omit<RRTokenOnMap, never>>) => {
+    return {
+      payload: {
+        mapId,
+        update,
+      },
+    };
+  }
+);
+
+export const mapTokenRemove = createAction<{
+  mapId: RRMapID;
+  tokenOnMapId: RRTokenOnMapID;
+}>("map/token/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
 // PrivateChats

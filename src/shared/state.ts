@@ -11,6 +11,8 @@ export type RRTokenID = Opaque<string, "token">;
 
 export type RRMapID = Opaque<string, "map">;
 
+export type RRTokenOnMapID = Opaque<string, "tokenOnMap">;
+
 export type RRPrivateChatID = Opaque<string, "privateChat">;
 
 export type RRPrivateChatMessageID = Opaque<string, "privateChatMessage">;
@@ -88,13 +90,17 @@ export type RRToken = {
   isTemplate: boolean;
 };
 
-export type RRTokenOnMap = { tokenId: RRTokenID; position: RRPoint };
+export type RRTokenOnMap = {
+  id: RRTokenOnMapID;
+  tokenId: RRTokenID;
+  position: RRPoint;
+};
 
 export type RRMap = {
   id: RRMapID;
   name: string;
 
-  tokens: Array<RRTokenOnMap>;
+  tokens: EntityCollection<RRTokenOnMap>;
   backgroundImages: Array<{
     image: RRFile;
     position: RRPoint;
@@ -212,7 +218,10 @@ const defaultMap: RRMap = {
   gmWorldPosition: { x: 0, y: 0 },
   grid: { enabled: true, size: { x: 70, y: 70 } },
   name: "unnamed",
-  tokens: [],
+  tokens: {
+    entities: {},
+    ids: [],
+  },
   id: rrid<RRMap>(),
 };
 
