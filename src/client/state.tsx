@@ -165,8 +165,11 @@ export function useServerState<T>(selector: (state: SyncedState) => T): T {
 
   useEffect(() => {
     const subscriber = (newState: SyncedState) => {
-      selectedStateRef.current = selectorRef.current!(newState);
-      rerender();
+      const newSelectedState = selectorRef.current!(newState);
+      if (newSelectedState !== selectedStateRef.current) {
+        selectedStateRef.current = newSelectedState;
+        rerender();
+      }
     };
     subscribe(subscriber);
     return () => unsubscribe(subscriber);

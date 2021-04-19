@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { tokenAdd, tokenUpdate } from "../../shared/actions";
+import { playerUpdate, tokenAdd, tokenUpdate } from "../../shared/actions";
 import { RRToken } from "../../shared/state";
 import { fileUrl, useFileUpload } from "../files";
 import { entries, useServerDispatch, useServerState } from "../state";
 import { useDrag } from "react-dnd";
+import { useMyself } from "../myself";
+import { GMArea } from "./GMArea";
 
 export function TokenManager() {
+  const myself = useMyself();
   const tokens = useServerState((s) => s.tokens);
   const [selectedToken, setSelectedToken] = useState<RRToken | null>(null);
 
@@ -24,7 +27,16 @@ export function TokenManager() {
   });
 
   const addToken = () => {
-    setSelectedToken(dispatch(tokenAdd(defaultToken())).payload);
+    const newToken = dispatch(tokenAdd(defaultToken())).payload;
+    dispatch(
+      playerUpdate({
+        id: myself.id,
+        changes: {
+          tokenIds: [...myself.tokenIds, newToken.id],
+        },
+      })
+    );
+    setSelectedToken(newToken);
   };
 
   return (
@@ -37,14 +49,32 @@ export function TokenManager() {
         />
       )}
       <div className="token-list">
-        {entries(tokens).map((t) => (
-          <TokenPreview
-            token={t}
-            key={t.id}
-            onSelect={() => setSelectedToken(t)}
-          />
-        ))}
+        {entries(tokens)
+          .filter((t) => myself.tokenIds.includes(t.id))
+          .map((t) => (
+            <TokenPreview
+              token={t}
+              key={t.id}
+              onSelect={() => setSelectedToken(t)}
+            />
+          ))}
       </div>
+      {myself.isGM && (
+        <GMArea>
+          <h4>Tokens of other players</h4>
+          <div className="token-list">
+            {entries(tokens)
+              .filter((t) => !myself.tokenIds.includes(t.id))
+              .map((t) => (
+                <TokenPreview
+                  token={t}
+                  key={t.id}
+                  onSelect={() => setSelectedToken(t)}
+                />
+              ))}
+          </div>
+        </GMArea>
+      )}
     </div>
   );
 }
