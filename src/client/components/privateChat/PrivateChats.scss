@@ -5,11 +5,14 @@ ul.private-chats-contact-list {
   overflow-y: auto;
 
   li {
-    cursor: pointer;
     padding: 4px 8px;
 
-    &:hover {
-      background-color: #444;
+    &.is-link {
+      cursor: pointer;
+
+      &:hover {
+        background-color: #444;
+      }
     }
 
     &.is-unread {

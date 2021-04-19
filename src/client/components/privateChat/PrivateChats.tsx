@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { RRPrivateChatID, RRPrivateChatMessage } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import { byId, entries, useServerDispatch, useServerState } from "../../state";
@@ -15,6 +15,8 @@ import remarkGFM from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import { useIsTabFocused } from "../../useIsTabFocused";
 import { chatRecipient, wasSentByMe } from "./privateChatUtil";
+import clsx from "clsx";
+import { PrivateChatInput } from "./PrivateChatInput";
 
 export default function PrivateChats() {
   const [selectedChatId, setSelectedChatId] = useState<RRPrivateChatID | null>(
@@ -94,7 +96,7 @@ function Chat({ id, close }: { id: RRPrivateChatID; close: () => void }) {
           />
         ))}
       </ul>
-      <ChatInput send={send} />
+      <PrivateChatInput send={send} otherPlayerId={otherId} />
     </div>
   );
 }
@@ -123,55 +125,6 @@ function ChatMessage({
   );
 }
 
-function ChatInput(props: { send: (message: string) => void }) {
-  const [text, setText] = useState("");
-
-  // auto resize
-  const textarea = useRef<HTMLTextAreaElement>(null);
-  useLayoutEffect(() => {
-    if (textarea.current) {
-      textarea.current.style.height = "auto";
-      textarea.current.style.height =
-        (textarea.current.scrollHeight + 4).toString() + "px";
-    }
-  }, [text]);
-
-  // Focus the text input on load
-  useEffect(() => {
-    textarea.current?.focus();
-  }, []);
-
-  const send = () => {
-    const message = text.trim();
-    if (message.length > 0) {
-      props.send(message);
-      setText("");
-      textarea.current?.focus();
-    }
-  };
-
-  return (
-    <div className="private-chat-input">
-      <textarea
-        ref={textarea}
-        rows={1}
-        placeholder="Type message..."
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyPress={(e) => {
-          if (!e.shiftKey && e.key === "Enter") {
-            e.preventDefault();
-            send();
-          }
-        }}
-      />
-      <button onClick={send} disabled={text.trim().length === 0}>
-        send
-      </button>
-    </div>
-  );
-}
-
 function ContactList({
   setSelectedChatId,
 }: {
@@ -182,11 +135,10 @@ function ContactList({
   const { ids: chatIds, entities: chats } = useServerState(
     (state) => state.privateChats
   );
-  const { ids: playerIds, entities: playerMap } = useServerState(
-    (state) => state.players
+  const playerCollection = useServerState((state) => state.players);
+  const otherPlayers = entries(playerCollection).filter(
+    (player) => player.id !== myself.id
   );
-
-  const players = playerIds.map((id) => byId(playerMap, id)!);
 
   const myChats = chatIds
     .map((id) => byId(chats, id)!)
@@ -194,38 +146,43 @@ function ContactList({
 
   return (
     <ul role="list" className="private-chats-contact-list">
-      {players
-        .filter((player) => player.id !== myself.id)
-        .map((player) => {
-          const chat = myChats.find(
-            (chat) => chat.idB === player.id || chat.idA === player.id
-          );
-          const numUnread = chat
-            ? entries(chat.messages).filter(
-                (message) =>
-                  !wasSentByMe(chat, message, myself.id) && !message.read
-              ).length
-            : 0;
-          return (
-            <li
-              key={player.id}
-              onClick={() => {
-                if (chat) {
-                  setSelectedChatId(chat.id);
-                } else {
-                  const id = dispatch(privateChatAdd(myself.id, player.id))
-                    .payload.id;
-                  setSelectedChatId(id);
-                }
-              }}
-              className={numUnread > 0 ? "is-unread" : undefined}
-            >
-              {player.name}
-              {player.isGM && " [GM]"}
-              {numUnread > 0 && ` (${numUnread} unread)`}
-            </li>
-          );
-        })}
+      {otherPlayers.map((player) => {
+        const chat = myChats.find(
+          (chat) => chat.idB === player.id || chat.idA === player.id
+        );
+        const numUnread = chat
+          ? entries(chat.messages).filter(
+              (message) =>
+                !wasSentByMe(chat, message, myself.id) && !message.read
+            ).length
+          : 0;
+        return (
+          <li
+            key={player.id}
+            onClick={() => {
+              if (chat) {
+                setSelectedChatId(chat.id);
+              } else {
+                const id = dispatch(privateChatAdd(myself.id, player.id))
+                  .payload.id;
+                setSelectedChatId(id);
+              }
+            }}
+            className={clsx("is-link", {
+              "is-unread": numUnread > 0,
+            })}
+          >
+            {player.name}
+            {player.isGM && " [GM]"}
+            {numUnread > 0 && ` (${numUnread} unread)`}
+          </li>
+        );
+      })}
+      {otherPlayers.length === 0 && (
+        <li>
+          <em>No other players to chat with found.</em>
+        </li>
+      )}
     </ul>
   );
 }
