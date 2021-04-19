@@ -17,7 +17,6 @@ export function MapContainer({ className }: { className: string }) {
 
   const [selectedTokens, setSelectedTokens] = useState<RRTokenOnMapID[]>([]);
 
-  // TODO introduce separate add function
   const [, dropRef] = useDrop<RRToken, void, never>(
     () => ({
       accept: "token",

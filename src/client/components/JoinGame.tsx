@@ -2,7 +2,7 @@ import React from "react";
 import { playerAdd } from "../../shared/actions";
 import { RRPlayerID } from "../../shared/state";
 import { randomColor } from "../colors";
-import { byId, useServerDispatch, useServerState } from "../state";
+import { entries, useServerDispatch, useServerState } from "../state";
 import "./JoinGame.scss";
 
 export function JoinGame({
@@ -36,22 +36,18 @@ export function JoinGame({
     <div className="join-game-wrapper">
       <h1>Join Game</h1>
       <ul role="list">
-        {players.ids.map((id) => {
-          const player = byId(players.entities, id)!;
-
-          return (
-            <li
-              key={id}
-              onClick={() => setMyPlayerId(id)}
-              style={{
-                textDecoration: "underline",
-                textDecorationColor: player.color,
-              }}
-            >
-              {player.name}
-            </li>
-          );
-        })}
+        {entries(players).map((player) => (
+          <li
+            key={player.id}
+            onClick={() => setMyPlayerId(player.id)}
+            style={{
+              textDecoration: "underline",
+              textDecorationColor: player.color,
+            }}
+          >
+            {player.name}
+          </li>
+        ))}
         <li onClick={joinAsNewPlayer}>
           <em>join as new player</em>
         </li>

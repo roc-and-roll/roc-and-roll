@@ -1,16 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { tokenAdd, tokenUpdate } from "../../shared/actions";
-import { EntityCollection, RRID, RRToken } from "../../shared/state";
+import { RRToken } from "../../shared/state";
 import { fileUrl, useFileUpload } from "../files";
-import { useServerDispatch, useServerState } from "../state";
+import { entries, useServerDispatch, useServerState } from "../state";
 import { useDrag } from "react-dnd";
-
-const mapEntities = <E extends { id: RRID }, J>(
-  map: EntityCollection<E>,
-  cb: (e: E) => J
-) => {
-  return map.ids.map((id) => cb(map.entities[id]!));
-};
 
 export function TokenManager() {
   const tokens = useServerState((s) => s.tokens);
@@ -44,7 +37,7 @@ export function TokenManager() {
         />
       )}
       <div className="token-list">
-        {mapEntities(tokens, (t) => (
+        {entries(tokens).map((t) => (
           <TokenPreview
             token={t}
             key={t.id}

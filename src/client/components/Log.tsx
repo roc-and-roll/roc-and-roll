@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { logEntryMessageAdd } from "../../shared/actions";
 import { RRLogEntry } from "../../shared/state";
 import { useMyself } from "../myself";
-import { byId, useServerDispatch, useServerState } from "../state";
+import { byId, entries, useServerDispatch, useServerState } from "../state";
 import { useScrollToBottom } from "../useScrollToBottom";
 import { formatTimestamp } from "../util";
 import { CollapseButton } from "./CollapseButton";
@@ -34,14 +34,15 @@ function LogEntry(props: { logEntry: RRLogEntry }) {
 }
 
 export function Log() {
-  const { ids: logEntryIds, entities: logEntries } = useServerState(
-    (state) => state.logEntries
-  );
+  const logEntriesCollection = useServerState((state) => state.logEntries);
   const myself = useMyself();
   const dispatch = useServerDispatch();
   const [collapsed, setCollapsed] = useState(true);
-  const lastLogEntry = logEntryIds.length
-    ? byId(logEntries, logEntryIds[logEntryIds.length - 1]!)
+  const lastLogEntry = logEntriesCollection.ids.length
+    ? byId(
+        logEntriesCollection.entities,
+        logEntriesCollection.ids[logEntriesCollection.ids.length - 1]!
+      )
     : null;
   const [scrollRef] = useScrollToBottom<HTMLUListElement>([collapsed]);
 
@@ -54,14 +55,11 @@ export function Log() {
       {!collapsed ? (
         <>
           <ul ref={scrollRef} className="log-text">
-            {logEntryIds.map((id) => {
-              const logEntry = byId(logEntries, id)!;
-              return (
-                <li key={id}>
-                  <LogEntry logEntry={logEntry} />
-                </li>
-              );
-            })}
+            {entries(logEntriesCollection).map((logEntry) => (
+              <li key={logEntry.id}>
+                <LogEntry logEntry={logEntry} />
+              </li>
+            ))}
           </ul>
           <button
             onClick={() => {
