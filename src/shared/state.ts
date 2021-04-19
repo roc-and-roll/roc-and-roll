@@ -21,6 +21,9 @@ export type RRLogEntryID = Opaque<string, "logEntry">;
 
 export type RRInitiativeTrackerEntryID = Opaque<string, "initiativeEntry">;
 
+// not used as part of the state, but as part of optimistic update handling
+export type OptimisticUpdateID = Opaque<string, "optimisticUpdate">;
+
 export type RRColor = string;
 
 export type RRPoint = { x: number; y: number };
@@ -256,7 +259,14 @@ export const initialSyncedState: SyncedState = {
   },
 };
 
-// TODO
-export type SyncedStateAction = PayloadAction<any>;
+export type SyncedStateAction<
+  P = void,
+  T extends string = string,
+  M = never
+> = PayloadAction<P, T, M, never> & {
+  meta?: {
+    __optimisticUpdateId__?: OptimisticUpdateID;
+  };
+};
 
 export type SyncedStateDispatch = Dispatch<SyncedStateAction>;
