@@ -1,6 +1,6 @@
 import React, { Suspense, useMemo } from "react";
 import { useMyself } from "../../myself";
-import { byId, entries, useServerState } from "../../state";
+import { entries, useServerState } from "../../state";
 import { Collapsible } from "../Collapsible";
 import { wasSentByMe } from "./privateChatUtil";
 
