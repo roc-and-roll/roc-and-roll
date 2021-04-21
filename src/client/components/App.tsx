@@ -7,8 +7,6 @@ import { byId, useServerState } from "../state";
 import useLocalState from "../useLocalState";
 import { RRPlayerID } from "../../shared/state";
 import { MyselfContext } from "../myself";
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
 import { JoinGame } from "./JoinGame";
 import { BottomFloats } from "./BottomFloats";
 
@@ -25,13 +23,11 @@ export function App() {
 
   return myself ? (
     <MyselfContext.Provider value={myself}>
-      <DndProvider backend={HTML5Backend}>
-        <div className="app-wrapper">
-          <Sidebar logout={forgetMyPlayerId} />
-          <MapContainer className="app-map" />
-          <BottomFloats />
-        </div>
-      </DndProvider>
+      <div className="app-wrapper">
+        <Sidebar logout={forgetMyPlayerId} />
+        <MapContainer className="app-map" />
+        <BottomFloats />
+      </div>
     </MyselfContext.Provider>
   ) : (
     <JoinGame setMyPlayerId={setMyPlayerId} />
