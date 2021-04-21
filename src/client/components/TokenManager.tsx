@@ -5,7 +5,7 @@ import {
   tokenRemove,
   tokenUpdate,
 } from "../../shared/actions";
-import { RRToken } from "../../shared/state";
+import { RRToken, RRTokenID } from "../../shared/state";
 import { fileUrl, useFileUpload } from "../files";
 import { entries, useServerDispatch, useServerState } from "../state";
 import { useDrag } from "react-dnd";
@@ -16,7 +16,7 @@ import { Popover } from "./Popover";
 export function TokenManager() {
   const myself = useMyself();
   const tokens = useServerState((s) => s.tokens);
-  const [selectedToken, setSelectedToken] = useState<RRToken | null>(null);
+  const [selectedToken, setSelectedToken] = useState<RRTokenID | null>(null);
 
   const dispatch = useServerDispatch();
 
@@ -42,8 +42,17 @@ export function TokenManager() {
         },
       })
     );
-    setSelectedToken(newToken);
+    setSelectedToken(newToken.id);
   };
+
+  const tokenPreview = (t: RRToken) => (
+    <TokenPreview
+      token={t}
+      key={t.id}
+      isSelected={selectedToken === t.id}
+      setSelectedToken={(t) => setSelectedToken(t?.id ?? null)}
+    />
+  );
 
   return (
     <>
@@ -52,14 +61,7 @@ export function TokenManager() {
       <div className="token-list">
         {entries(tokens)
           .filter((t) => myself.tokenIds.includes(t.id))
-          .map((t) => (
-            <TokenPreview
-              token={t}
-              key={t.id}
-              isSelected={selectedToken === t}
-              setSelectedToken={setSelectedToken}
-            />
-          ))}
+          .map(tokenPreview)}
       </div>
       {myself.isGM && (
         <GMArea>
@@ -67,14 +69,7 @@ export function TokenManager() {
           <div className="token-list">
             {entries(tokens)
               .filter((t) => !myself.tokenIds.includes(t.id))
-              .map((t) => (
-                <TokenPreview
-                  token={t}
-                  key={t.id}
-                  isSelected={selectedToken === t}
-                  setSelectedToken={setSelectedToken}
-                />
-              ))}
+              .map(tokenPreview)}
           </div>
         </GMArea>
       )}
