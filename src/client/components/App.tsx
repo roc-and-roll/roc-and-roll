@@ -3,7 +3,6 @@ import "./global.scss";
 import React from "react";
 import { Sidebar } from "./Sidebar";
 import { MapContainer } from "./MapContainer";
-import styles from "./App.module.scss";
 import { byId, useServerState } from "../state";
 import useLocalState from "../useLocalState";
 import { RRPlayerID } from "../../shared/state";
@@ -27,9 +26,9 @@ export function App() {
   return myself ? (
     <MyselfContext.Provider value={myself}>
       <DndProvider backend={HTML5Backend}>
-        <div className={styles["wrapper"]}>
-          <Sidebar className={styles["sidebar"]!} logout={forgetMyPlayerId} />
-          <MapContainer className={styles["map"]!} />
+        <div className="app-wrapper">
+          <Sidebar logout={forgetMyPlayerId} />
+          <MapContainer className="app-map" />
           <BottomFloats />
         </div>
       </DndProvider>

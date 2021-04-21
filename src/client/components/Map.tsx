@@ -300,7 +300,7 @@ export const Map: React.FC<{
 
   return (
     <svg
-      className="map"
+      className="map-svg"
       ref={svgRef}
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleMouseDown}

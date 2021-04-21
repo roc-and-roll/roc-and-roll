@@ -1,0 +1,22 @@
+.tippy-box[data-theme~='roc-and-roll'] {
+  background: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+
+  & > .tippy-content {
+    padding: 1rem;
+  }
+}
+
+.popover-close {
+  border: none;
+  padding: 0;
+  line-height: 1rem;
+  background: none;
+  color: #fff;
+  font-weight: bold;
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  cursor: pointer;
+}

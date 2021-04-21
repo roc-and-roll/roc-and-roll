@@ -6,6 +6,7 @@ import { entries, useServerDispatch, useServerState } from "../state";
 import { useDrag } from "react-dnd";
 import { useMyself } from "../myself";
 import { GMArea } from "./GMArea";
+import { Popover } from "./Popover";
 
 export function TokenManager() {
   const myself = useMyself();
@@ -40,14 +41,9 @@ export function TokenManager() {
   };
 
   return (
-    <div className="token-manager">
+    <>
       <button onClick={addToken}>Add Token</button>
-      {selectedToken && (
-        <TokenEditor
-          token={selectedToken}
-          onClose={() => setSelectedToken(null)}
-        />
-      )}
+
       <div className="token-list">
         {entries(tokens)
           .filter((t) => myself.tokenIds.includes(t.id))
@@ -55,7 +51,8 @@ export function TokenManager() {
             <TokenPreview
               token={t}
               key={t.id}
-              onSelect={() => setSelectedToken(t)}
+              isSelected={selectedToken === t}
+              setSelectedToken={setSelectedToken}
             />
           ))}
       </div>
@@ -69,22 +66,25 @@ export function TokenManager() {
                 <TokenPreview
                   token={t}
                   key={t.id}
-                  onSelect={() => setSelectedToken(t)}
+                  isSelected={selectedToken === t}
+                  setSelectedToken={setSelectedToken}
                 />
               ))}
           </div>
         </GMArea>
       )}
-    </div>
+    </>
   );
 }
 
 function TokenPreview({
   token,
-  onSelect,
+  isSelected,
+  setSelectedToken,
 }: {
   token: RRToken;
-  onSelect: () => void;
+  isSelected: boolean;
+  setSelectedToken: (t: RRToken | null) => void;
 }) {
   const [, dragRef] = useDrag<RRToken, void, null>(() => ({
     type: "token",
@@ -92,17 +92,31 @@ function TokenPreview({
   }));
 
   return (
-    <div onClick={onSelect} ref={dragRef} className="token-preview">
-      {token.name}
+    <Popover
+      content={
+        <TokenEditor token={token} onClose={() => setSelectedToken(null)} />
+      }
+      visible={!!isSelected}
+      onClickOutside={() => setSelectedToken(null)}
+      interactive
+      placement="right"
+    >
       <div
-        className="token-image"
-        style={{
-          backgroundImage: token.image
-            ? `url(${fileUrl(token.image)})`
-            : "none",
-        }}
-      />
-    </div>
+        ref={dragRef}
+        className="token-preview"
+        onClick={() => setSelectedToken(token)}
+      >
+        {token.name}
+        <div
+          className="token-image"
+          style={{
+            backgroundImage: token.image
+              ? `url(${fileUrl(token.image)})`
+              : "none",
+          }}
+        />
+      </div>
+    </Popover>
   );
 }
 
@@ -144,9 +158,9 @@ function TokenEditor({
 
   return (
     <div className="token-popup">
-      <div className="token-popup-close" onClick={onClose}>
+      <button className="popover-close" onClick={onClose}>
         ×
-      </div>
+      </button>
       <input
         ref={nameInput}
         onKeyPress={(e) => e.key === "Enter" && updateName()}

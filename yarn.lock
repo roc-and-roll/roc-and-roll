@@ -1627,6 +1627,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@popperjs/core@npm:^2.8.3":
+  version: 2.9.2
+  resolution: "@popperjs/core@npm:2.9.2"
+  checksum: cc4de8b46fc190805619224f1c683bee6a162276430af3728d35087099ad83a80da3c11c4eac7cb2b5aa2fa59d4c7c689e211a3e955136588ed6dedb5bff32c5
+  languageName: node
+  linkType: hard
+
 "@react-dnd/asap@npm:^4.0.0":
   version: 4.0.0
   resolution: "@react-dnd/asap@npm:4.0.0"
@@ -1716,6 +1723,18 @@ __metadata:
   dependencies:
     defer-to-connect: ^1.0.1
   checksum: a46ec854231194dd1ab924a5ea0d8f0afa2b7133754a3def099cc5749e34802d8668a7d7ee3583327048354b9dc621113843d8546387e06ff57e6763cbb558d9
+  languageName: node
+  linkType: hard
+
+"@tippyjs/react@npm:^4.2.5":
+  version: 4.2.5
+  resolution: "@tippyjs/react@npm:4.2.5"
+  dependencies:
+    tippy.js: ^6.3.1
+  peerDependencies:
+    react: ">=16.8"
+    react-dom: ">=16.8"
+  checksum: f886801245bb9d24b3017b706c4054f37abf753d153f484d22872c5b7b3304c2cf5b866f4d1780279205d0d5fb605ce099aa2d45e207efb1f4f5635b0ce63abb
   languageName: node
   linkType: hard
 
@@ -5581,6 +5600,13 @@ __metadata:
   version: 2.0.6
   resolution: "fast-levenshtein@npm:2.0.6"
   checksum: a2d03af3088b0397633e007fb3010ecfa4f91cae2116d2385653c59396a1b31467641afa672a79e6f82218518670dc144128378124e711e35dbf90bc82846f22
+  languageName: node
+  linkType: hard
+
+"fast-memoize@npm:^2.5.1":
+  version: 2.5.2
+  resolution: "fast-memoize@npm:2.5.2"
+  checksum: 88bd91488039c0e04131d5382b8ea084268f144ce14ab36c360dd04f7792ac0c419e125b0fe6e6f41e77f03d1f703b31697475b2e95889ca86510623e2f0d904
   languageName: node
   linkType: hard
 
@@ -10284,6 +10310,18 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"re-resizable@npm:^6.9.0":
+  version: 6.9.0
+  resolution: "re-resizable@npm:6.9.0"
+  dependencies:
+    fast-memoize: ^2.5.1
+  peerDependencies:
+    react: ^16.13.1 || ^17.0.0
+    react-dom: ^16.13.1 || ^17.0.0
+  checksum: 941121f15d7f352a42e00cdd3a253c7a5a6fb19776e94f2b71fd7a6fdbe305914c7b36ed7dcf918a11f28387e8e8689039b06d72ca571a9517075dfb2dd9814c
+  languageName: node
+  linkType: hard
+
 "react-dnd-html5-backend@npm:^14.0.0":
   version: 14.0.0
   resolution: "react-dnd-html5-backend@npm:14.0.0"
@@ -10973,6 +11011,7 @@ resolve@^2.0.0-next.3:
     "@pmmmwh/react-refresh-webpack-plugin": ^0.4.3
     "@react-three/fiber": ^6.0.14
     "@reduxjs/toolkit": ^1.5.1
+    "@tippyjs/react": ^4.2.5
     "@types/express": ^4.17.11
     "@types/jest": ^26.0.21
     "@types/multer": ^1.4.5
@@ -11015,6 +11054,7 @@ resolve@^2.0.0-next.3:
     nodemon-webpack-plugin: ^4.5.2
     prettier: ^2.2.1
     raw-loader: ^4.0.2
+    re-resizable: ^6.9.0
     react: ^17.0.2
     react-dnd: ^14.0.2
     react-dnd-html5-backend: ^14.0.0
@@ -12351,6 +12391,15 @@ resolve@^2.0.0-next.3:
   version: 1.1.0
   resolution: "thunky@npm:1.1.0"
   checksum: eceb856b6412ecd02c24731a2441698aa57622e03b0a4d6d1dea47d7b173aca54980fd2fba5b3a2e11ccec48373c46483f7f55a46717bfc07645395fa57267a6
+  languageName: node
+  linkType: hard
+
+"tippy.js@npm:^6.3.1":
+  version: 6.3.1
+  resolution: "tippy.js@npm:6.3.1"
+  dependencies:
+    "@popperjs/core": ^2.8.3
+  checksum: e4194c42424bafe98919776bbacb5bd67ead5ca0d45126823c9e494d22d67ce1b09000aa18c84f36fc051071149656cecabb8dedb7adf598ea9372542fe11920
   languageName: node
   linkType: hard
 
