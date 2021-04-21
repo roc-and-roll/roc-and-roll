@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import {
   mapTokenAdd,
@@ -16,6 +16,7 @@ import {
   setById,
 } from "../state";
 import { Map } from "./Map";
+import composeRefs from "@seznam/compose-react-refs";
 
 export function MapContainer({ className }: { className: string }) {
   const myself = useMyself();
@@ -24,10 +25,18 @@ export function MapContainer({ className }: { className: string }) {
 
   const [selectedTokens, setSelectedTokens] = useState<RRTokenOnMapID[]>([]);
 
-  const [, dropRef] = useDrop<RRToken, void, never>(
+  const dropRef2 = useRef<HTMLDivElement>(null);
+  const [, dropRef1] = useDrop<RRToken, void, never>(
     () => ({
       accept: "token",
-      drop: (item) => {
+      drop: (item, monitor) => {
+        const topLeft = dropRef2.current!.getBoundingClientRect();
+        const dropPosition = monitor.getClientOffset();
+
+        console.warn({
+          x: dropPosition!.x - topLeft.x,
+          y: dropPosition!.y - topLeft.y,
+        });
         dispatch(
           mapTokenAdd(map.id, {
             position: { x: Math.random() * 10, y: Math.random() * 10 },
@@ -38,6 +47,7 @@ export function MapContainer({ className }: { className: string }) {
     }),
     [dispatch, map.id]
   );
+  const dropRef = composeRefs<HTMLDivElement>(dropRef2, dropRef1);
 
   const handleKeyDown = (e: KeyboardEvent) => {
     switch (e.key) {

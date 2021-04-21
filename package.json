@@ -19,6 +19,7 @@
   "dependencies": {
     "@react-three/fiber": "^6.0.14",
     "@reduxjs/toolkit": "^1.5.1",
+    "@seznam/compose-react-refs": "^1.0.6",
     "@tippyjs/react": "^4.2.5",
     "bufferutil": "^4.0.3",
     "clsx": "^1.1.1",
