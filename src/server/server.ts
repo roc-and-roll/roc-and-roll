@@ -6,6 +6,7 @@ import path from "path";
 import fs from "fs";
 import { setupStatePersistence } from "./setupStatePersistence";
 import { SyncedState } from "../shared/state";
+import NameGenerator from "../shared/namegen";
 
 // TODO: Place uploaded files somewhere else where it is safe.
 const workspaceDir = path.join(os.tmpdir(), "roc-and-roll");
@@ -30,3 +31,9 @@ setupStatePersistence(store, statePath);
 
 console.log(`Roc & Roll started at ${url}.`);
 console.log(`Files are stored in ${workspaceDir}.`);
+
+// http://rinkworks.com/namegen/
+// https://github.com/skeeto/fantasyname
+const generator = new NameGenerator("!<s|B|Bv|v><V|s|'|V><s|V|C>");
+
+console.log("Random name of the day: ", generator.toString());
