@@ -1692,6 +1692,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@seznam/compose-react-refs@npm:^1.0.6":
+  version: 1.0.6
+  resolution: "@seznam/compose-react-refs@npm:1.0.6"
+  checksum: ec8b0f73ab4c30cdfaeee672a7f8a4eafb3a8261cba243b50a8692c4dc3016625b911b8bcbc9c9b3e639ded8b82a5595f7dad73b258b7f7f3a2f19ea2c2ed088
+  languageName: node
+  linkType: hard
+
 "@sindresorhus/is@npm:^0.14.0":
   version: 0.14.0
   resolution: "@sindresorhus/is@npm:0.14.0"
@@ -11011,6 +11018,7 @@ resolve@^2.0.0-next.3:
     "@pmmmwh/react-refresh-webpack-plugin": ^0.4.3
     "@react-three/fiber": ^6.0.14
     "@reduxjs/toolkit": ^1.5.1
+    "@seznam/compose-react-refs": ^1.0.6
     "@tippyjs/react": ^4.2.5
     "@types/express": ^4.17.11
     "@types/jest": ^26.0.21
