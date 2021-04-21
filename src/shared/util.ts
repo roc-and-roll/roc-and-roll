@@ -35,3 +35,23 @@ export function rrid<E extends { id: RRID }>() {
 export function timestamp(): RRTimestamp {
   return Date.now() as RRTimestamp;
 }
+
+export function debounced<A extends unknown[], R extends unknown>(
+  fn: (...args: A) => R,
+  time: number
+): (...args: A) => void {
+  const nextArgs: { current: A | null } = { current: null };
+  const timerId: { current: ReturnType<typeof setTimeout> | null } = {
+    current: null,
+  };
+
+  return (...args: A) => {
+    nextArgs.current = args;
+    timerId.current ??= setTimeout(() => {
+      const args = nextArgs.current!;
+      timerId.current = null;
+      nextArgs.current = null;
+      fn(...args);
+    }, time);
+  };
+}
