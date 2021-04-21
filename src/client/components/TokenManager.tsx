@@ -10,7 +10,6 @@ import { fileUrl, useFileUpload } from "../files";
 import {
   entries,
   useDebouncedServerUpdate,
-  useLatest,
   useServerDispatch,
   useServerState,
 } from "../state";
@@ -18,11 +17,13 @@ import { useDrag } from "react-dnd";
 import { useMyself } from "../myself";
 import { GMArea } from "./GMArea";
 import { Popover } from "./Popover";
+import { randomName } from "../../shared/namegen";
 
 export function TokenManager() {
   const myself = useMyself();
   const tokens = useServerState((s) => s.tokens);
   const [selectedToken, setSelectedToken] = useState<RRTokenID | null>(null);
+  const [newTokenIds, setNewTokenIds] = useState<RRTokenID[]>([]);
 
   const dispatch = useServerDispatch();
 
@@ -35,7 +36,7 @@ export function TokenManager() {
     size: 1,
     visibility: "everyone",
     isTemplate: false,
-    name: "unnamed",
+    name: randomName(),
   });
 
   const addToken = () => {
@@ -48,6 +49,7 @@ export function TokenManager() {
         },
       })
     );
+    setNewTokenIds((l) => [...l, newToken.id]);
     setSelectedToken(newToken.id);
   };
 
@@ -55,6 +57,10 @@ export function TokenManager() {
     <TokenPreview
       token={t}
       key={t.id}
+      wasJustCreated={newTokenIds.includes(t.id)}
+      onNameFirstEdited={() =>
+        setNewTokenIds((l) => l.filter((id) => id !== t.id))
+      }
       isSelected={selectedToken === t.id}
       setSelectedToken={(t) => setSelectedToken(t?.id ?? null)}
     />
@@ -87,10 +93,14 @@ function TokenPreview({
   token,
   isSelected,
   setSelectedToken,
+  onNameFirstEdited,
+  wasJustCreated,
 }: {
   token: RRToken;
   isSelected: boolean;
   setSelectedToken: (t: RRToken | null) => void;
+  onNameFirstEdited: () => void;
+  wasJustCreated: boolean;
 }) {
   const [, dragRef] = useDrag<RRToken, void, null>(() => ({
     type: "token",
@@ -100,7 +110,12 @@ function TokenPreview({
   return (
     <Popover
       content={
-        <TokenEditor token={token} onClose={() => setSelectedToken(null)} />
+        <TokenEditor
+          token={token}
+          wasJustCreated={wasJustCreated}
+          onNameFirstEdited={onNameFirstEdited}
+          onClose={() => setSelectedToken(null)}
+        />
       }
       visible={!!isSelected}
       onClickOutside={() => setSelectedToken(null)}
@@ -128,10 +143,14 @@ function TokenPreview({
 
 function TokenEditor({
   token,
+  wasJustCreated,
   onClose,
+  onNameFirstEdited,
 }: {
   token: RRToken;
   onClose: () => void;
+  wasJustCreated: boolean;
+  onNameFirstEdited: () => void;
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
@@ -153,13 +172,15 @@ function TokenEditor({
     1000
   );
 
-  const nameRef = useLatest(name);
-
   useEffect(() => {
     fileInput.current!.value = "";
     nameInput.current!.focus();
-    if (nameRef.current === "unnamed") nameInput.current!.select();
-  }, [token.id, nameRef]);
+    if (wasJustCreated) nameInput.current!.select();
+  }, [token.id, wasJustCreated]);
+
+  useEffect(() => {
+    if (wasJustCreated) onNameFirstEdited();
+  }, [name, onNameFirstEdited, wasJustCreated]);
 
   const remove = () => {
     dispatch(tokenRemove(token.id));
