@@ -13,7 +13,13 @@ import {
 import { assertNever } from "../../shared/util";
 import { useMyself } from "../myself";
 import { diceResult, rollInitiative } from "../roll";
-import { byId, entries, useServerDispatch, useServerState } from "../state";
+import {
+  byId,
+  entries,
+  useDebouncedServerUpdate,
+  useServerDispatch,
+  useServerState,
+} from "../state";
 import useLocalState from "../useLocalState";
 import { TokenStack } from "./TokenManager";
 
@@ -24,8 +30,6 @@ function InitiativeEntry({
   entry: RRInitiativeTrackerEntry;
   tokenCollection: TokensSyncedState;
 }) {
-  const dispatch = useServerDispatch();
-
   let content = null;
   if (entry.type === "lairAction") {
     content = entry.description;
@@ -44,48 +48,40 @@ function InitiativeEntry({
     );
   }
 
-  const [initiativeStr, setInitiativeStr] = useState(
-    entry.initiative.toString()
-  );
-
-  useEffect(() => {
-    const initiative = parseInt(initiativeStr);
-    if (isNaN(initiative)) {
-      // fail
-    } else {
-      if (entry.type === "token") {
-        dispatch(
-          initiativeTrackerEntryTokenUpdate({
-            id: entry.id,
-            changes: {
-              initiative: initiative,
-            },
-          })
-        );
-      } else if (entry.type === "lairAction") {
-        dispatch(
-          initiativeTrackerEntryLairActionUpdate({
-            id: entry.id,
-            changes: {
-              initiative: initiative,
-            },
-          })
-        );
-      } else {
-        assertNever(entry);
+  const [initiative, setInitiative] = useDebouncedServerUpdate(
+    entry.initiative.toString(),
+    (initiativeStr) => {
+      const initiative = parseInt(initiativeStr);
+      if (isNaN(initiative)) {
+        return;
       }
-    }
-  }, [dispatch, entry, entry.id, entry.type, initiativeStr]);
+
+      if (entry.type === "token") {
+        return initiativeTrackerEntryTokenUpdate({
+          id: entry.id,
+          changes: {
+            initiative,
+          },
+        });
+      } else if (entry.type === "lairAction") {
+        return initiativeTrackerEntryLairActionUpdate({
+          id: entry.id,
+          changes: {
+            initiative,
+          },
+        });
+      }
+    },
+    1000
+  );
 
   return (
     <li key={entry.id}>
       {content}
       <input
         type="number"
-        value={initiativeStr}
-        onChange={(e) => {
-          setInitiativeStr(e.target.value);
-        }}
+        value={initiative}
+        onChange={(e) => setInitiative(e.target.value)}
       />
     </li>
   );

@@ -267,11 +267,14 @@ export function useImmerState<V>(value: V) {
 }
 */
 
-export function useDebouncedServerUpdate<V, P, T extends string, M = never>(
+export function useDebouncedServerUpdate<V>(
   serverValue: V,
   actionCreator: (
     p: V
-  ) => undefined | SyncedStateAction<P, T, M> | SyncedStateAction<P, T, M>[],
+  ) =>
+    | undefined
+    | SyncedStateAction<unknown, string, never>
+    | SyncedStateAction<unknown, string, never>[],
   debounceTime: number,
   lerp?: (start: V, end: V, amount: number) => V
 ): readonly [V, (newValue: V | ((v: V) => V)) => void] {
@@ -410,16 +413,12 @@ export function useDebouncedServerUpdate<V, P, T extends string, M = never>(
     (newState: V) => {
       let actionCreatorResult = actionCreatorRef.current(newState);
       if (actionCreatorResult === undefined) {
-        throw new Error(
-          "Not yet supported. We probably need to set optimisticUpdatePhase to off(?)"
-        );
+        return;
       } else if (!Array.isArray(actionCreatorResult)) {
         actionCreatorResult = [actionCreatorResult];
       }
       if (actionCreatorResult.length === 0) {
-        throw new Error(
-          "Not yet supported. We probably need to set optimisticUpdatePhase to off(?)"
-        );
+        return;
       }
 
       const actions = actionCreatorResult.map((action) => ({
