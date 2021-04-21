@@ -38,7 +38,6 @@ a {
   padding: 1rem;
 
   & > div {
-    margin-bottom: 3rem;
     border-top: 1px solid #333;
     border-bottom: 1px solid #333;
   }
@@ -98,18 +97,21 @@ a {
 }
 
 .collapse-button {
-    padding: 0px;
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 32px;
-    line-height: 32px;
-    background-color: #fff;
-    cursor: pointer;
-    &:hover { background-color: #ccc; }
+  padding: 0px;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 32px;
+  line-height: 32px;
+  background-color: #fff;
+  cursor: pointer;
+  &:hover {
+    background-color: #ccc;
+  }
 }
 
 .collapsible-header {
+  padding: 0.5rem 0;
   display: flex;
   justify-content: space-between;
 }
