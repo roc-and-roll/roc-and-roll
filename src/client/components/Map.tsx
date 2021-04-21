@@ -41,7 +41,7 @@ export const Map: React.FC<{
   tokens: TokensSyncedState;
   selectedTokens: RRTokenOnMapID[];
   onMoveTokens: (dx: number, dy: number) => void;
-  onSelectTokens: (tokens: RRTokenOnMap[]) => void;
+  onSelectTokens: (ids: RRTokenOnMapID[]) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
 }> = ({
   tokensOnMap,
@@ -57,7 +57,6 @@ export const Map: React.FC<{
   const [dragState, setDragState] = useState({
     start: { x: 0, y: 0 },
     lastMouse: { x: 0, y: 0 },
-    delta: { x: 0, y: 0 },
   });
 
   const [selectionArea, setSelectionArea] = useState<Rectangle | null>(null);
@@ -111,14 +110,15 @@ export const Map: React.FC<{
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       const { x, y } = localCoords(e);
+      const frameDelta = {
+        x: x - dragState.lastMouse.x,
+        y: y - dragState.lastMouse.y,
+      };
 
       switch (mouseAction) {
         case MouseAction.PAN: {
           setTransform((t) =>
-            compose(
-              translate(x - dragState.lastMouse.x, y - dragState.lastMouse.y),
-              t
-            )
+            compose(translate(frameDelta.x, frameDelta.y), t)
           );
           break;
         }
@@ -130,8 +130,7 @@ export const Map: React.FC<{
           break;
         }
         case MouseAction.MOVE_TOKEN: {
-          // const [localX, localY] = localCoords(e);
-          // onMoveTokens(localX - lastMousePos[0], localY - lastMousePos[1]);
+          onMoveTokens(frameDelta.x / transform.a, frameDelta.y / transform.a);
           break;
         }
       }
@@ -141,12 +140,18 @@ export const Map: React.FC<{
           return {
             ...p,
             lastMouse: { x, y },
-            delta: { x: x - p.start.x, y: y - p.start.y },
           };
         });
       }
     },
-    [dragState.lastMouse.x, dragState.lastMouse.y, globalToLocal, mouseAction]
+    [
+      dragState.lastMouse.x,
+      dragState.lastMouse.y,
+      globalToLocal,
+      mouseAction,
+      onMoveTokens,
+      transform.a,
+    ]
   );
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -164,7 +169,6 @@ export const Map: React.FC<{
     setDragState({
       start: local,
       lastMouse: local,
-      delta: { x: 0, y: 0 },
     });
 
     if (e.button === SELECTION_BUTTON) {
@@ -183,7 +187,6 @@ export const Map: React.FC<{
     setDragState({
       start: local,
       lastMouse: local,
-      delta: { x: 0, y: 0 },
     });
     handleStartMoveToken(token);
   };
@@ -201,28 +204,22 @@ export const Map: React.FC<{
     return cb(left, top, right - left, bottom - top);
   };
 
-  const hoveredTokens = withSelectionAreaDo<RRTokenOnMap[]>(
+  const hoveredTokens = withSelectionAreaDo<RRTokenOnMapID[]>(
     (x, y, w, h) =>
-      tokensOnMap.filter(
-        (t) =>
-          t.position.x + GRID_SIZE >= x &&
-          x + w >= t.position.x &&
-          t.position.y + GRID_SIZE >= y &&
-          y + h >= t.position.y
-      ),
+      tokensOnMap
+        .filter(
+          (t) =>
+            t.position.x + GRID_SIZE >= x &&
+            x + w >= t.position.x &&
+            t.position.y + GRID_SIZE >= y &&
+            y + h >= t.position.y
+        )
+        .map((t) => t.id),
     []
   );
 
   const handleMouseUp = useCallback(
     (e: MouseEvent) => {
-      if (mouseAction === MouseAction.MOVE_TOKEN) {
-        // commit change to server
-        onMoveTokens(
-          dragState.delta.x / transform.a,
-          dragState.delta.y / transform.a
-        );
-      }
-
       setMouseAction(MouseAction.NONE);
 
       if (mouseAction === MouseAction.SELECTION_AREA) {
@@ -230,15 +227,7 @@ export const Map: React.FC<{
         setSelectionArea(null);
       }
     },
-    [
-      mouseAction,
-      onMoveTokens,
-      dragState.delta.x,
-      dragState.delta.y,
-      transform.a,
-      onSelectTokens,
-      hoveredTokens,
-    ]
+    [mouseAction, onSelectTokens, hoveredTokens]
   );
 
   useEffect(() => {
@@ -257,18 +246,10 @@ export const Map: React.FC<{
 
   const handleStartMoveToken = (t: RRTokenOnMap) => {
     if (!selectedTokens.includes(t.id)) {
-      onSelectTokens([t]);
+      onSelectTokens([t.id]);
     }
     setMouseAction(MouseAction.MOVE_TOKEN);
   };
-
-  const tokenPosition = (t: RRTokenOnMap) =>
-    mouseAction === MouseAction.MOVE_TOKEN && selectedTokens.includes(t.id)
-      ? {
-          x: t.position.x + dragState.delta.x / transform.a,
-          y: t.position.y + dragState.delta.y / transform.a,
-        }
-      : t.position;
 
   const grid = () => (
     <>
@@ -320,16 +301,15 @@ export const Map: React.FC<{
           <></>
         )}
         {tokensOnMap.map((t) => {
-          const position = tokenPosition(t);
           return (
             <MapToken
               key={t.id}
               onStartMove={(e) => handleDragStart(e, t)}
-              x={position.x}
-              y={position.y}
+              x={t.position.x}
+              y={t.position.y}
               token={byId(tokens.entities, t.tokenId)!}
               selected={
-                hoveredTokens.includes(t) || selectedTokens.includes(t.id)
+                hoveredTokens.includes(t.id) || selectedTokens.includes(t.id)
               }
             />
           );
