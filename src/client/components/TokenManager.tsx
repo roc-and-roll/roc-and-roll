@@ -1,5 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { playerUpdate, tokenAdd, tokenUpdate } from "../../shared/actions";
+import {
+  playerUpdate,
+  tokenAdd,
+  tokenRemove,
+  tokenUpdate,
+} from "../../shared/actions";
 import { RRToken } from "../../shared/state";
 import { fileUrl, useFileUpload } from "../files";
 import { entries, useServerDispatch, useServerState } from "../state";
@@ -156,6 +161,11 @@ function TokenEditor({
     dispatch(tokenUpdate({ id: token.id, changes: { name } }));
   };
 
+  const remove = () => {
+    dispatch(tokenRemove(token.id));
+    onClose();
+  };
+
   return (
     <div className="token-popup">
       <button className="popover-close" onClick={onClose}>
@@ -175,6 +185,7 @@ function TokenEditor({
         type="file"
         ref={fileInput}
       />
+      <button onClick={remove}>Delete</button>
     </div>
   );
 }
