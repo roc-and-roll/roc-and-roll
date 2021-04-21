@@ -49,6 +49,9 @@ export function MapContainer({ className }: { className: string }) {
   return (
     <div className={className} ref={dropRef}>
       <Map
+        gridEnabled={map.gridEnabled}
+        backgroundColor={map.backgroundColor}
+        myself={myself}
         tokens={tokens}
         onMoveTokens={(dx, dy) => {
           selectedTokens.forEach((selectedTokenId) => {

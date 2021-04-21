@@ -10,6 +10,8 @@ import {
   inverse,
 } from "transformation-matrix";
 import {
+  RRColor,
+  RRPlayer,
   RRToken,
   RRTokenOnMap,
   RRTokenOnMapID,
@@ -37,14 +39,20 @@ enum MouseAction {
 }
 
 export const Map: React.FC<{
+  myself: RRPlayer;
   tokensOnMap: RRTokenOnMap[];
+  gridEnabled: boolean;
+  backgroundColor: RRColor;
   tokens: TokensSyncedState;
   selectedTokens: RRTokenOnMapID[];
   onMoveTokens: (dx: number, dy: number) => void;
   onSelectTokens: (tokens: RRTokenOnMap[]) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
 }> = ({
+  myself,
   tokensOnMap,
+  gridEnabled,
+  backgroundColor,
   selectedTokens,
   onSelectTokens,
   handleKeyDown,
@@ -201,10 +209,21 @@ export const Map: React.FC<{
     return cb(left, top, right - left, bottom - top);
   };
 
+  const canControlTokenOnMap = (t: RRTokenOnMap) => {
+    const token = byId(tokens.entities, t.tokenId);
+    return (
+      token &&
+      (token.visibility === "everyone" ||
+        myself.isGM ||
+        myself.tokenIds.includes(token.id))
+    );
+  };
+
   const hoveredTokens = withSelectionAreaDo<RRTokenOnMap[]>(
     (x, y, w, h) =>
       tokensOnMap.filter(
         (t) =>
+          canControlTokenOnMap(t) &&
           t.position.x + GRID_SIZE >= x &&
           x + w >= t.position.x &&
           t.position.y + GRID_SIZE >= y &&
@@ -270,7 +289,7 @@ export const Map: React.FC<{
         }
       : t.position;
 
-  const grid = () => (
+  const grid = gridEnabled ? (
     <>
       <defs>
         <pattern
@@ -296,7 +315,7 @@ export const Map: React.FC<{
         fill="url(#grid)"
       />
     </>
-  );
+  ) : null;
 
   return (
     <svg
@@ -304,9 +323,10 @@ export const Map: React.FC<{
       ref={svgRef}
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleMouseDown}
+      style={{ backgroundColor }}
     >
       <g transform={toSVG(transform)}>
-        {grid()}
+        {grid}
         {withSelectionAreaDo(
           (x, y, w, h) => (
             <rect
@@ -319,7 +339,12 @@ export const Map: React.FC<{
           ),
           <></>
         )}
-        {tokensOnMap.map((t) => {
+        {tokensOnMap.flatMap((t) => {
+          const token = byId(tokens.entities, t.tokenId);
+          if (!token || !canControlTokenOnMap(t)) {
+            return [];
+          }
+
           const position = tokenPosition(t);
           return (
             <MapToken
@@ -327,7 +352,7 @@ export const Map: React.FC<{
               onStartMove={(e) => handleDragStart(e, t)}
               x={position.x}
               y={position.y}
-              token={byId(tokens.entities, t.tokenId)!}
+              token={token}
               selected={
                 hoveredTokens.includes(t) || selectedTokens.includes(t.id)
               }
@@ -402,15 +427,15 @@ function MapToken({
           onMouseDown={handleMouseDown}
           x={x}
           y={y}
-          width={GRID_SIZE}
-          height={GRID_SIZE}
+          width={GRID_SIZE * token.size}
+          height={GRID_SIZE * token.size}
           href={fileUrl(token.image)}
         />
       ) : (
         <circle
           onMouseDown={handleMouseDown}
-          cx={x + GRID_SIZE / 2}
-          cy={y + GRID_SIZE / 2}
+          cx={x + (GRID_SIZE * token.size) / 2}
+          cy={y + (GRID_SIZE * token.size) / 2}
           r="35"
           fill="red"
         />
@@ -418,9 +443,9 @@ function MapToken({
       {selected && (
         <circle
           onMouseDown={handleMouseDown}
-          cx={x + GRID_SIZE / 2}
-          cy={y + GRID_SIZE / 2}
-          r={GRID_SIZE / 2 - 2}
+          cx={x + (GRID_SIZE * token.size) / 2}
+          cy={y + (GRID_SIZE * token.size) / 2}
+          r={(GRID_SIZE * token.size) / 2 - 2}
           fill="transparent"
           className="selection-area-highlight"
         />
