@@ -155,6 +155,7 @@ function TokenEditor({
   const fileInput = useRef<HTMLInputElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
   const [isUploading, upload] = useFileUpload("upload-token");
+  const [size, setSize] = useState(token.size);
 
   const dispatch = useServerDispatch();
 
@@ -187,6 +188,10 @@ function TokenEditor({
     onClose();
   };
 
+  const updateSize = () => {
+    dispatch(tokenUpdate({ id: token.id, changes: { size } }));
+  };
+
   return (
     <div className="token-popup">
       <button className="popover-close" onClick={onClose}>
@@ -197,6 +202,14 @@ function TokenEditor({
         value={name}
         onChange={(e) => setName(e.target.value)}
         className="token-name"
+      />
+      <input
+        value={size}
+        type="number"
+        min={1}
+        placeholder="size"
+        onChange={(e) => setSize(e.target.valueAsNumber)}
+        onKeyPress={(e) => e.key === "Enter" && updateSize()}
       />
 
       <input

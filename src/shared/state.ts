@@ -110,12 +110,7 @@ export type RRMap = {
     scale: number;
   }>;
   backgroundColor: RRColor;
-
-  grid: {
-    enabled: boolean;
-    size: RRPoint;
-    // type: "square" | "hex";
-  };
+  gridEnabled: boolean;
 
   gmWorldPosition: RRPoint;
 };
@@ -219,7 +214,7 @@ const defaultMap: RRMap = {
   backgroundColor: "#000",
   backgroundImages: [],
   gmWorldPosition: { x: 0, y: 0 },
-  grid: { enabled: true, size: { x: 70, y: 70 } },
+  gridEnabled: true,
   name: "unnamed",
   tokens: {
     entities: {},
