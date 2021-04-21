@@ -401,6 +401,7 @@ function MapToken({
     onStartMove(e);
   };
 
+  const tokenSize = GRID_SIZE * token.scale;
   return (
     <>
       {token.image ? (
@@ -408,25 +409,25 @@ function MapToken({
           onMouseDown={handleMouseDown}
           x={x}
           y={y}
-          width={GRID_SIZE * token.size}
-          height={GRID_SIZE * token.size}
+          width={tokenSize}
+          height={tokenSize}
           href={fileUrl(token.image)}
         />
       ) : (
         <circle
           onMouseDown={handleMouseDown}
-          cx={x + (GRID_SIZE * token.size) / 2}
-          cy={y + (GRID_SIZE * token.size) / 2}
-          r="35"
+          cx={x + tokenSize / 2}
+          cy={y + tokenSize / 2}
+          r={tokenSize / 2}
           fill="red"
         />
       )}
       {selected && (
         <circle
           onMouseDown={handleMouseDown}
-          cx={x + (GRID_SIZE * token.size) / 2}
-          cy={y + (GRID_SIZE * token.size) / 2}
-          r={(GRID_SIZE * token.size) / 2 - 2}
+          cx={x + tokenSize / 2}
+          cy={y + tokenSize / 2}
+          r={tokenSize / 2 - 2}
           fill="transparent"
           className="selection-area-highlight"
         />

@@ -82,7 +82,7 @@ export type RRToken = {
   name: string;
 
   image: RRFile | null;
-  size: number;
+  scale: number;
 
   auras: RRAura[];
   hp: number;

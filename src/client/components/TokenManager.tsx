@@ -33,7 +33,7 @@ export function TokenManager() {
     hp: 0,
     image: null,
     maxHP: 0,
-    size: 1,
+    scale: 1,
     visibility: "everyone",
     isTemplate: false,
     name: randomName(),
@@ -155,7 +155,7 @@ function TokenEditor({
   const fileInput = useRef<HTMLInputElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
   const [isUploading, upload] = useFileUpload("upload-token");
-  const [size, setSize] = useState(token.size);
+  const [scale, setScale] = useState(token.scale.toString());
 
   const dispatch = useServerDispatch();
 
@@ -173,6 +173,17 @@ function TokenEditor({
     1000
   );
 
+  const [_, setProperScale] = useDebouncedServerUpdate(
+    token.scale,
+    (scale) => tokenUpdate({ id: token.id, changes: { scale } }),
+    1000
+  );
+
+  useEffect(() => {
+    const num = parseInt(scale);
+    if (!isNaN(num)) setProperScale(num);
+  }, [scale, setProperScale]);
+
   useEffect(() => {
     fileInput.current!.value = "";
     nameInput.current!.focus();
@@ -188,10 +199,6 @@ function TokenEditor({
     onClose();
   };
 
-  const updateSize = () => {
-    dispatch(tokenUpdate({ id: token.id, changes: { size } }));
-  };
-
   return (
     <div className="token-popup">
       <button className="popover-close" onClick={onClose}>
@@ -204,12 +211,11 @@ function TokenEditor({
         className="token-name"
       />
       <input
-        value={size}
+        value={scale}
         type="number"
         min={1}
-        placeholder="size"
-        onChange={(e) => setSize(e.target.valueAsNumber)}
-        onKeyPress={(e) => e.key === "Enter" && updateSize()}
+        placeholder="scale"
+        onChange={(e) => setScale(e.target.value)}
       />
 
       <input
