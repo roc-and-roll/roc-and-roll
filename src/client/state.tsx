@@ -246,7 +246,7 @@ function useDebounce<A extends unknown[], R extends unknown>(
   );
 }
 
-function useLatest<V>(value: V) {
+export function useLatest<V>(value: V) {
   const ref = useRef(value);
   ref.current = value;
   return ref;

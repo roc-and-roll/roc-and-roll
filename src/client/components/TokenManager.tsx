@@ -2,7 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { playerUpdate, tokenAdd, tokenUpdate } from "../../shared/actions";
 import { RRToken } from "../../shared/state";
 import { fileUrl, useFileUpload } from "../files";
-import { entries, useServerDispatch, useServerState } from "../state";
+import {
+  entries,
+  useDebouncedServerUpdate,
+  useLatest,
+  useServerDispatch,
+  useServerState,
+} from "../state";
 import { useDrag } from "react-dnd";
 import { useMyself } from "../myself";
 import { GMArea } from "./GMArea";
@@ -130,19 +136,8 @@ function TokenEditor({
   const fileInput = useRef<HTMLInputElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
   const [isUploading, upload] = useFileUpload("upload-token");
-  const [name, setName] = useState(token.name);
 
   const dispatch = useServerDispatch();
-
-  useEffect(() => {
-    setName(token.name);
-    fileInput.current!.value = "";
-    nameInput.current!.focus();
-  }, [token]);
-
-  useEffect(() => {
-    if (name == "unnamed") nameInput.current!.select();
-  }, [name]);
 
   const updateImage = async () => {
     const uploadedFiles = await upload(fileInput.current!.files);
@@ -152,9 +147,19 @@ function TokenEditor({
     fileInput.current!.value = "";
   };
 
-  const updateName = () => {
-    dispatch(tokenUpdate({ id: token.id, changes: { name } }));
-  };
+  const [name, setName] = useDebouncedServerUpdate(
+    token.name,
+    (name) => tokenUpdate({ id: token.id, changes: { name } }),
+    1000
+  );
+
+  const nameRef = useLatest(name);
+
+  useEffect(() => {
+    fileInput.current!.value = "";
+    nameInput.current!.focus();
+    if (nameRef.current === "unnamed") nameInput.current!.select();
+  }, [token.id, nameRef]);
 
   return (
     <div className="token-popup">
@@ -163,7 +168,6 @@ function TokenEditor({
       </button>
       <input
         ref={nameInput}
-        onKeyPress={(e) => e.key === "Enter" && updateName()}
         value={name}
         onChange={(e) => setName(e.target.value)}
         className="token-name"

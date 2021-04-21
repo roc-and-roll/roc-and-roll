@@ -70,7 +70,7 @@ export function MapContainer({ className }: { className: string }) {
       });
     },
     100,
-    (start, end, delta) => {
+    (start, end, t) => {
       const updatedTokensOnMap: Record<RRTokenOnMapID, RRTokenOnMap> = {};
 
       entries(end).forEach((e) => {
@@ -79,8 +79,8 @@ export function MapContainer({ className }: { className: string }) {
           setById(updatedTokensOnMap, e.id, {
             ...e,
             position: {
-              x: s.position.x + (e.position.x - s.position.x) * delta,
-              y: s.position.y + (e.position.y - s.position.y) * delta,
+              x: s.position.x + (e.position.x - s.position.x) * t,
+              y: s.position.y + (e.position.y - s.position.y) * t,
             },
           });
         }
