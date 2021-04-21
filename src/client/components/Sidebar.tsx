@@ -7,6 +7,7 @@ import { Debug } from "./Debug";
 import { Resizable } from "re-resizable";
 import useLocalState from "../useLocalState";
 import { Player } from "./Player";
+import { InitiativeTracker } from "./InitiativeTracker";
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
@@ -40,6 +41,9 @@ export function Sidebar({ logout }: { logout: () => void }) {
             <DiceRoller />
           </Suspense>
         )}
+        <Collapsible title="Initiative">
+          <InitiativeTracker />
+        </Collapsible>
         <Collapsible title="Tokens">
           <TokenManager />
         </Collapsible>

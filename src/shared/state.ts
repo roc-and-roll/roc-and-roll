@@ -153,22 +153,34 @@ export interface RRLogEntryMessage extends RRBaseLogEntry {
 //   };
 // }
 
+export type RRDamageType = null | "fire" | "thunder";
+
+export type RRMultipleRoll = "advantage" | "disadvantage" | "none";
+
+export interface RRRollPart {
+  damageType: RRDamageType;
+}
+
+export interface RRDice extends RRRollPart {
+  faces: number; // 4, 6, 8, 10, 12, 20, 100
+  modified: RRMultipleRoll;
+  diceResults: number[];
+
+  // TODO
+  //         used: number;
+  //         style: string;
+  //         effect: string;
+}
+
+export interface RRModifier extends RRRollPart {
+  modifier: number;
+}
+
 export interface RRLogEntryDiceRoll extends RRBaseLogEntry {
   type: "diceRoll";
   payload: {
-    dice: Array<{
-      damageType: string;
-      result: number;
-      die: null | {
-        faces: number; // 4, 6, 8, 10, 12, 20, 100
-        count: number; // number of dice
-
-        // TODO
-        //         used: number;
-        //         style: string;
-        //         effect: string;
-      };
-    }>;
+    rollType: "initiative" | "hit" | "attack";
+    parts: Array<RRDice | RRModifier>;
   };
 }
 

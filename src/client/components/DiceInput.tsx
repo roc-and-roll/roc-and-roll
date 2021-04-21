@@ -23,7 +23,7 @@ export function DiceInput() {
         }
         result *= sign;
         return {
-          damageType: "normal",
+          rollType: "normal",
           result: result,
           die: {
             faces: faces,
@@ -34,13 +34,13 @@ export function DiceInput() {
         // mod
         const modifier = parseInt(array[4]) * sign;
         return {
-          damageType: "normal",
+          rollType: "normal",
           result: modifier,
           die: null,
         };
       }
       return {
-        damageType: "nothing",
+        rollType: "nothing",
         result: 0,
         die: null,
       };
@@ -51,7 +51,7 @@ export function DiceInput() {
         logEntryDiceRollAdd({
           silent: false,
           playerId: myself.id,
-          payload: { dice: dice },
+          payload: { dice },
         })
       );
       setText("");
