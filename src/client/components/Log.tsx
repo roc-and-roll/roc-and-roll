@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { logEntryMessageAdd } from "../../shared/actions";
 import { RRLogEntry } from "../../shared/state";
 import { useMyself } from "../myself";
+import { diceResult, diceResultString } from "../roll";
 import { byId, entries, useServerDispatch, useServerState } from "../state";
 import { useScrollToBottom } from "../useScrollToBottom";
 import { formatTimestamp } from "../util";
@@ -13,15 +14,10 @@ function LogEntry(props: { logEntry: RRLogEntry }) {
   const player = logEntry.playerId ? byId(players, logEntry.playerId) : null;
 
   if (logEntry.type === "diceRoll") {
-    const rolls = logEntry.payload.dice.map((die) => {
-      return die.result;
-    });
     return (
       <div title={formatTimestamp(logEntry.timestamp)}>
-        {player?.name ?? "system"}:{" "}
-        {rolls.join(" + ") +
-          " = " +
-          rolls.reduce((acc, val) => acc + val).toString()}
+        {player?.name ?? "system"}: {diceResultString(logEntry)} ={" "}
+        {diceResult(logEntry)}
       </div>
     );
   }

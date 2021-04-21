@@ -54,7 +54,7 @@ export function TokenManager() {
   };
 
   const tokenPreview = (t: RRToken) => (
-    <TokenPreview
+    <EditableTokenPreview
       token={t}
       key={t.id}
       wasJustCreated={newTokenIds.includes(t.id)}
@@ -89,7 +89,7 @@ export function TokenManager() {
   );
 }
 
-function TokenPreview({
+function EditableTokenPreview({
   token,
   isSelected,
   setSelectedToken,
@@ -128,16 +128,32 @@ function TokenPreview({
         onClick={() => setSelectedToken(token)}
       >
         {token.name}
-        <div
-          className="token-image"
-          style={{
-            backgroundImage: token.image
-              ? `url(${fileUrl(token.image)})`
-              : "none",
-          }}
-        />
+        <TokenPreview token={token} />
       </div>
     </Popover>
+  );
+}
+
+export function TokenPreview({ token }: { token: RRToken }) {
+  return (
+    <div
+      className="token-image"
+      style={{
+        backgroundImage: token.image ? `url(${fileUrl(token.image)})` : "none",
+      }}
+    />
+  );
+}
+
+export function TokenStack({ tokens }: { tokens: RRToken[] }) {
+  return (
+    <div className="token-stack">
+      {tokens.map((token, i) => (
+        <div key={token.id} style={{ left: i * (24 / tokens.length) }}>
+          <TokenPreview token={token} />
+        </div>
+      ))}
+    </div>
   );
 }
 

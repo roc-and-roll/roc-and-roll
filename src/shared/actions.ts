@@ -3,7 +3,7 @@ import {
   InitiativeTrackerSyncedState,
   RRID,
   RRInitiativeTrackerEntry,
-  RRInitiativeTrackerEntryLayerAction,
+  RRInitiativeTrackerEntryLairAction,
   RRInitiativeTrackerEntryToken,
   RRLogEntry,
   RRLogEntryDiceRoll,
@@ -241,17 +241,17 @@ export const initiativeTrackerEntryTokenAdd = createAction(
   })
 );
 
-export const initiativeTrackerEntryLayerActionAdd = createAction(
-  "initiativetracker/entry/layeraction/add",
+export const initiativeTrackerEntryLairActionAdd = createAction(
+  "initiativetracker/entry/lairaction/add",
   (
     initiativetrackerEntry: Omit<
-      RRInitiativeTrackerEntryLayerAction,
+      RRInitiativeTrackerEntryLairAction,
       "id" | "type"
     >
-  ): { payload: RRInitiativeTrackerEntryLayerAction } => ({
+  ): { payload: RRInitiativeTrackerEntryLairAction } => ({
     payload: {
-      id: rrid<RRInitiativeTrackerEntryLayerAction>(),
-      type: "layerAction",
+      id: rrid<RRInitiativeTrackerEntryLairAction>(),
+      type: "lairAction",
       ...initiativetrackerEntry,
     },
   })
@@ -261,9 +261,9 @@ export const initiativeTrackerEntryTokenUpdate = createAction<
   Update<RRInitiativeTrackerEntryToken>
 >("initiativetracker/entry/token/update");
 
-export const initiativeTrackerEntryLayerActionUpdate = createAction<
-  Update<RRInitiativeTrackerEntryLayerAction>
->("initiativetracker/entry/layeraction/update");
+export const initiativeTrackerEntryLairActionUpdate = createAction<
+  Update<RRInitiativeTrackerEntryLairAction>
+>("initiativetracker/entry/lairaction/update");
 
 export const initiativeTrackerEntryRemove = createAction<
   RRInitiativeTrackerEntry["id"]

@@ -53,18 +53,18 @@ interface RRInitiativeTrackerEntryBase {
 export interface RRInitiativeTrackerEntryToken
   extends RRInitiativeTrackerEntryBase {
   type: "token";
-  tokenId: RRTokenID;
+  tokenIds: RRTokenID[];
 }
 
-export interface RRInitiativeTrackerEntryLayerAction
+export interface RRInitiativeTrackerEntryLairAction
   extends RRInitiativeTrackerEntryBase {
-  type: "layerAction";
+  type: "lairAction";
   description: string;
 }
 
 export type RRInitiativeTrackerEntry =
   | RRInitiativeTrackerEntryToken
-  | RRInitiativeTrackerEntryLayerAction;
+  | RRInitiativeTrackerEntryLairAction;
 
 export type RRPlayer = {
   id: RRPlayerID;
@@ -162,9 +162,11 @@ export interface RRRollPart {
 }
 
 export interface RRDice extends RRRollPart {
+  type: "dice";
   faces: number; // 4, 6, 8, 10, 12, 20, 100
   modified: RRMultipleRoll;
   diceResults: number[];
+  negated: boolean;
 
   // TODO
   //         used: number;
@@ -173,14 +175,15 @@ export interface RRDice extends RRRollPart {
 }
 
 export interface RRModifier extends RRRollPart {
+  type: "modifier";
   modifier: number;
 }
 
 export interface RRLogEntryDiceRoll extends RRBaseLogEntry {
   type: "diceRoll";
   payload: {
-    rollType: "initiative" | "hit" | "attack";
-    parts: Array<RRDice | RRModifier>;
+    rollType: "initiative" | "hit" | "attack" | null;
+    dice: Array<RRDice | RRModifier>;
   };
 }
 

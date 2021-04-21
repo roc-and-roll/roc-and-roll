@@ -76,6 +76,16 @@ a {
   cursor: pointer;
 }
 
+.token-stack {
+  position: relative;
+  height: 32px;
+  width: 12px + 32px;
+  & > div {
+    position: absolute;
+    top: 0;
+  }
+}
+
 // log
 .log {
   padding: 5px;
@@ -176,5 +186,46 @@ $gmAreaColor: #ab62c0;
     left: 4px;
     padding: 0 3px;
     background-color: #222;
+  }
+}
+
+.initiative-tracker {
+  & > ul {
+    margin: 0;
+    padding: 0;
+    li {
+      display: flex;
+      justify-content: space-between;
+      padding-bottom: 1rem;
+
+      p {
+        padding: 0 1rem;
+        flex-grow: 1;
+      }
+
+      input {
+        text-align: right;
+        width: 3rem;
+      }
+    }
+  }
+
+  .initiative-tracker-turn-done {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .initiative-tracker-roll {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    button {
+      width: 100%;
+    }
+
+    input {
+      width: 3rem;
+    }
   }
 }

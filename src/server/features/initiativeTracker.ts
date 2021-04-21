@@ -4,15 +4,15 @@ import {
   initiativeTrackersetCurrentEntry,
   initiativeTrackerEntryRemove,
   initiativeTrackerEntryTokenAdd,
-  initiativeTrackerEntryLayerActionAdd,
+  initiativeTrackerEntryLairActionAdd,
   initiativeTrackerEntryTokenUpdate,
-  initiativeTrackerEntryLayerActionUpdate,
+  initiativeTrackerEntryLairActionUpdate,
 } from "../../shared/actions";
 import {
   initialSyncedState,
   InitiativeTrackerSyncedState,
   RRInitiativeTrackerEntry,
-  RRInitiativeTrackerEntryLayerAction,
+  RRInitiativeTrackerEntryLairAction,
   RRInitiativeTrackerEntryToken,
 } from "../../shared/state";
 
@@ -24,7 +24,7 @@ const config = {
   >(
     a: A,
     b: B
-  ) => a.initiative - b.initiative,
+  ) => b.initiative - a.initiative,
 };
 
 const initiativeTrackerEntryAdapter = createEntityAdapter<RRInitiativeTrackerEntry>(
@@ -33,7 +33,7 @@ const initiativeTrackerEntryAdapter = createEntityAdapter<RRInitiativeTrackerEnt
 const initiativeTrackerEntryTokenAdapter = createEntityAdapter<RRInitiativeTrackerEntryToken>(
   config
 );
-const initiativeTrackerEntryLayerActionAdapter = createEntityAdapter<RRInitiativeTrackerEntryLayerAction>(
+const initiativeTrackerEntryLairActionAdapter = createEntityAdapter<RRInitiativeTrackerEntryLairAction>(
   config
 );
 
@@ -46,16 +46,16 @@ const initiativeTrackerEntriesReducer = createReducer(
         initiativeTrackerEntryTokenAdapter.addOne
       )
       .addCase(
-        initiativeTrackerEntryLayerActionAdd,
-        initiativeTrackerEntryLayerActionAdapter.addOne
+        initiativeTrackerEntryLairActionAdd,
+        initiativeTrackerEntryLairActionAdapter.addOne
       )
       .addCase(
         initiativeTrackerEntryTokenUpdate,
         initiativeTrackerEntryTokenAdapter.updateOne
       )
       .addCase(
-        initiativeTrackerEntryLayerActionUpdate,
-        initiativeTrackerEntryLayerActionAdapter.updateOne
+        initiativeTrackerEntryLairActionUpdate,
+        initiativeTrackerEntryLairActionAdapter.updateOne
       )
       .addCase(
         initiativeTrackerEntryRemove,

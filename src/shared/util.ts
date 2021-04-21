@@ -55,3 +55,7 @@ export function debounced<A extends unknown[], R extends unknown>(
     }, time);
   };
 }
+
+export function assertNever(val: never): never {
+  throw new Error();
+}
