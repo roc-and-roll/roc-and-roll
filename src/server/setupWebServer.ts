@@ -9,6 +9,7 @@ import multer from "multer";
 import { nanoid } from "@reduxjs/toolkit";
 import { RRFile } from "../shared/state";
 import sharp from "sharp";
+import { GRID_SIZE } from "../shared/constants";
 
 export function setupWebServer(uploadedFilesDir: string) {
   const httpPort = 3000;
@@ -48,7 +49,6 @@ export function setupWebServer(uploadedFilesDir: string) {
         return;
       }
 
-      const GRID_SIZE = 70;
       const CENTER = GRID_SIZE / 2;
       const RADIUS = GRID_SIZE / 2 - 1;
       const BORDER_WIDTH = 3;

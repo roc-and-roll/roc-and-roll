@@ -5,10 +5,10 @@ import {
   compose,
   applyToPoint,
   Matrix,
-  identity,
   toSVG,
   inverse,
 } from "transformation-matrix";
+import { GRID_SIZE } from "../../shared/constants";
 import {
   RRColor,
   RRPlayer,
@@ -23,14 +23,18 @@ import { byId } from "../state";
 
 type Rectangle = [number, number, number, number];
 
-const GRID_SIZE = 70;
-
 const PANNING_BUTTON = 2;
 const SELECTION_BUTTON = 0;
 
 const ZOOM_SCALE_FACTOR = 0.2;
 
-type Point = { x: number; y: number };
+export type Point = { x: number; y: number };
+
+const snapToGrid = (num: number) => Math.floor(num / GRID_SIZE) * GRID_SIZE;
+export const snapPointToGrid = (p: Point) => ({
+  x: snapToGrid(p.x),
+  y: snapToGrid(p.y),
+});
 
 enum MouseAction {
   NONE,
@@ -39,6 +43,11 @@ enum MouseAction {
   MOVE_TOKEN,
 }
 
+export const globalToLocal = (transform: Matrix, p: Point) => {
+  const [x, y] = applyToPoint(inverse(transform), [p.x, p.y]);
+  return { x, y };
+};
+
 export const Map: React.FC<{
   myself: RRPlayer;
   tokensOnMap: RRTokenOnMap[];
@@ -46,6 +55,8 @@ export const Map: React.FC<{
   backgroundColor: RRColor;
   tokens: TokensSyncedState;
   selectedTokens: RRTokenOnMapID[];
+  transform: Matrix;
+  setTransform: React.Dispatch<React.SetStateAction<Matrix>>;
   onMoveTokens: (dx: number, dy: number) => void;
   onSelectTokens: (ids: RRTokenOnMapID[]) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
@@ -59,8 +70,9 @@ export const Map: React.FC<{
   handleKeyDown,
   onMoveTokens,
   tokens,
+  setTransform,
+  transform,
 }) => {
-  const [transform, setTransform] = useState<Matrix>(identity());
   // TODO can't handle overlapping clicks
   const [mouseAction, setMouseAction] = useState<MouseAction>(MouseAction.NONE);
   const [dragState, setDragState] = useState({
@@ -77,14 +89,6 @@ export const Map: React.FC<{
     const rect = svgRef.current.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
-
-  const globalToLocal = useCallback(
-    (p: Point) => {
-      const [x, y] = applyToPoint(inverse(transform), [p.x, p.y]);
-      return { x, y };
-    },
-    [transform]
-  );
 
   const handleWheel = useCallback(
     (e: WheelEvent) => {
@@ -113,7 +117,7 @@ export const Map: React.FC<{
         );
       });
     },
-    [mouseAction]
+    [mouseAction, setTransform]
   );
 
   const handleMouseMove = useCallback(
@@ -132,7 +136,7 @@ export const Map: React.FC<{
           break;
         }
         case MouseAction.SELECTION_AREA: {
-          const innerLocal = globalToLocal({ x, y });
+          const innerLocal = globalToLocal(transform, { x, y });
           setSelectionArea(
             (a) => a && [a[0], a[1], innerLocal.x, innerLocal.y]
           );
@@ -156,10 +160,10 @@ export const Map: React.FC<{
     [
       dragState.lastMouse.x,
       dragState.lastMouse.y,
-      globalToLocal,
       mouseAction,
+      setTransform,
+      transform,
       onMoveTokens,
-      transform.a,
     ]
   );
 
@@ -181,7 +185,7 @@ export const Map: React.FC<{
     });
 
     if (e.button === SELECTION_BUTTON) {
-      const innerLocal = globalToLocal(local);
+      const innerLocal = globalToLocal(transform, local);
       setSelectionArea([
         innerLocal.x,
         innerLocal.y,
@@ -342,8 +346,8 @@ export const Map: React.FC<{
         })}
         {mouseAction === MouseAction.MOVE_TOKEN && (
           <MapMeasureBar
-            from={globalToLocal(dragState.start)}
-            to={globalToLocal(dragState.lastMouse)}
+            from={globalToLocal(transform, dragState.start)}
+            to={globalToLocal(transform, dragState.lastMouse)}
             zoom={transform.a}
           />
         )}

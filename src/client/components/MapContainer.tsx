@@ -15,8 +15,9 @@ import {
   entries,
   setById,
 } from "../state";
-import { Map } from "./Map";
+import { globalToLocal, Map, snapPointToGrid } from "./Map";
 import composeRefs from "@seznam/compose-react-refs";
+import { identity, Matrix } from "transformation-matrix";
 
 export function MapContainer({ className }: { className: string }) {
   const myself = useMyself();
@@ -24,6 +25,7 @@ export function MapContainer({ className }: { className: string }) {
   const dispatch = useServerDispatch();
 
   const [selectedTokens, setSelectedTokens] = useState<RRTokenOnMapID[]>([]);
+  const [transform, setTransform] = useState<Matrix>(identity());
 
   const dropRef2 = useRef<HTMLDivElement>(null);
   const [, dropRef1] = useDrop<RRToken, void, never>(
@@ -32,20 +34,23 @@ export function MapContainer({ className }: { className: string }) {
       drop: (item, monitor) => {
         const topLeft = dropRef2.current!.getBoundingClientRect();
         const dropPosition = monitor.getClientOffset();
+        const x = dropPosition!.x - topLeft.x;
+        const y = dropPosition!.y - topLeft.y;
 
-        console.warn({
-          x: dropPosition!.x - topLeft.x,
-          y: dropPosition!.y - topLeft.y,
-        });
         dispatch(
           mapTokenAdd(map.id, {
-            position: { x: Math.random() * 10, y: Math.random() * 10 },
+            position: snapPointToGrid(
+              globalToLocal(transform, {
+                x,
+                y,
+              })
+            ),
             tokenId: item.id,
           })
         );
       },
     }),
-    [dispatch, map.id]
+    [dispatch, map.id, transform]
   );
   const dropRef = composeRefs<HTMLDivElement>(dropRef2, dropRef1);
 
@@ -139,6 +144,8 @@ export function MapContainer({ className }: { className: string }) {
             };
           });
         }}
+        transform={transform}
+        setTransform={setTransform}
         tokensOnMap={entries(localTokensOnMap)}
         selectedTokens={selectedTokens}
         onSelectTokens={setSelectedTokens}
