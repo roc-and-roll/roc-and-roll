@@ -6,7 +6,7 @@ import {
   tokenUpdate,
 } from "../../shared/actions";
 import { RRToken, RRTokenID } from "../../shared/state";
-import { fileUrl, useFileUpload } from "../files";
+import { tokenImageUrl, useFileUpload } from "../files";
 import {
   entries,
   useDebouncedServerUpdate,
@@ -18,6 +18,7 @@ import { useMyself } from "../myself";
 import { GMArea } from "./GMArea";
 import { Popover } from "./Popover";
 import { randomName } from "../../shared/namegen";
+import { GRID_SIZE } from "../../shared/constants";
 
 export function TokenManager() {
   const myself = useMyself();
@@ -139,7 +140,9 @@ export function TokenPreview({ token }: { token: RRToken }) {
     <div
       className="token-image"
       style={{
-        backgroundImage: token.image ? `url(${fileUrl(token.image)})` : "none",
+        backgroundImage: token.image
+          ? `url(${tokenImageUrl(token.image, GRID_SIZE)})`
+          : "none",
       }}
     />
   );
@@ -170,7 +173,7 @@ function TokenEditor({
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
-  const [isUploading, upload] = useFileUpload("upload-token");
+  const [isUploading, upload] = useFileUpload();
   const [scale, setScale] = useState(token.scale.toString());
 
   const dispatch = useServerDispatch();

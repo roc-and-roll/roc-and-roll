@@ -17,7 +17,7 @@ import {
   RRTokenOnMapID,
   TokensSyncedState,
 } from "../../shared/state";
-import { fileUrl } from "../files";
+import { tokenImageUrl } from "../files";
 import { canControlToken, canViewTokenOnMap } from "../permissions";
 import { byId } from "../state";
 
@@ -328,6 +328,7 @@ export const Map: React.FC<{
               onStartMove={(e) => handleDragStart(e, t)}
               x={t.position.x}
               y={t.position.y}
+              zoom={transform.a}
               token={token}
               selected={
                 hoveredTokens.includes(t.id) || selectedTokens.includes(t.id)
@@ -383,10 +384,12 @@ function MapToken({
   y,
   selected,
   onStartMove,
+  zoom,
 }: {
   token: RRToken;
   x: number;
   y: number;
+  zoom: number;
   selected: boolean;
   onStartMove: (e: React.MouseEvent) => void;
 }) {
@@ -406,7 +409,7 @@ function MapToken({
           y={y}
           width={tokenSize}
           height={tokenSize}
-          href={fileUrl(token.image)}
+          href={tokenImageUrl(token.image, tokenSize, Math.ceil(zoom))}
         />
       ) : (
         <circle

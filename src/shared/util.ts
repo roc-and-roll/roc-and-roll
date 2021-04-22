@@ -59,3 +59,7 @@ export function debounced<A extends unknown[], R extends unknown>(
 export function assertNever(val: never): never {
   throw new Error();
 }
+
+export function clamp(min: number, val: number, max: number) {
+  return Math.max(min, Math.min(max, val));
+}

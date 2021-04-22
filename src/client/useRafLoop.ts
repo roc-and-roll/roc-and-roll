@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-
-function clamp(min: number, val: number, max: number) {
-  return Math.max(min, Math.min(max, val));
-}
+import { clamp } from "../shared/util";
 
 export default function useRafLoop() {
   const rafFrameId = useRef<number | null>(null);

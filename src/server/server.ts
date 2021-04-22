@@ -14,9 +14,12 @@ fs.mkdirSync(workspaceDir, { recursive: true });
 const uploadedFilesDir = path.join(workspaceDir, "uploaded-files");
 fs.mkdirSync(uploadedFilesDir, { recursive: true });
 
+const uploadedFilesCacheDir = path.join(uploadedFilesDir, "cache");
+fs.mkdirSync(uploadedFilesCacheDir, { recursive: true });
+
 const statePath = path.join(workspaceDir, "state.json");
 
-const { io, url } = setupWebServer(uploadedFilesDir);
+const { io, url } = setupWebServer(uploadedFilesDir, uploadedFilesCacheDir);
 
 let initialState: SyncedState | undefined = undefined;
 if (fs.existsSync(statePath)) {

@@ -9,9 +9,14 @@ import multer from "multer";
 import { nanoid } from "@reduxjs/toolkit";
 import { RRFile } from "../shared/state";
 import sharp from "sharp";
-import { GRID_SIZE } from "../shared/constants";
+import { clamp } from "../shared/util";
+import { readFile } from "fs/promises";
+import { existsSync } from "fs";
 
-export function setupWebServer(uploadedFilesDir: string) {
+export function setupWebServer(
+  uploadedFilesDir: string,
+  uploadedFilesCacheDir: string
+) {
   const httpPort = 3000;
   const url = `http://localhost:${httpPort}`;
 
@@ -40,81 +45,7 @@ export function setupWebServer(uploadedFilesDir: string) {
     filename: (req, file, cb) =>
       cb(null, `${nanoid()}${path.extname(file.originalname)}`),
   });
-  app.post(
-    "/upload-token",
-    multer({ storage }).array("files"),
-    async (req, res, next) => {
-      if (!Array.isArray(req.files)) {
-        res.status(400);
-        return;
-      }
 
-      const CENTER = GRID_SIZE / 2;
-      const RADIUS = GRID_SIZE / 2 - 1;
-      const BORDER_WIDTH = 3;
-      const mask = await sharp(
-        Buffer.from(
-          `<svg viewBox="0 0 ${GRID_SIZE} ${GRID_SIZE}">
-            <circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="#000" />
-          </svg>`,
-          "utf-8"
-        )
-      ).toBuffer();
-      const border = await sharp(
-        Buffer.from(
-          `<svg viewBox="0 0 ${GRID_SIZE} ${GRID_SIZE}">
-            <circle
-              cx="${CENTER}"
-              cy="${CENTER}"
-              r="${RADIUS - BORDER_WIDTH / 2 - 0.5}"
-              fill="transparent"
-              stroke-width="${BORDER_WIDTH}"
-              stroke="#502d16" />
-            <circle
-              cx="${CENTER}"
-              cy="${CENTER}"
-              r="${RADIUS - BORDER_WIDTH / 2}"
-              fill="transparent"
-              stroke-width="${BORDER_WIDTH}"
-              stroke="#b39671" />
-          </svg>`,
-          "utf-8"
-        )
-      ).toBuffer();
-
-      const outputFilename = (filename: string) => {
-        const parts = filename.split(".");
-        return parts.slice(0, parts.length - 1).join(".") + "-res.png";
-      };
-
-      try {
-        const data: RRFile[] = await Promise.all(
-          req.files.map((file) =>
-            sharp(file.path)
-              .resize({
-                width: 70,
-                height: 70,
-                fit: "cover",
-                position: "top",
-              })
-              .composite([
-                { input: mask, blend: "dest-in" },
-                { input: border, blend: "over" },
-              ])
-              .toFile(outputFilename(file.path))
-              .then(() => ({
-                originalFilename: file.originalname,
-                filename: outputFilename(file.filename),
-              }))
-          )
-        );
-        res.json(data);
-      } catch (err) {
-        console.error(err);
-        res.status(500);
-      }
-    }
-  );
   app.post("/upload", multer({ storage }).array("files"), (req, res, next) => {
     if (!Array.isArray(req.files)) {
       res.status(400);
@@ -126,6 +57,97 @@ export function setupWebServer(uploadedFilesDir: string) {
     }));
     res.json(data);
   });
+
+  app.get<{ filename: string; size: string; zoom: string }>(
+    "/token-image/:filename/:size/:zoom",
+    async (req, res) => {
+      const filename = req.params.filename;
+      let size = parseInt(req.params.size);
+      let zoom = parseInt(req.params.zoom);
+      if (
+        !/^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)?$/.test(filename) ||
+        isNaN(size) ||
+        isNaN(zoom)
+      ) {
+        res.status(400);
+        console.error("Invalid request", { filename, size, zoom });
+        return;
+      }
+
+      size = clamp(16, size * zoom, 2000);
+      zoom = clamp(1, zoom, 8);
+
+      const inputPath = path.join(uploadedFilesDir, filename);
+      const outputPath = path.join(
+        uploadedFilesCacheDir,
+        `${size}-${zoom}-${filename}`
+      );
+
+      if (!existsSync(outputPath)) {
+        const CENTER = size / 2;
+        const RADIUS = size / 2 - 1;
+        const BORDER_WIDTH = zoom * 3;
+        const mask = await sharp(
+          Buffer.from(
+            `<svg viewBox="0 0 ${size} ${size}">
+              <circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="#000" />
+            </svg>`,
+            "utf-8"
+          )
+        ).toBuffer();
+        const border = await sharp(
+          Buffer.from(
+            `<svg viewBox="0 0 ${size} ${size}">
+              <circle
+                cx="${CENTER}"
+                cy="${CENTER}"
+                r="${RADIUS - BORDER_WIDTH / 2 - 0.5}"
+                fill="transparent"
+                stroke-width="${BORDER_WIDTH}"
+                stroke="#502d16" />
+              <circle
+                cx="${CENTER}"
+                cy="${CENTER}"
+                r="${RADIUS - BORDER_WIDTH / 2}"
+                fill="transparent"
+                stroke-width="${BORDER_WIDTH}"
+                stroke="#b39671" />
+            </svg>`,
+            "utf-8"
+          )
+        ).toBuffer();
+
+        try {
+          console.log("Generating token");
+          await sharp(inputPath)
+            .resize({
+              width: size,
+              height: size,
+              fit: "cover",
+              position: "top",
+            })
+            .composite([
+              { input: mask, blend: "dest-in" },
+              { input: border, blend: "over" },
+            ])
+            .png()
+            .toFile(outputPath);
+        } catch (err) {
+          console.error(err);
+          res.status(500);
+          return;
+        }
+      }
+
+      const file = await readFile(outputPath);
+      res.writeHead(200, {
+        "Content-Type": "image/png",
+        "Content-Length": file.length,
+      });
+      res.end(file);
+    }
+  );
+
   // (3) Serve uploaded files
   app.use("/files", express.static(uploadedFilesDir));
 
