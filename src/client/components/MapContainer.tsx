@@ -8,6 +8,7 @@ import {
 import {
   byId,
   entries,
+  RRColor,
   RRToken,
   RRTokenOnMap,
   RRTokenOnMapID,
@@ -19,9 +20,24 @@ import {
   useServerDispatch,
   useServerState,
 } from "../state";
-import { globalToLocal, Map, snapPointToGrid } from "./Map";
+import { globalToLocal, Map, Point, snapPointToGrid } from "./Map";
 import composeRefs from "@seznam/compose-react-refs";
 import { identity, Matrix } from "transformation-matrix";
+import { MapToolbar } from "./MapToolbar";
+import { GRID_SIZE } from "../../shared/constants";
+
+export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
+
+export type MapEditState =
+  | { tool: "move" }
+  | { tool: "measure"; snap: MapSnap }
+  | {
+      tool: "draw";
+      type: "line" | "polygon" | "rectangle" | "circle";
+      color: RRColor;
+      snap: MapSnap;
+    }
+  | { tool: "draw"; type: "text" | "freehand"; color: RRColor };
 
 export function MapContainer({ className }: { className: string }) {
   const myself = useMyself();
@@ -57,18 +73,6 @@ export function MapContainer({ className }: { className: string }) {
     [dispatch, map.id, transform]
   );
   const dropRef = composeRefs<HTMLDivElement>(dropRef2, dropRef1);
-
-  const handleKeyDown = (e: KeyboardEvent) => {
-    switch (e.key) {
-      case "Delete":
-        selectedTokens.forEach((selectedTokenId) => {
-          dispatch(
-            mapTokenRemove({ mapId: map.id, tokenOnMapId: selectedTokenId })
-          );
-        });
-        break;
-    }
-  };
 
   const serverTokensOnMap = map.tokens;
   const [localTokensOnMap, setLocalTokensOnMap] = useDebouncedServerUpdate(
@@ -115,15 +119,65 @@ export function MapContainer({ className }: { className: string }) {
     }
   );
 
+  const handleKeyDown = (e: KeyboardEvent) => {
+    function move(positionUpdater: (position: Point) => Point) {
+      setLocalTokensOnMap((tokensOnMap) => {
+        const updatedTokensOnMap: Record<RRTokenOnMapID, RRTokenOnMap> = {};
+        entries(tokensOnMap).forEach((each) => {
+          if (selectedTokens.includes(each.id)) {
+            setById(updatedTokensOnMap, each.id, {
+              ...each,
+              position: positionUpdater(each.position),
+            });
+          }
+        });
+
+        return {
+          ids: tokensOnMap.ids,
+          entities: {
+            ...tokensOnMap.entities,
+            ...updatedTokensOnMap,
+          },
+        };
+      });
+    }
+
+    switch (e.key) {
+      case "Delete":
+        selectedTokens.forEach((selectedTokenId) => {
+          dispatch(
+            mapTokenRemove({ mapId: map.id, tokenOnMapId: selectedTokenId })
+          );
+        });
+        break;
+      case "ArrowLeft":
+        move((position) => ({ x: position.x - GRID_SIZE, y: position.y }));
+        break;
+      case "ArrowRight":
+        move((position) => ({ x: position.x + GRID_SIZE, y: position.y }));
+        break;
+      case "ArrowUp":
+        move((position) => ({ x: position.x, y: position.y - GRID_SIZE }));
+        break;
+      case "ArrowDown":
+        move((position) => ({ x: position.x, y: position.y + GRID_SIZE }));
+        break;
+    }
+  };
+
   const tokens = useServerState((s) => s.tokens);
+
+  const [editState, setEditState] = useState<MapEditState>({ tool: "move" });
 
   return (
     <div className={className} ref={dropRef}>
+      <MapToolbar map={map} setEditState={setEditState} />
       <Map
         gridEnabled={map.gridEnabled}
         backgroundColor={map.backgroundColor}
         myself={myself}
         tokens={tokens}
+        editState={editState}
         onMoveTokens={(dx, dy) => {
           setLocalTokensOnMap((tokensOnMap) => {
             const updatedTokensOnMap: Record<RRTokenOnMapID, RRTokenOnMap> = {};

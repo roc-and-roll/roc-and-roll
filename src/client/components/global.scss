@@ -257,3 +257,19 @@ $gmAreaColor: #ab62c0;
 
   background: orange;
 }
+
+.map-toolbar {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  max-width: 40vw;
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+
+
+  button.active {
+    font-weight: bold;
+  }
+}

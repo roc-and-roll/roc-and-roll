@@ -20,6 +20,7 @@ import {
 } from "../../shared/state";
 import { tokenImageUrl } from "../files";
 import { canControlToken, canViewTokenOnMap } from "../permissions";
+import { MapEditState } from "./MapContainer";
 import {
   RoughCircle,
   RoughContextProvider,
@@ -68,6 +69,7 @@ export const Map: React.FC<{
   onMoveTokens: (dx: number, dy: number) => void;
   onSelectTokens: (ids: RRTokenOnMapID[]) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
+  editState: MapEditState;
 }> = ({
   myself,
   tokensOnMap,
@@ -80,6 +82,7 @@ export const Map: React.FC<{
   tokens,
   setTransform,
   transform,
+  editState, // TODO: Use the edit state :)
 }) => {
   // TODO can't handle overlapping clicks
   const [mouseAction, setMouseAction] = useState<MouseAction>(MouseAction.NONE);
@@ -230,12 +233,14 @@ export const Map: React.FC<{
       tokensOnMap
         .filter((t) => {
           const token = byId(tokens.entities, t.tokenId);
-          token &&
+          return (
+            token &&
             canControlToken(token, myself) &&
             t.position.x + GRID_SIZE >= x &&
             x + w >= t.position.x &&
             t.position.y + GRID_SIZE >= y &&
-            y + h >= t.position.y;
+            y + h >= t.position.y
+          );
         })
         .map((t) => t.id),
     []
