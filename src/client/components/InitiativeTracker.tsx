@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   initiativeTrackerEntryLairActionUpdate,
   initiativeTrackerEntryTokenAdd,
@@ -10,7 +10,6 @@ import {
   RRToken,
   TokensSyncedState,
 } from "../../shared/state";
-import { assertNever } from "../../shared/util";
 import { useMyself } from "../myself";
 import { diceResult, rollInitiative } from "../roll";
 import {
