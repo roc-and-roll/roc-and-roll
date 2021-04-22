@@ -20,6 +20,14 @@ import {
 } from "../../shared/state";
 import { tokenImageUrl } from "../files";
 import { canControlToken, canViewTokenOnMap } from "../permissions";
+import {
+  RoughCircle,
+  RoughContextProvider,
+  RoughEllipse,
+  RoughLine,
+  RoughPath,
+  RoughRectangle,
+} from "./rough";
 
 type Rectangle = [number, number, number, number];
 
@@ -295,7 +303,7 @@ export const Map: React.FC<{
   ) : null;
 
   return (
-    <svg
+    <RoughContextProvider
       className="map-svg"
       ref={svgRef}
       onContextMenu={(e) => e.preventDefault()}
@@ -316,6 +324,51 @@ export const Map: React.FC<{
           ),
           <></>
         )}
+        <RoughRectangle
+          x={GRID_SIZE * 2}
+          y={GRID_SIZE * 0}
+          w={GRID_SIZE * 4}
+          h={GRID_SIZE * 4}
+          fill="rgba(243, 186, 0, 0.5)"
+          stroke="rgb(243, 186, 0)"
+        />
+        <RoughRectangle
+          x={0}
+          y={GRID_SIZE * 5}
+          w={GRID_SIZE * 7}
+          h={GRID_SIZE}
+          fill="rgba(243, 186, 0, 0.5)"
+          stroke="rgb(243, 186, 0)"
+        />
+        <RoughCircle
+          x={-GRID_SIZE}
+          y={GRID_SIZE * 7}
+          d={GRID_SIZE * 2}
+          fill="rgba(243, 186, 0, 0.5)"
+          stroke="rgb(243, 186, 0)"
+        />
+        <RoughEllipse
+          x={GRID_SIZE * 2}
+          y={GRID_SIZE * 7}
+          w={GRID_SIZE * 2}
+          h={GRID_SIZE * 1}
+          fill="rgba(243, 186, 0, 0.5)"
+          stroke="rgb(243, 186, 0)"
+        />
+        <RoughLine
+          x1={0}
+          y1={0}
+          x2={GRID_SIZE * 10}
+          y2={GRID_SIZE * 10}
+          fill="rgba(243, 186, 0, 0.5)"
+          stroke="rgb(243, 186, 0)"
+        />
+        <RoughPath
+          path="M37,17v15H14V17z M50,0H0v50h50z"
+          fill="rgba(243, 186, 0, 0.5)"
+          stroke="rgb(243, 186, 0)"
+        />
+
         {tokensOnMap.map((t) => {
           const token = byId(tokens.entities, t.tokenId);
           if (!token || !canViewTokenOnMap(token, myself)) {
@@ -344,7 +397,7 @@ export const Map: React.FC<{
           />
         )}
       </g>
-    </svg>
+    </RoughContextProvider>
   );
 };
 

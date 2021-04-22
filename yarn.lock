@@ -9760,6 +9760,13 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"path-data-parser@npm:0.1.0, path-data-parser@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "path-data-parser@npm:0.1.0"
+  checksum: 9d8ea6a73d22b5cf4d8883a45e45514cbb145644ce30db416d17b78e8eb87acbe63a6d72ae345c2077b00ff4279a99718fa6f9a22ab8ef51691278c0b34130dd
+  languageName: node
+  linkType: hard
+
 "path-dirname@npm:^1.0.0":
   version: 1.0.2
   resolution: "path-dirname@npm:1.0.2"
@@ -9916,6 +9923,23 @@ fsevents@^1.2.7:
   dependencies:
     semver-compare: ^1.0.0
   checksum: 34cf86f6d577877df5e9ced0bda57babd97bd2dc7e5965a67f990337f01ccd5203a98dc5aa7971e10088b2b1b29628d51d9770996151c7d306ed0069b4ecd745
+  languageName: node
+  linkType: hard
+
+"points-on-curve@npm:0.2.0, points-on-curve@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "points-on-curve@npm:0.2.0"
+  checksum: 6b9344454af13d38a7d94ffca8c3eb7489336f45a5aa0e79960f28bd78fde8c0b5f9ff1e75d0aa1bcbef9022ba1a1ac97ec4afe00b556b48c5a96242a6b8abcb
+  languageName: node
+  linkType: hard
+
+"points-on-path@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "points-on-path@npm:0.2.1"
+  dependencies:
+    path-data-parser: 0.1.0
+    points-on-curve: 0.2.0
+  checksum: 5603a2279be3bc7ade72be78dac8440398fffad1edf4fb37ef170812e7e175971bca08112c7e12b4528b5f299817cc31c91b0252bac5fe2cfe46d11d858b4099
   languageName: node
   linkType: hard
 
@@ -11073,6 +11097,7 @@ resolve@^2.0.0-next.3:
     regenerator-runtime: ^0.13.7
     remark-breaks: ^2.0.2
     remark-gfm: ^1.0.0
+    roughjs: ^4.3.1
     sass: ^1.32.8
     sass-loader: ^11.0.1
     sharp: ^0.28.1
@@ -11095,6 +11120,17 @@ resolve@^2.0.0-next.3:
     webpack-node-externals: ^2.5.2
   languageName: unknown
   linkType: soft
+
+"roughjs@npm:^4.3.1":
+  version: 4.3.1
+  resolution: "roughjs@npm:4.3.1"
+  dependencies:
+    path-data-parser: ^0.1.0
+    points-on-curve: ^0.2.0
+    points-on-path: ^0.2.1
+  checksum: 6465ea38896204bf40ecdffd74e3fc517046f41a9eb9ef05eedbd80b679bafb5f9e2e5259a7fcd4ce809e2e8317e7f38105f23187e8eebfaa3e7622c3394f059
+  languageName: node
+  linkType: hard
 
 "rsvp@npm:^4.8.4":
   version: 4.8.5

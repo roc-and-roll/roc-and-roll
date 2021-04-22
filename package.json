@@ -37,6 +37,7 @@
     "redux": "^4.0.5",
     "remark-breaks": "^2.0.2",
     "remark-gfm": "^1.0.0",
+    "roughjs": "^4.3.1",
     "sharp": "^0.28.1",
     "socket.io": "^4.0.0",
     "socket.io-client": "^4.0.0",
