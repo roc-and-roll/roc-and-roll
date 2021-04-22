@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { RRPrivateChatID, RRPrivateChatMessage } from "../../../shared/state";
+import {
+  byId,
+  entries,
+  RRPrivateChatID,
+  RRPrivateChatMessage,
+} from "../../../shared/state";
 import { useMyself } from "../../myself";
-import { byId, entries, useServerDispatch, useServerState } from "../../state";
+import { useServerDispatch, useServerState } from "../../state";
 import "./PrivateChats.scss";
 import {
   privateChatAdd,

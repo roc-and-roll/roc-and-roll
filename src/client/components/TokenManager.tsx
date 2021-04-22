@@ -1,14 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  playerUpdate,
+  playerUpdateAddTokenId,
   tokenAdd,
   tokenRemove,
   tokenUpdate,
 } from "../../shared/actions";
-import { RRToken, RRTokenID } from "../../shared/state";
+import { entries, RRToken, RRTokenID } from "../../shared/state";
 import { generateRandomToken, tokenImageUrl, useFileUpload } from "../files";
 import {
-  entries,
   useDebouncedServerUpdate,
   useServerDispatch,
   useServerState,
@@ -42,18 +41,21 @@ export function TokenManager() {
 
   const dispatch = useServerDispatch();
 
-  const addToken = async () => {
-    const newToken = dispatch(tokenAdd(await makeNewToken())).payload;
-    dispatch(
-      playerUpdate({
-        id: myself.id,
-        changes: {
-          tokenIds: [...myself.tokenIds, newToken.id],
-        },
-      })
-    );
-    setNewTokenIds((l) => [...l, newToken.id]);
-    setSelectedToken(newToken.id);
+  const [isAddingToken, setIsAddingToken] = useState(false);
+
+  const addToken = () => {
+    setIsAddingToken(true);
+    (async () => {
+      const newToken = dispatch(tokenAdd(await makeNewToken())).payload;
+      dispatch(
+        playerUpdateAddTokenId({
+          id: myself.id,
+          tokenId: newToken.id,
+        })
+      );
+      setNewTokenIds((l) => [...l, newToken.id]);
+      setSelectedToken(newToken.id);
+    })().finally(() => setIsAddingToken(false));
   };
 
   const tokenPreview = (t: RRToken) => (
@@ -71,7 +73,9 @@ export function TokenManager() {
 
   return (
     <>
-      <button onClick={addToken}>Add Token</button>
+      <button onClick={addToken} disabled={isAddingToken}>
+        Add Token
+      </button>
 
       <div className="token-list">
         {entries(tokens)

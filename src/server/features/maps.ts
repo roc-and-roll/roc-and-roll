@@ -1,5 +1,4 @@
 import { createEntityAdapter, createReducer, isAnyOf } from "@reduxjs/toolkit";
-import { byId } from "../../client/state";
 import {
   mapAdd,
   mapUpdate,
@@ -9,6 +8,7 @@ import {
   mapTokenRemove,
 } from "../../shared/actions";
 import {
+  byId,
   initialSyncedState,
   MapsSyncedState,
   RRMap,

@@ -474,24 +474,3 @@ export function useDebouncedServerUpdate<V>(
   // console.log(localValue);
   return [localValue, setLocalValue] as const;
 }
-
-export function byId<E extends { id: RRID }>(
-  entities: Record<E["id"], E>,
-  id: E["id"]
-) {
-  return entities[id] as E | undefined;
-}
-
-export function setById<E extends { id: RRID }>(
-  entities: Record<E["id"], E>,
-  id: E["id"],
-  value: E
-) {
-  entities[id] = value;
-}
-
-export function entries<E extends { id: RRID }>(
-  collection: EntityCollection<E>
-): E[] {
-  return collection.ids.map((id) => byId(collection.entities, id)!);
-}

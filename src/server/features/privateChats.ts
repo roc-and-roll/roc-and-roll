@@ -1,5 +1,4 @@
 import { createEntityAdapter, createReducer, isAnyOf } from "@reduxjs/toolkit";
-import { byId } from "../../client/state";
 import {
   privateChatAdd,
   privateChatUpdate,
@@ -8,6 +7,7 @@ import {
   privateChatMessageUpdate,
 } from "../../shared/actions";
 import {
+  byId,
   initialSyncedState,
   PrivateChatsSyncedState,
   RRPrivateChat,

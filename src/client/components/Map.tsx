@@ -10,6 +10,7 @@ import {
 } from "transformation-matrix";
 import { GRID_SIZE } from "../../shared/constants";
 import {
+  byId,
   RRColor,
   RRPlayer,
   RRToken,
@@ -19,7 +20,6 @@ import {
 } from "../../shared/state";
 import { tokenImageUrl } from "../files";
 import { canControlToken, canViewTokenOnMap } from "../permissions";
-import { byId } from "../state";
 
 type Rectangle = [number, number, number, number];
 

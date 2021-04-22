@@ -5,15 +5,19 @@ import {
   mapTokenRemove,
   mapTokenUpdate,
 } from "../../shared/actions";
-import { RRToken, RRTokenOnMap, RRTokenOnMapID } from "../../shared/state";
-import { useMyself } from "../myself";
 import {
   byId,
+  entries,
+  RRToken,
+  RRTokenOnMap,
+  RRTokenOnMapID,
+  setById,
+} from "../../shared/state";
+import { useMyself } from "../myself";
+import {
   useDebouncedServerUpdate,
   useServerDispatch,
   useServerState,
-  entries,
-  setById,
 } from "../state";
 import { globalToLocal, Map, snapPointToGrid } from "./Map";
 import composeRefs from "@seznam/compose-react-refs";

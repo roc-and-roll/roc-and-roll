@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { logEntryMessageAdd } from "../../shared/actions";
-import { RRLogEntry } from "../../shared/state";
+import { byId, entries, RRLogEntry } from "../../shared/state";
 import { useMyself } from "../myself";
 import { diceResult, diceResultString } from "../roll";
-import { byId, entries, useServerDispatch, useServerState } from "../state";
+import { useServerDispatch, useServerState } from "../state";
 import { useScrollToBottom } from "../useScrollToBottom";
 import { formatTimestamp } from "../util";
 import { CollapseButton } from "./CollapseButton";

@@ -10,6 +10,8 @@ import {
   logEntryDiceRollAdd,
 } from "../../shared/actions";
 import {
+  byId,
+  entries,
   RRInitiativeTrackerEntry,
   RRPlayer,
   RRToken,
@@ -19,8 +21,6 @@ import { useMyself } from "../myself";
 import { canControlToken } from "../permissions";
 import { diceResult, rollInitiative } from "../roll";
 import {
-  byId,
-  entries,
   useDebouncedServerUpdate,
   useServerDispatch,
   useServerState,

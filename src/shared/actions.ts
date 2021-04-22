@@ -16,6 +16,7 @@ import {
   RRPrivateChatID,
   RRPrivateChatMessage,
   RRToken,
+  RRTokenID,
   RRTokenOnMap,
   RRTokenOnMapID,
 } from "./state";
@@ -37,6 +38,11 @@ export const playerAdd = createAction(
 );
 
 export const playerUpdate = createAction<Update<RRPlayer>>("player/update");
+
+export const playerUpdateAddTokenId = createAction<{
+  id: RRPlayer["id"];
+  tokenId: RRTokenID;
+}>("player/update/tokenid");
 
 export const playerRemove = createAction<RRPlayer["id"]>("player/remove");
 
