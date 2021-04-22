@@ -224,7 +224,7 @@ export const initiativeTrackerSetVisible = createAction<
   InitiativeTrackerSyncedState["visible"]
 >("initiativeTracker/visible");
 
-export const initiativeTrackersetCurrentEntry = createAction<
+export const initiativeTrackerSetCurrentEntry = createAction<
   InitiativeTrackerSyncedState["currentEntryId"]
 >("initiativeTracker/currentEntryId");
 

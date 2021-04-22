@@ -13,12 +13,12 @@ import {
   RRColor,
   RRPlayer,
   RRToken,
-  RRTokenID,
   RRTokenOnMap,
   RRTokenOnMapID,
   TokensSyncedState,
 } from "../../shared/state";
 import { fileUrl } from "../files";
+import { canControlToken, canViewTokenOnMap } from "../permissions";
 import { byId } from "../state";
 
 type Rectangle = [number, number, number, number];
@@ -217,27 +217,18 @@ export const Map: React.FC<{
     return cb(left, top, right - left, bottom - top);
   };
 
-  const canControlTokenOnMap = (t: RRTokenID) => {
-    const token = byId(tokens.entities, t);
-    return (
-      token &&
-      (token.visibility === "everyone" ||
-        myself.isGM ||
-        myself.tokenIds.includes(token.id))
-    );
-  };
-
   const hoveredTokens = withSelectionAreaDo<RRTokenOnMapID[]>(
     (x, y, w, h) =>
       tokensOnMap
-        .filter(
-          (t) =>
-            canControlTokenOnMap(t.tokenId) &&
+        .filter((t) => {
+          const token = byId(tokens.entities, t.tokenId);
+          token &&
+            canControlToken(token, myself) &&
             t.position.x + GRID_SIZE >= x &&
             x + w >= t.position.x &&
             t.position.y + GRID_SIZE >= y &&
-            y + h >= t.position.y
-        )
+            y + h >= t.position.y;
+        })
         .map((t) => t.id),
     []
   );
@@ -325,10 +316,10 @@ export const Map: React.FC<{
           ),
           <></>
         )}
-        {tokensOnMap.flatMap((t) => {
+        {tokensOnMap.map((t) => {
           const token = byId(tokens.entities, t.tokenId);
-          if (!token || !canControlTokenOnMap(t.tokenId)) {
-            return [];
+          if (!token || !canViewTokenOnMap(token, myself)) {
+            return null;
           }
 
           return (

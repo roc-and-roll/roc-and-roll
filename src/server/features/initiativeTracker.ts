@@ -1,7 +1,7 @@
 import { createEntityAdapter, createReducer, original } from "@reduxjs/toolkit";
 import {
   initiativeTrackerSetVisible,
-  initiativeTrackersetCurrentEntry,
+  initiativeTrackerSetCurrentEntry,
   initiativeTrackerEntryRemove,
   initiativeTrackerEntryTokenAdd,
   initiativeTrackerEntryLairActionAdd,
@@ -71,7 +71,7 @@ export const initiativeTrackerReducer = createReducer(
       .addCase(initiativeTrackerSetVisible, (state, action) => {
         state.visible = action.payload;
       })
-      .addCase(initiativeTrackersetCurrentEntry, (state, action) => {
+      .addCase(initiativeTrackerSetCurrentEntry, (state, action) => {
         state.currentEntryId = action.payload;
       })
       .addDefaultCase((state, action) => {
