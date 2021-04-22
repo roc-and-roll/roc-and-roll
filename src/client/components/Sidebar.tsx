@@ -8,6 +8,7 @@ import { Resizable } from "re-resizable";
 import useLocalState from "../useLocalState";
 import { Player } from "./Player";
 import { InitiativeTracker } from "./InitiativeTracker";
+import { Acknowledgements } from "./Acknowledgements";
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
@@ -54,6 +55,10 @@ export function Sidebar({ logout }: { logout: () => void }) {
 
         <Collapsible title="Player">
           <Player logout={logout} />
+        </Collapsible>
+
+        <Collapsible title="Acknowledgements" defaultCollapsed={true}>
+          <Acknowledgements />
         </Collapsible>
 
         {process.env.NODE_ENV === "development" && <Debug />}

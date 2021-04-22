@@ -6,7 +6,7 @@ import {
   tokenUpdate,
 } from "../../shared/actions";
 import { RRToken, RRTokenID } from "../../shared/state";
-import { tokenImageUrl, useFileUpload } from "../files";
+import { generateRandomToken, tokenImageUrl, useFileUpload } from "../files";
 import {
   entries,
   useDebouncedServerUpdate,
@@ -20,6 +20,20 @@ import { Popover } from "./Popover";
 import { randomName } from "../../shared/namegen";
 import { GRID_SIZE } from "../../shared/constants";
 
+async function makeNewToken(): Promise<Parameters<typeof tokenAdd>[0]> {
+  return {
+    auras: [],
+    conditions: [],
+    hp: 0,
+    maxHP: 0,
+    scale: 1,
+    visibility: "everyone",
+    isTemplate: false,
+    name: randomName(),
+    image: await generateRandomToken(),
+  };
+}
+
 export function TokenManager() {
   const myself = useMyself();
   const tokens = useServerState((s) => s.tokens);
@@ -28,20 +42,8 @@ export function TokenManager() {
 
   const dispatch = useServerDispatch();
 
-  const defaultToken = (): Omit<RRToken, "id"> => ({
-    auras: [],
-    conditions: [],
-    hp: 0,
-    image: null,
-    maxHP: 0,
-    scale: 1,
-    visibility: "everyone",
-    isTemplate: false,
-    name: randomName(),
-  });
-
-  const addToken = () => {
-    const newToken = dispatch(tokenAdd(defaultToken())).payload;
+  const addToken = async () => {
+    const newToken = dispatch(tokenAdd(await makeNewToken())).payload;
     dispatch(
       playerUpdate({
         id: myself.id,

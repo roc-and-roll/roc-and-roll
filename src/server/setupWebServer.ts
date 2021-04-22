@@ -12,8 +12,10 @@ import sharp from "sharp";
 import { clamp } from "../shared/util";
 import { readFile } from "fs/promises";
 import { existsSync } from "fs";
+import { getFilesInDirectoryRecursively } from "./util";
+import { randomColor } from "../shared/colors";
 
-export function setupWebServer(
+export async function setupWebServer(
   uploadedFilesDir: string,
   uploadedFilesCacheDir: string
 ) {
@@ -58,6 +60,10 @@ export function setupWebServer(
     res.json(data);
   });
 
+  // (3) Serve uploaded files
+  app.use("/files", express.static(uploadedFilesDir));
+
+  // (4) Add an endpoint to generate tokens from already uploaded files
   app.get<{ filename: string; size: string; zoom: string }>(
     "/token-image/:filename/:size/:zoom",
     async (req, res) => {
@@ -148,10 +154,48 @@ export function setupWebServer(
     }
   );
 
-  // (3) Serve uploaded files
-  app.use("/files", express.static(uploadedFilesDir));
+  // (5) Add end endpoint that generates a random image suitable for a token
+  const icons: string[] = [];
+  for await (const icon of getFilesInDirectoryRecursively(
+    process.env.NODE_ENV === "production"
+      ? path.join(__dirname, "public", "icons")
+      : path.join(__dirname, "..", "src", "public", "icons")
+  )) {
+    if (icon.endsWith(".svg")) {
+      icons.push(icon);
+    }
+  }
 
-  // (4) Serve the client code to the browser
+  app.post("/random-token", async (req, res) => {
+    const icon = icons[Math.floor(Math.random() * icons.length)];
+    if (!icon) {
+      res.status(500);
+      return;
+    }
+
+    const filename = `generated-${nanoid()}.svg`;
+    const background = randomColor();
+
+    try {
+      await sharp(await sharp(icon).resize(450, 450).toBuffer())
+        .extend({ top: 50, left: 50, right: 50, bottom: 50, background })
+        .flatten({ background })
+        .png()
+        .toFile(path.join(uploadedFilesDir, filename));
+    } catch (err) {
+      console.error(err);
+      res.status(500);
+      return;
+    }
+
+    const file: RRFile = {
+      filename,
+      originalFilename: filename,
+    };
+    return res.json(file);
+  });
+
+  // (6) Serve the client code to the browser
   if (process.env.NODE_ENV === "development") {
     // In development, simply redirect all requests (except websockets) to the
     // webpack dev server, which serves the client code on its own.
@@ -184,7 +228,7 @@ export function setupWebServer(
   // Spin up the Express JS instance.
   const http = app.listen(httpPort, "0.0.0.0");
 
-  // (5) Now also spin up a websocket server.
+  // (7) Now also spin up a websocket server.
   // In development, we need to allow CORS access not only from the url of the
   // server, but also from the webpack dev server port.
   const io = new SocketIOServer(http, {

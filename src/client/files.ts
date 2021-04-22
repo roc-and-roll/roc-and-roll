@@ -12,6 +12,17 @@ export function tokenImageUrl(file: RRFile, size: number, zoom: number = 1) {
   )}/${encodeURIComponent(size)}/${encodeURIComponent(zoom)}`;
 }
 
+export async function generateRandomToken(): Promise<RRFile> {
+  const result = await fetch(`${apiHost()}/random-token`, {
+    method: "POST",
+  });
+
+  if (result.status === 200) {
+    return (await result.json()) as RRFile;
+  }
+  throw new Error("something went wrong");
+}
+
 export function useFileUpload() {
   const [isUploading, setIsUploading] = useState(false);
 

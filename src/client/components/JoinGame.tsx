@@ -1,7 +1,7 @@
 import React from "react";
 import { playerAdd } from "../../shared/actions";
 import { RRPlayerID } from "../../shared/state";
-import { randomColor } from "../colors";
+import { randomColor } from "../../shared/colors";
 import { entries, useServerDispatch, useServerState } from "../state";
 import "./JoinGame.scss";
 
