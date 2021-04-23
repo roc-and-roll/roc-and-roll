@@ -21,8 +21,6 @@ export function useRRSound(
   const globalVolume = useContext(SoundContext).volume;
   const globalSoundEnabled = globalVolume > 0;
 
-  console.log(globalVolume);
-
   return useSound(url, {
     ...options,
     volume: (options?.volume ?? 1) * globalVolume,

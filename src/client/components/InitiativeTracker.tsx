@@ -31,6 +31,21 @@ import { TokenStack } from "./TokenManager";
 import { Button } from "./ui/Button";
 import { Flipper, Flipped } from "react-flip-toolkit";
 
+function canEditEntry(
+  entry: RRInitiativeTrackerEntry,
+  myself: RRPlayer,
+  tokenCollection: TokensSyncedState
+) {
+  if (entry.type === "lairAction") {
+    return myself.isGM;
+  }
+
+  return entry.tokenIds.some((tokenId) => {
+    const token = byId(tokenCollection.entities, tokenId);
+    return token && canControlToken(token, { ...myself, isGM: false });
+  });
+}
+
 const InitiativeEntry = React.memo<{
   entry: RRInitiativeTrackerEntry;
   tokenCollection: TokensSyncedState;
@@ -102,13 +117,7 @@ const InitiativeEntry = React.memo<{
     1000
   );
 
-  const canEdit =
-    myself.isGM ||
-    (entry.type !== "lairAction" &&
-      entry.tokenIds.some((tokenId) => {
-        const token = byId(tokenCollection.entities, tokenId);
-        return token && canControlToken(token, myself);
-      }));
+  const canEdit = canEditEntry(entry, myself, tokenCollection);
 
   return (
     <Flipped
@@ -118,10 +127,10 @@ const InitiativeEntry = React.memo<{
     >
       <li key={entry.id} className={isCurrentEntry ? "current" : undefined}>
         {content}
-        {canEdit && (
+        {(canEdit || myself.isGM) && (
           <Button
             onClick={() => onRemoveEntry()}
-            className={myself.isGM ? "gm-button" : undefined}
+            className={!canEdit && myself.isGM ? "gm-button" : undefined}
           >
             remove
           </Button>
@@ -207,13 +216,21 @@ export function InitiativeTracker() {
       ? [...rows.slice(currentRowIndex), ...rows.slice(0, currentRowIndex)]
       : rows;
 
-  const itIsMyTurn =
-    currentRow &&
-    ((currentRow.type === "lairAction" && myself.isGM) ||
-      (currentRow.type === "token" &&
-        currentRow.tokenIds.some((tokenId) =>
-          myself.tokenIds.includes(tokenId)
-        )));
+  const canEdit =
+    !!currentRow && canEditEntry(currentRow, myself, tokenCollection);
+
+  const endTurnButton = currentRow && (
+    <EndTurnButton
+      myself={myself}
+      canEdit={canEdit}
+      onClick={() => {
+        if (!nextRow) {
+          return;
+        }
+        dispatch(initiativeTrackerSetCurrentEntry(nextRow.id));
+      }}
+    />
+  );
 
   return (
     <div className="initiative-tracker">
@@ -237,22 +254,7 @@ export function InitiativeTracker() {
           ))}
         </ul>
       </Flipper>
-      {currentRow && (
-        <Button
-          className={clsx("initiative-tracker-turn-done", {
-            "gm-button": !itIsMyTurn && myself.isGM,
-          })}
-          disabled={!(itIsMyTurn || myself.isGM)}
-          onClick={() => {
-            if (!nextRow) {
-              return;
-            }
-            dispatch(initiativeTrackerSetCurrentEntry(nextRow.id));
-          }}
-        >
-          I am done with my turn!
-        </Button>
-      )}
+      {endTurnButton}
       <div className="initiative-tracker-roll">
         <Button onClick={roll}>Roll Initiative</Button>
         <input
@@ -272,11 +274,33 @@ export function InitiativeTracker() {
           </Button>
         </GMArea>
       )}
-      {itIsMyTurn && <YourTurn />}
+      {canEdit && <YourTurn endTurnButton={endTurnButton} />}
     </div>
   );
 }
 
-function YourTurn() {
-  return <div className="your-turn">It is your turn!</div>;
+function EndTurnButton({
+  canEdit,
+  myself,
+  onClick,
+}: {
+  canEdit: boolean;
+  myself: RRPlayer;
+  onClick: () => void;
+}) {
+  return (
+    <Button
+      className={clsx("initiative-tracker-turn-done", {
+        "gm-button": !canEdit && myself.isGM,
+      })}
+      disabled={!(canEdit || myself.isGM)}
+      onClick={onClick}
+    >
+      I am done with my turn!
+    </Button>
+  );
+}
+
+function YourTurn({ endTurnButton }: { endTurnButton: React.ReactNode }) {
+  return <div className="your-turn">It is your turn! {endTurnButton}</div>;
 }
