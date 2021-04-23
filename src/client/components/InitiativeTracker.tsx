@@ -29,22 +29,28 @@ import useLocalState from "../useLocalState";
 import { GMArea } from "./GMArea";
 import { TokenStack } from "./TokenManager";
 import { Button } from "./ui/Button";
+import { Flipper, Flipped } from "react-flip-toolkit";
 
-function InitiativeEntry({
-  entry,
-  tokenCollection,
-  isCurrentEntry,
-  onSetCurrentEntry,
-  onRemoveEntry,
-  myself,
-}: {
+const InitiativeEntry = React.memo<{
   entry: RRInitiativeTrackerEntry;
   tokenCollection: TokensSyncedState;
   isCurrentEntry: boolean;
   onSetCurrentEntry: () => void;
   onRemoveEntry: () => void;
   myself: RRPlayer;
-}) {
+  inverseIdx: number;
+}>(function InitiativeEntry(
+  {
+    entry,
+    tokenCollection,
+    isCurrentEntry,
+    onSetCurrentEntry,
+    onRemoveEntry,
+    myself,
+    inverseIdx,
+  },
+  ref
+) {
   let content = null;
   if (entry.type === "lairAction") {
     content = (
@@ -105,30 +111,36 @@ function InitiativeEntry({
       }));
 
   return (
-    <li key={entry.id} className={isCurrentEntry ? "current" : undefined}>
-      {content}
-      {canEdit && (
-        <Button
-          onClick={() => onRemoveEntry()}
-          className={myself.isGM ? "gm-button" : undefined}
-        >
-          remove
-        </Button>
-      )}
-      <input
-        type="number"
-        value={initiative}
-        disabled={!(myself.isGM || canEdit)}
-        onChange={(e) => setInitiative(e.target.value)}
-      />
-      {myself.isGM && (
-        <Button className="gm-button" onClick={() => onSetCurrentEntry()}>
-          jump here
-        </Button>
-      )}
-    </li>
+    <Flipped
+      flipId={entry.id}
+      onStart={(element) => (element.style.zIndex = inverseIdx.toString())}
+      onComplete={(element) => (element.style.zIndex = "")}
+    >
+      <li key={entry.id} className={isCurrentEntry ? "current" : undefined}>
+        {content}
+        {canEdit && (
+          <Button
+            onClick={() => onRemoveEntry()}
+            className={myself.isGM ? "gm-button" : undefined}
+          >
+            remove
+          </Button>
+        )}
+        <input
+          type="number"
+          value={initiative}
+          disabled={!(myself.isGM || canEdit)}
+          onChange={(e) => setInitiative(e.target.value)}
+        />
+        {myself.isGM && (
+          <Button className="gm-button" onClick={() => onSetCurrentEntry()}>
+            jump here
+          </Button>
+        )}
+      </li>
+    </Flipped>
   );
-}
+});
 
 export function InitiativeTracker() {
   const [modifier, setModifier, _] = useLocalState("initiative-modifier", "0");
@@ -205,37 +217,42 @@ export function InitiativeTracker() {
 
   return (
     <div className="initiative-tracker">
-      <ul role="list">
-        {sortedRows.map((entry) => (
-          <InitiativeEntry
-            key={entry.id}
-            entry={entry}
-            isCurrentEntry={entry.id === initiativeTracker.currentEntryId}
-            onSetCurrentEntry={() =>
-              dispatch(initiativeTrackerSetCurrentEntry(entry.id))
+      <Flipper flipKey={sortedRows.map((row) => row.id).join("-")}>
+        <ul role="list">
+          {sortedRows.map((entry, idx) => (
+            <InitiativeEntry
+              key={entry.id}
+              inverseIdx={sortedRows.length - idx - 1}
+              entry={entry}
+              isCurrentEntry={entry.id === initiativeTracker.currentEntryId}
+              onSetCurrentEntry={() =>
+                dispatch(initiativeTrackerSetCurrentEntry(entry.id))
+              }
+              onRemoveEntry={() =>
+                dispatch(initiativeTrackerEntryRemove(entry.id))
+              }
+              tokenCollection={tokenCollection}
+              myself={myself}
+            />
+          ))}
+        </ul>
+      </Flipper>
+      {currentRow && (
+        <Button
+          className={clsx("initiative-tracker-turn-done", {
+            "gm-button": !itIsMyTurn && myself.isGM,
+          })}
+          disabled={!(itIsMyTurn || myself.isGM)}
+          onClick={() => {
+            if (!nextRow) {
+              return;
             }
-            onRemoveEntry={() =>
-              dispatch(initiativeTrackerEntryRemove(entry.id))
-            }
-            tokenCollection={tokenCollection}
-            myself={myself}
-          />
-        ))}
-      </ul>
-      <Button
-        className={clsx("initiative-tracker-turn-done", {
-          "gm-button": !itIsMyTurn && myself.isGM,
-        })}
-        disabled={!(itIsMyTurn || myself.isGM)}
-        onClick={() => {
-          if (!nextRow) {
-            return;
-          }
-          dispatch(initiativeTrackerSetCurrentEntry(nextRow.id));
-        }}
-      >
-        I am done with my turn!
-      </Button>
+            dispatch(initiativeTrackerSetCurrentEntry(nextRow.id));
+          }}
+        >
+          I am done with my turn!
+        </Button>
+      )}
       <div className="initiative-tracker-roll">
         <Button onClick={roll}>Roll Initiative</Button>
         <input

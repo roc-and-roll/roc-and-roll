@@ -5799,6 +5799,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"flip-toolkit@npm:7.0.13":
+  version: 7.0.13
+  resolution: "flip-toolkit@npm:7.0.13"
+  dependencies:
+    rematrix: 0.2.2
+  checksum: 136b8453be887ef0e17b90469120befb89f13e6de0a4ff7b5026bd2b5af451a90de891c3cb328f0c9edc34b7bcc43cf11c5834c565f8eb3ea0c2b4c34f27d554
+  languageName: node
+  linkType: hard
+
 "follow-redirects@npm:^1.0.0":
   version: 1.13.3
   resolution: "follow-redirects@npm:1.13.3"
@@ -10168,7 +10177,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"prop-types@npm:^15.7.2":
+"prop-types@npm:^15.5.7, prop-types@npm:^15.7.2":
   version: 15.7.2
   resolution: "prop-types@npm:15.7.2"
   dependencies:
@@ -10404,6 +10413,19 @@ fsevents@^1.2.7:
   peerDependencies:
     react: 17.0.2
   checksum: 960a74ff6670766846a73097a599115963df1574833c59ca0c2fd909758ebe7a6214cd14f5e6aa63ce846d8f39fde7f3b80474ccfcfadc45dd7f3246364718c6
+  languageName: node
+  linkType: hard
+
+"react-flip-toolkit@npm:^7.0.13":
+  version: 7.0.13
+  resolution: "react-flip-toolkit@npm:7.0.13"
+  dependencies:
+    flip-toolkit: 7.0.13
+    prop-types: ^15.5.7
+  peerDependencies:
+    react: ">= 16.x"
+    react-dom: ">= 16.x"
+  checksum: 1d1a0278c5cf97e3af91cfe3ec05c5dd0794afdbd2095ff3979ad4b510bfb0ab382390c74569c8be9da67fc736510976b00993314ec699cf93dccba4dbfcc426
   languageName: node
   linkType: hard
 
@@ -10760,6 +10782,13 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"rematrix@npm:0.2.2":
+  version: 0.2.2
+  resolution: "rematrix@npm:0.2.2"
+  checksum: 72cc7cc10cefab261d1c555581cf262e3df0150b2186708d981af9374fbda53f58140bd4ea4bdc3590ae991e85d3468e6108a351b6014250d21fe9098fdfc55f
+  languageName: node
+  linkType: hard
+
 "remove-trailing-separator@npm:^1.0.1":
   version: 1.1.0
   resolution: "remove-trailing-separator@npm:1.1.0"
@@ -11098,6 +11127,7 @@ resolve@^2.0.0-next.3:
     react-dnd: ^14.0.2
     react-dnd-html5-backend: ^14.0.0
     react-dom: ^17.0.2
+    react-flip-toolkit: ^7.0.13
     react-markdown: ^6.0.0
     react-refresh: ^0.9
     redux: ^4.0.5

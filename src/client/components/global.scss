@@ -196,14 +196,22 @@ $gmAreaColor: #ab62c0;
 }
 
 .initiative-tracker {
-  & > ul {
+  ul {
     margin: 0;
     padding: 0;
     li {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 0.5rem;
       padding: 0.25rem 0;
+      padding-bottom: 0.5rem;
+      // we need to set the background color here (instead of inheriting it from
+      // the parent, so that the list item has an opaque background when its
+      // position is anmiated and it is moved over other list items.
+      background: #222;
+      // Needed for z-index to work correctly (for some reason).
+      // The z-index is applied from React when shuffling the items around.
+      // https://stackoverflow.com/a/56238880/2560557
+      position: relative;
 
       p {
         padding: 0 1rem;
