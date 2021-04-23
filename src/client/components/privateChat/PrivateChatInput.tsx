@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { RRPlayerID } from "../../../shared/state";
 import useLocalState from "../../useLocalState";
+import { Button } from "../ui/Button";
 
 export function PrivateChatInput(props: {
   send: (message: string) => void;
@@ -56,9 +57,9 @@ export function PrivateChatInput(props: {
           }
         }}
       />
-      <button onClick={send} disabled={text.trim().length === 0}>
+      <Button onClick={send} disabled={text.trim().length === 0}>
         send
-      </button>
+      </Button>
     </div>
   );
 }

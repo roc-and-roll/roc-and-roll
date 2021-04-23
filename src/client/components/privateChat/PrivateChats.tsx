@@ -22,6 +22,7 @@ import { useIsTabFocused } from "../../useIsTabFocused";
 import { chatRecipient, wasSentByMe } from "./privateChatUtil";
 import clsx from "clsx";
 import { PrivateChatInput } from "./PrivateChatInput";
+import { Button } from "../ui/Button";
 
 export default function PrivateChats() {
   const [selectedChatId, setSelectedChatId] = useState<RRPrivateChatID | null>(
@@ -90,7 +91,7 @@ function Chat({ id, close }: { id: RRPrivateChatID; close: () => void }) {
     <div className="private-chat">
       <div className="private-chat-header">
         <h3>{otherPlayer.name}</h3>
-        <button onClick={() => close()}>back</button>
+        <Button onClick={() => close()}>back</Button>
       </div>
       <ul ref={scrollRef} role="list" className="private-chat-messages">
         {entries(chat.messages).map((message) => (

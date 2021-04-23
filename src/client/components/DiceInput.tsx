@@ -4,6 +4,7 @@ import { RRDice, RRModifier } from "../../shared/state";
 import { useMyself } from "../myself";
 import { useServerDispatch } from "../state";
 import { roll } from "../roll";
+import { Button } from "./ui/Button";
 
 export function DiceInput() {
   const [text, setText] = useState("");
@@ -57,8 +58,8 @@ export function DiceInput() {
         onKeyPress={(e) => e.key === "Enter" && doRoll()}
         onChange={(evt) => setText(evt.target.value)}
         type="text"
-      ></input>
-      <button onClick={doRoll}>roll</button>
+      />
+      <Button onClick={doRoll}>roll</Button>
     </>
   );
 }

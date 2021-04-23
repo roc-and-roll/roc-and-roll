@@ -1,5 +1,6 @@
 import React from "react";
 import useLocalState from "../useLocalState";
+import { Button } from "./ui/Button";
 
 export function LocalStateExample() {
   const [clicks, setClicks, forgetClicks] = useLocalState("clicks", 0);
@@ -7,9 +8,9 @@ export function LocalStateExample() {
   return (
     <p>
       You clicked this{" "}
-      <button onClick={() => setClicks((old) => old + 1)}>button</button>{" "}
+      <Button onClick={() => setClicks((old) => old + 1)}>button</Button>{" "}
       {clicks} times. Try refreshing the page.{" "}
-      <button onClick={() => forgetClicks()}>forget clicks</button>
+      <Button onClick={() => forgetClicks()}>forget clicks</Button>
     </p>
   );
 }

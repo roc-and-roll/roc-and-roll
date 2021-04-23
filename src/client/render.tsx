@@ -4,6 +4,7 @@ import { App } from "./components/App";
 import { ServerStateProvider } from "./state";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { SoundProvider } from "./sound";
 
 export function render(socket: SocketIOClient.Socket) {
   // Create a new div element, add it to the DOM, and render our app into it.
@@ -16,9 +17,11 @@ export function render(socket: SocketIOClient.Socket) {
     <StrictMode>
       {/* The ServerStateProvider provides the server state to the entire app tree. */}
       <ServerStateProvider socket={socket}>
-        <DndProvider backend={HTML5Backend}>
-          <App />
-        </DndProvider>
+        <SoundProvider stateKey="volume">
+          <DndProvider backend={HTML5Backend}>
+            <App />
+          </DndProvider>
+        </SoundProvider>
       </ServerStateProvider>
     </StrictMode>,
     root

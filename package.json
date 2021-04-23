@@ -44,6 +44,7 @@
     "source-map-support": "^0.5.19",
     "three": "^0.127.0",
     "transformation-matrix": "^2.7.0",
+    "use-sound": "^2.0.2",
     "utf-8-validate": "^5.0.4"
   },
   "devDependencies": {

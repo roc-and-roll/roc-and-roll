@@ -2,6 +2,7 @@ import React from "react";
 import { playerUpdate } from "../../shared/actions";
 import { useMyself } from "../myself";
 import { useDebouncedServerUpdate, useServerDispatch } from "../state";
+import { Button } from "./ui/Button";
 
 export function Player({ logout }: { logout: () => void }) {
   const dispatch = useServerDispatch();
@@ -60,7 +61,7 @@ export function Player({ logout }: { logout: () => void }) {
           onChange={(e) => setColor(e.target.value)}
         />
       </p>
-      <button onClick={logout}>logout</button>
+      <Button onClick={logout}>logout</Button>
     </>
   );
 }

@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { useState } from "react";
 import { RRFile } from "../../shared/state";
 import { fileUrl, useFileUpload } from "../files";
+import { Button } from "./ui/Button";
 
 export function UploadFileExample() {
   const [files, setFiles] = useState<RRFile[]>([]);
@@ -17,9 +18,9 @@ export function UploadFileExample() {
   return (
     <>
       <input type="file" multiple ref={fileInput} disabled={isUploading} />
-      <button onClick={doUpload} disabled={isUploading}>
+      <Button onClick={doUpload} disabled={isUploading}>
         upload
-      </button>
+      </Button>
       <ul>
         {files.map((file) => (
           <li key={file.filename}>

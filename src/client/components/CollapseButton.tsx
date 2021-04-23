@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import React from "react";
+import { Button } from "./ui/Button";
 
 export function CollapseButton(props: {
   className?: string;
@@ -7,13 +8,13 @@ export function CollapseButton(props: {
   collapsed: boolean;
 }) {
   return (
-    <button
+    <Button
       className={clsx("collapse-button", props.className)}
       onClick={() => {
         props.setCollapsed((collapsed) => !collapsed);
       }}
     >
       {props.collapsed ? "▲" : "▼"}
-    </button>
+    </Button>
   );
 }

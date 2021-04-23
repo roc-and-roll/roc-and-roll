@@ -9,6 +9,7 @@ import useLocalState from "../useLocalState";
 import { Player } from "./Player";
 import { InitiativeTracker } from "./InitiativeTracker";
 import { Acknowledgements } from "./Acknowledgements";
+import { Settings } from "./Settings";
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
@@ -55,6 +56,10 @@ export function Sidebar({ logout }: { logout: () => void }) {
 
         <Collapsible title="Player">
           <Player logout={logout} />
+        </Collapsible>
+
+        <Collapsible title="Settings">
+          <Settings />
         </Collapsible>
 
         <Collapsible title="Acknowledgements" defaultCollapsed={true}>

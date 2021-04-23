@@ -5,6 +5,10 @@ const licenses = {
     name: "CC-BY 3.0",
     url: "https://creativecommons.org/licenses/by/3.0/",
   },
+  CC0: {
+    name: "CC0",
+    url: "https://creativecommons.org/publicdomain/zero/1.0/",
+  },
 };
 
 export function Acknowledgements() {
@@ -42,14 +46,36 @@ export function Acknowledgements() {
                 {url}
               </a>
             )}{" "}
-            (
-            <a href={license.url} target="_blank" rel="noreferrer">
-              {license.name}
-            </a>
-            )
+            <License license={license} />
           </li>
         ))}
       </ul>
+      <h3>Sounds</h3>
+      <ul>
+        <li>
+          Click.wav from{" "}
+          <a
+            href="https://freesound.org/s/256116/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            https://freesound.org/s/256116/
+          </a>{" "}
+          by kwahmah_02 <License license={licenses.CC0} />
+        </li>
+      </ul>
+    </>
+  );
+}
+
+function License({ license }: { license: { url: string; name: string } }) {
+  return (
+    <>
+      (
+      <a href={license.url} target="_blank" rel="noreferrer">
+        {license.name}
+      </a>
+      )
     </>
   );
 }

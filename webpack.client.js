@@ -115,7 +115,7 @@ module.exports = (webpackEnv) => {
           ],
         },
         {
-          test: /\.(eot|svg|ttf|woff|woff2)$/,
+          test: /\.(eot|svg|ttf|woff|woff2|mp3)$/,
           loader: 'file-loader'
         },
         {

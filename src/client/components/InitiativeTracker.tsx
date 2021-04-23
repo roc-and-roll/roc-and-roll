@@ -28,6 +28,7 @@ import {
 import useLocalState from "../useLocalState";
 import { GMArea } from "./GMArea";
 import { TokenStack } from "./TokenManager";
+import { Button } from "./ui/Button";
 
 function InitiativeEntry({
   entry,
@@ -107,12 +108,12 @@ function InitiativeEntry({
     <li key={entry.id} className={isCurrentEntry ? "current" : undefined}>
       {content}
       {canEdit && (
-        <button
+        <Button
           onClick={() => onRemoveEntry()}
           className={myself.isGM ? "gm-button" : undefined}
         >
           remove
-        </button>
+        </Button>
       )}
       <input
         type="number"
@@ -121,9 +122,9 @@ function InitiativeEntry({
         onChange={(e) => setInitiative(e.target.value)}
       />
       {myself.isGM && (
-        <button className="gm-button" onClick={() => onSetCurrentEntry()}>
+        <Button className="gm-button" onClick={() => onSetCurrentEntry()}>
           jump here
-        </button>
+        </Button>
       )}
     </li>
   );
@@ -221,7 +222,7 @@ export function InitiativeTracker() {
           />
         ))}
       </ul>
-      <button
+      <Button
         className={clsx("initiative-tracker-turn-done", {
           "gm-button": !itIsMyTurn && myself.isGM,
         })}
@@ -234,9 +235,9 @@ export function InitiativeTracker() {
         }}
       >
         I am done with my turn!
-      </button>
+      </Button>
       <div className="initiative-tracker-roll">
-        <button onClick={roll}>Roll Initiative</button>
+        <Button onClick={roll}>Roll Initiative</Button>
         <input
           value={modifier}
           onChange={(e) => setModifier(e.target.value)}
@@ -246,12 +247,12 @@ export function InitiativeTracker() {
       </div>
       {myself.isGM && (
         <GMArea>
-          <button
+          <Button
             onClick={addLairAction}
             className="initiative-tracker-add-lair-action"
           >
             Add lair action
-          </button>
+          </Button>
         </GMArea>
       )}
       {itIsMyTurn && <YourTurn />}

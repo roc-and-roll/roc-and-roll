@@ -7,6 +7,7 @@ import { useServerDispatch, useServerState } from "../state";
 import { useScrollToBottom } from "../useScrollToBottom";
 import { formatTimestamp } from "../util";
 import { CollapseButton } from "./CollapseButton";
+import { Button } from "./ui/Button";
 
 function LogEntry(props: { logEntry: RRLogEntry }) {
   const { entities: players } = useServerState((state) => state.players);
@@ -57,7 +58,7 @@ export function Log() {
               </li>
             ))}
           </ul>
-          <button
+          <Button
             onClick={() => {
               const text = prompt("text");
               if (text === null) {
@@ -75,7 +76,7 @@ export function Log() {
             }}
           >
             add message
-          </button>
+          </Button>
         </>
       ) : (
         lastLogEntry && <LogEntry logEntry={lastLogEntry} />

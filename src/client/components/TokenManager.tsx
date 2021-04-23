@@ -18,6 +18,7 @@ import { GMArea } from "./GMArea";
 import { Popover } from "./Popover";
 import { randomName } from "../../shared/namegen";
 import { GRID_SIZE } from "../../shared/constants";
+import { Button } from "./ui/Button";
 
 async function makeNewToken(): Promise<Parameters<typeof tokenAdd>[0]> {
   return {
@@ -73,9 +74,9 @@ export function TokenManager() {
 
   return (
     <>
-      <button onClick={addToken} disabled={isAddingToken}>
+      <Button onClick={addToken} disabled={isAddingToken}>
         Add Token
-      </button>
+      </Button>
 
       <div className="token-list">
         {entries(tokens)
@@ -226,9 +227,9 @@ function TokenEditor({
 
   return (
     <div className="token-popup">
-      <button className="popover-close" onClick={onClose}>
+      <Button className="popover-close" onClick={onClose}>
         ×
-      </button>
+      </Button>
       <input
         ref={nameInput}
         value={name}
@@ -249,7 +250,7 @@ function TokenEditor({
         type="file"
         ref={fileInput}
       />
-      <button onClick={remove}>Delete</button>
+      <Button onClick={remove}>Delete</Button>
     </div>
   );
 }

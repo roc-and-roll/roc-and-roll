@@ -6,6 +6,7 @@ import { useDebouncedServerUpdate } from "../state";
 import useLocalState from "../useLocalState";
 import { MapEditState, MapSnap } from "./MapContainer";
 import { Popover } from "./Popover";
+import { Button } from "./ui/Button";
 
 export function MapToolbar({
   map,
@@ -40,56 +41,56 @@ export function MapToolbar({
 
   return (
     <div className="map-toolbar">
-      <button
+      <Button
         onClick={() => setTool("move")}
         className={tool === "move" ? "active" : undefined}
       >
         select / move
-      </button>
-      <button
+      </Button>
+      <Button
         onClick={() => setTool("draw")}
         className={tool === "draw" ? "active" : undefined}
       >
         draw
-      </button>
+      </Button>
       {tool === "draw" && (
         <>
-          <button
+          <Button
             onClick={() => setDrawType("freehand")}
             className={drawType === "freehand" ? "active" : undefined}
           >
             draw freehand
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setDrawType("line")}
             className={drawType === "line" ? "active" : undefined}
           >
             draw line
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setDrawType("polygon")}
             className={drawType === "polygon" ? "active" : undefined}
           >
             draw polygon
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setDrawType("rectangle")}
             className={drawType === "rectangle" ? "active" : undefined}
           >
             draw rectangle
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setDrawType("circle")}
             className={drawType === "circle" ? "active" : undefined}
           >
             draw circle
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setDrawType("text")}
             className={drawType === "text" ? "active" : undefined}
           >
             write text
-          </button>
+          </Button>
           <>
             <input
               type="color"
@@ -175,7 +176,7 @@ function MapSettings({ map }: { map: RRMap }) {
       placement="bottom-end"
       trigger="click"
     >
-      <button className="gm-button">map settings</button>
+      <Button className="gm-button">map settings</Button>
     </Popover>
   );
 }

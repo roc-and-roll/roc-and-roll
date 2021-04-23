@@ -15,6 +15,11 @@ declare module "*.scss" {
   export = classNames;
 }
 
+declare module "*.mp3" {
+  const mp3: string;
+  export = mp3;
+}
+
 declare namespace NodeJS {
   interface ProcessEnv {
     readonly NODE_ENV: "development" | "production" | "test";
