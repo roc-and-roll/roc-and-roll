@@ -2,16 +2,20 @@ import { buildPatch, isEmptyObject } from "./util";
 import { MyStore } from "./setupReduxStore";
 import { Server as SocketIOServer, Socket as SocketIOSocket } from "socket.io";
 import {
+  byId,
   OptimisticUpdateID,
+  RRPlayerID,
   SyncedState,
   SyncedStateAction,
 } from "../shared/state";
+import { ephermalPlayerAdd, ephermalPlayerRemove } from "../shared/actions";
 
 export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
   const finishedOptimisticUpdateIdsBySocket: Record<
     string,
     Set<OptimisticUpdateID>
   > = {};
+  const playerIdBySocketId = new Map<string, RRPlayerID>();
 
   const lastStateBySocket: Record<string, SyncedState | undefined> = {};
   const patchCache = new WeakMap<
@@ -56,6 +60,19 @@ export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
     lastStateBySocket[socket.id] = currentState;
   };
 
+  function setPlayerIdToNull(socket: SocketIOSocket) {
+    const playerId = playerIdBySocketId.get(socket.id);
+    if (playerId) {
+      playerIdBySocketId.delete(socket.id);
+
+      if (![...playerIdBySocketId.values()].some((id) => id === playerId)) {
+        // If the player is not connected to any other socket, remove them
+        // from ephermal state.
+        store.dispatch(ephermalPlayerRemove(playerId));
+      }
+    }
+  }
+
   const setupSocket = (socket: SocketIOSocket) => {
     finishedOptimisticUpdateIdsBySocket[socket.id] = new Set();
     console.log("A client connected");
@@ -65,6 +82,7 @@ export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
       console.log("A client disconnected");
       delete lastStateBySocket[socket.id];
       delete finishedOptimisticUpdateIdsBySocket[socket.id];
+      setPlayerIdToNull(socket);
     });
     socket.on(
       "REDUX_ACTION",
@@ -76,6 +94,32 @@ export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
           );
         }
         store.dispatch(action);
+      }
+    );
+    socket.on(
+      "SET_PLAYER_ID",
+      async (
+        playerId: RRPlayerID | null,
+        sendResponse: (r: string) => void
+      ) => {
+        if (playerId === null) {
+          setPlayerIdToNull(socket);
+        } else {
+          playerIdBySocketId.set(socket.id, playerId);
+          const existingEphermalPlayer = byId(
+            store.getState().ephermal.players.entities,
+            playerId
+          );
+          if (!existingEphermalPlayer) {
+            store.dispatch(
+              ephermalPlayerAdd({
+                id: playerId,
+                isOnline: true,
+                mapMouse: null,
+              })
+            );
+          }
+        }
       }
     );
   };

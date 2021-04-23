@@ -3,7 +3,7 @@ import "./global.scss";
 import React from "react";
 import { Sidebar } from "./Sidebar";
 import { MapContainer } from "./MapContainer";
-import { useServerState } from "../state";
+import { useAutoDispatchPlayerIdOnChange, useServerState } from "../state";
 import useLocalState from "../useLocalState";
 import { byId, RRPlayerID } from "../../shared/state";
 import { MyselfContext } from "../myself";
@@ -19,17 +19,23 @@ export function App() {
   ] = useLocalState<RRPlayerID | null>("myPlayerId", null);
 
   // Important: Use useMyself everywhere else!
-  const myself = myPlayerId ? byId(players.entities, myPlayerId) : null;
+  const myself = myPlayerId ? byId(players.entities, myPlayerId) ?? null : null;
 
-  return myself ? (
+  useAutoDispatchPlayerIdOnChange(myself?.id ?? null);
+
+  return (
     <MyselfContext.Provider value={myself}>
-      <div className="app-wrapper">
-        <Sidebar logout={forgetMyPlayerId} />
-        <MapContainer className="app-map" />
-        <BottomFloats />
-      </div>
+      {myself ? (
+        <MyselfContext.Provider value={myself}>
+          <div className="app-wrapper">
+            <Sidebar logout={forgetMyPlayerId} />
+            <MapContainer className="app-map" />
+            <BottomFloats />
+          </div>
+        </MyselfContext.Provider>
+      ) : (
+        <JoinGame setMyPlayerId={setMyPlayerId} />
+      )}
     </MyselfContext.Provider>
-  ) : (
-    <JoinGame setMyPlayerId={setMyPlayerId} />
   );
 }

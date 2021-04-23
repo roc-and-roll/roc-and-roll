@@ -5,20 +5,19 @@ import React, {
   useDebugValue,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
 import ReactDOM from "react-dom";
 import {
-  EntityCollection,
   initialSyncedState,
   OptimisticUpdateID,
-  RRID,
+  RRPlayerID,
   SyncedState,
   SyncedStateAction,
 } from "../shared/state";
 import { mergeDeep, rrid } from "../shared/util";
+import { useDebounce } from "./useDebounce";
 import useRafLoop from "./useRafLoop";
 
 type StatePatch<D> = { patch: DeepPartial<D>; deletedKeys: string[] };
@@ -206,8 +205,8 @@ export function useServerState<T>(selector: (state: SyncedState) => T): T {
 export function useServerDispatch() {
   const { socket } = useContext(ServerStateContext);
 
-  return useMemo(
-    () => <P, T extends string = string, M = never>(
+  return useCallback(
+    <P, T extends string = string, M = never>(
       action: SyncedStateAction<P, T, M>
     ): SyncedStateAction<P, T, M> => {
       socket?.emit("REDUX_ACTION", JSON.stringify(action));
@@ -217,33 +216,21 @@ export function useServerDispatch() {
   );
 }
 
-function useDebounce<A extends unknown[], R extends unknown>(
-  callback: (...args: A) => R,
-  debounceTime: number
-): (...args: A) => void {
-  const lastArgs = useRef<A | null>(null);
-  const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
+export function useAutoDispatchPlayerIdOnChange(playerId: RRPlayerID | null) {
+  const { socket } = useContext(ServerStateContext);
 
   useEffect(() => {
-    return () => {
-      if (timeoutId.current) {
-        clearTimeout(timeoutId.current);
-      }
-    };
-  }, []);
+    socket?.emit("SET_PLAYER_ID", playerId);
 
-  return useCallback(
-    (...args: A): void => {
-      lastArgs.current = args;
-      timeoutId.current ??= setTimeout(() => {
-        const args = lastArgs.current!;
-        timeoutId.current = null;
-        lastArgs.current = null;
-        callback(...args);
-      }, debounceTime);
-    },
-    [callback, debounceTime]
-  );
+    const onReconnect = () => {
+      socket?.emit("SET_PLAYER_ID", playerId);
+    };
+
+    socket?.io.on("reconnect", onReconnect);
+    return () => {
+      socket?.io.off("reconnect", onReconnect);
+    };
+  }, [playerId, socket]);
 }
 
 export function useLatest<V>(value: V) {

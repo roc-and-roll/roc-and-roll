@@ -25,7 +25,6 @@ export function JoinGame({
         color: randomColor(),
         currentMap: maps.ids[0]!,
         isGM: false,
-        isOnline: false, // TODO
         tokenIds: [],
       })
     );

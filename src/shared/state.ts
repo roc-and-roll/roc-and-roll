@@ -73,8 +73,6 @@ export type RRPlayer = {
   isGM: boolean;
   currentMap: RRMapID;
   tokenIds: RRTokenID[];
-
-  isOnline: boolean;
 };
 
 export type RRToken = {
@@ -216,6 +214,16 @@ export type PrivateChatsSyncedState = EntityCollection<RRPrivateChat>;
 
 export type LogEntriesSyncedState = EntityCollection<RRLogEntry>;
 
+export type EphermalPlayer = {
+  id: RRPlayerID;
+  isOnline: boolean;
+  mapMouse: null | { position: RRPoint; lastUpdate: RRTimestamp };
+};
+
+export type EphermalSyncedState = {
+  players: EntityCollection<EphermalPlayer>;
+};
+
 export interface SyncedState {
   initiativeTracker: InitiativeTrackerSyncedState;
   players: PlayersSyncedState;
@@ -223,6 +231,7 @@ export interface SyncedState {
   maps: MapsSyncedState;
   privateChats: PrivateChatsSyncedState;
   logEntries: LogEntriesSyncedState;
+  ephermal: EphermalSyncedState;
 }
 
 const defaultMap: RRMap = {
@@ -266,6 +275,12 @@ export const initialSyncedState: SyncedState = {
   logEntries: {
     entities: {},
     ids: [],
+  },
+  ephermal: {
+    players: {
+      entities: {},
+      ids: [],
+    },
   },
 };
 

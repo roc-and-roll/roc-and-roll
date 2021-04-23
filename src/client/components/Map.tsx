@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   scale,
   translate,
@@ -13,6 +19,8 @@ import {
   byId,
   RRColor,
   RRPlayer,
+  RRPlayerID,
+  RRPoint,
   RRToken,
   RRTokenOnMap,
   RRTokenOnMapID,
@@ -29,6 +37,8 @@ import {
   RoughPath,
   RoughRectangle,
 } from "./rough";
+import invert from "invert-color";
+import useRafLoop from "../useRafLoop";
 
 type Rectangle = [number, number, number, number];
 
@@ -38,6 +48,8 @@ const SELECTION_BUTTON = 0;
 const ZOOM_SCALE_FACTOR = 0.2;
 
 export type Point = { x: number; y: number };
+
+export const CURSOR_POSITION_SYNC_DEBOUNCE = 500;
 
 const snapToGrid = (num: number) => Math.floor(num / GRID_SIZE) * GRID_SIZE;
 export const snapPointToGrid = (p: Point) => ({
@@ -69,6 +81,13 @@ export const Map: React.FC<{
   onMoveTokens: (dx: number, dy: number) => void;
   onSelectTokens: (ids: RRTokenOnMapID[]) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
+  mousePositions: Array<{
+    playerId: RRPlayerID;
+    playerName: string;
+    playerColor: RRColor;
+    position: RRPoint;
+  }>;
+  onMousePositionChanged: (position: RRPoint | null) => void;
   editState: MapEditState;
 }> = ({
   myself,
@@ -82,8 +101,14 @@ export const Map: React.FC<{
   tokens,
   setTransform,
   transform,
+  mousePositions,
+  onMousePositionChanged,
   editState, // TODO: Use the edit state :)
 }) => {
+  const contrastColor = useMemo(() => invert(backgroundColor, true), [
+    backgroundColor,
+  ]);
+
   // TODO can't handle overlapping clicks
   const [mouseAction, setMouseAction] = useState<MouseAction>(MouseAction.NONE);
   const [dragState, setDragState] = useState({
@@ -279,6 +304,13 @@ export const Map: React.FC<{
     setMouseAction(MouseAction.MOVE_TOKEN);
   };
 
+  const handleMapMouseMove = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => {
+      onMousePositionChanged(globalToLocal(transform, localCoords(e)));
+    },
+    [onMousePositionChanged, transform]
+  );
+
   const grid = gridEnabled ? (
     <>
       <defs>
@@ -314,6 +346,7 @@ export const Map: React.FC<{
       onContextMenu={(e) => e.preventDefault()}
       onMouseDown={handleMouseDown}
       style={{ backgroundColor }}
+      onMouseMove={handleMapMouseMove}
     >
       <g transform={toSVG(transform)}>
         {grid}
@@ -401,10 +434,78 @@ export const Map: React.FC<{
             zoom={transform.a}
           />
         )}
+        {mousePositions.map((each) => (
+          <MouseCursor
+            key={each.playerId}
+            zoom={transform.a}
+            contrastColor={contrastColor}
+            {...each}
+          />
+        ))}
       </g>
     </RoughContextProvider>
   );
 };
+
+const MouseCursor = React.memo(function MouseCursor(props: {
+  zoom: number;
+  contrastColor: RRColor;
+  playerId: RRPlayerID;
+  playerName: string;
+  playerColor: RRColor;
+  position: RRPoint;
+}) {
+  const [rafStart, rafStop] = useRafLoop();
+
+  const prevPosition = useRef<RRPoint | null>(null);
+  const [position, setPosition] = useState(props.position);
+
+  // Animate position changes
+  useEffect(() => {
+    const end = props.position;
+    if (prevPosition.current) {
+      const start = prevPosition.current;
+      rafStart((t) => {
+        setPosition({
+          x: start.x + (end.x - start.x) * Math.sin((t * Math.PI) / 2),
+          y: start.y + (end.y - start.y) * Math.sin((t * Math.PI) / 2),
+        });
+      }, CURSOR_POSITION_SYNC_DEBOUNCE);
+    }
+    prevPosition.current = end;
+
+    return () => {
+      rafStop();
+    };
+  }, [prevPosition, props.position, rafStart, rafStop]);
+
+  return (
+    <g
+      transform={`translate(${position.x},${position.y}) scale(${
+        0.5 / props.zoom
+      })`}
+    >
+      <RoughPath
+        // https://mavo.io/demos/svgpath/
+        path={`m 0 0 v ${GRID_SIZE} h ${(GRID_SIZE * 5) / 7} l ${
+          (-GRID_SIZE * 5) / 7
+        } ${-GRID_SIZE}`}
+        fillStyle="solid"
+        fill={props.playerColor}
+        stroke={props.contrastColor}
+      />
+      <text
+        x={0}
+        y={GRID_SIZE * 1.1}
+        alignmentBaseline="before-edge"
+        fontSize="1.5rem"
+        fill={props.contrastColor}
+      >
+        {props.playerName}
+      </text>
+    </g>
+  );
+});
 
 function MapMeasureBar({
   from,

@@ -1,6 +1,7 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import {
+  ephermalPlayerUpdate,
   mapTokenAdd,
   mapTokenRemove,
   mapTokenUpdate,
@@ -9,6 +10,7 @@ import {
   byId,
   entries,
   RRColor,
+  RRPoint,
   RRToken,
   RRTokenOnMap,
   RRTokenOnMapID,
@@ -20,11 +22,19 @@ import {
   useServerDispatch,
   useServerState,
 } from "../state";
-import { globalToLocal, Map, Point, snapPointToGrid } from "./Map";
+import { useDebounce } from "../useDebounce";
+import {
+  CURSOR_POSITION_SYNC_DEBOUNCE,
+  globalToLocal,
+  Map,
+  Point,
+  snapPointToGrid,
+} from "./Map";
 import composeRefs from "@seznam/compose-react-refs";
 import { identity, Matrix } from "transformation-matrix";
 import { MapToolbar } from "./MapToolbar";
 import { GRID_SIZE } from "../../shared/constants";
+import { timestamp } from "../../shared/util";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -169,6 +179,41 @@ export function MapContainer({ className }: { className: string }) {
 
   const [editState, setEditState] = useState<MapEditState>({ tool: "move" });
 
+  const onMousePositionChanged = useDebounce(
+    useCallback(
+      (position: RRPoint | null) =>
+        dispatch(
+          ephermalPlayerUpdate({
+            id: myself.id,
+            changes: {
+              mapMouse: position ? { position, lastUpdate: timestamp() } : null,
+            },
+          })
+        ),
+      [dispatch, myself.id]
+    ),
+    CURSOR_POSITION_SYNC_DEBOUNCE
+  );
+
+  const players = useServerState((state) => state.players);
+  const ephermalPlayers = useServerState((state) => state.ephermal.players);
+  const mousePositions = entries(ephermalPlayers).flatMap((each) => {
+    if (each.mapMouse === null || each.id === myself.id) {
+      return [];
+    }
+    const player = byId(players.entities, each.id);
+    if (!player) {
+      return [];
+    }
+
+    return {
+      playerId: each.id,
+      playerName: player.name,
+      playerColor: player.color,
+      position: each.mapMouse.position,
+    };
+  });
+
   return (
     <div className={className} ref={dropRef}>
       <MapToolbar map={map} setEditState={setEditState} />
@@ -178,6 +223,8 @@ export function MapContainer({ className }: { className: string }) {
         myself={myself}
         tokens={tokens}
         editState={editState}
+        mousePositions={mousePositions}
+        onMousePositionChanged={onMousePositionChanged}
         onMoveTokens={(dx, dy) => {
           setLocalTokensOnMap((tokensOnMap) => {
             const updatedTokensOnMap: Record<RRTokenOnMapID, RRTokenOnMap> = {};

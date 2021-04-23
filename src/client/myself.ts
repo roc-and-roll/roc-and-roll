@@ -5,10 +5,12 @@ export const MyselfContext = React.createContext<RRPlayer | null>(null);
 
 MyselfContext.displayName = "MyselfContext";
 
-export function useMyself(): RRPlayer {
+export function useMyself(allowNull?: false): RRPlayer;
+
+export function useMyself(allowNull = false): RRPlayer | null {
   const myself = useContext(MyselfContext);
 
-  if (!myself) {
+  if (!myself && !allowNull) {
     throw new Error("myself is not provided");
   }
 

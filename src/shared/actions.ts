@@ -1,5 +1,6 @@
 import { createAction, Update as OriginalUpdate } from "@reduxjs/toolkit";
 import {
+  EphermalPlayer,
   InitiativeTrackerSyncedState,
   RRID,
   RRInitiativeTrackerEntry,
@@ -274,3 +275,19 @@ export const initiativeTrackerEntryLairActionUpdate = createAction<
 export const initiativeTrackerEntryRemove = createAction<
   RRInitiativeTrackerEntry["id"]
 >("initiativetracker/entry/remove");
+
+////////////////////////////////////////////////////////////////////////////////
+// Ephermal state
+////////////////////////////////////////////////////////////////////////////////
+
+export const ephermalPlayerAdd = createAction<EphermalPlayer>(
+  "ephermal/player/add"
+);
+
+export const ephermalPlayerUpdate = createAction<Update<EphermalPlayer>>(
+  "ephermal/player/update"
+);
+
+export const ephermalPlayerRemove = createAction<EphermalPlayer["id"]>(
+  "ephermal/player/remove"
+);
