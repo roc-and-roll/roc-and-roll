@@ -19,6 +19,7 @@ import { Popover } from "./Popover";
 import { randomName } from "../../shared/namegen";
 import { GRID_SIZE } from "../../shared/constants";
 import { Button } from "./ui/Button";
+import { clamp } from "../../shared/util";
 
 async function makeNewToken(): Promise<Parameters<typeof tokenAdd>[0]> {
   return {
@@ -146,6 +147,7 @@ export function TokenPreview({ token }: { token: RRToken }) {
   return (
     <div
       className="token-image"
+      title={token.name}
       style={{
         backgroundImage: token.image
           ? `url(${tokenImageUrl(token.image, GRID_SIZE)})`
@@ -156,9 +158,22 @@ export function TokenPreview({ token }: { token: RRToken }) {
 }
 
 export function TokenStack({ tokens }: { tokens: RRToken[] }) {
+  const [topIdx, setTopIdx] = useState(0);
+
+  // Allow to click through all tokens
+  const sortedTokens = [...tokens.slice(topIdx), ...tokens.slice(0, topIdx)];
+  useEffect(() => {
+    setTopIdx((old) => clamp(0, old, tokens.length - 1));
+  }, [tokens.length]);
+
   return (
-    <div className="token-stack">
-      {tokens.map((token, i) => (
+    <div
+      className="token-stack"
+      onClick={() =>
+        setTopIdx((old) => (old === 0 ? tokens.length - 1 : old - 1))
+      }
+    >
+      {sortedTokens.map((token, i) => (
         <div key={token.id} style={{ left: i * (24 / tokens.length) }}>
           <TokenPreview token={token} />
         </div>

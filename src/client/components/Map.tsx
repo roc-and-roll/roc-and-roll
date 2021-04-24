@@ -421,7 +421,11 @@ export const Map: React.FC<{
           return (
             <MapToken
               key={t.id}
-              onStartMove={(e) => handleDragStart(e, t)}
+              onStartMove={(e) => {
+                if (canControlToken(token, myself)) {
+                  handleDragStart(e, t);
+                }
+              }}
               x={t.position.x}
               y={t.position.y}
               zoom={transform.a}
