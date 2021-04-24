@@ -1,5 +1,5 @@
 import React from "react";
-import { useRRSound } from "../../sound";
+import { useRRSimpleSound } from "../../sound";
 // update acknowledgements if changed
 import click from "./click.mp3";
 
@@ -7,7 +7,7 @@ export const Button = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement>
 >(function Button(props, ref) {
-  const [play] = useRRSound(click);
+  const play = useRRSimpleSound(click);
 
   return (
     <button

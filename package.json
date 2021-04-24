@@ -27,6 +27,7 @@
     "core-js": "^3.9.1",
     "express": "^4.17.1",
     "express-async-handler": "^1.1.4",
+    "howler": "^2.2.1",
     "invert-color": "^2.0.0",
     "modern-css-reset": "^1.4.0",
     "multer": "^1.4.2",
@@ -47,7 +48,6 @@
     "source-map-support": "^0.5.19",
     "three": "^0.127.0",
     "transformation-matrix": "^2.7.0",
-    "use-sound": "^2.0.2",
     "utf-8-validate": "^5.0.4"
   },
   "devDependencies": {
@@ -60,6 +60,7 @@
     "@beyonk/google-fonts-webpack-plugin": "^1.7.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.4.3",
     "@types/express": "^4.17.11",
+    "@types/howler": "^2",
     "@types/jest": "^26.0.21",
     "@types/mini-css-extract-plugin": "^1",
     "@types/multer": "^1.4.5",
