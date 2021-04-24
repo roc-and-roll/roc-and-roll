@@ -4,6 +4,7 @@ import type { RoughSVG } from "roughjs/bin/svg";
 import rough from "roughjs/bin/rough";
 import type { Drawable, Options } from "roughjs/bin/core";
 import { RoughGenerator } from "roughjs/bin/generator";
+import clsx from "clsx";
 
 export const RoughContext = React.createContext<{
   svg: SVGSVGElement;
@@ -14,7 +15,7 @@ RoughContext.displayName = "RoughContext";
 
 export const RoughContextProvider = React.forwardRef<
   SVGSVGElement,
-  React.PropsWithChildren<SVGProps<SVGElement>>
+  SVGProps<SVGElement>
 >(function RoughContextProvider({ children, ...props }, forwardedRef) {
   const [roughSVG, setRoughSVG] = useState<{
     svg: SVGSVGElement;
@@ -179,3 +180,13 @@ export const RoughCircle = makeRoughComponent<{
 export const RoughPath = makeRoughComponent<{
   path: string;
 }>((generator, { path }, options) => generator.path(path, options));
+
+// Rough.JS does not support text. We simply use a handwritten font to "fake"
+// that look.
+export function RoughText({ children, ...props }: SVGProps<SVGTextElement>) {
+  return (
+    <text {...props} className={clsx("rough-text", props.className)}>
+      {children}
+    </text>
+  );
+}

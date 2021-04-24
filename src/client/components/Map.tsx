@@ -36,6 +36,7 @@ import {
   RoughLine,
   RoughPath,
   RoughRectangle,
+  RoughText,
 } from "./rough";
 import invert from "invert-color";
 import useRafLoop from "../useRafLoop";
@@ -522,15 +523,15 @@ const MouseCursor = React.memo(function MouseCursor(props: {
         fill={props.playerColor}
         stroke={props.contrastColor}
       />
-      <text
+      <RoughText
         x={0}
         y={GRID_SIZE * 1.1}
         alignmentBaseline="before-edge"
-        fontSize="1.5rem"
+        fontSize="2rem"
         fill={props.contrastColor}
       >
         {props.playerName}
-      </text>
+      </RoughText>
     </g>
   );
 });

@@ -2,10 +2,12 @@ const path = require("path");
 const webpack = require("webpack");
 const GitRevisionPlugin = require("git-revision-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const webpackDevServerWaitpage = require("webpack-dev-server-waitpage");
+const GoogleFontsPlugin = require("@beyonk/google-fonts-webpack-plugin")
 
 const gitRevisionPlugin = new GitRevisionPlugin();
 
@@ -82,6 +84,14 @@ module.exports = (webpackEnv) => {
                 },
               }
             : undefined
+      }),
+      new HtmlWebpackTagsPlugin({ tags: ['fonts.css'], append: true }),
+      new GoogleFontsPlugin({
+        path: "fonts",
+        fonts: [
+          { family: "Architects Daughter" },
+        ],
+        noLocalInCss: true,
       }),
       new webpack.DefinePlugin({
         // Heroku deletes the .git folder, therefore this command fails.
