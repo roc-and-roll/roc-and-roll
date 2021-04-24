@@ -50,7 +50,7 @@ export type MapEditState =
     }
   | { tool: "draw"; type: "text" | "freehand"; color: RRColor };
 
-export function MapContainer({ className }: { className: string }) {
+export default function MapContainer({ className }: { className: string }) {
   const myself = useMyself();
   const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
   const dispatch = useServerDispatch();

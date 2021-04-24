@@ -8,6 +8,7 @@ const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const webpackDevServerWaitpage = require("webpack-dev-server-waitpage");
 const GoogleFontsPlugin = require("@beyonk/google-fonts-webpack-plugin")
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const gitRevisionPlugin = new GitRevisionPlugin();
 
@@ -109,6 +110,7 @@ module.exports = (webpackEnv) => {
         typescript: { configFile: "tsconfig.client.json" },
         async: isEnvDevelopment,
       }),
+      new MiniCssExtractPlugin(),
       isEnvProduction && new CleanWebpackPlugin(),
     ].filter(Boolean),
     module: {
@@ -116,8 +118,7 @@ module.exports = (webpackEnv) => {
         {
           test: /\.(s[ac]|c)ss$/i,
           use: [
-            // Creates `style` nodes from JS strings
-            "style-loader",
+            MiniCssExtractPlugin.loader,
             // Translates CSS into CommonJS
             "css-loader",
             // Compiles Sass to CSS

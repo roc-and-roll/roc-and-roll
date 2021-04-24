@@ -1,4 +1,5 @@
-import { createAction, Update as OriginalUpdate } from "@reduxjs/toolkit";
+import { createAction } from "@reduxjs/toolkit";
+import type { Update as OriginalUpdate } from "@reduxjs/toolkit";
 import {
   EphermalPlayer,
   InitiativeTrackerSyncedState,

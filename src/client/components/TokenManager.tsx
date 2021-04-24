@@ -16,10 +16,9 @@ import { useDrag } from "react-dnd";
 import { useMyself } from "../myself";
 import { GMArea } from "./GMArea";
 import { Popover } from "./Popover";
-import { randomName } from "../../shared/namegen";
 import { GRID_SIZE } from "../../shared/constants";
 import { Button } from "./ui/Button";
-import { clamp } from "../../shared/util";
+import { clamp, randomName } from "../../shared/util";
 
 async function makeNewToken(): Promise<Parameters<typeof tokenAdd>[0]> {
   return {
@@ -30,7 +29,7 @@ async function makeNewToken(): Promise<Parameters<typeof tokenAdd>[0]> {
     scale: 1,
     visibility: "everyone",
     isTemplate: false,
-    name: randomName(),
+    name: await randomName(),
     image: await generateRandomToken(),
   };
 }

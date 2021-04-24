@@ -1,14 +1,16 @@
 import "modern-css-reset";
 import "./global.scss";
-import React from "react";
+import React, { Suspense } from "react";
 import { Sidebar } from "./Sidebar";
-import { MapContainer } from "./MapContainer";
 import { useAutoDispatchPlayerIdOnChange, useServerState } from "../state";
 import useLocalState from "../useLocalState";
 import { byId, RRPlayerID } from "../../shared/state";
 import { MyselfContext } from "../myself";
 import { JoinGame } from "./JoinGame";
 import { BottomFloats } from "./BottomFloats";
+
+// Load the map lazily to enable code splitting -> the sidebar will load faster.
+const MapContainer = React.lazy(() => import("./MapContainer"));
 
 export function App() {
   const players = useServerState((state) => state.players);
@@ -29,7 +31,9 @@ export function App() {
         <MyselfContext.Provider value={myself}>
           <div className="app-wrapper">
             <Sidebar logout={forgetMyPlayerId} />
-            <MapContainer className="app-map" />
+            <Suspense fallback="Map is loading...">
+              <MapContainer className="app-map" />
+            </Suspense>
             <BottomFloats />
           </div>
         </MyselfContext.Provider>

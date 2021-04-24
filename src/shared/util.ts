@@ -1,6 +1,10 @@
 import { nanoid } from "@reduxjs/toolkit";
 import { RRID, RRTimestamp } from "./state";
 
+export async function randomName(pattern = "!<s|B|Bv|v><V|s|'|V><s|V|C>") {
+  return new (await import("./namegen")).default(pattern).toString();
+}
+
 export function isObject(item: any): item is Record<string, any> {
   return item && typeof item === "object" && !Array.isArray(item);
 }

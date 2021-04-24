@@ -50,18 +50,18 @@ export const RoughContextProvider = React.forwardRef<
   );
 });
 
-/**
+/*!
  * Adapted from Rough.js
  * https://github.com/rough-stuff/rough/blob/bc460dd98eca1f6c4eb8104794931960f0b078ca/src/svg.ts
  *
- * @licensed under the MIT License
+ * @license MIT
  * Copyright (c) 2019 Preet Shihn
  */
 function DrawablePrimitive({ d, rc }: { d: Drawable; rc: RoughSVG }) {
   const options = d.options || rc.getDefaultOptions();
 
   return (
-    <g>
+    <>
       {d.sets.map((drawing, i) => {
         switch (drawing.type) {
           case "path":
@@ -111,7 +111,7 @@ function DrawablePrimitive({ d, rc }: { d: Drawable; rc: RoughSVG }) {
           }
         }
       })}
-    </g>
+    </>
   );
 }
 

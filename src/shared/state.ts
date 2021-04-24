@@ -1,6 +1,6 @@
-import { PayloadAction } from "@reduxjs/toolkit";
-import { Dispatch } from "redux";
-import { Opaque } from "type-fest";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import type { Dispatch } from "redux";
+import type { Opaque } from "type-fest";
 import { rrid } from "./util";
 
 export type RRID = Opaque<string>;
