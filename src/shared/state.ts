@@ -217,7 +217,11 @@ export type LogEntriesSyncedState = EntityCollection<RRLogEntry>;
 export type EphermalPlayer = {
   id: RRPlayerID;
   isOnline: boolean;
-  mapMouse: null | { position: RRPoint; lastUpdate: RRTimestamp };
+  mapMouse: null | {
+    position: RRPoint;
+    positionHistory: RRPoint[];
+    lastUpdate: RRTimestamp;
+  };
 };
 
 export type EphermalSyncedState = {
@@ -231,6 +235,7 @@ export interface SyncedState {
   maps: MapsSyncedState;
   privateChats: PrivateChatsSyncedState;
   logEntries: LogEntriesSyncedState;
+  // All ephermal state is cleared when the server restarts
   ephermal: EphermalSyncedState;
 }
 

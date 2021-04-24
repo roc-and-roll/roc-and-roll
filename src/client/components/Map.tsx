@@ -49,7 +49,11 @@ const ZOOM_SCALE_FACTOR = 0.2;
 
 export type Point = { x: number; y: number };
 
-export const CURSOR_POSITION_SYNC_DEBOUNCE = 500;
+// sync the cursor position to the server in this interval
+export const CURSOR_POSITION_SYNC_DEBOUNCE = 300;
+
+// record the cursor position this many times between each sync to the server
+export const CURSOR_POSITION_SYNC_HISTORY_STEPS = 10;
 
 const snapToGrid = (num: number) => Math.floor(num / GRID_SIZE) * GRID_SIZE;
 export const snapPointToGrid = (p: Point) => ({
@@ -86,8 +90,9 @@ export const Map: React.FC<{
     playerName: string;
     playerColor: RRColor;
     position: RRPoint;
+    positionHistory: RRPoint[];
   }>;
-  onMousePositionChanged: (position: RRPoint | null) => void;
+  onMousePositionChanged: (position: RRPoint) => void;
   editState: MapEditState;
 }> = ({
   myself,
@@ -454,6 +459,7 @@ const MouseCursor = React.memo(function MouseCursor(props: {
   playerName: string;
   playerColor: RRColor;
   position: RRPoint;
+  positionHistory: RRPoint[];
 }) {
   const [rafStart, rafStop] = useRafLoop();
 
@@ -465,10 +471,28 @@ const MouseCursor = React.memo(function MouseCursor(props: {
     const end = props.position;
     if (prevPosition.current) {
       const start = prevPosition.current;
-      rafStart((t) => {
+      const points = [start, ...props.positionHistory, end];
+
+      rafStart((linear) => {
+        // we cannot use non-linear lerping, because that looks weird for continuous mouse movements
+        const t = linear; // linear === 1 ? 1 : Math.sin((linear * Math.PI) / 2);
+
+        // part of [0..1] that corresponds to the lerping between two
+        // waypoints.
+        const tPerPoint = 1 / (points.length - 1);
+
+        const pointIdx =
+          t === 1 ? points.length - 2 : Math.floor(t / tPerPoint);
+
+        // percentage of the lerping of the current point.
+        const pointT = (t - pointIdx * tPerPoint) / tPerPoint;
+
+        const s = points[pointIdx]!;
+        const e = points[pointIdx + 1]!;
+
         setPosition({
-          x: start.x + (end.x - start.x) * Math.sin((t * Math.PI) / 2),
-          y: start.y + (end.y - start.y) * Math.sin((t * Math.PI) / 2),
+          x: s.x + (e.x - s.x) * pointT,
+          y: s.y + (e.y - s.y) * pointT,
         });
       }, CURSOR_POSITION_SYNC_DEBOUNCE);
     }
@@ -477,7 +501,7 @@ const MouseCursor = React.memo(function MouseCursor(props: {
     return () => {
       rafStop();
     };
-  }, [prevPosition, props.position, rafStart, rafStop]);
+  }, [prevPosition, props.position, props.positionHistory, rafStart, rafStop]);
 
   return (
     <g

@@ -22,9 +22,10 @@ import {
   useServerDispatch,
   useServerState,
 } from "../state";
-import { useDebounce } from "../useDebounce";
+import { useAggregatedDoubleDebounce } from "../useDebounce";
 import {
   CURSOR_POSITION_SYNC_DEBOUNCE,
+  CURSOR_POSITION_SYNC_HISTORY_STEPS,
   globalToLocal,
   Map,
   Point,
@@ -179,20 +180,35 @@ export function MapContainer({ className }: { className: string }) {
 
   const [editState, setEditState] = useState<MapEditState>({ tool: "move" });
 
-  const onMousePositionChanged = useDebounce(
+  const onMousePositionChanged = useAggregatedDoubleDebounce(
     useCallback(
-      (position: RRPoint | null) =>
+      (argHistory: Array<[RRPoint]>) => {
+        if (argHistory.length === 0) {
+          return;
+        }
+
+        const positions = argHistory.map((each) => each[0]);
+
+        const lastPosition = positions[positions.length - 1]!;
+        const history = positions.slice(0, positions.length - 1);
+
         dispatch(
           ephermalPlayerUpdate({
             id: myself.id,
             changes: {
-              mapMouse: position ? { position, lastUpdate: timestamp() } : null,
+              mapMouse: {
+                position: lastPosition,
+                lastUpdate: timestamp(),
+                positionHistory: history,
+              },
             },
           })
-        ),
+        );
+      },
       [dispatch, myself.id]
     ),
-    CURSOR_POSITION_SYNC_DEBOUNCE
+    CURSOR_POSITION_SYNC_DEBOUNCE,
+    CURSOR_POSITION_SYNC_HISTORY_STEPS
   );
 
   const players = useServerState((state) => state.players);
@@ -211,6 +227,7 @@ export function MapContainer({ className }: { className: string }) {
       playerName: player.name,
       playerColor: player.color,
       position: each.mapMouse.position,
+      positionHistory: each.mapMouse.positionHistory,
     };
   });
 
