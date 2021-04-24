@@ -10,14 +10,18 @@ import {
 } from "../shared/state";
 import { ephermalPlayerAdd, ephermalPlayerRemove } from "../shared/actions";
 
-export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
-  const finishedOptimisticUpdateIdsBySocket: Record<
-    string,
-    Set<OptimisticUpdateID>
-  > = {};
-  const playerIdBySocketId = new Map<string, RRPlayerID>();
+type AdditionalSocketData = {
+  finishedOptimisticUpdateIds: OptimisticUpdateID[];
+  playerId: RRPlayerID | null;
+  lastState: SyncedState | null;
+};
 
-  const lastStateBySocket: Record<string, SyncedState | undefined> = {};
+export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
+  const additionalSocketData = new Map<
+    string /* socket id */,
+    AdditionalSocketData
+  >();
+
   const patchCache = new WeakMap<
     SyncedState,
     {
@@ -30,42 +34,49 @@ export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
     socket: SocketIOSocket,
     currentState: SyncedState
   ) => {
-    const lastState = lastStateBySocket[socket.id];
-    const finishedOptimisticUpdateIds = [
-      ...finishedOptimisticUpdateIdsBySocket[socket.id]!,
-    ];
-    if (lastState === undefined) {
+    const data = additionalSocketData.get(socket.id);
+    if (!data) {
+      console.error("This should never happen.");
+      console.trace();
+      return;
+    }
+
+    if (data.lastState === null) {
       socket.emit("SET_STATE", {
         state: JSON.stringify(currentState),
         version: __VERSION__,
-        finishedOptimisticUpdateIds,
+        finishedOptimisticUpdateIds: data.finishedOptimisticUpdateIds,
       });
     } else {
-      const cache = patchCache.get(lastState);
+      const cache = patchCache.get(data.lastState);
       let patch;
       if (cache && cache.currentState === currentState) {
         patch = cache.patch;
       } else {
-        patch = buildPatch(lastState, currentState);
-        patchCache.set(lastState, { currentState, patch });
+        patch = buildPatch(data.lastState, currentState);
+        patchCache.set(data.lastState, { currentState, patch });
       }
       if (!isEmptyObject(patch.patch) || patch.deletedKeys.length > 0) {
         socket.emit("PATCH_STATE", {
           patch: JSON.stringify(patch),
-          finishedOptimisticUpdateIds,
+          finishedOptimisticUpdateIds: data.finishedOptimisticUpdateIds,
         });
       }
     }
-    finishedOptimisticUpdateIdsBySocket[socket.id]!.clear();
-    lastStateBySocket[socket.id] = currentState;
+    data.finishedOptimisticUpdateIds = [];
+    data.lastState = currentState;
   };
 
-  function setPlayerIdToNull(socket: SocketIOSocket) {
-    const playerId = playerIdBySocketId.get(socket.id);
+  function setPlayerIdToNull(data: AdditionalSocketData) {
+    const playerId = data.playerId;
     if (playerId) {
-      playerIdBySocketId.delete(socket.id);
+      data.playerId = null;
 
-      if (![...playerIdBySocketId.values()].some((id) => id === playerId)) {
+      if (
+        ![...additionalSocketData.values()].some(
+          (each) => each.playerId === playerId
+        )
+      ) {
         // If the player is not connected to any other socket, remove them
         // from ephermal state.
         store.dispatch(ephermalPlayerRemove(playerId));
@@ -73,25 +84,58 @@ export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
     }
   }
 
+  function setPlayerId(data: AdditionalSocketData, playerId: RRPlayerID) {
+    data.playerId = playerId;
+    const existingEphermalPlayer = byId(
+      store.getState().ephermal.players.entities,
+      playerId
+    );
+    if (!existingEphermalPlayer) {
+      store.dispatch(
+        ephermalPlayerAdd({
+          id: playerId,
+          isOnline: true,
+          mapMouse: null,
+        })
+      );
+    }
+  }
+
   const setupSocket = (socket: SocketIOSocket) => {
-    finishedOptimisticUpdateIdsBySocket[socket.id] = new Set();
+    additionalSocketData.set(socket.id, {
+      finishedOptimisticUpdateIds: [],
+      lastState: null,
+      playerId: null,
+    });
+
     console.log("A client connected");
     sendStateUpdate(socket, store.getState());
 
     socket.on("disconnect", () => {
       console.log("A client disconnected");
-      delete lastStateBySocket[socket.id];
-      delete finishedOptimisticUpdateIdsBySocket[socket.id];
-      setPlayerIdToNull(socket);
+      const data = additionalSocketData.get(socket.id);
+      if (!data) {
+        console.error("This should never happen.");
+        console.trace();
+        return;
+      }
+      setPlayerIdToNull(data);
+      additionalSocketData.delete(socket.id);
     });
     socket.on(
       "REDUX_ACTION",
-      async (actionJSON: string, sendResponse: (r: string) => void) => {
+      (actionJSON: string, sendResponse: (r: string) => void) => {
         const action = JSON.parse(actionJSON) as SyncedStateAction;
         if (action.meta?.__optimisticUpdateId__) {
-          finishedOptimisticUpdateIdsBySocket[socket.id]!.add(
-            action.meta.__optimisticUpdateId__
-          );
+          const data = additionalSocketData.get(socket.id);
+          if (!data) {
+            console.error("This should never happen.");
+            console.trace();
+          } else {
+            data.finishedOptimisticUpdateIds.push(
+              action.meta.__optimisticUpdateId__
+            );
+          }
         }
         store.dispatch(action);
       }
@@ -102,23 +146,19 @@ export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
         playerId: RRPlayerID | null,
         sendResponse: (r: string) => void
       ) => {
+        const data = additionalSocketData.get(socket.id);
+        if (!data) {
+          console.error("This should never happen.");
+          console.trace();
+          return;
+        }
+
+        data.playerId = playerId;
+
         if (playerId === null) {
-          setPlayerIdToNull(socket);
+          setPlayerIdToNull(data);
         } else {
-          playerIdBySocketId.set(socket.id, playerId);
-          const existingEphermalPlayer = byId(
-            store.getState().ephermal.players.entities,
-            playerId
-          );
-          if (!existingEphermalPlayer) {
-            store.dispatch(
-              ephermalPlayerAdd({
-                id: playerId,
-                isOnline: true,
-                mapMouse: null,
-              })
-            );
-          }
+          setPlayerId(data, playerId);
         }
       }
     );
@@ -131,7 +171,14 @@ export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
   store.subscribe(() => {
     const state = store.getState();
     io.sockets.sockets.forEach((socket) => {
-      console.log(`sending state to ${socket.id}`);
+      const data = additionalSocketData.get(socket.id);
+      const player = data?.playerId
+        ? byId(state.players.entities, data.playerId) ?? null
+        : null;
+
+      console.log(
+        `sending state to ${socket.id} (${player?.name ?? "not logged in"})`
+      );
       sendStateUpdate(socket, state);
     });
   });
