@@ -36,6 +36,7 @@ import { identity, Matrix } from "transformation-matrix";
 import { MapToolbar } from "./MapToolbar";
 import { GRID_SIZE } from "../../shared/constants";
 import { timestamp } from "../../shared/util";
+import { useSettings } from "../settings";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -54,6 +55,7 @@ export default function MapContainer({ className }: { className: string }) {
   const myself = useMyself();
   const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
   const dispatch = useServerDispatch();
+  const [settings] = useSettings();
 
   const [selectedTokens, setSelectedTokens] = useState<RRTokenOnMapID[]>([]);
   const [transform, setTransform] = useState<Matrix>(identity());
@@ -273,12 +275,13 @@ export default function MapContainer({ className }: { className: string }) {
         onSelectTokens={setSelectedTokens}
         handleKeyDown={handleKeyDown}
       />
-      {false && process.env.NODE_ENV === "development" && (
-        <DebugTokenPositions
-          localTokensOnMap={entries(localTokensOnMap)}
-          serverTokensOnMap={entries(serverTokensOnMap)}
-        />
-      )}
+      {process.env.NODE_ENV === "development" &&
+        settings.debug.mapTokenPositions && (
+          <DebugTokenPositions
+            localTokensOnMap={entries(localTokensOnMap)}
+            serverTokensOnMap={entries(serverTokensOnMap)}
+          />
+        )}
     </div>
   );
 }

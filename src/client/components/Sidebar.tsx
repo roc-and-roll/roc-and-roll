@@ -11,9 +11,11 @@ import { InitiativeTracker } from "./InitiativeTracker";
 import { Acknowledgements } from "./Acknowledgements";
 import { Settings } from "./Settings";
 import { Players } from "./Players";
+import { useSettings } from "../settings";
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
+  const [settings] = useSettings();
 
   return (
     <Resizable
@@ -39,7 +41,7 @@ export function Sidebar({ logout }: { logout: () => void }) {
       <div className="app-sidebar-scroll-container">
         <h1>Roc & Roll</h1>
 
-        {false && (
+        {settings.debug.dice3d && (
           <Suspense fallback={null}>
             <DiceRoller />
           </Suspense>
