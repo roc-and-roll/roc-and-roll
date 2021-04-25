@@ -2,18 +2,18 @@ import React, { useCallback, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import {
   ephermalPlayerUpdate,
-  mapTokenAdd,
-  mapTokenRemove,
-  mapTokenUpdate,
+  mapObjectAdd,
+  mapObjectRemove,
+  mapObjectUpdate,
 } from "../../shared/actions";
 import {
   byId,
   entries,
   RRColor,
+  RRMapObject,
+  RRMapObjectID,
   RRPoint,
   RRToken,
-  RRTokenOnMap,
-  RRTokenOnMapID,
   setById,
 } from "../../shared/state";
 import { useMyself } from "../myself";
@@ -35,7 +35,7 @@ import composeRefs from "@seznam/compose-react-refs";
 import { identity, Matrix } from "transformation-matrix";
 import { MapToolbar } from "./MapToolbar";
 import { GRID_SIZE } from "../../shared/constants";
-import { timestamp } from "../../shared/util";
+import { rrid, timestamp } from "../../shared/util";
 import { useSettings } from "../settings";
 import { useMapSelection } from "../mapSelection";
 
@@ -57,7 +57,7 @@ export default function MapContainer({ className }: { className: string }) {
   const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
   const dispatch = useServerDispatch();
   const [settings] = useSettings();
-  const [selectedTokens, setSelectedTokens] = useMapSelection();
+  const [selectedMapObjects, setSelectedTokens] = useMapSelection();
 
   const [transform, setTransform] = useState<Matrix>(identity());
 
@@ -72,43 +72,46 @@ export default function MapContainer({ className }: { className: string }) {
         const y = dropPosition!.y - topLeft.y;
 
         dispatch(
-          mapTokenAdd(map.id, {
+          mapObjectAdd(map.id, {
+            id: rrid<RRMapObject>(),
+            type: "token",
             position: snapPointToGrid(
               globalToLocal(transform, {
                 x,
                 y,
               })
             ),
+            playerId: myself.id,
             tokenId: item.id,
           })
         );
       },
     }),
-    [dispatch, map.id, transform]
+    [dispatch, map.id, myself.id, transform]
   );
   const dropRef = composeRefs<HTMLDivElement>(dropRef2, dropRef1);
 
-  const serverTokensOnMap = map.tokens;
-  const [localTokensOnMap, setLocalTokensOnMap] = useDebouncedServerUpdate(
-    serverTokensOnMap,
+  const serverMapObjects = map.objects;
+  const [localMapObjects, setLocalObjectsOnMap] = useDebouncedServerUpdate(
+    serverMapObjects,
     (localTokensOnMap) => {
-      return selectedTokens.flatMap((selectedTokenId) => {
-        const tokenOnMap = byId(localTokensOnMap.entities, selectedTokenId);
-        if (!tokenOnMap) {
+      return selectedMapObjects.flatMap((selectedTokenId) => {
+        const mapObjects = byId(localTokensOnMap.entities, selectedTokenId);
+        if (!mapObjects) {
           return [];
         }
 
-        return mapTokenUpdate(map.id, {
+        return mapObjectUpdate(map.id, {
           id: selectedTokenId,
           changes: {
-            position: tokenOnMap.position,
+            position: mapObjects.position,
           },
         });
       });
     },
     100,
     (start, end, t) => {
-      const updatedTokensOnMap: Record<RRTokenOnMapID, RRTokenOnMap> = {};
+      const updatedTokensOnMap: Record<RRMapObjectID, RRMapObject> = {};
 
       entries(end).forEach((e) => {
         const s = byId(start.entities, e.id);
@@ -135,11 +138,11 @@ export default function MapContainer({ className }: { className: string }) {
 
   const handleKeyDown = (e: KeyboardEvent) => {
     function move(positionUpdater: (position: Point) => Point) {
-      setLocalTokensOnMap((tokensOnMap) => {
-        const updatedTokensOnMap: Record<RRTokenOnMapID, RRTokenOnMap> = {};
-        entries(tokensOnMap).forEach((each) => {
-          if (selectedTokens.includes(each.id)) {
-            setById(updatedTokensOnMap, each.id, {
+      setLocalObjectsOnMap((mapObjects) => {
+        const updatedMapObjects: Record<RRMapObjectID, RRMapObject> = {};
+        entries(mapObjects).forEach((each) => {
+          if (selectedMapObjects.includes(each.id)) {
+            setById(updatedMapObjects, each.id, {
               ...each,
               position: positionUpdater(each.position),
             });
@@ -147,10 +150,10 @@ export default function MapContainer({ className }: { className: string }) {
         });
 
         return {
-          ids: tokensOnMap.ids,
+          ids: mapObjects.ids,
           entities: {
-            ...tokensOnMap.entities,
-            ...updatedTokensOnMap,
+            ...mapObjects.entities,
+            ...updatedMapObjects,
           },
         };
       });
@@ -158,9 +161,9 @@ export default function MapContainer({ className }: { className: string }) {
 
     switch (e.key) {
       case "Delete":
-        selectedTokens.forEach((selectedTokenId) => {
+        selectedMapObjects.forEach((selectedTokenId) => {
           dispatch(
-            mapTokenRemove({ mapId: map.id, tokenOnMapId: selectedTokenId })
+            mapObjectRemove({ mapId: map.id, mapObjectId: selectedTokenId })
           );
         });
         break;
@@ -246,10 +249,10 @@ export default function MapContainer({ className }: { className: string }) {
         mousePositions={mousePositions}
         onMousePositionChanged={onMousePositionChanged}
         onMoveTokens={(dx, dy) => {
-          setLocalTokensOnMap((tokensOnMap) => {
-            const updatedTokensOnMap: Record<RRTokenOnMapID, RRTokenOnMap> = {};
-            entries(tokensOnMap).forEach((each) => {
-              if (selectedTokens.includes(each.id)) {
+          setLocalObjectsOnMap((mapObjects) => {
+            const updatedTokensOnMap: Record<RRMapObjectID, RRMapObject> = {};
+            entries(mapObjects).forEach((each) => {
+              if (selectedMapObjects.includes(each.id)) {
                 setById(updatedTokensOnMap, each.id, {
                   ...each,
                   position: {
@@ -261,9 +264,9 @@ export default function MapContainer({ className }: { className: string }) {
             });
 
             return {
-              ids: tokensOnMap.ids,
+              ids: mapObjects.ids,
               entities: {
-                ...tokensOnMap.entities,
+                ...mapObjects.entities,
                 ...updatedTokensOnMap,
               },
             };
@@ -271,16 +274,16 @@ export default function MapContainer({ className }: { className: string }) {
         }}
         transform={transform}
         setTransform={setTransform}
-        tokensOnMap={entries(localTokensOnMap)}
-        selectedTokens={selectedTokens}
-        onSelectTokens={setSelectedTokens}
+        mapObjects={entries(localMapObjects)}
+        selectedObjects={selectedMapObjects}
+        onSelectObjects={setSelectedTokens}
         handleKeyDown={handleKeyDown}
       />
       {process.env.NODE_ENV === "development" &&
         settings.debug.mapTokenPositions && (
           <DebugTokenPositions
-            localTokensOnMap={entries(localTokensOnMap)}
-            serverTokensOnMap={entries(serverTokensOnMap)}
+            localMapObjects={entries(localMapObjects)}
+            serverMapObjects={entries(serverMapObjects)}
           />
         )}
     </div>
@@ -288,13 +291,13 @@ export default function MapContainer({ className }: { className: string }) {
 }
 
 function DebugTokenPositions(props: {
-  localTokensOnMap: RRTokenOnMap[];
-  serverTokensOnMap: RRTokenOnMap[];
+  localMapObjects: RRMapObject[];
+  serverMapObjects: RRMapObject[];
 }) {
-  const tokenOnMapIds = [
+  const mapObjectIds = [
     ...new Set([
-      ...props.localTokensOnMap.map((t) => t.id),
-      ...props.serverTokensOnMap.map((t) => t.id),
+      ...props.localMapObjects.map((t) => t.id),
+      ...props.serverMapObjects.map((t) => t.id),
     ]),
   ];
   return (
@@ -307,46 +310,45 @@ function DebugTokenPositions(props: {
         maxWidth: "100%",
       }}
     >
-      <h3>Debug: token positions</h3>
+      <h3>Debug: map object positions</h3>
       <table cellPadding={8}>
         <thead>
           <tr>
-            <th>RRTokenOnMapID</th>
+            <th>RRMapObjectID</th>
             <th>Server .position</th>
             <th>Local .position</th>
             <th>Diff .position</th>
           </tr>
         </thead>
         <tbody>
-          {tokenOnMapIds.map((tokenOnMapId) => {
-            const serverTokenOnMap =
-              props.serverTokensOnMap.find(
-                (each) => each.id === tokenOnMapId
-              ) ?? null;
-            const localTokenOnMap =
-              props.localTokensOnMap.find((each) => each.id === tokenOnMapId) ??
+          {mapObjectIds.map((mapObjectId) => {
+            const serverMapObject =
+              props.serverMapObjects.find((each) => each.id === mapObjectId) ??
+              null;
+            const localMapObject =
+              props.localMapObjects.find((each) => each.id === mapObjectId) ??
               null;
             return (
-              <tr key={tokenOnMapId}>
-                <td>{tokenOnMapId}</td>
+              <tr key={mapObjectId}>
+                <td>{mapObjectId}</td>
                 <td>
-                  x: {serverTokenOnMap?.position.x}
+                  x: {serverMapObject?.position.x}
                   <br />
-                  y: {serverTokenOnMap?.position.y}
+                  y: {serverMapObject?.position.y}
                 </td>
                 <td>
-                  x: {localTokenOnMap?.position.x}
+                  x: {localMapObject?.position.x}
                   <br />
-                  y: {localTokenOnMap?.position.y}
+                  y: {localMapObject?.position.y}
                 </td>
                 <td>
-                  {localTokenOnMap && serverTokenOnMap && (
+                  {localMapObject && serverMapObject && (
                     <>
                       x:{" "}
-                      {localTokenOnMap.position.x - serverTokenOnMap.position.x}
+                      {localMapObject.position.x - serverMapObject.position.x}
                       <br />
                       y:{" "}
-                      {localTokenOnMap.position.y - serverTokenOnMap.position.y}
+                      {localMapObject.position.y - serverMapObject.position.y}
                     </>
                   )}
                 </td>

@@ -159,15 +159,19 @@ export function InitiativeTracker() {
   const initiativeTracker = useServerState((state) => state.initiativeTracker);
   const tokenCollection = useServerState((state) => state.tokens);
 
-  const tokensOnMap = useMyMap((map) => map?.tokens) ?? {
-    entities: {},
-    ids: [],
-  };
+  const tokensOnMap = useMyMap((map) =>
+    entries(
+      map?.objects ?? {
+        entities: {},
+        ids: [],
+      }
+    ).flatMap((each) => (each.type === "token" ? each : []))
+  );
   const [selectedMapTokenIds, _1] = useMapSelection();
   const selectedTokenIds = [
     ...new Set(
       selectedMapTokenIds.flatMap(
-        (t) => byId(tokensOnMap.entities, t)?.tokenId ?? []
+        (t) => tokensOnMap.find((each) => each.id === t)?.tokenId ?? []
       )
     ),
   ];

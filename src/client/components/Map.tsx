@@ -18,16 +18,16 @@ import { GRID_SIZE } from "../../shared/constants";
 import {
   byId,
   RRColor,
+  RRMapObject,
+  RRMapObjectID,
   RRPlayer,
   RRPlayerID,
   RRPoint,
   RRToken,
-  RRTokenOnMap,
-  RRTokenOnMapID,
   TokensSyncedState,
 } from "../../shared/state";
 import { tokenImageUrl } from "../files";
-import { canControlToken, canViewTokenOnMap } from "../permissions";
+import { canControlMapObject, canViewTokenOnMap } from "../permissions";
 import { MapEditState } from "./MapContainer";
 import {
   RoughCircle,
@@ -76,15 +76,15 @@ export const globalToLocal = (transform: Matrix, p: Point) => {
 
 export const Map: React.FC<{
   myself: RRPlayer;
-  tokensOnMap: RRTokenOnMap[];
+  mapObjects: RRMapObject[];
   gridEnabled: boolean;
   backgroundColor: RRColor;
   tokens: TokensSyncedState;
-  selectedTokens: RRTokenOnMapID[];
+  selectedObjects: RRMapObjectID[];
   transform: Matrix;
   setTransform: React.Dispatch<React.SetStateAction<Matrix>>;
   onMoveTokens: (dx: number, dy: number) => void;
-  onSelectTokens: (ids: RRTokenOnMapID[]) => void;
+  onSelectObjects: (ids: RRMapObjectID[]) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
   mousePositions: Array<{
     playerId: RRPlayerID;
@@ -97,11 +97,11 @@ export const Map: React.FC<{
   editState: MapEditState;
 }> = ({
   myself,
-  tokensOnMap,
+  mapObjects,
   gridEnabled,
   backgroundColor,
-  selectedTokens,
-  onSelectTokens,
+  selectedObjects,
+  onSelectObjects,
   handleKeyDown,
   onMoveTokens,
   tokens,
@@ -237,13 +237,13 @@ export const Map: React.FC<{
     }
   };
 
-  const handleDragStart = (e: React.MouseEvent, token: RRTokenOnMap) => {
+  const handleDragStart = (e: React.MouseEvent, mapObject: RRMapObject) => {
     const local = localCoords(e);
     setDragState({
       start: local,
       lastMouse: local,
     });
-    handleStartMoveToken(token);
+    handleStartMoveToken(mapObject);
   };
 
   const withSelectionAreaDo = <T extends any>(
@@ -259,18 +259,16 @@ export const Map: React.FC<{
     return cb(left, top, right - left, bottom - top);
   };
 
-  const hoveredTokens = withSelectionAreaDo<RRTokenOnMapID[]>(
+  const hoveredObjects = withSelectionAreaDo<RRMapObjectID[]>(
     (x, y, w, h) =>
-      tokensOnMap
-        .filter((t) => {
-          const token = byId(tokens.entities, t.tokenId);
+      mapObjects
+        .filter((o) => {
           return (
-            token &&
-            canControlToken(token, myself) &&
-            t.position.x + GRID_SIZE >= x &&
-            x + w >= t.position.x &&
-            t.position.y + GRID_SIZE >= y &&
-            y + h >= t.position.y
+            canControlMapObject(o, myself) &&
+            o.position.x + GRID_SIZE >= x &&
+            x + w >= o.position.x &&
+            o.position.y + GRID_SIZE >= y &&
+            y + h >= o.position.y
           );
         })
         .map((t) => t.id),
@@ -282,11 +280,11 @@ export const Map: React.FC<{
       setMouseAction(MouseAction.NONE);
 
       if (mouseAction === MouseAction.SELECTION_AREA) {
-        onSelectTokens(hoveredTokens);
+        onSelectObjects(hoveredObjects);
         setSelectionArea(null);
       }
     },
-    [mouseAction, onSelectTokens, hoveredTokens]
+    [mouseAction, onSelectObjects, hoveredObjects]
   );
 
   useEffect(() => {
@@ -303,9 +301,9 @@ export const Map: React.FC<{
     };
   }, [handleMouseMove, handleWheel, handleMouseUp, handleKeyDown]);
 
-  const handleStartMoveToken = (t: RRTokenOnMap) => {
-    if (!selectedTokens.includes(t.id)) {
-      onSelectTokens([t.id]);
+  const handleStartMoveToken = (t: RRMapObject) => {
+    if (!selectedObjects.includes(t.id)) {
+      onSelectObjects([t.id]);
     }
     setMouseAction(MouseAction.MOVE_TOKEN);
   };
@@ -413,30 +411,33 @@ export const Map: React.FC<{
           stroke="rgb(243, 186, 0)"
         />
 
-        {tokensOnMap.map((t) => {
-          const token = byId(tokens.entities, t.tokenId);
-          if (!token || !canViewTokenOnMap(token, myself)) {
-            return null;
-          }
+        {mapObjects
+          .flatMap((o) => (o.type === "token" ? o : []))
+          .map((t) => {
+            const token = byId(tokens.entities, t.tokenId);
+            if (!token || !canViewTokenOnMap(token, myself)) {
+              return null;
+            }
 
-          return (
-            <MapToken
-              key={t.id}
-              onStartMove={(e) => {
-                if (canControlToken(token, myself)) {
-                  handleDragStart(e, t);
+            return (
+              <MapToken
+                key={t.id}
+                onStartMove={(e) => {
+                  if (canControlMapObject(t, myself)) {
+                    handleDragStart(e, t);
+                  }
+                }}
+                x={t.position.x}
+                y={t.position.y}
+                zoom={transform.a}
+                token={token}
+                selected={
+                  hoveredObjects.includes(t.id) ||
+                  selectedObjects.includes(t.id)
                 }
-              }}
-              x={t.position.x}
-              y={t.position.y}
-              zoom={transform.a}
-              token={token}
-              selected={
-                hoveredTokens.includes(t.id) || selectedTokens.includes(t.id)
-              }
-            />
-          );
-        })}
+              />
+            );
+          })}
         {mouseAction === MouseAction.MOVE_TOKEN && (
           <MapMeasureBar
             from={globalToLocal(transform, dragState.start)}

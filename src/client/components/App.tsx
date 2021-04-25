@@ -4,7 +4,7 @@ import React, { Suspense, useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { useAutoDispatchPlayerIdOnChange, useServerState } from "../state";
 import useLocalState from "../useLocalState";
-import { byId, RRPlayerID, RRTokenOnMapID } from "../../shared/state";
+import { byId, RRPlayerID, RRMapObjectID } from "../../shared/state";
 import { MyselfContext } from "../myself";
 import { JoinGame } from "./JoinGame";
 import { BottomFloats } from "./BottomFloats";
@@ -23,7 +23,7 @@ export function App() {
 
   // Important: Use useMyself everywhere else!
   const myself = myPlayerId ? byId(players.entities, myPlayerId) ?? null : null;
-  const mapState = useState<RRTokenOnMapID[]>([]);
+  const mapState = useState<RRMapObjectID[]>([]);
 
   useAutoDispatchPlayerIdOnChange(myself?.id ?? null);
 

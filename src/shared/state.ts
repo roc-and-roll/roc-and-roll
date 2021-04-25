@@ -11,7 +11,7 @@ export type RRTokenID = Opaque<string, "token">;
 
 export type RRMapID = Opaque<string, "map">;
 
-export type RRTokenOnMapID = Opaque<string, "tokenOnMap">;
+export type RRMapObjectID = Opaque<string, "mapObject">;
 
 export type RRPrivateChatID = Opaque<string, "privateChat">;
 
@@ -91,22 +91,66 @@ export type RRToken = {
   isTemplate: boolean;
 };
 
-export type RRTokenOnMap = {
-  id: RRTokenOnMapID;
-  tokenId: RRTokenID;
+type RRMapObjectBase = {
+  id: RRMapObjectID;
   position: RRPoint;
+  playerId: RRPlayerID;
 };
+
+export interface RRTokenOnMap extends RRMapObjectBase {
+  type: "token";
+  tokenId: RRTokenID;
+}
+
+interface RRMapDrawingBase extends RRMapObjectBase {
+  scale: number;
+  locked: boolean;
+  color: RRColor;
+}
+
+export interface RRMapDrawingImage extends RRMapDrawingBase {
+  type: "image";
+  image: RRFile;
+}
+
+export interface RRMapDrawingRectangle extends RRMapDrawingBase {
+  type: "rectangle";
+  size: RRPoint;
+}
+
+export interface RRMapDrawingEllipsis extends RRMapDrawingBase {
+  type: "ellipsis";
+  size: RRPoint;
+}
+
+export interface RRMapDrawingPolygon extends RRMapDrawingBase {
+  type: "polygon";
+  points: RRPoint[];
+}
+
+export interface RRMapDrawingFreehand extends RRMapDrawingBase {
+  type: "freehand";
+  points: RRPoint[];
+}
+
+export interface RRMapDrawingText extends RRMapDrawingBase {
+  type: "text";
+  text: string;
+}
+
+export type RRMapObject = RRTokenOnMap | RRMapDrawingImage;
+//| RRMapDrawingRectangle
+//| RRMapDrawingEllipsis
+//| RRMapDrawingPolygon
+//| RRMapDrawingFreehand
+//| RRMapDrawingText;
 
 export type RRMap = {
   id: RRMapID;
   name: string;
 
-  tokens: EntityCollection<RRTokenOnMap>;
-  backgroundImages: Array<{
-    image: RRFile;
-    position: RRPoint;
-    scale: number;
-  }>;
+  objects: EntityCollection<RRMapObject>;
+
   backgroundColor: RRColor;
   gridEnabled: boolean;
 
@@ -241,14 +285,13 @@ export interface SyncedState {
 
 const defaultMap: RRMap = {
   backgroundColor: "#000",
-  backgroundImages: [],
-  gmWorldPosition: { x: 0, y: 0 },
-  gridEnabled: true,
-  name: "unnamed",
-  tokens: {
+  objects: {
     entities: {},
     ids: [],
   },
+  gmWorldPosition: { x: 0, y: 0 },
+  gridEnabled: true,
+  name: "unnamed",
   id: rrid<RRMap>(),
 };
 

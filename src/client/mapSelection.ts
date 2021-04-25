@@ -1,9 +1,9 @@
 import React, { useContext } from "react";
-import { RRTokenOnMapID } from "../shared/state";
+import { RRMapObjectID } from "../shared/state";
 
 type MapSelectionContextType = [
-  RRTokenOnMapID[],
-  React.Dispatch<React.SetStateAction<RRTokenOnMapID[]>>
+  RRMapObjectID[],
+  React.Dispatch<React.SetStateAction<RRMapObjectID[]>>
 ];
 
 export const MapSelectionContext = React.createContext<MapSelectionContextType>(

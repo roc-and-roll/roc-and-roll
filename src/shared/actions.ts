@@ -11,6 +11,7 @@ import {
   RRLogEntryDiceRoll,
   RRLogEntryMessage,
   RRMap,
+  RRMapObject,
   RRMapID,
   RRPlayer,
   RRPlayerID,
@@ -19,8 +20,7 @@ import {
   RRPrivateChatMessage,
   RRToken,
   RRTokenID,
-  RRTokenOnMap,
-  RRTokenOnMapID,
+  RRMapObjectID,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -75,29 +75,30 @@ export const mapUpdate = createAction<Update<RRMap>>("map/update");
 
 export const mapRemove = createAction<RRMap["id"]>("map/remove");
 
-export const mapTokenAdd = createAction(
-  "map/token/add",
+export const mapObjectAdd = createAction(
+  "map/object/add",
   (
     mapId: RRMapID,
-    tokenOnMap: Omit<RRTokenOnMap, "id">
+    // TODO: We really want Omit<RRMapObject, "id">, but this breaks everything
+    mapObject: RRMapObject
   ): {
-    payload: { mapId: RRMapID; tokenOnMap: RRTokenOnMap };
+    payload: { mapId: RRMapID; mapObject: RRMapObject };
   } => {
     return {
       payload: {
         mapId,
-        tokenOnMap: {
-          id: rrid<RRTokenOnMap>(),
-          ...tokenOnMap,
+        mapObject: {
+          ...mapObject,
+          id: rrid<RRMapObject>(),
         },
       },
     };
   }
 );
 
-export const mapTokenUpdate = createAction(
-  "map/token/update",
-  (mapId: RRMapID, update: Update<Omit<RRTokenOnMap, never>>) => {
+export const mapObjectUpdate = createAction(
+  "map/object/update",
+  (mapId: RRMapID, update: Update<Omit<RRMapObject, never>>) => {
     return {
       payload: {
         mapId,
@@ -107,10 +108,10 @@ export const mapTokenUpdate = createAction(
   }
 );
 
-export const mapTokenRemove = createAction<{
+export const mapObjectRemove = createAction<{
   mapId: RRMapID;
-  tokenOnMapId: RRTokenOnMapID;
-}>("map/token/remove");
+  mapObjectId: RRMapObjectID;
+}>("map/object/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
 // PrivateChats

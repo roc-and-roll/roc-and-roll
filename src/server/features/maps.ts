@@ -3,20 +3,20 @@ import {
   mapAdd,
   mapUpdate,
   mapRemove,
-  mapTokenAdd,
-  mapTokenUpdate,
-  mapTokenRemove,
+  mapObjectAdd,
+  mapObjectUpdate,
+  mapObjectRemove,
 } from "../../shared/actions";
 import {
   byId,
   initialSyncedState,
   MapsSyncedState,
   RRMap,
-  RRTokenOnMap,
+  RRMapObject,
 } from "../../shared/state";
 
 const mapsAdapter = createEntityAdapter<RRMap>();
-const mapTokensAdapter = createEntityAdapter<RRTokenOnMap>();
+const mapObjectsAdapter = createEntityAdapter<RRMapObject>();
 
 export const mapsReducer = createReducer(initialSyncedState.maps, (builder) => {
   builder
@@ -24,21 +24,21 @@ export const mapsReducer = createReducer(initialSyncedState.maps, (builder) => {
     .addCase(mapUpdate, mapsAdapter.updateOne)
     .addCase(mapRemove, mapsAdapter.removeOne)
     .addMatcher(
-      isAnyOf(mapTokenAdd, mapTokenUpdate, mapTokenRemove),
+      isAnyOf(mapObjectAdd, mapObjectUpdate, mapObjectRemove),
       (state, action) => {
         const { mapId } = action.payload;
         const map = byId((state as MapsSyncedState).entities, mapId);
         if (!map) {
-          console.error("Trying to update chat message of unknown chat.");
+          console.error("Trying to update map token of unknown map.");
           return state;
         }
 
-        if (mapTokenAdd.match(action)) {
-          mapTokensAdapter.addOne(map.tokens, action.payload.tokenOnMap);
-        } else if (mapTokenUpdate.match(action)) {
-          mapTokensAdapter.updateOne(map.tokens, action.payload.update);
-        } else if (mapTokenRemove.match(action)) {
-          mapTokensAdapter.removeOne(map.tokens, action.payload.tokenOnMapId);
+        if (mapObjectAdd.match(action)) {
+          mapObjectsAdapter.addOne(map.objects, action.payload.mapObject);
+        } else if (mapObjectUpdate.match(action)) {
+          mapObjectsAdapter.updateOne(map.objects, action.payload.update);
+        } else if (mapObjectRemove.match(action)) {
+          mapObjectsAdapter.removeOne(map.objects, action.payload.mapObjectId);
         }
 
         return state;
