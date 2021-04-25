@@ -17,7 +17,7 @@ import {
   RRToken,
   TokensSyncedState,
 } from "../../shared/state";
-import { useMyself } from "../myself";
+import { useMyMap, useMyself } from "../myself";
 import { canControlToken } from "../permissions";
 import { diceResult, rollInitiative } from "../roll";
 import {
@@ -30,6 +30,7 @@ import { GMArea } from "./GMArea";
 import { TokenStack } from "./TokenManager";
 import { Button } from "./ui/Button";
 import { Flipper, Flipped } from "react-flip-toolkit";
+import { useMapSelection } from "../mapSelection";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -158,9 +159,24 @@ export function InitiativeTracker() {
   const initiativeTracker = useServerState((state) => state.initiativeTracker);
   const tokenCollection = useServerState((state) => state.tokens);
 
+  const tokensOnMap = useMyMap((map) => map?.tokens) ?? {
+    entities: {},
+    ids: [],
+  };
+  const [selectedMapTokenIds, _1] = useMapSelection();
+  const selectedTokenIds = [
+    ...new Set(
+      selectedMapTokenIds.flatMap(
+        (t) => byId(tokensOnMap.entities, t)?.tokenId ?? []
+      )
+    ),
+  ];
+
+  const selectionAlreadyInList = entries(initiativeTracker.entries)
+    .flatMap((entry) => (entry.type === "token" ? entry.tokenIds : []))
+    .some((id) => selectedTokenIds.includes(id));
+
   const roll = () => {
-    // TODO: Get selection from map, or if just one token of this user is on the map, use that.
-    const selectedTokenIds = myself.tokenIds;
     if (selectedTokenIds.length === 0) {
       alert("Please select the token(s) to roll initiative for.");
       return;
@@ -256,7 +272,9 @@ export function InitiativeTracker() {
       </Flipper>
       {endTurnButton}
       <div className="initiative-tracker-roll">
-        <Button onClick={roll}>Roll Initiative</Button>
+        <Button disabled={selectionAlreadyInList} onClick={roll}>
+          Roll Initiative
+        </Button>
         <input
           value={modifier}
           onChange={(e) => setModifier(e.target.value)}

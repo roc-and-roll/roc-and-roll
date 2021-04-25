@@ -37,6 +37,7 @@ import { MapToolbar } from "./MapToolbar";
 import { GRID_SIZE } from "../../shared/constants";
 import { timestamp } from "../../shared/util";
 import { useSettings } from "../settings";
+import { useMapSelection } from "../mapSelection";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -56,8 +57,8 @@ export default function MapContainer({ className }: { className: string }) {
   const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
   const dispatch = useServerDispatch();
   const [settings] = useSettings();
+  const [selectedTokens, setSelectedTokens] = useMapSelection();
 
-  const [selectedTokens, setSelectedTokens] = useState<RRTokenOnMapID[]>([]);
   const [transform, setTransform] = useState<Matrix>(identity());
 
   const dropRef2 = useRef<HTMLDivElement>(null);

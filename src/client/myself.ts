@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
-import { RRPlayer } from "../shared/state";
+import { byId, RRMap, RRPlayer } from "../shared/state";
+import { useServerState } from "./state";
 
 export const MyselfContext = React.createContext<RRPlayer | null>(null);
 
@@ -15,4 +16,13 @@ export function useMyself(allowNull = false): RRPlayer | null {
   }
 
   return myself;
+}
+
+export function useMyMap<T>(selector: (map: RRMap | undefined) => T) {
+  const myself = useMyself();
+  const currentMap = useServerState((state) =>
+    selector(byId(state.maps.entities, myself.currentMap))
+  );
+
+  return currentMap;
 }

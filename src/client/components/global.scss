@@ -14,14 +14,16 @@ $font-family-sans-serif:
   // Android
   Roboto,
   // Basic web fallback
-  "Helvetica Neue", Arial,
+  "Helvetica Neue",
+  Arial,
   // Linux
   "Noto Sans",
   "Liberation Sans",
   // Sans serif fallback
   sans-serif,
   // Emoji fonts
-  "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  "Apple Color Emoji",
+  "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
 // END code from https://getbootstrap.com
 
@@ -30,7 +32,7 @@ $font-family-sans-serif:
 //
 // We deliberately use a local copy of Google Web Fonts instead of linking them
 // directly, so that we avoid having to add a stupid cookie warning.
-$font-family-handwritten: 'Architects Daughter', cursive;
+$font-family-handwritten: "Architects Daughter", cursive;
 
 body,
 html,
@@ -113,7 +115,7 @@ a {
   p {
     text-align: center;
     width: 4rem;
-    word-break: break-all;
+    overflow-wrap: break-word;
   }
 }
 
@@ -321,7 +323,6 @@ $gmAreaColor: #ab62c0;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-
 
   button.active {
     font-weight: bold;
