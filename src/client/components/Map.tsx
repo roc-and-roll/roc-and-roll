@@ -222,6 +222,7 @@ export const Map: React.FC<{
   );
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    (document.activeElement as HTMLElement)?.blur();
     e.preventDefault();
     e.stopPropagation();
     const newMouseAction =
@@ -367,6 +368,7 @@ export const Map: React.FC<{
     event: React.MouseEvent
   ) => {
     if (toolButtonState === "select" && canControlMapObject(object, myself)) {
+      (document.activeElement as HTMLElement)?.blur();
       event.preventDefault();
       event.stopPropagation();
       handleDragStart(event, object);

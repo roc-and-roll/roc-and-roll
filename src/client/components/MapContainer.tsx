@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import {
   ephermalPlayerUpdate,
@@ -309,6 +309,8 @@ const pointSubtract = (p1: RRPoint, p2: RRPoint) => ({
   x: p1.x - p2.x,
   y: p1.y - p2.y,
 });
+const pointEquals = (p1: RRPoint, p2: RRPoint) =>
+  p1.x === p2.x && p1.y === p2.y;
 
 export interface MapMouseHandler {
   onMouseDown: (p: RRPoint) => void;
@@ -355,6 +357,9 @@ function CreateMapMouseHandler(myself: RRPlayer, map: RRMap): MapMouseHandler {
       }
     },
     onMouseUp: (p: RRPoint) => {
+      if (currentId && pointEquals(startMousePositionRef.current, p)) {
+        dispatch(mapObjectRemove({ mapId: map.id, mapObjectId: currentId }));
+      }
       setCurrentId(null);
     },
   };

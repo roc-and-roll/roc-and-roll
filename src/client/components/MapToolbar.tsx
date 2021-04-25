@@ -26,6 +26,31 @@ export function MapToolbar({
   const [snap, setSnap] = useLocalState<MapSnap>("toolbar/snap", "grid");
 
   useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (
+        ["INPUT", "BUTTON", "TEXTAREA"].includes(
+          (event?.target as HTMLElement)?.nodeName
+        )
+      ) {
+        return;
+      }
+      switch (event.key) {
+        case "r":
+          setTool("draw");
+          setDrawType("rectangle");
+          break;
+        case "v":
+          setTool("move");
+          break;
+      }
+    };
+    window.addEventListener("keypress", handleKeyPress);
+    return () => {
+      window.removeEventListener("keypress", handleKeyPress);
+    };
+  }, []);
+
+  useEffect(() => {
     setEditState((old) =>
       tool === "move"
         ? { tool }
