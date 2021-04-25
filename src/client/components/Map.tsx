@@ -525,9 +525,8 @@ const MouseCursor = React.memo(function MouseCursor(props: {
       />
       <RoughText
         x={0}
-        y={GRID_SIZE * 1.1}
-        alignmentBaseline="before-edge"
-        fontSize="2rem"
+        y={GRID_SIZE * 1.1 + 2 * 16}
+        fontSize="32px"
         fill={props.contrastColor}
       >
         {props.playerName}
