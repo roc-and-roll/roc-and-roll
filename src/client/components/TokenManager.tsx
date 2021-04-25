@@ -135,7 +135,7 @@ function EditableTokenPreview({
         className="token-preview"
         onClick={() => setSelectedToken(token)}
       >
-        {token.name}
+        <p>{token.name}</p>
         <TokenPreview token={token} />
       </div>
     </Popover>
@@ -173,7 +173,17 @@ export function TokenStack({ tokens }: { tokens: RRToken[] }) {
       }
     >
       {sortedTokens.map((token, i) => (
-        <div key={token.id} style={{ left: i * (24 / tokens.length) }}>
+        <div
+          key={token.id}
+          style={{
+            left:
+              tokens.length === 1
+                ? 24 / 2 // center token if there is just one in the stack
+                : i === 0
+                ? 0 // avoid division by 0
+                : i * (24 / (tokens.length - 1)),
+          }}
+        >
           <TokenPreview token={token} />
         </div>
       ))}
