@@ -10,8 +10,10 @@ import {
   byId,
   entries,
   RRColor,
+  RRMap,
   RRMapObject,
   RRMapObjectID,
+  RRPlayer,
   RRPoint,
   RRToken,
   setById,
@@ -41,6 +43,8 @@ import { useMapSelection } from "../mapSelection";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
+export type ToolButtonState = "select" | "tool";
+
 export type MapEditState =
   | { tool: "move" }
   | { tool: "measure"; snap: MapSnap }
@@ -57,7 +61,7 @@ export default function MapContainer({ className }: { className: string }) {
   const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
   const dispatch = useServerDispatch();
   const [settings] = useSettings();
-  const [selectedMapObjects, setSelectedTokens] = useMapSelection();
+  const [selectedMapObjects, setSelectedMapObjects] = useMapSelection();
 
   const [transform, setTransform] = useState<Matrix>(identity());
 
@@ -186,7 +190,7 @@ export default function MapContainer({ className }: { className: string }) {
 
   const [editState, setEditState] = useState<MapEditState>({ tool: "move" });
 
-  const onMousePositionChanged = useAggregatedDoubleDebounce(
+  const sendMousePositionToServer = useAggregatedDoubleDebounce(
     useCallback(
       (argHistory: Array<[RRPoint]>) => {
         if (argHistory.length === 0) {
@@ -237,6 +241,15 @@ export default function MapContainer({ className }: { className: string }) {
     };
   });
 
+  const editStateToToolButtonState = (): ToolButtonState => {
+    if (editState.tool === "move") return "select";
+    if (editState.tool === "draw") return "tool";
+    // TODO adapt for measure
+    return "select";
+  };
+
+  const mapMouseHandler = CreateMapMouseHandler(myself, map);
+
   return (
     <div className={className} ref={dropRef}>
       <MapToolbar map={map} setEditState={setEditState} />
@@ -245,10 +258,12 @@ export default function MapContainer({ className }: { className: string }) {
         backgroundColor={map.backgroundColor}
         myself={myself}
         tokens={tokens}
-        editState={editState}
+        toolButtonState={editStateToToolButtonState()}
+        toolHandler={mapMouseHandler}
+        // eslint-disable-next-line no-constant-condition
+        onMousePositionChanged={true ? (p) => {} : sendMousePositionToServer}
         mousePositions={mousePositions}
-        onMousePositionChanged={onMousePositionChanged}
-        onMoveTokens={(dx, dy) => {
+        onMoveMapObjects={(dx, dy) => {
           setLocalObjectsOnMap((mapObjects) => {
             const updatedTokensOnMap: Record<RRMapObjectID, RRMapObject> = {};
             entries(mapObjects).forEach((each) => {
@@ -276,7 +291,7 @@ export default function MapContainer({ className }: { className: string }) {
         setTransform={setTransform}
         mapObjects={entries(localMapObjects)}
         selectedObjects={selectedMapObjects}
-        onSelectObjects={setSelectedTokens}
+        onSelectObjects={setSelectedMapObjects}
         handleKeyDown={handleKeyDown}
       />
       {process.env.NODE_ENV === "development" &&
@@ -288,6 +303,61 @@ export default function MapContainer({ className }: { className: string }) {
         )}
     </div>
   );
+}
+
+const pointSubtract = (p1: RRPoint, p2: RRPoint) => ({
+  x: p1.x - p2.x,
+  y: p1.y - p2.y,
+});
+
+export interface MapMouseHandler {
+  onMouseDown: (p: RRPoint) => void;
+  onMouseMove: (p: RRPoint) => void;
+  onMouseUp: (p: RRPoint) => void;
+}
+
+// note: this is not actually a component but we're just tricking the linter >:)
+function CreateMapMouseHandler(myself: RRPlayer, map: RRMap): MapMouseHandler {
+  const dispatch = useServerDispatch();
+
+  const [currentId, setCurrentId] = useState<RRMapObjectID | null>(null);
+
+  const startMousePositionRef = useRef<RRPoint>({
+    x: 0,
+    y: 0,
+  });
+
+  return {
+    onMouseDown: (p: RRPoint) => {
+      startMousePositionRef.current = p;
+      setCurrentId(
+        dispatch(
+          mapObjectAdd(map.id, {
+            type: "rectangle",
+            color: "#ff0000",
+            playerId: myself.id,
+            id: rrid<RRMapObject>(),
+            position: p,
+            size: { x: 0, y: 0 },
+            locked: false,
+          })
+        ).payload.mapObject.id
+      );
+    },
+    onMouseMove: (p: RRPoint) => {
+      if (currentId) {
+        dispatch(
+          mapObjectUpdate(map.id, {
+            id: currentId,
+            changes: { size: pointSubtract(p, startMousePositionRef.current) },
+          })
+        );
+      }
+    },
+    onMouseUp: (p: RRPoint) => {
+      setCurrentId(null);
+    },
+  };
 }
 
 function DebugTokenPositions(props: {

@@ -103,7 +103,6 @@ export interface RRTokenOnMap extends RRMapObjectBase {
 }
 
 interface RRMapDrawingBase extends RRMapObjectBase {
-  scale: number;
   locked: boolean;
   color: RRColor;
 }
@@ -138,12 +137,14 @@ export interface RRMapDrawingText extends RRMapDrawingBase {
   text: string;
 }
 
-export type RRMapObject = RRTokenOnMap | RRMapDrawingImage;
-//| RRMapDrawingRectangle
-//| RRMapDrawingEllipsis
-//| RRMapDrawingPolygon
-//| RRMapDrawingFreehand
-//| RRMapDrawingText;
+export type RRMapObject =
+  | RRTokenOnMap
+  | RRMapDrawingImage
+  | RRMapDrawingRectangle
+  | RRMapDrawingEllipsis
+  | RRMapDrawingPolygon
+  | RRMapDrawingFreehand
+  | RRMapDrawingText;
 
 export type RRMap = {
   id: RRMapID;

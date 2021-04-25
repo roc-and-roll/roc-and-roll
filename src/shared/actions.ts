@@ -24,7 +24,9 @@ import {
 } from "./state";
 import { rrid, timestamp } from "./util";
 
-interface Update<T extends { id: RRID }> extends OriginalUpdate<Omit<T, "id">> {
+// TODO sadness :(
+// interface Update<T extends { id: RRID }> extends OriginalUpdate<Omit<T, "id">> {
+interface Update<T extends { id: RRID }> extends OriginalUpdate<T> {
   id: T["id"]; // tighten the type of id to the opaque RRID
 }
 
@@ -98,7 +100,7 @@ export const mapObjectAdd = createAction(
 
 export const mapObjectUpdate = createAction(
   "map/object/update",
-  (mapId: RRMapID, update: Update<Omit<RRMapObject, never>>) => {
+  (mapId: RRMapID, update: Update<RRMapObject>) => {
     return {
       payload: {
         mapId,

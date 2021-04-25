@@ -28,7 +28,7 @@ import {
 } from "../../shared/state";
 import { tokenImageUrl } from "../files";
 import { canControlMapObject, canViewTokenOnMap } from "../permissions";
-import { MapEditState } from "./MapContainer";
+import { MapMouseHandler, ToolButtonState } from "./MapContainer";
 import {
   RoughCircle,
   RoughContextProvider,
@@ -40,11 +40,12 @@ import {
 } from "./rough";
 import invert from "invert-color";
 import useRafLoop from "../useRafLoop";
+import { useLatest } from "../state";
 
 type Rectangle = [number, number, number, number];
 
 const PANNING_BUTTON = 2;
-const SELECTION_BUTTON = 0;
+const TOOL_BUTTON = 0;
 
 const ZOOM_SCALE_FACTOR = 0.2;
 
@@ -67,6 +68,7 @@ enum MouseAction {
   PAN,
   SELECTION_AREA,
   MOVE_TOKEN,
+  USE_TOOL,
 }
 
 export const globalToLocal = (transform: Matrix, p: Point) => {
@@ -83,7 +85,7 @@ export const Map: React.FC<{
   selectedObjects: RRMapObjectID[];
   transform: Matrix;
   setTransform: React.Dispatch<React.SetStateAction<Matrix>>;
-  onMoveTokens: (dx: number, dy: number) => void;
+  onMoveMapObjects: (dx: number, dy: number) => void;
   onSelectObjects: (ids: RRMapObjectID[]) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
   mousePositions: Array<{
@@ -94,7 +96,8 @@ export const Map: React.FC<{
     positionHistory: RRPoint[];
   }>;
   onMousePositionChanged: (position: RRPoint) => void;
-  editState: MapEditState;
+  toolHandler: MapMouseHandler;
+  toolButtonState: ToolButtonState;
 }> = ({
   myself,
   mapObjects,
@@ -103,13 +106,14 @@ export const Map: React.FC<{
   selectedObjects,
   onSelectObjects,
   handleKeyDown,
-  onMoveTokens,
+  onMoveMapObjects,
   tokens,
   setTransform,
   transform,
   mousePositions,
   onMousePositionChanged,
-  editState, // TODO: Use the edit state :)
+  toolButtonState,
+  toolHandler,
 }) => {
   const contrastColor = useMemo(() => invert(backgroundColor, true), [
     backgroundColor,
@@ -185,7 +189,14 @@ export const Map: React.FC<{
           break;
         }
         case MouseAction.MOVE_TOKEN: {
-          onMoveTokens(frameDelta.x / transform.a, frameDelta.y / transform.a);
+          onMoveMapObjects(
+            frameDelta.x / transform.a,
+            frameDelta.y / transform.a
+          );
+          break;
+        }
+        case MouseAction.USE_TOOL: {
+          toolHandler.onMouseMove(globalToLocal(transform, { x, y }));
           break;
         }
       }
@@ -205,20 +216,24 @@ export const Map: React.FC<{
       mouseAction,
       setTransform,
       transform,
-      onMoveTokens,
+      onMoveMapObjects,
+      toolHandler,
     ]
   );
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setMouseAction(
+    const newMouseAction =
       e.button === PANNING_BUTTON
         ? MouseAction.PAN
-        : e.button === SELECTION_BUTTON
-        ? MouseAction.SELECTION_AREA
-        : MouseAction.NONE
-    );
+        : e.button === TOOL_BUTTON
+        ? toolButtonState === "select"
+          ? MouseAction.SELECTION_AREA
+          : MouseAction.USE_TOOL
+        : MouseAction.NONE;
+
+    setMouseAction(newMouseAction);
 
     const local = localCoords(e);
     setDragState({
@@ -226,14 +241,16 @@ export const Map: React.FC<{
       lastMouse: local,
     });
 
-    if (e.button === SELECTION_BUTTON) {
-      const innerLocal = globalToLocal(transform, local);
+    const innerLocal = globalToLocal(transform, local);
+    if (newMouseAction === MouseAction.SELECTION_AREA) {
       setSelectionArea([
         innerLocal.x,
         innerLocal.y,
         innerLocal.x,
         innerLocal.y,
       ]);
+    } else if (newMouseAction === MouseAction.USE_TOOL) {
+      toolHandler.onMouseDown(innerLocal);
     }
   };
 
@@ -243,7 +260,7 @@ export const Map: React.FC<{
       start: local,
       lastMouse: local,
     });
-    handleStartMoveToken(mapObject);
+    handleStartMoveMapObject(mapObject);
   };
 
   const withSelectionAreaDo = <T extends any>(
@@ -283,8 +300,11 @@ export const Map: React.FC<{
         onSelectObjects(hoveredObjects);
         setSelectionArea(null);
       }
+      if (mouseAction === MouseAction.USE_TOOL) {
+        toolHandler.onMouseUp(globalToLocal(transform, localCoords(e)));
+      }
     },
-    [mouseAction, onSelectObjects, hoveredObjects]
+    [mouseAction, onSelectObjects, hoveredObjects, toolHandler, transform]
   );
 
   useEffect(() => {
@@ -301,7 +321,7 @@ export const Map: React.FC<{
     };
   }, [handleMouseMove, handleWheel, handleMouseUp, handleKeyDown]);
 
-  const handleStartMoveToken = (t: RRMapObject) => {
+  const handleStartMoveMapObject = (t: RRMapObject) => {
     if (!selectedObjects.includes(t.id)) {
       onSelectObjects([t.id]);
     }
@@ -343,6 +363,16 @@ export const Map: React.FC<{
     </>
   ) : null;
 
+  const createHandleStartMoveGameObject = (object: RRMapObject) => (
+    event: React.MouseEvent
+  ) => {
+    if (toolButtonState === "select" && canControlMapObject(object, myself)) {
+      event.preventDefault();
+      event.stopPropagation();
+      handleDragStart(event, object);
+    }
+  };
+
   return (
     <RoughContextProvider
       className="map-svg"
@@ -366,51 +396,15 @@ export const Map: React.FC<{
           ),
           <></>
         )}
-        <RoughRectangle
-          x={GRID_SIZE * 2}
-          y={GRID_SIZE * 0}
-          w={GRID_SIZE * 4}
-          h={GRID_SIZE * 4}
-          fill="rgba(243, 186, 0, 0.5)"
-          stroke="rgb(243, 186, 0)"
-        />
-        <RoughRectangle
-          x={0}
-          y={GRID_SIZE * 5}
-          w={GRID_SIZE * 7}
-          h={GRID_SIZE}
-          fill="rgba(243, 186, 0, 0.5)"
-          stroke="rgb(243, 186, 0)"
-        />
-        <RoughCircle
-          x={-GRID_SIZE}
-          y={GRID_SIZE * 7}
-          d={GRID_SIZE * 2}
-          fill="rgba(243, 186, 0, 0.5)"
-          stroke="rgb(243, 186, 0)"
-        />
-        <RoughEllipse
-          x={GRID_SIZE * 2}
-          y={GRID_SIZE * 7}
-          w={GRID_SIZE * 2}
-          h={GRID_SIZE * 1}
-          fill="rgba(243, 186, 0, 0.5)"
-          stroke="rgb(243, 186, 0)"
-        />
-        <RoughLine
-          x1={0}
-          y1={0}
-          x2={GRID_SIZE * 10}
-          y2={GRID_SIZE * 10}
-          fill="rgba(243, 186, 0, 0.5)"
-          stroke="rgb(243, 186, 0)"
-        />
-        <RoughPath
-          path="M37,17v15H14V17z M50,0H0v50h50z"
-          fill="rgba(243, 186, 0, 0.5)"
-          stroke="rgb(243, 186, 0)"
-        />
-
+        {mapObjects.map((object) =>
+          object.type === "rectangle" ? (
+            <MapObjectThatIsNotAToken
+              key={object.id}
+              onStartMove={createHandleStartMoveGameObject(object)}
+              object={object}
+            />
+          ) : null
+        )}
         {mapObjects
           .flatMap((o) => (o.type === "token" ? o : []))
           .map((t) => {
@@ -422,11 +416,7 @@ export const Map: React.FC<{
             return (
               <MapToken
                 key={t.id}
-                onStartMove={(e) => {
-                  if (canControlMapObject(t, myself)) {
-                    handleDragStart(e, t);
-                  }
-                }}
+                onStartMove={createHandleStartMoveGameObject(t)}
                 x={t.position.x}
                 y={t.position.y}
                 zoom={transform.a}
@@ -457,6 +447,39 @@ export const Map: React.FC<{
     </RoughContextProvider>
   );
 };
+
+function MapObjectThatIsNotAToken({
+  object,
+  onStartMove,
+}: {
+  object: RRMapObject;
+  onStartMove: (event: React.MouseEvent) => void;
+}) {
+  const ref = useLatest(onStartMove);
+
+  const handleMouseDown = useCallback(
+    (e) => {
+      ref.current(e);
+    },
+    [ref]
+  );
+
+  if (object.type === "rectangle") {
+    return (
+      <RoughRectangle
+        x={object.position.x}
+        y={object.position.y}
+        w={object.size.x}
+        h={object.size.y}
+        onMouseDown={handleMouseDown}
+        fill="rgba(243, 186, 0, 0.5)"
+        stroke="rgb(243, 186, 0)"
+      />
+    );
+  } else {
+    return null;
+  }
+}
 
 const MouseCursor = React.memo(function MouseCursor(props: {
   zoom: number;
@@ -517,6 +540,8 @@ const MouseCursor = React.memo(function MouseCursor(props: {
     >
       <RoughPath
         // https://mavo.io/demos/svgpath/
+        x={0}
+        y={0}
         path={`m 0 0 v ${GRID_SIZE} h ${(GRID_SIZE * 5) / 7} l ${
           (-GRID_SIZE * 5) / 7
         } ${-GRID_SIZE}`}
@@ -582,8 +607,6 @@ function MapToken({
   onStartMove: (e: React.MouseEvent) => void;
 }) {
   const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
     onStartMove(e);
   };
 

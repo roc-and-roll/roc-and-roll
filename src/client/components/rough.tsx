@@ -1,5 +1,11 @@
 import composeRefs from "@seznam/compose-react-refs";
-import React, { SVGProps, useCallback, useContext, useState } from "react";
+import React, {
+  SVGProps,
+  useCallback,
+  useContext,
+  useState,
+  useMemo,
+} from "react";
 import type { RoughSVG } from "roughjs/bin/svg";
 import rough from "roughjs/bin/rough";
 import type { Drawable, Options } from "roughjs/bin/core";
@@ -57,12 +63,23 @@ export const RoughContextProvider = React.forwardRef<
  * @license MIT
  * Copyright (c) 2019 Preet Shihn
  */
-function DrawablePrimitive({ d, rc }: { d: Drawable; rc: RoughSVG }) {
-  const options = d.options || rc.getDefaultOptions();
+function DrawablePrimitive({
+  drawable,
+  rc,
+  x,
+  y,
+  ...props
+}: {
+  x: number;
+  y: number;
+  drawable: Drawable;
+  rc: RoughSVG;
+} & SVGProps<SVGGElement>) {
+  const options = drawable.options || rc.getDefaultOptions();
 
   return (
-    <>
-      {d.sets.map((drawing, i) => {
+    <g {...props} transform={`translate(${x}, ${y})`}>
+      {drawable.sets.map((drawing, i) => {
         switch (drawing.type) {
           case "path":
             return (
@@ -85,7 +102,7 @@ function DrawablePrimitive({ d, rc }: { d: Drawable; rc: RoughSVG }) {
                 strokeWidth={0}
                 fill={options.fill}
                 fillRule={
-                  d.shape === "curve" || d.shape === "polygon"
+                  drawable.shape === "curve" || drawable.shape === "polygon"
                     ? "evenodd"
                     : undefined
                 }
@@ -111,71 +128,83 @@ function DrawablePrimitive({ d, rc }: { d: Drawable; rc: RoughSVG }) {
           }
         }
       })}
-    </>
+    </g>
   );
 }
 
 type PassedThroughOptions = Pick<Options, "fill" | "fillStyle" | "stroke">;
 
-function makeRoughComponent<C extends Record<string, unknown>>(
+// eslint-disable-next-line @typescript-eslint/ban-types
+function makeRoughComponent<C extends object>(
   generate: (
     rc: RoughGenerator,
     customProps: C,
     options: PassedThroughOptions
   ) => Drawable
 ) {
-  return React.memo<C & PassedThroughOptions>(
-    ({ fill, fillStyle, stroke, ...props }) => {
-      const ctx = useContext(RoughContext);
-      if (!ctx) {
-        return null;
-      }
-
-      const drawable = generate(ctx.rc.generator, props as C, {
+  return React.memo<
+    C &
+      PassedThroughOptions &
+      Pick<SVGProps<SVGGElement>, "onMouseDown"> & { x: number; y: number }
+  >(({ fill, fillStyle, stroke, ...props }) => {
+    const ctx = useContext(RoughContext);
+    const { onMouseDown, x, y, ...generatorProps } = props;
+    const drawable = useMemo(
+      () =>
+        ctx?.rc?.generator
+          ? generate(ctx.rc.generator, generatorProps as C, {
+              fill,
+              fillStyle,
+              stroke,
+            })
+          : null,
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [
+        ctx?.rc?.generator,
         fill,
         fillStyle,
         stroke,
-      });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        ...Object.values(generatorProps),
+      ]
+    );
 
-      return <DrawablePrimitive d={drawable} rc={ctx.rc} />;
+    if (!drawable || !ctx) {
+      return null;
     }
-  );
+
+    return (
+      <DrawablePrimitive
+        drawable={drawable}
+        rc={ctx.rc}
+        x={x}
+        y={y}
+        onMouseDown={onMouseDown}
+      />
+    );
+  });
 }
 
 export const RoughLine = makeRoughComponent<{
-  x1: number;
-  y1: number;
   x2: number;
   y2: number;
-}>((generator, { x1, y1, x2, y2 }, options) =>
-  generator.line(x1, y1, x2, y2, options)
-);
+}>((generator, { x2, y2 }, options) => generator.line(0, 0, x2, y2, options));
 
 export const RoughRectangle = makeRoughComponent<{
-  x: number;
-  y: number;
   w: number;
   h: number;
-}>((generator, { x, y, w, h }, options) =>
-  generator.rectangle(x, y, w, h, options)
-);
+}>((generator, { w, h }, options) => generator.rectangle(0, 0, w, h, options));
 
 export const RoughEllipse = makeRoughComponent<{
-  x: number;
-  y: number;
   w: number;
   h: number;
-}>((generator, { x, y, w, h }, options) =>
-  generator.ellipse(x + w / 2, y + h / 2, w, h, options)
+}>((generator, { w, h }, options) =>
+  generator.ellipse(w / 2, h / 2, w, h, options)
 );
 
 export const RoughCircle = makeRoughComponent<{
-  x: number;
-  y: number;
   d: number;
-}>((generator, { x, y, d }, options) =>
-  generator.circle(x + d / 2, y + d / 2, d, options)
-);
+}>((generator, { d }, options) => generator.circle(d / 2, d / 2, d, options));
 
 export const RoughPath = makeRoughComponent<{
   path: string;
