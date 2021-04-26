@@ -407,24 +407,27 @@ export const Map: React.FC<{
                 y={y}
                 width={w}
                 height={h}
-                fill="rgba(255, 255, 255, 0.3)"
+                fill={tinycolor(contrastColor).setAlpha(0.3).toRgbString()}
               />
             ),
             <></>
           )}
-          {mapObjects.map((object) =>
-            object.type !== "token" ? (
-              <MapObjectThatIsNotAToken
-                key={object.id}
-                onStartMove={createHandleStartMoveGameObject(object)}
-                object={object}
-                selected={
-                  hoveredObjects.includes(object.id) ||
-                  selectedObjects.includes(object.id)
-                }
-              />
-            ) : null
-          )}
+          {mapObjects
+            // render images first, so that they always are in the background
+            .sort((a, b) => +(b.type === "image") - +(a.type === "image"))
+            .map((object) =>
+              object.type !== "token" ? (
+                <MapObjectThatIsNotAToken
+                  key={object.id}
+                  onStartMove={createHandleStartMoveGameObject(object)}
+                  object={object}
+                  selected={
+                    hoveredObjects.includes(object.id) ||
+                    selectedObjects.includes(object.id)
+                  }
+                />
+              ) : null
+            )}
           {mapObjects
             .flatMap((o) => (o.type === "token" ? o : []))
             .map((t) => {

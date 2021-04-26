@@ -33,35 +33,56 @@ export function useFileUpload() {
       if (fileList === null || fileList === undefined) {
         return [];
       }
-
-      const files: File[] = [];
-      for (let i = 0; i < fileList.length; i++) {
-        const file = fileList.item(i);
-        if (file) {
-          files.push(file);
-        }
-      }
-
-      if (files.length === 0) {
-        return [];
-      }
-
-      const formData = new FormData();
-      files.forEach((file) => formData.append("files", file));
-
-      const result = await fetch(`${apiHost()}/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (result.status === 200) {
-        return (await result.json()) as RRFile[];
-      }
-      throw new Error("something went wrong");
+      return uploadFiles(fileList);
     } finally {
       setIsUploading(false);
     }
   }, []);
 
   return [isUploading, upload] as const;
+}
+
+export async function askAndUploadFiles(multiple: boolean = false) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.multiple = multiple;
+
+  const fileList = await new Promise<FileList | null>((resolve) => {
+    input.addEventListener("change", (e) => {
+      resolve(input.files);
+    });
+    input.click();
+  });
+
+  if (fileList === null) {
+    return null;
+  }
+  return uploadFiles(fileList);
+}
+
+async function uploadFiles(fileList: FileList) {
+  const files: File[] = [];
+  for (let i = 0; i < fileList.length; i++) {
+    const file = fileList.item(i);
+    if (file) {
+      files.push(file);
+    }
+  }
+
+  if (files.length === 0) {
+    return [];
+  }
+
+  const formData = new FormData();
+  files.forEach((file) => formData.append("files", file));
+
+  const result = await fetch(`${apiHost()}/upload`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (result.status === 200) {
+    return (await result.json()) as RRFile[];
+  }
+  throw new Error("something went wrong");
 }

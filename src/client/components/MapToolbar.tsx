@@ -116,6 +116,12 @@ export function MapToolbar({
           >
             write text
           </Button>
+          <Button
+            onClick={() => setDrawType("image")}
+            className={drawType === "image" ? "active" : undefined}
+          >
+            add background image
+          </Button>
           <>
             <input
               type="color"

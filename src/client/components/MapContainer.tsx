@@ -41,6 +41,7 @@ import { assertNever, rrid, timestamp } from "../../shared/util";
 import { useSettings } from "../settings";
 import { useMapSelection } from "../mapSelection";
 import produce, { Draft } from "immer";
+import { askAndUploadFiles } from "../files";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -51,7 +52,7 @@ export type MapEditState =
   | { tool: "measure"; snap: MapSnap }
   | {
       tool: "draw";
-      type: "line" | "polygon" | "rectangle" | "ellipse";
+      type: "line" | "polygon" | "rectangle" | "ellipse" | "image";
       color: RRColor;
       snap: MapSnap;
     }
@@ -525,6 +526,49 @@ function CreateMapMouseHandler(
               );
             }
             setCurrentId(null);
+          },
+        };
+      case "image":
+        return {
+          onMouseDown: (p: RRPoint) => {},
+          onMouseMove: (p: RRPoint) => {},
+          onMouseUp: async (p: RRPoint) => {
+            const files = await askAndUploadFiles();
+            if (files === null) {
+              return;
+            }
+            const image = files[0]!;
+
+            const widthText = prompt(
+              "enter the width of the image in #number of squares"
+            );
+            if (widthText === null) {
+              return;
+            }
+            const width = parseInt(widthText);
+            if (isNaN(width)) {
+              return;
+            }
+
+            const heightText = prompt(
+              "enter the height of the image in #number of squares"
+            );
+            if (heightText === null) {
+              return;
+            }
+            const height = parseInt(heightText);
+            if (isNaN(height)) {
+              return;
+            }
+
+            dispatch(
+              mapObjectAdd(map.id, {
+                type: "image",
+                size: { x: width * GRID_SIZE, y: height * GRID_SIZE },
+                image,
+                ...create(p),
+              })
+            );
           },
         };
       default:
