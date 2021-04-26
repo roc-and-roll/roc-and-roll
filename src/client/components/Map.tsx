@@ -42,12 +42,14 @@ import {
   RoughText,
   RoughLinearPath,
   RoughPolygon,
+  RoughCircle,
 } from "./rough";
 import useRafLoop from "../useRafLoop";
 import { useLatest } from "../state";
 import tinycolor from "tinycolor2";
-import { assertNever } from "../../shared/util";
+import { assertNever, clamp } from "../../shared/util";
 import { useMyself } from "../myself";
+import ReactDOM from "react-dom";
 
 type Rectangle = [number, number, number, number];
 
@@ -393,6 +395,8 @@ export const Map: React.FC<{
     }
   };
 
+  const [auraArea, setAuraArea] = useState<SVGGElement | null>(null);
+
   return (
     <RoughContextProvider>
       <svg
@@ -405,18 +409,7 @@ export const Map: React.FC<{
       >
         <g transform={toSVG(transform)}>
           {grid}
-          {withSelectionAreaDo(
-            (x, y, w, h) => (
-              <rect
-                x={x}
-                y={y}
-                width={w}
-                height={h}
-                fill={tinycolor(contrastColor).setAlpha(0.3).toRgbString()}
-              />
-            ),
-            null
-          )}
+          <g ref={setAuraArea} />
           {mapObjects
             // render images first, so that they always are in the background
             .sort((a, b) => +(b.type === "image") - +(a.type === "image"))
@@ -444,6 +437,7 @@ export const Map: React.FC<{
               return (
                 <MapToken
                   key={t.id}
+                  auraArea={auraArea}
                   onStartMove={createHandleStartMoveGameObject(t)}
                   x={t.position.x}
                   y={t.position.y}
@@ -457,6 +451,18 @@ export const Map: React.FC<{
                 />
               );
             })}
+          {withSelectionAreaDo(
+            (x, y, w, h) => (
+              <rect
+                x={x}
+                y={y}
+                width={w}
+                height={h}
+                fill={tinycolor(contrastColor).setAlpha(0.3).toRgbString()}
+              />
+            ),
+            null
+          )}
           {mouseAction === MouseAction.MOVE_TOKEN && (
             <MapMeasureBar
               from={globalToLocal(transform, dragState.start)}
@@ -522,22 +528,29 @@ function MapObjectThatIsNotAToken({
     case "polygon":
       return <RoughPolygon {...sharedProps} points={object.points} />;
     case "text": {
-      const { fill: _1, stroke: _2, ...textProps } = sharedProps;
+      const {
+        fill: _1,
+        stroke: _2,
+        strokeLineDash: _3,
+        ...textProps
+      } = sharedProps;
       return (
         <RoughText {...textProps} fill={sharedProps.stroke}>
           {object.text}
         </RoughText>
       );
     }
-    case "image":
+    case "image": {
+      const { strokeLineDash: _, ...imageProps } = sharedProps;
       return (
         <image
-          {...sharedProps}
+          {...imageProps}
           width={object.size.x}
           height={object.size.y}
           href={fileUrl(object.image)}
         />
       );
+    }
     default:
       assertNever(object);
   }
@@ -663,6 +676,7 @@ function MapToken({
   onStartMove,
   zoom,
   contrastColor,
+  auraArea,
 }: {
   token: RRToken;
   x: number;
@@ -671,6 +685,7 @@ function MapToken({
   selected: boolean;
   onStartMove: (e: React.MouseEvent) => void;
   contrastColor: string;
+  auraArea: SVGGElement | null;
 }) {
   const myself = useMyself();
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -680,6 +695,49 @@ function MapToken({
   const tokenSize = GRID_SIZE * token.scale;
   return (
     <>
+      {auraArea &&
+        // we need to render the auras as the very first thing in the SVG so
+        // that they are located in the background and still allow users to
+        // interact with objects that would otherwise be beneath the auras
+        ReactDOM.createPortal(
+          token.auras.map((aura, i) => {
+            if (
+              (aura.visibility === "playerOnly" &&
+                !myself.tokenIds.includes(token.id)) ||
+              (aura.visibility === "playerAndGM" &&
+                !myself.isGM &&
+                !myself.tokenIds.includes(token.id))
+            ) {
+              return null;
+            }
+
+            const size = (aura.size * GRID_SIZE) / 5 + tokenSize / 2;
+            const sharedProps = {
+              key: i,
+              x: x - size + tokenSize / 2,
+              y: y - size + tokenSize / 2,
+              fill: tinycolor(aura.color).setAlpha(0.3).toRgbString(),
+              fillStyle: "solid",
+            };
+            if (aura.shape === "circle") {
+              return (
+                <RoughCircle {...sharedProps} d={size * 2} roughness={1} />
+              );
+            } else if (aura.shape === "square") {
+              return (
+                <RoughRectangle
+                  {...sharedProps}
+                  h={size * 2}
+                  w={size * 2}
+                  roughness={3}
+                />
+              );
+            } else {
+              assertNever(aura.shape);
+            }
+          }),
+          auraArea
+        )}
       {canControlToken(token, myself) && (
         <g transform={`translate(${x},${y - 16})`}>
           <RoughRectangle
@@ -695,7 +753,7 @@ function MapToken({
           <RoughRectangle
             x={0}
             y={0}
-            w={tokenSize * Math.min(1, token.hp / token.maxHP)}
+            w={tokenSize * clamp(0, token.hp / token.maxHP, 1)}
             h={16}
             stroke="transparent"
             fill="#c5d87c"

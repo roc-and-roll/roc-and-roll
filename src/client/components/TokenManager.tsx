@@ -5,7 +5,7 @@ import {
   tokenRemove,
   tokenUpdate,
 } from "../../shared/actions";
-import { entries, RRToken, RRTokenID } from "../../shared/state";
+import { entries, RRAura, RRToken, RRTokenID } from "../../shared/state";
 import { generateRandomToken, tokenImageUrl, useFileUpload } from "../files";
 import {
   useDebouncedServerUpdate,
@@ -19,6 +19,7 @@ import { Popover } from "./Popover";
 import { GRID_SIZE } from "../../shared/constants";
 import { Button } from "./ui/Button";
 import { clamp, randomName } from "../../shared/util";
+import { randomColor } from "../../shared/colors";
 
 async function makeNewToken(): Promise<Parameters<typeof tokenAdd>[0]> {
   return {
@@ -273,6 +274,14 @@ function TokenEditor({
     1000
   );
 
+  const [auras, setAuras] = useDebouncedServerUpdate(
+    token.auras,
+    (auras) => {
+      return tokenUpdate({ id: token.id, changes: { auras } });
+    },
+    1000
+  );
+
   return (
     <div className="token-popup">
       <Button className="popover-close" onClick={onClose}>
@@ -325,6 +334,136 @@ function TokenEditor({
           />
         </label>
       </div>
+      <h3>Auras</h3>
+      <ul>
+        {auras.map((aura, i) => (
+          <li key={i}>
+            <div>
+              <label>
+                Size in feet{" "}
+                <input
+                  type="number"
+                  min={0}
+                  value={aura.size}
+                  onChange={(e) => {
+                    setAuras([
+                      ...auras.slice(0, i),
+                      { ...aura, size: e.target.valueAsNumber },
+                      ...auras.slice(i + 1),
+                    ]);
+                  }}
+                />
+              </label>
+            </div>
+            <div>
+              <label>
+                Color{" "}
+                <input
+                  type="color"
+                  value={aura.color}
+                  onChange={(e) => {
+                    setAuras([
+                      ...auras.slice(0, i),
+                      { ...aura, color: e.target.value },
+                      ...auras.slice(i + 1),
+                    ]);
+                  }}
+                />
+              </label>
+            </div>
+            <div>
+              <label>
+                Shape{" "}
+                <select
+                  value={aura.shape}
+                  onChange={(e) => {
+                    setAuras([
+                      ...auras.slice(0, i),
+                      { ...aura, shape: e.target.value as RRAura["shape"] },
+                      ...auras.slice(i + 1),
+                    ]);
+                  }}
+                >
+                  <option value="circle">circle</option>
+                  <option value="square">square</option>
+                </select>
+              </label>
+            </div>
+            <div>
+              <label>
+                Visible to{" "}
+                <select
+                  value={aura.visibility}
+                  onChange={(e) => {
+                    setAuras([
+                      ...auras.slice(0, i),
+                      {
+                        ...aura,
+                        visibility: e.target.value as RRAura["visibility"],
+                      },
+                      ...auras.slice(i + 1),
+                    ]);
+                  }}
+                >
+                  <option value="everyone">everyone</option>
+                  <option value="playerAndGM">playerAndGM</option>
+                  <option value="playerOnly">myself</option>
+                </select>
+              </label>
+            </div>
+            {/*
+            <div>
+              <label>
+                Visible when{" "}
+                <select
+                  value={aura.visibileWhen}
+                  onChange={(e) => {
+                    setAuras([
+                      ...auras.slice(0, i),
+                      {
+                        ...aura,
+                        visibileWhen: e.target.value as RRAura["visibileWhen"],
+                      },
+                      ...auras.slice(i + 1),
+                    ]);
+                  }}
+                >
+                  <option value="always">always</option>
+                  <option value="onTurn">on my turn</option>
+                  <option value="hover">on hover</option>
+                </select>
+              </label>
+            </div>
+            */}
+            <button
+              onClick={() => {
+                setAuras([...auras.slice(0, i), ...auras.slice(i + 1)]);
+              }}
+            >
+              delete aura
+            </button>
+          </li>
+        ))}
+        <li>
+          <button
+            onClick={() => {
+              setAuras((old) => [
+                ...old,
+                {
+                  color: randomColor(),
+                  shape: "circle",
+                  size: 10,
+                  visibileWhen: "always",
+                  visibility: "everyone",
+                },
+              ]);
+            }}
+          >
+            add aura
+          </button>
+        </li>
+      </ul>
+      <hr />
       <div>
         <label>
           Image:{" "}
@@ -336,7 +475,7 @@ function TokenEditor({
           />
         </label>
       </div>
-      <br />
+      <hr />
       <Button onClick={remove}>delete token</Button>
     </div>
   );
