@@ -59,6 +59,19 @@ export const CURSOR_POSITION_SYNC_DEBOUNCE = 300;
 // record the cursor position this many times between each sync to the server
 export const CURSOR_POSITION_SYNC_HISTORY_STEPS = 10;
 
+function mapObjectIntersectsWithRectangle(
+  o: RRMapObject,
+  { x, y, w, h }: { x: number; y: number; w: number; h: number }
+) {
+  // TODO: Currently assumes that every object is exactly GRID_SIZE big.
+  return (
+    o.position.x + GRID_SIZE >= x &&
+    x + w >= o.position.x &&
+    o.position.y + GRID_SIZE >= y &&
+    y + h >= o.position.y
+  );
+}
+
 const snapToGrid = (num: number) => Math.floor(num / GRID_SIZE) * GRID_SIZE;
 export const snapPointToGrid = (p: Point) => ({
   x: snapToGrid(p.x),
@@ -284,15 +297,11 @@ export const Map: React.FC<{
   const hoveredObjects = withSelectionAreaDo<RRMapObjectID[]>(
     (x, y, w, h) =>
       mapObjects
-        .filter((o) => {
-          return (
+        .filter(
+          (o) =>
             canControlMapObject(o, myself) &&
-            o.position.x + GRID_SIZE >= x &&
-            x + w >= o.position.x &&
-            o.position.y + GRID_SIZE >= y &&
-            y + h >= o.position.y
-          );
-        })
+            mapObjectIntersectsWithRectangle(o, { x, y, w, h })
+        )
         .map((t) => t.id),
     []
   );
@@ -409,6 +418,10 @@ export const Map: React.FC<{
                 key={object.id}
                 onStartMove={createHandleStartMoveGameObject(object)}
                 object={object}
+                selected={
+                  hoveredObjects.includes(object.id) ||
+                  selectedObjects.includes(object.id)
+                }
               />
             ) : null
           )}
@@ -460,9 +473,11 @@ export const Map: React.FC<{
 function MapObjectThatIsNotAToken({
   object,
   onStartMove,
+  selected,
 }: {
   object: Exclude<RRMapObject, RRTokenOnMap>;
   onStartMove: (event: React.MouseEvent) => void;
+  selected: boolean;
 }) {
   const ref = useLatest(onStartMove);
 
@@ -477,8 +492,11 @@ function MapObjectThatIsNotAToken({
     x: object.position.x,
     y: object.position.y,
     onMouseDown: handleMouseDown,
-    fill: tinycolor(object.color).setAlpha(0.3).toRgbString(),
+    fill: selected
+      ? object.color
+      : tinycolor(object.color).setAlpha(0.3).toRgbString(),
     stroke: object.color,
+    strokeLineDash: selected ? [GRID_SIZE / 10, GRID_SIZE / 10] : undefined,
   };
 
   switch (object.type) {
@@ -494,8 +512,14 @@ function MapObjectThatIsNotAToken({
       return <RoughLinearPath {...sharedProps} points={object.points} />;
     case "polygon":
       return <RoughPolygon {...sharedProps} points={object.points} />;
-    case "text":
-      return <RoughText {...sharedProps}>{object.text}</RoughText>;
+    case "text": {
+      const { fill: _1, stroke: _2, ...textProps } = sharedProps;
+      return (
+        <RoughText {...textProps} fill={sharedProps.stroke}>
+          {object.text}
+        </RoughText>
+      );
+    }
     case "image":
       return (
         <image

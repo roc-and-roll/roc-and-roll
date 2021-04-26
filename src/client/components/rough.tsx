@@ -114,7 +114,7 @@ function DrawablePrimitive({
 
 type PassedThroughOptions = Pick<
   Options,
-  "fill" | "fillStyle" | "stroke" | "seed"
+  "fill" | "fillStyle" | "stroke" | "seed" | "strokeLineDash"
 >;
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -130,7 +130,7 @@ function makeRoughComponent<C extends object>(
     C &
       PassedThroughOptions &
       Pick<SVGProps<SVGGElement>, "onMouseDown"> & { x: number; y: number }
-  >(({ fill, fillStyle, stroke, seed, ...props }) => {
+  >(({ fill, fillStyle, stroke, strokeLineDash, seed, ...props }) => {
     const generator = useContext(RoughContext);
     const { onMouseDown, x, y, ...generatorProps } = props;
     const realSeed = useMemo(
@@ -148,6 +148,7 @@ function makeRoughComponent<C extends object>(
               fill,
               fillStyle,
               stroke,
+              strokeLineDash,
               seed: realSeed,
             })
           : null,
@@ -157,6 +158,7 @@ function makeRoughComponent<C extends object>(
         fill,
         fillStyle,
         stroke,
+        strokeLineDash,
         realSeed,
         // TODO
         // eslint-disable-next-line react-hooks/exhaustive-deps
