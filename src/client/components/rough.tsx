@@ -1,54 +1,40 @@
-import composeRefs from "@seznam/compose-react-refs";
-import React, {
-  SVGProps,
-  useCallback,
-  useContext,
-  useState,
-  useMemo,
-} from "react";
-import type { RoughSVG } from "roughjs/bin/svg";
+import React, { SVGProps, useContext, useState, useMemo } from "react";
 import rough from "roughjs/bin/rough";
 import type { Drawable, Options } from "roughjs/bin/core";
 import { RoughGenerator } from "roughjs/bin/generator";
 import clsx from "clsx";
 import { RRPoint } from "../../shared/state";
 
-export const RoughContext = React.createContext<RoughSVG | null>(null);
+export const RoughContext = React.createContext<RoughGenerator | null>(null);
 
 RoughContext.displayName = "RoughContext";
 
-export const RoughContextProvider = React.forwardRef<
-  SVGSVGElement,
-  SVGProps<SVGElement>
->(function RoughContextProvider({ children, ...props }, forwardedRef) {
-  const [roughSVG, setRoughSVG] = useState<RoughSVG | null>(null);
-  const localRef = useCallback((svg: SVGSVGElement) => {
-    setRoughSVG(
-      rough.svg(svg, {
-        options: {
-          // outline
-          strokeWidth: 3,
-          // inside
-          fillStyle: "hachure",
-          hachureGap: 12,
-          fillWeight: 3,
-          // general options
-          roughness: 3,
-        },
-      })
-    );
-  }, []);
-
-  const ref = composeRefs<SVGSVGElement>(localRef, forwardedRef);
+export function RoughContextProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [roughGenerator, _] = useState(() =>
+    rough.generator({
+      options: {
+        // general options
+        roughness: 3,
+        // outline
+        strokeWidth: 3,
+        // inside
+        fillStyle: "hachure",
+        hachureGap: 12,
+        fillWeight: 3,
+      },
+    })
+  );
 
   return (
-    <RoughContext.Provider value={roughSVG}>
-      <svg {...props} ref={ref}>
-        {children}
-      </svg>
+    <RoughContext.Provider value={roughGenerator}>
+      {children}
     </RoughContext.Provider>
   );
-});
+}
 
 /*!
  * Adapted from Rough.js
@@ -59,7 +45,7 @@ export const RoughContextProvider = React.forwardRef<
  */
 function DrawablePrimitive({
   drawable,
-  rc,
+  generator,
   x,
   y,
   ...props
@@ -67,9 +53,9 @@ function DrawablePrimitive({
   x: number;
   y: number;
   drawable: Drawable;
-  rc: RoughSVG;
+  generator: RoughGenerator;
 } & SVGProps<SVGGElement>) {
-  const options = drawable.options || rc.getDefaultOptions();
+  const options = drawable.options;
 
   return (
     <g {...props} transform={`translate(${x}, ${y})`}>
@@ -79,7 +65,7 @@ function DrawablePrimitive({
             return (
               <path
                 key={i}
-                d={rc.opsToPath(drawing)}
+                d={generator.opsToPath(drawing)}
                 stroke={options.stroke}
                 strokeWidth={options.strokeWidth}
                 fill="none"
@@ -91,7 +77,7 @@ function DrawablePrimitive({
             return (
               <path
                 key={i}
-                d={rc.opsToPath(drawing)}
+                d={generator.opsToPath(drawing)}
                 stroke="none"
                 strokeWidth={0}
                 fill={options.fill}
@@ -111,7 +97,7 @@ function DrawablePrimitive({
             return (
               <path
                 key={i}
-                d={rc.opsToPath(drawing)}
+                d={generator.opsToPath(drawing)}
                 stroke={options.fill}
                 strokeWidth={fweight}
                 fill="none"
@@ -126,7 +112,10 @@ function DrawablePrimitive({
   );
 }
 
-type PassedThroughOptions = Pick<Options, "fill" | "fillStyle" | "stroke">;
+type PassedThroughOptions = Pick<
+  Options,
+  "fill" | "fillStyle" | "stroke" | "seed"
+>;
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 function makeRoughComponent<C extends object>(
@@ -141,38 +130,48 @@ function makeRoughComponent<C extends object>(
     C &
       PassedThroughOptions &
       Pick<SVGProps<SVGGElement>, "onMouseDown"> & { x: number; y: number }
-  >(({ fill, fillStyle, stroke, ...props }) => {
-    const ctx = useContext(RoughContext);
+  >(({ fill, fillStyle, stroke, seed, ...props }) => {
+    const generator = useContext(RoughContext);
     const { onMouseDown, x, y, ...generatorProps } = props;
+    const realSeed = useMemo(
+      // seed must not be float for some reason.
+      () =>
+        seed === undefined || seed === 0
+          ? Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
+          : seed,
+      [seed]
+    );
     const drawable = useMemo(
       () =>
-        ctx?.generator
-          ? generate(ctx.generator, generatorProps as C, {
+        generator
+          ? generate(generator, generatorProps as C, {
               fill,
               fillStyle,
               stroke,
+              seed: realSeed,
             })
           : null,
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [
-        ctx?.generator,
+        generator,
         fill,
         fillStyle,
         stroke,
+        realSeed,
         // TODO
         // eslint-disable-next-line react-hooks/exhaustive-deps
         ...Object.values(generatorProps),
       ]
     );
 
-    if (!drawable || !ctx) {
+    if (!drawable || !generator) {
       return null;
     }
 
     return (
       <DrawablePrimitive
         drawable={drawable}
-        rc={ctx}
+        generator={generator}
         x={x}
         y={y}
         onMouseDown={onMouseDown}

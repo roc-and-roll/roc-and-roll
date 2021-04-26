@@ -380,77 +380,79 @@ export const Map: React.FC<{
   };
 
   return (
-    <RoughContextProvider
-      className="map-svg"
-      ref={svgRef}
-      onContextMenu={(e) => e.preventDefault()}
-      onMouseDown={handleMouseDown}
-      style={{ backgroundColor }}
-      onMouseMove={handleMapMouseMove}
-    >
-      <g transform={toSVG(transform)}>
-        {grid}
-        {withSelectionAreaDo(
-          (x, y, w, h) => (
-            <rect
-              x={x}
-              y={y}
-              width={w}
-              height={h}
-              fill="rgba(255, 255, 255, 0.3)"
-            />
-          ),
-          <></>
-        )}
-        {mapObjects.map((object) =>
-          object.type !== "token" ? (
-            <MapObjectThatIsNotAToken
-              key={object.id}
-              onStartMove={createHandleStartMoveGameObject(object)}
-              object={object}
-            />
-          ) : null
-        )}
-        {mapObjects
-          .flatMap((o) => (o.type === "token" ? o : []))
-          .map((t) => {
-            const token = byId(tokens.entities, t.tokenId);
-            if (!token || !canViewTokenOnMap(token, myself)) {
-              return null;
-            }
-
-            return (
-              <MapToken
-                key={t.id}
-                onStartMove={createHandleStartMoveGameObject(t)}
-                x={t.position.x}
-                y={t.position.y}
-                zoom={transform.a}
-                token={token}
-                selected={
-                  hoveredObjects.includes(t.id) ||
-                  selectedObjects.includes(t.id)
-                }
+    <RoughContextProvider>
+      <svg
+        ref={svgRef}
+        className="map-svg"
+        onContextMenu={(e) => e.preventDefault()}
+        onMouseDown={handleMouseDown}
+        style={{ backgroundColor }}
+        onMouseMove={handleMapMouseMove}
+      >
+        <g transform={toSVG(transform)}>
+          {grid}
+          {withSelectionAreaDo(
+            (x, y, w, h) => (
+              <rect
+                x={x}
+                y={y}
+                width={w}
+                height={h}
+                fill="rgba(255, 255, 255, 0.3)"
               />
-            );
-          })}
-        {mouseAction === MouseAction.MOVE_TOKEN && (
-          <MapMeasureBar
-            from={globalToLocal(transform, dragState.start)}
-            to={globalToLocal(transform, dragState.lastMouse)}
-            zoom={transform.a}
-            color={contrastColor}
-          />
-        )}
-        {mousePositions.map((each) => (
-          <MouseCursor
-            key={each.playerId}
-            zoom={transform.a}
-            contrastColor={contrastColor}
-            {...each}
-          />
-        ))}
-      </g>
+            ),
+            <></>
+          )}
+          {mapObjects.map((object) =>
+            object.type !== "token" ? (
+              <MapObjectThatIsNotAToken
+                key={object.id}
+                onStartMove={createHandleStartMoveGameObject(object)}
+                object={object}
+              />
+            ) : null
+          )}
+          {mapObjects
+            .flatMap((o) => (o.type === "token" ? o : []))
+            .map((t) => {
+              const token = byId(tokens.entities, t.tokenId);
+              if (!token || !canViewTokenOnMap(token, myself)) {
+                return null;
+              }
+
+              return (
+                <MapToken
+                  key={t.id}
+                  onStartMove={createHandleStartMoveGameObject(t)}
+                  x={t.position.x}
+                  y={t.position.y}
+                  zoom={transform.a}
+                  token={token}
+                  selected={
+                    hoveredObjects.includes(t.id) ||
+                    selectedObjects.includes(t.id)
+                  }
+                />
+              );
+            })}
+          {mouseAction === MouseAction.MOVE_TOKEN && (
+            <MapMeasureBar
+              from={globalToLocal(transform, dragState.start)}
+              to={globalToLocal(transform, dragState.lastMouse)}
+              zoom={transform.a}
+              color={contrastColor}
+            />
+          )}
+          {mousePositions.map((each) => (
+            <MouseCursor
+              key={each.playerId}
+              zoom={transform.a}
+              contrastColor={contrastColor}
+              {...each}
+            />
+          ))}
+        </g>
+      </svg>
     </RoughContextProvider>
   );
 };
