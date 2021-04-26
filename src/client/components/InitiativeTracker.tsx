@@ -273,7 +273,7 @@ export function InitiativeTracker() {
       {endTurnButton}
       <div className="initiative-tracker-roll">
         <Button
-          disabled={selectionAlreadyInList && hasSelection}
+          disabled={selectionAlreadyInList || !hasSelection}
           onClick={roll}
         >
           Roll Initiative
