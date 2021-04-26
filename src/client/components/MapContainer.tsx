@@ -229,7 +229,12 @@ export default function MapContainer({ className }: { className: string }) {
     return "select";
   };
 
-  const mapMouseHandler = CreateMapMouseHandler(myself, map, editState);
+  const mapMouseHandler = CreateMapMouseHandler(
+    myself,
+    map,
+    editState,
+    transform.a
+  );
 
   return (
     <div className={className} ref={dropRef}>
@@ -299,11 +304,35 @@ export interface MapMouseHandler {
   onMouseUp: (p: RRPoint) => void;
 }
 
+// Thin points using the idea described here
+// https://jackschaedler.github.io/handwriting-recognition/
+function thin(points: ReadonlyArray<RRPoint>, squareSize: number) {
+  const result: RRPoint[] = [];
+
+  for (let i = 0; i < points.length; i++) {
+    const current = points[i]!;
+    result.push(current);
+
+    let next: RRPoint | undefined;
+    do {
+      next = points[++i];
+    } while (
+      next &&
+      Math.abs(current.x - next.x) < squareSize &&
+      Math.abs(current.y - next.y) < squareSize
+    );
+    i--;
+  }
+
+  return result;
+}
+
 // note: this is not actually a component but we're just tricking the linter >:)
 function CreateMapMouseHandler(
   myself: RRPlayer,
   map: RRMap,
-  editState: MapEditState
+  editState: MapEditState,
+  zoom: number
 ): MapMouseHandler {
   const dispatch = useServerDispatch();
 
@@ -313,6 +342,7 @@ function CreateMapMouseHandler(
     x: 0,
     y: 0,
   });
+  const pointsRef = useRef<RRPoint[]>([]);
 
   if (editState.tool === "draw") {
     const create = (p: RRPoint): RRMapDrawingBase => ({
@@ -394,7 +424,6 @@ function CreateMapMouseHandler(
             setCurrentId(null);
           },
         };
-      // TODO: Maybe remove lines altogether and draw them as part of freehand?
       case "line":
         return {
           onMouseDown: (p: RRPoint) => {
@@ -452,9 +481,52 @@ function CreateMapMouseHandler(
         };
       case "polygon":
       case "freehand":
-        // TODO
-        break;
+        return {
+          onMouseDown: (p: RRPoint) => {
+            startMousePositionRef.current = p;
+            pointsRef.current = [];
+            setCurrentId(
+              dispatch(
+                mapObjectAdd(map.id, {
+                  type: editState.type === "freehand" ? "freehand" : "polygon",
+                  points: [],
+                  ...create(p),
+                })
+              ).payload.mapObject.id
+            );
+          },
+          onMouseMove: (p: RRPoint) => {
+            if (currentId) {
+              const oldNumPoints = pointsRef.current.length;
+              pointsRef.current = thin(
+                [
+                  ...pointsRef.current,
+                  pointSubtract(p, startMousePositionRef.current),
+                ],
+                GRID_SIZE / 4 / zoom
+              );
 
+              if (oldNumPoints !== pointsRef.current.length) {
+                dispatch(
+                  mapObjectUpdate(map.id, {
+                    id: currentId,
+                    changes: {
+                      points: [...pointsRef.current],
+                    },
+                  })
+                );
+              }
+            }
+          },
+          onMouseUp: (p: RRPoint) => {
+            if (currentId && pointsRef.current.length === 0) {
+              dispatch(
+                mapObjectRemove({ mapId: map.id, mapObjectId: currentId })
+              );
+            }
+            setCurrentId(null);
+          },
+        };
       default:
         assertNever(editState);
     }
