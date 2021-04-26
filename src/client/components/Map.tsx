@@ -28,7 +28,11 @@ import {
   TokensSyncedState,
 } from "../../shared/state";
 import { fileUrl, tokenImageUrl } from "../files";
-import { canControlMapObject, canViewTokenOnMap } from "../permissions";
+import {
+  canControlMapObject,
+  canControlToken,
+  canViewTokenOnMap,
+} from "../permissions";
 import { MapMouseHandler, ToolButtonState } from "./MapContainer";
 import {
   RoughContextProvider,
@@ -43,6 +47,7 @@ import useRafLoop from "../useRafLoop";
 import { useLatest } from "../state";
 import tinycolor from "tinycolor2";
 import { assertNever } from "../../shared/util";
+import { useMyself } from "../myself";
 
 type Rectangle = [number, number, number, number];
 
@@ -410,7 +415,7 @@ export const Map: React.FC<{
                 fill={tinycolor(contrastColor).setAlpha(0.3).toRgbString()}
               />
             ),
-            <></>
+            null
           )}
           {mapObjects
             // render images first, so that they always are in the background
@@ -448,6 +453,7 @@ export const Map: React.FC<{
                     hoveredObjects.includes(t.id) ||
                     selectedObjects.includes(t.id)
                   }
+                  contrastColor={contrastColor}
                 />
               );
             })}
@@ -656,6 +662,7 @@ function MapToken({
   selected,
   onStartMove,
   zoom,
+  contrastColor,
 }: {
   token: RRToken;
   x: number;
@@ -663,7 +670,9 @@ function MapToken({
   zoom: number;
   selected: boolean;
   onStartMove: (e: React.MouseEvent) => void;
+  contrastColor: string;
 }) {
+  const myself = useMyself();
   const handleMouseDown = (e: React.MouseEvent) => {
     onStartMove(e);
   };
@@ -671,6 +680,49 @@ function MapToken({
   const tokenSize = GRID_SIZE * token.scale;
   return (
     <>
+      {canControlToken(token, myself) && (
+        <g transform={`translate(${x},${y - 16})`}>
+          <RoughRectangle
+            x={0}
+            y={0}
+            w={tokenSize}
+            h={16}
+            stroke="transparent"
+            fill="white"
+            fillStyle="solid"
+            roughness={1}
+          />
+          <RoughRectangle
+            x={0}
+            y={0}
+            w={tokenSize * Math.min(1, token.hp / token.maxHP)}
+            h={16}
+            stroke="transparent"
+            fill="#c5d87c"
+            fillStyle="solid"
+            roughness={1}
+          />
+          <RoughRectangle
+            x={0}
+            y={0}
+            w={tokenSize}
+            h={16}
+            stroke={tinycolor(contrastColor).setAlpha(0.5).toRgbString()}
+            fill="transparent"
+            roughness={1}
+          />
+          <RoughText
+            x={tokenSize / 2}
+            y={-2}
+            width={tokenSize}
+            textAnchor="middle"
+            fontWeight="bold"
+            fontSize={16}
+          >
+            {token.hp} / {token.maxHP}
+          </RoughText>
+        </g>
+      )}
       {token.image ? (
         <image
           onMouseDown={handleMouseDown}

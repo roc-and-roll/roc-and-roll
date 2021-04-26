@@ -5,6 +5,8 @@ import { RoughGenerator } from "roughjs/bin/generator";
 import clsx from "clsx";
 import { RRPoint } from "../../shared/state";
 
+const DEFAULT_ROUGHNESS = 3;
+
 export const RoughContext = React.createContext<RoughGenerator | null>(null);
 
 RoughContext.displayName = "RoughContext";
@@ -17,8 +19,6 @@ export function RoughContextProvider({
   const [roughGenerator, _] = useState(() =>
     rough.generator({
       options: {
-        // general options
-        roughness: 3,
         // outline
         strokeWidth: 3,
         // inside
@@ -114,7 +114,7 @@ function DrawablePrimitive({
 
 type PassedThroughOptions = Pick<
   Options,
-  "fill" | "fillStyle" | "stroke" | "seed" | "strokeLineDash"
+  "fill" | "fillStyle" | "stroke" | "seed" | "strokeLineDash" | "roughness"
 >;
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -130,56 +130,68 @@ function makeRoughComponent<C extends object>(
     C &
       PassedThroughOptions &
       Pick<SVGProps<SVGGElement>, "onMouseDown"> & { x: number; y: number }
-  >(({ fill, fillStyle, stroke, strokeLineDash, seed, ...props }) => {
-    const generator = useContext(RoughContext);
-    const { onMouseDown, x, y, ...generatorProps } = props;
-    const realSeed = useMemo(
-      // seed must not be float for some reason.
-      () =>
-        seed === undefined || seed === 0
-          ? Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
-          : seed,
-      [seed]
-    );
-    const drawable = useMemo(
-      () =>
-        generator
-          ? generate(generator, generatorProps as C, {
-              fill,
-              fillStyle,
-              stroke,
-              strokeLineDash,
-              seed: realSeed,
-            })
-          : null,
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [
-        generator,
-        fill,
-        fillStyle,
-        stroke,
-        strokeLineDash,
-        realSeed,
-        // TODO
+  >(
+    ({
+      fill,
+      fillStyle,
+      stroke,
+      strokeLineDash,
+      seed,
+      roughness,
+      ...props
+    }) => {
+      const generator = useContext(RoughContext);
+      const { onMouseDown, x, y, ...generatorProps } = props;
+      const realSeed = useMemo(
+        // seed must not be float for some reason.
+        () =>
+          seed === undefined || seed === 0
+            ? Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
+            : seed,
+        [seed]
+      );
+      const drawable = useMemo(
+        () =>
+          generator
+            ? generate(generator, generatorProps as C, {
+                fill,
+                fillStyle,
+                stroke,
+                strokeLineDash,
+                roughness: roughness ?? DEFAULT_ROUGHNESS,
+                seed: realSeed,
+              })
+            : null,
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        ...Object.values(generatorProps),
-      ]
-    );
+        [
+          generator,
+          fill,
+          fillStyle,
+          stroke,
+          strokeLineDash,
+          roughness,
+          realSeed,
+          // TODO
+          // eslint-disable-next-line react-hooks/exhaustive-deps
+          ...Object.values(generatorProps),
+        ]
+      );
 
-    if (!drawable || !generator) {
-      return null;
+      if (!drawable || !generator) {
+        return null;
+      }
+
+      return (
+        <DrawablePrimitive
+          drawable={drawable}
+          generator={generator}
+          x={x}
+          y={y}
+          onMouseDown={onMouseDown}
+        />
+      );
     }
-
-    return (
-      <DrawablePrimitive
-        drawable={drawable}
-        generator={generator}
-        x={x}
-        y={y}
-        onMouseDown={onMouseDown}
-      />
-    );
-  });
+  );
 
   component.displayName = displayName;
   return component;

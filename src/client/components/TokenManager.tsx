@@ -249,32 +249,95 @@ function TokenEditor({
     onClose();
   };
 
+  const [hp, setHP] = useDebouncedServerUpdate(
+    token.hp.toString(),
+    (hp) => {
+      const hpNumber = parseInt(hp);
+      if (isNaN(hpNumber)) {
+        return;
+      }
+      return tokenUpdate({ id: token.id, changes: { hp: hpNumber } });
+    },
+    1000
+  );
+
+  const [maxHP, setMaxHP] = useDebouncedServerUpdate(
+    token.maxHP.toString(),
+    (maxHP) => {
+      const maxHPNumber = parseInt(maxHP);
+      if (isNaN(maxHPNumber)) {
+        return undefined;
+      }
+      return tokenUpdate({ id: token.id, changes: { maxHP: maxHPNumber } });
+    },
+    1000
+  );
+
   return (
     <div className="token-popup">
       <Button className="popover-close" onClick={onClose}>
         ×
       </Button>
-      <input
-        ref={nameInput}
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="token-name"
-      />
-      <input
-        value={scale}
-        type="number"
-        min={1}
-        placeholder="scale"
-        onChange={(e) => setScale(e.target.value)}
-      />
-
-      <input
-        disabled={isUploading}
-        onChange={updateImage}
-        type="file"
-        ref={fileInput}
-      />
-      <Button onClick={remove}>Delete</Button>
+      <div>
+        <label>
+          Name:{" "}
+          <input
+            ref={nameInput}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="token-name"
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          HP:{" "}
+          <input
+            value={hp}
+            type="number"
+            min={0}
+            placeholder="HP"
+            onChange={(e) => setHP(e.target.value)}
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          max HP:{" "}
+          <input
+            value={maxHP}
+            type="number"
+            min={1}
+            placeholder="max HP"
+            onChange={(e) => setMaxHP(e.target.value)}
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          Size in #squares:{" "}
+          <input
+            value={scale}
+            type="number"
+            min={1}
+            placeholder="scale"
+            onChange={(e) => setScale(e.target.value)}
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          Image:{" "}
+          <input
+            disabled={isUploading}
+            onChange={updateImage}
+            type="file"
+            ref={fileInput}
+          />
+        </label>
+      </div>
+      <br />
+      <Button onClick={remove}>delete token</Button>
     </div>
   );
 }
