@@ -102,7 +102,7 @@ export interface RRTokenOnMap extends RRMapObjectBase {
   tokenId: RRTokenID;
 }
 
-interface RRMapDrawingBase extends RRMapObjectBase {
+export interface RRMapDrawingBase extends RRMapObjectBase {
   locked: boolean;
   color: RRColor;
 }
@@ -110,6 +110,7 @@ interface RRMapDrawingBase extends RRMapObjectBase {
 export interface RRMapDrawingImage extends RRMapDrawingBase {
   type: "image";
   image: RRFile;
+  size: RRPoint;
 }
 
 export interface RRMapDrawingRectangle extends RRMapDrawingBase {
@@ -117,18 +118,22 @@ export interface RRMapDrawingRectangle extends RRMapDrawingBase {
   size: RRPoint;
 }
 
-export interface RRMapDrawingEllipsis extends RRMapDrawingBase {
-  type: "ellipsis";
+export interface RRMapDrawingEllipse extends RRMapDrawingBase {
+  type: "ellipse";
   size: RRPoint;
 }
 
 export interface RRMapDrawingPolygon extends RRMapDrawingBase {
   type: "polygon";
+  // a polygon with three corners only has two entries in the points array,
+  // because the first point is always implicitly 0, 0.
   points: RRPoint[];
 }
 
 export interface RRMapDrawingFreehand extends RRMapDrawingBase {
   type: "freehand";
+  // a freehand drawing with three points only has two entries in the points
+  // array, because the first point is always implicitly 0, 0.
   points: RRPoint[];
 }
 
@@ -141,7 +146,7 @@ export type RRMapObject =
   | RRTokenOnMap
   | RRMapDrawingImage
   | RRMapDrawingRectangle
-  | RRMapDrawingEllipsis
+  | RRMapDrawingEllipse
   | RRMapDrawingPolygon
   | RRMapDrawingFreehand
   | RRMapDrawingText;

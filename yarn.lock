@@ -2233,6 +2233,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/tinycolor2@npm:^1":
+  version: 1.4.2
+  resolution: "@types/tinycolor2@npm:1.4.2"
+  checksum: e6a53ee633b20fc6516c3888b9326192b00277476f04574f8c618fd9817fcc66517d704d045d67de78bc3b8c98f4da2fa23e25aa2ca6ab17e7bc7a7901321560
+  languageName: node
+  linkType: hard
+
 "@types/uglify-js@npm:*":
   version: 3.13.0
   resolution: "@types/uglify-js@npm:3.13.0"
@@ -6906,13 +6913,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"invert-color@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "invert-color@npm:2.0.0"
-  checksum: 2a3d69b7e3a775e1a1106b68bf25df1b01ab61149b812e62d1d8be7f0e478c039884fe7d08b9906996e0a8f75783e05d7dc509aeefac93e5d384506e989824c3
-  languageName: node
-  linkType: hard
-
 "ip-regex@npm:^2.1.0":
   version: 2.1.0
   resolution: "ip-regex@npm:2.1.0"
@@ -11224,6 +11224,7 @@ resolve@^2.0.0-next.3:
     "@types/socket.io-client": ^1.4.36
     "@types/source-map-support": ^0.5.3
     "@types/three": ^0.127.1
+    "@types/tinycolor2": ^1
     "@types/webpack-bundle-analyzer": ^4.4.0
     "@types/webpack-env": ^1.16.0
     "@typescript-eslint/eslint-plugin": ^4.22.0
@@ -11250,7 +11251,6 @@ resolve@^2.0.0-next.3:
     html-webpack-plugin: ^5.3.1
     html-webpack-tags-plugin: ^3.0.1
     husky: ^4.3.8
-    invert-color: ^2.0.0
     jest: ^26.6.3
     lint-staged: ^10.5.4
     mini-css-extract-plugin: ^1.5.0
@@ -11281,6 +11281,7 @@ resolve@^2.0.0-next.3:
     source-map-support: ^0.5.19
     style-loader: ^2.0.0
     three: ^0.127.0
+    tinycolor2: ^1.4.2
     transformation-matrix: ^2.7.0
     ts-jest: ^26.5.5
     ts-loader: ^9.1.1
@@ -12622,6 +12623,13 @@ resolve@^2.0.0-next.3:
   version: 1.1.0
   resolution: "thunky@npm:1.1.0"
   checksum: eceb856b6412ecd02c24731a2441698aa57622e03b0a4d6d1dea47d7b173aca54980fd2fba5b3a2e11ccec48373c46483f7f55a46717bfc07645395fa57267a6
+  languageName: node
+  linkType: hard
+
+"tinycolor2@npm:^1.4.2":
+  version: 1.4.2
+  resolution: "tinycolor2@npm:1.4.2"
+  checksum: cf33d084cb378d2988fad1b214e62f38be75ba1a9a6df98d4dadf77c31f82796d40822100e6d3e1973c9233ddf0ddbbbfdcac40e2288c958bca3c6d310e2ccb4
   languageName: node
   linkType: hard
 

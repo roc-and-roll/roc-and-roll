@@ -24,23 +24,26 @@ import {
   RRPlayerID,
   RRPoint,
   RRToken,
+  RRTokenOnMap,
   TokensSyncedState,
 } from "../../shared/state";
-import { tokenImageUrl } from "../files";
+import { fileUrl, tokenImageUrl } from "../files";
 import { canControlMapObject, canViewTokenOnMap } from "../permissions";
 import { MapMouseHandler, ToolButtonState } from "./MapContainer";
 import {
-  RoughCircle,
   RoughContextProvider,
   RoughEllipse,
-  RoughLine,
-  RoughPath,
+  RoughSVGPath,
   RoughRectangle,
   RoughText,
+  RoughLinearPath,
+  RoughPolygon,
 } from "./rough";
-import invert from "invert-color";
 import useRafLoop from "../useRafLoop";
 import { useLatest } from "../state";
+import tinycolor from "tinycolor2";
+import { Except } from "type-fest";
+import { assertNever } from "../../shared/util";
 
 type Rectangle = [number, number, number, number];
 
@@ -115,9 +118,11 @@ export const Map: React.FC<{
   toolButtonState,
   toolHandler,
 }) => {
-  const contrastColor = useMemo(() => invert(backgroundColor, true), [
-    backgroundColor,
-  ]);
+  const contrastColor = useMemo(
+    () =>
+      tinycolor.mostReadable(backgroundColor, ["#fff", "#000"]).toHexString(),
+    [backgroundColor]
+  );
 
   // TODO can't handle overlapping clicks
   const [mouseAction, setMouseAction] = useState<MouseAction>(MouseAction.NONE);
@@ -399,7 +404,7 @@ export const Map: React.FC<{
           <></>
         )}
         {mapObjects.map((object) =>
-          object.type === "rectangle" ? (
+          object.type !== "token" ? (
             <MapObjectThatIsNotAToken
               key={object.id}
               onStartMove={createHandleStartMoveGameObject(object)}
@@ -435,6 +440,7 @@ export const Map: React.FC<{
             from={globalToLocal(transform, dragState.start)}
             to={globalToLocal(transform, dragState.lastMouse)}
             zoom={transform.a}
+            color={contrastColor}
           />
         )}
         {mousePositions.map((each) => (
@@ -454,7 +460,7 @@ function MapObjectThatIsNotAToken({
   object,
   onStartMove,
 }: {
-  object: RRMapObject;
+  object: Exclude<RRMapObject, RRTokenOnMap>;
   onStartMove: (event: React.MouseEvent) => void;
 }) {
   const ref = useLatest(onStartMove);
@@ -466,20 +472,40 @@ function MapObjectThatIsNotAToken({
     [ref]
   );
 
-  if (object.type === "rectangle") {
-    return (
-      <RoughRectangle
-        x={object.position.x}
-        y={object.position.y}
-        w={object.size.x}
-        h={object.size.y}
-        onMouseDown={handleMouseDown}
-        fill="rgba(243, 186, 0, 0.5)"
-        stroke="rgb(243, 186, 0)"
-      />
-    );
-  } else {
-    return null;
+  const sharedProps = {
+    x: object.position.x,
+    y: object.position.y,
+    onMouseDown: handleMouseDown,
+    fill: tinycolor(object.color).setAlpha(0.3).toRgbString(),
+    stroke: object.color,
+  };
+
+  switch (object.type) {
+    case "rectangle":
+      return (
+        <RoughRectangle {...sharedProps} w={object.size.x} h={object.size.y} />
+      );
+    case "ellipse":
+      return (
+        <RoughEllipse {...sharedProps} w={object.size.x} h={object.size.y} />
+      );
+    case "freehand":
+      return <RoughLinearPath {...sharedProps} points={object.points} />;
+    case "polygon":
+      return <RoughPolygon {...sharedProps} points={object.points} />;
+    case "text":
+      return <RoughText {...sharedProps}>{object.text}</RoughText>;
+    case "image":
+      return (
+        <image
+          {...sharedProps}
+          width={object.size.x}
+          height={object.size.y}
+          href={fileUrl(object.image)}
+        />
+      );
+    default:
+      assertNever(object);
   }
 }
 
@@ -540,7 +566,7 @@ const MouseCursor = React.memo(function MouseCursor(props: {
         0.5 / props.zoom
       })`}
     >
-      <RoughPath
+      <RoughSVGPath
         // https://mavo.io/demos/svgpath/
         x={0}
         y={0}
@@ -553,8 +579,8 @@ const MouseCursor = React.memo(function MouseCursor(props: {
       />
       <RoughText
         x={0}
-        y={GRID_SIZE * 1.1 + 2 * 16}
-        fontSize="32px"
+        y={GRID_SIZE * 1.1}
+        fontSize="2rem"
         fill={props.contrastColor}
       >
         {props.playerName}
@@ -567,10 +593,12 @@ function MapMeasureBar({
   from,
   to,
   zoom,
+  color,
 }: {
   from: Point;
   to: Point;
   zoom: number;
+  color: string;
 }) {
   const distance =
     (Math.sqrt(Math.pow(from.x - to.x, 2) + Math.pow(from.y - to.y, 2)) /
@@ -584,9 +612,9 @@ function MapMeasureBar({
         x2={to.x}
         y2={to.y}
         style={{ strokeDasharray: "10", strokeWidth: 5 }}
-        stroke="rgba(255, 255, 255, 0.3)"
+        stroke={tinycolor(color).setAlpha(0.3).toRgbString()}
       />
-      <text x={to.x + GRID_SIZE} y={to.y} fill="#fff" fontSize={14 / zoom}>
+      <text x={to.x + GRID_SIZE} y={to.y} fill={color} fontSize={14 / zoom}>
         {distance.toFixed(1) + "ft"}
       </text>
     </>

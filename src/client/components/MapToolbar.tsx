@@ -105,10 +105,10 @@ export function MapToolbar({
             draw rectangle
           </Button>
           <Button
-            onClick={() => setDrawType("circle")}
-            className={drawType === "circle" ? "active" : undefined}
+            onClick={() => setDrawType("ellipse")}
+            className={drawType === "ellipse" ? "active" : undefined}
           >
-            draw circle
+            draw ellipse
           </Button>
           <Button
             onClick={() => setDrawType("text")}
@@ -140,9 +140,6 @@ export function MapToolbar({
         </>
       )}
       {myself.isGM && <MapSettings map={map} />}
-      <p>
-        TODO: This toolbar does not yet do anything (except for map settings)
-      </p>
     </div>
   );
 }

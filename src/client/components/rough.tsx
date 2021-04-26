@@ -11,11 +11,9 @@ import rough from "roughjs/bin/rough";
 import type { Drawable, Options } from "roughjs/bin/core";
 import { RoughGenerator } from "roughjs/bin/generator";
 import clsx from "clsx";
+import { RRPoint } from "../../shared/state";
 
-export const RoughContext = React.createContext<{
-  svg: SVGSVGElement;
-  rc: RoughSVG;
-} | null>(null);
+export const RoughContext = React.createContext<RoughSVG | null>(null);
 
 RoughContext.displayName = "RoughContext";
 
@@ -23,14 +21,10 @@ export const RoughContextProvider = React.forwardRef<
   SVGSVGElement,
   SVGProps<SVGElement>
 >(function RoughContextProvider({ children, ...props }, forwardedRef) {
-  const [roughSVG, setRoughSVG] = useState<{
-    svg: SVGSVGElement;
-    rc: RoughSVG;
-  } | null>(null);
+  const [roughSVG, setRoughSVG] = useState<RoughSVG | null>(null);
   const localRef = useCallback((svg: SVGSVGElement) => {
-    setRoughSVG({
-      svg,
-      rc: rough.svg(svg, {
+    setRoughSVG(
+      rough.svg(svg, {
         options: {
           // outline
           strokeWidth: 3,
@@ -41,8 +35,8 @@ export const RoughContextProvider = React.forwardRef<
           // general options
           roughness: 3,
         },
-      }),
-    });
+      })
+    );
   }, []);
 
   const ref = composeRefs<SVGSVGElement>(localRef, forwardedRef);
@@ -136,13 +130,14 @@ type PassedThroughOptions = Pick<Options, "fill" | "fillStyle" | "stroke">;
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 function makeRoughComponent<C extends object>(
+  displayName: string,
   generate: (
     rc: RoughGenerator,
     customProps: C,
     options: PassedThroughOptions
   ) => Drawable
 ) {
-  return React.memo<
+  const component = React.memo<
     C &
       PassedThroughOptions &
       Pick<SVGProps<SVGGElement>, "onMouseDown"> & { x: number; y: number }
@@ -151,8 +146,8 @@ function makeRoughComponent<C extends object>(
     const { onMouseDown, x, y, ...generatorProps } = props;
     const drawable = useMemo(
       () =>
-        ctx?.rc?.generator
-          ? generate(ctx.rc.generator, generatorProps as C, {
+        ctx?.generator
+          ? generate(ctx.generator, generatorProps as C, {
               fill,
               fillStyle,
               stroke,
@@ -160,10 +155,11 @@ function makeRoughComponent<C extends object>(
           : null,
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [
-        ctx?.rc?.generator,
+        ctx?.generator,
         fill,
         fillStyle,
         stroke,
+        // TODO
         // eslint-disable-next-line react-hooks/exhaustive-deps
         ...Object.values(generatorProps),
       ]
@@ -176,45 +172,85 @@ function makeRoughComponent<C extends object>(
     return (
       <DrawablePrimitive
         drawable={drawable}
-        rc={ctx.rc}
+        rc={ctx}
         x={x}
         y={y}
         onMouseDown={onMouseDown}
       />
     );
   });
+
+  component.displayName = displayName;
+  return component;
 }
 
 export const RoughLine = makeRoughComponent<{
-  x2: number;
-  y2: number;
-}>((generator, { x2, y2 }, options) => generator.line(0, 0, x2, y2, options));
+  w: number;
+  h: number;
+}>("RoughLine", (generator, { w, h }, options) =>
+  generator.line(0, 0, w, h, options)
+);
 
 export const RoughRectangle = makeRoughComponent<{
   w: number;
   h: number;
-}>((generator, { w, h }, options) => generator.rectangle(0, 0, w, h, options));
+}>("RoughRectangle", (generator, { w, h }, options) =>
+  generator.rectangle(0, 0, w, h, options)
+);
 
 export const RoughEllipse = makeRoughComponent<{
   w: number;
   h: number;
-}>((generator, { w, h }, options) =>
+}>("RoughEllipse", (generator, { w, h }, options) =>
   generator.ellipse(w / 2, h / 2, w, h, options)
 );
 
 export const RoughCircle = makeRoughComponent<{
   d: number;
-}>((generator, { d }, options) => generator.circle(d / 2, d / 2, d, options));
+}>("RoughCircle", (generator, { d }, options) =>
+  generator.circle(d / 2, d / 2, d, options)
+);
 
-export const RoughPath = makeRoughComponent<{
+export const RoughSVGPath = makeRoughComponent<{
   path: string;
-}>((generator, { path }, options) => generator.path(path, options));
+}>("RoughSVGPath", (generator, { path }, options) =>
+  generator.path(path, options)
+);
+
+export const RoughLinearPath = makeRoughComponent<{
+  points: RRPoint[];
+}>("RoughLinearPath", (generator, { points }, options) =>
+  generator.linearPath(
+    [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
+    options
+  )
+);
+
+export const RoughPolygon = makeRoughComponent<{
+  points: RRPoint[];
+}>("RoughPolygon", (generator, { points }, options) =>
+  generator.polygon(
+    [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
+    options
+  )
+);
 
 // Rough.JS does not support text. We simply use a handwritten font to "fake"
 // that look.
-export function RoughText({ children, ...props }: SVGProps<SVGTextElement>) {
+export function RoughText({
+  children,
+  x,
+  y,
+  ...props
+}: SVGProps<SVGTextElement>) {
   return (
-    <text {...props} className={clsx("rough-text", props.className)}>
+    <text
+      {...props}
+      x={x}
+      y={y}
+      dominantBaseline="text-before-edge"
+      className={clsx("rough-text", props.className)}
+    >
       {children}
     </text>
   );

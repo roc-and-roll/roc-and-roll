@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import {
   ephermalPlayerUpdate,
@@ -11,6 +11,7 @@ import {
   entries,
   RRColor,
   RRMap,
+  RRMapDrawingBase,
   RRMapObject,
   RRMapObjectID,
   RRPlayer,
@@ -37,7 +38,7 @@ import composeRefs from "@seznam/compose-react-refs";
 import { identity, Matrix } from "transformation-matrix";
 import { MapToolbar } from "./MapToolbar";
 import { GRID_SIZE } from "../../shared/constants";
-import { rrid, timestamp } from "../../shared/util";
+import { assertNever, rrid, timestamp } from "../../shared/util";
 import { useSettings } from "../settings";
 import { useMapSelection } from "../mapSelection";
 
@@ -50,7 +51,7 @@ export type MapEditState =
   | { tool: "measure"; snap: MapSnap }
   | {
       tool: "draw";
-      type: "line" | "polygon" | "rectangle" | "circle";
+      type: "line" | "polygon" | "rectangle" | "ellipse";
       color: RRColor;
       snap: MapSnap;
     }
@@ -248,7 +249,7 @@ export default function MapContainer({ className }: { className: string }) {
     return "select";
   };
 
-  const mapMouseHandler = CreateMapMouseHandler(myself, map);
+  const mapMouseHandler = CreateMapMouseHandler(myself, map, editState);
 
   return (
     <div className={className} ref={dropRef}>
@@ -319,7 +320,11 @@ export interface MapMouseHandler {
 }
 
 // note: this is not actually a component but we're just tricking the linter >:)
-function CreateMapMouseHandler(myself: RRPlayer, map: RRMap): MapMouseHandler {
+function CreateMapMouseHandler(
+  myself: RRPlayer,
+  map: RRMap,
+  editState: MapEditState
+): MapMouseHandler {
   const dispatch = useServerDispatch();
 
   const [currentId, setCurrentId] = useState<RRMapObjectID | null>(null);
@@ -329,39 +334,156 @@ function CreateMapMouseHandler(myself: RRPlayer, map: RRMap): MapMouseHandler {
     y: 0,
   });
 
+  if (editState.tool === "draw") {
+    const create = (p: RRPoint): RRMapDrawingBase => ({
+      id: rrid<RRMapObject>(),
+      playerId: myself.id,
+      color: editState.color,
+      position: p,
+      locked: false,
+    });
+
+    switch (editState.type) {
+      case "rectangle":
+        return {
+          onMouseDown: (p: RRPoint) => {
+            startMousePositionRef.current = p;
+            setCurrentId(
+              dispatch(
+                mapObjectAdd(map.id, {
+                  type: "rectangle",
+                  size: { x: 0, y: 0 },
+                  ...create(p),
+                })
+              ).payload.mapObject.id
+            );
+          },
+          onMouseMove: (p: RRPoint) => {
+            if (currentId) {
+              dispatch(
+                mapObjectUpdate(map.id, {
+                  id: currentId,
+                  changes: {
+                    size: pointSubtract(p, startMousePositionRef.current),
+                  },
+                })
+              );
+            }
+          },
+          onMouseUp: (p: RRPoint) => {
+            if (currentId && pointEquals(startMousePositionRef.current, p)) {
+              dispatch(
+                mapObjectRemove({ mapId: map.id, mapObjectId: currentId })
+              );
+            }
+            setCurrentId(null);
+          },
+        };
+      case "ellipse":
+        return {
+          onMouseDown: (p: RRPoint) => {
+            startMousePositionRef.current = p;
+            setCurrentId(
+              dispatch(
+                mapObjectAdd(map.id, {
+                  type: "ellipse",
+                  size: { x: 0, y: 0 },
+                  ...create(p),
+                })
+              ).payload.mapObject.id
+            );
+          },
+          onMouseMove: (p: RRPoint) => {
+            if (currentId) {
+              dispatch(
+                mapObjectUpdate(map.id, {
+                  id: currentId,
+                  changes: {
+                    size: pointSubtract(p, startMousePositionRef.current),
+                  },
+                })
+              );
+            }
+          },
+          onMouseUp: (p: RRPoint) => {
+            if (currentId && pointEquals(startMousePositionRef.current, p)) {
+              dispatch(
+                mapObjectRemove({ mapId: map.id, mapObjectId: currentId })
+              );
+            }
+            setCurrentId(null);
+          },
+        };
+      // TODO: Maybe remove lines altogether and draw them as part of freehand?
+      case "line":
+        return {
+          onMouseDown: (p: RRPoint) => {
+            startMousePositionRef.current = p;
+            setCurrentId(
+              dispatch(
+                mapObjectAdd(map.id, {
+                  type: "freehand",
+                  points: [{ x: 0, y: 0 }],
+                  ...create(p),
+                })
+              ).payload.mapObject.id
+            );
+          },
+          onMouseMove: (p: RRPoint) => {
+            if (currentId) {
+              dispatch(
+                mapObjectUpdate(map.id, {
+                  id: currentId,
+                  changes: {
+                    points: [pointSubtract(p, startMousePositionRef.current)],
+                  },
+                })
+              );
+            }
+          },
+          onMouseUp: (p: RRPoint) => {
+            if (currentId && pointEquals(startMousePositionRef.current, p)) {
+              dispatch(
+                mapObjectRemove({ mapId: map.id, mapObjectId: currentId })
+              );
+            }
+            setCurrentId(null);
+          },
+        };
+      case "text":
+        return {
+          onMouseDown: (p: RRPoint) => {},
+          onMouseMove: (p: RRPoint) => {},
+          onMouseUp: (p: RRPoint) => {
+            const text = prompt("enter text")?.trim();
+            if (text === undefined || text.length === 0) {
+              return;
+            }
+            setCurrentId(
+              dispatch(
+                mapObjectAdd(map.id, {
+                  type: "text",
+                  text,
+                  ...create(p),
+                })
+              ).payload.mapObject.id
+            );
+          },
+        };
+      case "polygon":
+      case "freehand":
+        // TODO
+        break;
+
+      default:
+        assertNever(editState);
+    }
+  }
+
   return {
-    onMouseDown: (p: RRPoint) => {
-      startMousePositionRef.current = p;
-      setCurrentId(
-        dispatch(
-          mapObjectAdd(map.id, {
-            type: "rectangle",
-            color: "#ff0000",
-            playerId: myself.id,
-            id: rrid<RRMapObject>(),
-            position: p,
-            size: { x: 0, y: 0 },
-            locked: false,
-          })
-        ).payload.mapObject.id
-      );
-    },
-    onMouseMove: (p: RRPoint) => {
-      if (currentId) {
-        dispatch(
-          mapObjectUpdate(map.id, {
-            id: currentId,
-            changes: { size: pointSubtract(p, startMousePositionRef.current) },
-          })
-        );
-      }
-    },
-    onMouseUp: (p: RRPoint) => {
-      if (currentId && pointEquals(startMousePositionRef.current, p)) {
-        dispatch(mapObjectRemove({ mapId: map.id, mapObjectId: currentId }));
-      }
-      setCurrentId(null);
-    },
+    onMouseDown: (p: RRPoint) => {},
+    onMouseMove: (p: RRPoint) => {},
+    onMouseUp: (p: RRPoint) => {},
   };
 }
 
