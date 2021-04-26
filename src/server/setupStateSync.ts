@@ -10,6 +10,9 @@ import {
 } from "../shared/state";
 import { ephermalPlayerAdd, ephermalPlayerRemove } from "../shared/actions";
 
+const quiet = !!process.env.QUIET;
+const log = (...params) => !quiet && console.log(...params)
+
 type AdditionalSocketData = {
   finishedOptimisticUpdateIds: OptimisticUpdateID[];
   playerId: RRPlayerID | null;
@@ -108,11 +111,11 @@ export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
       playerId: null,
     });
 
-    console.log("A client connected");
+    log("A client connected");
     sendStateUpdate(socket, store.getState());
 
     socket.on("disconnect", () => {
-      console.log("A client disconnected");
+      log("A client disconnected");
       const data = additionalSocketData.get(socket.id);
       if (!data) {
         console.error("This should never happen.");
@@ -176,7 +179,7 @@ export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
         ? byId(state.players.entities, data.playerId) ?? null
         : null;
 
-      console.log(
+      log(
         `sending state to ${socket.id} (${player?.name ?? "not logged in"})`
       );
       sendStateUpdate(socket, state);
