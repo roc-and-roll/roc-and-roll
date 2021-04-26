@@ -30,11 +30,6 @@ export function Debug() {
       <LocalStateExample />
       <h2>Upload File Example</h2>
       <UploadFileExample />
-
-      <h2>Version</h2>
-      <p>Environment: {process.env.NODE_ENV}</p>
-      {/* Git commit */}
-      <p>Version: {__VERSION__}</p>
     </Collapsible>
   );
 }

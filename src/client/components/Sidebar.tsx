@@ -12,6 +12,7 @@ import { Acknowledgements } from "./Acknowledgements";
 import { Settings } from "./Settings";
 import { Players } from "./Players";
 import { useSettings } from "../settings";
+import { About } from "./About";
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
@@ -71,6 +72,10 @@ export function Sidebar({ logout }: { logout: () => void }) {
 
         <Collapsible title="Acknowledgements" defaultCollapsed={true}>
           <Acknowledgements />
+        </Collapsible>
+
+        <Collapsible title="About" defaultCollapsed={true}>
+          <About />
         </Collapsible>
 
         {process.env.NODE_ENV === "development" && <Debug />}
