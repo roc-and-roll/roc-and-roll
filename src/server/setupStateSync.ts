@@ -10,8 +10,8 @@ import {
 } from "../shared/state";
 import { ephermalPlayerAdd, ephermalPlayerRemove } from "../shared/actions";
 
-const quiet = !!process.env.QUIET;
-const log = (...params) => !quiet && console.log(...params)
+const quiet = !!process.env["QUIET"];
+const log = (...params: any[]) => !quiet && console.log(...params);
 
 type AdditionalSocketData = {
   finishedOptimisticUpdateIds: OptimisticUpdateID[];
@@ -179,9 +179,7 @@ export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
         ? byId(state.players.entities, data.playerId) ?? null
         : null;
 
-      log(
-        `sending state to ${socket.id} (${player?.name ?? "not logged in"})`
-      );
+      log(`sending state to ${socket.id} (${player?.name ?? "not logged in"})`);
       sendStateUpdate(socket, state);
     });
   });

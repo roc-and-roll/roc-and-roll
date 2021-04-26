@@ -19,7 +19,7 @@ export async function setupWebServer(
   uploadedFilesDir: string,
   uploadedFilesCacheDir: string
 ) {
-  const httpPort = process.env.PORT || 3000;
+  const httpPort = process.env["PORT"] || 3000;
   const url = `http://localhost:${httpPort}`;
 
   // First, create a new Express JS app that we use to serve our website.
