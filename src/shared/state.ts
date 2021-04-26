@@ -353,15 +353,15 @@ export type SyncedStateDispatch = Dispatch<SyncedStateAction>;
 export function byId<E extends { id: RRID }>(
   entities: Record<E["id"], E>,
   id: E["id"]
-) {
-  return entities[id] as E | undefined;
+): E | undefined {
+  return entities[id];
 }
 
 export function setById<E extends { id: RRID }>(
   entities: Record<E["id"], E>,
   id: E["id"],
   value: E
-) {
+): void {
   entities[id] = value;
 }
 

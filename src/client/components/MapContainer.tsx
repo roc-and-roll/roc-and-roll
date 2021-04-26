@@ -17,7 +17,6 @@ import {
   RRPlayer,
   RRPoint,
   RRToken,
-  setById,
 } from "../../shared/state";
 import { useMyself } from "../myself";
 import {
@@ -41,6 +40,7 @@ import { GRID_SIZE } from "../../shared/constants";
 import { assertNever, rrid, timestamp } from "../../shared/util";
 import { useSettings } from "../settings";
 import { useMapSelection } from "../mapSelection";
+import produce, { Draft } from "immer";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -62,7 +62,7 @@ export default function MapContainer({ className }: { className: string }) {
   const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
   const dispatch = useServerDispatch();
   const [settings] = useSettings();
-  const [selectedMapObjects, setSelectedMapObjects] = useMapSelection();
+  const [selectedMapObjectIds, setSelectedMapObjectIds] = useMapSelection();
 
   const [transform, setTransform] = useState<Matrix>(identity());
 
@@ -99,77 +99,57 @@ export default function MapContainer({ className }: { className: string }) {
   const serverMapObjects = map.objects;
   const [localMapObjects, setLocalObjectsOnMap] = useDebouncedServerUpdate(
     serverMapObjects,
-    (localTokensOnMap) => {
-      return selectedMapObjects.flatMap((selectedTokenId) => {
-        const mapObjects = byId(localTokensOnMap.entities, selectedTokenId);
-        if (!mapObjects) {
+    (localMapObjects) => {
+      return selectedMapObjectIds.flatMap((selectMapObjectId) => {
+        const mapObject = byId(localMapObjects.entities, selectMapObjectId);
+        if (!mapObject) {
           return [];
         }
 
         return mapObjectUpdate(map.id, {
-          id: selectedTokenId,
+          id: selectMapObjectId,
           changes: {
-            position: mapObjects.position,
+            position: mapObject.position,
           },
         });
       });
     },
     100,
-    (start, end, t) => {
-      const updatedTokensOnMap: Record<RRMapObjectID, RRMapObject> = {};
-
-      entries(end).forEach((e) => {
-        const s = byId(start.entities, e.id);
-        if (s) {
-          setById(updatedTokensOnMap, e.id, {
-            ...e,
-            position: {
+    (start, end, t) =>
+      produce(end, (draft) =>
+        entries<Draft<RRMapObject>>(draft).forEach((e) => {
+          const s = byId(start.entities, e.id);
+          if (s) {
+            e.position = {
               x: s.position.x + (e.position.x - s.position.x) * t,
               y: s.position.y + (e.position.y - s.position.y) * t,
-            },
-          });
-        }
-      });
-
-      return {
-        ids: end.ids,
-        entities: {
-          ...end.entities,
-          ...updatedTokensOnMap,
-        },
-      };
-    }
+            };
+          }
+        })
+      )
   );
 
   const handleKeyDown = (e: KeyboardEvent) => {
     function move(positionUpdater: (position: Point) => Point) {
-      setLocalObjectsOnMap((mapObjects) => {
-        const updatedMapObjects: Record<RRMapObjectID, RRMapObject> = {};
-        entries(mapObjects).forEach((each) => {
-          if (selectedMapObjects.includes(each.id)) {
-            setById(updatedMapObjects, each.id, {
-              ...each,
-              position: positionUpdater(each.position),
-            });
-          }
-        });
-
-        return {
-          ids: mapObjects.ids,
-          entities: {
-            ...mapObjects.entities,
-            ...updatedMapObjects,
-          },
-        };
-      });
+      setLocalObjectsOnMap(
+        produce((draft) => {
+          selectedMapObjectIds.forEach((selectedMapObjectId) => {
+            const object = byId<Draft<RRMapObject>>(
+              draft.entities,
+              selectedMapObjectId
+            );
+            if (object) {
+              object.position = positionUpdater(object.position);
+            }
+          });
+        })
+      );
     }
 
     switch (e.key) {
       case "Delete":
-        selectedMapObjects.forEach((selectedTokenId) => {
-          dispatch(
-            mapObjectRemove({ mapId: map.id, mapObjectId: selectedTokenId })
-          );
+        selectedMapObjectIds.forEach((mapObjectId) => {
+          dispatch(mapObjectRemove({ mapId: map.id, mapObjectId }));
         });
         break;
       case "ArrowLeft":
@@ -255,44 +235,44 @@ export default function MapContainer({ className }: { className: string }) {
     <div className={className} ref={dropRef}>
       <MapToolbar map={map} setEditState={setEditState} />
       <Map
+        // map entity data
         gridEnabled={map.gridEnabled}
         backgroundColor={map.backgroundColor}
+        // other entities
         myself={myself}
         tokens={tokens}
+        // toolbar / tool
         toolButtonState={editStateToToolButtonState()}
         toolHandler={mapMouseHandler}
-        // eslint-disable-next-line no-constant-condition
-        onMousePositionChanged={true ? (p) => {} : sendMousePositionToServer}
+        // mouse position sync
+        onMousePositionChanged={sendMousePositionToServer}
         mousePositions={mousePositions}
-        onMoveMapObjects={(dx, dy) => {
-          setLocalObjectsOnMap((mapObjects) => {
-            const updatedTokensOnMap: Record<RRMapObjectID, RRMapObject> = {};
-            entries(mapObjects).forEach((each) => {
-              if (selectedMapObjects.includes(each.id)) {
-                setById(updatedTokensOnMap, each.id, {
-                  ...each,
-                  position: {
-                    x: each.position.x + dx,
-                    y: each.position.y + dy,
-                  },
-                });
-              }
-            });
-
-            return {
-              ids: mapObjects.ids,
-              entities: {
-                ...mapObjects.entities,
-                ...updatedTokensOnMap,
-              },
-            };
-          });
-        }}
+        // zoom and position
         transform={transform}
         setTransform={setTransform}
+        // map objects
         mapObjects={entries(localMapObjects)}
-        selectedObjects={selectedMapObjects}
-        onSelectObjects={setSelectedMapObjects}
+        selectedObjects={selectedMapObjectIds}
+        onSelectObjects={setSelectedMapObjectIds}
+        onMoveMapObjects={(dx, dy) => {
+          setLocalObjectsOnMap(
+            produce((draft) => {
+              selectedMapObjectIds.forEach((selectedMapObjectId) => {
+                const object = byId<Draft<RRMapObject>>(
+                  draft.entities,
+                  selectedMapObjectId
+                );
+                if (object) {
+                  object.position = {
+                    x: object.position.x + dx,
+                    y: object.position.y + dy,
+                  };
+                }
+              });
+            })
+          );
+        }}
+        // misc
         handleKeyDown={handleKeyDown}
       />
       {process.env.NODE_ENV === "development" &&

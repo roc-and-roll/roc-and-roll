@@ -42,7 +42,6 @@ import {
 import useRafLoop from "../useRafLoop";
 import { useLatest } from "../state";
 import tinycolor from "tinycolor2";
-import { Except } from "type-fest";
 import { assertNever } from "../../shared/util";
 
 type Rectangle = [number, number, number, number];
