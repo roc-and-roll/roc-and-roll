@@ -179,13 +179,9 @@ export function InitiativeTracker() {
   const selectionAlreadyInList = entries(initiativeTracker.entries)
     .flatMap((entry) => (entry.type === "token" ? entry.tokenIds : []))
     .some((id) => selectedTokenIds.includes(id));
+  const hasSelection = selectedTokenIds.length !== 0;
 
   const roll = () => {
-    if (selectedTokenIds.length === 0) {
-      alert("Please select the token(s) to roll initiative for.");
-      return;
-    }
-
     const mod = parseInt(modifier);
     const action = logEntryDiceRollAdd(
       rollInitiative(isNaN(mod) ? 0 : mod, "none", myself.id)
@@ -276,7 +272,10 @@ export function InitiativeTracker() {
       </Flipper>
       {endTurnButton}
       <div className="initiative-tracker-roll">
-        <Button disabled={selectionAlreadyInList} onClick={roll}>
+        <Button
+          disabled={selectionAlreadyInList && hasSelection}
+          onClick={roll}
+        >
           Roll Initiative
         </Button>
         <input
