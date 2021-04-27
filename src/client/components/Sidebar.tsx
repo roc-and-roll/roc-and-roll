@@ -13,10 +13,13 @@ import { Settings } from "./Settings";
 import { Players } from "./Players";
 import { useSettings } from "../settings";
 import { About } from "./About";
+import { useMyself } from "../myself";
+import { Maps } from "./Maps";
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
   const [settings] = useSettings();
+  const myself = useMyself();
 
   return (
     <Resizable
@@ -57,6 +60,12 @@ export function Sidebar({ logout }: { logout: () => void }) {
         <Collapsible title="Dice">
           <DiceInput />
         </Collapsible>
+
+        {myself.isGM && (
+          <Collapsible title="Maps">
+            <Maps />
+          </Collapsible>
+        )}
 
         <Collapsible title="Player">
           <Player logout={logout} />
