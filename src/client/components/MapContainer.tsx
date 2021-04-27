@@ -601,6 +601,8 @@ function DebugTokenPositions(props: {
         top: 0,
         background: "orange",
         maxWidth: "100%",
+        overflowY: "auto",
+        maxHeight: "100vh",
       }}
     >
       <h3>Debug: map object positions</h3>

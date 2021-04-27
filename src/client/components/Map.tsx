@@ -50,6 +50,7 @@ import tinycolor from "tinycolor2";
 import { assertNever, clamp } from "../../shared/util";
 import { useMyself } from "../myself";
 import ReactDOM from "react-dom";
+import { useRefState } from "../useRefState";
 
 type Rectangle = [number, number, number, number];
 
@@ -145,10 +146,13 @@ export const Map: React.FC<{
 
   // TODO can't handle overlapping clicks
   const [mouseAction, setMouseAction] = useState<MouseAction>(MouseAction.NONE);
-  const [dragState, setDragState] = useState({
-    start: { x: 0, y: 0 },
-    lastMouse: { x: 0, y: 0 },
-  });
+
+  const [dragStart, setDragStart] = useState<RRPoint>({ x: 0, y: 0 });
+  const [
+    dragLastMouse,
+    dragLastMouseRef,
+    setDragLastMouse,
+  ] = useRefState<RRPoint>({ x: 0, y: 0 });
 
   const [selectionArea, setSelectionArea] = useState<Rectangle | null>(null);
 
@@ -194,8 +198,13 @@ export const Map: React.FC<{
     (e: MouseEvent) => {
       const { x, y } = localCoords(e);
       const frameDelta = {
-        x: x - dragState.lastMouse.x,
-        y: y - dragState.lastMouse.y,
+        // we must not use dragLastMouse here, because it might not have
+        // updated to reflect the value set during the last frame (since React
+        // can batch multiple setState() calls, particularly if the browser is
+        // very busy).
+        // Instead use the ref, which is guranteed to have been updated.
+        x: x - dragLastMouseRef.current.x,
+        y: y - dragLastMouseRef.current.y,
       };
 
       switch (mouseAction) {
@@ -226,17 +235,12 @@ export const Map: React.FC<{
       }
 
       if (mouseAction !== MouseAction.NONE) {
-        setDragState((p) => {
-          return {
-            ...p,
-            lastMouse: { x, y },
-          };
-        });
+        setDragLastMouse({ x, y });
       }
     },
     [
-      dragState.lastMouse.x,
-      dragState.lastMouse.y,
+      dragLastMouseRef,
+      setDragLastMouse,
       mouseAction,
       setTransform,
       transform,
@@ -261,10 +265,8 @@ export const Map: React.FC<{
     setMouseAction(newMouseAction);
 
     const local = localCoords(e);
-    setDragState({
-      start: local,
-      lastMouse: local,
-    });
+    setDragStart(local);
+    setDragLastMouse(local);
 
     const innerLocal = globalToLocal(transform, local);
     if (newMouseAction === MouseAction.SELECTION_AREA) {
@@ -281,10 +283,8 @@ export const Map: React.FC<{
 
   const handleDragStart = (e: React.MouseEvent, mapObject: RRMapObject) => {
     const local = localCoords(e);
-    setDragState({
-      start: local,
-      lastMouse: local,
-    });
+    setDragStart(local);
+    setDragLastMouse(local);
     handleStartMoveMapObject(mapObject);
   };
 
@@ -465,8 +465,8 @@ export const Map: React.FC<{
           )}
           {mouseAction === MouseAction.MOVE_TOKEN && (
             <MapMeasureBar
-              from={globalToLocal(transform, dragState.start)}
-              to={globalToLocal(transform, dragState.lastMouse)}
+              from={globalToLocal(transform, dragStart)}
+              to={globalToLocal(transform, dragLastMouse)}
               zoom={transform.a}
               color={contrastColor}
             />

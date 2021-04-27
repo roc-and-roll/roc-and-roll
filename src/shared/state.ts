@@ -26,7 +26,7 @@ export type OptimisticUpdateID = Opaque<string, "optimisticUpdate">;
 
 export type RRColor = string;
 
-export type RRPoint = { x: number; y: number };
+export type RRPoint = { readonly x: number; readonly y: number };
 
 export type RRFile = {
   originalFilename: string;

@@ -22,8 +22,9 @@ import useRafLoop from "./useRafLoop";
 
 type StatePatch<D> = { patch: DeepPartial<D>; deletedKeys: string[] };
 
-type StateUpdateSubscriber = (
-  newState: SyncedState,
+type StateUpdateSubscriber = (newState: SyncedState) => void;
+
+type OptimisticUpdateExecutedSubscriber = (
   optimisticUpdateIds: OptimisticUpdateID[]
 ) => void;
 
@@ -42,15 +43,19 @@ type StateUpdateSubscriber = (
 const ServerStateContext = React.createContext<{
   subscribe: (subscriber: StateUpdateSubscriber) => void;
   unsubscribe: (subscriber: StateUpdateSubscriber) => void;
+  subscribeToOptimisticUpdateExecuted: (
+    subscriber: OptimisticUpdateExecutedSubscriber
+  ) => void;
+  unsubscribeToOptimisticUpdateExecuted: (
+    subscriber: OptimisticUpdateExecutedSubscriber
+  ) => void;
   stateRef: React.MutableRefObject<SyncedState>;
   socket: SocketIOClient.Socket | null;
 }>({
-  subscribe: () => {
-    // do nothing
-  },
-  unsubscribe: () => {
-    // do nothing
-  },
+  subscribe: () => {},
+  unsubscribe: () => {},
+  subscribeToOptimisticUpdateExecuted: () => {},
+  unsubscribeToOptimisticUpdateExecuted: () => {},
   stateRef: { current: initialSyncedState },
   socket: null,
 });
@@ -64,6 +69,9 @@ export function ServerStateProvider({
   // re-renders of this component and its children when the state changes.
   const stateRef = useRef<SyncedState>(initialSyncedState);
   const subscribers = useRef<Set<StateUpdateSubscriber>>(new Set());
+  const subscribersToOptimisticUpdatesExecuted = useRef<
+    Set<OptimisticUpdateExecutedSubscriber>
+  >(new Set());
 
   useEffect(() => {
     const onSetState = (msg: {
@@ -71,17 +79,23 @@ export function ServerStateProvider({
       finishedOptimisticUpdateIds: OptimisticUpdateID[];
     }) => {
       const state: SyncedState = JSON.parse(msg.state);
-      console.log(
-        "Server -> Client | SET_STATE | state = ",
-        state,
-        "finishedOptimisticUpdateIds = ",
-        msg.finishedOptimisticUpdateIds
-      );
+      process.env.NODE_ENV !== "test" &&
+        console.log(
+          "Server -> Client | SET_STATE | state = ",
+          state,
+          "finishedOptimisticUpdateIds = ",
+          msg.finishedOptimisticUpdateIds
+        );
 
       stateRef.current = state;
       ReactDOM.unstable_batchedUpdates(() => {
         subscribers.current.forEach((subscriber) =>
-          subscriber(stateRef.current, msg.finishedOptimisticUpdateIds)
+          subscriber(stateRef.current)
+        );
+      });
+      ReactDOM.unstable_batchedUpdates(() => {
+        subscribersToOptimisticUpdatesExecuted.current.forEach((subscriber) =>
+          subscriber(msg.finishedOptimisticUpdateIds)
         );
       });
     };
@@ -91,17 +105,23 @@ export function ServerStateProvider({
       finishedOptimisticUpdateIds: OptimisticUpdateID[];
     }) => {
       const patch: StatePatch<SyncedState> = JSON.parse(msg.patch);
-      console.log(
-        "Server -> Client | PATCH_STATE | patch = ",
-        patch,
-        "finishedOptimisticUpdateIds = ",
-        msg.finishedOptimisticUpdateIds
-      );
+      process.env.NODE_ENV !== "test" &&
+        console.log(
+          "Server -> Client | PATCH_STATE | patch = ",
+          patch,
+          "finishedOptimisticUpdateIds = ",
+          msg.finishedOptimisticUpdateIds
+        );
 
       stateRef.current = applyStatePatch(stateRef.current, patch);
       ReactDOM.unstable_batchedUpdates(() => {
         subscribers.current.forEach((subscriber) =>
-          subscriber(stateRef.current, msg.finishedOptimisticUpdateIds)
+          subscriber(stateRef.current)
+        );
+      });
+      ReactDOM.unstable_batchedUpdates(() => {
+        subscribersToOptimisticUpdatesExecuted.current.forEach((subscriber) =>
+          subscriber(msg.finishedOptimisticUpdateIds)
         );
       });
     };
@@ -123,9 +143,30 @@ export function ServerStateProvider({
     subscribers.current.delete(subscriber);
   }, []);
 
+  const subscribeToOptimisticUpdateExecuted = useCallback(
+    (subscriber: OptimisticUpdateExecutedSubscriber) => {
+      subscribersToOptimisticUpdatesExecuted.current.add(subscriber);
+    },
+    []
+  );
+
+  const unsubscribeToOptimisticUpdateExecuted = useCallback(
+    (subscriber: OptimisticUpdateExecutedSubscriber) => {
+      subscribersToOptimisticUpdatesExecuted.current.delete(subscriber);
+    },
+    []
+  );
+
   return (
     <ServerStateContext.Provider
-      value={{ stateRef, subscribe, unsubscribe, socket }}
+      value={{
+        stateRef,
+        subscribe,
+        unsubscribe,
+        subscribeToOptimisticUpdateExecuted,
+        unsubscribeToOptimisticUpdateExecuted,
+        socket,
+      }}
     >
       {children}
     </ServerStateContext.Provider>
@@ -266,7 +307,10 @@ export function useDebouncedServerUpdate<V>(
   lerp?: (start: V, end: V, amount: number) => V
 ): readonly [V, (newValue: V | ((v: V) => V)) => void] {
   const dispatch = useServerDispatch();
-  const { subscribe, unsubscribe } = useContext(ServerStateContext);
+  const {
+    subscribeToOptimisticUpdateExecuted,
+    unsubscribeToOptimisticUpdateExecuted,
+  } = useContext(ServerStateContext);
 
   const optimisticUpdatePhase = useRef<
     // no optimistic local value active
@@ -356,7 +400,9 @@ export function useDebouncedServerUpdate<V>(
   // component to re-render on changes.
   useLayoutEffect(() => {
     // console.log("effect/off");
-    const subscriber: StateUpdateSubscriber = (_, optimisticUpdateIds) => {
+    const subscriber: OptimisticUpdateExecutedSubscriber = (
+      optimisticUpdateIds
+    ) => {
       // console.log("optimistic id update");
       if (
         optimisticUpdatePhase.current.type === "on-until" &&
@@ -364,33 +410,19 @@ export function useDebouncedServerUpdate<V>(
       ) {
         // The update we were waiting for has been executed on the server. We
         // can now safely switch back to rendering the value from the server.
-        //
-        // TODO: The setImmediate is a bit of a hack.
-        // It is necessary to avoid a race condition:
-        // If the server context provider first executes this subscriber, and
-        // only later executes the subscriber that updates the serverValue
-        // passed into the useDebouncedServerUpdate, the optimisticUpdatePhase
-        // would incorrectly have already been set to off, which enbables the
-        // lerping on the client that caused the server update. setImmediate
-        // makes sure that the serverValue is updated first, which causes the
-        // useLayoutEffect above to execute (which does nothing, since the
-        // optimisticUpdatePhase is !== "off"), and only then the
-        // optimisticUpdatePhase is set to off.
-        //
-        // We could possibly solve this by modifying the ServerStateProvider
-        // to execute callbacks that just listen for finishedOptimisticIds
-        // after all callbacks that list for the state.
-        setImmediate(() => {
-          optimisticUpdatePhase.current = { type: "off" };
-          // console.log("set/action finished");
-          _setLocalValue(serverValueRef.current);
-        });
+        optimisticUpdatePhase.current = { type: "off" };
+        // console.log("set/action finished");
+        _setLocalValue(serverValueRef.current);
       }
     };
 
-    subscribe(subscriber);
-    return () => unsubscribe(subscriber);
-  }, [serverValueRef, subscribe, unsubscribe]);
+    subscribeToOptimisticUpdateExecuted(subscriber);
+    return () => unsubscribeToOptimisticUpdateExecuted(subscriber);
+  }, [
+    serverValueRef,
+    subscribeToOptimisticUpdateExecuted,
+    unsubscribeToOptimisticUpdateExecuted,
+  ]);
 
   // Function that uses the actionCreator argument to create the necessary
   // actions from the latest state. It assigns an __optimisticUpdateId__
@@ -426,7 +458,11 @@ export function useDebouncedServerUpdate<V>(
     [dispatch, actionCreatorRef]
   );
 
-  const debouncedActionDispatch = useDebounce(actionDispatch, debounceTime);
+  const debouncedActionDispatch = useDebounce(
+    actionDispatch,
+    debounceTime,
+    true
+  );
 
   // Simple wrapper around _setLocalValue that sets optimisticUpdatePhase to
   // "on" if the state is changed locally.

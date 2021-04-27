@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
+import { useLatest } from "./state";
 
 /**
  * Returns a new function that, when called, will debounce calls to the passed
@@ -6,30 +7,44 @@ import { useCallback, useEffect, useRef } from "react";
  */
 export function useDebounce<A extends unknown[], R extends unknown>(
   callback: (...args: A) => R,
-  debounceTime: number
+  debounceTime: number,
+  forceOnUnmount: boolean = false
 ): (...args: A) => void {
-  const lastArgs = useRef<A | null>(null);
+  const callbackRef = useLatest(callback);
+  const debounceTimeRef = useLatest(debounceTime);
+  const forceOnUnmountRef = useLatest(forceOnUnmount);
+
+  const lastArgsAndCallback = useRef<{
+    args: A;
+    callback: (...args: A) => R;
+  } | null>(null);
   const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       if (timeoutId.current) {
         clearTimeout(timeoutId.current);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (forceOnUnmountRef.current && lastArgsAndCallback.current) {
+          lastArgsAndCallback.current.callback(
+            ...lastArgsAndCallback.current.args
+          );
+        }
       }
     };
-  }, []);
+  }, [forceOnUnmountRef]);
 
   return useCallback(
     (...args: A): void => {
-      lastArgs.current = args;
+      lastArgsAndCallback.current = { args, callback: callbackRef.current };
       timeoutId.current ??= setTimeout(() => {
-        const args = lastArgs.current!;
+        const { args, callback } = lastArgsAndCallback.current!;
         timeoutId.current = null;
-        lastArgs.current = null;
+        lastArgsAndCallback.current = null;
         callback(...args);
-      }, debounceTime);
+      }, debounceTimeRef.current);
     },
-    [callback, debounceTime]
+    [callbackRef, debounceTimeRef]
   );
 }
 
