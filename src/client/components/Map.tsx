@@ -399,6 +399,7 @@ export const Map: React.FC<{
   };
 
   const [auraArea, setAuraArea] = useState<SVGGElement | null>(null);
+  const [healthbarArea, setHealthbarArea] = useState<SVGGElement | null>(null);
 
   return (
     <RoughContextProvider>
@@ -441,6 +442,7 @@ export const Map: React.FC<{
                 <MapToken
                   key={t.id}
                   auraArea={auraArea}
+                  healthbarArea={healthbarArea}
                   onStartMove={createHandleStartMoveGameObject(t)}
                   x={t.position.x}
                   y={t.position.y}
@@ -455,6 +457,7 @@ export const Map: React.FC<{
                 />
               );
             })}
+          <g ref={setHealthbarArea} />
           {withSelectionAreaDo(
             (x, y, w, h) => (
               <rect
@@ -751,6 +754,7 @@ function MapToken({
   zoom,
   contrastColor,
   auraArea,
+  healthbarArea,
   setHP,
 }: {
   token: RRToken;
@@ -761,6 +765,7 @@ function MapToken({
   onStartMove: (e: React.MouseEvent) => void;
   contrastColor: string;
   auraArea: SVGGElement | null;
+  healthbarArea: SVGGElement | null;
   setHP: (hp: number) => void;
 }) {
   const myself = useMyself();
@@ -814,38 +819,40 @@ function MapToken({
           }),
           auraArea
         )}
-      {canControlToken(token, myself) && (
-        <g transform={`translate(${x},${y - 16})`}>
-          <RoughRectangle
-            x={0}
-            y={0}
-            w={tokenSize}
-            h={16}
-            stroke="transparent"
-            fill="white"
-            fillStyle="solid"
-            roughness={1}
-          />
-          <RoughRectangle
-            x={0}
-            y={0}
-            w={tokenSize * clamp(0, token.hp / token.maxHP, 1)}
-            h={16}
-            stroke="transparent"
-            fill="#c5d87c"
-            fillStyle="solid"
-            roughness={1}
-          />
-          <RoughRectangle
-            x={0}
-            y={0}
-            w={tokenSize}
-            h={16}
-            stroke={tinycolor(contrastColor).setAlpha(0.5).toRgbString()}
-            fill="transparent"
-            roughness={1}
-          />
-          {/*
+      {healthbarArea &&
+        canControlToken(token, myself) &&
+        ReactDOM.createPortal(
+          <g transform={`translate(${x},${y - 16})`}>
+            <RoughRectangle
+              x={0}
+              y={0}
+              w={tokenSize}
+              h={16}
+              stroke="transparent"
+              fill="white"
+              fillStyle="solid"
+              roughness={1}
+            />
+            <RoughRectangle
+              x={0}
+              y={0}
+              w={tokenSize * clamp(0, token.hp / token.maxHP, 1)}
+              h={16}
+              stroke="transparent"
+              fill="#c5d87c"
+              fillStyle="solid"
+              roughness={1}
+            />
+            <RoughRectangle
+              x={0}
+              y={0}
+              w={tokenSize}
+              h={16}
+              stroke={tinycolor(contrastColor).setAlpha(0.5).toRgbString()}
+              fill="transparent"
+              roughness={1}
+            />
+            {/*
             Uncomment this text when making changes to font sizes or text
             contents, so that you can re-align the hp and max hp to be perfectly
             centered.
@@ -860,21 +867,22 @@ function MapToken({
               {token.hp}&thinsp;/&thinsp;{token.maxHP}
             </RoughText>
           */}
-          <foreignObject x={0} y={2} width={tokenSize / 2 - 4} height={14}>
-            <HPInlineEdit hp={token.hp} setHP={setHP} />
-          </foreignObject>
-          <RoughText
-            x={tokenSize / 2 - 3}
-            y={-1}
-            width={tokenSize}
-            fontWeight="bold"
-            fontSize={14}
-            style={{ cursor: "default" }}
-          >
-            /&thinsp;{token.maxHP}
-          </RoughText>
-        </g>
-      )}
+            <foreignObject x={0} y={2} width={tokenSize / 2 - 4} height={14}>
+              <HPInlineEdit hp={token.hp} setHP={setHP} />
+            </foreignObject>
+            <RoughText
+              x={tokenSize / 2 - 3}
+              y={-1}
+              width={tokenSize}
+              fontWeight="bold"
+              fontSize={14}
+              style={{ cursor: "default" }}
+            >
+              /&thinsp;{token.maxHP}
+            </RoughText>
+          </g>,
+          healthbarArea
+        )}
       {token.image ? (
         <image
           onMouseDown={handleMouseDown}
