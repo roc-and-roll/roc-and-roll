@@ -7,6 +7,7 @@ import useLocalState from "../useLocalState";
 import { MapEditState, MapSnap } from "./MapContainer";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
+import { Select } from "./ui/Select";
 
 export function MapToolbar({
   map,
@@ -131,15 +132,16 @@ export function MapToolbar({
             {drawType !== "freehand" && drawType !== "text" && (
               <label>
                 snap to grid{" "}
-                <select
+                <Select
                   value={snap}
-                  onChange={(e) => setSnap(e.target.value as MapSnap)}
-                >
-                  <option value="none">none</option>
-                  <option value="grid">grid center and corners</option>
-                  <option value="grid-center">grid center</option>
-                  <option value="grid-corner">grid corners</option>
-                </select>
+                  onChange={(snap) => setSnap(snap)}
+                  options={[
+                    { value: "none", label: "none" },
+                    { value: "grid", label: "grid center and corners" },
+                    { value: "grid-center", label: "grid center" },
+                    { value: "grid-corner", label: "grid corners" },
+                  ]}
+                />
               </label>
             )}
           </>
