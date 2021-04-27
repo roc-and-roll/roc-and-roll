@@ -10,7 +10,6 @@ import {
 import {
   byId,
   entries,
-  EphermalPlayer,
   RRColor,
   RRMap,
   RRMapDrawingBase,
@@ -32,7 +31,7 @@ import {
   CURSOR_POSITION_SYNC_DEBOUNCE,
   CURSOR_POSITION_SYNC_HISTORY_STEPS,
   globalToLocal,
-  Map,
+  RRMapView,
 } from "./Map";
 import composeRefs from "@seznam/compose-react-refs";
 import { identity, Matrix } from "transformation-matrix";
@@ -253,7 +252,7 @@ export default function MapContainer({ className }: { className: string }) {
   return (
     <div className={className} ref={dropRef}>
       <MapToolbar map={map} setEditState={setEditState} />
-      <Map
+      <RRMapView
         // map entity data
         gridEnabled={map.gridEnabled}
         backgroundColor={map.backgroundColor}
@@ -268,6 +267,7 @@ export default function MapContainer({ className }: { className: string }) {
         mousePositions={mousePositions}
         players={ephermalPlayers}
         onUpdateTokenPath={updateTokenPath}
+        playerColors={new Map(entries(players).map((p) => [p.id, p.color]))}
         // zoom and position
         transform={transform}
         setTransform={setTransform}
@@ -275,7 +275,7 @@ export default function MapContainer({ className }: { className: string }) {
         mapObjects={entries(localMapObjects)}
         selectedObjects={selectedMapObjectIds}
         onSelectObjects={setSelectedMapObjectIds}
-        onMoveMapObjects={(dx, dy) => {
+        onMoveMapObjects={(dx: number, dy: number) => {
           setLocalObjectsOnMap(
             produce((draft) => {
               selectedMapObjectIds.forEach((selectedMapObjectId) => {

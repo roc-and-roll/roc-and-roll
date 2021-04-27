@@ -105,7 +105,7 @@ export const globalToLocal = (transform: Matrix, p: RRPoint) => {
   return { x, y };
 };
 
-export const Map: React.FC<{
+export const RRMapView: React.FC<{
   myself: RRPlayer;
   mapObjects: RRMapObject[];
   gridEnabled: boolean;
@@ -126,6 +126,7 @@ export const Map: React.FC<{
     positionHistory: RRPoint[];
   }>;
   players: EntityCollection<EphermalPlayer>;
+  playerColors: Map<RRPlayerID, string>;
   onUpdateTokenPath: (path: RRPoint[]) => void;
   onMousePositionChanged: (position: RRPoint) => void;
   toolHandler: MapMouseHandler;
@@ -149,6 +150,7 @@ export const Map: React.FC<{
   onMousePositionChanged,
   toolButtonState,
   toolHandler,
+  playerColors,
 }) => {
   const contrastColor = useMemo(
     () =>
@@ -213,7 +215,7 @@ export const Map: React.FC<{
       if (path.length < 1) return onUpdateTokenPath([gridPosition]);
 
       // to make moving along a diagonal easier, we only count hits that are not on the corners
-      const radius = GRID_SIZE / 2;
+      const radius = GRID_SIZE * 0.4;
       const isInCenter =
         pointDistance(
           pointScale(pointAdd(gridPosition, makePoint(0.5)), GRID_SIZE),
@@ -548,7 +550,7 @@ export const Map: React.FC<{
             p.tokenPath.length > 0 ? (
               <MapMeasurePath
                 zoom={transform.a}
-                color={contrastColor}
+                color={playerColors.get(p.id)!}
                 path={p.tokenPath}
               />
             ) : null
@@ -728,6 +730,16 @@ const overlappingPairsSum = <T extends any>(
   }
   return sum;
 };
+const overlappingPairsMap = <T extends any, U extends any>(
+  a: T[],
+  f: (a: T, b: T) => U
+) => {
+  const res: U[] = [];
+  for (let i = 0; i < a.length - 1; i++) {
+    res.push(f(a[i]!, a[i + 1]!));
+  }
+  return res;
+};
 
 function MapMeasurePath({
   path,
@@ -747,26 +759,37 @@ function MapMeasurePath({
     a.x === b.x || a.y === b.y ? 0 : 1
   );
   const length = path.length - 1 + Math.floor(diagonals / 2);
+  const fontSize = 14 / zoom;
+  const fontPadding = 5;
 
+  const centered = (p: RRPoint) =>
+    pointScale(pointAdd(p, makePoint(0.5)), GRID_SIZE);
   return (
     <>
       {path.map((p, i) => {
-        const r = pointSubtract(
-          pointScale(pointAdd(p, makePoint(0.5)), GRID_SIZE),
-          makePoint(dotSize / 2)
-        );
+        const r = centered(p);
         return (
-          <rect
-            key={i}
-            width={dotSize}
-            height={dotSize}
-            fill={color}
-            x={r.x}
-            y={r.y}
-          />
+          <circle key={i} r={dotSize / 2} fill={color} cx={r.x} cy={r.y} />
         );
       })}
-      <text x={last.x} y={last.y} fill={color} fontSize={14 / zoom}>
+      {overlappingPairsMap(path, (a, b) => (
+        <line
+          x1={centered(a).x}
+          y1={centered(a).y}
+          x2={centered(b).x}
+          y2={centered(b).y}
+          stroke={color}
+          style={{ strokeWidth: 3 }}
+        />
+      ))}
+      <rect
+        x={last.x - fontPadding}
+        y={last.y - fontSize - fontPadding}
+        width={50}
+        height={fontSize + fontPadding * 2}
+        fill="#ffffff"
+      />
+      <text x={last.x} y={last.y} fill={color} fontSize={fontSize}>
         {`${length * 5}ft`}
       </text>
     </>
