@@ -17,6 +17,9 @@ import {
 import { GRID_SIZE } from "../../shared/constants";
 import {
   byId,
+  EntityCollection,
+  entries,
+  EphermalPlayer,
   RRColor,
   RRMapObject,
   RRMapObjectID,
@@ -122,6 +125,8 @@ export const Map: React.FC<{
     position: RRPoint;
     positionHistory: RRPoint[];
   }>;
+  players: EntityCollection<EphermalPlayer>;
+  onUpdateTokenPath: (path: RRPoint[]) => void;
   onMousePositionChanged: (position: RRPoint) => void;
   toolHandler: MapMouseHandler;
   toolButtonState: ToolButtonState;
@@ -139,6 +144,8 @@ export const Map: React.FC<{
   setTransform,
   transform,
   mousePositions,
+  players,
+  onUpdateTokenPath,
   onMousePositionChanged,
   toolButtonState,
   toolHandler,
@@ -152,9 +159,7 @@ export const Map: React.FC<{
   // TODO can't handle overlapping clicks
   const [mouseAction, setMouseAction] = useState<MouseAction>(MouseAction.NONE);
 
-  const [dragStartObject, setDragStartObject] = useState<RRMapObjectID | null>(
-    null
-  );
+  const [dragStartID, setDragStartID] = useState<RRMapObjectID | null>(null);
   const [_1, setDragStart] = useState<RRPoint>({ x: 0, y: 0 });
   const [_2, dragLastMouseRef, setDragLastMouse] = useRefState<RRPoint>({
     x: 0,
@@ -162,7 +167,6 @@ export const Map: React.FC<{
   });
 
   const [selectionArea, setSelectionArea] = useState<Rectangle | null>(null);
-  const [path, setPath] = useState<RRPoint[]>([]);
 
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -204,8 +208,9 @@ export const Map: React.FC<{
 
   const addPointToPath = useCallback(
     (p: RRPoint) => {
+      const path = byId<EphermalPlayer>(players.entities, myself.id)!.tokenPath;
       const gridPosition = pointScale(snapPointToGrid(p), 1 / GRID_SIZE);
-      if (path.length < 1) return setPath([gridPosition]);
+      if (path.length < 1) return onUpdateTokenPath([gridPosition]);
 
       // to make moving along a diagonal easier, we only count hits that are not on the corners
       const radius = GRID_SIZE / 2;
@@ -233,16 +238,16 @@ export const Map: React.FC<{
           path.length > 1 &&
           pointEquals(path[path.length - 2]!, gridPosition)
         ) {
-          setPath((p) => p.slice(0, p.length - 1));
+          onUpdateTokenPath(path.slice(0, path.length - 1));
         } else {
-          setPath((p) => [
-            ...p,
+          onUpdateTokenPath([
+            ...path,
             ...pointsToReach(path[path.length - 1]!, gridPosition),
           ]);
         }
       }
     },
-    [path]
+    [myself.id, onUpdateTokenPath, players]
   );
 
   const handleMouseMove = useCallback(
@@ -275,7 +280,7 @@ export const Map: React.FC<{
         case MouseAction.MOVE_TOKEN: {
           // TODO consider actual bounding box
           const innerLocal = pointAdd(
-            mapObjects.find((o) => o.id === dragStartObject)!.position,
+            mapObjects.find((o) => o.id === dragStartID)!.position,
             makePoint(GRID_SIZE * 0.5)
           );
           addPointToPath(innerLocal);
@@ -303,7 +308,7 @@ export const Map: React.FC<{
       mapObjects,
       addPointToPath,
       onMoveMapObjects,
-      dragStartObject,
+      dragStartID,
       toolHandler,
       setDragLastMouse,
     ]
@@ -378,8 +383,8 @@ export const Map: React.FC<{
       setMouseAction(MouseAction.NONE);
 
       if (mouseAction === MouseAction.MOVE_TOKEN) {
-        setPath([]);
-        setDragStartObject(null);
+        onUpdateTokenPath([]);
+        setDragStartID(null);
       }
       if (mouseAction === MouseAction.SELECTION_AREA) {
         onSelectObjects(hoveredObjects);
@@ -389,7 +394,14 @@ export const Map: React.FC<{
         toolHandler.onMouseUp(globalToLocal(transform, localCoords(e)));
       }
     },
-    [mouseAction, onSelectObjects, hoveredObjects, toolHandler, transform]
+    [
+      mouseAction,
+      onUpdateTokenPath,
+      onSelectObjects,
+      hoveredObjects,
+      toolHandler,
+      transform,
+    ]
   );
 
   useEffect(() => {
@@ -455,7 +467,7 @@ export const Map: React.FC<{
       (document.activeElement as HTMLElement)?.blur();
       event.preventDefault();
       event.stopPropagation();
-      setDragStartObject(object.id);
+      setDragStartID(object.id);
       handleDragStart(event, object);
     }
   };
@@ -532,12 +544,14 @@ export const Map: React.FC<{
             ),
             null
           )}
-          {mouseAction === MouseAction.MOVE_TOKEN && path.length > 0 && (
-            <MapMeasurePath
-              zoom={transform.a}
-              color={contrastColor}
-              path={path}
-            />
+          {entries(players).map((p) =>
+            p.tokenPath.length > 0 ? (
+              <MapMeasurePath
+                zoom={transform.a}
+                color={contrastColor}
+                path={p.tokenPath}
+              />
+            ) : null
           )}
           {mousePositions.map((each) => (
             <MouseCursor

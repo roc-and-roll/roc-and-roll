@@ -272,6 +272,7 @@ export type EphermalPlayer = {
     positionHistory: RRPoint[];
     lastUpdate: RRTimestamp;
   };
+  tokenPath: RRPoint[];
 };
 
 export type EphermalSyncedState = {

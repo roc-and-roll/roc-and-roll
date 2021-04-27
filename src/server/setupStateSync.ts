@@ -99,6 +99,7 @@ export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
           id: playerId,
           isOnline: true,
           mapMouse: null,
+          tokenPath: [],
         })
       );
     }

@@ -10,6 +10,7 @@ import {
 import {
   byId,
   entries,
+  EphermalPlayer,
   RRColor,
   RRMap,
   RRMapDrawingBase,
@@ -204,6 +205,17 @@ export default function MapContainer({ className }: { className: string }) {
     CURSOR_POSITION_SYNC_HISTORY_STEPS
   );
 
+  const updateTokenPath = (path: RRPoint[]) => {
+    dispatch(
+      ephermalPlayerUpdate({
+        id: myself.id,
+        changes: {
+          tokenPath: path,
+        },
+      })
+    );
+  };
+
   const players = useServerState((state) => state.players);
   const ephermalPlayers = useServerState((state) => state.ephermal.players);
   const mousePositions = entries(ephermalPlayers).flatMap((each) => {
@@ -251,9 +263,11 @@ export default function MapContainer({ className }: { className: string }) {
         // toolbar / tool
         toolButtonState={editStateToToolButtonState()}
         toolHandler={mapMouseHandler}
-        // mouse position sync
+        // mouse position and token path sync
         onMousePositionChanged={sendMousePositionToServer}
         mousePositions={mousePositions}
+        players={ephermalPlayers}
+        onUpdateTokenPath={updateTokenPath}
         // zoom and position
         transform={transform}
         setTransform={setTransform}
