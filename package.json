@@ -129,7 +129,23 @@
     "setupFiles": [],
     "globals": {
       "ts-jest": {
-        "tsconfig": "tsconfig.json"
+        "tsconfig": "tsconfig.json",
+        "babelConfig": {
+          "presets": [
+            [
+              "@babel/preset-env",
+              {
+                "useBuiltIns": "entry",
+                "corejs": 3,
+                "targets": {
+                  "node": 14
+                }
+              }
+            ],
+            "@babel/preset-react",
+            "@babel/preset-typescript"
+          ]
+        }
       }
     },
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
