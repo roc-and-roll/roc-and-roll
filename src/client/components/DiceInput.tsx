@@ -12,30 +12,34 @@ export function DiceInput() {
   const dispatch = useServerDispatch();
 
   const doRoll = () => {
-    const regex = /(^| *[+-] *)(?:(\d*)d(\d+)|(\d+))/g;
-    const dice = [...text.matchAll(regex)].map((array): RRDice | RRModifier => {
-      const negated = array[1]?.trim() === "-";
-      if (array[2] !== undefined && array[3] !== undefined) {
-        // die
-        const faces = parseInt(array[3]);
-        const count = array[2] === "" ? 1 : parseInt(array[2]);
-        return roll({
-          count,
-          faces,
-          modified: "none",
-          negated,
-        });
-      } else if (array[4]) {
-        // mod
-        const modifier = parseInt(array[4]) * (negated ? -1 : 1);
-        return {
-          type: "modifier",
-          damageType: null,
-          modifier,
-        };
+    const regex = /(^| *[+-] *)(?:(\d*)(d|a|i)(\d+)|(\d+))/g;
+    const dice = [...text.matchAll(regex)].map(
+      ([_, sign, diceCount, die, dieFaces, mod]): RRDice | RRModifier => {
+        const negated = sign?.trim() === "-";
+        if (diceCount !== undefined && dieFaces !== undefined) {
+          // die
+          const faces = parseInt(dieFaces);
+          const count =
+            diceCount === "" ? (die === "d" ? 1 : 2) : parseInt(diceCount);
+          return roll({
+            count,
+            faces,
+            modified:
+              die === "a" ? "advantage" : die === "i" ? "disadvantage" : "none",
+            negated,
+          });
+        } else if (mod) {
+          // mod
+          const modifier = parseInt(mod) * (negated ? -1 : 1);
+          return {
+            type: "modifier",
+            damageType: null,
+            modifier,
+          };
+        }
+        throw new Error();
       }
-      throw new Error();
-    });
+    );
 
     if (dice.length) {
       dispatch(

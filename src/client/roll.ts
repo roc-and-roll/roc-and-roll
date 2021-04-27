@@ -83,12 +83,16 @@ export function diceResultString(logEntry: RRLogEntryDiceRoll) {
       const prefix = part.negated ? "-" : "";
       if (part.type === "dice") {
         if (part.diceResults.length === 1) {
-          return `${prefix}${part.diceResults[0]!}`;
+          return `${prefix}${part.diceResults[0]!} (d${part.faces})`;
         }
         if (part.modified === "none") {
-          return `${prefix}${part.diceResults.join(" + ")}`;
+          return `${prefix}${part.diceResults
+            .map((r) => `${r} (d${part.faces})`)
+            .join(" + ")}`;
         }
-        return `${prefix}(${part.diceResults.join(", ")})`;
+        return `${prefix}(${part.diceResults
+          .map((r) => `${r} (d${part.faces})`)
+          .join(", ")})`;
       }
       assertNever(part);
     })
