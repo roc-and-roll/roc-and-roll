@@ -15,7 +15,8 @@
     "build:client": "webpack --config webpack.client.js --env production",
     "build:server": "webpack --config webpack.server.js --env production",
     "analyze-bundle:client": "webpack --config webpack.client.js --env production --profile --json dist/client/stats.json && yarn webpack-bundle-analyzer dist/client/stats.json",
-    "start": "nodemon --watch dist/server.roc-and-roll.js dist/server.roc-and-roll.js"
+    "start": "nodemon --watch dist/server.roc-and-roll.js dist/server.roc-and-roll.js",
+    "postinstall": "husky install"
   },
   "dependencies": {
     "@react-three/fiber": "^6.0.16",
@@ -95,7 +96,7 @@
     "git-revision-webpack-plugin": "^3.0.6",
     "html-webpack-plugin": "^5.3.1",
     "html-webpack-tags-plugin": "^3.0.1",
-    "husky": "^4.3.8",
+    "husky": "^6.0.0",
     "jest": "^26.6.3",
     "lint-staged": "^10.5.4",
     "mini-css-extract-plugin": "^1.5.0",
@@ -164,14 +165,9 @@
       "<rootDir>/src"
     ]
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "lint-staged": {
-    "{src}/**/*.{js,jsx,ts,tsx,json,css,scss,md,html}": [
-      "yarn run format"
+    "src/**/*.{js,jsx,ts,tsx,json,css,scss,md,html}": [
+      "eslint --fix"
     ]
   },
   "engines": {
