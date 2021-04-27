@@ -5,6 +5,7 @@ import {
   mapObjectAdd,
   mapObjectRemove,
   mapObjectUpdate,
+  tokenUpdate,
 } from "../../shared/actions";
 import {
   byId,
@@ -17,6 +18,7 @@ import {
   RRPlayer,
   RRPoint,
   RRToken,
+  RRTokenID,
 } from "../../shared/state";
 import { useMyself } from "../myself";
 import {
@@ -277,6 +279,9 @@ export default function MapContainer({ className }: { className: string }) {
               });
             })
           );
+        }}
+        onSetHP={(tokenId: RRTokenID, hp: number) => {
+          dispatch(tokenUpdate({ id: tokenId, changes: { hp } }));
         }}
         // misc
         handleKeyDown={handleKeyDown}

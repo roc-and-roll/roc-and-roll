@@ -24,6 +24,7 @@ import {
   RRPlayerID,
   RRPoint,
   RRToken,
+  RRTokenID,
   RRTokenOnMap,
   TokensSyncedState,
 } from "../../shared/state";
@@ -110,6 +111,7 @@ export const Map: React.FC<{
   setTransform: React.Dispatch<React.SetStateAction<Matrix>>;
   onMoveMapObjects: (dx: number, dy: number) => void;
   onSelectObjects: (ids: RRMapObjectID[]) => void;
+  onSetHP: (tokenId: RRTokenID, hp: number) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
   mousePositions: Array<{
     playerId: RRPlayerID;
@@ -128,6 +130,7 @@ export const Map: React.FC<{
   backgroundColor,
   selectedObjects,
   onSelectObjects,
+  onSetHP,
   handleKeyDown,
   onMoveMapObjects,
   tokens,
@@ -447,6 +450,7 @@ export const Map: React.FC<{
                     hoveredObjects.includes(t.id) ||
                     selectedObjects.includes(t.id)
                   }
+                  setHP={(hp) => onSetHP(token.id, hp)}
                   contrastColor={contrastColor}
                 />
               );
@@ -668,6 +672,76 @@ function MapMeasureBar({
   );
 }
 
+function HPInlineEdit({
+  hp,
+  setHP,
+}: {
+  hp: number;
+  setHP: (hp: number) => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [localHP, setLocalHP] = useState(hp.toString());
+
+  const updateHP = () => {
+    const matches = /^([+-]|)(\d+)$/.exec(localHP);
+    if (!matches || matches.length !== 3) {
+      return false;
+    }
+
+    const prefix = matches[1]!;
+    const number = parseInt(matches[2]!);
+
+    if (prefix === "") {
+      setHP(number);
+    } else if (prefix === "-") {
+      setHP(hp - number);
+    } else if (prefix === "+") {
+      setHP(hp + number);
+    } else {
+      throw new Error("Unexpected preix");
+    }
+
+    return true;
+  };
+
+  // if HP changes from the outside, update the input field with the new HP
+  useEffect(() => {
+    setLocalHP(hp.toString());
+  }, [hp]);
+
+  return (
+    <input
+      ref={ref}
+      className="hp-inline-edit"
+      type="text"
+      value={localHP}
+      onChange={(e) => setLocalHP(e.target.value)}
+      // Avoid bubbling up the events that are also subscribed to by the <Map>
+      // component, so that they are not preventDefaulted.
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        e.stopPropagation();
+
+        if (e.key === "Enter") {
+          if (updateHP()) {
+            ref.current?.blur();
+          } else {
+            // The user entered garbage, ignore the event.
+          }
+        }
+      }}
+      onFocus={() => ref.current?.select()}
+      onBlur={() => {
+        if (!updateHP()) {
+          // If the user entered garbage, replace the HP with the correct value
+          setLocalHP(hp.toString());
+        }
+      }}
+    />
+  );
+}
+
 function MapToken({
   token,
   x,
@@ -677,6 +751,7 @@ function MapToken({
   zoom,
   contrastColor,
   auraArea,
+  setHP,
 }: {
   token: RRToken;
   x: number;
@@ -686,6 +761,7 @@ function MapToken({
   onStartMove: (e: React.MouseEvent) => void;
   contrastColor: string;
   auraArea: SVGGElement | null;
+  setHP: (hp: number) => void;
 }) {
   const myself = useMyself();
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -769,15 +845,33 @@ function MapToken({
             fill="transparent"
             roughness={1}
           />
+          {/*
+            Uncomment this text when making changes to font sizes or text
+            contents, so that you can re-align the hp and max hp to be perfectly
+            centered.
+            <RoughText
+              x={tokenSize / 2}
+              y={-1}
+              width={tokenSize}
+              textAnchor="middle"
+              fontWeight="bold"
+              fontSize={14}
+            >
+              {token.hp}&thinsp;/&thinsp;{token.maxHP}
+            </RoughText>
+          */}
+          <foreignObject x={0} y={2} width={tokenSize / 2 - 4} height={14}>
+            <HPInlineEdit hp={token.hp} setHP={setHP} />
+          </foreignObject>
           <RoughText
-            x={tokenSize / 2}
-            y={-2}
+            x={tokenSize / 2 - 3}
+            y={-1}
             width={tokenSize}
-            textAnchor="middle"
             fontWeight="bold"
-            fontSize={16}
+            fontSize={14}
+            style={{ cursor: "default" }}
           >
-            {token.hp} / {token.maxHP}
+            /&thinsp;{token.maxHP}
           </RoughText>
         </g>
       )}

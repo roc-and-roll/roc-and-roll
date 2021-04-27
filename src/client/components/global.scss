@@ -332,3 +332,20 @@ $gmAreaColor: #ab62c0;
 .rough-text {
   font-family: $font-family-handwritten;
 }
+
+.hp-inline-edit {
+  @extend .rough-text;
+  font-weight: bold;
+  font-size: 14px;
+
+  display: block;
+  width: 100%;
+  height: 14px;
+  padding: 0 2px;
+
+  color: black;
+  background: transparent;
+
+  text-align: right;
+  border: none;
+}

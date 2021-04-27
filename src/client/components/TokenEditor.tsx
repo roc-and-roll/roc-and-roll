@@ -124,6 +124,12 @@ export function TokenEditor({
             onChange={(e) => setHP(e.target.value)}
           />
         </label>
+        <div>
+          <small>
+            you can also edit hp by clicking on the hp in the healthbar of your
+            token on the map
+          </small>
+        </div>
       </div>
       <div>
         <label>
