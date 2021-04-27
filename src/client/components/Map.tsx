@@ -152,6 +152,9 @@ export const Map: React.FC<{
   // TODO can't handle overlapping clicks
   const [mouseAction, setMouseAction] = useState<MouseAction>(MouseAction.NONE);
 
+  const [dragStartObject, setDragStartObject] = useState<RRMapObjectID | null>(
+    null
+  );
   const [_1, setDragStart] = useState<RRPoint>({ x: 0, y: 0 });
   const [_2, dragLastMouseRef, setDragLastMouse] = useRefState<RRPoint>({
     x: 0,
@@ -270,7 +273,11 @@ export const Map: React.FC<{
           break;
         }
         case MouseAction.MOVE_TOKEN: {
-          const innerLocal = globalToLocal(transform, { x, y });
+          // TODO consider actual bounding box
+          const innerLocal = pointAdd(
+            mapObjects.find((o) => o.id === dragStartObject)!.position,
+            makePoint(GRID_SIZE * 0.5)
+          );
           addPointToPath(innerLocal);
           onMoveMapObjects(
             frameDelta.x / transform.a,
@@ -293,8 +300,10 @@ export const Map: React.FC<{
       mouseAction,
       setTransform,
       transform,
+      mapObjects,
       addPointToPath,
       onMoveMapObjects,
+      dragStartObject,
       toolHandler,
       setDragLastMouse,
     ]
@@ -370,6 +379,7 @@ export const Map: React.FC<{
 
       if (mouseAction === MouseAction.MOVE_TOKEN) {
         setPath([]);
+        setDragStartObject(null);
       }
       if (mouseAction === MouseAction.SELECTION_AREA) {
         onSelectObjects(hoveredObjects);
@@ -445,6 +455,7 @@ export const Map: React.FC<{
       (document.activeElement as HTMLElement)?.blur();
       event.preventDefault();
       event.stopPropagation();
+      setDragStartObject(object.id);
       handleDragStart(event, object);
     }
   };
