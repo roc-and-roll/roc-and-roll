@@ -32,8 +32,6 @@ import {
   CURSOR_POSITION_SYNC_HISTORY_STEPS,
   globalToLocal,
   Map,
-  Point,
-  snapPointToGrid,
 } from "./Map";
 import composeRefs from "@seznam/compose-react-refs";
 import { identity, Matrix } from "transformation-matrix";
@@ -44,6 +42,7 @@ import { useSettings } from "../settings";
 import { useMapSelection } from "../mapSelection";
 import produce, { Draft } from "immer";
 import { askAndUploadFiles } from "../files";
+import { pointEquals, pointSubtract, snapPointToGrid } from "../point";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -133,7 +132,7 @@ export default function MapContainer({ className }: { className: string }) {
   );
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    function move(positionUpdater: (position: Point) => Point) {
+    function move(positionUpdater: (position: RRPoint) => RRPoint) {
       setLocalObjectsOnMap(
         produce((draft) => {
           selectedMapObjectIds.forEach((selectedMapObjectId) => {
@@ -296,13 +295,6 @@ export default function MapContainer({ className }: { className: string }) {
     </div>
   );
 }
-
-const pointSubtract = (p1: RRPoint, p2: RRPoint) => ({
-  x: p1.x - p2.x,
-  y: p1.y - p2.y,
-});
-const pointEquals = (p1: RRPoint, p2: RRPoint) =>
-  p1.x === p2.x && p1.y === p2.y;
 
 export interface MapMouseHandler {
   onMouseDown: (p: RRPoint) => void;

@@ -52,6 +52,16 @@ import { assertNever, clamp } from "../../shared/util";
 import { useMyself } from "../myself";
 import ReactDOM from "react-dom";
 import { useRefState } from "../useRefState";
+import {
+  makePoint,
+  pointAdd,
+  pointDistance,
+  pointEquals,
+  pointScale,
+  pointSign,
+  pointSubtract,
+  snapPointToGrid,
+} from "../point";
 
 type Rectangle = [number, number, number, number];
 
@@ -59,8 +69,6 @@ const PANNING_BUTTON = 2;
 const TOOL_BUTTON = 0;
 
 const ZOOM_SCALE_FACTOR = 0.2;
-
-export type Point = { x: number; y: number };
 
 // sync the cursor position to the server in this interval
 export const CURSOR_POSITION_SYNC_DEBOUNCE = 300;
@@ -81,12 +89,6 @@ function mapObjectIntersectsWithRectangle(
   );
 }
 
-const snapToGrid = (num: number) => Math.floor(num / GRID_SIZE) * GRID_SIZE;
-export const snapPointToGrid = (p: Point) => ({
-  x: snapToGrid(p.x),
-  y: snapToGrid(p.y),
-});
-
 enum MouseAction {
   NONE,
   PAN,
@@ -95,7 +97,7 @@ enum MouseAction {
   USE_TOOL,
 }
 
-export const globalToLocal = (transform: Matrix, p: Point) => {
+export const globalToLocal = (transform: Matrix, p: RRPoint) => {
   const [x, y] = applyToPoint(inverse(transform), [p.x, p.y]);
   return { x, y };
 };
@@ -150,14 +152,14 @@ export const Map: React.FC<{
   // TODO can't handle overlapping clicks
   const [mouseAction, setMouseAction] = useState<MouseAction>(MouseAction.NONE);
 
-  const [dragStart, setDragStart] = useState<RRPoint>({ x: 0, y: 0 });
-  const [
-    dragLastMouse,
-    dragLastMouseRef,
-    setDragLastMouse,
-  ] = useRefState<RRPoint>({ x: 0, y: 0 });
+  const [_1, setDragStart] = useState<RRPoint>({ x: 0, y: 0 });
+  const [_2, dragLastMouseRef, setDragLastMouse] = useRefState<RRPoint>({
+    x: 0,
+    y: 0,
+  });
 
   const [selectionArea, setSelectionArea] = useState<Rectangle | null>(null);
+  const [path, setPath] = useState<RRPoint[]>([]);
 
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -197,6 +199,49 @@ export const Map: React.FC<{
     [mouseAction, setTransform]
   );
 
+  const addPointToPath = useCallback(
+    (p: RRPoint) => {
+      const gridPosition = pointScale(snapPointToGrid(p), 1 / GRID_SIZE);
+      if (path.length < 1) return setPath([gridPosition]);
+
+      // to make moving along a diagonal easier, we only count hits that are not on the corners
+      const radius = GRID_SIZE / 2;
+      const isInCenter =
+        pointDistance(
+          pointScale(pointAdd(gridPosition, makePoint(0.5)), GRID_SIZE),
+          p
+        ) < radius;
+
+      const pointsToReach = (from: RRPoint, to: RRPoint) => {
+        const points: RRPoint[] = [];
+        while (!pointEquals(from, to)) {
+          const step = pointSign(pointSubtract(to, from));
+          from = pointAdd(from, step);
+          points.push(from);
+        }
+        return points;
+      };
+
+      if (
+        isInCenter &&
+        (path.length < 1 || !pointEquals(path[path.length - 1]!, gridPosition))
+      ) {
+        if (
+          path.length > 1 &&
+          pointEquals(path[path.length - 2]!, gridPosition)
+        ) {
+          setPath((p) => p.slice(0, p.length - 1));
+        } else {
+          setPath((p) => [
+            ...p,
+            ...pointsToReach(path[path.length - 1]!, gridPosition),
+          ]);
+        }
+      }
+    },
+    [path]
+  );
+
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       const { x, y } = localCoords(e);
@@ -225,6 +270,8 @@ export const Map: React.FC<{
           break;
         }
         case MouseAction.MOVE_TOKEN: {
+          const innerLocal = globalToLocal(transform, { x, y });
+          addPointToPath(innerLocal);
           onMoveMapObjects(
             frameDelta.x / transform.a,
             frameDelta.y / transform.a
@@ -243,12 +290,13 @@ export const Map: React.FC<{
     },
     [
       dragLastMouseRef,
-      setDragLastMouse,
       mouseAction,
       setTransform,
       transform,
+      addPointToPath,
       onMoveMapObjects,
       toolHandler,
+      setDragLastMouse,
     ]
   );
 
@@ -320,6 +368,9 @@ export const Map: React.FC<{
     (e: MouseEvent) => {
       setMouseAction(MouseAction.NONE);
 
+      if (mouseAction === MouseAction.MOVE_TOKEN) {
+        setPath([]);
+      }
       if (mouseAction === MouseAction.SELECTION_AREA) {
         onSelectObjects(hoveredObjects);
         setSelectionArea(null);
@@ -470,12 +521,11 @@ export const Map: React.FC<{
             ),
             null
           )}
-          {mouseAction === MouseAction.MOVE_TOKEN && (
-            <MapMeasureBar
-              from={globalToLocal(transform, dragStart)}
-              to={globalToLocal(transform, dragLastMouse)}
+          {mouseAction === MouseAction.MOVE_TOKEN && path.length > 0 && (
+            <MapMeasurePath
               zoom={transform.a}
               color={contrastColor}
+              path={path}
             />
           )}
           {mousePositions.map((each) => (
@@ -643,14 +693,69 @@ const MouseCursor = React.memo(function MouseCursor(props: {
   );
 });
 
-function MapMeasureBar({
+const overlappingPairsSum = <T extends any>(
+  a: T[],
+  f: (a: T, b: T) => number
+) => {
+  let sum = 0;
+  for (let i = 0; i < a.length - 1; i++) {
+    sum += f(a[i]!, a[i + 1]!);
+  }
+  return sum;
+};
+
+function MapMeasurePath({
+  path,
+  color,
+  zoom,
+}: {
+  path: RRPoint[];
+  color: string;
+  zoom: number;
+}) {
+  const last = pointAdd(pointScale(path[path.length - 1]!, GRID_SIZE), {
+    x: GRID_SIZE * 1.5,
+    y: 0,
+  });
+  const dotSize = 10;
+  const diagonals = overlappingPairsSum(path, (a, b) =>
+    a.x === b.x || a.y === b.y ? 0 : 1
+  );
+  const length = path.length - 1 + Math.floor(diagonals / 2);
+
+  return (
+    <>
+      {path.map((p, i) => {
+        const r = pointSubtract(
+          pointScale(pointAdd(p, makePoint(0.5)), GRID_SIZE),
+          makePoint(dotSize / 2)
+        );
+        return (
+          <rect
+            key={i}
+            width={dotSize}
+            height={dotSize}
+            fill={color}
+            x={r.x}
+            y={r.y}
+          />
+        );
+      })}
+      <text x={last.x} y={last.y} fill={color} fontSize={14 / zoom}>
+        {`${length * 5}ft`}
+      </text>
+    </>
+  );
+}
+
+function _MapMeasureBar({
   from,
   to,
   zoom,
   color,
 }: {
-  from: Point;
-  to: Point;
+  from: RRPoint;
+  to: RRPoint;
   zoom: number;
   color: string;
 }) {
