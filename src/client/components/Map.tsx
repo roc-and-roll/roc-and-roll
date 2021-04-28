@@ -52,7 +52,7 @@ import useRafLoop from "../useRafLoop";
 import { useLatest } from "../state";
 import tinycolor from "tinycolor2";
 import { assertNever, clamp } from "../../shared/util";
-import { useMyMap, useMyself } from "../myself";
+import { useMyself } from "../myself";
 import ReactDOM from "react-dom";
 import { useRefState } from "../useRefState";
 import {
@@ -91,6 +91,25 @@ function mapObjectIntersectsWithRectangle(
     y + h >= o.position.y
   );
 }
+
+const mapObjectCenter = (
+  object: RRMapObject,
+  tokens: EntityCollection<RRToken>
+) => {
+  const size = mapObjectSize(object, tokens);
+  return pointAdd(object.position, pointScale(size, 0.5));
+};
+const mapObjectSize = (
+  object: RRMapObject,
+  tokens: EntityCollection<RRToken>
+) => {
+  let size = makePoint(GRID_SIZE);
+  if (object.type === "token") {
+    const token = byId(tokens.entities, object.tokenId)!;
+    size = pointScale(size, token.scale);
+  }
+  return size;
+};
 
 enum MouseAction {
   NONE,
@@ -348,13 +367,6 @@ export const RRMapView: React.FC<{
     }
   };
 
-  const handleDragStart = (e: React.MouseEvent, mapObject: RRMapObject) => {
-    const local = localCoords(e);
-    setDragStart(local);
-    setDragLastMouse(local);
-    handleStartMoveMapObject(mapObject);
-  };
-
   const withSelectionAreaDo = <T extends any>(
     cb: (x: number, y: number, w: number, h: number) => T,
     otherwise: T
@@ -466,13 +478,43 @@ export const RRMapView: React.FC<{
     event: React.MouseEvent
   ) => {
     if (toolButtonState === "select" && canControlMapObject(object, myself)) {
+      const local = localCoords(event);
+      setDragStart(local);
+
       (document.activeElement as HTMLElement)?.blur();
       event.preventDefault();
       event.stopPropagation();
       setDragStartID(object.id);
-      handleDragStart(event, object);
+      setDragLastMouse(local);
+      handleStartMoveMapObject(object);
     }
   };
+
+  /* FIXME: doesn't actually feel that good. might have to do it only after we really
+            drag and not just select.
+  // we snap tokens to the cursor to make it easier for the user to aim diagonals
+  useEffect(() => {
+    if (dragStartID != null) {
+      const object = mapObjects.find((o) => o.id === dragStartID)!;
+      if (object.type === "token") {
+        const innerLocal = globalToLocal(transform, dragLastMouseRef.current);
+        const delta = pointSubtract(
+          innerLocal,
+          mapObjectCenter(object, tokens)
+        );
+        onMoveMapObjects(delta.x, delta.y);
+      }
+    }
+  }, [
+    dragLastMouseRef,
+    dragStartID,
+    mapObjects,
+    mapObjects.entries,
+    onMoveMapObjects,
+    tokens,
+    transform,
+  ]);
+  */
 
   const [auraArea, setAuraArea] = useState<SVGGElement | null>(null);
   const [healthbarArea, setHealthbarArea] = useState<SVGGElement | null>(null);
@@ -556,6 +598,7 @@ export const RRMapView: React.FC<{
           {entries(players).map((p) =>
             p.tokenPath.length > 0 ? (
               <MapMeasurePath
+                key={"path" + p.id}
                 zoom={transform.a}
                 color={playerColors.get(p.id)!}
                 path={p.tokenPath}
@@ -746,11 +789,11 @@ const overlappingPairsSum = <T extends any>(
 };
 const overlappingPairsMap = <T extends any, U extends any>(
   a: T[],
-  f: (a: T, b: T) => U
+  f: (a: T, b: T, i?: number) => U
 ) => {
   const res: U[] = [];
   for (let i = 0; i < a.length - 1; i++) {
-    res.push(f(a[i]!, a[i + 1]!));
+    res.push(f(a[i]!, a[i + 1]!, i));
   }
   return res;
 };
@@ -786,8 +829,9 @@ function MapMeasurePath({
           <circle key={i} r={dotSize / 2} fill={color} cx={r.x} cy={r.y} />
         );
       })}
-      {overlappingPairsMap(path, (a, b) => (
+      {overlappingPairsMap(path, (a, b, i) => (
         <line
+          key={i}
           x1={centered(a).x}
           y1={centered(a).y}
           x2={centered(b).x}
