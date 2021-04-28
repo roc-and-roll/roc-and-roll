@@ -63,6 +63,17 @@ export function Acknowledgements() {
           </a>{" "}
           by kwahmah_02 <License license={licenses.CC0} />
         </li>
+        <li>
+          up3.mp3 from{" "}
+          <a
+            href="https://freesound.org/s/545373/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            https://freesound.org/s/545373/
+          </a>{" "}
+          by stwime <License license={licenses.CC0} />
+        </li>
       </ul>
     </>
   );
