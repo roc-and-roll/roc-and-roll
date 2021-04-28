@@ -12,7 +12,6 @@ import sharp from "sharp";
 import { clamp } from "../shared/util";
 import { readFile } from "fs/promises";
 import { existsSync } from "fs";
-import { getFilesInDirectoryRecursively } from "./util";
 import { randomColor } from "../shared/colors";
 
 export async function setupWebServer(
@@ -155,16 +154,12 @@ export async function setupWebServer(
   );
 
   // (5) Add end endpoint that generates a random image suitable for a token
-  const icons: string[] = [];
-  for await (const icon of getFilesInDirectoryRecursively(
-    process.env.NODE_ENV === "production"
-      ? path.join(__dirname, "public", "icons")
-      : path.join(__dirname, "..", "src", "public", "icons")
-  )) {
-    if (icon.endsWith(".svg")) {
-      icons.push(icon);
-    }
-  }
+  const tmp = require.context("../third-party/game-icons.net", true, /\.svg$/);
+  const icons = tmp
+    .keys()
+    .map((key) => tmp.resolve(key))
+    .map((id) => (__webpack_require__ as (str: string) => string)(id))
+    .map((each) => path.join(__dirname, each));
 
   app.post("/random-token", async (req, res) => {
     const icon = icons[Math.floor(Math.random() * icons.length)];

@@ -5,7 +5,7 @@ import { useServerState } from "../../state";
 import { Collapsible } from "../Collapsible";
 import { wasSentByMe } from "./privateChatUtil";
 // update acknowledgements if changed
-import newMessageSound from "../../sounds/545373__stwime__up3.mp3";
+import newMessageSound from "../../../third-party/freesound.org/545373__stwime__up3.mp3";
 import { useRRSimpleSound } from "../../sound";
 
 // Import PrivateChats laziy to reduce the bundle size.

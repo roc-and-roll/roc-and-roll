@@ -39,6 +39,13 @@ module.exports = (webpackEnv) => {
     module: {
       rules: [
         {
+          test: /\.svg$/,
+          type: 'asset/resource',
+          generator: {
+            filename: 'svg/[hash][ext][query]'
+          }
+        },
+        {
           test: /\.tsx?$/,
           include: path.resolve('src'),
           use: [
@@ -64,8 +71,8 @@ module.exports = (webpackEnv) => {
         // $ heroku config:set HEROKU=1
         '__VERSION__': JSON.stringify(process.env.HEROKU ? "master" : gitRevisionPlugin.version()),
       }),
-      isEnvProduction && new CleanWebpackPlugin({
-        cleanOnceBeforeBuildPatterns: ["**/*", "!client/**/*", "!client"]
+      new CleanWebpackPlugin({
+        cleanOnceBeforeBuildPatterns: ["**/*", "!client/**/*", "!client"],
       }),
       isEnvProduction && new CopyWebpackPlugin({
         patterns: [{
@@ -78,6 +85,7 @@ module.exports = (webpackEnv) => {
         async: isEnvDevelopment,
       }),
       isEnvDevelopment && new NodemonPlugin({
+        script: './dist/server.roc-and-roll.js',
         // Arguments to pass to the script being watched.
         args: [],
         // Node arguments.
