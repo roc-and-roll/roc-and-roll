@@ -52,7 +52,7 @@ import useRafLoop from "../useRafLoop";
 import { useLatest } from "../state";
 import tinycolor from "tinycolor2";
 import { assertNever, clamp } from "../../shared/util";
-import { useMyself } from "../myself";
+import { useMyMap, useMyself } from "../myself";
 import ReactDOM from "react-dom";
 import { useRefState } from "../useRefState";
 import {
@@ -477,6 +477,11 @@ export const RRMapView: React.FC<{
   const [auraArea, setAuraArea] = useState<SVGGElement | null>(null);
   const [healthbarArea, setHealthbarArea] = useState<SVGGElement | null>(null);
 
+  const mapStyle = {
+    backgroundColor,
+    cursor: toolButtonState === "tool" ? "crosshair" : "inherit",
+  };
+
   return (
     <RoughContextProvider>
       <svg
@@ -484,7 +489,7 @@ export const RRMapView: React.FC<{
         className="map-svg"
         onContextMenu={(e) => e.preventDefault()}
         onMouseDown={handleMouseDown}
-        style={{ backgroundColor }}
+        style={mapStyle}
         onMouseMove={handleMapMouseMove}
       >
         <g transform={toSVG(transform)}>
@@ -499,6 +504,7 @@ export const RRMapView: React.FC<{
                   key={object.id}
                   onStartMove={createHandleStartMoveGameObject(object)}
                   object={object}
+                  canStartMoving={toolButtonState === "select"}
                   selected={
                     hoveredObjects.includes(object.id) ||
                     selectedObjects.includes(object.id)
@@ -520,6 +526,7 @@ export const RRMapView: React.FC<{
                   auraArea={auraArea}
                   healthbarArea={healthbarArea}
                   onStartMove={createHandleStartMoveGameObject(t)}
+                  canStartMoving={toolButtonState === "select"}
                   x={t.position.x}
                   y={t.position.y}
                   zoom={transform.a}
@@ -573,12 +580,15 @@ function MapObjectThatIsNotAToken({
   object,
   onStartMove,
   selected,
+  canStartMoving,
 }: {
   object: Exclude<RRMapObject, RRTokenOnMap>;
   onStartMove: (event: React.MouseEvent) => void;
   selected: boolean;
+  canStartMoving: boolean;
 }) {
   const ref = useLatest(onStartMove);
+  const myself = useMyself();
 
   const handleMouseDown = useCallback(
     (e) => {
@@ -587,9 +597,13 @@ function MapObjectThatIsNotAToken({
     [ref]
   );
 
+  const canControl = canStartMoving && object.playerId === myself.id;
+  const style = canControl ? { cursor: "move" } : {};
+
   const sharedProps = {
     x: object.position.x,
     y: object.position.y,
+    style,
     onMouseDown: handleMouseDown,
     fill: selected
       ? object.color
@@ -908,6 +922,7 @@ function MapToken({
   contrastColor,
   auraArea,
   healthbarArea,
+  canStartMoving,
   setHP,
 }: {
   token: RRToken;
@@ -920,11 +935,15 @@ function MapToken({
   auraArea: SVGGElement | null;
   healthbarArea: SVGGElement | null;
   setHP: (hp: number) => void;
+  canStartMoving: boolean;
 }) {
   const myself = useMyself();
   const handleMouseDown = (e: React.MouseEvent) => {
     onStartMove(e);
   };
+
+  const canControl = canStartMoving && canControlToken(token, myself);
+  const tokenStyle = canControl ? { cursor: "move" } : {};
 
   const tokenSize = GRID_SIZE * token.scale;
   return (
@@ -973,7 +992,7 @@ function MapToken({
           auraArea
         )}
       {healthbarArea &&
-        canControlToken(token, myself) &&
+        canControl &&
         ReactDOM.createPortal(
           <g transform={`translate(${x},${y - 16})`}>
             <RoughRectangle
@@ -1041,6 +1060,7 @@ function MapToken({
           onMouseDown={handleMouseDown}
           x={x}
           y={y}
+          style={tokenStyle}
           width={tokenSize}
           height={tokenSize}
           href={tokenImageUrl(token.image, tokenSize, Math.ceil(zoom))}
@@ -1052,6 +1072,7 @@ function MapToken({
           cy={y + tokenSize / 2}
           r={tokenSize / 2}
           fill="red"
+          style={tokenStyle}
         />
       )}
       {selected && (
@@ -1062,6 +1083,7 @@ function MapToken({
           r={tokenSize / 2 - 2}
           fill="transparent"
           className="selection-area-highlight"
+          style={tokenStyle}
         />
       )}
     </>

@@ -129,7 +129,10 @@ function makeRoughComponent<C extends object>(
   const component = React.memo<
     C &
       PassedThroughOptions &
-      Pick<SVGProps<SVGGElement>, "onMouseDown"> & { x: number; y: number }
+      Pick<SVGProps<SVGGElement>, "onMouseDown" | "style"> & {
+        x: number;
+        y: number;
+      }
   >(
     ({
       fill,
@@ -141,7 +144,7 @@ function makeRoughComponent<C extends object>(
       ...props
     }) => {
       const generator = useContext(RoughContext);
-      const { onMouseDown, x, y, ...generatorProps } = props;
+      const { style, onMouseDown, x, y, ...generatorProps } = props;
       const realSeed = useMemo(
         // seed must not be float for some reason.
         () =>
@@ -188,6 +191,7 @@ function makeRoughComponent<C extends object>(
           x={x}
           y={y}
           onMouseDown={onMouseDown}
+          style={style}
         />
       );
     }
