@@ -32,7 +32,7 @@ import {
 } from "../../../shared/state";
 import { canControlMapObject, canViewTokenOnMap } from "../../permissions";
 import { ToolButtonState } from "./MapContainer";
-import { RoughContextProvider } from "../rough";
+import { RoughContextProvider, RoughRectangle } from "../rough";
 import tinycolor from "tinycolor2";
 import {
   makePoint,
@@ -49,6 +49,7 @@ import { MouseCursor } from "./MouseCursor";
 import { MapMeasurePath } from "./MapMeasurePath";
 import { MapObjectThatIsNotAToken } from "./MapObjectThatIsNotAToken";
 import { MapMouseHandler } from "./CreateMapMouseHandler";
+import { MapGrid } from "./MapGrid";
 
 type Rectangle = [number, number, number, number];
 
@@ -80,7 +81,7 @@ enum MouseAction {
   NONE,
   PAN,
   SELECTION_AREA,
-  MOVE_TOKEN,
+  MOVE_MAP_OBJECT,
   USE_TOOL,
 }
 
@@ -256,7 +257,7 @@ export const RRMapView: React.FC<{
           );
           break;
         }
-        case MouseAction.MOVE_TOKEN: {
+        case MouseAction.MOVE_MAP_OBJECT: {
           // TODO consider actual bounding box
           const innerLocal = pointAdd(
             mapObjects.find((o) => o.id === dragStartID)!.position,
@@ -349,7 +350,7 @@ export const RRMapView: React.FC<{
     (e: MouseEvent) => {
       setMouseAction(MouseAction.NONE);
 
-      if (mouseAction === MouseAction.MOVE_TOKEN) {
+      if (mouseAction === MouseAction.MOVE_MAP_OBJECT) {
         onUpdateTokenPath([]);
         setDragStartID(null);
       }
@@ -385,13 +386,6 @@ export const RRMapView: React.FC<{
     };
   }, [handleMouseMove, handleWheel, handleMouseUp, handleKeyDown]);
 
-  const handleStartMoveMapObject = (t: RRMapObject) => {
-    if (!selectedObjects.includes(t.id)) {
-      onSelectObjects([t.id]);
-    }
-    setMouseAction(MouseAction.MOVE_TOKEN);
-  };
-
   const handleMapMouseMove = useCallback(
     (e: React.MouseEvent<SVGSVGElement>) => {
       onMousePositionChanged(globalToLocal(transform, localCoords(e)));
@@ -399,48 +393,24 @@ export const RRMapView: React.FC<{
     [onMousePositionChanged, transform]
   );
 
-  const grid = gridEnabled ? (
-    <>
-      <defs>
-        <pattern
-          id="grid"
-          width={GRID_SIZE}
-          height={GRID_SIZE}
-          patternUnits="userSpaceOnUse"
-        >
-          <path
-            d={`M ${GRID_SIZE} 0 L 0 0 0 ${GRID_SIZE}`}
-            fill="none"
-            stroke="gray"
-            strokeWidth="1"
-          />
-        </pattern>
-      </defs>
+  const handleStartMoveGameObject = useCallback(
+    (object: RRMapObject, event: React.MouseEvent) => {
+      if (toolButtonState === "select" && canControlMapObject(object, myself)) {
+        const local = localCoords(event);
 
-      <rect
-        x={-transform.e / transform.a}
-        y={-transform.f / transform.a}
-        width={`${100 / transform.a}%`}
-        height={`${100 / transform.a}%`}
-        fill="url(#grid)"
-      />
-    </>
-  ) : null;
-
-  const createHandleStartMoveGameObject = (object: RRMapObject) => (
-    event: React.MouseEvent
-  ) => {
-    if (toolButtonState === "select" && canControlMapObject(object, myself)) {
-      const local = localCoords(event);
-
-      (document.activeElement as HTMLElement)?.blur();
-      event.preventDefault();
-      event.stopPropagation();
-      setDragStartID(object.id);
-      dragLastMouseRef.current = local;
-      handleStartMoveMapObject(object);
-    }
-  };
+        (document.activeElement as HTMLElement)?.blur();
+        event.preventDefault();
+        event.stopPropagation();
+        setDragStartID(object.id);
+        dragLastMouseRef.current = local;
+        if (!selectedObjects.includes(object.id)) {
+          onSelectObjects([object.id]);
+        }
+        setMouseAction(MouseAction.MOVE_MAP_OBJECT);
+      }
+    },
+    [myself, onSelectObjects, selectedObjects, toolButtonState]
+  );
 
   /* FIXME: doesn't actually feel that good. might have to do it only after we really
             drag and not just select.
@@ -487,7 +457,7 @@ export const RRMapView: React.FC<{
         onMouseMove={handleMapMouseMove}
       >
         <g transform={toSVG(transform)}>
-          {grid}
+          {gridEnabled && <MapGrid transform={transform} />}
           <g ref={setAuraArea} />
           {mapObjects
             // render images first, so that they always are in the background
@@ -496,7 +466,7 @@ export const RRMapView: React.FC<{
               object.type !== "token" ? (
                 <MapObjectThatIsNotAToken
                   key={object.id}
-                  onStartMove={createHandleStartMoveGameObject(object)}
+                  onStartMove={handleStartMoveGameObject}
                   object={object}
                   canStartMoving={toolButtonState === "select"}
                   selected={
@@ -508,28 +478,27 @@ export const RRMapView: React.FC<{
             )}
           {mapObjects
             .flatMap((o) => (o.type === "token" ? o : []))
-            .map((t) => {
-              const token = byId(tokens.entities, t.tokenId);
+            .map((object) => {
+              const token = byId(tokens.entities, object.tokenId);
               if (!token || !canViewTokenOnMap(token, myself)) {
                 return null;
               }
 
               return (
                 <MapToken
-                  key={t.id}
+                  key={object.id}
+                  token={token}
+                  object={object}
                   auraArea={auraArea}
                   healthbarArea={healthbarArea}
-                  onStartMove={createHandleStartMoveGameObject(t)}
+                  onStartMove={handleStartMoveGameObject}
                   canStartMoving={toolButtonState === "select"}
-                  x={t.position.x}
-                  y={t.position.y}
                   zoom={transform.a}
-                  token={token}
                   selected={
-                    hoveredObjects.includes(t.id) ||
-                    selectedObjects.includes(t.id)
+                    hoveredObjects.includes(object.id) ||
+                    selectedObjects.includes(object.id)
                   }
-                  setHP={(hp) => onSetHP(token.id, hp)}
+                  onSetHP={onSetHP}
                   contrastColor={contrastColor}
                 />
               );
@@ -537,12 +506,13 @@ export const RRMapView: React.FC<{
           <g ref={setHealthbarArea} />
           {withSelectionAreaDo(
             (x, y, w, h) => (
-              <rect
+              <RoughRectangle
                 x={x}
                 y={y}
-                width={w}
-                height={h}
+                w={w}
+                h={h}
                 fill={tinycolor(contrastColor).setAlpha(0.3).toRgbString()}
+                fillStyle="solid"
               />
             ),
             null

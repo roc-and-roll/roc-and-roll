@@ -228,6 +228,31 @@ export default function MapContainer({ className }: { className: string }) {
     transform.a
   );
 
+  const onSetHP = useCallback(
+    (tokenId: RRTokenID, hp: number) => {
+      dispatch(tokenUpdate({ id: tokenId, changes: { hp } }));
+    },
+    [dispatch]
+  );
+  const onMoveMapObjects = useCallback(
+    (d: RRPoint) => {
+      setLocalObjectsOnMap(
+        produce((draft) => {
+          selectedMapObjectIds.forEach((selectedMapObjectId) => {
+            const object = byId<Draft<RRMapObject>>(
+              draft.entities,
+              selectedMapObjectId
+            );
+            if (object) {
+              object.position = pointAdd(object.position, d);
+            }
+          });
+        })
+      );
+    },
+    [selectedMapObjectIds, setLocalObjectsOnMap]
+  );
+
   return (
     <div className={className} ref={dropRef}>
       <MapToolbar map={map} setEditState={setEditState} />
@@ -261,24 +286,8 @@ export default function MapContainer({ className }: { className: string }) {
         mapObjects={entries(localMapObjects)}
         selectedObjects={selectedMapObjectIds}
         onSelectObjects={setSelectedMapObjectIds}
-        onMoveMapObjects={(d: RRPoint) => {
-          setLocalObjectsOnMap(
-            produce((draft) => {
-              selectedMapObjectIds.forEach((selectedMapObjectId) => {
-                const object = byId<Draft<RRMapObject>>(
-                  draft.entities,
-                  selectedMapObjectId
-                );
-                if (object) {
-                  object.position = pointAdd(object.position, d);
-                }
-              });
-            })
-          );
-        }}
-        onSetHP={(tokenId: RRTokenID, hp: number) => {
-          dispatch(tokenUpdate({ id: tokenId, changes: { hp } }));
-        }}
+        onMoveMapObjects={onMoveMapObjects}
+        onSetHP={onSetHP}
         // misc
         handleKeyDown={handleKeyDown}
       />

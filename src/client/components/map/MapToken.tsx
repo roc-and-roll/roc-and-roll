@@ -1,6 +1,13 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { GRID_SIZE } from "../../../shared/constants";
-import { RRToken } from "../../../shared/state";
+import {
+  RRAura,
+  RRMapObject,
+  RRPlayer,
+  RRToken,
+  RRTokenID,
+  RRTokenOnMap,
+} from "../../../shared/state";
 import { tokenImageUrl } from "../../files";
 import { canControlToken } from "../../permissions";
 import { RoughRectangle, RoughText, RoughCircle } from "../rough";
@@ -10,10 +17,20 @@ import { useMyself } from "../../myself";
 import ReactDOM from "react-dom";
 import { HPInlineEdit } from "./HPInlineEdit";
 
-export function MapToken({
+export const MapToken = React.memo<{
+  token: RRToken;
+  object: RRTokenOnMap;
+  zoom: number;
+  selected: boolean;
+  onStartMove: (o: RRMapObject, e: React.MouseEvent) => void;
+  contrastColor: string;
+  auraArea: SVGGElement | null;
+  healthbarArea: SVGGElement | null;
+  onSetHP: (tokenId: RRTokenID, hp: number) => void;
+  canStartMoving: boolean;
+}>(function MapToken({
   token,
-  x,
-  y,
+  object,
   selected,
   onStartMove,
   zoom,
@@ -21,24 +38,21 @@ export function MapToken({
   auraArea,
   healthbarArea,
   canStartMoving,
-  setHP,
-}: {
-  token: RRToken;
-  x: number;
-  y: number;
-  zoom: number;
-  selected: boolean;
-  onStartMove: (e: React.MouseEvent) => void;
-  contrastColor: string;
-  auraArea: SVGGElement | null;
-  healthbarArea: SVGGElement | null;
-  setHP: (hp: number) => void;
-  canStartMoving: boolean;
+  onSetHP,
 }) {
+  const {
+    position: { x, y },
+  } = object;
   const myself = useMyself();
   const handleMouseDown = (e: React.MouseEvent) => {
-    onStartMove(e);
+    onStartMove(object, e);
   };
+  const setHP = useCallback(
+    (hp: number) => {
+      onSetHP(token.id, hp);
+    },
+    [onSetHP, token.id]
+  );
 
   const canControl = canStartMoving && canControlToken(token, myself);
   const tokenStyle = canControl ? { cursor: "move" } : {};
@@ -52,40 +66,16 @@ export function MapToken({
         // interact with objects that would otherwise be beneath the auras
         ReactDOM.createPortal(
           token.auras.map((aura, i) => {
-            if (
-              (aura.visibility === "playerOnly" &&
-                !myself.tokenIds.includes(token.id)) ||
-              (aura.visibility === "playerAndGM" &&
-                !myself.isGM &&
-                !myself.tokenIds.includes(token.id))
-            ) {
-              return null;
-            }
-
-            const size = (aura.size * GRID_SIZE) / 5 + tokenSize / 2;
-            const sharedProps = {
-              key: i,
-              x: x - size + tokenSize / 2,
-              y: y - size + tokenSize / 2,
-              fill: tinycolor(aura.color).setAlpha(0.3).toRgbString(),
-              fillStyle: "solid",
-            };
-            if (aura.shape === "circle") {
-              return (
-                <RoughCircle {...sharedProps} d={size * 2} roughness={1} />
-              );
-            } else if (aura.shape === "square") {
-              return (
-                <RoughRectangle
-                  {...sharedProps}
-                  h={size * 2}
-                  w={size * 2}
-                  roughness={3}
-                />
-              );
-            } else {
-              assertNever(aura.shape);
-            }
+            return (
+              <Aura
+                key={i}
+                token={token}
+                aura={aura}
+                myself={myself}
+                x={x}
+                y={y}
+              />
+            );
           }),
           auraArea
         )}
@@ -93,63 +83,11 @@ export function MapToken({
         canControl &&
         ReactDOM.createPortal(
           <g transform={`translate(${x},${y - 16})`}>
-            <RoughRectangle
-              x={0}
-              y={0}
-              w={tokenSize}
-              h={16}
-              stroke="transparent"
-              fill="white"
-              fillStyle="solid"
-              roughness={1}
+            <Healthbar
+              token={token}
+              setHP={setHP}
+              contrastColor={contrastColor}
             />
-            <RoughRectangle
-              x={0}
-              y={0}
-              w={tokenSize * clamp(0, token.hp / token.maxHP, 1)}
-              h={16}
-              stroke="transparent"
-              fill="#c5d87c"
-              fillStyle="solid"
-              roughness={1}
-            />
-            <RoughRectangle
-              x={0}
-              y={0}
-              w={tokenSize}
-              h={16}
-              stroke={tinycolor(contrastColor).setAlpha(0.5).toRgbString()}
-              fill="transparent"
-              roughness={1}
-            />
-            {/*
-                    Uncomment this text when making changes to font sizes or text
-                    contents, so that you can re-align the hp and max hp to be perfectly
-                    centered.
-                    <RoughText
-                      x={tokenSize / 2}
-                      y={-1}
-                      width={tokenSize}
-                      textAnchor="middle"
-                      fontWeight="bold"
-                      fontSize={14}
-                    >
-                      {token.hp}&thinsp;/&thinsp;{token.maxHP}
-                    </RoughText>
-                  */}
-            <foreignObject x={0} y={2} width={tokenSize / 2 - 4} height={14}>
-              <HPInlineEdit hp={token.hp} setHP={setHP} />
-            </foreignObject>
-            <RoughText
-              x={tokenSize / 2 - 3}
-              y={-1}
-              width={tokenSize}
-              fontWeight="bold"
-              fontSize={14}
-              style={{ cursor: "default" }}
-            >
-              /&thinsp;{token.maxHP}
-            </RoughText>
           </g>,
           healthbarArea
         )}
@@ -184,6 +122,127 @@ export function MapToken({
           style={tokenStyle}
         />
       )}
+    </>
+  );
+});
+
+function Aura({
+  x,
+  y,
+  token,
+  aura,
+  myself,
+}: {
+  x: number;
+  y: number;
+  token: RRToken;
+  aura: RRAura;
+  myself: RRPlayer;
+}) {
+  if (
+    (aura.visibility === "playerOnly" && !myself.tokenIds.includes(token.id)) ||
+    (aura.visibility === "playerAndGM" &&
+      !myself.isGM &&
+      !myself.tokenIds.includes(token.id))
+  ) {
+    return null;
+  }
+
+  const tokenSize = GRID_SIZE * token.scale;
+
+  const size = (aura.size * GRID_SIZE) / 5 + tokenSize / 2;
+  const sharedProps = {
+    x: x - size + tokenSize / 2,
+    y: y - size + tokenSize / 2,
+    fill: tinycolor(aura.color).setAlpha(0.3).toRgbString(),
+    fillStyle: "solid",
+  };
+  if (aura.shape === "circle") {
+    return <RoughCircle {...sharedProps} d={size * 2} roughness={1} />;
+  } else if (aura.shape === "square") {
+    return (
+      <RoughRectangle
+        {...sharedProps}
+        h={size * 2}
+        w={size * 2}
+        roughness={3}
+      />
+    );
+  } else {
+    assertNever(aura.shape);
+  }
+}
+
+function Healthbar({
+  token,
+  contrastColor,
+  setHP,
+}: {
+  token: RRToken;
+  contrastColor: string;
+  setHP: (hp: number) => void;
+}) {
+  const tokenSize = GRID_SIZE * token.scale;
+
+  return (
+    <>
+      <RoughRectangle
+        x={0}
+        y={0}
+        w={tokenSize}
+        h={16}
+        stroke="transparent"
+        fill="white"
+        fillStyle="solid"
+        roughness={1}
+      />
+      <RoughRectangle
+        x={0}
+        y={0}
+        w={tokenSize * clamp(0, token.hp / token.maxHP, 1)}
+        h={16}
+        stroke="transparent"
+        fill="#c5d87c"
+        fillStyle="solid"
+        roughness={1}
+      />
+      <RoughRectangle
+        x={0}
+        y={0}
+        w={tokenSize}
+        h={16}
+        stroke={tinycolor(contrastColor).setAlpha(0.5).toRgbString()}
+        fill="transparent"
+        roughness={1}
+      />
+      {/*
+          Uncomment this text when making changes to font sizes or text
+          contents, so that you can re-align the hp and max hp to be perfectly
+          centered.
+          <RoughText
+            x={tokenSize / 2}
+            y={-1}
+            width={tokenSize}
+            textAnchor="middle"
+            fontWeight="bold"
+            fontSize={14}
+          >
+            {token.hp}&thinsp;/&thinsp;{token.maxHP}
+          </RoughText>
+        */}
+      <foreignObject x={0} y={2} width={tokenSize / 2 - 4} height={14}>
+        <HPInlineEdit hp={token.hp} setHP={setHP} />
+      </foreignObject>
+      <RoughText
+        x={tokenSize / 2 - 3}
+        y={-1}
+        width={tokenSize}
+        fontWeight="bold"
+        fontSize={14}
+        style={{ cursor: "default" }}
+      >
+        /&thinsp;{token.maxHP}
+      </RoughText>
     </>
   );
 }

@@ -190,7 +190,8 @@ function applyStatePatch(
       }
     });
   });
-  console.log("Server -> Client | PATCH_STATE | state = ", patchedState);
+  process.env.NODE_ENV !== "test" &&
+    console.log("Server -> Client | PATCH_STATE | state = ", patchedState);
   return patchedState;
 }
 

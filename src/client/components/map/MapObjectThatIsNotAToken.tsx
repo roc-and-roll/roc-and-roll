@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { GRID_SIZE } from "../../../shared/constants";
 import { RRMapObject, RRTokenOnMap } from "../../../shared/state";
 import { fileUrl } from "../../files";
@@ -14,40 +14,47 @@ import tinycolor from "tinycolor2";
 import { assertNever } from "../../../shared/util";
 import { useMyself } from "../../myself";
 
-export function MapObjectThatIsNotAToken({
+export const MapObjectThatIsNotAToken = React.memo<{
+  object: Exclude<RRMapObject, RRTokenOnMap>;
+  onStartMove: (object: RRMapObject, event: React.MouseEvent) => void;
+  selected: boolean;
+  canStartMoving: boolean;
+}>(function MapObjectThatIsNotAToken({
   object,
   onStartMove,
   selected,
   canStartMoving,
-}: {
-  object: Exclude<RRMapObject, RRTokenOnMap>;
-  onStartMove: (event: React.MouseEvent) => void;
-  selected: boolean;
-  canStartMoving: boolean;
 }) {
-  const ref = useLatest(onStartMove);
   const myself = useMyself();
 
-  const handleMouseDown = useCallback(
+  const canControl = canStartMoving && object.playerId === myself.id;
+  const style = useMemo(() => (canControl ? { cursor: "move" } : {}), [
+    canControl,
+  ]);
+
+  const strokeLineDash = useMemo(
+    () => (selected ? [GRID_SIZE / 10, GRID_SIZE / 10] : undefined),
+    [selected]
+  );
+
+  const ref = useLatest({ object, onStartMove });
+  const onMouseDown = useCallback(
     (e) => {
-      ref.current(e);
+      ref.current.onStartMove(ref.current.object, e);
     },
     [ref]
   );
-
-  const canControl = canStartMoving && object.playerId === myself.id;
-  const style = canControl ? { cursor: "move" } : {};
 
   const sharedProps = {
     x: object.position.x,
     y: object.position.y,
     style,
-    onMouseDown: handleMouseDown,
+    onMouseDown,
     fill: selected
       ? object.color
       : tinycolor(object.color).setAlpha(0.3).toRgbString(),
     stroke: object.color,
-    strokeLineDash: selected ? [GRID_SIZE / 10, GRID_SIZE / 10] : undefined,
+    strokeLineDash,
   };
 
   switch (object.type) {
@@ -90,4 +97,4 @@ export function MapObjectThatIsNotAToken({
     default:
       assertNever(object);
   }
-}
+});
