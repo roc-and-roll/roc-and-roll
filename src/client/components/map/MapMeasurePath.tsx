@@ -1,7 +1,9 @@
 import React from "react";
+import tinycolor from "tinycolor2";
 import { GRID_SIZE } from "../../../shared/constants";
 import { RRPoint } from "../../../shared/state";
-import { makePoint, pointAdd, pointScale } from "../../point";
+import { makePoint, pointAdd, pointScale, pointSubtract } from "../../point";
+import { RoughLine, RoughText } from "../rough";
 
 const overlappingPairsSum = <T extends any>(
   a: T[],
@@ -27,26 +29,39 @@ const overlappingPairsMap = <T extends any, U extends any>(
 export function MapMeasurePath({
   path,
   color,
+  mapBackgroundColor,
   zoom,
 }: {
   path: RRPoint[];
   color: string;
+  mapBackgroundColor: string;
   zoom: number;
 }) {
   const last = pointAdd(pointScale(path[path.length - 1]!, GRID_SIZE), {
     x: GRID_SIZE * 1.5,
-    y: 0,
+    y: GRID_SIZE * 0.5,
   });
   const dotSize = 10;
   const diagonals = overlappingPairsSum(path, (a, b) =>
     a.x === b.x || a.y === b.y ? 0 : 1
   );
   const length = path.length - 1 + Math.floor(diagonals / 2);
-  const fontSize = 14 / zoom;
-  const fontPadding = 5;
 
   const centered = (p: RRPoint) =>
     pointScale(pointAdd(p, makePoint(0.5)), GRID_SIZE);
+
+  const pathContrastColor = tinycolor
+    .mostReadable(color, ["#fff", "#000"])
+    .toRgbString();
+  const mapContrastColor = tinycolor
+    .mostReadable(mapBackgroundColor, ["#fff", "#000"])
+    .toRgbString();
+
+  const FONT_SIZE = 14;
+  const PADDING = 5;
+  const FEET_BOX_WIDTH = 50;
+  const FEET_BOX_HEIGHT = FONT_SIZE + PADDING * 2;
+
   return (
     <>
       {path.map((p, i) => {
@@ -55,27 +70,44 @@ export function MapMeasurePath({
           <circle key={i} r={dotSize / 2} fill={color} cx={r.x} cy={r.y} />
         );
       })}
-      {overlappingPairsMap(path, (a, b, i) => (
-        <line
-          key={i}
-          x1={centered(a).x}
-          y1={centered(a).y}
-          x2={centered(b).x}
-          y2={centered(b).y}
-          stroke={color}
-          style={{ strokeWidth: 3 }}
+      {overlappingPairsMap(path, (a, b, i) => {
+        const start = centered(a);
+        const end = centered(b);
+        return (
+          <RoughLine
+            key={i}
+            x={start.x}
+            y={start.y}
+            w={pointSubtract(end, start).x}
+            h={pointSubtract(end, start).y}
+            stroke={color}
+          />
+        );
+      })}
+      <g
+        transform={`translate(${last.x},${
+          last.y - FEET_BOX_HEIGHT / 2 / zoom
+        }) scale(${1 / zoom})`}
+      >
+        <rect
+          x={0}
+          y={0}
+          width={FEET_BOX_WIDTH}
+          height={FONT_SIZE + PADDING * 2}
+          fill={pathContrastColor}
+          stroke={mapContrastColor}
         />
-      ))}
-      <rect
-        x={last.x - fontPadding}
-        y={last.y - fontSize - fontPadding}
-        width={50}
-        height={fontSize + fontPadding * 2}
-        fill="#ffffff"
-      />
-      <text x={last.x} y={last.y} fill={color} fontSize={fontSize}>
-        {`${length * 5}ft`}
-      </text>
+        <RoughText
+          x={FEET_BOX_WIDTH / 2}
+          y={PADDING}
+          fill={color}
+          fontSize={FONT_SIZE}
+          fontWeight="bold"
+          textAnchor="middle"
+        >
+          {length * 5}&thinsp;ft
+        </RoughText>
+      </g>
     </>
   );
 }

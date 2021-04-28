@@ -9,6 +9,8 @@ export function About() {
           href={`https://github.com/cmfcmf/roc-and-roll/commit/${encodeURIComponent(
             __VERSION__
           )}`}
+          target="_blank"
+          rel="noreferrer"
         >
           {__VERSION__}
         </a>

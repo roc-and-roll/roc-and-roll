@@ -34,7 +34,6 @@ import { canControlMapObject, canViewTokenOnMap } from "../../permissions";
 import { ToolButtonState } from "./MapContainer";
 import { RoughContextProvider } from "../rough";
 import tinycolor from "tinycolor2";
-import { useRefState } from "../../useRefState";
 import {
   makePoint,
   pointAdd,
@@ -100,7 +99,7 @@ export const RRMapView: React.FC<{
   selectedObjects: RRMapObjectID[];
   transform: Matrix;
   setTransform: React.Dispatch<React.SetStateAction<Matrix>>;
-  onMoveMapObjects: (dx: number, dy: number) => void;
+  onMoveMapObjects: (d: RRPoint) => void;
   onSelectObjects: (ids: RRMapObjectID[]) => void;
   onSetHP: (tokenId: RRTokenID, hp: number) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
@@ -141,8 +140,7 @@ export const RRMapView: React.FC<{
   const [mouseAction, setMouseAction] = useState<MouseAction>(MouseAction.NONE);
 
   const [dragStartID, setDragStartID] = useState<RRMapObjectID | null>(null);
-  const [_1, setDragStart] = useState<RRPoint>({ x: 0, y: 0 });
-  const [_2, dragLastMouseRef, setDragLastMouse] = useRefState<RRPoint>({
+  const dragLastMouseRef = useRef<RRPoint>({
     x: 0,
     y: 0,
   });
@@ -265,10 +263,7 @@ export const RRMapView: React.FC<{
             makePoint(GRID_SIZE * 0.5)
           );
           addPointToPath(innerLocal);
-          onMoveMapObjects(
-            frameDelta.x / transform.a,
-            frameDelta.y / transform.a
-          );
+          onMoveMapObjects(pointScale(frameDelta, 1 / transform.a));
           break;
         }
         case MouseAction.USE_TOOL: {
@@ -278,7 +273,7 @@ export const RRMapView: React.FC<{
       }
 
       if (mouseAction !== MouseAction.NONE) {
-        setDragLastMouse({ x, y });
+        dragLastMouseRef.current = { x, y };
       }
     },
     [
@@ -291,7 +286,6 @@ export const RRMapView: React.FC<{
       onMoveMapObjects,
       dragStartID,
       toolHandler,
-      setDragLastMouse,
     ]
   );
 
@@ -311,8 +305,7 @@ export const RRMapView: React.FC<{
     setMouseAction(newMouseAction);
 
     const local = localCoords(e);
-    setDragStart(local);
-    setDragLastMouse(local);
+    dragLastMouseRef.current = local;
 
     const innerLocal = globalToLocal(transform, local);
     if (newMouseAction === MouseAction.SELECTION_AREA) {
@@ -439,13 +432,12 @@ export const RRMapView: React.FC<{
   ) => {
     if (toolButtonState === "select" && canControlMapObject(object, myself)) {
       const local = localCoords(event);
-      setDragStart(local);
 
       (document.activeElement as HTMLElement)?.blur();
       event.preventDefault();
       event.stopPropagation();
       setDragStartID(object.id);
-      setDragLastMouse(local);
+      dragLastMouseRef.current = local;
       handleStartMoveMapObject(object);
     }
   };
@@ -565,6 +557,7 @@ export const RRMapView: React.FC<{
                 key={"path" + p.id}
                 zoom={transform.a}
                 color={player.color}
+                mapBackgroundColor={backgroundColor}
                 path={p.tokenPath}
               />
             ) : null;

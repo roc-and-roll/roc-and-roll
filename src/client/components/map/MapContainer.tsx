@@ -37,7 +37,7 @@ import { rrid, timestamp } from "../../../shared/util";
 import { useSettings } from "../../settings";
 import { useMapSelection } from "../../mapSelection";
 import produce, { Draft } from "immer";
-import { snapPointToGrid } from "../../point";
+import { pointAdd, snapPointToGrid } from "../../point";
 import { CreateMapMouseHandler } from "./CreateMapMouseHandler";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
@@ -261,7 +261,7 @@ export default function MapContainer({ className }: { className: string }) {
         mapObjects={entries(localMapObjects)}
         selectedObjects={selectedMapObjectIds}
         onSelectObjects={setSelectedMapObjectIds}
-        onMoveMapObjects={(dx: number, dy: number) => {
+        onMoveMapObjects={(d: RRPoint) => {
           setLocalObjectsOnMap(
             produce((draft) => {
               selectedMapObjectIds.forEach((selectedMapObjectId) => {
@@ -270,10 +270,7 @@ export default function MapContainer({ className }: { className: string }) {
                   selectedMapObjectId
                 );
                 if (object) {
-                  object.position = {
-                    x: object.position.x + dx,
-                    y: object.position.y + dy,
-                  };
+                  object.position = pointAdd(object.position, d);
                 }
               });
             })
