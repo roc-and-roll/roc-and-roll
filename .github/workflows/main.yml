@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
     - name: Increase available file watchers
       # https://stackoverflow.com/a/59522493/2560557
