@@ -349,3 +349,25 @@ $gmAreaColor: #ab62c0;
   text-align: right;
   border: none;
 }
+
+.notifications {
+  $width: 400px;
+  position: fixed;
+  width: $width;
+  left: 50%;
+  margin-left: $width / -2;
+
+  .notification {
+    padding: 1rem;
+    background: #333;
+    margin-top: 0.5rem;
+    border-radius: 3px;
+
+    .player-name {
+      display: inline-block;
+      background: #fff;
+      padding: 0 0.5rem;
+      border-radius: 999px;
+    }
+  }
+}

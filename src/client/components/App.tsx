@@ -9,6 +9,7 @@ import { MyselfContext } from "../myself";
 import { JoinGame } from "./JoinGame";
 import { BottomFloats } from "./BottomFloats";
 import { MapSelectionContext } from "../mapSelection";
+import { Notifications } from "./Notifications";
 
 // Load the map lazily to enable code splitting -> the sidebar will load faster.
 const MapContainer = React.lazy(() => import("./map/MapContainer"));
@@ -37,6 +38,7 @@ export function App() {
               <MapContainer className="app-map" />
             </Suspense>
             <BottomFloats />
+            <Notifications />
           </div>
         ) : (
           <JoinGame setMyPlayerId={setMyPlayerId} />
