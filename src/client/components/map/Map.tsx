@@ -21,6 +21,7 @@ import {
   entries,
   EphermalPlayer,
   RRColor,
+  RRMapID,
   RRMapObject,
   RRMapObjectID,
   RRPlayer,
@@ -92,6 +93,7 @@ export const globalToLocal = (transform: Matrix, p: RRPoint) => {
 export const RRMapView: React.FC<{
   myself: RRPlayer;
   mapObjects: RRMapObject[];
+  mapId: RRMapID;
   gridEnabled: boolean;
   backgroundColor: RRColor;
   tokens: TokensSyncedState;
@@ -102,15 +104,8 @@ export const RRMapView: React.FC<{
   onSelectObjects: (ids: RRMapObjectID[]) => void;
   onSetHP: (tokenId: RRTokenID, hp: number) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
-  mousePositions: Array<{
-    playerId: RRPlayerID;
-    playerName: string;
-    playerColor: RRColor;
-    position: RRPoint;
-    positionHistory: RRPoint[];
-  }>;
   players: EntityCollection<EphermalPlayer>;
-  playerColors: Map<RRPlayerID, string>;
+  playerData: Map<RRPlayerID, { name: string; color: string; mapId: RRMapID }>;
   onUpdateTokenPath: (path: RRPoint[]) => void;
   onMousePositionChanged: (position: RRPoint) => void;
   toolHandler: MapMouseHandler;
@@ -118,6 +113,7 @@ export const RRMapView: React.FC<{
 }> = ({
   myself,
   mapObjects,
+  mapId,
   gridEnabled,
   backgroundColor,
   selectedObjects,
@@ -128,13 +124,12 @@ export const RRMapView: React.FC<{
   tokens,
   setTransform,
   transform,
-  mousePositions,
   players,
   onUpdateTokenPath,
   onMousePositionChanged,
   toolButtonState,
   toolHandler,
-  playerColors,
+  playerData,
 }) => {
   const contrastColor = useMemo(
     () =>
@@ -560,24 +555,43 @@ export const RRMapView: React.FC<{
             ),
             null
           )}
-          {entries(players).map((p) =>
-            p.tokenPath.length > 0 ? (
+          {entries(players).map((p) => {
+            const player = playerData.get(p.id);
+            if (!player || player.mapId !== mapId) {
+              return null;
+            }
+            return p.tokenPath.length > 0 ? (
               <MapMeasurePath
                 key={"path" + p.id}
                 zoom={transform.a}
-                color={playerColors.get(p.id)!}
+                color={player.color}
                 path={p.tokenPath}
               />
-            ) : null
-          )}
-          {mousePositions.map((each) => (
-            <MouseCursor
-              key={each.playerId}
-              zoom={transform.a}
-              contrastColor={contrastColor}
-              {...each}
-            />
-          ))}
+            ) : null;
+          })}
+          {entries(players).map((p) => {
+            if (p.mapMouse === null || p.id === myself.id) {
+              return null;
+            }
+
+            const player = playerData.get(p.id);
+            if (!player || player.mapId !== mapId) {
+              return null;
+            }
+
+            return (
+              <MouseCursor
+                key={p.id}
+                zoom={transform.a}
+                playerId={p.id}
+                contrastColor={contrastColor}
+                playerColor={player.color}
+                playerName={player.name}
+                position={p.mapMouse.position}
+                positionHistory={p.mapMouse.positionHistory}
+              />
+            );
+          })}
         </g>
       </svg>
     </RoughContextProvider>
