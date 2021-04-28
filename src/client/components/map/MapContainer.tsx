@@ -213,23 +213,6 @@ export default function MapContainer({ className }: { className: string }) {
 
   const players = useServerState((state) => state.players);
   const ephermalPlayers = useServerState((state) => state.ephermal.players);
-  const mousePositions = entries(ephermalPlayers).flatMap((each) => {
-    if (each.mapMouse === null || each.id === myself.id) {
-      return [];
-    }
-    const player = byId(players.entities, each.id);
-    if (!player) {
-      return [];
-    }
-
-    return {
-      playerId: each.id,
-      playerName: player.name,
-      playerColor: player.color,
-      position: each.mapMouse.position,
-      positionHistory: each.mapMouse.positionHistory,
-    };
-  });
 
   const editStateToToolButtonState = (): ToolButtonState => {
     if (editState.tool === "move") return "select";
@@ -250,6 +233,7 @@ export default function MapContainer({ className }: { className: string }) {
       <MapToolbar map={map} setEditState={setEditState} />
       <RRMapView
         // map entity data
+        mapId={map.id}
         gridEnabled={map.gridEnabled}
         backgroundColor={map.backgroundColor}
         // other entities
@@ -260,10 +244,16 @@ export default function MapContainer({ className }: { className: string }) {
         toolHandler={mapMouseHandler}
         // mouse position and token path sync
         onMousePositionChanged={sendMousePositionToServer}
-        mousePositions={mousePositions}
         players={ephermalPlayers}
         onUpdateTokenPath={updateTokenPath}
-        playerColors={new Map(entries(players).map((p) => [p.id, p.color]))}
+        playerData={
+          new Map(
+            entries(players).map((p) => [
+              p.id,
+              { name: p.name, color: p.color, mapId: p.currentMap },
+            ])
+          )
+        }
         // zoom and position
         transform={transform}
         setTransform={setTransform}
