@@ -1,5 +1,4 @@
 import React, { Suspense } from "react";
-import { DiceRoller } from "./DiceRoller";
 import { DiceInput } from "./DiceInput";
 import { TokenManager } from "./TokenManager";
 import { Collapsible } from "./Collapsible";
@@ -15,6 +14,10 @@ import { useSettings } from "../settings";
 import { About } from "./About";
 import { useMyself } from "../myself";
 import { Maps } from "./Maps";
+
+// Lazy-load the DiceRoller component so that THREE.js is not part of the
+// initial bundle sent to the client.
+const DiceRoller = React.lazy(() => import("./DiceRoller"));
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);

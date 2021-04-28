@@ -215,7 +215,7 @@ const DiceContainer: React.FC = () => {
   );
 };
 
-export const DiceRoller: React.FC = () => {
+export default function DiceRoller() {
   return (
     <Canvas
       style={{ width: "1500px", height: "400px" }}
@@ -230,4 +230,4 @@ export const DiceRoller: React.FC = () => {
       </Suspense>
     </Canvas>
   );
-};
+}
