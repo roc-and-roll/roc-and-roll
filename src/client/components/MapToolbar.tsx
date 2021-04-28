@@ -7,6 +7,7 @@ import useLocalState from "../useLocalState";
 import { MapEditState, MapSnap } from "./map/MapContainer";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
+import { ColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
 
 export function MapToolbar({
@@ -124,11 +125,7 @@ export function MapToolbar({
             add background image
           </Button>
           <>
-            <input
-              type="color"
-              value={drawColor}
-              onChange={(e) => setDrawColor(e.target.value)}
-            />
+            <ColorInput value={drawColor} onChange={setDrawColor} />
             {drawType !== "freehand" && drawType !== "text" && (
               <label>
                 snap to grid{" "}
@@ -185,12 +182,7 @@ function MapSettings({ map }: { map: RRMap }) {
           </p>
           <p>
             Background color{" "}
-            <input
-              type="color"
-              placeholder="Background color"
-              value={backgroundColor}
-              onChange={(e) => setBackgroundColor(e.target.value)}
-            />
+            <ColorInput value={backgroundColor} onChange={setBackgroundColor} />
           </p>
           <label>
             Grid enabled{" "}
@@ -203,6 +195,10 @@ function MapSettings({ map }: { map: RRMap }) {
         </>
       }
       interactive
+      // Only close the popover when clicking on the button again. This is
+      // needed, because the popover uses a nested popover for the color picker,
+      // which would close this popover when interacting with it.
+      hideOnClick="toggle"
       placement="bottom-end"
       trigger="click"
     >

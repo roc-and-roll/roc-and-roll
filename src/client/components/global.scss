@@ -371,3 +371,42 @@ $gmAreaColor: #ab62c0;
     }
   }
 }
+
+button.color-picker-color {
+  width: 2rem;
+  height: 2rem;
+  padding: 0.25rem;
+
+  div {
+    height: 100%;
+    border: 1px solid black;
+  }
+}
+
+.color-picker {
+  display: inline-block;
+
+  & > button {
+    width: 3rem;
+    height: 1.5rem;
+  }
+}
+
+.color-picker-popover {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  width: 11.99rem;
+
+  input[type="color"] {
+    width: 100%;
+    height: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  button {
+    margin-bottom: 0.5rem;
+    width: 2rem;
+    height: 2rem;
+  }
+}

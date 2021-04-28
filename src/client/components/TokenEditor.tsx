@@ -5,6 +5,7 @@ import { RRToken } from "../../shared/state";
 import { useFileUpload } from "../files";
 import { useServerDispatch, useDebouncedServerUpdate } from "../state";
 import { Button } from "./ui/Button";
+import { ColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
 
 export function TokenEditor({
@@ -179,13 +180,12 @@ export function TokenEditor({
             <div>
               <label>
                 Color{" "}
-                <input
-                  type="color"
+                <ColorInput
                   value={aura.color}
-                  onChange={(e) => {
+                  onChange={(color) => {
                     setAuras([
                       ...auras.slice(0, i),
-                      { ...aura, color: e.target.value },
+                      { ...aura, color },
                       ...auras.slice(i + 1),
                     ]);
                   }}

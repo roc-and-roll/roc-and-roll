@@ -3,6 +3,7 @@ import { playerUpdate } from "../../shared/actions";
 import { useMyself } from "../myself";
 import { useDebouncedServerUpdate, useServerDispatch } from "../state";
 import { Button } from "./ui/Button";
+import { ColorInput } from "./ui/ColorInput";
 
 export function Player({ logout }: { logout: () => void }) {
   const dispatch = useServerDispatch();
@@ -54,12 +55,7 @@ export function Player({ logout }: { logout: () => void }) {
         />
       </p>
       <p>
-        Color:{" "}
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-        />
+        Color: <ColorInput value={color} onChange={setColor} />
       </p>
       <Button onClick={logout}>logout</Button>
     </>

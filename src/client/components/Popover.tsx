@@ -17,6 +17,7 @@ export function Popover({
   | "trigger"
   | "placement"
   | "children"
+  | "hideOnClick"
 > & { children: NonNullable<React.ReactNode> }) {
   return (
     <Suspense fallback={children}>
