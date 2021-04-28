@@ -4,7 +4,7 @@ import { RRMap } from "../../shared/state";
 import { useMyself } from "../myself";
 import { useDebouncedServerUpdate } from "../state";
 import useLocalState from "../useLocalState";
-import { MapEditState, MapSnap } from "./MapContainer";
+import { MapEditState, MapSnap } from "./map/MapContainer";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { Select } from "./ui/Select";

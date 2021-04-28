@@ -6,7 +6,7 @@ import {
   mapObjectRemove,
   mapObjectUpdate,
   tokenUpdate,
-} from "../../shared/actions";
+} from "../../../shared/actions";
 import {
   byId,
   entries,
@@ -19,14 +19,14 @@ import {
   RRPoint,
   RRToken,
   RRTokenID,
-} from "../../shared/state";
-import { useMyself } from "../myself";
+} from "../../../shared/state";
+import { useMyself } from "../../myself";
 import {
   useDebouncedServerUpdate,
   useServerDispatch,
   useServerState,
-} from "../state";
-import { useAggregatedDoubleDebounce } from "../useDebounce";
+} from "../../state";
+import { useAggregatedDoubleDebounce } from "../../useDebounce";
 import {
   CURSOR_POSITION_SYNC_DEBOUNCE,
   CURSOR_POSITION_SYNC_HISTORY_STEPS,
@@ -35,14 +35,14 @@ import {
 } from "./Map";
 import composeRefs from "@seznam/compose-react-refs";
 import { identity, Matrix } from "transformation-matrix";
-import { MapToolbar } from "./MapToolbar";
-import { GRID_SIZE } from "../../shared/constants";
-import { assertNever, rrid, timestamp } from "../../shared/util";
-import { useSettings } from "../settings";
-import { useMapSelection } from "../mapSelection";
+import { MapToolbar } from "../MapToolbar";
+import { GRID_SIZE } from "../../../shared/constants";
+import { assertNever, rrid, timestamp } from "../../../shared/util";
+import { useSettings } from "../../settings";
+import { useMapSelection } from "../../mapSelection";
 import produce, { Draft } from "immer";
-import { askAndUploadFiles } from "../files";
-import { pointEquals, pointSubtract, snapPointToGrid } from "../point";
+import { askAndUploadFiles } from "../../files";
+import { pointEquals, pointSubtract, snapPointToGrid } from "../../point";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 

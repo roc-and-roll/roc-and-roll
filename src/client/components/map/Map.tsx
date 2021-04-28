@@ -14,7 +14,7 @@ import {
   toSVG,
   inverse,
 } from "transformation-matrix";
-import { GRID_SIZE } from "../../shared/constants";
+import { GRID_SIZE } from "../../../shared/constants";
 import {
   byId,
   EntityCollection,
@@ -30,13 +30,13 @@ import {
   RRTokenID,
   RRTokenOnMap,
   TokensSyncedState,
-} from "../../shared/state";
-import { fileUrl, tokenImageUrl } from "../files";
+} from "../../../shared/state";
+import { fileUrl, tokenImageUrl } from "../../files";
 import {
   canControlMapObject,
   canControlToken,
   canViewTokenOnMap,
-} from "../permissions";
+} from "../../permissions";
 import { MapMouseHandler, ToolButtonState } from "./MapContainer";
 import {
   RoughContextProvider,
@@ -47,14 +47,14 @@ import {
   RoughLinearPath,
   RoughPolygon,
   RoughCircle,
-} from "./rough";
-import useRafLoop from "../useRafLoop";
-import { useLatest } from "../state";
+} from "../rough";
+import useRafLoop from "../../useRafLoop";
+import { useLatest } from "../../state";
 import tinycolor from "tinycolor2";
-import { assertNever, clamp } from "../../shared/util";
-import { useMyself } from "../myself";
+import { assertNever, clamp } from "../../../shared/util";
+import { useMyself } from "../../myself";
 import ReactDOM from "react-dom";
-import { useRefState } from "../useRefState";
+import { useRefState } from "../../useRefState";
 import {
   makePoint,
   pointAdd,
@@ -64,7 +64,7 @@ import {
   pointSign,
   pointSubtract,
   snapPointToGrid,
-} from "../point";
+} from "../../point";
 
 type Rectangle = [number, number, number, number];
 

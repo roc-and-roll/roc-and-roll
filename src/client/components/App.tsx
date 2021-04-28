@@ -11,7 +11,7 @@ import { BottomFloats } from "./BottomFloats";
 import { MapSelectionContext } from "../mapSelection";
 
 // Load the map lazily to enable code splitting -> the sidebar will load faster.
-const MapContainer = React.lazy(() => import("./MapContainer"));
+const MapContainer = React.lazy(() => import("./map/MapContainer"));
 
 export function App() {
   const players = useServerState((state) => state.players);
