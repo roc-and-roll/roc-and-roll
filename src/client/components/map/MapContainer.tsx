@@ -40,9 +40,10 @@ import { rrid, timestamp } from "../../../shared/util";
 import { useSettings } from "../../settings";
 import produce, { Draft } from "immer";
 import { pointAdd, snapPointToGrid } from "../../point";
-import { CreateMapMouseHandler } from "./CreateMapMouseHandler";
+import { useMapToolHandler } from "./useMapToolHandler";
 import { useRefState } from "../../useRefState";
 import { atomFamily, atom, useRecoilCallback, RecoilState } from "recoil";
+import { DebugTokenPositions } from "./DebugTokenPositions";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -107,7 +108,14 @@ function useReduxToRecoilBridge<E extends { id: RRID }>(
         set(idsAtom, newIds);
       }
 
-      newIds.forEach((id) => set(familyAtom(id), byId(entities, id)!));
+      newIds.forEach((id) => {
+        const atom = familyAtom(id);
+        const newEntity = byId(entities, id)!;
+        const oldEntity = snapshot.getLoadable(atom).getValue();
+        if (!Object.is(newEntity, oldEntity)) {
+          set(atom, newEntity);
+        }
+      });
     },
     [familyAtom, idsAtom]
   );
@@ -163,8 +171,8 @@ export default function MapContainer() {
   const serverMapObjects = map.objects;
   const [localMapObjects, setLocalObjectsOnMap] = useDebouncedServerUpdate(
     serverMapObjects,
-    useRecoilCallback(({ snapshot }) => (localMapObjects) => {
-      return snapshot
+    useRecoilCallback(({ snapshot }) => (localMapObjects) =>
+      snapshot
         .getLoadable(selectedMapObjectIdsAtom)
         .getValue()
         .flatMap((selectMapObjectId) => {
@@ -179,8 +187,8 @@ export default function MapContainer() {
               position: mapObject.position,
             },
           });
-        });
-    }),
+        })
+    ),
     syncedDebounce.current,
     (start, end, t) =>
       produce(end, (draft) =>
@@ -299,12 +307,7 @@ export default function MapContainer() {
       : // TODO adapt for measure
         "select";
 
-  const mapMouseHandler = CreateMapMouseHandler(
-    myself,
-    map,
-    editState,
-    transform.a
-  );
+  const toolHandler = useMapToolHandler(myself, map, editState, transform.a);
 
   const onSetHP = useCallback(
     (tokenId: RRTokenID, hp: number) => {
@@ -353,20 +356,13 @@ export default function MapContainer() {
         myself={myself}
         // toolbar / tool
         toolButtonState={toolButtonState}
-        toolHandler={mapMouseHandler}
+        toolHandler={toolHandler}
         // mouse position and token path sync
-        tokenPathSyncedDebouncer={syncedDebounce.current}
+        tokenPathDebounce={syncedDebounce.current}
         onMousePositionChanged={sendMousePositionToServer}
-        players={ephermalPlayers}
+        players={players}
+        ephermalPlayers={ephermalPlayers}
         onUpdateTokenPath={updateTokenPath}
-        playerData={
-          new Map(
-            entries(players).map((p) => [
-              p.id,
-              { name: p.name, color: p.color, mapId: p.currentMap },
-            ])
-          )
-        }
         // zoom and position
         transform={transform}
         setTransform={setTransform}
@@ -383,79 +379,6 @@ export default function MapContainer() {
             serverMapObjects={entries(serverMapObjects)}
           />
         )}
-    </div>
-  );
-}
-
-function DebugTokenPositions(props: {
-  localMapObjects: RRMapObject[];
-  serverMapObjects: RRMapObject[];
-}) {
-  const mapObjectIds = [
-    ...new Set([
-      ...props.localMapObjects.map((t) => t.id),
-      ...props.serverMapObjects.map((t) => t.id),
-    ]),
-  ];
-  return (
-    <div
-      style={{
-        position: "absolute",
-        right: 0,
-        top: 0,
-        background: "orange",
-        maxWidth: "100%",
-        overflowY: "auto",
-        maxHeight: "100vh",
-      }}
-    >
-      <h3>Debug: map object positions</h3>
-      <table cellPadding={8}>
-        <thead>
-          <tr>
-            <th>RRMapObjectID</th>
-            <th>Server .position</th>
-            <th>Local .position</th>
-            <th>Diff .position</th>
-          </tr>
-        </thead>
-        <tbody>
-          {mapObjectIds.map((mapObjectId) => {
-            const serverMapObject =
-              props.serverMapObjects.find((each) => each.id === mapObjectId) ??
-              null;
-            const localMapObject =
-              props.localMapObjects.find((each) => each.id === mapObjectId) ??
-              null;
-            return (
-              <tr key={mapObjectId}>
-                <td>{mapObjectId}</td>
-                <td>
-                  x: {serverMapObject?.position.x}
-                  <br />
-                  y: {serverMapObject?.position.y}
-                </td>
-                <td>
-                  x: {localMapObject?.position.x}
-                  <br />
-                  y: {localMapObject?.position.y}
-                </td>
-                <td>
-                  {localMapObject && serverMapObject && (
-                    <>
-                      x:{" "}
-                      {localMapObject.position.x - serverMapObject.position.x}
-                      <br />
-                      y:{" "}
-                      {localMapObject.position.y - serverMapObject.position.y}
-                    </>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
     </div>
   );
 }

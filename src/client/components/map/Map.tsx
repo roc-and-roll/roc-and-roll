@@ -16,6 +16,7 @@ import {
 } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
 import {
+  byId,
   EntityCollection,
   entries,
   EphermalPlayer,
@@ -50,12 +51,12 @@ import {
 } from "../../point";
 import { MouseCursor } from "./MouseCursor";
 import { MapMeasurePath } from "./MapMeasurePath";
-import { MapMouseHandler } from "./CreateMapMouseHandler";
+import { MapMouseHandler } from "./useMapToolHandler";
 import { MapGrid } from "./MapGrid";
 import { MapObjects } from "./MapObjects";
 import { atom, atomFamily, useRecoilCallback } from "recoil";
 import { useRefState } from "../../useRefState";
-import { SyncedDebouncer, useDebounce } from "../../debounce";
+import { Debouncer, useDebounce } from "../../debounce";
 
 type Rectangle = [number, number, number, number];
 
@@ -133,9 +134,9 @@ export const RRMapView: React.FC<{
   onMoveMapObjects: (d: RRPoint) => void;
   onSetHP: (tokenId: RRTokenID, hp: number) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
-  players: EntityCollection<EphermalPlayer>;
-  playerData: Map<RRPlayerID, { name: string; color: string; mapId: RRMapID }>;
-  tokenPathSyncedDebouncer: SyncedDebouncer;
+  players: EntityCollection<RRPlayer>;
+  ephermalPlayers: EntityCollection<EphermalPlayer>;
+  tokenPathDebounce: Debouncer;
   onUpdateTokenPath: (path: RRPoint[]) => void;
   onMousePositionChanged: (position: RRPoint) => void;
   toolHandler: MapMouseHandler;
@@ -151,12 +152,12 @@ export const RRMapView: React.FC<{
   setTransform,
   transform,
   players,
-  tokenPathSyncedDebouncer,
+  ephermalPlayers,
+  tokenPathDebounce,
   onUpdateTokenPath,
   onMousePositionChanged,
   toolButtonState,
   toolHandler,
-  playerData,
 }) => {
   const contrastColor = useMemo(
     () =>
@@ -181,7 +182,7 @@ export const RRMapView: React.FC<{
     useCallback((tokenPath: RRPoint[]) => onUpdateTokenPath(tokenPath), [
       onUpdateTokenPath,
     ]),
-    tokenPathSyncedDebouncer
+    tokenPathDebounce
   );
 
   useEffect(() => {
@@ -557,50 +558,116 @@ export const RRMapView: React.FC<{
             ),
             null
           )}
-          {entries(players).map((p) => {
-            const player = playerData.get(p.id);
-            if (!player || player.mapId !== mapId) {
-              return null;
-            }
-            // use local token path instead of the one from the server for
-            // myself.
-            const theTokenPath = p.id !== myself.id ? p.tokenPath : tokenPath;
-
-            return theTokenPath.length > 0 ? (
-              <MapMeasurePath
-                key={"path" + p.id}
-                zoom={transform.a}
-                color={player.color}
-                mapBackgroundColor={backgroundColor}
-                path={theTokenPath}
-              />
-            ) : null;
-          })}
-          {entries(players).map((p) => {
-            if (p.mapMouse === null || p.id === myself.id) {
-              return null;
-            }
-
-            const player = playerData.get(p.id);
-            if (!player || player.mapId !== mapId) {
-              return null;
-            }
-
-            return (
-              <MouseCursor
-                key={p.id}
-                zoom={transform.a}
-                playerId={p.id}
-                contrastColor={contrastColor}
-                playerColor={player.color}
-                playerName={player.name}
-                position={p.mapMouse.position}
-                positionHistory={p.mapMouse.positionHistory}
-              />
-            );
-          })}
+          <MeasurePaths
+            myId={myself.id}
+            myTokenPath={tokenPath}
+            mapId={mapId}
+            zoom={transform.a}
+            backgroundColor={backgroundColor}
+            players={players}
+            ephermalPlayers={ephermalPlayers}
+          />
+          <MouseCursors
+            myId={myself.id}
+            mapId={mapId}
+            zoom={transform.a}
+            contrastColor={contrastColor}
+            players={players}
+            ephermalPlayers={ephermalPlayers}
+          />
         </g>
       </svg>
     </RoughContextProvider>
   );
 };
+
+function MeasurePaths({
+  myId,
+  myTokenPath,
+  mapId,
+  zoom,
+  backgroundColor,
+  players,
+  ephermalPlayers,
+}: {
+  myId: RRPlayerID;
+  myTokenPath: RRPoint[];
+  mapId: RRMapID;
+  zoom: number;
+  backgroundColor: string;
+  players: EntityCollection<RRPlayer>;
+  ephermalPlayers: EntityCollection<EphermalPlayer>;
+}) {
+  return (
+    <>
+      {entries(ephermalPlayers).map((ephermalPlayer) => {
+        const tokenPath =
+          ephermalPlayer.id !== myId ? ephermalPlayer.tokenPath : myTokenPath;
+        if (tokenPath.length === 0) {
+          return null;
+        }
+
+        const player = byId(players.entities, ephermalPlayer.id);
+        if (!player || player.currentMap !== mapId) {
+          return null;
+        }
+        // use local token path instead of the one from the server for
+        // myself.
+
+        return (
+          <MapMeasurePath
+            key={ephermalPlayer.id}
+            zoom={zoom}
+            color={player.color}
+            mapBackgroundColor={backgroundColor}
+            path={tokenPath}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+function MouseCursors({
+  myId,
+  mapId,
+  zoom,
+  contrastColor,
+  players,
+  ephermalPlayers,
+}: {
+  myId: RRPlayerID;
+  mapId: RRMapID;
+  zoom: number;
+  contrastColor: string;
+  players: EntityCollection<RRPlayer>;
+  ephermalPlayers: EntityCollection<EphermalPlayer>;
+}) {
+  return (
+    <>
+      {entries(ephermalPlayers).map((ephermalPlayer) => {
+        if (ephermalPlayer.mapMouse === null || ephermalPlayer.id === myId) {
+          return null;
+        }
+
+        const player = byId(players.entities, ephermalPlayer.id);
+        if (!player || player.currentMap !== mapId) {
+          return null;
+        }
+
+        return (
+          <MouseCursor
+            key={ephermalPlayer.id}
+            zoom={zoom}
+            playerId={ephermalPlayer.id}
+            contrastColor={contrastColor}
+            playerColor={player.color}
+            playerName={player.name}
+            position={ephermalPlayer.mapMouse.position}
+            positionHistory={ephermalPlayer.mapMouse.positionHistory}
+          />
+        );
+      })}
+    </>
+  );
+}

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import {
   mapObjectAdd,
   mapObjectRemove,
@@ -49,7 +49,7 @@ export function thin(points: ReadonlyArray<RRPoint>, squareSize: number) {
 }
 
 // note: this is not actually a component but we're just tricking the linter >:)
-export function CreateMapMouseHandler(
+export function useMapToolHandler(
   myself: RRPlayer,
   map: RRMap,
   editState: MapEditState,
@@ -57,13 +57,15 @@ export function CreateMapMouseHandler(
 ): MapMouseHandler {
   const dispatch = useServerDispatch();
 
-  const [currentId, setCurrentId] = useState<RRMapObjectID | null>(null);
+  const currentId = useRef<RRMapObjectID | null>(null);
 
   const startMousePositionRef = useRef<RRPoint>({
     x: 0,
     y: 0,
   });
   const pointsRef = useRef<RRPoint[]>([]);
+
+  const toolHandlerRef = useRef<MapMouseHandler>();
 
   if (editState.tool === "draw") {
     const create = (p: RRPoint): RRMapDrawingBase => ({
@@ -76,24 +78,22 @@ export function CreateMapMouseHandler(
 
     switch (editState.type) {
       case "rectangle":
-        return {
+        toolHandlerRef.current = {
           onMouseDown: (p: RRPoint) => {
             startMousePositionRef.current = p;
-            setCurrentId(
-              dispatch(
-                mapObjectAdd(map.id, {
-                  type: "rectangle",
-                  size: { x: 0, y: 0 },
-                  ...create(p),
-                })
-              ).payload.mapObject.id
-            );
+            currentId.current = dispatch(
+              mapObjectAdd(map.id, {
+                type: "rectangle",
+                size: { x: 0, y: 0 },
+                ...create(p),
+              })
+            ).payload.mapObject.id;
           },
           onMouseMove: (p: RRPoint) => {
-            if (currentId) {
+            if (currentId.current) {
               dispatch(
                 mapObjectUpdate(map.id, {
-                  id: currentId,
+                  id: currentId.current,
                   changes: {
                     size: pointSubtract(p, startMousePositionRef.current),
                   },
@@ -102,33 +102,38 @@ export function CreateMapMouseHandler(
             }
           },
           onMouseUp: (p: RRPoint) => {
-            if (currentId && pointEquals(startMousePositionRef.current, p)) {
+            if (
+              currentId.current &&
+              pointEquals(startMousePositionRef.current, p)
+            ) {
               dispatch(
-                mapObjectRemove({ mapId: map.id, mapObjectId: currentId })
+                mapObjectRemove({
+                  mapId: map.id,
+                  mapObjectId: currentId.current,
+                })
               );
             }
-            setCurrentId(null);
+            currentId.current = null;
           },
         };
+        break;
       case "ellipse":
-        return {
+        toolHandlerRef.current = {
           onMouseDown: (p: RRPoint) => {
             startMousePositionRef.current = p;
-            setCurrentId(
-              dispatch(
-                mapObjectAdd(map.id, {
-                  type: "ellipse",
-                  size: { x: 0, y: 0 },
-                  ...create(p),
-                })
-              ).payload.mapObject.id
-            );
+            currentId.current = dispatch(
+              mapObjectAdd(map.id, {
+                type: "ellipse",
+                size: { x: 0, y: 0 },
+                ...create(p),
+              })
+            ).payload.mapObject.id;
           },
           onMouseMove: (p: RRPoint) => {
-            if (currentId) {
+            if (currentId.current) {
               dispatch(
                 mapObjectUpdate(map.id, {
-                  id: currentId,
+                  id: currentId.current,
                   changes: {
                     size: pointSubtract(p, startMousePositionRef.current),
                   },
@@ -137,33 +142,38 @@ export function CreateMapMouseHandler(
             }
           },
           onMouseUp: (p: RRPoint) => {
-            if (currentId && pointEquals(startMousePositionRef.current, p)) {
+            if (
+              currentId.current &&
+              pointEquals(startMousePositionRef.current, p)
+            ) {
               dispatch(
-                mapObjectRemove({ mapId: map.id, mapObjectId: currentId })
+                mapObjectRemove({
+                  mapId: map.id,
+                  mapObjectId: currentId.current,
+                })
               );
             }
-            setCurrentId(null);
+            currentId.current = null;
           },
         };
+        break;
       case "line":
-        return {
+        toolHandlerRef.current = {
           onMouseDown: (p: RRPoint) => {
             startMousePositionRef.current = p;
-            setCurrentId(
-              dispatch(
-                mapObjectAdd(map.id, {
-                  type: "freehand",
-                  points: [{ x: 0, y: 0 }],
-                  ...create(p),
-                })
-              ).payload.mapObject.id
-            );
+            currentId.current = dispatch(
+              mapObjectAdd(map.id, {
+                type: "freehand",
+                points: [{ x: 0, y: 0 }],
+                ...create(p),
+              })
+            ).payload.mapObject.id;
           },
           onMouseMove: (p: RRPoint) => {
-            if (currentId) {
+            if (currentId.current) {
               dispatch(
                 mapObjectUpdate(map.id, {
-                  id: currentId,
+                  id: currentId.current,
                   changes: {
                     points: [pointSubtract(p, startMousePositionRef.current)],
                   },
@@ -172,16 +182,23 @@ export function CreateMapMouseHandler(
             }
           },
           onMouseUp: (p: RRPoint) => {
-            if (currentId && pointEquals(startMousePositionRef.current, p)) {
+            if (
+              currentId.current &&
+              pointEquals(startMousePositionRef.current, p)
+            ) {
               dispatch(
-                mapObjectRemove({ mapId: map.id, mapObjectId: currentId })
+                mapObjectRemove({
+                  mapId: map.id,
+                  mapObjectId: currentId.current,
+                })
               );
             }
-            setCurrentId(null);
+            currentId.current = null;
           },
         };
+        break;
       case "text":
-        return {
+        toolHandlerRef.current = {
           onMouseDown: (p: RRPoint) => {},
           onMouseMove: (p: RRPoint) => {},
           onMouseUp: (p: RRPoint) => {
@@ -189,35 +206,32 @@ export function CreateMapMouseHandler(
             if (text === undefined || text.length === 0) {
               return;
             }
-            setCurrentId(
-              dispatch(
-                mapObjectAdd(map.id, {
-                  type: "text",
-                  text,
-                  ...create(p),
-                })
-              ).payload.mapObject.id
-            );
+            currentId.current = dispatch(
+              mapObjectAdd(map.id, {
+                type: "text",
+                text,
+                ...create(p),
+              })
+            ).payload.mapObject.id;
           },
         };
+        break;
       case "polygon":
       case "freehand":
-        return {
+        toolHandlerRef.current = {
           onMouseDown: (p: RRPoint) => {
             startMousePositionRef.current = p;
             pointsRef.current = [];
-            setCurrentId(
-              dispatch(
-                mapObjectAdd(map.id, {
-                  type: editState.type === "freehand" ? "freehand" : "polygon",
-                  points: [],
-                  ...create(p),
-                })
-              ).payload.mapObject.id
-            );
+            currentId.current = dispatch(
+              mapObjectAdd(map.id, {
+                type: editState.type === "freehand" ? "freehand" : "polygon",
+                points: [],
+                ...create(p),
+              })
+            ).payload.mapObject.id;
           },
           onMouseMove: (p: RRPoint) => {
-            if (currentId) {
+            if (currentId.current) {
               const oldNumPoints = pointsRef.current.length;
               pointsRef.current = thin(
                 [
@@ -230,7 +244,7 @@ export function CreateMapMouseHandler(
               if (oldNumPoints !== pointsRef.current.length) {
                 dispatch(
                   mapObjectUpdate(map.id, {
-                    id: currentId,
+                    id: currentId.current,
                     changes: {
                       points: [...pointsRef.current],
                     },
@@ -240,16 +254,20 @@ export function CreateMapMouseHandler(
             }
           },
           onMouseUp: (p: RRPoint) => {
-            if (currentId && pointsRef.current.length === 0) {
+            if (currentId.current && pointsRef.current.length === 0) {
               dispatch(
-                mapObjectRemove({ mapId: map.id, mapObjectId: currentId })
+                mapObjectRemove({
+                  mapId: map.id,
+                  mapObjectId: currentId.current,
+                })
               );
             }
-            setCurrentId(null);
+            currentId.current = null;
           },
         };
+        break;
       case "image":
-        return {
+        toolHandlerRef.current = {
           onMouseDown: (p: RRPoint) => {},
           onMouseMove: (p: RRPoint) => {},
           onMouseUp: async (p: RRPoint) => {
@@ -291,14 +309,21 @@ export function CreateMapMouseHandler(
             );
           },
         };
+        break;
       default:
         assertNever(editState);
     }
+  } else {
+    toolHandlerRef.current = {
+      onMouseDown: (p: RRPoint) => {},
+      onMouseMove: (p: RRPoint) => {},
+      onMouseUp: (p: RRPoint) => {},
+    };
   }
 
-  return {
-    onMouseDown: (p: RRPoint) => {},
-    onMouseMove: (p: RRPoint) => {},
-    onMouseUp: (p: RRPoint) => {},
-  };
+  return useRef({
+    onMouseDown: (p: RRPoint) => toolHandlerRef.current!.onMouseDown(p),
+    onMouseMove: (p: RRPoint) => toolHandlerRef.current!.onMouseMove(p),
+    onMouseUp: (p: RRPoint) => toolHandlerRef.current!.onMouseUp(p),
+  }).current;
 }

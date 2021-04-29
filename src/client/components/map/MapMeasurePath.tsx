@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import tinycolor from "tinycolor2";
 import { GRID_SIZE } from "../../../shared/constants";
 import { RRPoint } from "../../../shared/state";
@@ -26,6 +26,18 @@ const overlappingPairsMap = <T extends any, U extends any>(
   return res;
 };
 
+const dotSize = 10;
+
+const centered = (p: RRPoint) =>
+  pointScale(pointAdd(p, makePoint(0.5)), GRID_SIZE);
+
+function useContrastColor(color: string) {
+  return useMemo(
+    () => tinycolor.mostReadable(color, ["#fff", "#000"]).toRgbString(),
+    [color]
+  );
+}
+
 export function MapMeasurePath({
   path,
   color,
@@ -41,21 +53,13 @@ export function MapMeasurePath({
     x: GRID_SIZE * 1.5,
     y: GRID_SIZE * 0.5,
   });
-  const dotSize = 10;
   const diagonals = overlappingPairsSum(path, (a, b) =>
     a.x === b.x || a.y === b.y ? 0 : 1
   );
   const length = path.length - 1 + Math.floor(diagonals / 2);
 
-  const centered = (p: RRPoint) =>
-    pointScale(pointAdd(p, makePoint(0.5)), GRID_SIZE);
-
-  const pathContrastColor = tinycolor
-    .mostReadable(color, ["#fff", "#000"])
-    .toRgbString();
-  const mapContrastColor = tinycolor
-    .mostReadable(mapBackgroundColor, ["#fff", "#000"])
-    .toRgbString();
+  const pathContrastColor = useContrastColor(color);
+  const mapContrastColor = useContrastColor(mapBackgroundColor);
 
   const FONT_SIZE = 14;
   const PADDING = 5;
