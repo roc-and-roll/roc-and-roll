@@ -17,7 +17,7 @@ import {
   SyncedStateAction,
 } from "../shared/state";
 import { mergeDeep, rrid } from "../shared/util";
-import { useDebounce } from "./useDebounce";
+import { Debouncer, debouncerTime, useDebounce } from "./debounce";
 import useRafLoop from "./useRafLoop";
 
 type StatePatch<D> = { patch: DeepPartial<D>; deletedKeys: string[] };
@@ -27,6 +27,8 @@ type StateUpdateSubscriber = (newState: SyncedState) => void;
 type OptimisticUpdateExecutedSubscriber = (
   optimisticUpdateIds: OptimisticUpdateID[]
 ) => void;
+
+const DEBUG = false;
 
 // This context is subscribed to using the useServerState and useServerDispatch
 // hooks. It is deliberately not exported. The context must not change on state
@@ -79,7 +81,8 @@ export function ServerStateProvider({
       finishedOptimisticUpdateIds: OptimisticUpdateID[];
     }) => {
       const state: SyncedState = JSON.parse(msg.state);
-      process.env.NODE_ENV !== "test" &&
+      process.env.NODE_ENV === "development" &&
+        DEBUG &&
         console.log(
           "Server -> Client | SET_STATE | state = ",
           state,
@@ -105,7 +108,8 @@ export function ServerStateProvider({
       finishedOptimisticUpdateIds: OptimisticUpdateID[];
     }) => {
       const patch: StatePatch<SyncedState> = JSON.parse(msg.patch);
-      process.env.NODE_ENV !== "test" &&
+      process.env.NODE_ENV === "development" &&
+        DEBUG &&
         console.log(
           "Server -> Client | PATCH_STATE | patch = ",
           patch,
@@ -190,7 +194,8 @@ function applyStatePatch(
       }
     });
   });
-  process.env.NODE_ENV !== "test" &&
+  process.env.NODE_ENV === "development" &&
+    DEBUG &&
     console.log("Server -> Client | PATCH_STATE | state = ", patchedState);
   return patchedState;
 }
@@ -304,7 +309,7 @@ export function useDebouncedServerUpdate<V>(
     | undefined
     | SyncedStateAction<unknown, string, never>
     | SyncedStateAction<unknown, string, never>[],
-  debounceTime: number,
+  debounce: Debouncer,
   lerp?: (start: V, end: V, amount: number) => V
 ): readonly [V, (newValue: V | ((v: V) => V)) => void] {
   const dispatch = useServerDispatch();
@@ -379,7 +384,7 @@ export function useDebouncedServerUpdate<V>(
             amount === 1 ? serverValue : lerp(localValue, serverValue, amount)
           );
           // Lerp for the same amount of time as the debounceTime.
-        }, debounceTime);
+        }, debouncerTime(debounce));
 
         return () => {
           // If the server value updates while we were currently lerping,
@@ -394,7 +399,7 @@ export function useDebouncedServerUpdate<V>(
     // Make sure to only pass serverValue and debounceTime directly, and all
     // other dependencies as refs. Most importantly, pass localValue as just a
     // ref so that this hook is not re-executed when the local value changes.
-  }, [serverValue, debounceTime, localValueRef, lerpRef, rafStart, rafStop]);
+  }, [serverValue, debounce, localValueRef, lerpRef, rafStart, rafStop]);
 
   // Subscribe to server state changes, but just to track which optimistic
   // updates have been successfully executed. Subscribing will _not_ cause this
@@ -459,11 +464,7 @@ export function useDebouncedServerUpdate<V>(
     [dispatch, actionCreatorRef]
   );
 
-  const debouncedActionDispatch = useDebounce(
-    actionDispatch,
-    debounceTime,
-    true
-  );
+  const debouncedActionDispatch = useDebounce(actionDispatch, debounce, true);
 
   // Simple wrapper around _setLocalValue that sets optimisticUpdatePhase to
   // "on" if the state is changed locally.

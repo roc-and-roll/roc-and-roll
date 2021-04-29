@@ -22,7 +22,7 @@ import {
   useServerDispatch,
   useServerState,
 } from "../../state";
-import { useAggregatedDoubleDebounce } from "../../useDebounce";
+import { SyncedDebouncer, useAggregatedDoubleDebounce } from "../../debounce";
 import {
   CURSOR_POSITION_SYNC_DEBOUNCE,
   CURSOR_POSITION_SYNC_HISTORY_STEPS,
@@ -61,6 +61,9 @@ export default function MapContainer({ className }: { className: string }) {
   const dispatch = useServerDispatch();
   const [settings] = useSettings();
   const [selectedMapObjectIds, setSelectedMapObjectIds] = useMapSelection();
+  const syncedDebounce = useRef(
+    new SyncedDebouncer(CURSOR_POSITION_SYNC_DEBOUNCE)
+  );
 
   const [transform, setTransform] = useState<Matrix>(identity());
 
@@ -112,7 +115,7 @@ export default function MapContainer({ className }: { className: string }) {
         });
       });
     },
-    100,
+    syncedDebounce.current,
     (start, end, t) =>
       produce(end, (draft) =>
         entries<Draft<RRMapObject>>(draft).forEach((e) => {
@@ -196,8 +199,9 @@ export default function MapContainer({ className }: { className: string }) {
       },
       [dispatch, myself.id]
     ),
-    CURSOR_POSITION_SYNC_DEBOUNCE,
-    CURSOR_POSITION_SYNC_HISTORY_STEPS
+    syncedDebounce.current,
+    CURSOR_POSITION_SYNC_HISTORY_STEPS,
+    true
   );
 
   const updateTokenPath = (path: RRPoint[]) => {

@@ -54,9 +54,9 @@ export function Player({ logout }: { logout: () => void }) {
           }
         />
       </p>
-      <p>
+      <div>
         Color: <ColorInput value={color} onChange={setColor} />
-      </p>
+      </div>
       <Button onClick={logout}>logout</Button>
     </>
   );
