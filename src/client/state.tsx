@@ -70,10 +70,33 @@ export function ServerStateProvider({
   // We must not useState in this component, because we do not want to cause
   // re-renders of this component and its children when the state changes.
   const stateRef = useRef<SyncedState>(initialSyncedState);
+  const finishedOptimisticUpdateIdsRef = useRef<OptimisticUpdateID[]>([]);
   const subscribers = useRef<Set<StateUpdateSubscriber>>(new Set());
   const subscribersToOptimisticUpdatesExecuted = useRef<
     Set<OptimisticUpdateExecutedSubscriber>
   >(new Set());
+
+  const propagationAnimationFrameRef = useRef<number | null>(null);
+
+  const propagateStateChange = useCallback(() => {
+    propagationAnimationFrameRef.current ??= requestAnimationFrame(() => {
+      propagationAnimationFrameRef.current = null;
+
+      const state = stateRef.current;
+      const finishedOptimisticUpdateIds =
+        finishedOptimisticUpdateIdsRef.current;
+      finishedOptimisticUpdateIdsRef.current = [];
+
+      ReactDOM.unstable_batchedUpdates(() => {
+        subscribers.current.forEach((subscriber) => subscriber(state));
+      });
+      ReactDOM.unstable_batchedUpdates(() => {
+        subscribersToOptimisticUpdatesExecuted.current.forEach((subscriber) =>
+          subscriber(finishedOptimisticUpdateIds)
+        );
+      });
+    });
+  }, []);
 
   useEffect(() => {
     const onSetState = (msg: {
@@ -91,16 +114,11 @@ export function ServerStateProvider({
         );
 
       stateRef.current = state;
-      ReactDOM.unstable_batchedUpdates(() => {
-        subscribers.current.forEach((subscriber) =>
-          subscriber(stateRef.current)
-        );
-      });
-      ReactDOM.unstable_batchedUpdates(() => {
-        subscribersToOptimisticUpdatesExecuted.current.forEach((subscriber) =>
-          subscriber(msg.finishedOptimisticUpdateIds)
-        );
-      });
+      finishedOptimisticUpdateIdsRef.current = [
+        ...finishedOptimisticUpdateIdsRef.current,
+        ...msg.finishedOptimisticUpdateIds,
+      ];
+      propagateStateChange();
     };
 
     const onPatchState = (msg: {
@@ -118,16 +136,11 @@ export function ServerStateProvider({
         );
 
       stateRef.current = applyStatePatch(stateRef.current, patch);
-      ReactDOM.unstable_batchedUpdates(() => {
-        subscribers.current.forEach((subscriber) =>
-          subscriber(stateRef.current)
-        );
-      });
-      ReactDOM.unstable_batchedUpdates(() => {
-        subscribersToOptimisticUpdatesExecuted.current.forEach((subscriber) =>
-          subscriber(msg.finishedOptimisticUpdateIds)
-        );
-      });
+      finishedOptimisticUpdateIdsRef.current = [
+        ...finishedOptimisticUpdateIdsRef.current,
+        ...msg.finishedOptimisticUpdateIds,
+      ];
+      propagateStateChange();
     };
 
     socket.on("SET_STATE", onSetState);
@@ -137,7 +150,7 @@ export function ServerStateProvider({
       socket.off("SET_STATE", onSetState);
       socket.off("PATCH_STATE", onPatchState);
     };
-  }, [socket]);
+  }, [socket, propagateStateChange]);
 
   const subscribe = useCallback((subscriber: StateUpdateSubscriber) => {
     subscribers.current.add(subscriber);
@@ -253,11 +266,16 @@ export function useServerDispatch() {
   const { socket } = useContext(ServerStateContext);
 
   return useCallback(
-    <P, T extends string = string, M = never>(
-      action: SyncedStateAction<P, T, M>
-    ): SyncedStateAction<P, T, M> => {
-      socket?.emit("REDUX_ACTION", JSON.stringify(action));
-      return action;
+    <
+      P,
+      A extends SyncedStateAction<P, T, M> | SyncedStateAction<P, T, M>[],
+      T extends string = string,
+      M = never
+    >(
+      actionOrActions: A
+    ): A => {
+      socket?.emit("REDUX_ACTION", actionOrActions);
+      return actionOrActions;
     },
     [socket]
   );
@@ -459,7 +477,7 @@ export function useDebouncedServerUpdate<V>(
         id: actions[actions.length - 1]!.meta.__optimisticUpdateId__,
       };
 
-      actions.forEach((action) => dispatch(action));
+      dispatch(actions);
     },
     [dispatch, actionCreatorRef]
   );

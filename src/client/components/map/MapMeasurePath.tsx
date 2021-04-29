@@ -38,17 +38,12 @@ function useContrastColor(color: string) {
   );
 }
 
-export function MapMeasurePath({
-  path,
-  color,
-  mapBackgroundColor,
-  zoom,
-}: {
+export const MapMeasurePath = React.memo<{
   path: RRPoint[];
   color: string;
   mapBackgroundColor: string;
   zoom: number;
-}) {
+}>(function MapMeasurePath({ path, color, mapBackgroundColor, zoom }) {
   const last = pointAdd(pointScale(path[path.length - 1]!, GRID_SIZE), {
     x: GRID_SIZE * 1.5,
     y: GRID_SIZE * 0.5,
@@ -114,4 +109,4 @@ export function MapMeasurePath({
       </g>
     </>
   );
-}
+});

@@ -90,41 +90,6 @@ export const tokenIdsAtom = atom<RRTokenID[]>({
   default: [],
 });
 
-function useReduxToRecoilBridge<E extends { id: RRID }>(
-  entities: EntityCollection<E>,
-  idsAtom: RecoilState<E["id"][]>,
-  familyAtom: (id: E["id"]) => RecoilState<E | null>
-) {
-  const updateRecoilObjects = useRecoilCallback(
-    ({ snapshot, set, reset }) => ({
-      ids: newIds,
-      entities,
-    }: EntityCollection<E>) => {
-      const oldIds = snapshot.getLoadable(mapObjectIdsAtom).getValue();
-      if (oldIds !== newIds) {
-        oldIds.forEach((oldMapObjectId) => {
-          reset(familyAtom(oldMapObjectId));
-        });
-        set(idsAtom, newIds);
-      }
-
-      newIds.forEach((id) => {
-        const atom = familyAtom(id);
-        const newEntity = byId(entities, id)!;
-        const oldEntity = snapshot.getLoadable(atom).getValue();
-        if (!Object.is(newEntity, oldEntity)) {
-          set(atom, newEntity);
-        }
-      });
-    },
-    [familyAtom, idsAtom]
-  );
-
-  useEffect(() => {
-    updateRecoilObjects(entities);
-  }, [entities, updateRecoilObjects]);
-}
-
 export default function MapContainer() {
   const myself = useMyself();
   const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
@@ -228,9 +193,11 @@ export default function MapContainer() {
 
       switch (e.key) {
         case "Delete":
-          selectedMapObjectIds.forEach((mapObjectId) => {
-            dispatch(mapObjectRemove({ mapId: map.id, mapObjectId }));
-          });
+          dispatch(
+            selectedMapObjectIds.map((mapObjectId) =>
+              mapObjectRemove({ mapId: map.id, mapObjectId })
+            )
+          );
           break;
         case "ArrowLeft":
           move((position) => ({ x: position.x - GRID_SIZE, y: position.y }));
@@ -337,15 +304,9 @@ export default function MapContainer() {
     [setLocalObjectsOnMap]
   );
 
-  useReduxToRecoilBridge(localMapObjects, mapObjectIdsAtom, mapObjectsFamily);
-  useReduxToRecoilBridge(
-    useServerState((s) => s.tokens),
-    tokenIdsAtom,
-    tokenFamily
-  );
-
   return (
     <div className="app-map" ref={dropRef}>
+      <ReduxToRecoilBridge localMapObjects={localMapObjects} />
       <MapToolbar map={map} myself={myself} setEditState={setEditState} />
       <RRMapView
         // map entity data
@@ -381,4 +342,54 @@ export default function MapContainer() {
         )}
     </div>
   );
+}
+
+function useReduxToRecoilBridge<E extends { id: RRID }>(
+  entities: EntityCollection<E>,
+  idsAtom: RecoilState<E["id"][]>,
+  familyAtom: (id: E["id"]) => RecoilState<E | null>
+) {
+  const updateRecoilObjects = useRecoilCallback(
+    ({ snapshot, set, reset }) => ({
+      ids: newIds,
+      entities,
+    }: EntityCollection<E>) => {
+      const oldIds = snapshot.getLoadable(mapObjectIdsAtom).getValue();
+      if (oldIds !== newIds) {
+        oldIds.forEach((oldMapObjectId) => {
+          reset(familyAtom(oldMapObjectId));
+        });
+        set(idsAtom, newIds);
+      }
+
+      newIds.forEach((id) => {
+        const atom = familyAtom(id);
+        const newEntity = byId(entities, id)!;
+        const oldEntity = snapshot.getLoadable(atom).getValue();
+        if (!Object.is(newEntity, oldEntity)) {
+          set(atom, newEntity);
+        }
+      });
+    },
+    [familyAtom, idsAtom]
+  );
+
+  useEffect(() => {
+    updateRecoilObjects(entities);
+  }, [entities, updateRecoilObjects]);
+}
+
+function ReduxToRecoilBridge({
+  localMapObjects,
+}: {
+  localMapObjects: EntityCollection<RRMapObject>;
+}) {
+  useReduxToRecoilBridge(localMapObjects, mapObjectIdsAtom, mapObjectsFamily);
+  useReduxToRecoilBridge(
+    useServerState((s) => s.tokens),
+    tokenIdsAtom,
+    tokenFamily
+  );
+
+  return null;
 }

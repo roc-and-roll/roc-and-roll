@@ -9,6 +9,7 @@ import {
   SyncedStateAction,
 } from "../shared/state";
 import { ephermalPlayerAdd, ephermalPlayerRemove } from "../shared/actions";
+import { debounced } from "../shared/util";
 
 const quiet = !!process.env["QUIET"];
 const log = (...params: any[]) => !quiet && console.log(...params);
@@ -128,20 +129,29 @@ export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
     });
     socket.on(
       "REDUX_ACTION",
-      (actionJSON: string, sendResponse: (r: string) => void) => {
-        const action = JSON.parse(actionJSON) as SyncedStateAction;
-        if (action.meta?.__optimisticUpdateId__) {
-          const data = additionalSocketData.get(socket.id);
-          if (!data) {
-            console.error("This should never happen.");
-            console.trace();
-          } else {
-            data.finishedOptimisticUpdateIds.push(
-              action.meta.__optimisticUpdateId__
-            );
+      (
+        actionOrActions: SyncedStateAction | SyncedStateAction[],
+        sendResponse: (r: string) => void
+      ) => {
+        // log("actions", actionOrActions);
+        const actions = Array.isArray(actionOrActions)
+          ? actionOrActions
+          : [actionOrActions];
+
+        actions.forEach((action) => {
+          if (action.meta?.__optimisticUpdateId__) {
+            const data = additionalSocketData.get(socket.id);
+            if (!data) {
+              console.error("This should never happen.");
+              console.trace();
+            } else {
+              data.finishedOptimisticUpdateIds.push(
+                action.meta.__optimisticUpdateId__
+              );
+            }
           }
-        }
-        store.dispatch(action);
+          store.dispatch(action);
+        });
       }
     );
     socket.on(
@@ -172,16 +182,22 @@ export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
   io.sockets.sockets.forEach(setupSocket);
   io.on("connection", setupSocket);
 
-  store.subscribe(() => {
-    const state = store.getState();
-    io.sockets.sockets.forEach((socket) => {
-      const data = additionalSocketData.get(socket.id);
-      const player = data?.playerId
-        ? byId(state.players.entities, data.playerId) ?? null
-        : null;
+  store.subscribe(
+    debounced(() => {
+      const state = store.getState();
+      io.sockets.sockets.forEach((socket) => {
+        const data = additionalSocketData.get(socket.id);
+        const player = data?.playerId
+          ? byId(state.players.entities, data.playerId) ?? null
+          : null;
 
-      log(`sending state to ${socket.id} (${player?.name ?? "not logged in"})`);
-      sendStateUpdate(socket, state);
-    });
-  });
+        log(
+          `[${Date.now() / 1000}] sending state to ${socket.id} (${
+            player?.name ?? "not logged in"
+          })`
+        );
+        sendStateUpdate(socket, state);
+      });
+    }, 100)
+  );
 };

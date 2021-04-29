@@ -39,13 +39,15 @@ export function TokenManager() {
   const addToken = () => {
     setIsAddingToken(true);
     (async () => {
-      const newToken = dispatch(tokenAdd(await makeNewToken())).payload;
-      dispatch(
+      const tokenAddAction = tokenAdd(await makeNewToken());
+      const newToken = tokenAddAction.payload;
+      dispatch([
+        tokenAddAction,
         playerUpdateAddTokenId({
           id: myself.id,
           tokenId: newToken.id,
-        })
-      );
+        }),
+      ]);
       setNewTokenIds((l) => [...l, newToken.id]);
       setSelectedToken(newToken.id);
     })().finally(() => setIsAddingToken(false));

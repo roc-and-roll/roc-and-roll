@@ -186,13 +186,13 @@ export function InitiativeTracker() {
     const action = logEntryDiceRollAdd(
       rollInitiative(isNaN(mod) ? 0 : mod, "none", myself.id)
     );
-    dispatch(action);
-    dispatch(
+    dispatch([
+      action,
       initiativeTrackerEntryTokenAdd({
         initiative: diceResult(action.payload),
         tokenIds: selectedTokenIds,
-      })
-    );
+      }),
+    ]);
   };
 
   const addLairAction = () => {

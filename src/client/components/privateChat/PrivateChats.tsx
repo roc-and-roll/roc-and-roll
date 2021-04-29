@@ -59,8 +59,8 @@ function Chat({ id, close }: { id: RRPrivateChatID; close: () => void }) {
           )
         : [];
       if (messagesToMarkAsRead) {
-        messagesToMarkAsRead.forEach((message) =>
-          dispatch(
+        dispatch(
+          messagesToMarkAsRead.map((message) =>
             privateChatMessageUpdate(chat.id, {
               id: message.id,
               changes: {
