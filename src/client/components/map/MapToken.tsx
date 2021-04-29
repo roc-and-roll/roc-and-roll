@@ -9,7 +9,7 @@ import {
   RRTokenOnMap,
 } from "../../../shared/state";
 import { tokenImageUrl } from "../../files";
-import { canControlToken } from "../../permissions";
+import { canControlToken, canViewTokenOnMap } from "../../permissions";
 import { RoughRectangle, RoughText, RoughCircle } from "../rough";
 import tinycolor from "tinycolor2";
 import { assertNever, clamp } from "../../../shared/util";
@@ -17,47 +17,53 @@ import { useMyself } from "../../myself";
 import ReactDOM from "react-dom";
 import { HPInlineEdit } from "./HPInlineEdit";
 import { useRecoilValue } from "recoil";
-import { hoveredObjectsFamily } from "./Map";
+import { hoveredMapObjectsFamily } from "./Map";
+import { selectedMapObjectsFamily, tokenFamily } from "./MapContainer";
 
 export const MapToken = React.memo<{
-  token: RRToken;
   object: RRTokenOnMap;
-  zoom: number;
-  isSelected: boolean;
+  canStartMoving: boolean;
   onStartMove: (o: RRMapObject, e: React.MouseEvent) => void;
-  contrastColor: string;
   auraArea: SVGGElement | null;
   healthbarArea: SVGGElement | null;
-  onSetHP: (tokenId: RRTokenID, hp: number) => void;
-  canStartMoving: boolean;
+  zoom: number;
+  contrastColor: string;
+  setHP: (tokenId: RRTokenID, hp: number) => void;
 }>(function MapToken({
-  token,
   object,
-  isSelected,
+  canStartMoving,
   onStartMove,
-  zoom,
-  contrastColor,
   auraArea,
   healthbarArea,
-  canStartMoving,
-  onSetHP,
+  zoom,
+  contrastColor,
+  setHP: _setHP,
 }) {
-  const isHovered = useRecoilValue(hoveredObjectsFamily(object.id));
+  const myself = useMyself();
+  const token = useRecoilValue(tokenFamily(object.tokenId));
+
+  const isHovered = useRecoilValue(hoveredMapObjectsFamily(object.id));
+  const isSelected = useRecoilValue(selectedMapObjectsFamily(object.id));
   const isSelectedOrHovered = isHovered || isSelected;
+
+  const setHP = useCallback(
+    (hp: number) => {
+      token?.id && _setHP(token.id, hp);
+    },
+    [_setHP, token?.id]
+  );
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    onStartMove(object, e);
+  };
+
+  if (!token || !canViewTokenOnMap(token, myself)) {
+    return null;
+  }
 
   const {
     position: { x, y },
   } = object;
-  const myself = useMyself();
-  const handleMouseDown = (e: React.MouseEvent) => {
-    onStartMove(object, e);
-  };
-  const setHP = useCallback(
-    (hp: number) => {
-      onSetHP(token.id, hp);
-    },
-    [onSetHP, token.id]
-  );
 
   const canControl = canStartMoving && canControlToken(token, myself);
   const tokenStyle = canControl ? { cursor: "move" } : {};

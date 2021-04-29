@@ -14,20 +14,16 @@ import tinycolor from "tinycolor2";
 import { assertNever } from "../../../shared/util";
 import { useMyself } from "../../myself";
 import { useRecoilValue } from "recoil";
-import { hoveredObjectsFamily } from "./Map";
+import { hoveredMapObjectsFamily } from "./Map";
+import { selectedMapObjectsFamily } from "./MapContainer";
 
 export const MapObjectThatIsNotAToken = React.memo<{
   object: Exclude<RRMapObject, RRTokenOnMap>;
   onStartMove: (object: RRMapObject, event: React.MouseEvent) => void;
-  isSelected: boolean;
   canStartMoving: boolean;
-}>(function MapObjectThatIsNotAToken({
-  object,
-  onStartMove,
-  isSelected,
-  canStartMoving,
-}) {
-  const isHovered = useRecoilValue(hoveredObjectsFamily(object.id));
+}>(function MapObjectThatIsNotAToken({ object, onStartMove, canStartMoving }) {
+  const isHovered = useRecoilValue(hoveredMapObjectsFamily(object.id));
+  const isSelected = useRecoilValue(selectedMapObjectsFamily(object.id));
   const isSelectedOrHovered = isHovered || isSelected;
 
   const myself = useMyself();

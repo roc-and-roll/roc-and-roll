@@ -18,3 +18,21 @@ export const isBrowser = typeof window !== "undefined";
 export function formatTimestamp(timestamp: RRTimestamp) {
   return new Date(timestamp).toLocaleString();
 }
+
+export function partition<E, A extends E = E, B extends E = E>(
+  arr: E[],
+  fn: (each: E) => boolean
+) {
+  const a = [] as A[];
+  const b = [] as B[];
+
+  arr.forEach((each) => {
+    if (fn(each)) {
+      a.push(each as A);
+    } else {
+      b.push(each as B);
+    }
+  });
+
+  return [a, b] as const;
+}

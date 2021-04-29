@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import {
   ephermalPlayerUpdate,
@@ -9,9 +9,12 @@ import {
 } from "../../../shared/actions";
 import {
   byId,
+  EntityCollection,
   entries,
   RRColor,
+  RRID,
   RRMapObject,
+  RRMapObjectID,
   RRPoint,
   RRToken,
   RRTokenID,
@@ -35,11 +38,11 @@ import { MapToolbar } from "../MapToolbar";
 import { GRID_SIZE } from "../../../shared/constants";
 import { rrid, timestamp } from "../../../shared/util";
 import { useSettings } from "../../settings";
-import { useMapSelection } from "../../mapSelection";
 import produce, { Draft } from "immer";
 import { pointAdd, snapPointToGrid } from "../../point";
 import { CreateMapMouseHandler } from "./CreateMapMouseHandler";
 import { useRefState } from "../../useRefState";
+import { atomFamily, atom, useRecoilCallback, RecoilState } from "recoil";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -56,12 +59,69 @@ export type MapEditState =
     }
   | { tool: "draw"; type: "text" | "freehand"; color: RRColor };
 
+export const selectedMapObjectsFamily = atomFamily<boolean, RRMapObjectID>({
+  key: "SelectedMapObject",
+  default: false,
+});
+
+export const selectedMapObjectIdsAtom = atom<RRMapObjectID[]>({
+  key: "SelectedMapObjectIds",
+  default: [],
+});
+
+export const mapObjectsFamily = atomFamily<RRMapObject | null, RRMapObjectID>({
+  key: "MapObject",
+  default: null,
+});
+
+export const mapObjectIdsAtom = atom<RRMapObjectID[]>({
+  key: "MapObjectIds",
+  default: [],
+});
+
+export const tokenFamily = atomFamily<RRToken | null, RRTokenID>({
+  key: "Token",
+  default: null,
+});
+
+export const tokenIdsAtom = atom<RRTokenID[]>({
+  key: "TokenIds",
+  default: [],
+});
+
+function useReduxToRecoilBridge<E extends { id: RRID }>(
+  entities: EntityCollection<E>,
+  idsAtom: RecoilState<E["id"][]>,
+  familyAtom: (id: E["id"]) => RecoilState<E | null>
+) {
+  const updateRecoilObjects = useRecoilCallback(
+    ({ snapshot, set, reset }) => ({
+      ids: newIds,
+      entities,
+    }: EntityCollection<E>) => {
+      const oldIds = snapshot.getLoadable(mapObjectIdsAtom).getValue();
+      if (oldIds !== newIds) {
+        oldIds.forEach((oldMapObjectId) => {
+          reset(familyAtom(oldMapObjectId));
+        });
+        set(idsAtom, newIds);
+      }
+
+      newIds.forEach((id) => set(familyAtom(id), byId(entities, id)!));
+    },
+    [familyAtom, idsAtom]
+  );
+
+  useEffect(() => {
+    updateRecoilObjects(entities);
+  }, [entities, updateRecoilObjects]);
+}
+
 export default function MapContainer() {
   const myself = useMyself();
   const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
   const dispatch = useServerDispatch();
   const [settings] = useSettings();
-  const [selectedMapObjectIds, setSelectedMapObjectIds] = useMapSelection();
   const syncedDebounce = useRef(
     new SyncedDebouncer(CURSOR_POSITION_SYNC_DEBOUNCE)
   );
@@ -103,21 +163,24 @@ export default function MapContainer() {
   const serverMapObjects = map.objects;
   const [localMapObjects, setLocalObjectsOnMap] = useDebouncedServerUpdate(
     serverMapObjects,
-    (localMapObjects) => {
-      return selectedMapObjectIds.flatMap((selectMapObjectId) => {
-        const mapObject = byId(localMapObjects.entities, selectMapObjectId);
-        if (!mapObject) {
-          return [];
-        }
+    useRecoilCallback(({ snapshot }) => (localMapObjects) => {
+      return snapshot
+        .getLoadable(selectedMapObjectIdsAtom)
+        .getValue()
+        .flatMap((selectMapObjectId) => {
+          const mapObject = byId(localMapObjects.entities, selectMapObjectId);
+          if (!mapObject) {
+            return [];
+          }
 
-        return mapObjectUpdate(map.id, {
-          id: selectMapObjectId,
-          changes: {
-            position: mapObject.position,
-          },
+          return mapObjectUpdate(map.id, {
+            id: selectMapObjectId,
+            changes: {
+              position: mapObject.position,
+            },
+          });
         });
-      });
-    },
+    }),
     syncedDebounce.current,
     (start, end, t) =>
       produce(end, (draft) =>
@@ -133,45 +196,50 @@ export default function MapContainer() {
       )
   );
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    function move(positionUpdater: (position: RRPoint) => RRPoint) {
-      setLocalObjectsOnMap(
-        produce((draft) => {
-          selectedMapObjectIds.forEach((selectedMapObjectId) => {
-            const object = byId<Draft<RRMapObject>>(
-              draft.entities,
-              selectedMapObjectId
-            );
-            if (object) {
-              object.position = positionUpdater(object.position);
-            }
+  const handleKeyDown = useRecoilCallback(
+    ({ snapshot }) => (e: KeyboardEvent) => {
+      const selectedMapObjectIds = snapshot
+        .getLoadable(selectedMapObjectIdsAtom)
+        .getValue();
+
+      function move(positionUpdater: (position: RRPoint) => RRPoint) {
+        setLocalObjectsOnMap(
+          produce((draft) => {
+            selectedMapObjectIds.forEach((selectedMapObjectId) => {
+              const object = byId<Draft<RRMapObject>>(
+                draft.entities,
+                selectedMapObjectId
+              );
+              if (object) {
+                object.position = positionUpdater(object.position);
+              }
+            });
+          })
+        );
+      }
+
+      switch (e.key) {
+        case "Delete":
+          selectedMapObjectIds.forEach((mapObjectId) => {
+            dispatch(mapObjectRemove({ mapId: map.id, mapObjectId }));
           });
-        })
-      );
-    }
-
-    switch (e.key) {
-      case "Delete":
-        selectedMapObjectIds.forEach((mapObjectId) => {
-          dispatch(mapObjectRemove({ mapId: map.id, mapObjectId }));
-        });
-        break;
-      case "ArrowLeft":
-        move((position) => ({ x: position.x - GRID_SIZE, y: position.y }));
-        break;
-      case "ArrowRight":
-        move((position) => ({ x: position.x + GRID_SIZE, y: position.y }));
-        break;
-      case "ArrowUp":
-        move((position) => ({ x: position.x, y: position.y - GRID_SIZE }));
-        break;
-      case "ArrowDown":
-        move((position) => ({ x: position.x, y: position.y + GRID_SIZE }));
-        break;
-    }
-  };
-
-  const tokens = useServerState((s) => s.tokens);
+          break;
+        case "ArrowLeft":
+          move((position) => ({ x: position.x - GRID_SIZE, y: position.y }));
+          break;
+        case "ArrowRight":
+          move((position) => ({ x: position.x + GRID_SIZE, y: position.y }));
+          break;
+        case "ArrowUp":
+          move((position) => ({ x: position.x, y: position.y - GRID_SIZE }));
+          break;
+        case "ArrowDown":
+          move((position) => ({ x: position.x, y: position.y + GRID_SIZE }));
+          break;
+      }
+    },
+    [dispatch, map.id, setLocalObjectsOnMap]
+  );
 
   const [editState, setEditState] = useState<MapEditState>({ tool: "move" });
 
@@ -244,26 +312,34 @@ export default function MapContainer() {
     },
     [dispatch]
   );
-  const onMoveMapObjects = useCallback(
-    (d: RRPoint) => {
+  const onMoveMapObjects = useRecoilCallback(
+    ({ snapshot }) => (d: RRPoint) => {
       setLocalObjectsOnMap(
         produce((draft) => {
-          selectedMapObjectIds.forEach((selectedMapObjectId) => {
-            const object = byId<Draft<RRMapObject>>(
-              draft.entities,
-              selectedMapObjectId
-            );
-            if (object) {
-              object.position = pointAdd(object.position, d);
-            }
-          });
+          snapshot
+            .getLoadable(selectedMapObjectIdsAtom)
+            .getValue()
+            .forEach((selectedMapObjectId) => {
+              const object = byId<Draft<RRMapObject>>(
+                draft.entities,
+                selectedMapObjectId
+              );
+              if (object) {
+                object.position = pointAdd(object.position, d);
+              }
+            });
         })
       );
     },
-    [selectedMapObjectIds, setLocalObjectsOnMap]
+    [setLocalObjectsOnMap]
   );
 
-  const mapObjects = useMemo(() => entries(localMapObjects), [localMapObjects]);
+  useReduxToRecoilBridge(localMapObjects, mapObjectIdsAtom, mapObjectsFamily);
+  useReduxToRecoilBridge(
+    useServerState((s) => s.tokens),
+    tokenIdsAtom,
+    tokenFamily
+  );
 
   return (
     <div className="app-map" ref={dropRef}>
@@ -275,7 +351,6 @@ export default function MapContainer() {
         backgroundColor={map.backgroundColor}
         // other entities
         myself={myself}
-        tokens={tokens}
         // toolbar / tool
         toolButtonState={toolButtonState}
         toolHandler={mapMouseHandler}
@@ -295,9 +370,6 @@ export default function MapContainer() {
         transform={transform}
         setTransform={setTransform}
         // map objects
-        mapObjects={mapObjects}
-        selectedObjects={selectedMapObjectIds}
-        onSelectObjects={setSelectedMapObjectIds}
         onMoveMapObjects={onMoveMapObjects}
         onSetHP={onSetHP}
         // misc

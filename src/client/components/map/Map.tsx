@@ -28,10 +28,15 @@ import {
   RRPlayerID,
   RRPoint,
   RRTokenID,
-  TokensSyncedState,
 } from "../../../shared/state";
 import { canControlMapObject } from "../../permissions";
-import { ToolButtonState } from "./MapContainer";
+import {
+  mapObjectIdsAtom,
+  mapObjectsFamily,
+  selectedMapObjectIdsAtom,
+  selectedMapObjectsFamily,
+  ToolButtonState,
+} from "./MapContainer";
 import { RoughContextProvider, RoughRectangle } from "../rough";
 import tinycolor from "tinycolor2";
 import {
@@ -90,13 +95,13 @@ export const globalToLocal = (transform: Matrix, p: RRPoint) => {
   return { x, y };
 };
 
-export const hoveredObjectsFamily = atomFamily<boolean, RRMapObjectID>({
-  key: "HoveredObject",
+export const hoveredMapObjectsFamily = atomFamily<boolean, RRMapObjectID>({
+  key: "HoveredMapObject",
   default: false,
 });
 
-export const hoveredObjectIdsAtom = atom<RRMapObjectID[]>({
-  key: "HoveredObjectIds",
+export const hoveredMapObjectIdsAtom = atom<RRMapObjectID[]>({
+  key: "HoveredMapObjectIds",
   default: [],
 });
 
@@ -119,16 +124,12 @@ const withSelectionAreaDo = <T extends any>(
 
 export const RRMapView: React.FC<{
   myself: RRPlayer;
-  mapObjects: RRMapObject[];
   mapId: RRMapID;
   gridEnabled: boolean;
   backgroundColor: RRColor;
-  tokens: TokensSyncedState;
-  selectedObjects: RRMapObjectID[];
   transform: Matrix;
   setTransform: React.Dispatch<React.SetStateAction<Matrix>>;
   onMoveMapObjects: (d: RRPoint) => void;
-  onSelectObjects: (ids: RRMapObjectID[]) => void;
   onSetHP: (tokenId: RRTokenID, hp: number) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
   players: EntityCollection<EphermalPlayer>;
@@ -139,16 +140,12 @@ export const RRMapView: React.FC<{
   toolButtonState: ToolButtonState;
 }> = ({
   myself,
-  mapObjects,
   mapId,
   gridEnabled,
   backgroundColor,
-  selectedObjects: selectedObjectIds,
-  onSelectObjects,
   onSetHP,
   handleKeyDown,
   onMoveMapObjects,
-  tokens,
   setTransform,
   transform,
   players,
@@ -257,8 +254,8 @@ export const RRMapView: React.FC<{
     [myself.id, onUpdateTokenPath, players]
   );
 
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
+  const handleMouseMove = useRecoilCallback(
+    ({ snapshot }) => (e: MouseEvent) => {
       const { x, y } = localCoords(e);
       const frameDelta = {
         // we must not use dragLastMouse here, because it might not have
@@ -287,7 +284,8 @@ export const RRMapView: React.FC<{
         case MouseAction.MOVE_MAP_OBJECT: {
           // TODO consider actual bounding box
           const innerLocal = pointAdd(
-            mapObjects.find((o) => o.id === dragStartID)!.position,
+            snapshot.getLoadable(mapObjectsFamily(dragStartID!)).getValue()!
+              .position,
             makePoint(GRID_SIZE * 0.5)
           );
           addPointToPath(innerLocal);
@@ -309,7 +307,6 @@ export const RRMapView: React.FC<{
       setTransform,
       transform,
       setSelectionArea,
-      mapObjects,
       addPointToPath,
       onMoveMapObjects,
       dragStartID,
@@ -348,48 +345,69 @@ export const RRMapView: React.FC<{
     }
   };
 
-  const updateHoveredObjects = useRecoilCallback(
+  const updateHoveredMapObjects = useRecoilCallback(
     ({ snapshot, set, reset }) => (selectionArea: Rectangle | null) => {
       const lastHoveredObjectIds = snapshot
-        .getLoadable(hoveredObjectIdsAtom)
+        .getLoadable(hoveredMapObjectIdsAtom)
         .getValue();
 
       withSelectionAreaDo<void>(
         selectionArea,
         (x, y, w, h) => {
           lastHoveredObjectIds.forEach((hoveredObjectId) =>
-            reset(hoveredObjectsFamily(hoveredObjectId))
+            reset(hoveredMapObjectsFamily(hoveredObjectId))
           );
-          const hoveredMapObjectIds = mapObjects
-            .filter(
-              (mapObject) =>
+          const hoveredMapObjectIds = snapshot
+            .getLoadable(mapObjectIdsAtom)
+            .getValue()
+            .filter((mapObjectId) => {
+              const mapObject = snapshot
+                .getLoadable(mapObjectsFamily(mapObjectId))
+                .getValue();
+              return (
+                mapObject &&
                 canControlMapObject(mapObject, myself) &&
                 mapObjectIntersectsWithRectangle(mapObject, { x, y, w, h })
-            )
-            .map((each) => each.id);
+              );
+            });
 
           hoveredMapObjectIds.forEach((mapObjectId) => {
-            set(hoveredObjectsFamily(mapObjectId), true);
+            set(hoveredMapObjectsFamily(mapObjectId), true);
           });
           set(
-            hoveredObjectIdsAtom,
+            hoveredMapObjectIdsAtom,
             hoveredMapObjectIds.map((each) => each)
           );
         },
         () => {
           lastHoveredObjectIds.forEach((mapObjectId) =>
-            reset(hoveredObjectsFamily(mapObjectId))
+            reset(hoveredMapObjectsFamily(mapObjectId))
           );
-          set(hoveredObjectIdsAtom, []);
+          set(hoveredMapObjectIdsAtom, []);
         }
       );
     },
-    [mapObjects, myself]
+    [myself]
   );
 
   useEffect(() => {
-    updateHoveredObjects(selectionArea);
-  }, [updateHoveredObjects, selectionArea]);
+    updateHoveredMapObjects(selectionArea);
+  }, [updateHoveredMapObjects, selectionArea]);
+
+  const setSelectedMapObjectIds = useRecoilCallback(
+    ({ snapshot, set, reset }) => (ids: RRMapObjectID[]) => {
+      const lastSelectedObjectIds = snapshot
+        .getLoadable(selectedMapObjectIdsAtom)
+        .getValue();
+      lastSelectedObjectIds.forEach((id) =>
+        reset(selectedMapObjectsFamily(id))
+      );
+
+      set(selectedMapObjectIdsAtom, ids);
+      ids.map((id) => set(selectedMapObjectsFamily(id), true));
+    },
+    []
+  );
 
   const handleMouseUp = useRecoilCallback(
     ({ snapshot }) => (e: MouseEvent) => {
@@ -401,17 +419,23 @@ export const RRMapView: React.FC<{
       }
       if (mouseAction === MouseAction.SELECTION_AREA) {
         const lastHoveredObjectIds = snapshot
-          .getLoadable(hoveredObjectIdsAtom)
+          .getLoadable(hoveredMapObjectIdsAtom)
           .getValue()
           .filter(Boolean);
-        onSelectObjects(lastHoveredObjectIds);
+        setSelectedMapObjectIds(lastHoveredObjectIds);
         setSelectionArea(null);
       }
       if (mouseAction === MouseAction.USE_TOOL) {
         toolHandler.onMouseUp(globalToLocal(transform, localCoords(e)));
       }
     },
-    [mouseAction, onUpdateTokenPath, onSelectObjects, toolHandler, transform]
+    [
+      mouseAction,
+      onUpdateTokenPath,
+      setSelectedMapObjectIds,
+      toolHandler,
+      transform,
+    ]
   );
 
   useEffect(() => {
@@ -435,8 +459,8 @@ export const RRMapView: React.FC<{
     [onMousePositionChanged, transform]
   );
 
-  const handleStartMoveMapObject = useCallback(
-    (object: RRMapObject, event: React.MouseEvent) => {
+  const handleStartMoveMapObject = useRecoilCallback(
+    ({ snapshot }) => (object: RRMapObject, event: React.MouseEvent) => {
       if (toolButtonState === "select" && canControlMapObject(object, myself)) {
         const local = localCoords(event);
 
@@ -445,13 +469,18 @@ export const RRMapView: React.FC<{
         event.stopPropagation();
         setDragStartID(object.id);
         dragLastMouseRef.current = local;
-        if (!selectedObjectIds.includes(object.id)) {
-          onSelectObjects([object.id]);
+        if (
+          !snapshot
+            .getLoadable(selectedMapObjectIdsAtom)
+            .getValue()
+            .includes(object.id)
+        ) {
+          setSelectedMapObjectIds([object.id]);
         }
         setMouseAction(MouseAction.MOVE_MAP_OBJECT);
       }
     },
-    [myself, onSelectObjects, selectedObjectIds, toolButtonState]
+    [myself, setSelectedMapObjectIds, toolButtonState]
   );
 
   /* FIXME: doesn't actually feel that good. might have to do it only after we really
@@ -498,14 +527,10 @@ export const RRMapView: React.FC<{
         <g transform={toSVG(transform)}>
           {gridEnabled && <MapGrid transform={transform} />}
           <MapObjects
-            mapObjects={mapObjects}
-            myself={myself}
             contrastColor={contrastColor}
             setHP={onSetHP}
             toolButtonState={toolButtonState}
             handleStartMoveMapObject={handleStartMoveMapObject}
-            tokens={tokens}
-            selectedObjectIds={selectedObjectIds}
             zoom={transform.a}
           />
           {withSelectionAreaDo(
