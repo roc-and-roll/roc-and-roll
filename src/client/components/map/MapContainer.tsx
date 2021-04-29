@@ -276,12 +276,12 @@ export default function MapContainer() {
   );
 
   const updateTokenPath = useCallback(
-    (path: RRPoint[]) =>
+    (tokenPath: RRPoint[]) =>
       dispatch(
         ephermalPlayerUpdate({
           id: myself.id,
           changes: {
-            tokenPath: path,
+            tokenPath,
           },
         })
       ),
@@ -355,6 +355,7 @@ export default function MapContainer() {
         toolButtonState={toolButtonState}
         toolHandler={mapMouseHandler}
         // mouse position and token path sync
+        tokenPathSyncedDebouncer={syncedDebounce.current}
         onMousePositionChanged={sendMousePositionToServer}
         players={ephermalPlayers}
         onUpdateTokenPath={updateTokenPath}

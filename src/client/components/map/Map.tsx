@@ -16,7 +16,6 @@ import {
 } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
 import {
-  byId,
   EntityCollection,
   entries,
   EphermalPlayer,
@@ -55,6 +54,8 @@ import { MapMouseHandler } from "./CreateMapMouseHandler";
 import { MapGrid } from "./MapGrid";
 import { MapObjects } from "./MapObjects";
 import { atom, atomFamily, useRecoilCallback } from "recoil";
+import { useRefState } from "../../useRefState";
+import { SyncedDebouncer, useDebounce } from "../../debounce";
 
 type Rectangle = [number, number, number, number];
 
@@ -134,6 +135,7 @@ export const RRMapView: React.FC<{
   handleKeyDown: (event: KeyboardEvent) => void;
   players: EntityCollection<EphermalPlayer>;
   playerData: Map<RRPlayerID, { name: string; color: string; mapId: RRMapID }>;
+  tokenPathSyncedDebouncer: SyncedDebouncer;
   onUpdateTokenPath: (path: RRPoint[]) => void;
   onMousePositionChanged: (position: RRPoint) => void;
   toolHandler: MapMouseHandler;
@@ -149,6 +151,7 @@ export const RRMapView: React.FC<{
   setTransform,
   transform,
   players,
+  tokenPathSyncedDebouncer,
   onUpdateTokenPath,
   onMousePositionChanged,
   toolButtonState,
@@ -171,6 +174,19 @@ export const RRMapView: React.FC<{
   });
 
   const [selectionArea, setSelectionArea] = useState<Rectangle | null>(null);
+
+  const [tokenPath, tokenPathRef, setTokenPath] = useRefState<RRPoint[]>([]);
+
+  const syncTokenPath = useDebounce(
+    useCallback((tokenPath: RRPoint[]) => onUpdateTokenPath(tokenPath), [
+      onUpdateTokenPath,
+    ]),
+    tokenPathSyncedDebouncer
+  );
+
+  useEffect(() => {
+    syncTokenPath(tokenPath);
+  }, [tokenPath, syncTokenPath]);
 
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -212,12 +228,12 @@ export const RRMapView: React.FC<{
 
   const addPointToPath = useCallback(
     (p: RRPoint) => {
-      const path = byId<EphermalPlayer>(players.entities, myself.id)!.tokenPath;
+      const path = tokenPathRef.current;
       const gridPosition = pointScale(snapPointToGrid(p), 1 / GRID_SIZE);
-      if (path.length < 1) return onUpdateTokenPath([gridPosition]);
+      if (path.length < 1) return setTokenPath([gridPosition]);
 
       // to make moving along a diagonal easier, we only count hits that are not on the corners
-      const radius = GRID_SIZE * 0.4;
+      const radius = (GRID_SIZE * 0.8) / 2;
       const isInCenter =
         pointDistance(
           pointScale(pointAdd(gridPosition, makePoint(0.5)), GRID_SIZE),
@@ -242,16 +258,16 @@ export const RRMapView: React.FC<{
           path.length > 1 &&
           pointEquals(path[path.length - 2]!, gridPosition)
         ) {
-          onUpdateTokenPath(path.slice(0, path.length - 1));
+          setTokenPath(path.slice(0, path.length - 1));
         } else {
-          onUpdateTokenPath([
+          setTokenPath([
             ...path,
             ...pointsToReach(path[path.length - 1]!, gridPosition),
           ]);
         }
       }
     },
-    [myself.id, onUpdateTokenPath, players]
+    [setTokenPath, tokenPathRef]
   );
 
   const handleMouseMove = useRecoilCallback(
@@ -414,7 +430,7 @@ export const RRMapView: React.FC<{
       setMouseAction(MouseAction.NONE);
 
       if (mouseAction === MouseAction.MOVE_MAP_OBJECT) {
-        onUpdateTokenPath([]);
+        setTokenPath([]);
         setDragStartID(null);
       }
       if (mouseAction === MouseAction.SELECTION_AREA) {
@@ -429,13 +445,7 @@ export const RRMapView: React.FC<{
         toolHandler.onMouseUp(globalToLocal(transform, localCoords(e)));
       }
     },
-    [
-      mouseAction,
-      onUpdateTokenPath,
-      setSelectedMapObjectIds,
-      toolHandler,
-      transform,
-    ]
+    [mouseAction, setTokenPath, setSelectedMapObjectIds, toolHandler, transform]
   );
 
   useEffect(() => {
@@ -552,13 +562,17 @@ export const RRMapView: React.FC<{
             if (!player || player.mapId !== mapId) {
               return null;
             }
-            return p.tokenPath.length > 0 ? (
+            // use local token path instead of the one from the server for
+            // myself.
+            const theTokenPath = p.id !== myself.id ? p.tokenPath : tokenPath;
+
+            return theTokenPath.length > 0 ? (
               <MapMeasurePath
                 key={"path" + p.id}
                 zoom={transform.a}
                 color={player.color}
                 mapBackgroundColor={backgroundColor}
-                path={p.tokenPath}
+                path={theTokenPath}
               />
             ) : null;
           })}
