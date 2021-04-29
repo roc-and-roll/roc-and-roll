@@ -26,9 +26,7 @@ class MockClientSocket {
   }
 
   public emit(name: string, action: string) {
-    this.__onEmitSubscribers.forEach((subscriber) =>
-      subscriber(name, JSON.parse(action))
-    );
+    this.__onEmitSubscribers.forEach((subscriber) => subscriber(name, action));
   }
 
   public __receive(name: string, payload: any) {
@@ -145,7 +143,9 @@ describe("optimistic state updates", () => {
     });
 
     let updateId: string;
-    const onEmit = jest.fn((name, action) => {
+    const onEmit = jest.fn((name, actions) => {
+      expect(actions).toHaveLength(1);
+      const action = actions[0]!;
       const optimisticUpdateId = action.meta.__optimisticUpdateId__;
 
       expect(name).toBe("REDUX_ACTION");

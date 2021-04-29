@@ -79,7 +79,7 @@ export function ServerStateProvider({
   const propagationAnimationFrameRef = useRef<number | null>(null);
 
   const propagateStateChange = useCallback(() => {
-    propagationAnimationFrameRef.current ??= requestAnimationFrame(() => {
+    const update = () => {
       propagationAnimationFrameRef.current = null;
 
       const state = stateRef.current;
@@ -95,7 +95,12 @@ export function ServerStateProvider({
           subscriber(finishedOptimisticUpdateIds)
         );
       });
-    });
+    };
+    if (process.env.NODE_ENV === "test") {
+      update();
+    } else {
+      propagationAnimationFrameRef.current ??= requestAnimationFrame(update);
+    }
   }, []);
 
   useEffect(() => {
