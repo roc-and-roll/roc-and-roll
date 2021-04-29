@@ -16,12 +16,14 @@ import { assertNever, clamp } from "../../../shared/util";
 import { useMyself } from "../../myself";
 import ReactDOM from "react-dom";
 import { HPInlineEdit } from "./HPInlineEdit";
+import { useRecoilValue } from "recoil";
+import { hoveredObjectsFamily } from "./Map";
 
 export const MapToken = React.memo<{
   token: RRToken;
   object: RRTokenOnMap;
   zoom: number;
-  selected: boolean;
+  isSelected: boolean;
   onStartMove: (o: RRMapObject, e: React.MouseEvent) => void;
   contrastColor: string;
   auraArea: SVGGElement | null;
@@ -31,7 +33,7 @@ export const MapToken = React.memo<{
 }>(function MapToken({
   token,
   object,
-  selected,
+  isSelected,
   onStartMove,
   zoom,
   contrastColor,
@@ -40,6 +42,9 @@ export const MapToken = React.memo<{
   canStartMoving,
   onSetHP,
 }) {
+  const isHovered = useRecoilValue(hoveredObjectsFamily(object.id));
+  const isSelectedOrHovered = isHovered || isSelected;
+
   const {
     position: { x, y },
   } = object;
@@ -111,7 +116,7 @@ export const MapToken = React.memo<{
           style={tokenStyle}
         />
       )}
-      {selected && (
+      {isSelectedOrHovered && (
         <circle
           onMouseDown={handleMouseDown}
           cx={x + tokenSize / 2}

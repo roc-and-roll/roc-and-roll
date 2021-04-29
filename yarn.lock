@@ -2221,6 +2221,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/recoil@npm:^0":
+  version: 0.0.1
+  resolution: "@types/recoil@npm:0.0.1"
+  dependencies:
+    "@types/react": "*"
+  checksum: c8084febc0cba89abb8c53b6203a71077745e73fe2567d7c2f5add70a92c5854dd75bebb110a6106c5bf0ca6cc2c05c8941a63acecccc05446f70e4903fef4ae
+  languageName: node
+  linkType: hard
+
 "@types/responselike@npm:^1.0.0":
   version: 1.0.0
   resolution: "@types/responselike@npm:1.0.0"
@@ -6392,6 +6401,13 @@ fsevents@^1.2.7:
   dependencies:
     duplexer: ^0.1.2
   checksum: 37e0d62ce9db9c8684e056ed65d64485c0921b37a6bda61c119d1de171ec5302d700440c9898679e0715ea61f9907a0117828bf3bbc4e6b7b728ded0957426b6
+  languageName: node
+  linkType: hard
+
+"hamt_plus@npm:1.0.2":
+  version: 1.0.2
+  resolution: "hamt_plus@npm:1.0.2"
+  checksum: b1b1d65d19546a513cd68ea8e9970b5e76c61549bd395ea7d8f809d439940738cc5a36eaa712668e69099a5fd62cfafb8c34079e392697f31eee04ab5b6d4094
   languageName: node
   linkType: hard
 
@@ -10813,6 +10829,22 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"recoil@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "recoil@npm:0.2.0"
+  dependencies:
+    hamt_plus: 1.0.2
+  peerDependencies:
+    react: ">=16.13.1"
+  peerDependenciesMeta:
+    react-dom:
+      optional: true
+    react-native:
+      optional: true
+  checksum: 33fbbe352c0c9378fe170bbf192482ed082f11d4185fb27d2e9146f7e55111026aafd6676bbfab0c39517c444ffedfb4dede248c0c0cc588c28253a705ade7a5
+  languageName: node
+  linkType: hard
+
 "redux-thunk@npm:^2.3.0":
   version: 2.3.0
   resolution: "redux-thunk@npm:2.3.0"
@@ -11292,6 +11324,7 @@ resolve@^2.0.0-next.3:
     "@types/node": ^14.14.42
     "@types/react": ^17.0.4
     "@types/react-dom": ^17.0.3
+    "@types/recoil": ^0
     "@types/sharp": ^0.28.0
     "@types/socket.io": ^2.1.13
     "@types/socket.io-client": ^1.4.36
@@ -11342,6 +11375,7 @@ resolve@^2.0.0-next.3:
     react-flip-toolkit: ^7.0.13
     react-markdown: ^6.0.1
     react-refresh: ^0.9
+    recoil: ^0.2.0
     redux: ^4.1.0
     regenerator-runtime: ^0.13.7
     remark-breaks: ^2.0.2

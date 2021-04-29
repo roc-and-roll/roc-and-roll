@@ -30,7 +30,7 @@ import {
   RRTokenID,
   TokensSyncedState,
 } from "../../../shared/state";
-import { canControlMapObject, canViewTokenOnMap } from "../../permissions";
+import { canControlMapObject } from "../../permissions";
 import { ToolButtonState } from "./MapContainer";
 import { RoughContextProvider, RoughRectangle } from "../rough";
 import tinycolor from "tinycolor2";
@@ -44,12 +44,12 @@ import {
   pointSubtract,
   snapPointToGrid,
 } from "../../point";
-import { MapToken } from "./MapToken";
 import { MouseCursor } from "./MouseCursor";
 import { MapMeasurePath } from "./MapMeasurePath";
-import { MapObjectThatIsNotAToken } from "./MapObjectThatIsNotAToken";
 import { MapMouseHandler } from "./CreateMapMouseHandler";
 import { MapGrid } from "./MapGrid";
+import { MapObjects } from "./MapObjects";
+import { atom, atomFamily, useRecoilCallback } from "recoil";
 
 type Rectangle = [number, number, number, number];
 
@@ -90,6 +90,33 @@ export const globalToLocal = (transform: Matrix, p: RRPoint) => {
   return { x, y };
 };
 
+export const hoveredObjectsFamily = atomFamily<boolean, RRMapObjectID>({
+  key: "HoveredObject",
+  default: false,
+});
+
+export const hoveredObjectIdsAtom = atom<RRMapObjectID[]>({
+  key: "HoveredObjectIds",
+  default: [],
+});
+
+const withSelectionAreaDo = <T extends any>(
+  selectionArea: Rectangle | null,
+  cb: (x: number, y: number, w: number, h: number) => T,
+  otherwise: T | (() => T)
+): T => {
+  if (!selectionArea)
+    return typeof otherwise === "function"
+      ? (otherwise as () => T)()
+      : otherwise;
+
+  const left = Math.min(selectionArea[0], selectionArea[2]);
+  const right = Math.max(selectionArea[0], selectionArea[2]);
+  const top = Math.min(selectionArea[1], selectionArea[3]);
+  const bottom = Math.max(selectionArea[1], selectionArea[3]);
+  return cb(left, top, right - left, bottom - top);
+};
+
 export const RRMapView: React.FC<{
   myself: RRPlayer;
   mapObjects: RRMapObject[];
@@ -116,7 +143,7 @@ export const RRMapView: React.FC<{
   mapId,
   gridEnabled,
   backgroundColor,
-  selectedObjects,
+  selectedObjects: selectedObjectIds,
   onSelectObjects,
   onSetHP,
   handleKeyDown,
@@ -278,10 +305,10 @@ export const RRMapView: React.FC<{
       }
     },
     [
-      dragLastMouseRef,
       mouseAction,
       setTransform,
       transform,
+      setSelectionArea,
       mapObjects,
       addPointToPath,
       onMoveMapObjects,
@@ -321,33 +348,51 @@ export const RRMapView: React.FC<{
     }
   };
 
-  const withSelectionAreaDo = <T extends any>(
-    cb: (x: number, y: number, w: number, h: number) => T,
-    otherwise: T
-  ): T => {
-    if (!selectionArea) return otherwise;
+  const updateHoveredObjects = useRecoilCallback(
+    ({ snapshot, set, reset }) => (selectionArea: Rectangle | null) => {
+      const lastHoveredObjectIds = snapshot
+        .getLoadable(hoveredObjectIdsAtom)
+        .getValue();
 
-    const left = Math.min(selectionArea[0], selectionArea[2]);
-    const right = Math.max(selectionArea[0], selectionArea[2]);
-    const top = Math.min(selectionArea[1], selectionArea[3]);
-    const bottom = Math.max(selectionArea[1], selectionArea[3]);
-    return cb(left, top, right - left, bottom - top);
-  };
+      withSelectionAreaDo<void>(
+        selectionArea,
+        (x, y, w, h) => {
+          lastHoveredObjectIds.forEach((hoveredObjectId) =>
+            reset(hoveredObjectsFamily(hoveredObjectId))
+          );
+          const hoveredMapObjectIds = mapObjects
+            .filter(
+              (mapObject) =>
+                canControlMapObject(mapObject, myself) &&
+                mapObjectIntersectsWithRectangle(mapObject, { x, y, w, h })
+            )
+            .map((each) => each.id);
 
-  const hoveredObjects = withSelectionAreaDo<RRMapObjectID[]>(
-    (x, y, w, h) =>
-      mapObjects
-        .filter(
-          (o) =>
-            canControlMapObject(o, myself) &&
-            mapObjectIntersectsWithRectangle(o, { x, y, w, h })
-        )
-        .map((t) => t.id),
-    []
+          hoveredMapObjectIds.forEach((mapObjectId) => {
+            set(hoveredObjectsFamily(mapObjectId), true);
+          });
+          set(
+            hoveredObjectIdsAtom,
+            hoveredMapObjectIds.map((each) => each)
+          );
+        },
+        () => {
+          lastHoveredObjectIds.forEach((mapObjectId) =>
+            reset(hoveredObjectsFamily(mapObjectId))
+          );
+          set(hoveredObjectIdsAtom, []);
+        }
+      );
+    },
+    [mapObjects, myself]
   );
 
-  const handleMouseUp = useCallback(
-    (e: MouseEvent) => {
+  useEffect(() => {
+    updateHoveredObjects(selectionArea);
+  }, [updateHoveredObjects, selectionArea]);
+
+  const handleMouseUp = useRecoilCallback(
+    ({ snapshot }) => (e: MouseEvent) => {
       setMouseAction(MouseAction.NONE);
 
       if (mouseAction === MouseAction.MOVE_MAP_OBJECT) {
@@ -355,21 +400,18 @@ export const RRMapView: React.FC<{
         setDragStartID(null);
       }
       if (mouseAction === MouseAction.SELECTION_AREA) {
-        onSelectObjects(hoveredObjects);
+        const lastHoveredObjectIds = snapshot
+          .getLoadable(hoveredObjectIdsAtom)
+          .getValue()
+          .filter(Boolean);
+        onSelectObjects(lastHoveredObjectIds);
         setSelectionArea(null);
       }
       if (mouseAction === MouseAction.USE_TOOL) {
         toolHandler.onMouseUp(globalToLocal(transform, localCoords(e)));
       }
     },
-    [
-      mouseAction,
-      onUpdateTokenPath,
-      onSelectObjects,
-      hoveredObjects,
-      toolHandler,
-      transform,
-    ]
+    [mouseAction, onUpdateTokenPath, onSelectObjects, toolHandler, transform]
   );
 
   useEffect(() => {
@@ -393,7 +435,7 @@ export const RRMapView: React.FC<{
     [onMousePositionChanged, transform]
   );
 
-  const handleStartMoveGameObject = useCallback(
+  const handleStartMoveMapObject = useCallback(
     (object: RRMapObject, event: React.MouseEvent) => {
       if (toolButtonState === "select" && canControlMapObject(object, myself)) {
         const local = localCoords(event);
@@ -403,13 +445,13 @@ export const RRMapView: React.FC<{
         event.stopPropagation();
         setDragStartID(object.id);
         dragLastMouseRef.current = local;
-        if (!selectedObjects.includes(object.id)) {
+        if (!selectedObjectIds.includes(object.id)) {
           onSelectObjects([object.id]);
         }
         setMouseAction(MouseAction.MOVE_MAP_OBJECT);
       }
     },
-    [myself, onSelectObjects, selectedObjects, toolButtonState]
+    [myself, onSelectObjects, selectedObjectIds, toolButtonState]
   );
 
   /* FIXME: doesn't actually feel that good. might have to do it only after we really
@@ -438,9 +480,6 @@ export const RRMapView: React.FC<{
   ]);
   */
 
-  const [auraArea, setAuraArea] = useState<SVGGElement | null>(null);
-  const [healthbarArea, setHealthbarArea] = useState<SVGGElement | null>(null);
-
   const mapStyle = {
     backgroundColor,
     cursor: toolButtonState === "tool" ? "crosshair" : "inherit",
@@ -458,53 +497,19 @@ export const RRMapView: React.FC<{
       >
         <g transform={toSVG(transform)}>
           {gridEnabled && <MapGrid transform={transform} />}
-          <g ref={setAuraArea} />
-          {mapObjects
-            // render images first, so that they always are in the background
-            .sort((a, b) => +(b.type === "image") - +(a.type === "image"))
-            .map((object) =>
-              object.type !== "token" ? (
-                <MapObjectThatIsNotAToken
-                  key={object.id}
-                  onStartMove={handleStartMoveGameObject}
-                  object={object}
-                  canStartMoving={toolButtonState === "select"}
-                  selected={
-                    hoveredObjects.includes(object.id) ||
-                    selectedObjects.includes(object.id)
-                  }
-                />
-              ) : null
-            )}
-          {mapObjects
-            .flatMap((o) => (o.type === "token" ? o : []))
-            .map((object) => {
-              const token = byId(tokens.entities, object.tokenId);
-              if (!token || !canViewTokenOnMap(token, myself)) {
-                return null;
-              }
-
-              return (
-                <MapToken
-                  key={object.id}
-                  token={token}
-                  object={object}
-                  auraArea={auraArea}
-                  healthbarArea={healthbarArea}
-                  onStartMove={handleStartMoveGameObject}
-                  canStartMoving={toolButtonState === "select"}
-                  zoom={transform.a}
-                  selected={
-                    hoveredObjects.includes(object.id) ||
-                    selectedObjects.includes(object.id)
-                  }
-                  onSetHP={onSetHP}
-                  contrastColor={contrastColor}
-                />
-              );
-            })}
-          <g ref={setHealthbarArea} />
+          <MapObjects
+            mapObjects={mapObjects}
+            myself={myself}
+            contrastColor={contrastColor}
+            setHP={onSetHP}
+            toolButtonState={toolButtonState}
+            handleStartMoveMapObject={handleStartMoveMapObject}
+            tokens={tokens}
+            selectedObjectIds={selectedObjectIds}
+            zoom={transform.a}
+          />
           {withSelectionAreaDo(
+            selectionArea,
             (x, y, w, h) => (
               <RoughRectangle
                 x={x}

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { mapUpdate } from "../../shared/actions";
-import { RRMap } from "../../shared/state";
-import { useMyself } from "../myself";
+import { RRMap, RRPlayer } from "../../shared/state";
 import { useDebouncedServerUpdate } from "../state";
 import useLocalState from "../useLocalState";
 import { MapEditState, MapSnap } from "./map/MapContainer";
@@ -10,15 +9,11 @@ import { Button } from "./ui/Button";
 import { ColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
 
-export function MapToolbar({
-  map,
-  setEditState,
-}: {
+export const MapToolbar = React.memo<{
   map: RRMap;
+  myself: RRPlayer;
   setEditState: React.Dispatch<React.SetStateAction<MapEditState>>;
-}) {
-  const myself = useMyself();
-
+}>(function MapToolbar({ map, myself, setEditState }) {
   const [tool, setTool] = useState<MapEditState["tool"]>("move");
 
   const [drawType, setDrawType] = useState<
@@ -147,7 +142,7 @@ export function MapToolbar({
       {myself.isGM && <MapSettings map={map} />}
     </div>
   );
-}
+});
 
 function MapSettings({ map }: { map: RRMap }) {
   const [name, setName] = useDebouncedServerUpdate(

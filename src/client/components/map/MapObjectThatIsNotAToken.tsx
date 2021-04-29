@@ -13,18 +13,23 @@ import { useLatest } from "../../state";
 import tinycolor from "tinycolor2";
 import { assertNever } from "../../../shared/util";
 import { useMyself } from "../../myself";
+import { useRecoilValue } from "recoil";
+import { hoveredObjectsFamily } from "./Map";
 
 export const MapObjectThatIsNotAToken = React.memo<{
   object: Exclude<RRMapObject, RRTokenOnMap>;
   onStartMove: (object: RRMapObject, event: React.MouseEvent) => void;
-  selected: boolean;
+  isSelected: boolean;
   canStartMoving: boolean;
 }>(function MapObjectThatIsNotAToken({
   object,
   onStartMove,
-  selected,
+  isSelected,
   canStartMoving,
 }) {
+  const isHovered = useRecoilValue(hoveredObjectsFamily(object.id));
+  const isSelectedOrHovered = isHovered || isSelected;
+
   const myself = useMyself();
 
   const canControl = canStartMoving && object.playerId === myself.id;
@@ -33,8 +38,8 @@ export const MapObjectThatIsNotAToken = React.memo<{
   ]);
 
   const strokeLineDash = useMemo(
-    () => (selected ? [GRID_SIZE / 10, GRID_SIZE / 10] : undefined),
-    [selected]
+    () => (isSelectedOrHovered ? [GRID_SIZE / 10, GRID_SIZE / 10] : undefined),
+    [isSelectedOrHovered]
   );
 
   const ref = useLatest({ object, onStartMove });
@@ -50,7 +55,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
     y: object.position.y,
     style,
     onMouseDown,
-    fill: selected
+    fill: isSelectedOrHovered
       ? object.color
       : tinycolor(object.color).setAlpha(0.3).toRgbString(),
     stroke: object.color,

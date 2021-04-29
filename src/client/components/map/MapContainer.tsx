@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import {
   ephermalPlayerUpdate,
@@ -39,6 +39,7 @@ import { useMapSelection } from "../../mapSelection";
 import produce, { Draft } from "immer";
 import { pointAdd, snapPointToGrid } from "../../point";
 import { CreateMapMouseHandler } from "./CreateMapMouseHandler";
+import { useRefState } from "../../useRefState";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -55,7 +56,7 @@ export type MapEditState =
     }
   | { tool: "draw"; type: "text" | "freehand"; color: RRColor };
 
-export default function MapContainer({ className }: { className: string }) {
+export default function MapContainer() {
   const myself = useMyself();
   const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
   const dispatch = useServerDispatch();
@@ -65,7 +66,9 @@ export default function MapContainer({ className }: { className: string }) {
     new SyncedDebouncer(CURSOR_POSITION_SYNC_DEBOUNCE)
   );
 
-  const [transform, setTransform] = useState<Matrix>(identity());
+  const [transform, transformRef, setTransform] = useRefState<Matrix>(
+    identity()
+  );
 
   const dropRef2 = useRef<HTMLDivElement>(null);
   const [, dropRef1] = useDrop<RRToken, void, never>(
@@ -82,7 +85,7 @@ export default function MapContainer({ className }: { className: string }) {
             id: rrid<RRMapObject>(),
             type: "token",
             position: snapPointToGrid(
-              globalToLocal(transform, {
+              globalToLocal(transformRef.current, {
                 x,
                 y,
               })
@@ -93,7 +96,7 @@ export default function MapContainer({ className }: { className: string }) {
         );
       },
     }),
-    [dispatch, map.id, myself.id, transform]
+    [dispatch, map.id, myself.id, transformRef]
   );
   const dropRef = composeRefs<HTMLDivElement>(dropRef2, dropRef1);
 
@@ -204,26 +207,29 @@ export default function MapContainer({ className }: { className: string }) {
     true
   );
 
-  const updateTokenPath = (path: RRPoint[]) => {
-    dispatch(
-      ephermalPlayerUpdate({
-        id: myself.id,
-        changes: {
-          tokenPath: path,
-        },
-      })
-    );
-  };
+  const updateTokenPath = useCallback(
+    (path: RRPoint[]) =>
+      dispatch(
+        ephermalPlayerUpdate({
+          id: myself.id,
+          changes: {
+            tokenPath: path,
+          },
+        })
+      ),
+    [dispatch, myself.id]
+  );
 
   const players = useServerState((state) => state.players);
   const ephermalPlayers = useServerState((state) => state.ephermal.players);
 
-  const editStateToToolButtonState = (): ToolButtonState => {
-    if (editState.tool === "move") return "select";
-    if (editState.tool === "draw") return "tool";
-    // TODO adapt for measure
-    return "select";
-  };
+  const toolButtonState: ToolButtonState =
+    editState.tool === "move"
+      ? "select"
+      : editState.tool === "draw"
+      ? "tool"
+      : // TODO adapt for measure
+        "select";
 
   const mapMouseHandler = CreateMapMouseHandler(
     myself,
@@ -257,9 +263,11 @@ export default function MapContainer({ className }: { className: string }) {
     [selectedMapObjectIds, setLocalObjectsOnMap]
   );
 
+  const mapObjects = useMemo(() => entries(localMapObjects), [localMapObjects]);
+
   return (
-    <div className={className} ref={dropRef}>
-      <MapToolbar map={map} setEditState={setEditState} />
+    <div className="app-map" ref={dropRef}>
+      <MapToolbar map={map} myself={myself} setEditState={setEditState} />
       <RRMapView
         // map entity data
         mapId={map.id}
@@ -269,7 +277,7 @@ export default function MapContainer({ className }: { className: string }) {
         myself={myself}
         tokens={tokens}
         // toolbar / tool
-        toolButtonState={editStateToToolButtonState()}
+        toolButtonState={toolButtonState}
         toolHandler={mapMouseHandler}
         // mouse position and token path sync
         onMousePositionChanged={sendMousePositionToServer}
@@ -287,7 +295,7 @@ export default function MapContainer({ className }: { className: string }) {
         transform={transform}
         setTransform={setTransform}
         // map objects
-        mapObjects={entries(localMapObjects)}
+        mapObjects={mapObjects}
         selectedObjects={selectedMapObjectIds}
         onSelectObjects={setSelectedMapObjectIds}
         onMoveMapObjects={onMoveMapObjects}
