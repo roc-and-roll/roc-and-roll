@@ -309,21 +309,6 @@ export function useLatest<V>(value: V) {
   return ref;
 }
 
-/* TODO
-export function useImmerState<V>(value: V) {
-  const [get, set] = useState<any>(value);
-  const immerSet = useCallback<typeof set>((value) => {
-    if (typeof value === "function") {
-      const v = produce(value);
-      set(v);
-    } else {
-      set(value);
-    }
-  }, []);
-  return [get, immerSet];
-}
-*/
-
 export function useDebouncedServerUpdate<V>(
   serverValue: V,
   actionCreator: (
