@@ -1,6 +1,9 @@
 import React from "react";
 import { renderHook, WrapperComponent } from "@testing-library/react-hooks";
-import { ServerStateProvider, useDebouncedServerUpdate } from "./state";
+import {
+  ServerStateProvider,
+  useOptimisticDebouncedServerUpdate,
+} from "./state";
 import { SyncedStateAction } from "../shared/state";
 import { act } from "@testing-library/react-hooks";
 import ReactDOM from "react-dom";
@@ -78,7 +81,12 @@ function setup<V>(initialProps: HookArgs<V>) {
       debounceTime,
     }: HookArgs<V> & {
       socket: SocketIOClient.Socket;
-    }) => useDebouncedServerUpdate(serverValue, actionCreator, debounceTime),
+    }) =>
+      useOptimisticDebouncedServerUpdate(
+        serverValue,
+        actionCreator,
+        debounceTime
+      ),
     {
       wrapper,
       initialProps: {

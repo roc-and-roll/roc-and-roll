@@ -9,6 +9,7 @@ import React, {
   useState,
 } from "react";
 import ReactDOM from "react-dom";
+import type { Primitive } from "type-fest";
 import {
   initialSyncedState,
   OptimisticUpdateID,
@@ -235,7 +236,7 @@ export function useServerState<T>(selector: (state: SyncedState) => T): T {
   const { subscribe, unsubscribe, stateRef } = useContext(ServerStateContext);
 
   const selectorRef = useLatest(selector);
-  const [selectedState, setSelectedState] = useState(
+  const [selectedState, setSelectedState] = useState(() =>
     selectorRef.current(stateRef.current)
   );
 
@@ -298,21 +299,100 @@ export function useLatest<V>(value: V) {
   return ref;
 }
 
-export function useDebouncedServerUpdate<V>(
+type ActionCreatorResult =
+  | undefined
+  | SyncedStateAction<unknown, string, never>
+  | SyncedStateAction<unknown, string, never>[];
+
+/**
+ * Facility for updating a server value in a debounced fashion, while
+ * optimistically displaying the updated value locally.
+ *
+ * If you just want to debounce updates to a server value, use the useDebounced,
+ * useAggregatedDebounce, or useAggregatedDoubleDebounce hooks instead.
+ *
+ * Be aware that "debouncing server updates" means that other clients only see
+ * a new value every so often. This can be a problem when trying to sync a
+ * continuous action, like the movement of a token on the map.
+ * Use useOptimisticDebouncedLerpedServerUpdate for continuous movements
+ * instead.
+ *
+ * @param serverValue
+ * @param actionCreator
+ * @param debounce
+ * @returns
+ */
+export function useOptimisticDebouncedServerUpdate<V>(
   serverValue: V,
-  actionCreator: (
-    p: V
-  ) =>
-    | undefined
-    | SyncedStateAction<unknown, string, never>
-    | SyncedStateAction<unknown, string, never>[],
+  actionCreator: (p: V) => ActionCreatorResult,
+  debounce: Debouncer
+): readonly [V, React.Dispatch<React.SetStateAction<V>>] {
+  return _useDebouncedServerUpdateInternal(
+    serverValue,
+    actionCreator,
+    debounce,
+    undefined
+  );
+}
+
+export function useOptimisticDebouncedLerpedServerUpdate<V>(
+  selector: (s: SyncedState) => V,
+  actionCreator: (p: V) => ActionCreatorResult,
   debounce: Debouncer,
-  lerp?: (start: V, end: V, amount: number) => V
-): readonly [V, (newValue: V | ((v: V) => V)) => void] {
+  lerp: (start: V, end: V, amount: number) => V
+): readonly [V, React.Dispatch<React.SetStateAction<V>>] {
+  return _useDebouncedServerUpdateInternal(
+    selector,
+    actionCreator,
+    debounce,
+    lerp
+  );
+}
+
+function _useDebouncedServerUpdateInternal<V>(
+  serverValueOrSelector: V,
+  actionCreator: (p: V) => ActionCreatorResult,
+  debounce: Debouncer,
+  lerp: undefined
+): readonly [V, React.Dispatch<React.SetStateAction<V>>];
+
+function _useDebouncedServerUpdateInternal<V>(
+  serverValueOrSelector: (s: SyncedState) => V,
+  actionCreator: (p: V) => ActionCreatorResult,
+  debounce: Debouncer,
+  lerp: (start: V, end: V, amount: number) => V
+): readonly [V, React.Dispatch<React.SetStateAction<V>>];
+
+/**
+ * Internal implementation shared by the useOptimisticDebouncedServerUpdate and
+ * useOptimisticDebouncedLerpedServerUpdate hooks. We MUST NOT expose this
+ * internal implementation, because we need to gurantee that whether or not
+ * lerping is enabled remains constant during the lifetime of this hook, which
+ * allows us to "conditionally" use other hooks based on that.
+ *
+ * @param serverValueOrSelector
+ * @param actionCreator
+ * @param debounce
+ * @param lerp
+ * @returns
+ */
+function _useDebouncedServerUpdateInternal<
+  // V is allowed to be basically everything, except for functions. Feel free
+  // to extend V further.
+  V extends Primitive | Record<string | number, unknown>
+>(
+  serverValueOrSelector: V | ((s: SyncedState) => V),
+  actionCreator: (p: V) => ActionCreatorResult,
+  debounce: Debouncer,
+  lerp: undefined | ((start: V, end: V, amount: number) => V)
+): readonly [V, React.Dispatch<React.SetStateAction<V>>] {
   const dispatch = useServerDispatch();
   const {
+    subscribe,
+    unsubscribe,
     subscribeToOptimisticUpdateExecuted,
     unsubscribeToOptimisticUpdateExecuted,
+    stateRef,
   } = useContext(ServerStateContext);
 
   const optimisticUpdatePhase = useRef<
@@ -332,12 +412,16 @@ export function useDebouncedServerUpdate<V>(
   // The localValue is the value that is returned from this hook. It normally
   // follows the server value, except when there are changes to the local value
   // that have not yet been sent and received from the server.
-  const [localValue, _setLocalValue] = useState(serverValue);
+  const [localValue, _setLocalValue] = useState(
+    typeof serverValueOrSelector === "function"
+      ? () => serverValueOrSelector(stateRef.current)
+      : serverValueOrSelector
+  );
 
-  // Display the most relevant data in the React devtools.
+  // Display the most relevant data in React devtools.
   useDebugValue({
     optimisticUpdatePhase: optimisticUpdatePhase.current,
-    serverValue,
+    serverValueOrSelector,
     localValue,
   });
 
@@ -350,53 +434,87 @@ export function useDebouncedServerUpdate<V>(
   // remains stable.
   const actionCreatorRef = useLatest(actionCreator);
   const lerpRef = useLatest(lerp);
-  const serverValueRef = useLatest(serverValue);
+  const serverValueOrSelectorRef = useLatest(serverValueOrSelector);
   const localValueRef = useLatest(localValue);
 
-  // This effect updates the local value whenever the server value changes, if
-  // we do not currently have an active local value.
-  // It uses the lerp function, if provided, to smoothly lerp from the old local
-  // value to the new server value.
-  const [rafStart, rafStop] = useRafLoop();
-  useLayoutEffect(() => {
-    // console.log("effect/lerp");
-    if (optimisticUpdatePhase.current.type === "off") {
-      if (!lerpRef.current) {
-        _setLocalValue(serverValue);
-      } else if (!Object.is(serverValue, localValueRef.current)) {
-        // Instead of overwriting the local value with the server value
-        // immediately, slowly lerp from the current local value to the server
-        // value
+  // This condition is fine, even though we use hooks based on it, since the
+  // condition is guranteed to never change for the lifetime of this hook.
+  if (typeof serverValueOrSelector === "function") {
+    // This effect updates the local value whenever the server value changes, if
+    // we do not currently have an active local value. It uses the lerp
+    // function to smoothly lerp from the old local value to the new server
+    // value.
 
-        // Copy the current lerp and local value from the ref into local
-        // variables, so that they remain stable for the duration of the lerp,
-        // instead of using a possibly updated value from the ref.
-        const lerp = lerpRef.current;
-        const localValue = localValueRef.current;
-        rafStart((amount) => {
-          // console.log(delta);
-          _setLocalValue(
-            // Make sure to use the serverValue as is at the end of the
-            // animation
-            amount === 1 ? serverValue : lerp(localValue, serverValue, amount)
-          );
-          // Lerp for the same amount of time as the debounceTime.
-        }, debouncerTime(debounce));
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const [rafStart, rafStop] = useRafLoop();
 
-        return () => {
-          // If the server value updates while we were currently lerping,
-          // aboirt the current lerp and set the local value to the end position
-          // of the interrupted lerp.
-          if (rafStop()) {
-            _setLocalValue(serverValue);
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useLayoutEffect(() => {
+      const subscriber = (state: SyncedState) => {
+        if (optimisticUpdatePhase.current.type === "off") {
+          const selector = serverValueOrSelectorRef.current;
+          if (typeof selector !== "function") {
+            throw new Error("should never happen");
           }
-        };
+          const serverValue = selector(state);
+
+          if (!Object.is(serverValue, localValueRef.current)) {
+            // Instead of overwriting the local value with the server value
+            // immediately, slowly lerp from the current local value to the
+            // server value
+
+            // Copy the current lerp and local value from the ref into local
+            // variables, so that they remain stable for the duration of the
+            // lerp, instead of using a possibly updated value from the ref.
+            const lerp = lerpRef.current;
+            if (!lerp) {
+              throw new Error("should never happen");
+            }
+            const localValue = localValueRef.current;
+            rafStart((amount) => {
+              // console.log(delta);
+              _setLocalValue(
+                // Make sure to use the serverValue as is at the end of the
+                // animation
+                amount === 1
+                  ? serverValue
+                  : lerp(localValue, serverValue, amount)
+              );
+              // Lerp for the same amount of time as the debounceTime.
+            }, debouncerTime(debounce));
+
+            return () => {
+              // If the server value updates while we were currently lerping,
+              // aboirt the current lerp and set the local value to the end position
+              // of the interrupted lerp.
+              if (rafStop()) {
+                _setLocalValue(serverValue);
+              }
+            };
+          }
+        }
+      };
+
+      subscribe(subscriber);
+      return () => unsubscribe(subscriber);
+    }, [
+      debounce,
+      lerpRef,
+      localValueRef,
+      rafStart,
+      rafStop,
+      serverValueOrSelectorRef,
+      subscribe,
+      unsubscribe,
+    ]);
+  } else {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useLayoutEffect(() => {
+      if (optimisticUpdatePhase.current.type === "off") {
+        _setLocalValue(serverValueOrSelector);
       }
-    }
-    // Make sure to only pass serverValue and debounceTime directly, and all
-    // other dependencies as refs. Most importantly, pass localValue as just a
-    // ref so that this hook is not re-executed when the local value changes.
-  }, [serverValue, debounce, localValueRef, lerpRef, rafStart, rafStop]);
+    }, [serverValueOrSelector]);
+  }
 
   // Subscribe to server state changes, but just to track which optimistic
   // updates have been successfully executed. Subscribing will _not_ cause this
@@ -415,14 +533,19 @@ export function useDebouncedServerUpdate<V>(
         // can now safely switch back to rendering the value from the server.
         optimisticUpdatePhase.current = { type: "off" };
         // console.log("set/action finished");
-        _setLocalValue(serverValueRef.current);
+        _setLocalValue(
+          typeof serverValueOrSelectorRef.current === "function"
+            ? serverValueOrSelectorRef.current(stateRef.current)
+            : serverValueOrSelectorRef.current
+        );
       }
     };
 
     subscribeToOptimisticUpdateExecuted(subscriber);
     return () => unsubscribeToOptimisticUpdateExecuted(subscriber);
   }, [
-    serverValueRef,
+    serverValueOrSelectorRef,
+    stateRef,
     subscribeToOptimisticUpdateExecuted,
     unsubscribeToOptimisticUpdateExecuted,
   ]);
@@ -475,7 +598,7 @@ export function useDebouncedServerUpdate<V>(
       _setLocalValue((oldState) => {
         const newState =
           typeof newStateOrUpdater === "function"
-            ? (newStateOrUpdater as (v: V) => V)(oldState)
+            ? newStateOrUpdater(oldState)
             : newStateOrUpdater;
 
         if (!Object.is(newState, oldState)) {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { mapUpdate } from "../../shared/actions";
 import { RRMap, RRPlayer } from "../../shared/state";
-import { useDebouncedServerUpdate } from "../state";
+import { useOptimisticDebouncedServerUpdate } from "../state";
 import useLocalState from "../useLocalState";
 import { MapEditState, MapSnap } from "./map/MapContainer";
 import { Popover } from "./Popover";
@@ -145,18 +145,21 @@ export const MapToolbar = React.memo<{
 });
 
 function MapSettings({ map }: { map: RRMap }) {
-  const [name, setName] = useDebouncedServerUpdate(
+  const [name, setName] = useOptimisticDebouncedServerUpdate(
     map.name,
     (name) => mapUpdate({ id: map.id, changes: { name } }),
     1000
   );
-  const [backgroundColor, setBackgroundColor] = useDebouncedServerUpdate(
+  const [
+    backgroundColor,
+    setBackgroundColor,
+  ] = useOptimisticDebouncedServerUpdate(
     map.backgroundColor,
     (backgroundColor) =>
       mapUpdate({ id: map.id, changes: { backgroundColor } }),
     500
   );
-  const [gridEnabled, setGridEnabled] = useDebouncedServerUpdate(
+  const [gridEnabled, setGridEnabled] = useOptimisticDebouncedServerUpdate(
     map.gridEnabled,
     (gridEnabled) => mapUpdate({ id: map.id, changes: { gridEnabled } }),
     100

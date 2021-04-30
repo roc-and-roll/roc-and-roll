@@ -21,7 +21,7 @@ import {
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import {
-  useDebouncedServerUpdate,
+  useOptimisticDebouncedLerpedServerUpdate,
   useServerDispatch,
   useServerState,
 } from "../../state";
@@ -133,21 +133,23 @@ export default function MapContainer() {
   );
   const dropRef = composeRefs<HTMLDivElement>(dropRef2, dropRef1);
 
-  const serverMapObjects = map.objects;
-  const [localMapObjects, setLocalObjectsOnMap] = useDebouncedServerUpdate(
-    serverMapObjects,
+  const [
+    localMapObjects,
+    setLocalObjectsOnMap,
+  ] = useOptimisticDebouncedLerpedServerUpdate(
+    (state) => byId(state.maps.entities, myself.currentMap)!.objects,
     useRecoilCallback(({ snapshot }) => (localMapObjects) =>
       snapshot
         .getLoadable(selectedMapObjectIdsAtom)
         .getValue()
-        .flatMap((selectMapObjectId) => {
-          const mapObject = byId(localMapObjects.entities, selectMapObjectId);
+        .flatMap((selectedMapObjectId) => {
+          const mapObject = byId(localMapObjects.entities, selectedMapObjectId);
           if (!mapObject) {
             return [];
           }
 
           return mapObjectUpdate(map.id, {
-            id: selectMapObjectId,
+            id: mapObject.id,
             changes: {
               position: mapObject.position,
             },
@@ -337,7 +339,7 @@ export default function MapContainer() {
         settings.debug.mapTokenPositions && (
           <DebugMapContainerOverlay
             localMapObjects={entries(localMapObjects)}
-            serverMapObjects={entries(serverMapObjects)}
+            serverMapObjects={entries(map.objects)}
           />
         )}
     </div>

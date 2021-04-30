@@ -593,6 +593,7 @@ function MeasurePaths({
   return (
     <>
       {entries(ephermalPlayers).map((ephermalPlayer) => {
+        // use local token path instead of the one from the server for myself.
         const tokenPath =
           ephermalPlayer.id !== myId ? ephermalPlayer.tokenPath : myTokenPath;
         if (tokenPath.length === 0) {
@@ -603,8 +604,6 @@ function MeasurePaths({
         if (!player || player.currentMap !== mapId) {
           return null;
         }
-        // use local token path instead of the one from the server for
-        // myself.
 
         return (
           <MapMeasurePath

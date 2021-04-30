@@ -21,7 +21,7 @@ import { useMyMap, useMyself } from "../myself";
 import { canControlToken } from "../permissions";
 import { diceResult, rollInitiative } from "../roll";
 import {
-  useDebouncedServerUpdate,
+  useOptimisticDebouncedServerUpdate,
   useServerDispatch,
   useServerState,
 } from "../state";
@@ -92,7 +92,7 @@ const InitiativeEntry = React.memo<{
     );
   }
 
-  const [initiative, setInitiative] = useDebouncedServerUpdate(
+  const [initiative, setInitiative] = useOptimisticDebouncedServerUpdate(
     entry.initiative.toString(),
     (initiativeStr) => {
       const initiative = parseInt(initiativeStr);

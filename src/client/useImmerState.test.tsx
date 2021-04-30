@@ -1,4 +1,5 @@
 import { act, renderHook } from "@testing-library/react-hooks";
+import { Primitive } from "type-fest";
 import { useImmerState } from "./useImmerState";
 
 describe("useDebounce", () => {
@@ -6,7 +7,9 @@ describe("useDebounce", () => {
     initialValue: V;
   };
 
-  function setup<V>(initialProps: HookArgs<V>) {
+  function setup<V extends Primitive | Record<string, unknown>>(
+    initialProps: HookArgs<V>
+  ) {
     return renderHook(
       ({ initialValue }: HookArgs<V>) => useImmerState(initialValue),
       {

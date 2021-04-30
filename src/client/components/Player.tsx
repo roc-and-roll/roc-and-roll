@@ -1,7 +1,10 @@
 import React from "react";
 import { playerUpdate } from "../../shared/actions";
 import { useMyself } from "../myself";
-import { useDebouncedServerUpdate, useServerDispatch } from "../state";
+import {
+  useOptimisticDebouncedServerUpdate,
+  useServerDispatch,
+} from "../state";
 import { Button } from "./ui/Button";
 import { ColorInput } from "./ui/ColorInput";
 
@@ -9,7 +12,7 @@ export function Player({ logout }: { logout: () => void }) {
   const dispatch = useServerDispatch();
   const myself = useMyself();
 
-  const [name, setName] = useDebouncedServerUpdate(
+  const [name, setName] = useOptimisticDebouncedServerUpdate(
     myself.name,
     (name) =>
       playerUpdate({
@@ -19,7 +22,7 @@ export function Player({ logout }: { logout: () => void }) {
     1000
   );
 
-  const [color, setColor] = useDebouncedServerUpdate(
+  const [color, setColor] = useOptimisticDebouncedServerUpdate(
     myself.color,
     (color) =>
       playerUpdate({

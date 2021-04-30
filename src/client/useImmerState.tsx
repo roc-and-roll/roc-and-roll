@@ -1,18 +1,23 @@
 import produce from "immer";
 import type { Draft } from "immer/dist/types/types-external";
 import { useState, useCallback } from "react";
+import { Primitive } from "type-fest";
 
-export function useImmerState<V>(initialValue: V | (() => V)) {
-  const [get, set] = useState<V>(initialValue);
-  const immerSet = useCallback(
+export function useImmerState<
+  // V is allowed to be basically everything, except for functions. Feel free
+  // to extend V further.
+  V extends Primitive | Record<string | number, unknown>
+>(initialValue: V | (() => V)) {
+  const [state, setState] = useState(initialValue);
+  const setImmerState = useCallback(
     (valueOrUpdater: V | ((draft: Draft<V>) => V | void)) => {
       if (typeof valueOrUpdater === "function") {
-        set(produce<V>(valueOrUpdater as (draft: Draft<V>) => V | void));
+        setState(produce<V>(valueOrUpdater));
       } else {
-        set(valueOrUpdater);
+        setState(valueOrUpdater);
       }
     },
     []
   );
-  return [get, immerSet] as const;
+  return [state, setImmerState] as const;
 }

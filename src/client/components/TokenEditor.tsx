@@ -1,9 +1,12 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import { tokenUpdate, tokenRemove } from "../../shared/actions";
 import { randomColor } from "../../shared/colors";
 import { RRToken } from "../../shared/state";
 import { useFileUpload } from "../files";
-import { useServerDispatch, useDebouncedServerUpdate } from "../state";
+import {
+  useServerDispatch,
+  useOptimisticDebouncedServerUpdate,
+} from "../state";
 import { Button } from "./ui/Button";
 import { ColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
@@ -33,13 +36,13 @@ export function TokenEditor({
     fileInput.current!.value = "";
   };
 
-  const [name, setName] = useDebouncedServerUpdate(
+  const [name, setName] = useOptimisticDebouncedServerUpdate(
     token.name,
     (name) => tokenUpdate({ id: token.id, changes: { name } }),
     1000
   );
 
-  const [scale, setScale] = useDebouncedServerUpdate(
+  const [scale, setScale] = useOptimisticDebouncedServerUpdate(
     token.scale.toString(),
     (scaleString) => {
       const scale = parseInt(scaleString);
@@ -51,7 +54,7 @@ export function TokenEditor({
     1000
   );
 
-  const [hp, setHP] = useDebouncedServerUpdate(
+  const [hp, setHP] = useOptimisticDebouncedServerUpdate(
     token.hp.toString(),
     (hpString) => {
       const hp = parseInt(hpString);
@@ -63,7 +66,7 @@ export function TokenEditor({
     1000
   );
 
-  const [maxHP, setMaxHP] = useDebouncedServerUpdate(
+  const [maxHP, setMaxHP] = useOptimisticDebouncedServerUpdate(
     token.maxHP.toString(),
     (maxHPString) => {
       const maxHP = parseInt(maxHPString);
@@ -75,7 +78,7 @@ export function TokenEditor({
     1000
   );
 
-  const [auras, setAuras] = useDebouncedServerUpdate(
+  const [auras, setAuras] = useOptimisticDebouncedServerUpdate(
     token.auras,
     (auras) => tokenUpdate({ id: token.id, changes: { auras } }),
     1000
