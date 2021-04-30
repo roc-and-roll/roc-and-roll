@@ -126,7 +126,7 @@ module.exports = (webpackEnv) => {
           ],
         },
         {
-          test: /\.(eot|svg|ttf|woff|woff2|mp3)$/,
+          test: /\.(eot|ttf|woff|woff2|mp3|svg|png|jpg|jpeg|glb)$/,
           type: 'asset',
         },
         {

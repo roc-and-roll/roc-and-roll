@@ -2,6 +2,13 @@ import * as THREE from "three";
 import React, { Suspense, useMemo, useRef, useState } from "react";
 import { Canvas, invalidate, useFrame, useLoader } from "@react-three/fiber";
 import { GLTFLoader, GLTF } from "three/examples/jsm/loaders/GLTFLoader";
+import diceFaces from "./dice/dice-faces.png";
+import d4Glb from "./dice/d4.glb";
+import d6Glb from "./dice/d6.glb";
+import d8Glb from "./dice/d8.glb";
+import d10Glb from "./dice/d10.glb";
+import d12Glb from "./dice/d12.glb";
+import d20Glb from "./dice/d20.glb";
 
 const Dice: React.FC<
   JSX.IntrinsicElements["mesh"] & {
@@ -43,7 +50,7 @@ const Dice: React.FC<
     }
   });
 
-  const [image] = useLoader(THREE.TextureLoader, ["/dice/dice-faces.png"]);
+  const [image] = useLoader(THREE.TextureLoader, [diceFaces]);
   image && (image.flipY = false);
 
   const randomAxis = () => {
@@ -144,12 +151,12 @@ const Dice: React.FC<
 
 const DiceContainer: React.FC = () => {
   const [d4, d6, d8, d10, d12, d20] = useLoader(GLTFLoader, [
-    "/dice/d4.glb",
-    "/dice/d6.glb",
-    "/dice/d8.glb",
-    "/dice/d10.glb",
-    "/dice/d12.glb",
-    "/dice/d20.glb",
+    d4Glb,
+    d6Glb,
+    d8Glb,
+    d10Glb,
+    d12Glb,
+    d20Glb,
   ]);
 
   const [changingCount, setChangingCount] = useState(0);

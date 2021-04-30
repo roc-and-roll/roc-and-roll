@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import { DiceInput } from "./DiceInput";
 import { TokenManager } from "./TokenManager";
 import { Collapsible } from "./Collapsible";
-import { Debug } from "./Debug";
+import { Playground } from "./Playground";
 import { Resizable } from "re-resizable";
 import useLocalState from "../useLocalState";
 import { Player } from "./Player";
@@ -17,7 +17,7 @@ import { Maps } from "./Maps";
 
 // Lazy-load the DiceRoller component so that THREE.js is not part of the
 // initial bundle sent to the client.
-const DiceRoller = React.lazy(() => import("./DiceRoller"));
+const DiceRoller = React.lazy(() => import("./diceRoller/DiceRoller"));
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
@@ -90,7 +90,7 @@ export function Sidebar({ logout }: { logout: () => void }) {
           <About />
         </Collapsible>
 
-        {process.env.NODE_ENV === "development" && <Debug />}
+        {process.env.NODE_ENV === "development" && <Playground />}
       </div>
     </Resizable>
   );
