@@ -4,6 +4,7 @@ import { ServerStateProvider, useDebouncedServerUpdate } from "./state";
 import { SyncedStateAction } from "../shared/state";
 import { act } from "@testing-library/react-hooks";
 import ReactDOM from "react-dom";
+import FakeTimers from "@sinonjs/fake-timers";
 
 type Subscriber = (payload: any) => void;
 type OnEmitSubscriber = (name: string, payload: any) => void;
@@ -100,6 +101,16 @@ function setup<V>(initialProps: HookArgs<V>) {
 }
 
 describe("optimistic state updates", () => {
+  let clock: FakeTimers.Clock;
+
+  beforeEach(() => {
+    clock = FakeTimers.install();
+  });
+
+  afterEach(() => {
+    clock.uninstall();
+  });
+
   it("passes through server updates when there is no local update", async () => {
     const { mockSocket, socket, result, rerender, unmount } = setup({
       serverValue: 123,
@@ -181,11 +192,12 @@ describe("optimistic state updates", () => {
       });
     });
     expect(result.current[0]).toBe(42);
-
-    // wait 200ms -> now the updated local state should have been sent to the
-    // server
     expect(onEmit).toBeCalledTimes(0);
-    await new Promise<void>((resolve) => setTimeout(() => resolve(), 110));
+
+    // wait -> now the updated local state should have been sent to the
+    // server
+    await clock.runToLastAsync();
+    expect(clock.now).toBe(100);
     expect(onEmit).toBeCalledTimes(1);
 
     // trigger a SET_STATE update, which also should not overwrite the local

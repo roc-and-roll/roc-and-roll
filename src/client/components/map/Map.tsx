@@ -166,9 +166,9 @@ export const RRMapView: React.FC<{
   );
 
   // TODO can't handle overlapping clicks
-  const [mouseAction, setMouseAction] = useState<MouseAction>(MouseAction.NONE);
+  const mouseActionRef = useRef<MouseAction>(MouseAction.NONE);
 
-  const [dragStartID, setDragStartID] = useState<RRMapObjectID | null>(null);
+  const dragStartIdRef = useRef<RRMapObjectID | null>(null);
   const dragLastMouseRef = useRef<RRPoint>({
     x: 0,
     y: 0,
@@ -178,12 +178,7 @@ export const RRMapView: React.FC<{
 
   const [tokenPath, tokenPathRef, setTokenPath] = useRefState<RRPoint[]>([]);
 
-  const syncTokenPath = useDebounce(
-    useCallback((tokenPath: RRPoint[]) => onUpdateTokenPath(tokenPath), [
-      onUpdateTokenPath,
-    ]),
-    tokenPathDebounce
-  );
+  const syncTokenPath = useDebounce(onUpdateTokenPath, tokenPathDebounce);
 
   useEffect(() => {
     syncTokenPath(tokenPath);
@@ -202,7 +197,7 @@ export const RRMapView: React.FC<{
       e.preventDefault();
       e.stopPropagation();
 
-      if (mouseAction !== MouseAction.NONE) return;
+      if (mouseActionRef.current !== MouseAction.NONE) return;
 
       const { x, y } = localCoords(e);
       setTransform((t) => {
@@ -224,7 +219,7 @@ export const RRMapView: React.FC<{
         );
       });
     },
-    [mouseAction, setTransform]
+    [setTransform]
   );
 
   const addPointToPath = useCallback(
@@ -284,7 +279,7 @@ export const RRMapView: React.FC<{
         y: y - dragLastMouseRef.current.y,
       };
 
-      switch (mouseAction) {
+      switch (mouseActionRef.current) {
         case MouseAction.PAN: {
           setTransform((t) =>
             compose(translate(frameDelta.x, frameDelta.y), t)
@@ -301,8 +296,9 @@ export const RRMapView: React.FC<{
         case MouseAction.MOVE_MAP_OBJECT: {
           // TODO consider actual bounding box
           const innerLocal = pointAdd(
-            snapshot.getLoadable(mapObjectsFamily(dragStartID!)).getValue()!
-              .position,
+            snapshot
+              .getLoadable(mapObjectsFamily(dragStartIdRef.current!))
+              .getValue()!.position,
             makePoint(GRID_SIZE * 0.5)
           );
           addPointToPath(innerLocal);
@@ -315,18 +311,16 @@ export const RRMapView: React.FC<{
         }
       }
 
-      if (mouseAction !== MouseAction.NONE) {
+      if (mouseActionRef.current !== MouseAction.NONE) {
         dragLastMouseRef.current = { x, y };
       }
     },
     [
-      mouseAction,
       setTransform,
       transform,
       setSelectionArea,
       addPointToPath,
       onMoveMapObjects,
-      dragStartID,
       toolHandler,
     ]
   );
@@ -344,7 +338,7 @@ export const RRMapView: React.FC<{
           : MouseAction.USE_TOOL
         : MouseAction.NONE;
 
-    setMouseAction(newMouseAction);
+    mouseActionRef.current = newMouseAction;
 
     const local = localCoords(e);
     dragLastMouseRef.current = local;
@@ -428,13 +422,11 @@ export const RRMapView: React.FC<{
 
   const handleMouseUp = useRecoilCallback(
     ({ snapshot }) => (e: MouseEvent) => {
-      setMouseAction(MouseAction.NONE);
-
-      if (mouseAction === MouseAction.MOVE_MAP_OBJECT) {
+      if (mouseActionRef.current === MouseAction.MOVE_MAP_OBJECT) {
         setTokenPath([]);
-        setDragStartID(null);
+        dragStartIdRef.current = null;
       }
-      if (mouseAction === MouseAction.SELECTION_AREA) {
+      if (mouseActionRef.current === MouseAction.SELECTION_AREA) {
         const lastHoveredObjectIds = snapshot
           .getLoadable(hoveredMapObjectIdsAtom)
           .getValue()
@@ -442,11 +434,12 @@ export const RRMapView: React.FC<{
         setSelectedMapObjectIds(lastHoveredObjectIds);
         setSelectionArea(null);
       }
-      if (mouseAction === MouseAction.USE_TOOL) {
+      if (mouseActionRef.current === MouseAction.USE_TOOL) {
         toolHandler.onMouseUp(globalToLocal(transform, localCoords(e)));
       }
+      mouseActionRef.current = MouseAction.NONE;
     },
-    [mouseAction, setTokenPath, setSelectedMapObjectIds, toolHandler, transform]
+    [setTokenPath, setSelectedMapObjectIds, toolHandler, transform]
   );
 
   useEffect(() => {
@@ -478,7 +471,7 @@ export const RRMapView: React.FC<{
         (document.activeElement as HTMLElement)?.blur();
         event.preventDefault();
         event.stopPropagation();
-        setDragStartID(object.id);
+        dragStartIdRef.current = object.id;
         dragLastMouseRef.current = local;
         if (
           !snapshot
@@ -488,7 +481,7 @@ export const RRMapView: React.FC<{
         ) {
           setSelectedMapObjectIds([object.id]);
         }
-        setMouseAction(MouseAction.MOVE_MAP_OBJECT);
+        mouseActionRef.current = MouseAction.MOVE_MAP_OBJECT;
       }
     },
     [myself, setSelectedMapObjectIds, toolButtonState]
@@ -498,8 +491,8 @@ export const RRMapView: React.FC<{
             drag and not just select.
   // we snap tokens to the cursor to make it easier for the user to aim diagonals
   useEffect(() => {
-    if (dragStartID != null) {
-      const object = mapObjects.find((o) => o.id === dragStartID)!;
+    if (dragStartId.current != null) {
+      const object = mapObjects.find((o) => o.id === dragStartId.current)!;
       if (object.type === "token") {
         const innerLocal = globalToLocal(transform, dragLastMouseRef.current);
         const delta = pointSubtract(
@@ -511,7 +504,6 @@ export const RRMapView: React.FC<{
     }
   }, [
     dragLastMouseRef,
-    dragStartID,
     mapObjects,
     mapObjects.entries,
     onMoveMapObjects,

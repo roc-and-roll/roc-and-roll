@@ -25,7 +25,7 @@ export function Settings() {
           <h4>debug settings</h4>
           <div>
             <label>
-              show map object position overlay{" "}
+              show debug map overlay{" "}
               <input
                 type="checkbox"
                 checked={settings.debug.mapTokenPositions}

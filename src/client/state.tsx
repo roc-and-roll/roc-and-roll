@@ -80,8 +80,6 @@ export function ServerStateProvider({
 
   const propagateStateChange = useCallback(() => {
     const update = () => {
-      propagationAnimationFrameRef.current = null;
-
       const state = stateRef.current;
       const finishedOptimisticUpdateIds =
         finishedOptimisticUpdateIdsRef.current;
@@ -99,7 +97,10 @@ export function ServerStateProvider({
     if (process.env.NODE_ENV === "test") {
       update();
     } else {
-      propagationAnimationFrameRef.current ??= requestAnimationFrame(update);
+      propagationAnimationFrameRef.current ??= requestAnimationFrame(() => {
+        propagationAnimationFrameRef.current = null;
+        update();
+      });
     }
   }, []);
 
@@ -222,12 +223,6 @@ function applyStatePatch(
 // Hooks
 ////////////////////////////////////////////////////////////////////////////////
 
-function useForceRerender() {
-  const [_, setI] = useState(0);
-
-  return useCallback(() => setI((i) => i + 1), []);
-}
-
 /**
  * Get a piece of the server state. Will re-render the component whenever that
  * piece of state changes.
@@ -237,28 +232,22 @@ function useForceRerender() {
  * @returns The selected piece of server state.
  */
 export function useServerState<T>(selector: (state: SyncedState) => T): T {
-  const rerender = useForceRerender();
   const { subscribe, unsubscribe, stateRef } = useContext(ServerStateContext);
 
-  const selectorRef = useRef<typeof selector | null>(null);
-  selectorRef.current = selector;
-
-  const selectedStateRef = useRef<T | null>(null);
-  selectedStateRef.current = selectorRef.current(stateRef.current);
+  const selectorRef = useLatest(selector);
+  const [selectedState, setSelectedState] = useState(
+    selectorRef.current(stateRef.current)
+  );
 
   useEffect(() => {
     const subscriber = (newState: SyncedState) => {
-      const newSelectedState = selectorRef.current!(newState);
-      if (newSelectedState !== selectedStateRef.current) {
-        selectedStateRef.current = newSelectedState;
-        rerender();
-      }
+      setSelectedState(selectorRef.current(newState));
     };
     subscribe(subscriber);
     return () => unsubscribe(subscriber);
-  }, [rerender, subscribe, unsubscribe]);
+  }, [selectorRef, subscribe, unsubscribe]);
 
-  return selectedStateRef.current;
+  return selectedState;
 }
 
 /**
@@ -440,8 +429,8 @@ export function useDebouncedServerUpdate<V>(
 
   // Function that uses the actionCreator argument to create the necessary
   // actions from the latest state. It assigns an __optimisticUpdateId__
-  // to each of the actions, and remembers the __optimisticUpdateId__ in the
-  // optimisticUpdatePhase ref. I then dispatches the actions to the server.
+  // to the last action, and remembers the __optimisticUpdateId__ in the
+  // optimisticUpdatePhase ref. It then dispatches the actions to the server.
   const actionDispatch = useCallback(
     (newState: V) => {
       let actionCreatorResult = actionCreatorRef.current(newState);
@@ -450,21 +439,26 @@ export function useDebouncedServerUpdate<V>(
       } else if (!Array.isArray(actionCreatorResult)) {
         actionCreatorResult = [actionCreatorResult];
       }
-      if (actionCreatorResult.length === 0) {
+
+      const actions = actionCreatorResult;
+      if (actions.length === 0) {
         return;
       }
 
-      const actions = actionCreatorResult.map((action) => ({
-        ...action,
+      const optimisticUpdateId = rrid<{ id: OptimisticUpdateID }>();
+
+      const lastAction = actions[actions.length - 1]!;
+      actions[actions.length - 1] = {
+        ...lastAction,
         meta: {
-          ...(action.meta ?? {}),
-          __optimisticUpdateId__: rrid<{ id: OptimisticUpdateID }>(),
+          ...(lastAction.meta ?? {}),
+          __optimisticUpdateId__: optimisticUpdateId,
         },
-      }));
+      };
 
       optimisticUpdatePhase.current = {
         type: "on-until",
-        id: actions[actions.length - 1]!.meta.__optimisticUpdateId__,
+        id: optimisticUpdateId,
       };
 
       dispatch(actions);

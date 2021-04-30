@@ -43,7 +43,7 @@ import { pointAdd, snapPointToGrid } from "../../point";
 import { useMapToolHandler } from "./useMapToolHandler";
 import { useRefState } from "../../useRefState";
 import { atomFamily, atom, useRecoilCallback, RecoilState } from "recoil";
-import { DebugTokenPositions } from "./DebugTokenPositions";
+import { DebugMapContainerOverlay } from "./DebugTokenPositions";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -335,7 +335,7 @@ export default function MapContainer() {
       />
       {process.env.NODE_ENV === "development" &&
         settings.debug.mapTokenPositions && (
-          <DebugTokenPositions
+          <DebugMapContainerOverlay
             localMapObjects={entries(localMapObjects)}
             serverMapObjects={entries(serverMapObjects)}
           />

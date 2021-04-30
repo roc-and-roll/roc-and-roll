@@ -22,7 +22,6 @@ export function TokenEditor({
   const fileInput = useRef<HTMLInputElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
   const [isUploading, upload] = useFileUpload();
-  const [scale, setScale] = useState(token.scale.toString());
 
   const dispatch = useServerDispatch();
 
@@ -40,16 +39,47 @@ export function TokenEditor({
     1000
   );
 
-  const [_, setProperScale] = useDebouncedServerUpdate(
-    token.scale,
-    (scale) => tokenUpdate({ id: token.id, changes: { scale } }),
+  const [scale, setScale] = useDebouncedServerUpdate(
+    token.scale.toString(),
+    (scaleString) => {
+      const scale = parseInt(scaleString);
+      if (isNaN(scale)) {
+        return;
+      }
+      return tokenUpdate({ id: token.id, changes: { scale } });
+    },
     1000
   );
 
-  useEffect(() => {
-    const num = parseInt(scale);
-    if (!isNaN(num)) setProperScale(num);
-  }, [scale, setProperScale]);
+  const [hp, setHP] = useDebouncedServerUpdate(
+    token.hp.toString(),
+    (hpString) => {
+      const hp = parseInt(hpString);
+      if (isNaN(hp)) {
+        return;
+      }
+      return tokenUpdate({ id: token.id, changes: { hp } });
+    },
+    1000
+  );
+
+  const [maxHP, setMaxHP] = useDebouncedServerUpdate(
+    token.maxHP.toString(),
+    (maxHPString) => {
+      const maxHP = parseInt(maxHPString);
+      if (isNaN(maxHP)) {
+        return;
+      }
+      return tokenUpdate({ id: token.id, changes: { maxHP } });
+    },
+    1000
+  );
+
+  const [auras, setAuras] = useDebouncedServerUpdate(
+    token.auras,
+    (auras) => tokenUpdate({ id: token.id, changes: { auras } }),
+    1000
+  );
 
   useEffect(() => {
     fileInput.current!.value = "";
@@ -65,38 +95,6 @@ export function TokenEditor({
     dispatch(tokenRemove(token.id));
     onClose();
   };
-
-  const [hp, setHP] = useDebouncedServerUpdate(
-    token.hp.toString(),
-    (hp) => {
-      const hpNumber = parseInt(hp);
-      if (isNaN(hpNumber)) {
-        return;
-      }
-      return tokenUpdate({ id: token.id, changes: { hp: hpNumber } });
-    },
-    1000
-  );
-
-  const [maxHP, setMaxHP] = useDebouncedServerUpdate(
-    token.maxHP.toString(),
-    (maxHP) => {
-      const maxHPNumber = parseInt(maxHP);
-      if (isNaN(maxHPNumber)) {
-        return undefined;
-      }
-      return tokenUpdate({ id: token.id, changes: { maxHP: maxHPNumber } });
-    },
-    1000
-  );
-
-  const [auras, setAuras] = useDebouncedServerUpdate(
-    token.auras,
-    (auras) => {
-      return tokenUpdate({ id: token.id, changes: { auras } });
-    },
-    1000
-  );
 
   return (
     <div className="token-popup">

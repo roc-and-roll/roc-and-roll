@@ -7,7 +7,6 @@ import {
 import FakeTimers from "@sinonjs/fake-timers";
 import { renderHook } from "@testing-library/react-hooks";
 import { act } from "@react-three/fiber";
-import { COPYFILE_EXCL } from "node:constants";
 
 describe("synced debouncer", () => {
   let clock: FakeTimers.Clock;
