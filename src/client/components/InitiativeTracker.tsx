@@ -30,7 +30,8 @@ import { GMArea } from "./GMArea";
 import { TokenStack } from "./TokenManager";
 import { Button } from "./ui/Button";
 import { Flipper, Flipped } from "react-flip-toolkit";
-import { useMapSelection } from "../mapSelection";
+import { useRecoilValue } from "recoil";
+import { selectedMapObjectIdsAtom } from "./map/MapContainer";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -167,10 +168,14 @@ export function InitiativeTracker() {
       }
     ).flatMap((each) => (each.type === "token" ? each : []))
   );
-  const [selectedMapTokenIds, _1] = useMapSelection();
+
+  const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom).filter(
+    Boolean
+  );
+
   const selectedTokenIds = [
     ...new Set(
-      selectedMapTokenIds.flatMap(
+      selectedMapObjectIds.flatMap(
         (t) => tokensOnMap.find((each) => each.id === t)?.tokenId ?? []
       )
     ),

@@ -1,14 +1,13 @@
 import "modern-css-reset";
 import "./global.scss";
-import React, { Suspense, useState } from "react";
+import React, { Suspense } from "react";
 import { Sidebar } from "./Sidebar";
 import { useAutoDispatchPlayerIdOnChange, useServerState } from "../state";
 import useLocalState from "../useLocalState";
-import { byId, RRPlayerID, RRMapObjectID } from "../../shared/state";
+import { byId, RRPlayerID } from "../../shared/state";
 import { MyselfContext } from "../myself";
 import { JoinGame } from "./JoinGame";
 import { BottomFloats } from "./BottomFloats";
-import { MapSelectionContext } from "../mapSelection";
 import { Notifications } from "./Notifications";
 
 // Load the map lazily to enable code splitting -> the sidebar will load faster.
@@ -24,26 +23,23 @@ export function App() {
 
   // Important: Use useMyself everywhere else!
   const myself = myPlayerId ? byId(players.entities, myPlayerId) ?? null : null;
-  const mapState = useState<RRMapObjectID[]>([]);
 
   useAutoDispatchPlayerIdOnChange(myself?.id ?? null);
 
   return (
-    <MapSelectionContext.Provider value={mapState}>
-      <MyselfContext.Provider value={myself}>
-        {myself ? (
-          <div className="app-wrapper">
-            <Sidebar logout={forgetMyPlayerId} />
-            <Suspense fallback="Map is loading...">
-              <MapContainer />
-            </Suspense>
-            <BottomFloats />
-            <Notifications />
-          </div>
-        ) : (
-          <JoinGame setMyPlayerId={setMyPlayerId} />
-        )}
-      </MyselfContext.Provider>
-    </MapSelectionContext.Provider>
+    <MyselfContext.Provider value={myself}>
+      {myself ? (
+        <div className="app-wrapper">
+          <Sidebar logout={forgetMyPlayerId} />
+          <Suspense fallback="Map is loading...">
+            <MapContainer />
+          </Suspense>
+          <BottomFloats />
+          <Notifications />
+        </div>
+      ) : (
+        <JoinGame setMyPlayerId={setMyPlayerId} />
+      )}
+    </MyselfContext.Provider>
   );
 }
