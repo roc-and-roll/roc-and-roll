@@ -1,3 +1,7 @@
+// begin experimental react types
+import type {} from "react-dom/experimental";
+import type {} from "react/experimental";
+// end experimental react types
 import React, { StrictMode } from "react";
 import ReactDOM from "react-dom";
 import { App } from "./components/App";
@@ -6,17 +10,26 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { SettingsProvider } from "./settings";
 import { RecoilRoot } from "recoil";
+import { USE_CONCURRENT_MODE } from "../shared/constants";
 
 export function render(socket: SocketIOClient.Socket) {
   // Create a new div element, add it to the DOM, and render our app into it.
-  const root = document.createElement("div");
-  root.className = "root";
-  document.body.appendChild(root);
+  const container = document.createElement("div");
+  container.className = "root";
+  document.body.appendChild(container);
 
-  ReactDOM.render(
-    // https://reactjs.org/docs/strict-mode.html
+  const element = <Root socket={socket} />;
+  if (USE_CONCURRENT_MODE) {
+    ReactDOM.unstable_createRoot(container).render(element);
+  } else {
+    ReactDOM.render(element, container);
+  }
+}
+
+function Root({ socket }: { socket: SocketIOClient.Socket }) {
+  // https://reactjs.org/docs/strict-mode.html
+  return (
     <StrictMode>
-      {/* The ServerStateProvider provides the server state to the entire app tree. */}
       <RecoilRoot>
         <SettingsProvider>
           <ServerStateProvider socket={socket}>
@@ -26,7 +39,6 @@ export function render(socket: SocketIOClient.Socket) {
           </ServerStateProvider>
         </SettingsProvider>
       </RecoilRoot>
-    </StrictMode>,
-    root
+    </StrictMode>
   );
 }
