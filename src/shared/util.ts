@@ -67,3 +67,10 @@ export function assertNever(val: never): never {
 export function clamp(min: number, val: number, max: number) {
   return Math.max(min, Math.min(max, val));
 }
+
+// useful if you want to make sure that the identity of the empty collection
+// never changes.
+export const EMPTY_ENTITY_COLLECTION = {
+  entities: {},
+  ids: [],
+} as const;

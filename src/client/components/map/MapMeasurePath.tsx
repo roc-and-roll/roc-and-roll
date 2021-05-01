@@ -1,9 +1,11 @@
 import React, { useMemo } from "react";
+import { useRecoilValue } from "recoil";
 import tinycolor from "tinycolor2";
 import { GRID_SIZE } from "../../../shared/constants";
-import { RRPoint } from "../../../shared/state";
+import { RRPlayerID, RRPoint } from "../../../shared/state";
 import { makePoint, pointAdd, pointScale, pointSubtract } from "../../point";
 import { RoughLine, RoughText } from "../rough";
+import { ephermalPlayersFamily } from "./MapContainer";
 
 const overlappingPairsSum = <T extends any>(
   a: T[],
@@ -39,11 +41,30 @@ function useContrastColor(color: string) {
 }
 
 export const MapMeasurePath = React.memo<{
-  path: RRPoint[];
+  ephermalPlayerId: RRPlayerID;
+  overwritePath?: RRPoint[];
   color: string;
   mapBackgroundColor: string;
   zoom: number;
-}>(function MapMeasurePath({ path, color, mapBackgroundColor, zoom }) {
+}>(function MapMeasurePath({
+  overwritePath,
+  ephermalPlayerId,
+  color,
+  mapBackgroundColor,
+  zoom,
+}) {
+  const pathContrastColor = useContrastColor(color);
+  const mapContrastColor = useContrastColor(mapBackgroundColor);
+
+  const ephermalPlayer = useRecoilValue(
+    ephermalPlayersFamily(ephermalPlayerId)
+  );
+
+  const path = overwritePath ?? ephermalPlayer?.tokenPath ?? [];
+  if (path.length === 0) {
+    return null;
+  }
+
   const last = pointAdd(pointScale(path[path.length - 1]!, GRID_SIZE), {
     x: GRID_SIZE * 1.5,
     y: GRID_SIZE * 0.5,
@@ -52,9 +73,6 @@ export const MapMeasurePath = React.memo<{
     a.x === b.x || a.y === b.y ? 0 : 1
   );
   const length = path.length - 1 + Math.floor(diagonals / 2);
-
-  const pathContrastColor = useContrastColor(color);
-  const mapContrastColor = useContrastColor(mapBackgroundColor);
 
   const FONT_SIZE = 14;
   const PADDING = 5;

@@ -4,12 +4,12 @@ import React, {
   useContext,
   useDebugValue,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
 } from "react";
 import ReactDOM from "react-dom";
 import type { Primitive } from "type-fest";
+import { USE_CONCURRENT_MODE } from "../shared/constants";
 import {
   initialSyncedState,
   OptimisticUpdateID,
@@ -79,6 +79,16 @@ export function ServerStateProvider({
 
   const propagationAnimationFrameRef = useRef<number | null>(null);
 
+  const batchUpdatesIfNotConcurrentMode = (cb: () => void) => {
+    if (USE_CONCURRENT_MODE) {
+      return cb();
+    } else {
+      ReactDOM.unstable_batchedUpdates(() => {
+        cb();
+      });
+    }
+  };
+
   const propagateStateChange = useCallback(() => {
     const update = () => {
       const state = stateRef.current;
@@ -86,14 +96,14 @@ export function ServerStateProvider({
         finishedOptimisticUpdateIdsRef.current;
       finishedOptimisticUpdateIdsRef.current = [];
 
-      ReactDOM.unstable_batchedUpdates(() => {
-        subscribers.current.forEach((subscriber) => subscriber(state));
-      });
-      ReactDOM.unstable_batchedUpdates(() => {
+      batchUpdatesIfNotConcurrentMode(() =>
+        subscribers.current.forEach((subscriber) => subscriber(state))
+      );
+      batchUpdatesIfNotConcurrentMode(() =>
         subscribersToOptimisticUpdatesExecuted.current.forEach((subscriber) =>
           subscriber(finishedOptimisticUpdateIds)
-        );
-      });
+        )
+      );
     };
     if (process.env.NODE_ENV === "test") {
       update();
@@ -449,7 +459,7 @@ function _useDebouncedServerUpdateInternal<
     const [rafStart, rafStop] = useRafLoop();
 
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    useLayoutEffect(() => {
+    useEffect(() => {
       const subscriber = (state: SyncedState) => {
         if (optimisticUpdatePhase.current.type === "off") {
           const selector = serverValueOrSelectorRef.current;
@@ -509,7 +519,7 @@ function _useDebouncedServerUpdateInternal<
     ]);
   } else {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    useLayoutEffect(() => {
+    useEffect(() => {
       if (optimisticUpdatePhase.current.type === "off") {
         _setLocalValue(serverValueOrSelector);
       }
@@ -519,7 +529,7 @@ function _useDebouncedServerUpdateInternal<
   // Subscribe to server state changes, but just to track which optimistic
   // updates have been successfully executed. Subscribing will _not_ cause this
   // component to re-render on changes.
-  useLayoutEffect(() => {
+  useEffect(() => {
     // console.log("effect/off");
     const subscriber: OptimisticUpdateExecutedSubscriber = (
       optimisticUpdateIds

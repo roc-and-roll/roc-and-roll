@@ -18,6 +18,7 @@ import { assertNever, rrid } from "../../../shared/util";
 import { askAndUploadFiles } from "../../files";
 import { pointEquals, pointSubtract } from "../../point";
 import { MapEditState } from "./MapContainer";
+import { Matrix } from "transformation-matrix";
 
 export interface MapMouseHandler {
   onMouseDown: (p: RRPoint) => void;
@@ -53,7 +54,7 @@ export function useMapToolHandler(
   myself: RRPlayer,
   map: RRMap,
   editState: MapEditState,
-  zoom: number
+  transform: React.MutableRefObject<Matrix>
 ): MapMouseHandler {
   const dispatch = useServerDispatch();
 
@@ -238,7 +239,7 @@ export function useMapToolHandler(
                   ...pointsRef.current,
                   pointSubtract(p, startMousePositionRef.current),
                 ],
-                GRID_SIZE / 4 / zoom
+                GRID_SIZE / 4 / transform.current.a
               );
 
               if (oldNumPoints !== pointsRef.current.length) {

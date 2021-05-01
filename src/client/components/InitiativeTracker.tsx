@@ -32,6 +32,7 @@ import { Button } from "./ui/Button";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { useRecoilValue } from "recoil";
 import { selectedMapObjectIdsAtom } from "./map/MapContainer";
+import { EMPTY_ENTITY_COLLECTION } from "../../shared/util";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -52,22 +53,21 @@ const InitiativeEntry = React.memo<{
   entry: RRInitiativeTrackerEntry;
   tokenCollection: TokensSyncedState;
   isCurrentEntry: boolean;
-  onSetCurrentEntry: () => void;
-  onRemoveEntry: () => void;
   myself: RRPlayer;
   inverseIdx: number;
-}>(function InitiativeEntry(
-  {
-    entry,
-    tokenCollection,
-    isCurrentEntry,
-    onSetCurrentEntry,
-    onRemoveEntry,
-    myself,
-    inverseIdx,
-  },
-  ref
-) {
+}>(function InitiativeEntry({
+  entry,
+  tokenCollection,
+  isCurrentEntry,
+  myself,
+  inverseIdx,
+}) {
+  const dispatch = useServerDispatch();
+  const onSetCurrentEntry = () =>
+    dispatch(initiativeTrackerSetCurrentEntry(entry.id));
+
+  const onRemoveEntry = () => dispatch(initiativeTrackerEntryRemove(entry.id));
+
   let content = null;
   if (entry.type === "lairAction") {
     content = (
@@ -160,24 +160,17 @@ export function InitiativeTracker() {
   const initiativeTracker = useServerState((state) => state.initiativeTracker);
   const tokenCollection = useServerState((state) => state.tokens);
 
-  const tokensOnMap = useMyMap((map) =>
-    entries(
-      map?.objects ?? {
-        entities: {},
-        ids: [],
-      }
-    ).flatMap((each) => (each.type === "token" ? each : []))
-  );
-
+  const mapObjects = useMyMap((map) => map?.objects ?? EMPTY_ENTITY_COLLECTION);
   const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom).filter(
     Boolean
   );
 
   const selectedTokenIds = [
     ...new Set(
-      selectedMapObjectIds.flatMap(
-        (t) => tokensOnMap.find((each) => each.id === t)?.tokenId ?? []
-      )
+      selectedMapObjectIds.flatMap((mapObjectId) => {
+        const mapObject = byId(mapObjects.entities, mapObjectId);
+        return mapObject?.type === "token" ? mapObject?.tokenId : [];
+      })
     ),
   ];
 
@@ -263,12 +256,6 @@ export function InitiativeTracker() {
               inverseIdx={sortedRows.length - idx - 1}
               entry={entry}
               isCurrentEntry={entry.id === initiativeTracker.currentEntryId}
-              onSetCurrentEntry={() =>
-                dispatch(initiativeTrackerSetCurrentEntry(entry.id))
-              }
-              onRemoveEntry={() =>
-                dispatch(initiativeTrackerEntryRemove(entry.id))
-              }
               tokenCollection={tokenCollection}
               myself={myself}
             />

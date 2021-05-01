@@ -1,30 +1,52 @@
 import React, { useRef, useState, useEffect } from "react";
+import { useRecoilValue } from "recoil";
 import { GRID_SIZE } from "../../../shared/constants";
-import { RRColor, RRPlayerID, RRPoint } from "../../../shared/state";
+import {
+  EphermalPlayer,
+  RRColor,
+  RRPlayerID,
+  RRPoint,
+} from "../../../shared/state";
 import useRafLoop from "../../useRafLoop";
 import { RoughSVGPath, RoughText } from "../rough";
 import { CURSOR_POSITION_SYNC_DEBOUNCE } from "./Map";
+import { ephermalPlayersFamily } from "./MapContainer";
 
-export const MouseCursor = React.memo(function MouseCursor(props: {
-  zoom: number;
-  contrastColor: RRColor;
+export const MouseCursor = React.memo<{
   playerId: RRPlayerID;
   playerName: string;
   playerColor: RRColor;
-  position: RRPoint;
-  positionHistory: RRPoint[];
-}) {
+  zoom: number;
+  contrastColor: RRColor;
+}>(function MouseCursor(props) {
+  const ephermalPlayer = useRecoilValue(ephermalPlayersFamily(props.playerId));
+
+  if (ephermalPlayer === null || ephermalPlayer.mapMouse === null) {
+    return null;
+  }
+
+  return <MouseCursorInner {...props} mapMouse={ephermalPlayer.mapMouse} />;
+});
+
+const MouseCursorInner = React.memo<{
+  playerId: RRPlayerID;
+  playerName: string;
+  playerColor: RRColor;
+  zoom: number;
+  contrastColor: RRColor;
+  mapMouse: NonNullable<EphermalPlayer["mapMouse"]>;
+}>(function MouseCursorInner(props) {
   const [rafStart, rafStop] = useRafLoop();
 
   const prevPosition = useRef<RRPoint | null>(null);
-  const [position, setPosition] = useState(props.position);
+  const [position, setPosition] = useState(props.mapMouse.position);
 
   // Animate position changes
   useEffect(() => {
-    const end = props.position;
+    const end = props.mapMouse.position;
     if (prevPosition.current) {
       const start = prevPosition.current;
-      const points = [start, ...props.positionHistory, end];
+      const points = [start, ...props.mapMouse.positionHistory, end];
 
       rafStart((linear) => {
         // we cannot use non-linear lerping, because that looks weird for continuous mouse movements
@@ -54,7 +76,7 @@ export const MouseCursor = React.memo(function MouseCursor(props: {
     return () => {
       rafStop();
     };
-  }, [prevPosition, props.position, props.positionHistory, rafStart, rafStop]);
+  }, [prevPosition, props.mapMouse.position, props.mapMouse.positionHistory, rafStart, rafStop]);
 
   return (
     <g

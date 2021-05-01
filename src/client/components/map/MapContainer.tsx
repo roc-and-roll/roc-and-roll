@@ -11,13 +11,16 @@ import {
   byId,
   EntityCollection,
   entries,
+  EphermalPlayer,
   RRColor,
   RRID,
   RRMapObject,
   RRMapObjectID,
+  RRPlayerID,
   RRPoint,
   RRToken,
   RRTokenID,
+  setById,
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import {
@@ -41,7 +44,6 @@ import { useSettings } from "../../settings";
 import produce, { Draft } from "immer";
 import { pointAdd, snapPointToGrid } from "../../point";
 import { useMapToolHandler } from "./useMapToolHandler";
-import { useRefState } from "../../useRefState";
 import { atomFamily, atom, useRecoilCallback, RecoilState } from "recoil";
 import { DebugMapContainerOverlay } from "./DebugTokenPositions";
 
@@ -90,6 +92,19 @@ export const tokenIdsAtom = atom<RRTokenID[]>({
   default: [],
 });
 
+export const ephermalPlayersFamily = atomFamily<
+  EphermalPlayer | null,
+  RRPlayerID
+>({
+  key: "EphermalPlayer",
+  default: null,
+});
+
+export const ephermalPlayerIdsAtom = atom<RRPlayerID[]>({
+  key: "EphermalPlayerIds",
+  default: [],
+});
+
 export default function MapContainer() {
   const myself = useMyself();
   const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
@@ -99,9 +114,7 @@ export default function MapContainer() {
     new SyncedDebouncer(CURSOR_POSITION_SYNC_DEBOUNCE)
   );
 
-  const [transform, transformRef, setTransform] = useRefState<Matrix>(
-    identity()
-  );
+  const transformRef = useRef<Matrix>(identity());
 
   const dropRef2 = useRef<HTMLDivElement>(null);
   const [, dropRef1] = useDrop<RRToken, void, never>(
@@ -266,7 +279,6 @@ export default function MapContainer() {
   );
 
   const players = useServerState((state) => state.players);
-  const ephermalPlayers = useServerState((state) => state.ephermal.players);
 
   const toolButtonState: ToolButtonState =
     editState.tool === "move"
@@ -276,7 +288,7 @@ export default function MapContainer() {
       : // TODO adapt for measure
         "select";
 
-  const toolHandler = useMapToolHandler(myself, map, editState, transform.a);
+  const toolHandler = useMapToolHandler(myself, map, editState, transformRef);
 
   const onSetHP = useCallback(
     (tokenId: RRTokenID, hp: number) => {
@@ -287,20 +299,53 @@ export default function MapContainer() {
   const onMoveMapObjects = useRecoilCallback(
     ({ snapshot }) => (d: RRPoint) => {
       setLocalObjectsOnMap(
-        produce((draft) => {
+        (localObjectsOnMap) => {
+          const updatedLocalObjectsOnMap: Record<
+            RRMapObjectID,
+            RRMapObject
+          > = {};
+
           snapshot
             .getLoadable(selectedMapObjectIdsAtom)
             .getValue()
             .forEach((selectedMapObjectId) => {
               const object = byId<Draft<RRMapObject>>(
-                draft.entities,
+                localObjectsOnMap.entities,
                 selectedMapObjectId
               );
               if (object) {
-                object.position = pointAdd(object.position, d);
+                setById(updatedLocalObjectsOnMap, object.id, {
+                  ...object,
+                  position: pointAdd(object.position, d),
+                });
               }
             });
-        })
+
+          return {
+            ...localObjectsOnMap,
+            entities: {
+              ...localObjectsOnMap.entities,
+              ...updatedLocalObjectsOnMap,
+            },
+          };
+        }
+        // We don't use the equivalent immmer producer here, because moving
+        // objects around the map is very performance critical.
+        //
+        // produce((draft) => {
+        //   snapshot
+        //     .getLoadable(selectedMapObjectIdsAtom)
+        //     .getValue()
+        //     .forEach((selectedMapObjectId) => {
+        //       const object = byId<Draft<RRMapObject>>(
+        //         draft.entities,
+        //         selectedMapObjectId
+        //       );
+        //       if (object) {
+        //         object.position = pointAdd(object.position, d);
+        //       }
+        //     });
+        // })
       );
     },
     [setLocalObjectsOnMap]
@@ -324,11 +369,9 @@ export default function MapContainer() {
         tokenPathDebounce={syncedDebounce.current}
         onMousePositionChanged={sendMousePositionToServer}
         players={players}
-        ephermalPlayers={ephermalPlayers}
         onUpdateTokenPath={updateTokenPath}
         // zoom and position
-        transform={transform}
-        setTransform={setTransform}
+        transformRef={transformRef}
         // map objects
         onMoveMapObjects={onMoveMapObjects}
         onSetHP={onSetHP}
@@ -391,6 +434,11 @@ function ReduxToRecoilBridge({
     useServerState((s) => s.tokens),
     tokenIdsAtom,
     tokenFamily
+  );
+  useReduxToRecoilBridge(
+    useServerState((s) => s.ephermal.players),
+    ephermalPlayerIdsAtom,
+    ephermalPlayersFamily
   );
 
   return null;
