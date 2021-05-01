@@ -141,7 +141,6 @@ module.exports = (webpackEnv) => {
                 compact: isEnvProduction,
                 babelrc: false,
                 plugins: [
-                  ["@babel/plugin-proposal-class-properties", { loose: true }],
                   "@babel/plugin-syntax-dynamic-import",
                   isEnvDevelopment && require.resolve('react-refresh/babel'),
                 ].filter(Boolean),
