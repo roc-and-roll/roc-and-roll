@@ -1,5 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { byId, entries, RRLogEntry, RRLogEntryID } from "../../shared/state";
+import {
+  byId,
+  entries,
+  RRLogEntry,
+  RRLogEntryDiceRoll,
+  RRLogEntryID,
+  RRLogEntryMessage,
+} from "../../shared/state";
+import { assertNever } from "../../shared/util";
 import { diceResultString } from "../roll";
 import { useServerState } from "../state";
 
@@ -70,19 +78,31 @@ function Notification({
     ? byId(players.entities, notification.playerId)
     : null;
 
-  return (
-    <div className="notification">
-      {notification.type === "diceRoll" ? (
-        <>
-          <span className="player-name" style={{ color: player!.color }}>
-            {player!.name}
-          </span>
-          {" rolled a "}
-          <strong>{diceResultString(notification)}</strong>
-        </>
-      ) : (
-        notification.type
-      )}
-    </div>
+  const viewDiceRoll = (notification: RRLogEntryDiceRoll) => (
+    <>
+      <span className="player-name" style={{ color: player!.color }}>
+        {player!.name}
+      </span>
+      {" rolled a "}
+      <strong>{diceResultString(notification)}</strong>
+    </>
   );
+
+  const viewMessage = (notification: RRLogEntryMessage) => (
+    <>
+      <span className="player-name" style={{ color: player!.color }}>
+        {player!.name}
+      </span>
+      {" wrote: "}
+      <strong>{notification.payload.text}</strong>
+    </>
+  );
+
+  const view = (notification: RRLogEntry) => {
+    if (notification.type === "diceRoll") return viewDiceRoll(notification);
+    if (notification.type === "message") return viewMessage(notification);
+    assertNever(notification);
+  };
+
+  return <div className="notification">{view(notification)}</div>;
 }
