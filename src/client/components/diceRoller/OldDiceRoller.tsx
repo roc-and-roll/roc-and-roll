@@ -228,7 +228,11 @@ export default function DiceRoller() {
       style={{ width: "1500px", height: "400px" }}
       orthographic
       frameloop={"demand"}
-      camera={{ near: 0.1, far: 20, zoom: 50 }}
+      camera={{
+        near: 0.1,
+        far: 20,
+        zoom: 50,
+      }}
     >
       <ambientLight />
       <pointLight position={[10, 10, 10]} intensity={2} />

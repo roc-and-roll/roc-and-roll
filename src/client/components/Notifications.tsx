@@ -10,6 +10,8 @@ import {
 import { assertNever } from "../../shared/util";
 import { diceResultString } from "../roll";
 import { useServerState } from "../state";
+import DiceDisplay from "./diceRoller/DiceDisplay";
+import DiceRoller from "./diceRoller/DiceDisplay";
 
 const NOTIFICATION_TIMEOUT = 6000;
 
@@ -85,6 +87,7 @@ function Notification({
       </span>
       {" rolled a "}
       <strong>{diceResultString(notification)}</strong>
+      <DiceDisplay diceRoll={notification} />
     </>
   );
 

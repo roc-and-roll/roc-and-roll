@@ -10,18 +10,12 @@ import { InitiativeTracker } from "./InitiativeTracker";
 import { Acknowledgements } from "./Acknowledgements";
 import { Settings } from "./Settings";
 import { Players } from "./Players";
-import { useSettings } from "../settings";
 import { About } from "./About";
 import { useMyself } from "../myself";
 import { Maps } from "./Maps";
 
-// Lazy-load the DiceRoller component so that THREE.js is not part of the
-// initial bundle sent to the client.
-const DiceRoller = React.lazy(() => import("./diceRoller/DiceRoller"));
-
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
-  const [settings] = useSettings();
   const myself = useMyself();
 
   return (
@@ -48,11 +42,6 @@ export function Sidebar({ logout }: { logout: () => void }) {
       <div className="app-sidebar-scroll-container">
         <h1>Roc & Roll</h1>
 
-        {settings.debug.dice3d && (
-          <Suspense fallback={null}>
-            <DiceRoller />
-          </Suspense>
-        )}
         <Collapsible title="Initiative">
           <InitiativeTracker />
         </Collapsible>
