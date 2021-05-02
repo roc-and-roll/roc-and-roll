@@ -1,8 +1,9 @@
 import React from "react";
-import { useSettings } from "../settings";
+import { RRSettings, useRRSettings } from "../settings";
+import { Select } from "./ui/Select";
 
 export function Settings() {
-  const [settings, setSettings] = useSettings();
+  const [settings, setSettings] = useRRSettings();
 
   return (
     <>
@@ -20,6 +21,25 @@ export function Settings() {
         />
         {settings.volume}
       </p>
+      <div>
+        <label>
+          fast render mode{" "}
+          <Select<RRSettings["renderMode"]>
+            value={settings.renderMode}
+            options={[
+              { label: "fancy", value: "fancy" },
+              { label: "mostly fancy", value: "mostly-fancy" },
+              { label: "fast", value: "fast" },
+            ]}
+            onChange={(value) =>
+              setSettings((old) => ({
+                ...old,
+                renderMode: value,
+              }))
+            }
+          />
+        </label>
+      </div>
       {process.env.NODE_ENV === "development" && (
         <>
           <h4>debug settings</h4>

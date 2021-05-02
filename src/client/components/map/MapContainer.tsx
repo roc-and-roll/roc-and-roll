@@ -40,7 +40,7 @@ import { identity, Matrix } from "transformation-matrix";
 import { MapToolbar } from "../MapToolbar";
 import { GRID_SIZE } from "../../../shared/constants";
 import { rrid, timestamp } from "../../../shared/util";
-import { useSettings } from "../../settings";
+import { useRRSettings } from "../../settings";
 import produce, { Draft } from "immer";
 import {
   pointAdd,
@@ -114,7 +114,7 @@ export default function MapContainer() {
   const myself = useMyself();
   const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
   const dispatch = useServerDispatch();
-  const [settings] = useSettings();
+  const [settings] = useRRSettings();
   const syncedDebounce = useRef(
     new SyncedDebouncer(CURSOR_POSITION_SYNC_DEBOUNCE)
   );

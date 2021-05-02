@@ -9,7 +9,7 @@ import multer from "multer";
 import { nanoid } from "@reduxjs/toolkit";
 import { RRFile } from "../shared/state";
 import sharp from "sharp";
-import { clamp } from "../shared/util";
+import { clamp, withDo } from "../shared/util";
 import { readFile } from "fs/promises";
 import { existsSync } from "fs";
 import { randomColor } from "../shared/colors";
@@ -18,7 +18,9 @@ export async function setupWebServer(
   uploadedFilesDir: string,
   uploadedFilesCacheDir: string
 ) {
-  const httpPort = process.env["PORT"] || 3000;
+  const httpPort = withDo(parseInt(process.env["PORT"] ?? ""), (rawPort) =>
+    isNaN(rawPort) ? 3000 : rawPort
+  );
   const url = `http://localhost:${httpPort}`;
 
   // First, create a new Express JS app that we use to serve our website.

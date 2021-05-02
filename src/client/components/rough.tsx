@@ -4,37 +4,43 @@ import type { Drawable, Options } from "roughjs/bin/core";
 import { RoughGenerator } from "roughjs/bin/generator";
 import clsx from "clsx";
 import { RRPoint } from "../../shared/state";
+import { makePoint } from "../point";
 
 const DEFAULT_ROUGHNESS = 3;
+
+// Stroke width used in simple mode.
+const STROKE_WIDTH_SIMPLE = 5;
 
 export const RoughContext = React.createContext<RoughGenerator | null>(null);
 
 RoughContext.displayName = "RoughContext";
 
 export function RoughContextProvider({
+  enabled,
   children,
 }: {
+  enabled: boolean;
   children: React.ReactNode;
 }) {
-  const roughGenerator = useMemo(
+  const value = useMemo(
     () =>
-      rough.generator({
-        options: {
-          // outline
-          strokeWidth: 3,
-          // inside
-          fillStyle: "hachure",
-          hachureGap: 12,
-          fillWeight: 3,
-        },
-      }),
-    []
+      enabled
+        ? rough.generator({
+            options: {
+              // outline
+              strokeWidth: 3,
+              // inside
+              fillStyle: "hachure",
+              hachureGap: 12,
+              fillWeight: 3,
+            },
+          })
+        : null,
+    [enabled]
   );
 
   return (
-    <RoughContext.Provider value={roughGenerator}>
-      {children}
-    </RoughContext.Provider>
+    <RoughContext.Provider value={value}>{children}</RoughContext.Provider>
   );
 }
 
@@ -122,11 +128,17 @@ type PassedThroughOptions = Pick<
 // eslint-disable-next-line @typescript-eslint/ban-types
 function makeRoughComponent<C extends object>(
   displayName: string,
-  generate: (
+  generateRough: (
     rc: RoughGenerator,
     customProps: C,
     options: PassedThroughOptions
-  ) => Drawable
+  ) => Drawable,
+  generateSimple: (
+    customProps: C & { x: number; y: number } & Pick<
+        PassedThroughOptions,
+        "fill" | "stroke" | "strokeLineDash"
+      >
+  ) => React.ReactElement
 ) {
   const component = React.memo<
     C &
@@ -158,7 +170,7 @@ function makeRoughComponent<C extends object>(
       const drawable = useMemo(
         () =>
           generator
-            ? generate(generator, generatorProps as C, {
+            ? generateRough(generator, generatorProps as C, {
                 fill,
                 fillStyle,
                 stroke,
@@ -182,20 +194,34 @@ function makeRoughComponent<C extends object>(
         ]
       );
 
-      if (!drawable || !generator) {
-        return null;
-      }
+      if (generator) {
+        if (!drawable) {
+          return null;
+        }
 
-      return (
-        <DrawablePrimitive
-          drawable={drawable}
-          generator={generator}
-          x={x}
-          y={y}
-          onMouseDown={onMouseDown}
-          style={style}
-        />
-      );
+        return (
+          <DrawablePrimitive
+            drawable={drawable}
+            generator={generator}
+            x={x}
+            y={y}
+            onMouseDown={onMouseDown}
+            style={style}
+          />
+        );
+      } else {
+        return generateSimple({
+          x,
+          y,
+          onMouseDown,
+          style,
+          fill,
+          stroke,
+          strokeLineDash,
+          strokeWidth: STROKE_WIDTH_SIMPLE,
+          ...(generatorProps as C),
+        });
+      }
     }
   );
 
@@ -206,51 +232,119 @@ function makeRoughComponent<C extends object>(
 export const RoughLine = makeRoughComponent<{
   w: number;
   h: number;
-}>("RoughLine", (generator, { w, h }, options) =>
-  generator.line(0, 0, w, h, options)
+}>(
+  "RoughLine",
+  (generator, { w, h }, options) => generator.line(0, 0, w, h, options),
+  ({ x, y, w, h, ...rest }) => (
+    <line x1={x} y1={y} x2={x + w} y2={y + h} {...rest} />
+  )
 );
+
+function correctNegativeSize({
+  x,
+  y,
+  w,
+  h,
+}: {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}) {
+  if (w < 0) {
+    x = x + w;
+    w = -w;
+  }
+  if (h < 0) {
+    y = y + h;
+    h = -h;
+  }
+
+  return { x, y, w, h };
+}
 
 export const RoughRectangle = makeRoughComponent<{
   w: number;
   h: number;
-}>("RoughRectangle", (generator, { w, h }, options) =>
-  generator.rectangle(0, 0, w, h, options)
+}>(
+  "RoughRectangle",
+  (generator, { w, h }, options) => generator.rectangle(0, 0, w, h, options),
+  ({ x: ox, y: oy, w: ow, h: oh, ...rest }) => {
+    const { x, y, w, h } = correctNegativeSize({ x: ox, y: oy, w: ow, h: oh });
+    return <rect x={x} y={y} width={w} height={h} {...rest} />;
+  }
 );
 
 export const RoughEllipse = makeRoughComponent<{
   w: number;
   h: number;
-}>("RoughEllipse", (generator, { w, h }, options) =>
-  generator.ellipse(w / 2, h / 2, w, h, options)
+}>(
+  "RoughEllipse",
+  (generator, { w, h }, options) =>
+    generator.ellipse(w / 2, h / 2, w, h, options),
+  ({ x: ox, y: oy, w: ow, h: oh, ...rest }) => {
+    const { x, y, w, h } = correctNegativeSize({ x: ox, y: oy, w: ow, h: oh });
+    return (
+      <ellipse cx={x + w / 2} cy={y + h / 2} rx={w / 2} ry={h / 2} {...rest} />
+    );
+  }
 );
 
 export const RoughCircle = makeRoughComponent<{
   d: number;
-}>("RoughCircle", (generator, { d }, options) =>
-  generator.circle(d / 2, d / 2, d, options)
+}>(
+  "RoughCircle",
+  (generator, { d }, options) => generator.circle(d / 2, d / 2, d, options),
+  ({ x: ox, y: oy, d: od, ...rest }) => {
+    const { x, y, w: d } = correctNegativeSize({ x: ox, y: oy, w: od, h: od });
+    return <circle cx={x + d / 2} cy={y + d / 2} r={d / 2} {...rest} />;
+  }
 );
 
 export const RoughSVGPath = makeRoughComponent<{
   path: string;
-}>("RoughSVGPath", (generator, { path }, options) =>
-  generator.path(path, options)
+}>(
+  "RoughSVGPath",
+  (generator, { path }, options) => generator.path(path, options),
+  ({ x, y, path, ...rest }) => <path x={x} y={y} d={path} {...rest} />
 );
 
 export const RoughLinearPath = makeRoughComponent<{
   points: RRPoint[];
-}>("RoughLinearPath", (generator, { points }, options) =>
-  generator.linearPath(
-    [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
-    options
+}>(
+  "RoughLinearPath",
+  (generator, { points }, options) =>
+    generator.linearPath(
+      [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
+      options
+    ),
+  ({ x, y, points, fill, ...rest }) => (
+    <polyline
+      fill="transparent"
+      points={[makePoint(0), ...points]
+        .map(({ x: px, y: py }) => `${x + px},${y + py}`)
+        .join(" ")}
+      {...rest}
+    />
   )
 );
 
 export const RoughPolygon = makeRoughComponent<{
   points: RRPoint[];
-}>("RoughPolygon", (generator, { points }, options) =>
-  generator.polygon(
-    [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
-    options
+}>(
+  "RoughPolygon",
+  (generator, { points }, options) =>
+    generator.polygon(
+      [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
+      options
+    ),
+  ({ x, y, points, ...rest }) => (
+    <polygon
+      points={[makePoint(0), ...points]
+        .map(({ x: px, y: py }) => `${x + px},${y + py}`)
+        .join(" ")}
+      {...rest}
+    />
   )
 );
 

@@ -66,6 +66,10 @@ export function clamp(min: number, val: number, max: number) {
   return Math.max(min, Math.min(max, val));
 }
 
+export function withDo<V, R>(value: V, block: (v: V) => R) {
+  return block(value);
+}
+
 // useful if you want to make sure that the identity of the empty collection
 // never changes.
 export const EMPTY_ENTITY_COLLECTION = {

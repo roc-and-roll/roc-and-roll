@@ -1,6 +1,6 @@
 import type { Howl } from "howler";
 import { useCallback, useEffect, useRef } from "react";
-import { useSettings } from "./settings";
+import { useRRSettings } from "./settings";
 
 /**
  * Returns a function to play a sound. Might skip playing the sound if howler is
@@ -12,7 +12,7 @@ export function useRRSimpleSound(url: string) {
   const howlConstructorRef = useRef<typeof Howl | null>(null);
   const howlRef = useRef<Howl | null>(null);
 
-  const globalVolume = useSettings()[0].volume;
+  const globalVolume = useRRSettings()[0].volume;
   const globalMute = globalVolume <= 0;
 
   useEffect(() => {

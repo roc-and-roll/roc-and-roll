@@ -37,7 +37,7 @@ import {
   selectedMapObjectsFamily,
   ToolButtonState,
 } from "./MapContainer";
-import { RoughContextProvider, RoughRectangle } from "../rough";
+import { RoughContextProvider } from "../rough";
 import tinycolor from "tinycolor2";
 import {
   makePoint,
@@ -57,6 +57,8 @@ import { MapObjects } from "./MapObjects";
 import { atom, atomFamily, useRecoilCallback, useRecoilValue } from "recoil";
 import { useStateWithRef } from "../../useRefState";
 import { Debouncer, useDebounce } from "../../debounce";
+import { useRRSettings } from "../../settings";
+import { assertNever } from "../../../shared/util";
 
 type Rectangle = [number, number, number, number];
 
@@ -155,6 +157,10 @@ export const RRMapView = React.memo<{
   toolButtonState,
   toolHandler,
 }) {
+  const [settings] = useRRSettings();
+  const [roughEnabled, setRoughEnabled] = useState(
+    settings.renderMode !== "fast"
+  );
   // We deliberately do not use useStateWithRef/useStateWithExistingRef here,
   // because we want transformRef to reflect the currently rendered transform,
   // instead of the committed (using SetTransform), but potentially not yet
@@ -351,6 +357,13 @@ export const RRMapView = React.memo<{
 
       mouseActionRef.current = newMouseAction;
 
+      if (
+        newMouseAction === MouseAction.PAN &&
+        settings.renderMode === "mostly-fancy"
+      ) {
+        setRoughEnabled(false);
+      }
+
       const local = localCoords(e);
       dragLastMouseRef.current = local;
 
@@ -366,7 +379,7 @@ export const RRMapView = React.memo<{
         toolHandler.onMouseDown(innerLocal);
       }
     },
-    [toolButtonState, toolHandler, transformRef]
+    [settings.renderMode, toolButtonState, toolHandler, transformRef]
   );
 
   const updateHoveredMapObjects = useRecoilCallback(
@@ -452,9 +465,21 @@ export const RRMapView = React.memo<{
           globalToLocal(transformRef.current, localCoords(e))
         );
       }
+      if (
+        mouseActionRef.current === MouseAction.PAN &&
+        settings.renderMode === "mostly-fancy"
+      ) {
+        setRoughEnabled(true);
+      }
       mouseActionRef.current = MouseAction.NONE;
     },
-    [setTokenPath, setSelectedMapObjectIds, toolHandler, transformRef]
+    [
+      settings.renderMode,
+      setTokenPath,
+      setSelectedMapObjectIds,
+      toolHandler,
+      transformRef,
+    ]
   );
 
   useEffect(() => {
@@ -534,8 +559,24 @@ export const RRMapView = React.memo<{
     cursor: toolButtonState === "tool" ? "crosshair" : "inherit",
   };
 
+  useEffect(() => {
+    switch (settings.renderMode) {
+      case "fancy":
+        setRoughEnabled(true);
+        break;
+      case "fast":
+        setRoughEnabled(false);
+        break;
+      case "mostly-fancy":
+        setRoughEnabled(mouseActionRef.current !== MouseAction.PAN);
+        break;
+      default:
+        assertNever(settings.renderMode);
+    }
+  }, [settings.renderMode]);
+
   return (
-    <RoughContextProvider>
+    <RoughContextProvider enabled={roughEnabled}>
       <svg
         ref={svgRef}
         className="map-svg"
