@@ -1,4 +1,4 @@
-import React, { Suspense, useRef } from "react";
+import React, { Suspense, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { RRLogEntryDiceRoll } from "../../../shared/state";
 import { Dice } from "./Dice";
@@ -59,6 +59,13 @@ function DiceContainer({
       onAnimationFinished();
     }
   };
+
+  // check once at the start
+  useEffect(() => {
+    if (finishedCountRef.current === slots.length) {
+      onAnimationFinished();
+    }
+  }, [onAnimationFinished, slots.length]);
 
   return (
     <>
