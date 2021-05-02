@@ -72,3 +72,21 @@ export const EMPTY_ENTITY_COLLECTION = {
   entities: {},
   ids: [],
 } as const;
+
+//
+// For debugging only
+//
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+const hashes = new WeakMap<object, number>();
+let nextHash = 1;
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function identityHash(object: object): number {
+  if (hashes.has(object)) {
+    return hashes.get(object)!;
+  }
+  hashes.set(object, nextHash++);
+
+  return identityHash(object);
+}

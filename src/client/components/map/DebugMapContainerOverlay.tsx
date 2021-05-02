@@ -1,7 +1,8 @@
 import React from "react";
 import { RRMapObject } from "../../../shared/state";
+import { identityHash } from "../../../shared/util";
 import { useServerState } from "../../state";
-import { Collapsible } from "../Collapsible";
+import { CollapsibleWithLocalState } from "../Collapsible";
 
 export function DebugMapContainerOverlay(props: {
   localMapObjects: RRMapObject[];
@@ -22,10 +23,13 @@ export function DebugMapContainerOverlay(props: {
         background: "orange",
         maxWidth: "100%",
         overflowY: "auto",
-        maxHeight: "100vh",
+        maxHeight: "calc(100vh - 80px - 100px)",
       }}
     >
-      <Collapsible title="map object positions">
+      <CollapsibleWithLocalState
+        localStateKey="map/debug/overlay/map-object-positions"
+        title="map object positions"
+      >
         <table cellPadding={8}>
           <thead>
             <tr>
@@ -73,8 +77,11 @@ export function DebugMapContainerOverlay(props: {
             })}
           </tbody>
         </table>
-      </Collapsible>
-      <Collapsible title="rectangle sizes">
+      </CollapsibleWithLocalState>
+      <CollapsibleWithLocalState
+        localStateKey="map/debug/overlay/rectangle-sizes"
+        title="rectangle sizes"
+      >
         <table cellPadding={8}>
           <thead>
             <tr>
@@ -128,10 +135,50 @@ export function DebugMapContainerOverlay(props: {
             })}
           </tbody>
         </table>
-      </Collapsible>
-      <Collapsible title="Ephermal players">
+      </CollapsibleWithLocalState>
+      <CollapsibleWithLocalState
+        localStateKey="map/debug/overlay/hashes"
+        title="hashes"
+      >
+        <table cellPadding={8}>
+          <thead>
+            <tr>
+              <th>RRMapObjectID</th>
+              <th>Server hash</th>
+              <th>Local hash</th>
+            </tr>
+          </thead>
+          <tbody>
+            {mapObjectIds.map((mapObjectId) => {
+              const serverMapObject =
+                props.serverMapObjects.find(
+                  (each) => each.id === mapObjectId
+                ) ?? null;
+              const localMapObject =
+                props.localMapObjects.find((each) => each.id === mapObjectId) ??
+                null;
+
+              return (
+                <tr key={mapObjectId}>
+                  <td>{mapObjectId}</td>
+                  <td>
+                    {serverMapObject ? identityHash(serverMapObject) : "null"}
+                  </td>
+                  <td>
+                    {localMapObject ? identityHash(localMapObject) : "null"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </CollapsibleWithLocalState>
+      <CollapsibleWithLocalState
+        localStateKey="map/debug/overlay/ephermal-players"
+        title="Ephermal players"
+      >
         <DebugEphermalPlayers />
-      </Collapsible>
+      </CollapsibleWithLocalState>
     </div>
   );
 }

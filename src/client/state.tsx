@@ -496,7 +496,6 @@ function _useDebouncedServerUpdateInternal<
                     // animation
                     serverValue
                   : lerp(localValue, serverValue, amount);
-              console.log(amount, lerpedValue);
               _setLocalValue(lerpedValue);
               // Lerp for the same amount of time as the debounceTime.
             }, debouncerTime(debounce));
