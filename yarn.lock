@@ -1365,7 +1365,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@beyonk/google-fonts-webpack-plugin@npm:^1.7.0":
+"@beyonk/google-fonts-webpack-plugin@^1.7.0":
   version: 1.7.0
   resolution: "@beyonk/google-fonts-webpack-plugin@npm:1.7.0"
   dependencies:
@@ -1377,6 +1377,21 @@ __metadata:
   peerDependencies:
     webpack: ">=4.14.0"
   checksum: 14e8e670045c138d00d68466f6c5ef3aaec38edcf13a93158b7c156519d9a51ad507884ea7535d8af8e1f772e3de780f80978d1577b6f7f520c7208a7c821474
+  languageName: node
+  linkType: hard
+
+"@beyonk/google-fonts-webpack-plugin@patch:@beyonk/google-fonts-webpack-plugin@^1.7.0#./patches/@beyonk/google-fonts-webpack-plugin.patch::locator=roc-and-roll%40workspace%3A.":
+  version: 1.7.0
+  resolution: "@beyonk/google-fonts-webpack-plugin@patch:@beyonk/google-fonts-webpack-plugin@npm%3A1.7.0#./patches/@beyonk/google-fonts-webpack-plugin.patch::version=1.7.0&hash=e6823d&locator=roc-and-roll%40workspace%3A."
+  dependencies:
+    lodash: ^4.17.4
+    md5: ^2.2.1
+    node-fetch: ^2.1.2
+    webpack-sources: ^1.1.0
+    yauzl: ^2.8.0
+  peerDependencies:
+    webpack: ">=4.14.0"
+  checksum: 75cdcafc656fa962531d30f0187f05b73e2d3e8c528d7301c0ebe2acc96b019dcc51a1dcd0e8296ccd99bb61c17440a8147df069d6279b4e8b7167fd08ce52eb
   languageName: node
   linkType: hard
 
@@ -11360,7 +11375,7 @@ resolve@^2.0.0-next.3:
     "@babel/preset-env": ^7.14.0
     "@babel/preset-react": ^7.13.13
     "@babel/preset-typescript": ^7.13.0
-    "@beyonk/google-fonts-webpack-plugin": ^1.7.0
+    "@beyonk/google-fonts-webpack-plugin": "patch:@beyonk/google-fonts-webpack-plugin@^1.7.0#./patches/@beyonk/google-fonts-webpack-plugin.patch"
     "@pmmmwh/react-refresh-webpack-plugin": ^0.4.3
     "@react-three/fiber": ^6.0.18
     "@reduxjs/toolkit": ^1.5.1
