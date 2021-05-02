@@ -13,6 +13,7 @@ import {
   Matrix,
   toSVG,
   inverse,
+  identity,
 } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
 import {
@@ -54,7 +55,7 @@ import { MapMouseHandler } from "./useMapToolHandler";
 import { MapGrid } from "./MapGrid";
 import { MapObjects } from "./MapObjects";
 import { atom, atomFamily, useRecoilCallback, useRecoilValue } from "recoil";
-import { useStateWithExistingRef, useStateWithRef } from "../../useRefState";
+import { useStateWithRef } from "../../useRefState";
 import { Debouncer, useDebounce } from "../../debounce";
 
 type Rectangle = [number, number, number, number];
@@ -154,9 +155,12 @@ export const RRMapView = React.memo<{
   toolButtonState,
   toolHandler,
 }) {
-  const [transform, setTransform] = useStateWithExistingRef<Matrix>(
-    transformRef
-  );
+  // We deliberately do not use useStateWithRef/useStateWithExistingRef here,
+  // because we want transformRef to reflect the currently rendered transform,
+  // instead of the committed (using SetTransform), but potentially not yet
+  // rendered transform.
+  const [transform, setTransform] = useState<Matrix>(identity());
+  transformRef.current = transform;
 
   const contrastColor = useMemo(
     () =>
@@ -288,7 +292,10 @@ export const RRMapView = React.memo<{
           break;
         }
         case MouseAction.SELECTION_AREA: {
-          const innerLocal = globalToLocal(transform, { x, y });
+          const innerLocal = globalToLocal(transformRef.current, {
+            x,
+            y,
+          });
           setSelectionArea(
             (a) => a && [a[0], a[1], innerLocal.x, innerLocal.y]
           );
@@ -303,11 +310,13 @@ export const RRMapView = React.memo<{
             makePoint(GRID_SIZE * 0.5)
           );
           addPointToPath(innerLocal);
-          onMoveMapObjects(pointScale(frameDelta, 1 / transform.a));
+          onMoveMapObjects(pointScale(frameDelta, 1 / transformRef.current.a));
           break;
         }
         case MouseAction.USE_TOOL: {
-          toolHandler.onMouseMove(globalToLocal(transform, { x, y }));
+          toolHandler.onMouseMove(
+            globalToLocal(transformRef.current, { x, y })
+          );
           break;
         }
       }
@@ -318,7 +327,7 @@ export const RRMapView = React.memo<{
     },
     [
       setTransform,
-      transform,
+      transformRef,
       setSelectionArea,
       addPointToPath,
       onMoveMapObjects,
@@ -326,36 +335,39 @@ export const RRMapView = React.memo<{
     ]
   );
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    (document.activeElement as HTMLElement)?.blur();
-    e.preventDefault();
-    e.stopPropagation();
-    const newMouseAction =
-      e.button === PANNING_BUTTON
-        ? MouseAction.PAN
-        : e.button === TOOL_BUTTON
-        ? toolButtonState === "select"
-          ? MouseAction.SELECTION_AREA
-          : MouseAction.USE_TOOL
-        : MouseAction.NONE;
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      (document.activeElement as HTMLElement)?.blur();
+      e.preventDefault();
+      e.stopPropagation();
+      const newMouseAction =
+        e.button === PANNING_BUTTON
+          ? MouseAction.PAN
+          : e.button === TOOL_BUTTON
+          ? toolButtonState === "select"
+            ? MouseAction.SELECTION_AREA
+            : MouseAction.USE_TOOL
+          : MouseAction.NONE;
 
-    mouseActionRef.current = newMouseAction;
+      mouseActionRef.current = newMouseAction;
 
-    const local = localCoords(e);
-    dragLastMouseRef.current = local;
+      const local = localCoords(e);
+      dragLastMouseRef.current = local;
 
-    const innerLocal = globalToLocal(transform, local);
-    if (newMouseAction === MouseAction.SELECTION_AREA) {
-      setSelectionArea([
-        innerLocal.x,
-        innerLocal.y,
-        innerLocal.x,
-        innerLocal.y,
-      ]);
-    } else if (newMouseAction === MouseAction.USE_TOOL) {
-      toolHandler.onMouseDown(innerLocal);
-    }
-  };
+      const innerLocal = globalToLocal(transformRef.current, local);
+      if (newMouseAction === MouseAction.SELECTION_AREA) {
+        setSelectionArea([
+          innerLocal.x,
+          innerLocal.y,
+          innerLocal.x,
+          innerLocal.y,
+        ]);
+      } else if (newMouseAction === MouseAction.USE_TOOL) {
+        toolHandler.onMouseDown(innerLocal);
+      }
+    },
+    [toolButtonState, toolHandler, transformRef]
+  );
 
   const updateHoveredMapObjects = useRecoilCallback(
     ({ snapshot, set, reset }) => (selectionArea: Rectangle | null) => {
@@ -436,11 +448,13 @@ export const RRMapView = React.memo<{
         setSelectionArea(null);
       }
       if (mouseActionRef.current === MouseAction.USE_TOOL) {
-        toolHandler.onMouseUp(globalToLocal(transform, localCoords(e)));
+        toolHandler.onMouseUp(
+          globalToLocal(transformRef.current, localCoords(e))
+        );
       }
       mouseActionRef.current = MouseAction.NONE;
     },
-    [setTokenPath, setSelectedMapObjectIds, toolHandler, transform]
+    [setTokenPath, setSelectedMapObjectIds, toolHandler, transformRef]
   );
 
   useEffect(() => {
@@ -459,9 +473,11 @@ export const RRMapView = React.memo<{
 
   const handleMapMouseMove = useCallback(
     (e: React.MouseEvent<SVGSVGElement>) => {
-      onMousePositionChanged(globalToLocal(transform, localCoords(e)));
+      onMousePositionChanged(
+        globalToLocal(transformRef.current, localCoords(e))
+      );
     },
-    [onMousePositionChanged, transform]
+    [onMousePositionChanged, transformRef]
   );
 
   const handleStartMoveMapObject = useRecoilCallback(
