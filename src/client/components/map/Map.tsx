@@ -556,13 +556,12 @@ export const RRMapView = React.memo<{
           {withSelectionAreaDo(
             selectionArea,
             (x, y, w, h) => (
-              <RoughRectangle
+              <rect
                 x={x}
                 y={y}
-                w={w}
-                h={h}
+                width={w}
+                height={h}
                 fill={tinycolor(contrastColor).setAlpha(0.3).toRgbString()}
-                fillStyle="solid"
               />
             ),
             null

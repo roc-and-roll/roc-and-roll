@@ -162,21 +162,24 @@ function Aura({
   const tokenSize = GRID_SIZE * token.scale;
 
   const size = (aura.size * GRID_SIZE) / 5 + tokenSize / 2;
-  const sharedProps = {
-    x: x - size + tokenSize / 2,
-    y: y - size + tokenSize / 2,
-    fill: tinycolor(aura.color).setAlpha(0.3).toRgbString(),
-    fillStyle: "solid",
-  };
+  const fill = tinycolor(aura.color).setAlpha(0.3).toRgbString();
   if (aura.shape === "circle") {
-    return <RoughCircle {...sharedProps} d={size * 2} roughness={1} />;
+    return (
+      <circle
+        cx={x + tokenSize / 2}
+        cy={y + tokenSize / 2}
+        fill={fill}
+        r={size}
+      />
+    );
   } else if (aura.shape === "square") {
     return (
-      <RoughRectangle
-        {...sharedProps}
-        h={size * 2}
-        w={size * 2}
-        roughness={3}
+      <rect
+        x={x - size + tokenSize / 2}
+        y={y - size + tokenSize / 2}
+        fill={fill}
+        height={size * 2}
+        width={size * 2}
       />
     );
   } else {
