@@ -25,12 +25,14 @@ export const DiceGeometry: React.FC<
     numFaces: number;
     used: boolean;
     finalRotation: THREE.Quaternion;
+    onAnimationFinished?: () => void;
   }
-> = ({ finalRotation, used, numFaces, ...meshProps }) => {
+> = ({ finalRotation, used, numFaces, onAnimationFinished, ...meshProps }) => {
   const startVelocity = 30;
 
   const mesh = useRef<THREE.Mesh>(null!);
   const velocity = useRef<number>(startVelocity);
+  const animationFinished = useRef<boolean>(false);
 
   const speed = useMemo(() => (Math.random() - 0.25) * 0.08, []);
   const startRotation = useMemo(
@@ -39,6 +41,8 @@ export const DiceGeometry: React.FC<
   );
 
   useFrame((_, delta) => {
+    if (animationFinished.current) return;
+
     if (velocity.current > 0.1) {
       velocity.current *= 0.9 + speed;
       mesh.current.rotation.setFromQuaternion(
@@ -48,6 +52,8 @@ export const DiceGeometry: React.FC<
       mesh.current.quaternion.rotateTowards(finalRotation, delta * 4);
       if (mesh.current.quaternion.angleTo(finalRotation) < 0.001) {
         mesh.current.rotation.setFromQuaternion(finalRotation);
+        animationFinished.current = true;
+        onAnimationFinished?.();
       }
     }
   });
@@ -68,12 +74,14 @@ export function Dice({
   x,
   y,
   used,
+  onAnimationFinished,
 }: {
   faces: number;
   result: number;
   x: number;
   y: number;
   used: boolean;
+  onAnimationFinished?: () => void;
 }) {
   const dice = useLoader(GLTFLoader, [
     d4Glb,
@@ -90,6 +98,7 @@ export function Dice({
       <DiceGeometry
         finalRotation={descriptor.rotations[result - 1]!}
         used={used}
+        onAnimationFinished={onAnimationFinished}
         numFaces={faces}
         geometry={descriptor.geometry()}
         position={[x - (DICE_DISPLAY_COLUMNS - 1) / 2, y, 0]}

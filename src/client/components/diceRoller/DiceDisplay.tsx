@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { RRLogEntryDiceRoll } from "../../../shared/state";
 import { Dice } from "./Dice";
@@ -38,28 +38,42 @@ const indexToXY = (i: number) => ({
 function DiceContainer({
   slots,
   numRows,
+  onAnimationFinished,
 }: {
   slots: RollSlots;
   numRows: number;
+  onAnimationFinished: () => void;
 }) {
   const adjustPositions = ({ x, y }: { x: number; y: number }) => ({
     x,
     y: -y + (numRows - 1) / 2,
   });
 
+  const finishedCountRef = useRef<number>(
+    slots.length - slots.filter((s) => s.type === "die").length
+  );
+
+  const handleAnimationFinished = () => {
+    finishedCountRef.current++;
+    if (finishedCountRef.current === slots.length) {
+      onAnimationFinished();
+    }
+  };
+
   return (
     <>
       {slots.flatMap((part, i) =>
-        part.type === "modifier" ? (
-          []
-        ) : (
+        part.type === "die" ? (
           <Dice
             used={part.used}
             key={i}
             result={part.result}
             faces={part.faces}
+            onAnimationFinished={handleAnimationFinished}
             {...adjustPositions(indexToXY(i))}
           />
+        ) : (
+          []
         )
       )}
     </>
@@ -128,8 +142,10 @@ const calculateSlots = (diceRoll: RRLogEntryDiceRoll) => {
 
 export default function DiceDisplay({
   diceRoll,
+  onAnimationFinished,
 }: {
   diceRoll: RRLogEntryDiceRoll;
+  onAnimationFinished: () => void;
 }) {
   const slots = calculateSlots(diceRoll);
   const numRows = Math.ceil(slots.length / COLUMNS);
@@ -151,7 +167,11 @@ export default function DiceDisplay({
         <ambientLight />
         <pointLight position={[10, 10, 10]} intensity={2} />
         <Suspense fallback={null}>
-          <DiceContainer numRows={numRows} slots={slots} />
+          <DiceContainer
+            onAnimationFinished={onAnimationFinished}
+            numRows={numRows}
+            slots={slots}
+          />
         </Suspense>
       </Canvas>
       <ModifierContainer slots={slots} />

@@ -63,17 +63,22 @@ function Notification({
   onExpired: () => void;
 }) {
   const expiredRef = useRef(onExpired);
+  const [notificationReady, setNotificationReady] = useState(
+    notification.type !== "diceRoll"
+  );
 
   useEffect(() => {
     expiredRef.current = onExpired;
   }, [onExpired]);
 
   useEffect(() => {
-    const id = setTimeout(() => {
-      expiredRef.current();
-    }, NOTIFICATION_TIMEOUT);
-    return () => clearTimeout(id);
-  }, []);
+    if (notificationReady) {
+      const id = setTimeout(() => {
+        expiredRef.current();
+      }, NOTIFICATION_TIMEOUT);
+      return () => clearTimeout(id);
+    }
+  }, [notificationReady]);
 
   const players = useServerState((state) => state.players);
   const player = notification.playerId
@@ -86,8 +91,11 @@ function Notification({
         {player!.name}
       </span>
       {" rolled a "}
-      <strong>{diceResult(notification)}</strong>
-      <DiceDisplay diceRoll={notification} />
+      {notificationReady ? <strong>{diceResult(notification)}</strong> : "..."}
+      <DiceDisplay
+        onAnimationFinished={() => setNotificationReady(true)}
+        diceRoll={notification}
+      />
     </>
   );
 
