@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { GLTFLoader, GLTF } from "three/examples/jsm/loaders/GLTFLoader";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import diceFaces from "./dice/dice-faces.png";
 import d4Glb from "./dice/d4.glb";
 import d6Glb from "./dice/d6.glb";
@@ -10,6 +10,7 @@ import d12Glb from "./dice/d12.glb";
 import d20Glb from "./dice/d20.glb";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { descriptorMap } from "./dice/diceDescriptors";
+import { DICE_DISPLAY_COLUMNS } from "./DiceDisplay";
 
 const randomAxis = () => {
   return new THREE.Vector3(
@@ -22,31 +23,31 @@ const randomAxis = () => {
 export const DiceGeometry: React.FC<
   JSX.IntrinsicElements["mesh"] & {
     numFaces: number;
+    used: boolean;
     finalRotation: THREE.Quaternion;
   }
-> = (props) => {
+> = ({ finalRotation, used, numFaces, ...meshProps }) => {
   const startVelocity = 30;
 
   const mesh = useRef<THREE.Mesh>(null!);
   const velocity = useRef<number>(startVelocity);
 
-  const speed = useMemo(() => (Math.random() - 0.25) * 0.03, []);
+  const speed = useMemo(() => (Math.random() - 0.25) * 0.08, []);
   const startRotation = useMemo(
     () => new THREE.Quaternion().setFromAxisAngle(randomAxis(), 10000),
     []
   );
-  const endRotation = props.finalRotation;
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (velocity.current > 0.1) {
-      velocity.current *= 0.96 + speed;
+      velocity.current *= 0.9 + speed;
       mesh.current.rotation.setFromQuaternion(
-        startRotation.clone().slerp(endRotation, 1 - velocity.current)
+        startRotation.clone().slerp(finalRotation, 1 - velocity.current)
       );
     } else {
-      mesh.current.quaternion.rotateTowards(endRotation, delta * 4);
-      if (mesh.current.quaternion.angleTo(endRotation) < 0.001) {
-        mesh.current.rotation.setFromQuaternion(endRotation);
+      mesh.current.quaternion.rotateTowards(finalRotation, delta * 4);
+      if (mesh.current.quaternion.angleTo(finalRotation) < 0.001) {
+        mesh.current.rotation.setFromQuaternion(finalRotation);
       }
     }
   });
@@ -55,8 +56,8 @@ export const DiceGeometry: React.FC<
   image && (image.flipY = false);
 
   return (
-    <mesh {...props} ref={mesh} scale={0.7} quaternion={endRotation}>
-      <meshStandardMaterial map={image} color={"orange"} />
+    <mesh {...meshProps} ref={mesh} scale={0.7} quaternion={finalRotation}>
+      <meshStandardMaterial map={image} color={used ? "orange" : "gray"} />
     </mesh>
   );
 };
@@ -64,11 +65,15 @@ export const DiceGeometry: React.FC<
 export function Dice({
   faces,
   result,
-  index,
+  x,
+  y,
+  used,
 }: {
   faces: number;
   result: number;
-  index: number;
+  x: number;
+  y: number;
+  used: boolean;
 }) {
   const dice = useLoader(GLTFLoader, [
     d4Glb,
@@ -84,9 +89,10 @@ export function Dice({
     return (
       <DiceGeometry
         finalRotation={descriptor.rotations[result - 1]!}
+        used={used}
         numFaces={faces}
         geometry={descriptor.geometry()}
-        position={[index - 3, 0, 0]}
+        position={[x - (DICE_DISPLAY_COLUMNS - 1) / 2, y, 0]}
       />
     );
   } else {

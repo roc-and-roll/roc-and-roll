@@ -55,15 +55,13 @@ export function roll({
   modified?: RRMultipleRoll;
   negated?: boolean;
 }): RRDice {
+  if (modified !== "none" && count <= 1) {
+    count = 2;
+  }
   const results = Array.from(
     { length: count },
     () => Math.floor(Math.random() * faces) + 1
   );
-  if (modified !== "none" && count <= 1) {
-    throw new Error(
-      "when using advantage or disadvantage, you need to roll at least two dice."
-    );
-  }
   return {
     type: "dice",
     faces,

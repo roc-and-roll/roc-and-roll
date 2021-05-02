@@ -8,10 +8,9 @@ import {
   RRLogEntryMessage,
 } from "../../shared/state";
 import { assertNever } from "../../shared/util";
-import { diceResultString } from "../roll";
+import { diceResult } from "../roll";
 import { useServerState } from "../state";
 import DiceDisplay from "./diceRoller/DiceDisplay";
-import DiceRoller from "./diceRoller/DiceDisplay";
 
 const NOTIFICATION_TIMEOUT = 6000;
 
@@ -70,9 +69,10 @@ function Notification({
   }, [onExpired]);
 
   useEffect(() => {
-    setTimeout(() => {
+    const id = setTimeout(() => {
       expiredRef.current();
     }, NOTIFICATION_TIMEOUT);
+    return () => clearTimeout(id);
   }, []);
 
   const players = useServerState((state) => state.players);
@@ -86,7 +86,7 @@ function Notification({
         {player!.name}
       </span>
       {" rolled a "}
-      <strong>{diceResultString(notification)}</strong>
+      <strong>{diceResult(notification)}</strong>
       <DiceDisplay diceRoll={notification} />
     </>
   );

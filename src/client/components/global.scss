@@ -355,7 +355,7 @@ $gmAreaColor: #ab62c0;
 }
 
 .notifications {
-  $width: 400px;
+  $width: 400px - 18px;
   position: fixed;
   width: $width;
   left: 50%;
@@ -412,5 +412,56 @@ button.color-picker-color {
     margin-bottom: 0.5rem;
     width: 2rem;
     height: 2rem;
+  }
+}
+
+.dice-display {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.25rem;
+
+  canvas {
+    position: absolute;
+  }
+
+  .modifier {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.5rem;
+  }
+
+  .dice-display-modifiers {
+    position: absolute;
+    top: 0;
+  }
+
+  .weird-die {
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    position: absolute;
+    font-weight: bold;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    background: rgb(240, 205, 12);
+    color: #000;
+    border-color: #000;
+
+    &.unused {
+      background: gray;
+    }
+
+    .weird-die-faces {
+      font-size: 0.6rem;
+      line-height: 1;
+      position: absolute;
+      right: 2px;
+      bottom: 2px;
+    }
   }
 }
