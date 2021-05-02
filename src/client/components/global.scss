@@ -84,7 +84,9 @@ a {
 }
 
 .app-map {
+  position: relative;
   flex-grow: 1;
+  display: flex;
 }
 
 .map-svg {
@@ -183,20 +185,123 @@ a {
   // Without explicitly setting the height to 0, the following problem arises:
   // Open the chat, but close the log. Now it is impossible to interact with the
   // map to the right of the chat.
-  height: 0;
+  height: auto;
 
-  position: fixed;
+  position: absolute;
   bottom: 0px;
   right: 0px;
+  width: 100%;
 
   display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
+  flex-direction: column;
 
-  padding: 0 4px;
+  .bottom-floats-upper {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    padding: 0 4px;
 
-  & > * {
-    margin-left: 8px;
+    & > * {
+      margin-left: 8px;
+    }
+  }
+}
+
+.dice-templates {
+  $animation-duration: 200ms;
+
+  height: 0;
+  background: rgb(59, 28, 6);
+  box-shadow: inset 0 0 30px black;
+  border-top: 1px solid black;
+  border-left: 1px solid black;
+  width: 100%;
+  transition: $animation-duration height;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 8px;
+  position: relative;
+
+  &.opened {
+    height: 200px;
+  }
+
+  .dice-templates-container {
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    height: 100%;
+    width: 100%;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .dice-template {
+    min-height: 80px;
+    width: 160px;
+    border: 3px dashed #ccc;
+    margin: 0.5rem;
+    position: relative;
+    padding: 0.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    cursor: pointer;
+
+    input {
+      background: none;
+      border: none;
+      box-shadow: none;
+      width: 100%;
+      color: #fff;
+      font-size: 0.8rem;
+    }
+
+    &.created {
+      border-style: solid;
+      border-width: 2px;
+    }
+    &:not(.created) {
+      text-align: center;
+      font-style: italic;
+      font-size: 0.9rem;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  $dice-picker-height: 400px;
+  .dice-picker {
+    position: absolute;
+    left: 12px;
+    width: 270px;
+    height: 0;
+    transition: $animation-duration $animation-duration;
+    top: 0;
+    background: #333;
+    border-radius: 5px 5px 0 0;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    align-content: flex-start;
+  }
+
+  &.opened .dice-picker {
+    height: $dice-picker-height;
+    top: -$dice-picker-height;
+  }
+
+  .dice-option {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    background: #000;
+    margin: 0.25rem;
   }
 }
 

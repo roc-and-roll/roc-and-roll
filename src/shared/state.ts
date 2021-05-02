@@ -28,6 +28,8 @@ export type RRColor = string;
 
 export type RRPoint = { readonly x: number; readonly y: number };
 
+export type RRDiceTemplateID = Opaque<string, "diceTemplate">;
+
 export type RRFile = {
   originalFilename: string;
   filename: string;
@@ -201,6 +203,14 @@ export interface RRLogEntryMessage extends RRBaseLogEntry {
 //   };
 // }
 
+export interface RRDiceTemplate {
+  name?: string;
+  id: RRDiceTemplateID;
+  playerId: RRPlayerID;
+  rollType: "initiative" | "hit" | "attack" | null;
+  dice: Array<RRDice | RRModifier>;
+}
+
 export type RRDamageType = null | "fire" | "thunder";
 
 export type RRMultipleRoll = "advantage" | "disadvantage" | "none";
@@ -264,6 +274,8 @@ export type PrivateChatsSyncedState = EntityCollection<RRPrivateChat>;
 
 export type LogEntriesSyncedState = EntityCollection<RRLogEntry>;
 
+export type DiceTemplateState = EntityCollection<RRDiceTemplate>;
+
 export type EphermalPlayer = {
   id: RRPlayerID;
   isOnline: boolean;
@@ -286,6 +298,7 @@ export interface SyncedState {
   maps: MapsSyncedState;
   privateChats: PrivateChatsSyncedState;
   logEntries: LogEntriesSyncedState;
+  diceTemplates: DiceTemplateState;
   // All ephermal state is cleared when the server restarts
   ephermal: EphermalSyncedState;
 }
@@ -316,6 +329,10 @@ export const initialSyncedState: SyncedState = {
     ids: [],
   },
   tokens: {
+    entities: {},
+    ids: [],
+  },
+  diceTemplates: {
     entities: {},
     ids: [],
   },

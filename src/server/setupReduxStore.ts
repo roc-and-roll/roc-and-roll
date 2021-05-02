@@ -7,6 +7,7 @@ import { privateChatsReducer } from "./features/privateChats";
 import { logEntriesReducer } from "./features/logEntries";
 import { SyncedState } from "../shared/state";
 import { ephermalPlayersReducer } from "./features/ephermal";
+import { diceTemplatesReducer } from "./features/diceTemplate";
 
 const options = {
   reducer: {
@@ -19,6 +20,7 @@ const options = {
     maps: mapsReducer,
     privateChats: privateChatsReducer,
     logEntries: logEntriesReducer,
+    diceTemplates: diceTemplatesReducer,
     ephermal: combineReducers({
       players: ephermalPlayersReducer,
     }),

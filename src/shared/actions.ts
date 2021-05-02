@@ -21,6 +21,7 @@ import {
   RRToken,
   RRTokenID,
   RRMapObjectID,
+  RRDiceTemplate,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -294,4 +295,18 @@ export const ephermalPlayerUpdate = createAction<Update<EphermalPlayer>>(
 
 export const ephermalPlayerRemove = createAction<EphermalPlayer["id"]>(
   "ephermal/player/remove"
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// Dice template state
+////////////////////////////////////////////////////////////////////////////////
+
+export const diceTemplateAdd = createAction<RRDiceTemplate>("diceTemplate/add");
+
+export const diceTemplateUpdate = createAction<Update<RRDiceTemplate>>(
+  "diceTemplate/update"
+);
+
+export const diceTemplateRemove = createAction<RRDiceTemplate["id"]>(
+  "diceTemplate/remove"
 );
