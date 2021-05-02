@@ -1,4 +1,4 @@
-import React, { SVGProps, useContext, useState, useMemo } from "react";
+import React, { SVGProps, useContext, useMemo } from "react";
 import rough from "roughjs/bin/rough";
 import type { Drawable, Options } from "roughjs/bin/core";
 import { RoughGenerator } from "roughjs/bin/generator";
@@ -16,17 +16,19 @@ export function RoughContextProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [roughGenerator, _] = useState(() =>
-    rough.generator({
-      options: {
-        // outline
-        strokeWidth: 3,
-        // inside
-        fillStyle: "hachure",
-        hachureGap: 12,
-        fillWeight: 3,
-      },
-    })
+  const roughGenerator = useMemo(
+    () =>
+      rough.generator({
+        options: {
+          // outline
+          strokeWidth: 3,
+          // inside
+          fillStyle: "hachure",
+          hachureGap: 12,
+          fillWeight: 3,
+        },
+      }),
+    []
   );
 
   return (

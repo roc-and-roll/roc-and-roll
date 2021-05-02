@@ -110,8 +110,11 @@ export function ServerStateProvider({
       update();
     } else {
       propagationAnimationFrameRef.current ??= requestAnimationFrame(() => {
-        propagationAnimationFrameRef.current = null;
         update();
+        propagationAnimationFrameRef.current = null;
+        if (externalStateRef.current !== internalStateRef.current) {
+          propagateStateChange();
+        }
       });
     }
   }, []);
@@ -496,7 +499,6 @@ function _useDebouncedServerUpdateInternal<
                     // animation
                     serverValue
                   : lerp(localValue, serverValue, amount);
-              console.log(amount, lerpedValue);
               _setLocalValue(lerpedValue);
               // Lerp for the same amount of time as the debounceTime.
             }, debouncerTime(debounce));

@@ -177,10 +177,15 @@ export default function MapContainer() {
     syncedDebounce.current,
     (start, end, t) =>
       produce(end, (draft) =>
-        entries<Draft<RRMapObject>>(draft).forEach((e) => {
+        entries<Draft<RRMapObject>>(end).forEach((e) => {
           const s = byId(start.entities, e.id);
-          if (s) {
-            e.position = pointAdd(
+          // Only lerp the position if
+          // 1. the object existed before (s)
+          // 2. it has changed (s !== e)
+          if (s && s !== e) {
+            // We deliberately only use the draft here, instead of iterating
+            // over it directly, so that less proxies need to be created.
+            byId<Draft<RRMapObject>>(draft.entities, e.id)!.position = pointAdd(
               s.position,
               pointScale(pointSubtract(e.position, s.position), t)
             );
@@ -395,6 +400,7 @@ export default function MapContainer() {
 }
 
 function useReduxToRecoilBridge<E extends { id: RRID }>(
+  debugIdentifier: string,
   entities: EntityCollection<E>,
   idsAtom: RecoilState<E["id"][]>,
   familyAtom: (id: E["id"]) => RecoilState<E | null>
@@ -406,9 +412,6 @@ function useReduxToRecoilBridge<E extends { id: RRID }>(
     }: EntityCollection<E>) => {
       const oldIds = snapshot.getLoadable(mapObjectIdsAtom).getValue();
       if (oldIds !== newIds) {
-        oldIds.forEach((oldMapObjectId) => {
-          reset(familyAtom(oldMapObjectId));
-        });
         set(idsAtom, newIds);
       }
 
@@ -420,6 +423,12 @@ function useReduxToRecoilBridge<E extends { id: RRID }>(
           set(atom, newEntity);
         }
       });
+
+      oldIds
+        .filter((oldId) => !newIds.includes(oldId))
+        .forEach((removedId) => {
+          reset(familyAtom(removedId));
+        });
     },
     [familyAtom, idsAtom]
   );
@@ -434,13 +443,20 @@ function ReduxToRecoilBridge({
 }: {
   localMapObjects: EntityCollection<RRMapObject>;
 }) {
-  useReduxToRecoilBridge(localMapObjects, mapObjectIdsAtom, mapObjectsFamily);
   useReduxToRecoilBridge(
+    "local map objects",
+    localMapObjects,
+    mapObjectIdsAtom,
+    mapObjectsFamily
+  );
+  useReduxToRecoilBridge(
+    "tokens",
     useServerState((s) => s.tokens),
     tokenIdsAtom,
     tokenFamily
   );
   useReduxToRecoilBridge(
+    "ephermal players",
     useServerState((s) => s.ephermal.players),
     ephermalPlayerIdsAtom,
     ephermalPlayersFamily
