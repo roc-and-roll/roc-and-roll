@@ -16,11 +16,11 @@ export const MapToolbar = React.memo<{
 }>(function MapToolbar({ map, myself, setEditState }) {
   const [tool, setTool] = useState<MapEditState["tool"]>("move");
 
-  const [drawType, setDrawType] = useState<
+  const [drawType, setDrawType] = useLocalState<
     Extract<MapEditState, { tool: "draw" }>["type"]
-  >("freehand");
+  >("map/toolbar/drawType", "freehand");
   const [drawColor, setDrawColor] = useState(myself.color);
-  const [snap, setSnap] = useLocalState<MapSnap>("toolbar/snap", "grid");
+  const [snap, setSnap] = useLocalState<MapSnap>("map/toolbar/snap", "grid");
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -45,7 +45,7 @@ export const MapToolbar = React.memo<{
     return () => {
       window.removeEventListener("keypress", handleKeyPress);
     };
-  }, []);
+  }, [setDrawType]);
 
   useEffect(() => {
     setEditState((old) =>

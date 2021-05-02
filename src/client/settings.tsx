@@ -4,14 +4,13 @@ import { ReadonlyDeep } from "type-fest";
 import useLocalState from "./useLocalState";
 
 // increase this whenever the Settings type changes
-const CURRENT_SETTINGS_VERSION = 1;
+const CURRENT_SETTINGS_VERSION = 2;
 
 export type Settings = ReadonlyDeep<{
   version: number;
   volume: number;
   debug: {
     mapTokenPositions: boolean;
-    dice3d: boolean;
   };
 }>;
 
@@ -20,7 +19,6 @@ const initialSettings = {
   volume: 1,
   debug: {
     mapTokenPositions: false,
-    dice3d: false,
   },
 };
 

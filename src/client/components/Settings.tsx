@@ -41,21 +41,6 @@ export function Settings() {
               />
             </label>
           </div>
-          <div>
-            <label>
-              show 3d dice playground{" "}
-              <input
-                type="checkbox"
-                checked={settings.debug.dice3d}
-                onChange={(e) =>
-                  setSettings((old) => ({
-                    ...old,
-                    debug: { ...old.debug, dice3d: e.target.checked },
-                  }))
-                }
-              />
-            </label>
-          </div>
         </>
       )}
     </>
