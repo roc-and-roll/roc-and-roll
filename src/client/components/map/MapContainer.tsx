@@ -42,10 +42,15 @@ import { GRID_SIZE } from "../../../shared/constants";
 import { rrid, timestamp } from "../../../shared/util";
 import { useSettings } from "../../settings";
 import produce, { Draft } from "immer";
-import { pointAdd, snapPointToGrid } from "../../point";
+import {
+  pointAdd,
+  pointScale,
+  pointSubtract,
+  snapPointToGrid,
+} from "../../point";
 import { useMapToolHandler } from "./useMapToolHandler";
 import { atomFamily, atom, useRecoilCallback, RecoilState } from "recoil";
-import { DebugMapContainerOverlay } from "./DebugTokenPositions";
+import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -175,10 +180,10 @@ export default function MapContainer() {
         entries<Draft<RRMapObject>>(draft).forEach((e) => {
           const s = byId(start.entities, e.id);
           if (s) {
-            e.position = {
-              x: s.position.x + (e.position.x - s.position.x) * t,
-              y: s.position.y + (e.position.y - s.position.y) * t,
-            };
+            e.position = pointAdd(
+              s.position,
+              pointScale(pointSubtract(e.position, s.position), t)
+            );
           }
         })
       )

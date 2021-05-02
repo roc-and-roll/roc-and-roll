@@ -3,11 +3,22 @@ import { renderHook, WrapperComponent } from "@testing-library/react-hooks";
 import {
   ServerStateProvider,
   useOptimisticDebouncedServerUpdate,
+  applyStatePatch,
 } from "./state";
-import { SyncedStateAction } from "../shared/state";
+import {
+  byId,
+  defaultMap,
+  initialSyncedState,
+  RRMap,
+  RRMapObject,
+  RRPlayer,
+  SyncedState,
+  SyncedStateAction,
+} from "../shared/state";
 import { act } from "@testing-library/react-hooks";
 import ReactDOM from "react-dom";
 import FakeTimers from "@sinonjs/fake-timers";
+import { rrid } from "../shared/util";
 
 type Subscriber = (payload: any) => void;
 type OnEmitSubscriber = (name: string, payload: any) => void;
@@ -314,5 +325,155 @@ describe("optimistic state updates", () => {
     expect(result.current[0]).toBe(40);
 
     unmount();
+  });
+});
+
+describe("applyStatePatch", () => {
+  it("works", () => {
+    let prevState: SyncedState = {
+      ...initialSyncedState,
+      maps: {
+        ...initialSyncedState.maps,
+        entities: {
+          ...initialSyncedState.maps.entities,
+        },
+        ids: [...initialSyncedState.maps.ids],
+      },
+    };
+    const newMap: RRMap = {
+      id: rrid<RRMap>(),
+      name: "map",
+      backgroundColor: "#eee",
+      gmWorldPosition: { x: 0, y: 0 },
+      gridEnabled: true,
+      objects: {
+        entities: {},
+        ids: [],
+      },
+    };
+    let nextState = applyStatePatch(prevState, {
+      deletedKeys: [],
+      patch: {
+        maps: {
+          entities: {
+            [newMap.id]: newMap,
+          },
+          // @ts-expect-error TODO
+          ids: [defaultMap.id, newMap.id],
+        },
+      },
+    });
+
+    expect(nextState).not.toStrictEqual(prevState);
+    expect(nextState.maps).not.toStrictEqual(prevState.maps);
+    expect(nextState.maps.entities).not.toStrictEqual(prevState.maps.entities);
+    expect(byId(nextState.maps.entities, newMap.id)).toStrictEqual(newMap);
+    expect(byId(nextState.maps.entities, defaultMap.id)).toStrictEqual(
+      byId(prevState.maps.entities, defaultMap.id)
+    );
+    expect(nextState.maps.ids).not.toStrictEqual(prevState.maps.ids);
+    expect(nextState.maps.ids).toEqual([defaultMap.id, newMap.id]);
+
+    expect(nextState.players).toStrictEqual(prevState.players);
+
+    const newMapObject1: RRMapObject = {
+      id: rrid<RRMapObject>(),
+      type: "rectangle",
+      color: "#123",
+      locked: false,
+      playerId: rrid<RRPlayer>(),
+      position: { x: 0, y: 0 },
+      size: { x: 0, y: 0 },
+    };
+
+    nextState = applyStatePatch((prevState = nextState), {
+      deletedKeys: [],
+      patch: {
+        maps: {
+          entities: {
+            [newMap.id]: {
+              objects: {
+                entities: {
+                  [newMapObject1.id]: newMapObject1,
+                },
+                ids: [newMapObject1.id],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    expect(nextState).not.toStrictEqual(prevState);
+    expect(nextState.maps).not.toStrictEqual(prevState.maps);
+    expect(nextState.maps.entities).not.toStrictEqual(prevState.maps.entities);
+    expect(byId(nextState.maps.entities, newMap.id)).not.toStrictEqual(newMap);
+    expect(byId(nextState.maps.entities, newMap.id)!.objects).not.toStrictEqual(
+      newMap.objects
+    );
+    expect(
+      byId(
+        byId(nextState.maps.entities, newMap.id)!.objects.entities,
+        newMapObject1.id
+      )
+    ).toStrictEqual(newMapObject1);
+    expect(byId(nextState.maps.entities, defaultMap.id)).toStrictEqual(
+      byId(prevState.maps.entities, defaultMap.id)
+    );
+
+    expect(nextState.players).toStrictEqual(prevState.players);
+
+    const newMapObject2: RRMapObject = {
+      id: rrid<RRMapObject>(),
+      type: "rectangle",
+      color: "#456",
+      locked: false,
+      playerId: rrid<RRPlayer>(),
+      position: { x: 0, y: 0 },
+      size: { x: 0, y: 0 },
+    };
+
+    nextState = applyStatePatch((prevState = nextState), {
+      deletedKeys: [],
+      patch: {
+        maps: {
+          entities: {
+            [newMap.id]: {
+              objects: {
+                entities: {
+                  [newMapObject2.id]: newMapObject2,
+                },
+                ids: [...newMap.objects.ids, newMapObject2.id],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    expect(nextState).not.toStrictEqual(prevState);
+    expect(nextState.maps).not.toStrictEqual(prevState.maps);
+    expect(nextState.maps.entities).not.toStrictEqual(prevState.maps.entities);
+    expect(byId(nextState.maps.entities, newMap.id)).not.toStrictEqual(newMap);
+    expect(byId(nextState.maps.entities, newMap.id)!.objects).not.toStrictEqual(
+      newMap.objects
+    );
+    expect(
+      byId(
+        byId(nextState.maps.entities, newMap.id)!.objects.entities,
+        newMapObject1.id
+      )
+    ).toStrictEqual(newMapObject1);
+    expect(
+      byId(
+        byId(nextState.maps.entities, newMap.id)!.objects.entities,
+        newMapObject2.id
+      )
+    ).toStrictEqual(newMapObject2);
+    expect(byId(nextState.maps.entities, defaultMap.id)).toStrictEqual(
+      byId(prevState.maps.entities, defaultMap.id)
+    );
+
+    expect(nextState.players).toStrictEqual(prevState.players);
   });
 });

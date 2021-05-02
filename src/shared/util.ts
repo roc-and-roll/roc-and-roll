@@ -23,9 +23,7 @@ export function mergeDeep<T>(base: any, patch: any): T {
           output[key] = mergeDeep(base[key], patch[key]);
         }
       } else {
-        Object.assign(output, {
-          [key]: patch[key],
-        });
+        Object.assign(output, { [key]: patch[key] });
       }
     });
   }

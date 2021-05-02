@@ -70,7 +70,8 @@ export function ServerStateProvider({
 }: React.PropsWithChildren<{ socket: SocketIOClient.Socket }>) {
   // We must not useState in this component, because we do not want to cause
   // re-renders of this component and its children when the state changes.
-  const stateRef = useRef<SyncedState>(initialSyncedState);
+  const internalStateRef = useRef<SyncedState>(initialSyncedState);
+  const externalStateRef = useRef<SyncedState>(internalStateRef.current);
   const finishedOptimisticUpdateIdsRef = useRef<OptimisticUpdateID[]>([]);
   const subscribers = useRef<Set<StateUpdateSubscriber>>(new Set());
   const subscribersToOptimisticUpdatesExecuted = useRef<
@@ -91,7 +92,7 @@ export function ServerStateProvider({
 
   const propagateStateChange = useCallback(() => {
     const update = () => {
-      const state = stateRef.current;
+      const state = (externalStateRef.current = internalStateRef.current);
       const finishedOptimisticUpdateIds =
         finishedOptimisticUpdateIdsRef.current;
       finishedOptimisticUpdateIdsRef.current = [];
@@ -130,7 +131,7 @@ export function ServerStateProvider({
           msg.finishedOptimisticUpdateIds
         );
 
-      stateRef.current = state;
+      internalStateRef.current = state;
       finishedOptimisticUpdateIdsRef.current = [
         ...finishedOptimisticUpdateIdsRef.current,
         ...msg.finishedOptimisticUpdateIds,
@@ -152,7 +153,10 @@ export function ServerStateProvider({
           msg.finishedOptimisticUpdateIds
         );
 
-      stateRef.current = applyStatePatch(stateRef.current, patch);
+      internalStateRef.current = applyStatePatch(
+        internalStateRef.current,
+        patch
+      );
       finishedOptimisticUpdateIdsRef.current = [
         ...finishedOptimisticUpdateIdsRef.current,
         ...msg.finishedOptimisticUpdateIds,
@@ -194,7 +198,7 @@ export function ServerStateProvider({
   return (
     <ServerStateContext.Provider
       value={{
-        stateRef,
+        stateRef: externalStateRef,
         subscribe,
         unsubscribe,
         subscribeToOptimisticUpdateExecuted,
@@ -207,7 +211,7 @@ export function ServerStateProvider({
   );
 }
 
-function applyStatePatch(
+export function applyStatePatch(
   state: SyncedState,
   patchData: StatePatch<SyncedState>
 ) {
@@ -459,8 +463,12 @@ function _useDebouncedServerUpdateInternal<
     const [rafStart, rafStop] = useRafLoop();
 
     // eslint-disable-next-line react-hooks/rules-of-hooks
+    const stopOngoingLerpRef = useRef(() => {});
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
       const subscriber = (state: SyncedState) => {
+        stopOngoingLerpRef.current();
         if (optimisticUpdatePhase.current.type === "off") {
           const selector = serverValueOrSelectorRef.current;
           if (typeof selector !== "function") {
@@ -482,21 +490,22 @@ function _useDebouncedServerUpdateInternal<
             }
             const localValue = localValueRef.current;
             rafStart((amount) => {
-              // console.log(delta);
-              _setLocalValue(
-                // Make sure to use the serverValue as is at the end of the
-                // animation
+              const lerpedValue =
                 amount === 1
-                  ? serverValue
-                  : lerp(localValue, serverValue, amount)
-              );
+                  ? // Make sure to use the serverValue as is at the end of the
+                    // animation
+                    serverValue
+                  : lerp(localValue, serverValue, amount);
+              console.log(amount, lerpedValue);
+              _setLocalValue(lerpedValue);
               // Lerp for the same amount of time as the debounceTime.
             }, debouncerTime(debounce));
 
-            return () => {
+            stopOngoingLerpRef.current = () => {
+              stopOngoingLerpRef.current = () => {};
               // If the server value updates while we were currently lerping,
-              // aboirt the current lerp and set the local value to the end position
-              // of the interrupted lerp.
+              // abort the current lerp and set the local value to the end
+              // position of the interrupted lerp.
               if (rafStop()) {
                 _setLocalValue(serverValue);
               }
@@ -506,7 +515,10 @@ function _useDebouncedServerUpdateInternal<
       };
 
       subscribe(subscriber);
-      return () => unsubscribe(subscriber);
+      return () => {
+        unsubscribe(subscriber);
+        stopOngoingLerpRef.current();
+      };
     }, [
       debounce,
       lerpRef,

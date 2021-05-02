@@ -18,7 +18,7 @@ export function DebugMapContainerOverlay(props: {
       style={{
         position: "absolute",
         right: 0,
-        top: 0,
+        top: 80,
         background: "orange",
         maxWidth: "100%",
         overflowY: "auto",
@@ -65,6 +65,61 @@ export function DebugMapContainerOverlay(props: {
                         <br />
                         y:{" "}
                         {localMapObject.position.y - serverMapObject.position.y}
+                      </>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Collapsible>
+      <Collapsible title="rectangle sizes">
+        <table cellPadding={8}>
+          <thead>
+            <tr>
+              <th>RRMapObjectID</th>
+              <th>Server .size</th>
+              <th>Local .size</th>
+              <th>Diff .size</th>
+            </tr>
+          </thead>
+          <tbody>
+            {mapObjectIds.map((mapObjectId) => {
+              const serverMapObject =
+                props.serverMapObjects.find(
+                  (each) => each.id === mapObjectId
+                ) ?? null;
+              const localMapObject =
+                props.localMapObjects.find((each) => each.id === mapObjectId) ??
+                null;
+
+              if (
+                serverMapObject?.type !== "rectangle" ||
+                localMapObject?.type !== "rectangle"
+              ) {
+                return null;
+              }
+
+              return (
+                <tr key={mapObjectId}>
+                  <td>{mapObjectId}</td>
+                  <td>
+                    x: {serverMapObject?.size.x}
+                    <br />
+                    y: {serverMapObject?.size.y}
+                  </td>
+                  <td>
+                    x: {localMapObject?.size.x}
+                    <br />
+                    y: {localMapObject?.size.y}
+                  </td>
+                  <td>
+                    {localMapObject && serverMapObject && (
+                      <>
+                        x: {localMapObject.size.x - serverMapObject.size.x}
+                        <br />
+                        y: {localMapObject.size.y - serverMapObject.size.y}
                       </>
                     )}
                   </td>

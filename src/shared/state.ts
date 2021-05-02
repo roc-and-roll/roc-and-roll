@@ -290,7 +290,7 @@ export interface SyncedState {
   ephermal: EphermalSyncedState;
 }
 
-const defaultMap: RRMap = {
+export const defaultMap: RRMap = {
   backgroundColor: "#000",
   objects: {
     entities: {},
