@@ -6,7 +6,7 @@ import { diceResult, diceResultString } from "../roll";
 import { useServerDispatch, useServerState } from "../state";
 import { useScrollToBottom } from "../useScrollToBottom";
 import { formatTimestamp } from "../util";
-import { achievements } from "./Achievements";
+import { achievements } from "./achievementList";
 import { CollapseButton } from "./CollapseButton";
 import { Button } from "./ui/Button";
 

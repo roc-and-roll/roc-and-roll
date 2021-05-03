@@ -12,9 +12,9 @@ import { assertNever } from "../../shared/util";
 import { diceResult } from "../roll";
 import { useRRSimpleSound } from "../sound";
 import { useServerState } from "../state";
-import { achievements } from "./Achievements";
 import DiceDisplay from "./diceRoller/DiceDisplay";
 import tada from "../../third-party/freesound.org/60443__jobro__tada1.mp3";
+import { achievements } from "./achievementList";
 
 const NOTIFICATION_TIMEOUT = 6000;
 
@@ -129,6 +129,8 @@ function Notification({
         </span>
         {" unlocked: "}
         <strong>{achievement?.name}</strong>
+        <br />
+        <small>{achievement?.requirement ?? ""}</small>
       </>
     );
   };
