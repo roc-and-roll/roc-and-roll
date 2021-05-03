@@ -263,9 +263,11 @@ export const RRMapView = React.memo<{
       ) {
         if (
           path.length > 1 &&
-          pointEquals(path[path.length - 2]!, gridPosition)
+          path.slice(1).some((p) => pointEquals(p, gridPosition))
         ) {
-          setTokenPath(path.slice(0, path.length - 1));
+          setTokenPath(
+            path.slice(0, path.findIndex((p) => pointEquals(p, gridPosition))!)
+          );
         } else {
           setTokenPath([
             ...path,
