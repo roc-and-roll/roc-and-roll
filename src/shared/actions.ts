@@ -22,6 +22,7 @@ import {
   RRTokenID,
   RRMapObjectID,
   RRDiceTemplate,
+  RRLogEntryAchievement,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -206,6 +207,20 @@ export const logEntryMessageAdd = createAction(
     payload: {
       id: rrid<RRLogEntryMessage>(),
       type: "message",
+      timestamp: timestamp(),
+      ...logEntry,
+    },
+  })
+);
+
+export const logEntryAchievementAdd = createAction(
+  "logentry/achievement/add",
+  (
+    logEntry: Omit<RRLogEntryAchievement, "id" | "type" | "timestamp">
+  ): { payload: RRLogEntryAchievement } => ({
+    payload: {
+      id: rrid<RRLogEntryAchievement>(),
+      type: "achievement",
       timestamp: timestamp(),
       ...logEntry,
     },

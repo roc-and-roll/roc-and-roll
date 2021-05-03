@@ -74,6 +74,17 @@ export function Acknowledgements() {
           </a>{" "}
           by stwime <License license={licenses.CC0} />
         </li>
+        <li>
+          tada1.wav from{" "}
+          <a
+            href="https://freesound.org/s/60443/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            https://freesound.org/s/60443/
+          </a>{" "}
+          by jobro <License license={licenses["CC-BY 3.0"]} />
+        </li>
       </ul>
     </>
   );

@@ -3,14 +3,18 @@ import {
   byId,
   entries,
   RRLogEntry,
+  RRLogEntryAchievement,
   RRLogEntryDiceRoll,
   RRLogEntryID,
   RRLogEntryMessage,
 } from "../../shared/state";
 import { assertNever } from "../../shared/util";
 import { diceResult } from "../roll";
+import { useRRSimpleSound } from "../sound";
 import { useServerState } from "../state";
+import { achievements } from "./Achievements";
 import DiceDisplay from "./diceRoller/DiceDisplay";
+import tada from "../../third-party/freesound.org/60443__jobro__tada1.mp3";
 
 const NOTIFICATION_TIMEOUT = 6000;
 
@@ -109,9 +113,31 @@ function Notification({
     </>
   );
 
+  const play = useRRSimpleSound(tada);
+  useEffect(() => {
+    play();
+  }, [play]);
+
+  const viewAchievement = (notification: RRLogEntryAchievement) => {
+    const achievement = achievements.find(
+      (a) => a.id === notification.payload.achievementId
+    );
+    return (
+      <>
+        <span className="player-name" style={{ color: player!.color }}>
+          {player!.name}
+        </span>
+        {" unlocked: "}
+        <strong>{achievement?.name}</strong>
+      </>
+    );
+  };
+
   const view = (notification: RRLogEntry) => {
     if (notification.type === "diceRoll") return viewDiceRoll(notification);
     if (notification.type === "message") return viewMessage(notification);
+    if (notification.type === "achievement")
+      return viewAchievement(notification);
     assertNever(notification);
   };
 

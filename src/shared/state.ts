@@ -197,11 +197,12 @@ export interface RRLogEntryMessage extends RRBaseLogEntry {
   };
 }
 
-// export interface RRLogEntryAchievement extends RRBaseLogEntry {
-//   type: "achievement";
-//   payload: {
-//   };
-// }
+export interface RRLogEntryAchievement extends RRBaseLogEntry {
+  type: "achievement";
+  payload: {
+    achievementId: number;
+  };
+}
 
 export interface RRDiceTemplate {
   name?: string;
@@ -247,7 +248,7 @@ export interface RRLogEntryDiceRoll extends RRBaseLogEntry {
 
 export type RRLogEntry =
   | RRLogEntryMessage
-  //  | RRLogEntryAchievement
+  | RRLogEntryAchievement
   | RRLogEntryDiceRoll;
 
 // This must resemble the EntityState type from @reduxjs/toolkit to work with
