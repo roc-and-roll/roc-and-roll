@@ -86,7 +86,10 @@ a {
 .app-map {
   position: relative;
   flex-grow: 1;
-  display: flex;
+}
+
+.map-container {
+  height: 100%;
 }
 
 .map-svg {
@@ -205,6 +208,11 @@ a {
       margin-left: 8px;
     }
   }
+}
+
+.dice-template-opener {
+  padding: 0.5rem;
+  background-color: rgba(51, 51, 51, 0.6);
 }
 
 .dice-templates {

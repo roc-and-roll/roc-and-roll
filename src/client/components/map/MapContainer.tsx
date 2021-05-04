@@ -362,7 +362,7 @@ export default function MapContainer() {
   );
 
   return (
-    <div ref={dropRef}>
+    <div ref={dropRef} className="map-container">
       <ReduxToRecoilBridge localMapObjects={localMapObjects} />
       <MapToolbar map={map} myself={myself} setEditState={setEditState} />
       <RRMapView

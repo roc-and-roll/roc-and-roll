@@ -32,7 +32,7 @@ export function App() {
         <div className="app-wrapper">
           <Sidebar logout={forgetMyPlayerId} />
           <Suspense fallback="Map is loading...">
-            <main className="right-side app-map">
+            <main className="app-map">
               <MapContainer />
               <BottomFloats />
             </main>
