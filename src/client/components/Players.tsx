@@ -1,8 +1,12 @@
 import React from "react";
-import { byId, entries } from "../../shared/state";
+import { byId, entries, RRPlayer } from "../../shared/state";
 import { useServerState } from "../state";
 
-export function Players() {
+export function Players({
+  onClickPlayer,
+}: {
+  onClickPlayer?: (player: RRPlayer) => void;
+}) {
   const players = useServerState((state) => state.players);
   const ephermalPlayers = useServerState((state) => state.ephermal.players);
 
@@ -14,7 +18,9 @@ export function Players() {
         return (
           <li
             key={player.id}
+            onClick={() => onClickPlayer && onClickPlayer(player)}
             style={{
+              cursor: onClickPlayer ? "pointer" : "auto",
               textDecorationColor: player.color,
               textDecorationLine: "underline",
             }}
