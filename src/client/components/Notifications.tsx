@@ -115,8 +115,8 @@ function Notification({
 
   const play = useRRSimpleSound(tada);
   useEffect(() => {
-    play();
-  }, [play]);
+    if (notification.type === "achievement") play();
+  }, [notification.type, play]);
 
   const viewAchievement = (notification: RRLogEntryAchievement) => {
     const achievement = achievements.find(
