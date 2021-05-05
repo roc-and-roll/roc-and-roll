@@ -509,7 +509,11 @@ export const RRMapView = React.memo<{
 
   const handleStartMoveMapObject = useRecoilCallback(
     ({ snapshot }) => (object: RRMapObject, event: React.MouseEvent) => {
-      if (toolButtonState === "select" && canControlMapObject(object, myself)) {
+      if (
+        event.button === TOOL_BUTTON &&
+        toolButtonState === "select" &&
+        canControlMapObject(object, myself)
+      ) {
         const local = localCoords(event);
 
         (document.activeElement as HTMLElement)?.blur();
