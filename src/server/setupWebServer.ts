@@ -13,6 +13,7 @@ import { clamp } from "../shared/util";
 import { readFile } from "fs/promises";
 import { existsSync } from "fs";
 import { randomColor } from "../shared/colors";
+import fetch from "node-fetch";
 
 export async function setupWebServer(
   httpPort: number,
@@ -57,6 +58,23 @@ export async function setupWebServer(
       filename: file.filename,
     }));
     res.json(data);
+  });
+
+  let cachedTabletopaudioResponse: any;
+  app.get("/tabletopaudio", (req, res) => {
+    if (cachedTabletopaudioResponse) {
+      return res.json(cachedTabletopaudioResponse);
+    }
+
+    fetch("https://tabletopaudio.com/tta_data")
+      .then((res) => res.json())
+      .then((j) => {
+        return res.json((cachedTabletopaudioResponse = j));
+      })
+      .catch((err) => {
+        console.error(err);
+        return res.status(500).send();
+      });
   });
 
   // (3) Serve uploaded files

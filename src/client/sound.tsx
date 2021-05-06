@@ -10,7 +10,7 @@ let howler: typeof Howl;
  *
  * Does not stop playing the sound when the component unmounts.
  */
-export function useRRSimpleSound(url: string) {
+export function useRRSimpleSound(url: string): [() => void, () => void] {
   const howlRef = useRef<Howl | null>(null);
 
   const globalVolume = useRRSettings()[0].volume;
@@ -35,5 +35,9 @@ export function useRRSimpleSound(url: string) {
     }
   }, [globalMute, globalVolume, url]);
 
-  return play;
+  const pause = useCallback(() => {
+    if (howlRef.current) howlRef.current.pause();
+  }, []);
+
+  return [play, pause];
 }

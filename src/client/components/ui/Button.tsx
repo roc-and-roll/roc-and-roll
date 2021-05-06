@@ -7,7 +7,7 @@ export const Button = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement>
 >(function Button(props, ref) {
-  const play = useRRSimpleSound(click);
+  const [play] = useRRSimpleSound(click);
 
   return (
     <button

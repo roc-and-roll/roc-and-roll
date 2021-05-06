@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React from "react";
 import { DiceInput } from "./DiceInput";
 import { TokenManager } from "./TokenManager";
 import { Collapsible } from "./Collapsible";
@@ -14,6 +14,7 @@ import { About } from "./About";
 import { useMyself } from "../myself";
 import { Maps } from "./Maps";
 import { Achievements } from "./Achievements";
+import { Music } from "./Music";
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
@@ -68,7 +69,11 @@ export function Sidebar({ logout }: { logout: () => void }) {
           <Players />
         </Collapsible>
 
-        <Collapsible title="Achievements">
+        <Collapsible title="Music" defaultCollapsed>
+          <Music />
+        </Collapsible>
+
+        <Collapsible title="Achievements" defaultCollapsed>
           <Achievements />
         </Collapsible>
 

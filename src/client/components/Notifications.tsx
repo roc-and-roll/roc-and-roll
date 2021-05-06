@@ -113,7 +113,7 @@ function Notification({
     </>
   );
 
-  const play = useRRSimpleSound(tada);
+  const [play] = useRRSimpleSound(tada);
   useEffect(() => {
     if (notification.type === "achievement") play();
   }, [notification.type, play]);
