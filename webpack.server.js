@@ -87,7 +87,7 @@ module.exports = (webpackEnv) => {
       isEnvDevelopment && new NodemonPlugin({
         script: './dist/server.roc-and-roll.js',
         // Arguments to pass to the script being watched.
-        args: [],
+        args: ["--workspace", "./workspace"],
         // Node arguments.
         // TODO: When enabling this, restarting due to code changes always
         // triggers an error that says that the debug port is already in use.

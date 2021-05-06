@@ -4240,7 +4240,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"commander@npm:^7.0.0":
+"commander@npm:^7.0.0, commander@npm:^7.2.0":
   version: 7.2.0
   resolution: "commander@npm:7.2.0"
   checksum: bdc0eca5e25cd24af8440163d3c9a996785bbac4b49a590365699cdc1ed08cefbac8f268153208ab2bc5dc3cb1d3fb573fd1590c681e36e371342186bd331a4c
@@ -11408,6 +11408,7 @@ resolve@^2.0.0-next.3:
     bufferutil: ^4.0.3
     clean-webpack-plugin: ^3.0.0
     clsx: ^1.1.1
+    commander: ^7.2.0
     concurrently: ^6.0.2
     copy-webpack-plugin: ^8.1.1
     core-js: ^3.11.1

@@ -1,16 +1,15 @@
 import { setupReduxStore } from "./setupReduxStore";
 import { setupStateSync } from "./setupStateSync";
 import { setupWebServer } from "./setupWebServer";
-import os from "os";
 import path from "path";
 import fs from "fs";
 import { setupStatePersistence } from "./setupStatePersistence";
 import { entries, SyncedState } from "../shared/state";
 import { ephermalPlayerUpdate } from "../shared/actions";
+import { setupArgs } from "./setupArgs";
 
 void (async () => {
-  // TODO: Place uploaded files somewhere else where it is safe.
-  const workspaceDir = path.join(os.tmpdir(), "roc-and-roll");
+  const { workspace: workspaceDir, quiet, port: httpPort } = setupArgs();
   fs.mkdirSync(workspaceDir, { recursive: true });
 
   const uploadedFilesDir = path.join(workspaceDir, "uploaded-files");
@@ -22,6 +21,7 @@ void (async () => {
   const statePath = path.join(workspaceDir, "state.json");
 
   const { io, url } = await setupWebServer(
+    httpPort,
     uploadedFilesDir,
     uploadedFilesCacheDir
   );
@@ -41,7 +41,7 @@ void (async () => {
   }
   const store = setupReduxStore(initialState);
 
-  setupStateSync(io, store);
+  setupStateSync(io, store, quiet);
 
   setupStatePersistence(store, statePath);
 

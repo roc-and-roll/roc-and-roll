@@ -11,16 +11,19 @@ import {
 import { ephermalPlayerAdd, ephermalPlayerRemove } from "../shared/actions";
 import { debounced } from "../shared/util";
 
-const quiet = !!process.env["QUIET"];
-const log = (...params: any[]) => !quiet && console.log(...params);
-
 type AdditionalSocketData = {
   finishedOptimisticUpdateIds: OptimisticUpdateID[];
   playerId: RRPlayerID | null;
   lastState: SyncedState | null;
 };
 
-export const setupStateSync = (io: SocketIOServer, store: MyStore) => {
+export const setupStateSync = (
+  io: SocketIOServer,
+  store: MyStore,
+  quiet: boolean
+) => {
+  const log = (...params: any[]) => !quiet && console.log(...params);
+
   const additionalSocketData = new Map<
     string /* socket id */,
     AdditionalSocketData
