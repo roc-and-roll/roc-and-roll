@@ -63,7 +63,10 @@ export const DiceGeometry: React.FC<
 
   return (
     <mesh {...meshProps} ref={mesh} scale={0.7} quaternion={finalRotation}>
-      <meshStandardMaterial map={image} color={used ? "orange" : "gray"} />
+      <meshStandardMaterial
+        map={image}
+        color={used && animationFinished.current ? "orange" : "gray"}
+      />
     </mesh>
   );
 };

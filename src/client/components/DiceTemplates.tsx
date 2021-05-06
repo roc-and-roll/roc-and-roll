@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { IterableElement } from "type-fest";
 import {
@@ -9,8 +9,10 @@ import {
 } from "../../shared/actions";
 import {
   entries,
+  RRDamageType,
   RRDiceTemplate,
   RRDiceTemplateID,
+  RRMultipleRoll,
   RRPlayerID,
 } from "../../shared/state";
 import { rrid } from "../../shared/util";
@@ -25,6 +27,7 @@ import {
 interface RRRollPart {
   type: "modifier" | "dice";
   number: number;
+  damageType: RRDamageType;
 }
 
 const partToDice = (
@@ -52,28 +55,36 @@ export function DiceTemplates({
   open: boolean;
   onClose: () => void;
 }) {
+  const [pickerShown, setPickerShown] = useState(false);
   const myself = useMyself();
   const templates = useServerState((state) =>
     entries(state.diceTemplates).filter((t) => t.playerId === myself.id)
   );
 
+  const dispatch = useServerDispatch();
   const newIds = useRef<RRDiceTemplateID[]>([]);
+
+  const addTemplateFrom = (parts: RRRollPart[]) => {
+    const id = rrid<RRDiceTemplate>();
+    newIds.current.push(id);
+    dispatch(
+      diceTemplateAdd({
+        id,
+        playerId: myself.id,
+        rollType: "attack",
+        dice: parts.map(partToDice),
+      })
+    );
+  };
 
   return (
     <div
       onMouseLeave={onClose}
       className={clsx("dice-templates", { opened: open })}
     >
-      <div className="dice-picker">
-        <RollPart part={{ type: "dice", number: 4 }} />
-        <RollPart part={{ type: "dice", number: 6 }} />
-        <RollPart part={{ type: "dice", number: 8 }} />
-        <RollPart part={{ type: "dice", number: 10 }} />
-        <RollPart part={{ type: "dice", number: 12 }} />
-        <RollPart part={{ type: "dice", number: 20 }} />
-        <RollPart part={{ type: "modifier", number: 1 }} />
-      </div>
+      {pickerShown && <DicePicker onAddTemplate={addTemplateFrom} />}
       <div className="dice-templates-container">
+        <button onClick={() => setPickerShown((b) => !b)}>Picker</button>
         {templates.map((t) => (
           <DiceTemplate
             newIds={newIds}
@@ -82,8 +93,65 @@ export function DiceTemplates({
             template={t}
           />
         ))}
-        <DiceTemplate newIds={newIds} playerId={myself.id} />
+        {pickerShown && <DiceTemplate newIds={newIds} playerId={myself.id} />}
       </div>
+    </div>
+  );
+}
+
+function DicePicker({
+  onAddTemplate,
+}: {
+  onAddTemplate: (p: RRRollPart[]) => void;
+}) {
+  const [templateString, setTemplateString] = useState("");
+
+  const addFromTemplate = () => {
+    const regex = /(^| *[+-] *)(?:(\d*)(d|a|i)(\d+)|(\d+))/g;
+    onAddTemplate(
+      [...templateString.matchAll(regex)].flatMap(
+        ([_, sign, diceCount, die, dieFaces, mod]):
+          | RRRollPart
+          | RRRollPart[] => {
+          // TODO support negative dice?
+          const negated = sign?.trim() === "-";
+          if (diceCount !== undefined && dieFaces !== undefined) {
+            const faces = parseInt(dieFaces);
+            const count = diceCount === "" ? 1 : parseInt(diceCount);
+            return Array.from<RRRollPart>({ length: count }).fill({
+              type: "dice",
+              number: faces,
+              damageType: "fire",
+            });
+          } else if (mod) {
+            return {
+              type: "modifier",
+              number: parseInt(mod) * (negated ? -1 : 1),
+              damageType: "fire",
+            };
+          }
+          throw new Error();
+        }
+      )
+    );
+    setTemplateString("");
+  };
+
+  return (
+    <div className="dice-picker">
+      <RollPart part={{ damageType: "fire", type: "dice", number: 4 }} />
+      <RollPart part={{ damageType: "fire", type: "dice", number: 6 }} />
+      <RollPart part={{ damageType: "fire", type: "dice", number: 8 }} />
+      <RollPart part={{ damageType: "fire", type: "dice", number: 10 }} />
+      <RollPart part={{ damageType: "fire", type: "dice", number: 12 }} />
+      <RollPart part={{ damageType: "fire", type: "dice", number: 20 }} />
+      <RollPart part={{ damageType: "fire", type: "modifier", number: 1 }} />
+      <input
+        value={templateString}
+        placeholder="Enter dice shorthand ..."
+        onKeyPress={(e) => e.key === "Enter" && addFromTemplate()}
+        onChange={(e) => setTemplateString(e.target.value)}
+      />
     </div>
   );
 }
@@ -161,7 +229,7 @@ const DiceTemplate = React.memo(function DiceTemplate({
     }
   }, [newIds, template]);
 
-  function doRoll() {
+  function doRoll(modified: RRMultipleRoll) {
     if (template) {
       dispatch(
         logEntryDiceRollAdd({
@@ -170,7 +238,7 @@ const DiceTemplate = React.memo(function DiceTemplate({
           payload: {
             dice: template.dice.map((d) =>
               d.type === "dice"
-                ? roll({ ...d, count: d.diceResults.length })
+                ? roll({ ...d, count: d.diceResults.length, modified })
                 : d
             ),
             rollType: template.rollType,
@@ -180,10 +248,14 @@ const DiceTemplate = React.memo(function DiceTemplate({
     }
   }
 
+  const canMultipleRoll = template?.dice.some(
+    (d) => d.type === "dice" && d.faces === 20
+  );
+
   return (
     <div
       ref={dropRef}
-      onClick={doRoll}
+      onClick={() => doRoll("none")}
       className={clsx("dice-template", { created: template })}
     >
       {template ? (
@@ -191,6 +263,7 @@ const DiceTemplate = React.memo(function DiceTemplate({
           <input
             ref={nameInputRef}
             value={name}
+            onClick={(e) => e.stopPropagation()}
             onChange={(e) => setName(e.target.value)}
           />
           {template.dice.map((p, i) => (
@@ -199,6 +272,26 @@ const DiceTemplate = React.memo(function DiceTemplate({
               {p.type === "dice" ? p.faces : p.modifier}
             </div>
           ))}
+          {canMultipleRoll && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  doRoll("advantage");
+                }}
+              >
+                ADV
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  doRoll("disadvantage");
+                }}
+              >
+                DIS
+              </button>
+            </>
+          )}
         </>
       ) : (
         "New Template"
