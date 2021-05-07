@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { ephermalSongAdd, ephermalSongRemove } from "../../shared/actions";
+import { entries, RRActiveSong } from "../../shared/state";
+import { rrid } from "../../shared/util";
 import { useRRComplexSound } from "../sound";
+import { useServerDispatch, useServerState } from "../state";
 import { apiHost } from "../util";
 
 interface TabletopAudio {
@@ -22,7 +26,11 @@ interface TabletopAudioResponse {
 export function Music() {
   const [list, setList] = useState<TabletopAudioResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeSong, setActiveSong] = useState<TabletopAudio | null>(null);
+
+  const dispatch = useServerDispatch();
+  const activeSongs = useServerState((state) =>
+    entries(state.ephermal.activeSongs)
+  );
 
   useEffect(() => {
     fetch(`${apiHost()}/tabletopaudio`)
@@ -44,17 +52,33 @@ export function Music() {
       />
       {error}
       {list?.tracks
-        .filter((t) =>
-          t.track_title.toLowerCase().includes(filter.toLowerCase())
+        .filter(
+          (t) =>
+            t.track_title.toLowerCase().includes(filter.toLowerCase()) ||
+            t.tags.some((tag) =>
+              tag.toLocaleLowerCase().includes(filter.toLocaleLowerCase())
+            )
         )
         .map((t) => (
           <Song
             key={t.key}
-            active={activeSong === t}
+            active={activeSongs.some((s) => s.url === t.link)}
             audio={t}
-            onStart={() =>
-              setActiveSong((currentSong) => (currentSong === t ? null : t))
-            }
+            onStart={() => {
+              const playing = activeSongs.find((s) => s.url === t.link);
+              if (playing) {
+                dispatch(ephermalSongRemove(playing.id));
+              } else {
+                dispatch(
+                  ephermalSongAdd({
+                    startedAt: +new Date(),
+                    id: rrid<RRActiveSong>(),
+                    url: t.link,
+                    volume: 1,
+                  })
+                );
+              }
+            }}
           />
         ))}
     </div>
@@ -70,18 +94,9 @@ function Song({
   active: boolean;
   onStart: () => void;
 }) {
-  const [play, pause, state] = useRRComplexSound(audio.link, true);
-  useEffect(() => {
-    if (active) {
-      play();
-    } else {
-      pause();
-    }
-  }, [active, pause, play]);
-
   return (
     <div onClick={onStart}>
-      {audio.track_title} ({state})
+      {audio.track_title} ({active ? "playing" : "stopped"})
     </div>
   );
 }

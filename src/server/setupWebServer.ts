@@ -30,14 +30,12 @@ export async function setupWebServer(
     // communicate with the server. This is necessary, because client and
     // server run on different ports in development.
     app.use((req, res, next) => {
-      // 1. Handle the request
-      next();
-      // 2. Set the CORS header
       if (!res.headersSent) {
         // Only set header if the headers have not already been sent.
         // This happens, e.g., when calling res.redirect()
         res.setHeader("Access-Control-Allow-Origin", `*`);
       }
+      next();
     });
   }
 

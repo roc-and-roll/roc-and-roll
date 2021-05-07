@@ -30,6 +30,8 @@ export type RRPoint = { readonly x: number; readonly y: number };
 
 export type RRDiceTemplateID = Opaque<string, "diceTemplate">;
 
+export type RRActiveSongID = Opaque<string, "activeSong">;
+
 export type RRFile = {
   originalFilename: string;
   filename: string;
@@ -288,8 +290,16 @@ export type EphermalPlayer = {
   tokenPath: RRPoint[];
 };
 
+export interface RRActiveSong {
+  id: RRActiveSongID;
+  url: string;
+  startedAt: number;
+  volume: number;
+}
+
 export type EphermalSyncedState = {
   players: EntityCollection<EphermalPlayer>;
+  activeSongs: EntityCollection<RRActiveSong>;
 };
 
 export interface SyncedState {
@@ -351,6 +361,10 @@ export const initialSyncedState: SyncedState = {
   },
   ephermal: {
     players: {
+      entities: {},
+      ids: [],
+    },
+    activeSongs: {
       entities: {},
       ids: [],
     },

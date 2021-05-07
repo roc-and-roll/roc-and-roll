@@ -23,6 +23,7 @@ import {
   RRMapObjectID,
   RRDiceTemplate,
   RRLogEntryAchievement,
+  RRActiveSong,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -310,6 +311,16 @@ export const ephermalPlayerUpdate = createAction<Update<EphermalPlayer>>(
 
 export const ephermalPlayerRemove = createAction<EphermalPlayer["id"]>(
   "ephermal/player/remove"
+);
+
+export const ephermalSongAdd = createAction<RRActiveSong>("ephermal/song/add");
+
+export const ephermalSongUpdate = createAction<Update<RRActiveSong>>(
+  "ephermal/song/update"
+);
+
+export const ephermalSongRemove = createAction<RRActiveSong["id"]>(
+  "ephermal/song/remove"
 );
 
 ////////////////////////////////////////////////////////////////////////////////

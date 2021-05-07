@@ -1,7 +1,9 @@
+import React from "react";
 import type { Howl } from "howler";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { entries, RRActiveSong } from "../shared/state";
 import { useRRSettings } from "./settings";
-import { useLatest } from "./state";
+import { useLatest, useServerState } from "./state";
 
 let howler: typeof Howl;
 
@@ -109,4 +111,26 @@ export function useRRComplexSound(
   }, []);
 
   return [play, pause, state] as const;
+}
+
+export function SongPlayer() {
+  const songs = useServerState((state) => entries(state.ephermal.activeSongs));
+
+  return (
+    <>
+      {songs.map((s) => (
+        <ActiveSongPlayer key={s.url} song={s} />
+      ))}
+    </>
+  );
+}
+
+export function ActiveSongPlayer({ song }: { song: RRActiveSong }) {
+  const [play] = useRRComplexSound(song.url, true);
+
+  useEffect(() => {
+    play();
+  }, [play]);
+
+  return <></>;
 }

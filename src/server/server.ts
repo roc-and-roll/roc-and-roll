@@ -37,6 +37,10 @@ void (async () => {
         ids: [],
         entities: {},
       },
+      activeSongs: {
+        ids: [],
+        entities: {},
+      },
     };
   }
   const store = setupReduxStore(initialState);

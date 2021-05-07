@@ -3,10 +3,19 @@ import {
   ephermalPlayerAdd,
   ephermalPlayerRemove,
   ephermalPlayerUpdate,
+  ephermalSongAdd,
+  ephermalSongRemove,
+  ephermalSongUpdate,
 } from "../../shared/actions";
-import { EphermalPlayer, initialSyncedState } from "../../shared/state";
+import {
+  EphermalPlayer,
+  initialSyncedState,
+  RRActiveSong,
+} from "../../shared/state";
 
 const ephermalPlayersAdapter = createEntityAdapter<EphermalPlayer>();
+
+const ephermalSongsAdapter = createEntityAdapter<RRActiveSong>();
 
 export const ephermalPlayersReducer = createReducer(
   initialSyncedState.ephermal.players,
@@ -15,5 +24,15 @@ export const ephermalPlayersReducer = createReducer(
       .addCase(ephermalPlayerAdd, ephermalPlayersAdapter.addOne)
       .addCase(ephermalPlayerUpdate, ephermalPlayersAdapter.updateOne)
       .addCase(ephermalPlayerRemove, ephermalPlayersAdapter.removeOne);
+  }
+);
+
+export const ephermalSongsReducer = createReducer(
+  initialSyncedState.ephermal.activeSongs,
+  (builder) => {
+    builder
+      .addCase(ephermalSongAdd, ephermalSongsAdapter.addOne)
+      .addCase(ephermalSongUpdate, ephermalSongsAdapter.updateOne)
+      .addCase(ephermalSongRemove, ephermalSongsAdapter.removeOne);
   }
 );
