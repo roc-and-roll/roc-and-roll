@@ -57,7 +57,7 @@ export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 export type ToolButtonState = "select" | "tool";
 
 export type MapEditState =
-  | { tool: "move" }
+  | { tool: "move"; updateColor: RRColor }
   | { tool: "measure"; snap: MapSnap }
   | {
       tool: "draw";
@@ -185,7 +185,8 @@ export default function MapContainer() {
           if (s && s !== e) {
             // We deliberately only use the draft here, instead of iterating
             // over it directly, so that less proxies need to be created.
-            byId<Draft<RRMapObject>>(draft.entities, e.id)!.position = pointAdd(
+            const obj = byId<Draft<RRMapObject>>(draft.entities, e.id)!;
+            obj.position = pointAdd(
               s.position,
               pointScale(pointSubtract(e.position, s.position), t)
             );
@@ -241,7 +242,36 @@ export default function MapContainer() {
     [dispatch, map.id, setLocalObjectsOnMap]
   );
 
-  const [editState, setEditState] = useState<MapEditState>({ tool: "move" });
+  const [editState, setEditState] = useState<MapEditState>({
+    tool: "move",
+    updateColor: myself.color,
+  });
+
+  const updatedColor = editState.tool === "move" && editState.updateColor;
+  const onUpdateColor = useRecoilCallback(
+    ({ snapshot }) => (color: string) => {
+      if (color) {
+        snapshot
+          .getLoadable(selectedMapObjectIdsAtom)
+          .getValue()
+          .forEach((selectedMapObjectId) => {
+            dispatch(
+              mapObjectUpdate(map.id, {
+                id: selectedMapObjectId,
+                changes: { color },
+              })
+            );
+          });
+      }
+    },
+    [dispatch, map.id]
+  );
+
+  useEffect(() => {
+    if (updatedColor) {
+      onUpdateColor(updatedColor);
+    }
+  }, [updatedColor, onUpdateColor]);
 
   const sendMousePositionToServer = useAggregatedDoubleDebounce(
     useCallback(
