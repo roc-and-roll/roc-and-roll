@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ephermalSongAdd, ephermalSongRemove } from "../../shared/actions";
 import { entries, RRActiveSong } from "../../shared/state";
-import { rrid } from "../../shared/util";
-import { useRRComplexSound } from "../sound";
+import { rrid, withDo } from "../../shared/util";
 import { useServerDispatch, useServerState } from "../state";
 import { apiHost } from "../util";
 
@@ -42,6 +41,22 @@ export function Music() {
 
   const [filter, setFilter] = useState("");
 
+  const onStartAudio = (t: TabletopAudio) => {
+    const playing = activeSongs.find((s) => s.url === t.link);
+    if (playing) {
+      dispatch(ephermalSongRemove(playing.id));
+    } else {
+      dispatch(
+        ephermalSongAdd({
+          startedAt: +new Date(),
+          id: rrid<RRActiveSong>(),
+          url: t.link,
+          volume: 1,
+        })
+      );
+    }
+  };
+
   return (
     <div>
       <input
@@ -51,36 +66,43 @@ export function Music() {
         placeholder="search music..."
       />
       {error}
-      {list?.tracks
-        .filter(
-          (t) =>
-            t.track_title.toLowerCase().includes(filter.toLowerCase()) ||
-            t.tags.some((tag) =>
-              tag.toLocaleLowerCase().includes(filter.toLocaleLowerCase())
+      <div>
+        - Playing -
+        {list &&
+          activeSongs.map((s) =>
+            withDo(
+              list.tracks.find((t) => t.link === s.url),
+              (t) =>
+                t && (
+                  <Song
+                    key={t.link}
+                    active={true}
+                    audio={t}
+                    onStart={() => onStartAudio(t)}
+                  />
+                )
             )
-        )
-        .map((t) => (
-          <Song
-            key={t.key}
-            active={activeSongs.some((s) => s.url === t.link)}
-            audio={t}
-            onStart={() => {
-              const playing = activeSongs.find((s) => s.url === t.link);
-              if (playing) {
-                dispatch(ephermalSongRemove(playing.id));
-              } else {
-                dispatch(
-                  ephermalSongAdd({
-                    startedAt: +new Date(),
-                    id: rrid<RRActiveSong>(),
-                    url: t.link,
-                    volume: 1,
-                  })
-                );
-              }
-            }}
-          />
-        ))}
+          )}
+      </div>
+      <div>
+        - All -
+        {list?.tracks
+          .filter(
+            (t) =>
+              t.track_title.toLowerCase().includes(filter.toLowerCase()) ||
+              t.tags.some((tag) =>
+                tag.toLocaleLowerCase().includes(filter.toLocaleLowerCase())
+              )
+          )
+          .map((t) => (
+            <Song
+              key={t.key}
+              active={activeSongs.some((s) => s.url === t.link)}
+              audio={t}
+              onStart={() => onStartAudio(t)}
+            />
+          ))}
+      </div>
     </div>
   );
 }

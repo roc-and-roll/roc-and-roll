@@ -601,3 +601,17 @@ button.color-picker-color {
   background: rgba(0, 0, 0, 0.9);
   padding: 0.5rem;
 }
+
+.join-audio-popup {
+  position: fixed;
+  width: 300px;
+  margin-left: -150px;
+  top: 200px;
+  left: 50%;
+  background: #fff;
+  color: #000;
+  z-index: 9999;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+}
