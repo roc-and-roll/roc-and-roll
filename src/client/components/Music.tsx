@@ -9,7 +9,7 @@ interface TabletopAudio {
   key: number;
   track_title: string;
   track_type: string;
-  track_genre: string;
+  track_genre: string[];
   flavor: string;
   small_image: string;
   large_image: string;
@@ -41,20 +41,43 @@ export function Music() {
 
   const [filter, setFilter] = useState("");
 
-  const onStartAudio = (t: TabletopAudio) => {
-    const playing = activeSongs.find((s) => s.url === t.link);
-    if (playing) {
-      dispatch(ephermalSongRemove(playing.id));
-    } else {
-      dispatch(
-        ephermalSongAdd({
-          startedAt: +new Date(),
-          id: rrid<RRActiveSong>(),
-          url: t.link,
-          volume: 1,
-        })
-      );
+  const songDo = <T extends any>(
+    track: TabletopAudio,
+    cb: (s: RRActiveSong) => T
+  ) =>
+    withDo(
+      activeSongs.find((t) => t.url === track.link),
+      (t) => t && cb(t)
+    );
+  const tabletopAudioDo = <T extends any>(
+    song: RRActiveSong,
+    cb: (s: TabletopAudio) => T
+  ) =>
+    withDo(
+      list?.tracks.find((t) => t.link === song.url),
+      (t) => t && cb(t)
+    );
+
+  const onStop = (t: TabletopAudio) => {
+    songDo(t, (s) => dispatch(ephermalSongRemove(s.id)));
+  };
+
+  const onReplace = (t: TabletopAudio) => {
+    for (const song of activeSongs) {
+      tabletopAudioDo(song, onStop);
     }
+    onStart(t);
+  };
+
+  const onStart = (t: TabletopAudio) => {
+    dispatch(
+      ephermalSongAdd({
+        startedAt: +new Date(),
+        id: rrid<RRActiveSong>(),
+        url: t.link,
+        volume: 1,
+      })
+    );
   };
 
   return (
@@ -78,7 +101,9 @@ export function Music() {
                     key={t.link}
                     active={true}
                     audio={t}
-                    onStart={() => onStartAudio(t)}
+                    onAdd={() => onStart(t)}
+                    onReplace={() => onReplace(t)}
+                    onStop={() => onStop(t)}
                   />
                 )
             )
@@ -99,7 +124,9 @@ export function Music() {
               key={t.key}
               active={activeSongs.some((s) => s.url === t.link)}
               audio={t}
-              onStart={() => onStartAudio(t)}
+              onAdd={() => onStart(t)}
+              onReplace={() => onReplace(t)}
+              onStop={() => onStop(t)}
             />
           ))}
       </div>
@@ -110,15 +137,33 @@ export function Music() {
 function Song({
   audio,
   active,
-  onStart,
+  onAdd,
+  onReplace,
+  onStop,
 }: {
   audio: TabletopAudio;
   active: boolean;
-  onStart: () => void;
+  onAdd: () => void;
+  onReplace: () => void;
+  onStop: () => void;
 }) {
   return (
-    <div onClick={onStart}>
-      {audio.track_title} ({active ? "playing" : "stopped"})
+    <div className="tabletopaudio-song">
+      <div className="tabletopaudio-label">{audio.track_title}</div>
+      {active ? (
+        <div className="tabletopaudio-button" onClick={onStop}>
+          STOP
+        </div>
+      ) : (
+        <>
+          <div className="tabletopaudio-button" onClick={onAdd}>
+            ADD
+          </div>
+          <div className="tabletopaudio-button" onClick={onReplace}>
+            REPLACE
+          </div>
+        </>
+      )}
     </div>
   );
 }
