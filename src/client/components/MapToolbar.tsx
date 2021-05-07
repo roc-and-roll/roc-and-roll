@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { useRecoilValue } from "recoil";
 import { mapUpdate } from "../../shared/actions";
 import { RRMap, RRPlayer } from "../../shared/state";
 import { useOptimisticDebouncedServerUpdate } from "../state";
 import useLocalState from "../useLocalState";
-import { MapEditState, MapSnap } from "./map/MapContainer";
+import {
+  MapEditState,
+  MapSnap,
+  selectedMapObjectIdsAtom,
+} from "./map/MapContainer";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { ColorInput } from "./ui/ColorInput";
@@ -21,6 +26,8 @@ export const MapToolbar = React.memo<{
   >("map/toolbar/drawType", "freehand");
   const [drawColor, setDrawColor] = useState(myself.color);
   const [snap, setSnap] = useLocalState<MapSnap>("map/toolbar/snap", "grid");
+
+  const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom);
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -50,7 +57,7 @@ export const MapToolbar = React.memo<{
   useEffect(() => {
     setEditState((old) =>
       tool === "move"
-        ? { tool }
+        ? { tool, updateColor: drawColor }
         : tool === "measure"
         ? { tool, snap }
         : tool === "draw"
@@ -75,6 +82,9 @@ export const MapToolbar = React.memo<{
       >
         draw
       </Button>
+      {tool === "move" && selectedMapObjectIds.length > 0 && (
+        <ColorInput value={drawColor} onChange={setDrawColor} />
+      )}
       {tool === "draw" && (
         <>
           <Button
