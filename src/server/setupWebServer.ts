@@ -63,17 +63,18 @@ export async function setupWebServer(
   let cachedTabletopaudioResponse: any;
   app.get("/tabletopaudio", (req, res) => {
     if (cachedTabletopaudioResponse) {
-      return res.json(cachedTabletopaudioResponse);
+      res.json(cachedTabletopaudioResponse);
+      return;
     }
 
     fetch("https://tabletopaudio.com/tta_data")
       .then((res) => res.json())
       .then((j) => {
-        return res.json((cachedTabletopaudioResponse = j));
+        res.json((cachedTabletopaudioResponse = j));
       })
       .catch((err) => {
         console.error(err);
-        return res.status(500).send();
+        res.status(500).send();
       });
   });
 

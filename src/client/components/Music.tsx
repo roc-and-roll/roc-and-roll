@@ -41,7 +41,9 @@ export function Music() {
             key={t.key}
             active={activeSong === t}
             audio={t}
-            onStart={() => setActiveSong((song) => (song === t ? null : song))}
+            onStart={() =>
+              setActiveSong((currentSong) => (currentSong === t ? null : t))
+            }
           />
         ))}
     </div>
