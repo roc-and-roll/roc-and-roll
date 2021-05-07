@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useRRSimpleSound } from "../sound";
+import { useRRComplexSound } from "../sound";
 import { apiHost } from "../util";
 
 interface TabletopAudio {
@@ -32,11 +32,22 @@ export function Music() {
       .catch((err) => setError(err.toString()));
   }, []);
 
+  const [filter, setFilter] = useState("");
+
   return (
     <div>
+      <input
+        type="search"
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+        placeholder="search music..."
+      />
       {error}
-      {list &&
-        list.tracks.map((t) => (
+      {list?.tracks
+        .filter((t) =>
+          t.track_title.toLowerCase().includes(filter.toLowerCase())
+        )
+        .map((t) => (
           <Song
             key={t.key}
             active={activeSong === t}
@@ -59,7 +70,7 @@ function Song({
   active: boolean;
   onStart: () => void;
 }) {
-  const [play, pause] = useRRSimpleSound(audio.link);
+  const [play, pause, state] = useRRComplexSound(audio.link, true);
   useEffect(() => {
     if (active) {
       play();
@@ -68,5 +79,9 @@ function Song({
     }
   }, [active, pause, play]);
 
-  return <div onClick={onStart}>{audio.track_title}</div>;
+  return (
+    <div onClick={onStart}>
+      {audio.track_title} ({state})
+    </div>
+  );
 }
