@@ -286,7 +286,9 @@ export function useServerDispatch() {
     >(
       actionOrActions: A
     ): A => {
-      socket?.emit("REDUX_ACTION", actionOrActions);
+      if (!(Array.isArray(actionOrActions) && actionOrActions.length === 0)) {
+        socket?.emit("REDUX_ACTION", actionOrActions);
+      }
       return actionOrActions;
     },
     [socket]

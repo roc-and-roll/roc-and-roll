@@ -251,17 +251,17 @@ export default function MapContainer() {
   const onUpdateColor = useRecoilCallback(
     ({ snapshot }) => (color: string) => {
       if (color) {
-        snapshot
-          .getLoadable(selectedMapObjectIdsAtom)
-          .getValue()
-          .forEach((selectedMapObjectId) => {
-            dispatch(
+        dispatch(
+          snapshot
+            .getLoadable(selectedMapObjectIdsAtom)
+            .getValue()
+            .map((selectedMapObjectId) =>
               mapObjectUpdate(map.id, {
                 id: selectedMapObjectId,
                 changes: { color },
               })
-            );
-          });
+            )
+        );
       }
     },
     [dispatch, map.id]
