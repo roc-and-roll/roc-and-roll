@@ -103,7 +103,7 @@ export const setupStateSync = (
           id: playerId,
           isOnline: true,
           mapMouse: null,
-          tokenPath: [],
+          measurePath: [],
         })
       );
     }

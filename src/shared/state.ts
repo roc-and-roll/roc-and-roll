@@ -314,7 +314,7 @@ export type EphermalPlayer = {
     positionHistory: RRPoint[];
     lastUpdate: RRTimestamp;
   };
-  tokenPath: RRPoint[];
+  measurePath: RRPoint[];
 };
 
 export interface RRActiveSong {

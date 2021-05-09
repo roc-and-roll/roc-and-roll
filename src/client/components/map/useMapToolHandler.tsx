@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import {
+  ephermalPlayerUpdate,
   mapObjectAdd,
   mapObjectRemove,
   mapObjectUpdate,
@@ -16,7 +17,14 @@ import { useServerDispatch } from "../../state";
 import { GRID_SIZE } from "../../../shared/constants";
 import { assertNever, rrid } from "../../../shared/util";
 import { askAndUploadFiles } from "../../files";
-import { pointEquals, pointSubtract } from "../../point";
+import {
+  pointAdd,
+  pointEquals,
+  pointScale,
+  pointSign,
+  pointSubtract,
+  snapPointToGrid,
+} from "../../point";
 import { MapEditState } from "./MapContainer";
 import { Matrix } from "transformation-matrix";
 
@@ -64,6 +72,7 @@ export function useMapToolHandler(
     x: 0,
     y: 0,
   });
+  const measurePathStartRef = useRef<RRPoint>({ x: 0, y: 0 });
   const pointsRef = useRef<RRPoint[]>([]);
 
   const toolHandlerRef = useRef<MapMouseHandler>();

@@ -82,6 +82,12 @@ export const MapToolbar = React.memo<{
       >
         draw
       </Button>
+      <Button
+        onClick={() => setTool("measure")}
+        className={tool === "measure" ? "active" : undefined}
+      >
+        measure
+      </Button>
       {tool === "move" && selectedMapObjectIds.length > 0 && (
         <ColorInput value={drawColor} onChange={setDrawColor} />
       )}
