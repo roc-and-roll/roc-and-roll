@@ -105,11 +105,16 @@ function ModifierContainer({ slots }: { slots: RollSlots }) {
     >
       {slots.flatMap((part, i) =>
         part.type === "modifier" ? (
-          <div className="modifier" style={cssOffsetFromSlot(indexToXY(i))}>
+          <div
+            key={i}
+            className="modifier"
+            style={cssOffsetFromSlot(indexToXY(i))}
+          >
             {part.modifier < 0 ? part.modifier : `+${part.modifier}`}
           </div>
         ) : part.type === "weirdDie" ? (
           <div
+            key={i}
             className={clsx("weird-die", part.used ? "used" : "unused")}
             style={cssOffsetFromSlot(indexToXY(i))}
           >

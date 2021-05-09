@@ -98,46 +98,48 @@ export function DiceInterface() {
               border: "1px lightgray solid",
             }}
           >
-            <tr>
-              <th style={{ width: "33%" }}>Type</th>
-              <th style={{ width: "33%" }}>Bonus</th>
-            </tr>
-            <tr>
-              <td className="buttons-full-width">
-                <Button onClick={() => addDiceType("d4")}>d4</Button>
-                <Button onClick={() => addDiceType("d6")}>d6</Button>
-                <Button onClick={() => addDiceType("d8")}>d8</Button>
-                <Button onClick={() => addDiceType("d10")}>d10</Button>
-                <Button onClick={() => addDiceType("d12")}>d12</Button>
-                <Button onClick={() => addDiceType("d20")}>d20</Button>
-              </td>
-              <td className="buttons-half-width">
-                <div>
-                  <Button onClick={() => addBonus(-1)}>-1</Button>
-                  <Button onClick={() => addBonus(1)}>+1</Button>
-                  <Button onClick={() => addBonus(2)}>+2</Button>
-                  <Button onClick={() => addBonus(3)}>+3</Button>
-                  <Button onClick={() => addBonus(4)}>+4</Button>
-                </div>
-                <div>
-                  <Button onClick={() => addBonus(5)}>+5</Button>
-                  <Button onClick={() => addBonus(6)}>+6</Button>
-                  <Button onClick={() => addBonus(7)}>+7</Button>
-                  <Button onClick={() => addBonus(8)}>+8</Button>
-                  <Button onClick={() => addBonus(9)}>+9</Button>
-                </div>
-              </td>
-
-              <td>
-                <Button className="roll-it-button" onClick={doRoll}>
-                  <p>ROLL IT</p>
-                  <p>{diceTypes.join(" + ")}</p>
+            <tbody>
+              <tr>
+                <th style={{ width: "33%" }}>Type</th>
+                <th style={{ width: "33%" }}>Bonus</th>
+              </tr>
+              <tr>
+                <td className="buttons-full-width">
+                  <Button onClick={() => addDiceType("d4")}>d4</Button>
+                  <Button onClick={() => addDiceType("d6")}>d6</Button>
+                  <Button onClick={() => addDiceType("d8")}>d8</Button>
+                  <Button onClick={() => addDiceType("d10")}>d10</Button>
+                  <Button onClick={() => addDiceType("d12")}>d12</Button>
+                  <Button onClick={() => addDiceType("d20")}>d20</Button>
+                </td>
+                <td className="buttons-half-width">
                   <div>
-                    {boni >= 0 ? "+" + boni.toString() : boni.toString()}
+                    <Button onClick={() => addBonus(-1)}>-1</Button>
+                    <Button onClick={() => addBonus(1)}>+1</Button>
+                    <Button onClick={() => addBonus(2)}>+2</Button>
+                    <Button onClick={() => addBonus(3)}>+3</Button>
+                    <Button onClick={() => addBonus(4)}>+4</Button>
                   </div>
-                </Button>
-              </td>
-            </tr>
+                  <div>
+                    <Button onClick={() => addBonus(5)}>+5</Button>
+                    <Button onClick={() => addBonus(6)}>+6</Button>
+                    <Button onClick={() => addBonus(7)}>+7</Button>
+                    <Button onClick={() => addBonus(8)}>+8</Button>
+                    <Button onClick={() => addBonus(9)}>+9</Button>
+                  </div>
+                </td>
+
+                <td>
+                  <Button className="roll-it-button" onClick={doRoll}>
+                    <p>ROLL IT</p>
+                    <p>{diceTypes.join(" + ")}</p>
+                    <div>
+                      {boni >= 0 ? "+" + boni.toString() : boni.toString()}
+                    </div>
+                  </Button>
+                </td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>
