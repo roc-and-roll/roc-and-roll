@@ -128,7 +128,7 @@ export function TokenEditor({
   };
 
   return (
-    <div className="token-popup">
+    <div className="token-popup" onMouseDown={(e) => e.stopPropagation()}>
       <Button className="popover-close" onClick={onClose}>
         ×
       </Button>
