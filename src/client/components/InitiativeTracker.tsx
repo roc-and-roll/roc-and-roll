@@ -33,6 +33,7 @@ import { Flipper, Flipped } from "react-flip-toolkit";
 import { useRecoilValue } from "recoil";
 import { selectedMapObjectIdsAtom } from "./map/MapContainer";
 import { EMPTY_ENTITY_COLLECTION } from "../../shared/util";
+import ReactDOM from "react-dom";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -315,5 +316,8 @@ function EndTurnButton({
 }
 
 function YourTurn({ endTurnButton }: { endTurnButton: React.ReactNode }) {
-  return <div className="your-turn">It is your turn! {endTurnButton}</div>;
+  return ReactDOM.createPortal(
+    <div className="your-turn">It is your turn! {endTurnButton}</div>,
+    document.body
+  );
 }

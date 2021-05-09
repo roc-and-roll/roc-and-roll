@@ -2202,6 +2202,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node-fetch@npm:^2":
+  version: 2.5.10
+  resolution: "@types/node-fetch@npm:2.5.10"
+  dependencies:
+    "@types/node": "*"
+    form-data: ^3.0.0
+  checksum: 7687038f73cf0f2e4bac8ced3abdfbb77f8b2719de2f180d0064238d7460c8b4dc0b39c08da35a76d7db9f86528599ea0f7cee7c468ad7cfecfe2db1c5863641
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:*, @types/node@npm:>=10.0.0, @types/node@npm:^14.14.43":
   version: 14.14.43
   resolution: "@types/node@npm:14.14.43"
@@ -4203,7 +4213,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"combined-stream@npm:^1.0.6, combined-stream@npm:~1.0.6":
+"combined-stream@npm:^1.0.6, combined-stream@npm:^1.0.8, combined-stream@npm:~1.0.6":
   version: 1.0.8
   resolution: "combined-stream@npm:1.0.8"
   dependencies:
@@ -4240,7 +4250,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"commander@npm:^7.0.0":
+"commander@npm:^7.0.0, commander@npm:^7.2.0":
   version: 7.2.0
   resolution: "commander@npm:7.2.0"
   checksum: bdc0eca5e25cd24af8440163d3c9a996785bbac4b49a590365699cdc1ed08cefbac8f268153208ab2bc5dc3cb1d3fb573fd1590c681e36e371342186bd331a4c
@@ -6088,6 +6098,17 @@ __metadata:
     semver: ^7.3.2
     tapable: ^1.0.0
   checksum: d79d47e111288efe1addd12a295ed74772cbf5cda714c5201b90d6473aa4e03b7992db3881c99ec238c9ed0167f37adc4120a7b8273090a0e910f52bd923f5c1
+  languageName: node
+  linkType: hard
+
+"form-data@npm:^3.0.0":
+  version: 3.0.1
+  resolution: "form-data@npm:3.0.1"
+  dependencies:
+    asynckit: ^0.4.0
+    combined-stream: ^1.0.8
+    mime-types: ^2.1.12
+  checksum: 6574ff4d2d845c47ba288151a6e0573767eefdee9da358be199e0f0b66aa5c454e7d62ed5e0daef6f84167ba1e9596e064f36f206488e460ef449ef7b653cdfc
   languageName: node
   linkType: hard
 
@@ -9421,7 +9442,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:^2.1.2":
+"node-fetch@npm:^2.1.2, node-fetch@npm:^2.6.1":
   version: 2.6.1
   resolution: "node-fetch@npm:2.6.1"
   checksum: cbb171635e538162b977eac5dfe7a1e07a9a02e991924377a6435502291e2f823d306b95aabc455caebf4a118ccf836868462bc70ccc3095af02bb9da61fda37
@@ -11390,6 +11411,7 @@ resolve@^2.0.0-next.3:
     "@types/mini-css-extract-plugin": ^1.4.2
     "@types/multer": ^1.4.5
     "@types/node": ^14.14.43
+    "@types/node-fetch": ^2
     "@types/react": ^17.0.4
     "@types/react-dom": ^17.0.3
     "@types/recoil": ^0.0.1
@@ -11408,6 +11430,7 @@ resolve@^2.0.0-next.3:
     bufferutil: ^4.0.3
     clean-webpack-plugin: ^3.0.0
     clsx: ^1.1.1
+    commander: ^7.2.0
     concurrently: ^6.0.2
     copy-webpack-plugin: ^8.1.1
     core-js: ^3.11.1
@@ -11432,6 +11455,7 @@ resolve@^2.0.0-next.3:
     mini-css-extract-plugin: ^1.6.0
     modern-css-reset: ^1.4.0
     multer: ^1.4.2
+    node-fetch: ^2.6.1
     nodemon: ^2.0.7
     nodemon-webpack-plugin: ^4.5.2
     prettier: ^2.2.1

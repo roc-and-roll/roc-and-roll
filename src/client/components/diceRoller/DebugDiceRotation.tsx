@@ -55,6 +55,7 @@ export function DebugDiceRotation() {
         <Suspense fallback={null}>
           <DiceGeometry
             numFaces={20}
+            used={true}
             geometry={geometryFrom(die)}
             finalRotation={new THREE.Quaternion().setFromEuler(
               new THREE.Euler(x, y, z)

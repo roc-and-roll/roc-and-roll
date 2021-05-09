@@ -1,6 +1,10 @@
 import React from "react";
 
 const licenses = {
+  "CC-BY-NC-ND 4.0": {
+    name: "CC-BY-NC-ND 4.0",
+    url: "https://creativecommons.org/licenses/by-nc-nd/4.0/",
+  },
   "CC-BY 3.0": {
     name: "CC-BY 3.0",
     url: "https://creativecommons.org/licenses/by/3.0/",
@@ -11,34 +15,62 @@ const licenses = {
   },
 };
 
+const gameIconsNetAuthors = {
+  Cathelineau: { license: licenses["CC-BY 3.0"], url: null },
+  Delapouite: {
+    license: licenses["CC-BY 3.0"],
+    url: "https://delapouite.com",
+  },
+  Faithtoken: {
+    license: licenses["CC-BY 3.0"],
+    url: "http://fungustoken.deviantart.com",
+  },
+  Lorc: {
+    license: licenses["CC-BY 3.0"],
+    url: "http://lorcblog.blogspot.com",
+  },
+  Skoll: { license: licenses["CC-BY 3.0"], url: null },
+};
+
+const audio = [
+  {
+    title: "Click.wav",
+    author: "kwahmah_02",
+    url: "https://freesound.org/s/256116/",
+    license: licenses["CC0"],
+  },
+  {
+    title: "up3.mp3",
+    author: "stwime",
+    url: "https://freesound.org/s/545373/",
+    license: licenses["CC0"],
+  },
+  {
+    title: "tada1.wav",
+    author: "jobro",
+    url: "https://freesound.org/s/60443/",
+    license: licenses["CC-BY 3.0"],
+  },
+  {
+    title: "10 minute ambiences",
+    author: "Tabletop Audio",
+    url: "https://tabletopaudio.com",
+    license: licenses["CC-BY-NC-ND 4.0"],
+  },
+];
+
 export function Acknowledgements() {
-  const iconAuthors = {
-    Cathelineau: { license: licenses["CC-BY 3.0"], url: null },
-    Delapouite: {
-      license: licenses["CC-BY 3.0"],
-      url: "https://delapouite.com",
-    },
-    Faithtoken: {
-      license: licenses["CC-BY 3.0"],
-      url: "http://fungustoken.deviantart.com",
-    },
-    Lorc: {
-      license: licenses["CC-BY 3.0"],
-      url: "http://lorcblog.blogspot.com",
-    },
-    Skoll: { license: licenses["CC-BY 3.0"], url: null },
-  };
   return (
     <>
       <h3>Icons</h3>
       {/* required by the CC-BY license */}
-      Some of the icons we use come from{" "}
+      We use icons from{" "}
       <a href="https://game-icons.net/" target="_blank" rel="noreferrer">
         https://game-icons.net/
       </a>
-      , created by the following authors:
+      , which were created by the following authors:
       <ul>
-        {Object.entries(iconAuthors).map(([name, { license, url }]) => (
+        {Object.entries(gameIconsNetAuthors).map(([name, { license, url }]) => (
           <li key={name}>
             {name}{" "}
             {url && (
@@ -50,30 +82,17 @@ export function Acknowledgements() {
           </li>
         ))}
       </ul>
-      <h3>Sounds</h3>
+      <h3>Audio</h3>
       <ul>
-        <li>
-          Click.wav from{" "}
-          <a
-            href="https://freesound.org/s/256116/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            https://freesound.org/s/256116/
-          </a>{" "}
-          by kwahmah_02 <License license={licenses.CC0} />
-        </li>
-        <li>
-          up3.mp3 from{" "}
-          <a
-            href="https://freesound.org/s/545373/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            https://freesound.org/s/545373/
-          </a>{" "}
-          by stwime <License license={licenses.CC0} />
-        </li>
+        {audio.map((audio, i) => (
+          <li key={i}>
+            <strong>{audio.title}</strong> by <em>{audio.author}</em> from{" "}
+            <a href={audio.url} target="_blank" rel="noreferrer">
+              {audio.url}
+            </a>{" "}
+            <License license={audio.license} />
+          </li>
+        ))}
       </ul>
     </>
   );

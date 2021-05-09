@@ -9,6 +9,7 @@ import { MyselfContext } from "../myself";
 import { JoinGame } from "./JoinGame";
 import { BottomFloats } from "./BottomFloats";
 import { Notifications } from "./Notifications";
+import { SongPlayer } from "../sound";
 
 // Load the map lazily to enable code splitting -> the sidebar will load faster.
 const MapContainer = React.lazy(() => import("./map/MapContainer"));
@@ -30,11 +31,14 @@ export function App() {
     <MyselfContext.Provider value={myself}>
       {myself ? (
         <div className="app-wrapper">
+          <SongPlayer />
           <Sidebar logout={forgetMyPlayerId} />
           <Suspense fallback="Map is loading...">
-            <MapContainer />
+            <main className="app-map">
+              <MapContainer />
+              <BottomFloats />
+            </main>
           </Suspense>
-          <BottomFloats />
           <Notifications />
         </div>
       ) : (

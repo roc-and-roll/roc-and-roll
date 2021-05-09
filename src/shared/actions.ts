@@ -21,6 +21,9 @@ import {
   RRToken,
   RRTokenID,
   RRMapObjectID,
+  RRDiceTemplate,
+  RRLogEntryAchievement,
+  RRActiveSong,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -211,6 +214,20 @@ export const logEntryMessageAdd = createAction(
   })
 );
 
+export const logEntryAchievementAdd = createAction(
+  "logentry/achievement/add",
+  (
+    logEntry: Omit<RRLogEntryAchievement, "id" | "type" | "timestamp">
+  ): { payload: RRLogEntryAchievement } => ({
+    payload: {
+      id: rrid<RRLogEntryAchievement>(),
+      type: "achievement",
+      timestamp: timestamp(),
+      ...logEntry,
+    },
+  })
+);
+
 export const logEntryDiceRollAdd = createAction(
   "logentry/diceroll/add",
   (
@@ -294,4 +311,28 @@ export const ephermalPlayerUpdate = createAction<Update<EphermalPlayer>>(
 
 export const ephermalPlayerRemove = createAction<EphermalPlayer["id"]>(
   "ephermal/player/remove"
+);
+
+export const ephermalSongAdd = createAction<RRActiveSong>("ephermal/song/add");
+
+export const ephermalSongUpdate = createAction<Update<RRActiveSong>>(
+  "ephermal/song/update"
+);
+
+export const ephermalSongRemove = createAction<RRActiveSong["id"]>(
+  "ephermal/song/remove"
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// Dice template state
+////////////////////////////////////////////////////////////////////////////////
+
+export const diceTemplateAdd = createAction<RRDiceTemplate>("diceTemplate/add");
+
+export const diceTemplateUpdate = createAction<Update<RRDiceTemplate>>(
+  "diceTemplate/update"
+);
+
+export const diceTemplateRemove = createAction<RRDiceTemplate["id"]>(
+  "diceTemplate/remove"
 );

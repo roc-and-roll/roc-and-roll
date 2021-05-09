@@ -15,7 +15,7 @@
     "build:client": "webpack --config webpack.client.js --env production",
     "build:server": "webpack --config webpack.server.js --env production",
     "analyze-bundle:client": "webpack --config webpack.client.js --env production --profile --json dist/client/stats.json && yarn webpack-bundle-analyzer dist/client/stats.json",
-    "start": "nodemon --watch dist/server.roc-and-roll.js dist/server.roc-and-roll.js",
+    "start": "nodemon --watch dist/server.roc-and-roll.js dist/server.roc-and-roll.js --workspace ./workspace",
     "postinstall": "husky install"
   },
   "dependencies": {
@@ -25,6 +25,7 @@
     "@tippyjs/react": "^4.2.5",
     "bufferutil": "^4.0.3",
     "clsx": "^1.1.1",
+    "commander": "^7.2.0",
     "core-js": "^3.11.1",
     "express": "^4.17.1",
     "express-async-handler": "^1.1.4",
@@ -32,6 +33,7 @@
     "immer": "^9.0.2",
     "modern-css-reset": "^1.4.0",
     "multer": "^1.4.2",
+    "node-fetch": "^2.6.1",
     "re-resizable": "^6.9.0",
     "react": "experimental",
     "react-dnd": "^14.0.2",
@@ -71,6 +73,7 @@
     "@types/mini-css-extract-plugin": "^1.4.2",
     "@types/multer": "^1.4.5",
     "@types/node": "^14.14.43",
+    "@types/node-fetch": "^2",
     "@types/react": "^17.0.4",
     "@types/react-dom": "^17.0.3",
     "@types/recoil": "^0.0.1",

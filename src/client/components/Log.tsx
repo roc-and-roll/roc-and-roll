@@ -6,6 +6,7 @@ import { diceResult, diceResultString } from "../roll";
 import { useServerDispatch, useServerState } from "../state";
 import { useScrollToBottom } from "../useScrollToBottom";
 import { formatTimestamp } from "../util";
+import { achievements } from "./achievementList";
 import { CollapseButton } from "./CollapseButton";
 import { Button } from "./ui/Button";
 
@@ -19,6 +20,18 @@ function LogEntry(props: { logEntry: RRLogEntry }) {
       <div title={formatTimestamp(logEntry.timestamp)}>
         {player?.name ?? "system"}: {diceResultString(logEntry)} ={" "}
         {diceResult(logEntry)}
+      </div>
+    );
+  }
+
+  if (logEntry.type === "achievement") {
+    const achievement = achievements.find(
+      (a) => a.id === logEntry.payload.achievementId
+    );
+    return (
+      <div title={formatTimestamp(logEntry.timestamp)}>
+        {player?.name ?? "system"}
+        {` unlocked: ${achievement?.name ?? ""}`}
       </div>
     );
   }

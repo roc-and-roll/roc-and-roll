@@ -31,7 +31,7 @@ export function PrivateChatsWrapper() {
 function useHasUnreadMessages() {
   const myself = useMyself();
   const chats = useServerState((state) => state.privateChats);
-  const play = useRRSimpleSound(newMessageSound);
+  const [play] = useRRSimpleSound(newMessageSound);
 
   const notifiedMessageIds = useRef(new Set<RRPrivateChatMessageID>());
 

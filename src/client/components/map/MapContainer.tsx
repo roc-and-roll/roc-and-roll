@@ -40,7 +40,7 @@ import { identity, Matrix } from "transformation-matrix";
 import { MapToolbar } from "../MapToolbar";
 import { GRID_SIZE } from "../../../shared/constants";
 import { rrid, timestamp } from "../../../shared/util";
-import { useSettings } from "../../settings";
+import { useRRSettings } from "../../settings";
 import produce, { Draft } from "immer";
 import {
   pointAdd,
@@ -57,7 +57,7 @@ export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 export type ToolButtonState = "select" | "tool";
 
 export type MapEditState =
-  | { tool: "move" }
+  | { tool: "move"; updateColor: RRColor }
   | { tool: "measure"; snap: MapSnap }
   | {
       tool: "draw";
@@ -114,7 +114,7 @@ export default function MapContainer() {
   const myself = useMyself();
   const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
   const dispatch = useServerDispatch();
-  const [settings] = useSettings();
+  const [settings] = useRRSettings();
   const syncedDebounce = useRef(
     new SyncedDebouncer(CURSOR_POSITION_SYNC_DEBOUNCE)
   );
@@ -177,10 +177,16 @@ export default function MapContainer() {
     syncedDebounce.current,
     (start, end, t) =>
       produce(end, (draft) =>
-        entries<Draft<RRMapObject>>(draft).forEach((e) => {
+        entries<Draft<RRMapObject>>(end).forEach((e) => {
           const s = byId(start.entities, e.id);
-          if (s) {
-            e.position = pointAdd(
+          // Only lerp the position if
+          // 1. the object existed before (s)
+          // 2. it has changed (s !== e)
+          if (s && s !== e) {
+            // We deliberately only use the draft here, instead of iterating
+            // over it directly, so that less proxies need to be created.
+            const obj = byId<Draft<RRMapObject>>(draft.entities, e.id)!;
+            obj.position = pointAdd(
               s.position,
               pointScale(pointSubtract(e.position, s.position), t)
             );
@@ -236,7 +242,36 @@ export default function MapContainer() {
     [dispatch, map.id, setLocalObjectsOnMap]
   );
 
-  const [editState, setEditState] = useState<MapEditState>({ tool: "move" });
+  const [editState, setEditState] = useState<MapEditState>({
+    tool: "move",
+    updateColor: myself.color,
+  });
+
+  const updatedColor = editState.tool === "move" && editState.updateColor;
+  const onUpdateColor = useRecoilCallback(
+    ({ snapshot }) => (color: string) => {
+      if (color) {
+        dispatch(
+          snapshot
+            .getLoadable(selectedMapObjectIdsAtom)
+            .getValue()
+            .map((selectedMapObjectId) =>
+              mapObjectUpdate(map.id, {
+                id: selectedMapObjectId,
+                changes: { color },
+              })
+            )
+        );
+      }
+    },
+    [dispatch, map.id]
+  );
+
+  useEffect(() => {
+    if (updatedColor) {
+      onUpdateColor(updatedColor);
+    }
+  }, [updatedColor, onUpdateColor]);
 
   const sendMousePositionToServer = useAggregatedDoubleDebounce(
     useCallback(
@@ -357,7 +392,7 @@ export default function MapContainer() {
   );
 
   return (
-    <div className="app-map" ref={dropRef}>
+    <div ref={dropRef} className="map-container">
       <ReduxToRecoilBridge localMapObjects={localMapObjects} />
       <MapToolbar map={map} myself={myself} setEditState={setEditState} />
       <RRMapView
@@ -395,6 +430,7 @@ export default function MapContainer() {
 }
 
 function useReduxToRecoilBridge<E extends { id: RRID }>(
+  debugIdentifier: string,
   entities: EntityCollection<E>,
   idsAtom: RecoilState<E["id"][]>,
   familyAtom: (id: E["id"]) => RecoilState<E | null>
@@ -406,9 +442,6 @@ function useReduxToRecoilBridge<E extends { id: RRID }>(
     }: EntityCollection<E>) => {
       const oldIds = snapshot.getLoadable(mapObjectIdsAtom).getValue();
       if (oldIds !== newIds) {
-        oldIds.forEach((oldMapObjectId) => {
-          reset(familyAtom(oldMapObjectId));
-        });
         set(idsAtom, newIds);
       }
 
@@ -420,6 +453,12 @@ function useReduxToRecoilBridge<E extends { id: RRID }>(
           set(atom, newEntity);
         }
       });
+
+      oldIds
+        .filter((oldId) => !newIds.includes(oldId))
+        .forEach((removedId) => {
+          reset(familyAtom(removedId));
+        });
     },
     [familyAtom, idsAtom]
   );
@@ -434,13 +473,20 @@ function ReduxToRecoilBridge({
 }: {
   localMapObjects: EntityCollection<RRMapObject>;
 }) {
-  useReduxToRecoilBridge(localMapObjects, mapObjectIdsAtom, mapObjectsFamily);
   useReduxToRecoilBridge(
+    "local map objects",
+    localMapObjects,
+    mapObjectIdsAtom,
+    mapObjectsFamily
+  );
+  useReduxToRecoilBridge(
+    "tokens",
     useServerState((s) => s.tokens),
     tokenIdsAtom,
     tokenFamily
   );
   useReduxToRecoilBridge(
+    "ephermal players",
     useServerState((s) => s.ephermal.players),
     ephermalPlayerIdsAtom,
     ephermalPlayersFamily

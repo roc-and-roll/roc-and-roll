@@ -3,15 +3,18 @@ import {
   byId,
   entries,
   RRLogEntry,
+  RRLogEntryAchievement,
   RRLogEntryDiceRoll,
   RRLogEntryID,
   RRLogEntryMessage,
 } from "../../shared/state";
 import { assertNever } from "../../shared/util";
-import { diceResultString } from "../roll";
+import { diceResult } from "../roll";
+import { useRRSimpleSound } from "../sound";
 import { useServerState } from "../state";
 import DiceDisplay from "./diceRoller/DiceDisplay";
-import DiceRoller from "./diceRoller/DiceDisplay";
+import tada from "../../third-party/freesound.org/60443__jobro__tada1.mp3";
+import { achievements } from "./achievementList";
 
 const NOTIFICATION_TIMEOUT = 6000;
 
@@ -64,16 +67,22 @@ function Notification({
   onExpired: () => void;
 }) {
   const expiredRef = useRef(onExpired);
+  const [notificationReady, setNotificationReady] = useState(
+    notification.type !== "diceRoll"
+  );
 
   useEffect(() => {
     expiredRef.current = onExpired;
   }, [onExpired]);
 
   useEffect(() => {
-    setTimeout(() => {
-      expiredRef.current();
-    }, NOTIFICATION_TIMEOUT);
-  }, []);
+    if (notificationReady) {
+      const id = setTimeout(() => {
+        expiredRef.current();
+      }, NOTIFICATION_TIMEOUT);
+      return () => clearTimeout(id);
+    }
+  }, [notificationReady]);
 
   const players = useServerState((state) => state.players);
   const player = notification.playerId
@@ -86,8 +95,11 @@ function Notification({
         {player!.name}
       </span>
       {" rolled a "}
-      <strong>{diceResultString(notification)}</strong>
-      <DiceDisplay diceRoll={notification} />
+      {notificationReady ? <strong>{diceResult(notification)}</strong> : "..."}
+      <DiceDisplay
+        onAnimationFinished={() => setNotificationReady(true)}
+        diceRoll={notification}
+      />
     </>
   );
 
@@ -101,9 +113,33 @@ function Notification({
     </>
   );
 
+  const [play] = useRRSimpleSound(tada);
+  useEffect(() => {
+    if (notification.type === "achievement") play();
+  }, [notification.type, play]);
+
+  const viewAchievement = (notification: RRLogEntryAchievement) => {
+    const achievement = achievements.find(
+      (a) => a.id === notification.payload.achievementId
+    );
+    return (
+      <>
+        <span className="player-name" style={{ color: player!.color }}>
+          {player!.name}
+        </span>
+        {" unlocked: "}
+        <strong>{achievement?.name}</strong>
+        <br />
+        <small>{achievement?.requirement ?? ""}</small>
+      </>
+    );
+  };
+
   const view = (notification: RRLogEntry) => {
     if (notification.type === "diceRoll") return viewDiceRoll(notification);
     if (notification.type === "message") return viewMessage(notification);
+    if (notification.type === "achievement")
+      return viewAchievement(notification);
     assertNever(notification);
   };
 

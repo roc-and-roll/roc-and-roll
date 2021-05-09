@@ -66,9 +66,31 @@ export function clamp(min: number, val: number, max: number) {
   return Math.max(min, Math.min(max, val));
 }
 
+export function withDo<V, R>(value: V, block: (v: V) => R) {
+  return block(value);
+}
+
 // useful if you want to make sure that the identity of the empty collection
 // never changes.
 export const EMPTY_ENTITY_COLLECTION = {
   entities: {},
   ids: [],
 } as const;
+
+//
+// For debugging only
+//
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+const hashes = new WeakMap<object, number>();
+let nextHash = 1;
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function identityHash(object: object): number {
+  if (hashes.has(object)) {
+    return hashes.get(object)!;
+  }
+  hashes.set(object, nextHash++);
+
+  return identityHash(object);
+}

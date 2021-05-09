@@ -13,12 +13,13 @@ import { clamp } from "../shared/util";
 import { readFile } from "fs/promises";
 import { existsSync } from "fs";
 import { randomColor } from "../shared/colors";
+import fetch from "node-fetch";
 
 export async function setupWebServer(
+  httpPort: number,
   uploadedFilesDir: string,
   uploadedFilesCacheDir: string
 ) {
-  const httpPort = process.env["PORT"] || 3000;
   const url = `http://localhost:${httpPort}`;
 
   // First, create a new Express JS app that we use to serve our website.
@@ -29,14 +30,12 @@ export async function setupWebServer(
     // communicate with the server. This is necessary, because client and
     // server run on different ports in development.
     app.use((req, res, next) => {
-      // 1. Handle the request
-      next();
-      // 2. Set the CORS header
       if (!res.headersSent) {
         // Only set header if the headers have not already been sent.
         // This happens, e.g., when calling res.redirect()
         res.setHeader("Access-Control-Allow-Origin", `*`);
       }
+      next();
     });
   }
 
@@ -57,6 +56,24 @@ export async function setupWebServer(
       filename: file.filename,
     }));
     res.json(data);
+  });
+
+  let cachedTabletopaudioResponse: any;
+  app.get("/tabletopaudio", (req, res) => {
+    if (cachedTabletopaudioResponse) {
+      res.json(cachedTabletopaudioResponse);
+      return;
+    }
+
+    fetch("https://tabletopaudio.com/tta_data")
+      .then((res) => res.json())
+      .then((j) => {
+        res.json((cachedTabletopaudioResponse = j));
+      })
+      .catch((err) => {
+        console.error(err);
+        res.status(500).send();
+      });
   });
 
   // (3) Serve uploaded files

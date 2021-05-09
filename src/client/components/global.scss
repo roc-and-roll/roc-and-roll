@@ -84,7 +84,12 @@ a {
 }
 
 .app-map {
+  position: relative;
   flex-grow: 1;
+}
+
+.map-container {
+  height: 100%;
 }
 
 .map-svg {
@@ -183,20 +188,128 @@ a {
   // Without explicitly setting the height to 0, the following problem arises:
   // Open the chat, but close the log. Now it is impossible to interact with the
   // map to the right of the chat.
-  height: 0;
+  height: auto;
 
-  position: fixed;
+  position: absolute;
   bottom: 0px;
   right: 0px;
+  width: 100%;
 
   display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
+  flex-direction: column;
 
-  padding: 0 4px;
+  .bottom-floats-upper {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    padding: 0 4px;
 
-  & > * {
-    margin-left: 8px;
+    & > * {
+      margin-left: 8px;
+    }
+  }
+}
+
+.dice-template-opener {
+  padding: 0.5rem;
+  background-color: rgba(51, 51, 51, 0.6);
+}
+
+.dice-templates {
+  $animation-duration: 200ms;
+
+  height: 0;
+  background: rgb(59, 28, 6);
+  box-shadow: inset 0 0 30px black;
+  border-top: 1px solid black;
+  border-left: 1px solid black;
+  width: 100%;
+  transition: $animation-duration height;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 8px;
+  position: relative;
+
+  &.opened {
+    height: 200px;
+  }
+
+  .dice-templates-container {
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    height: 100%;
+    width: 100%;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .dice-template {
+    min-height: 80px;
+    width: 160px;
+    border: 3px dashed #ccc;
+    margin: 0.5rem;
+    position: relative;
+    padding: 0.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    cursor: pointer;
+
+    input {
+      background: none;
+      border: none;
+      box-shadow: none;
+      width: 100%;
+      color: #fff;
+      font-size: 0.8rem;
+    }
+
+    &.created {
+      border-style: solid;
+      border-width: 2px;
+    }
+    &:not(.created) {
+      text-align: center;
+      font-style: italic;
+      font-size: 0.9rem;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  $dice-picker-height: 400px;
+  .dice-picker {
+    position: absolute;
+    left: 12px;
+    width: 270px;
+    height: 0;
+    transition: $animation-duration $animation-duration;
+    top: 0;
+    background: #333;
+    border-radius: 5px 5px 0 0;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    align-content: flex-start;
+  }
+
+  &.opened .dice-picker {
+    height: $dice-picker-height;
+    top: -$dice-picker-height;
+  }
+
+  .dice-option {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    background: #000;
+    margin: 0.25rem;
   }
 }
 
@@ -307,7 +420,6 @@ $gmAreaColor: #ab62c0;
 
 .your-turn {
   position: fixed;
-  display: inline-block;
   top: 1rem;
   left: 50%;
   margin-left: -15vw;
@@ -355,7 +467,7 @@ $gmAreaColor: #ab62c0;
 }
 
 .notifications {
-  $width: 400px;
+  $width: 400px - 18px;
   position: fixed;
   width: $width;
   left: 50%;
@@ -412,5 +524,121 @@ button.color-picker-color {
     margin-bottom: 0.5rem;
     width: 2rem;
     height: 2rem;
+  }
+}
+
+.dice-display {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.25rem;
+
+  canvas {
+    position: absolute;
+  }
+
+  .modifier {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.5rem;
+  }
+
+  .dice-display-modifiers {
+    position: absolute;
+    top: 0;
+  }
+
+  .weird-die {
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    position: absolute;
+    font-weight: bold;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    background: rgb(240, 205, 12);
+    color: #000;
+    border-color: #000;
+
+    &.unused {
+      background: gray;
+    }
+
+    .weird-die-faces {
+      font-size: 0.6rem;
+      line-height: 1;
+      position: absolute;
+      right: 2px;
+      bottom: 2px;
+    }
+  }
+}
+
+.achievement-button {
+  border: 1px solid #999;
+  border-radius: 4px;
+  margin: 0.25rem;
+  padding: 0.25rem;
+  cursor: pointer;
+}
+
+.achievements {
+  position: relative;
+}
+.achievement-player-select {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 0.5rem;
+}
+
+.join-audio-popup {
+  position: fixed;
+  width: 300px;
+  margin-left: -150px;
+  top: 200px;
+  left: 50%;
+  background: #fff;
+  color: #000;
+  z-index: 9999;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.tabletopaudio-song {
+  display: flex;
+  align-items: center;
+  padding: 0 0.25rem;
+
+  &:nth-child(even) {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .tabletopaudio-label {
+    flex-grow: 1;
+  }
+  .tabletopaudio-tags {
+    font-size: 0.6rem;
+  }
+  .tabletopaudio-button {
+    margin: 0 0.25rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .search-match {
+    background: #ff0;
+    color: #000;
   }
 }

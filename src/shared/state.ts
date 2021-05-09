@@ -28,6 +28,10 @@ export type RRColor = string;
 
 export type RRPoint = { readonly x: number; readonly y: number };
 
+export type RRDiceTemplateID = Opaque<string, "diceTemplate">;
+
+export type RRActiveSongID = Opaque<string, "activeSong">;
+
 export type RRFile = {
   originalFilename: string;
   filename: string;
@@ -195,11 +199,20 @@ export interface RRLogEntryMessage extends RRBaseLogEntry {
   };
 }
 
-// export interface RRLogEntryAchievement extends RRBaseLogEntry {
-//   type: "achievement";
-//   payload: {
-//   };
-// }
+export interface RRLogEntryAchievement extends RRBaseLogEntry {
+  type: "achievement";
+  payload: {
+    achievementId: number;
+  };
+}
+
+export interface RRDiceTemplate {
+  name?: string;
+  id: RRDiceTemplateID;
+  playerId: RRPlayerID;
+  rollType: "initiative" | "hit" | "attack" | null;
+  dice: Array<RRDice | RRModifier>;
+}
 
 export type RRDamageType = null | "fire" | "thunder";
 
@@ -237,7 +250,7 @@ export interface RRLogEntryDiceRoll extends RRBaseLogEntry {
 
 export type RRLogEntry =
   | RRLogEntryMessage
-  //  | RRLogEntryAchievement
+  | RRLogEntryAchievement
   | RRLogEntryDiceRoll;
 
 // This must resemble the EntityState type from @reduxjs/toolkit to work with
@@ -264,6 +277,8 @@ export type PrivateChatsSyncedState = EntityCollection<RRPrivateChat>;
 
 export type LogEntriesSyncedState = EntityCollection<RRLogEntry>;
 
+export type DiceTemplateState = EntityCollection<RRDiceTemplate>;
+
 export type EphermalPlayer = {
   id: RRPlayerID;
   isOnline: boolean;
@@ -275,8 +290,16 @@ export type EphermalPlayer = {
   tokenPath: RRPoint[];
 };
 
+export interface RRActiveSong {
+  id: RRActiveSongID;
+  url: string;
+  startedAt: number;
+  volume: number;
+}
+
 export type EphermalSyncedState = {
   players: EntityCollection<EphermalPlayer>;
+  activeSongs: EntityCollection<RRActiveSong>;
 };
 
 export interface SyncedState {
@@ -286,6 +309,7 @@ export interface SyncedState {
   maps: MapsSyncedState;
   privateChats: PrivateChatsSyncedState;
   logEntries: LogEntriesSyncedState;
+  diceTemplates: DiceTemplateState;
   // All ephermal state is cleared when the server restarts
   ephermal: EphermalSyncedState;
 }
@@ -319,6 +343,10 @@ export const initialSyncedState: SyncedState = {
     entities: {},
     ids: [],
   },
+  diceTemplates: {
+    entities: {},
+    ids: [],
+  },
   maps: {
     entities: { [defaultMap.id]: defaultMap },
     ids: [defaultMap.id],
@@ -333,6 +361,10 @@ export const initialSyncedState: SyncedState = {
   },
   ephermal: {
     players: {
+      entities: {},
+      ids: [],
+    },
+    activeSongs: {
       entities: {},
       ids: [],
     },
