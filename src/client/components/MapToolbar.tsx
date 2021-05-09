@@ -46,6 +46,9 @@ export const MapToolbar = React.memo<{
         case "v":
           setTool("move");
           break;
+        case "m":
+          setTool("measure");
+          break;
       }
     };
     window.addEventListener("keypress", handleKeyPress);
