@@ -628,10 +628,17 @@ button.color-picker-color {
   .tabletopaudio-label {
     flex-grow: 1;
   }
+  .tabletopaudio-tags {
+    font-size: 0.6rem;
+  }
   .tabletopaudio-button {
     margin: 0 0.25rem;
     font-size: 0.8rem;
     font-weight: bold;
     cursor: pointer;
+  }
+  .search-match {
+    background: #ff0;
+    color: #000;
   }
 }

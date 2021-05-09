@@ -98,6 +98,7 @@ export function Music() {
               (t) =>
                 t && (
                   <Song
+                    filterText={""}
                     key={t.link}
                     active={true}
                     audio={t}
@@ -124,6 +125,7 @@ export function Music() {
               key={t.key}
               active={activeSongs.some((s) => s.url === t.link)}
               audio={t}
+              filterText={filter}
               onAdd={() => onStart(t)}
               onReplace={() => onReplace(t)}
               onStop={() => onStop(t)}
@@ -134,22 +136,52 @@ export function Music() {
   );
 }
 
+const highlightMatching = (text: string, search: string) => {
+  if (search.length < 1) {
+    return text;
+  }
+
+  const index = text.toLowerCase().indexOf(search.toLowerCase());
+  if (index >= 0) {
+    return (
+      <>
+        {text.substring(0, index)}
+        <strong className="search-match">
+          {text.substring(index, index + search.length)}
+        </strong>
+        {text.substring(index + search.length)}
+      </>
+    );
+  }
+
+  return text;
+};
+
 function Song({
   audio,
   active,
   onAdd,
   onReplace,
   onStop,
+  filterText,
 }: {
   audio: TabletopAudio;
   active: boolean;
+  filterText: string;
   onAdd: () => void;
   onReplace: () => void;
   onStop: () => void;
 }) {
+  const showTags = filterText.length > 0;
+
   return (
     <div className="tabletopaudio-song">
-      <div className="tabletopaudio-label">{audio.track_title}</div>
+      <div className="tabletopaudio-label">
+        {highlightMatching(audio.track_title, filterText)}
+        <div className="tabletopaudio-tags">
+          {showTags && highlightMatching(audio.tags.join(". "), filterText)}
+        </div>
+      </div>
       {active ? (
         <div className="tabletopaudio-button" onClick={onStop}>
           STOP
