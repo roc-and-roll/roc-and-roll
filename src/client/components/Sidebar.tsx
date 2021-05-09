@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { DiceInput } from "./DiceInput";
+import { DiceInterface } from "./DiceInterface";
 import { TokenManager } from "./TokenManager";
 import { Collapsible } from "./Collapsible";
 import { Playground } from "./Playground";
@@ -50,7 +50,7 @@ export function Sidebar({ logout }: { logout: () => void }) {
         </Collapsible>
 
         <Collapsible title="Dice">
-          <DiceInput />
+          <DiceInterface />
         </Collapsible>
 
         {myself.isGM && (
