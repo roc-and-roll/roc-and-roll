@@ -6,7 +6,25 @@ export function DiceInterface() {
   const [boni, setBoni] = useState<number>(0);
 
   function addDiceType(diceType: string) {
-    setDiceTypes([...diceTypes, diceType]);
+    const index = diceTypes.findIndex((element) => element.includes(diceType));
+    if (index >= 0) {
+      const diceInfo = diceTypes[index]?.split("d");
+      if (diceInfo === undefined) {
+        return;
+      }
+      const diceCount = diceInfo[0];
+      let newCount;
+      if (diceCount) {
+        newCount = parseInt(diceCount) + 1;
+      } else {
+        newCount = 2;
+      }
+      const newDiceType = `${newCount}d${diceInfo[1]!}`;
+      diceTypes[index] = newDiceType;
+      setDiceTypes([...diceTypes]);
+    } else {
+      setDiceTypes([...diceTypes, diceType]);
+    }
   }
 
   function addBonus(bonus: number) {
@@ -59,7 +77,9 @@ export function DiceInterface() {
                 <Button style={{ width: "100%", height: "150px" }}>
                   <p>ROLL IT</p>
                   <p>{diceTypes.join("+")}</p>
-                  <div>{boni >= 0 ? "+" + boni.toString() : boni}</div>
+                  <div>
+                    {boni >= 0 ? "+" + boni.toString() : boni.toString()}
+                  </div>
                 </Button>
               </td>
             </tr>
