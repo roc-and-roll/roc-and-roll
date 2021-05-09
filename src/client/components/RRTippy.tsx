@@ -28,5 +28,19 @@ export default function RRTippy(props: TippyProps) {
     computedProps.content = mounted ? props.content : "";
   }
 
+  const onClickOutside = props.onClickOutside;
+  if (onClickOutside) {
+    computedProps.onClickOutside = (instance, e) => {
+      let element = e.target as HTMLElement | null;
+      while (element) {
+        if (element.attributes.getNamedItem("data-tippy-root")) {
+          return;
+        }
+        element = element.parentElement;
+      }
+      return onClickOutside(instance, e);
+    };
+  }
+
   return <Tippy {...computedProps} />;
 }

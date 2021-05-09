@@ -175,6 +175,8 @@ function MapSettings({ map }: { map: RRMap }) {
     100
   );
 
+  const [visible, setVisible] = useState(false);
+
   return (
     <Popover
       content={
@@ -188,10 +190,10 @@ function MapSettings({ map }: { map: RRMap }) {
               onChange={(e) => setName(e.target.value)}
             />
           </p>
-          <p>
+          <div>
             Background color{" "}
             <ColorInput value={backgroundColor} onChange={setBackgroundColor} />
-          </p>
+          </div>
           <label>
             Grid enabled{" "}
             <input
@@ -203,14 +205,13 @@ function MapSettings({ map }: { map: RRMap }) {
         </>
       }
       interactive
-      // Only close the popover when clicking on the button again. This is
-      // needed, because the popover uses a nested popover for the color picker,
-      // which would close this popover when interacting with it.
-      hideOnClick="toggle"
       placement="bottom-end"
-      trigger="click"
+      onClickOutside={() => setVisible(false)}
+      visible={visible}
     >
-      <Button className="gm-button">map settings</Button>
+      <Button className="gm-button" onClick={() => setVisible(true)}>
+        map settings
+      </Button>
     </Popover>
   );
 }
