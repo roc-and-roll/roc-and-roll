@@ -4,6 +4,7 @@ import { entries, RRActiveSong } from "../shared/state";
 import { useRRSettings } from "./settings";
 import { useLatest, useServerState } from "./state";
 import { Howl } from "howler";
+import { assetUrl } from "./files";
 
 /**
  * Returns a function to play a sound. Might skip playing the sound if howler is
@@ -114,13 +115,14 @@ export function SongPlayer() {
           Click to join the music
         </div>
       )}
-      {joined && songs.map((s) => <ActiveSongPlayer key={s.url} song={s} />)}
+      {joined &&
+        songs.map((s) => <ActiveSongPlayer key={assetUrl(s.song)} song={s} />)}
     </>
   );
 }
 
 export function ActiveSongPlayer({ song }: { song: RRActiveSong }) {
-  const [play] = useRRComplexSound(song.url, true, true);
+  const [play] = useRRComplexSound(assetUrl(song.song), true, true);
 
   useEffect(() => {
     play((+new Date() - song.startedAt) / 1000);

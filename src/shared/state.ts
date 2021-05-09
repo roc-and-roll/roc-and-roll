@@ -32,6 +32,8 @@ export type RRDiceTemplateID = Opaque<string, "diceTemplate">;
 
 export type RRActiveSongID = Opaque<string, "activeSong">;
 
+export type RRAssetID = Opaque<string, "asset">;
+
 export type RRFile = {
   originalFilename: string;
   filename: string;
@@ -253,6 +255,26 @@ export type RRLogEntry =
   | RRLogEntryAchievement
   | RRLogEntryDiceRoll;
 
+export interface RRAsset {
+  id: RRAssetID;
+  type: string;
+  name: string;
+  external: boolean;
+  filenameOrUrl: string;
+  playerId: RRPlayerID;
+}
+
+export interface RRSong extends RRAsset {
+  type: "song";
+  tags: string[];
+  durationSeconds: number;
+}
+
+export interface RRImage extends RRAsset {
+  type: "image";
+  originalFunction: "token" | "map";
+}
+
 // This must resemble the EntityState type from @reduxjs/toolkit to work with
 // createEntityAdapter
 // https://redux-toolkit.js.org/api/createEntityAdapter
@@ -279,6 +301,8 @@ export type LogEntriesSyncedState = EntityCollection<RRLogEntry>;
 
 export type DiceTemplateState = EntityCollection<RRDiceTemplate>;
 
+export type AssetsSyncedState = EntityCollection<RRAsset>;
+
 export type EphermalPlayer = {
   id: RRPlayerID;
   isOnline: boolean;
@@ -292,7 +316,7 @@ export type EphermalPlayer = {
 
 export interface RRActiveSong {
   id: RRActiveSongID;
-  url: string;
+  song: RRSong;
   startedAt: number;
   volume: number;
 }
@@ -310,6 +334,7 @@ export interface SyncedState {
   privateChats: PrivateChatsSyncedState;
   logEntries: LogEntriesSyncedState;
   diceTemplates: DiceTemplateState;
+  assets: AssetsSyncedState;
   // All ephermal state is cleared when the server restarts
   ephermal: EphermalSyncedState;
 }
@@ -356,6 +381,10 @@ export const initialSyncedState: SyncedState = {
     ids: [],
   },
   logEntries: {
+    entities: {},
+    ids: [],
+  },
+  assets: {
     entities: {},
     ids: [],
   },

@@ -24,6 +24,8 @@ import {
   RRDiceTemplate,
   RRLogEntryAchievement,
   RRActiveSong,
+  RRImage,
+  RRSong,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -335,4 +337,26 @@ export const diceTemplateUpdate = createAction<Update<RRDiceTemplate>>(
 
 export const diceTemplateRemove = createAction<RRDiceTemplate["id"]>(
   "diceTemplate/remove"
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// Asset state
+////////////////////////////////////////////////////////////////////////////////
+
+export const assetSongAdd = createAction<RRSong>("asset/song/add");
+
+export const assetImageAdd = createAction<RRImage>("asset/image/add");
+
+export const assetSongUpdate = createAction<Update<RRSong>>(
+  "asset/song/update"
+);
+
+export const assetImageUpdate = createAction<Update<RRImage>>(
+  "asset/image/update"
+);
+
+export const assetSongRemove = createAction<RRSong["id"]>("asset/song/remove");
+
+export const assetImageRemove = createAction<RRImage["id"]>(
+  "asset/image/remove"
 );

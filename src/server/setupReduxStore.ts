@@ -11,6 +11,7 @@ import {
   ephermalSongsReducer,
 } from "./features/ephermal";
 import { diceTemplatesReducer } from "./features/diceTemplate";
+import { assetsReducer } from "./features/assets";
 
 const options = {
   reducer: {
@@ -24,6 +25,7 @@ const options = {
     privateChats: privateChatsReducer,
     logEntries: logEntriesReducer,
     diceTemplates: diceTemplatesReducer,
+    assets: assetsReducer,
     ephermal: combineReducers({
       players: ephermalPlayersReducer,
       activeSongs: ephermalSongsReducer,
