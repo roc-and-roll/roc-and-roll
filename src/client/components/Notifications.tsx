@@ -15,6 +15,7 @@ import { useServerState } from "../state";
 import DiceDisplay from "./diceRoller/DiceDisplay";
 import tada from "../../third-party/freesound.org/60443__jobro__tada1.mp3";
 import { achievements } from "./achievementList";
+import { Flipper, Flipped } from "react-flip-toolkit";
 
 const NOTIFICATION_TIMEOUT = 6000;
 
@@ -44,17 +45,19 @@ export function Notifications() {
 
   return (
     <div className="notifications">
-      {newNotifications.map((notification) => (
-        <Notification
-          onExpired={() =>
-            setNewNotifications((l) =>
-              l.filter((n) => n.id !== notification.id)
-            )
-          }
-          notification={notification}
-          key={notification.id}
-        />
-      ))}
+      <Flipper flipKey={newNotifications.map((n) => n.id).join("")}>
+        {newNotifications.map((notification) => (
+          <Notification
+            key={notification.id}
+            onExpired={() =>
+              setNewNotifications((l) =>
+                l.filter((n) => n.id !== notification.id)
+              )
+            }
+            notification={notification}
+          />
+        ))}
+      </Flipper>
     </div>
   );
 }
@@ -143,5 +146,9 @@ function Notification({
     assertNever(notification);
   };
 
-  return <div className="notification">{view(notification)}</div>;
+  return (
+    <Flipped flipId={notification.id}>
+      <div className="notification">{view(notification)}</div>
+    </Flipped>
+  );
 }
