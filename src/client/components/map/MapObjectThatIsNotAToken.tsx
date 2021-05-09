@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import { GRID_SIZE } from "../../../shared/constants";
-import { RRMapObject, RRTokenOnMap } from "../../../shared/state";
+import { RRMapObject, RRToken } from "../../../shared/state";
 import { fileUrl } from "../../files";
 import {
   RoughEllipse,
@@ -18,7 +18,7 @@ import { hoveredMapObjectsFamily } from "./Map";
 import { selectedMapObjectsFamily } from "./MapContainer";
 
 export const MapObjectThatIsNotAToken = React.memo<{
-  object: Exclude<RRMapObject, RRTokenOnMap>;
+  object: Exclude<RRMapObject, RRToken>;
   onStartMove: (object: RRMapObject, event: React.MouseEvent) => void;
   canStartMoving: boolean;
 }>(function MapObjectThatIsNotAToken({ object, onStartMove, canStartMoving }) {

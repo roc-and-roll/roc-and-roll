@@ -1,7 +1,7 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { initiativeTrackerReducer } from "./features/initiativeTracker";
 import { playersReducer } from "./features/players";
-import { tokensReducer } from "./features/tokens";
+import { charactersReducer } from "./features/characters";
 import { mapsReducer } from "./features/maps";
 import { privateChatsReducer } from "./features/privateChats";
 import { logEntriesReducer } from "./features/logEntries";
@@ -20,7 +20,7 @@ const options = {
     // when adding a new slice.
     initiativeTracker: initiativeTrackerReducer,
     players: playersReducer,
-    tokens: tokensReducer,
+    characters: charactersReducer,
     maps: mapsReducer,
     privateChats: privateChatsReducer,
     logEntries: logEntriesReducer,

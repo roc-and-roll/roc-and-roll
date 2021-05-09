@@ -7,7 +7,7 @@ export type RRID = Opaque<string>;
 
 export type RRPlayerID = Opaque<string, "player">;
 
-export type RRTokenID = Opaque<string, "token">;
+export type RRCharacterID = Opaque<string, "character">;
 
 export type RRMapID = Opaque<string, "map">;
 
@@ -47,7 +47,7 @@ export type RRAura = {
   visibileWhen: "always" | "onTurn" | "hover";
 };
 
-export type RRTokenCondition = string;
+export type RRCharacterCondition = string;
 
 export type RRTimestamp = Opaque<number, "timestamp">;
 
@@ -56,10 +56,10 @@ interface RRInitiativeTrackerEntryBase {
   initiative: number;
 }
 
-export interface RRInitiativeTrackerEntryToken
+export interface RRInitiativeTrackerEntryCharacter
   extends RRInitiativeTrackerEntryBase {
-  type: "token";
-  tokenIds: RRTokenID[];
+  type: "character";
+  characterIds: RRCharacterID[];
 }
 
 export interface RRInitiativeTrackerEntryLairAction
@@ -69,7 +69,7 @@ export interface RRInitiativeTrackerEntryLairAction
 }
 
 export type RRInitiativeTrackerEntry =
-  | RRInitiativeTrackerEntryToken
+  | RRInitiativeTrackerEntryCharacter
   | RRInitiativeTrackerEntryLairAction;
 
 export type RRPlayer = {
@@ -78,11 +78,11 @@ export type RRPlayer = {
   color: RRColor;
   isGM: boolean;
   currentMap: RRMapID;
-  tokenIds: RRTokenID[];
+  characterIds: RRCharacterID[];
 };
 
-export type RRToken = {
-  id: RRTokenID;
+export type RRCharacter = {
+  id: RRCharacterID;
   name: string;
 
   image: RRFile | null;
@@ -91,7 +91,7 @@ export type RRToken = {
   auras: RRAura[];
   hp: number;
   maxHP: number;
-  conditions: RRTokenCondition[];
+  conditions: RRCharacterCondition[];
 
   visibility: "gmOnly" | "everyone";
   isTemplate: boolean;
@@ -103,9 +103,9 @@ type RRMapObjectBase = {
   playerId: RRPlayerID;
 };
 
-export interface RRTokenOnMap extends RRMapObjectBase {
+export interface RRToken extends RRMapObjectBase {
   type: "token";
-  tokenId: RRTokenID;
+  characterId: RRCharacterID;
 }
 
 export interface RRMapDrawingBase extends RRMapObjectBase {
@@ -149,7 +149,7 @@ export interface RRMapDrawingText extends RRMapDrawingBase {
 }
 
 export type RRMapObject =
-  | RRTokenOnMap
+  | RRToken
   | RRMapDrawingImage
   | RRMapDrawingRectangle
   | RRMapDrawingEllipse
@@ -291,7 +291,7 @@ export interface InitiativeTrackerSyncedState {
 
 export type PlayersSyncedState = EntityCollection<RRPlayer>;
 
-export type TokensSyncedState = EntityCollection<RRToken>;
+export type CharactersSyncedState = EntityCollection<RRCharacter>;
 
 export type MapsSyncedState = EntityCollection<RRMap>;
 
@@ -329,7 +329,7 @@ export type EphermalSyncedState = {
 export interface SyncedState {
   initiativeTracker: InitiativeTrackerSyncedState;
   players: PlayersSyncedState;
-  tokens: TokensSyncedState;
+  characters: CharactersSyncedState;
   maps: MapsSyncedState;
   privateChats: PrivateChatsSyncedState;
   logEntries: LogEntriesSyncedState;
@@ -364,7 +364,7 @@ export const initialSyncedState: SyncedState = {
     entities: {},
     ids: [],
   },
-  tokens: {
+  characters: {
     entities: {},
     ids: [],
   },

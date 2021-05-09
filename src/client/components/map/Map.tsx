@@ -26,7 +26,7 @@ import {
   RRPlayer,
   RRPlayerID,
   RRPoint,
-  RRTokenID,
+  RRCharacterID,
 } from "../../../shared/state";
 import { canControlMapObject } from "../../permissions";
 import {
@@ -133,7 +133,7 @@ export const RRMapView = React.memo<{
   backgroundColor: RRColor;
   transformRef: React.MutableRefObject<Matrix>;
   onMoveMapObjects: (d: RRPoint) => void;
-  onSetHP: (tokenId: RRTokenID, hp: number) => void;
+  onSetHP: (tokenId: RRCharacterID, hp: number) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
   players: EntityCollection<RRPlayer>;
   tokenPathDebounce: Debouncer;

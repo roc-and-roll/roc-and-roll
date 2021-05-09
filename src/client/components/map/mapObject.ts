@@ -3,13 +3,13 @@ import {
   byId,
   EntityCollection,
   RRMapObject,
-  RRToken,
+  RRCharacter,
 } from "../../../shared/state";
 import { pointAdd, pointScale, makePoint } from "../../point";
 
 export const mapObjectCenter = (
   object: RRMapObject,
-  tokens: EntityCollection<RRToken>
+  tokens: EntityCollection<RRCharacter>
 ) => {
   const size = mapObjectSize(object, tokens);
   return pointAdd(object.position, pointScale(size, 0.5));
@@ -17,11 +17,11 @@ export const mapObjectCenter = (
 
 export const mapObjectSize = (
   object: RRMapObject,
-  tokens: EntityCollection<RRToken>
+  tokens: EntityCollection<RRCharacter>
 ) => {
   let size = makePoint(GRID_SIZE);
   if (object.type === "token") {
-    const token = byId(tokens.entities, object.tokenId)!;
+    const token = byId(tokens.entities, object.characterId)!;
     size = pointScale(size, token.scale);
   }
   return size;

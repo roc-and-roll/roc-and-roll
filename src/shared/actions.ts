@@ -6,7 +6,7 @@ import {
   RRID,
   RRInitiativeTrackerEntry,
   RRInitiativeTrackerEntryLairAction,
-  RRInitiativeTrackerEntryToken,
+  RRInitiativeTrackerEntryCharacter,
   RRLogEntry,
   RRLogEntryDiceRoll,
   RRLogEntryMessage,
@@ -18,8 +18,8 @@ import {
   RRPrivateChat,
   RRPrivateChatID,
   RRPrivateChatMessage,
-  RRToken,
-  RRTokenID,
+  RRCharacter,
+  RRCharacterID,
   RRMapObjectID,
   RRDiceTemplate,
   RRLogEntryAchievement,
@@ -48,27 +48,31 @@ export const playerAdd = createAction(
 
 export const playerUpdate = createAction<Update<RRPlayer>>("player/update");
 
-export const playerUpdateAddTokenId = createAction<{
+export const playerUpdateAddCharacterId = createAction<{
   id: RRPlayer["id"];
-  tokenId: RRTokenID;
-}>("player/update/tokenid");
+  characterId: RRCharacterID;
+}>("player/update/characterid");
 
 export const playerRemove = createAction<RRPlayer["id"]>("player/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
-// Tokens
+// Characters
 ////////////////////////////////////////////////////////////////////////////////
 
-export const tokenAdd = createAction(
-  "token/add",
-  (token: Omit<RRToken, "id">): { payload: RRToken } => ({
-    payload: { id: rrid<RRToken>(), ...token },
+export const characterAdd = createAction(
+  "character/add",
+  (character: Omit<RRCharacter, "id">): { payload: RRCharacter } => ({
+    payload: { id: rrid<RRCharacter>(), ...character },
   })
 );
 
-export const tokenUpdate = createAction<Update<RRToken>>("token/update");
+export const characterUpdate = createAction<Update<RRCharacter>>(
+  "character/update"
+);
 
-export const tokenRemove = createAction<RRToken["id"]>("token/remove");
+export const characterRemove = createAction<RRCharacter["id"]>(
+  "character/remove"
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Maps
@@ -258,14 +262,17 @@ export const initiativeTrackerSetCurrentEntry = createAction<
   InitiativeTrackerSyncedState["currentEntryId"]
 >("initiativeTracker/currentEntryId");
 
-export const initiativeTrackerEntryTokenAdd = createAction(
-  "initiativetracker/entry/token/add",
+export const initiativeTrackerEntryCharacterAdd = createAction(
+  "initiativetracker/entry/character/add",
   (
-    initiativetrackerEntry: Omit<RRInitiativeTrackerEntryToken, "id" | "type">
-  ): { payload: RRInitiativeTrackerEntryToken } => ({
+    initiativetrackerEntry: Omit<
+      RRInitiativeTrackerEntryCharacter,
+      "id" | "type"
+    >
+  ): { payload: RRInitiativeTrackerEntryCharacter } => ({
     payload: {
-      id: rrid<RRInitiativeTrackerEntryToken>(),
-      type: "token",
+      id: rrid<RRInitiativeTrackerEntryCharacter>(),
+      type: "character",
       ...initiativetrackerEntry,
     },
   })
@@ -287,9 +294,9 @@ export const initiativeTrackerEntryLairActionAdd = createAction(
   })
 );
 
-export const initiativeTrackerEntryTokenUpdate = createAction<
-  Update<RRInitiativeTrackerEntryToken>
->("initiativetracker/entry/token/update");
+export const initiativeTrackerEntryCharacterUpdate = createAction<
+  Update<RRInitiativeTrackerEntryCharacter>
+>("initiativetracker/entry/character/update");
 
 export const initiativeTrackerEntryLairActionUpdate = createAction<
   Update<RRInitiativeTrackerEntryLairAction>

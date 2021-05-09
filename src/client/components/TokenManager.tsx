@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { playerUpdateAddTokenId, tokenAdd } from "../../shared/actions";
-import { entries, RRToken, RRTokenID } from "../../shared/state";
+import { playerUpdateAddCharacterId, characterAdd } from "../../shared/actions";
+import { entries, RRCharacter, RRCharacterID } from "../../shared/state";
 import { generateRandomToken, tokenImageUrl } from "../files";
 import { useServerDispatch, useServerState } from "../state";
 import { useDrag } from "react-dnd";
@@ -12,7 +12,7 @@ import { Button } from "./ui/Button";
 import { clamp, randomName } from "../../shared/util";
 import { TokenEditor } from "./TokenEditor";
 
-async function makeNewToken(): Promise<Parameters<typeof tokenAdd>[0]> {
+async function makeNewToken(): Promise<Parameters<typeof characterAdd>[0]> {
   return {
     auras: [],
     conditions: [],
@@ -28,9 +28,11 @@ async function makeNewToken(): Promise<Parameters<typeof tokenAdd>[0]> {
 
 export function TokenManager() {
   const myself = useMyself();
-  const tokens = useServerState((s) => s.tokens);
-  const [selectedToken, setSelectedToken] = useState<RRTokenID | null>(null);
-  const [newTokenIds, setNewTokenIds] = useState<RRTokenID[]>([]);
+  const tokens = useServerState((s) => s.characters);
+  const [selectedToken, setSelectedToken] = useState<RRCharacterID | null>(
+    null
+  );
+  const [newTokenIds, setNewTokenIds] = useState<RRCharacterID[]>([]);
 
   const dispatch = useServerDispatch();
 
@@ -39,13 +41,13 @@ export function TokenManager() {
   const addToken = () => {
     setIsAddingToken(true);
     (async () => {
-      const tokenAddAction = tokenAdd(await makeNewToken());
+      const tokenAddAction = characterAdd(await makeNewToken());
       const newToken = tokenAddAction.payload;
       dispatch([
         tokenAddAction,
-        playerUpdateAddTokenId({
+        playerUpdateAddCharacterId({
           id: myself.id,
-          tokenId: newToken.id,
+          characterId: newToken.id,
         }),
       ]);
       setNewTokenIds((l) => [...l, newToken.id]);
@@ -53,7 +55,7 @@ export function TokenManager() {
     })().finally(() => setIsAddingToken(false));
   };
 
-  const tokenPreview = (t: RRToken) => (
+  const tokenPreview = (t: RRCharacter) => (
     <EditableTokenPreview
       token={t}
       key={t.id}
@@ -74,7 +76,7 @@ export function TokenManager() {
 
       <div className="token-list">
         {entries(tokens)
-          .filter((t) => myself.tokenIds.includes(t.id))
+          .filter((t) => myself.characterIds.includes(t.id))
           .map(tokenPreview)}
       </div>
       {myself.isGM && (
@@ -82,7 +84,7 @@ export function TokenManager() {
           <h4>Tokens of other players</h4>
           <div className="token-list">
             {entries(tokens)
-              .filter((t) => !myself.tokenIds.includes(t.id))
+              .filter((t) => !myself.characterIds.includes(t.id))
               .map(tokenPreview)}
           </div>
         </GMArea>
@@ -98,13 +100,13 @@ function EditableTokenPreview({
   onNameFirstEdited,
   wasJustCreated,
 }: {
-  token: RRToken;
+  token: RRCharacter;
   isSelected: boolean;
-  setSelectedToken: (t: RRToken | null) => void;
+  setSelectedToken: (t: RRCharacter | null) => void;
   onNameFirstEdited: () => void;
   wasJustCreated: boolean;
 }) {
-  const [, dragRef] = useDrag<RRToken, void, null>(() => ({
+  const [, dragRef] = useDrag<RRCharacter, void, null>(() => ({
     type: "token",
     item: token,
   }));
@@ -136,7 +138,7 @@ function EditableTokenPreview({
   );
 }
 
-export function TokenPreview({ token }: { token: RRToken }) {
+export function TokenPreview({ token }: { token: RRCharacter }) {
   return (
     <div
       className="token-image"
@@ -150,7 +152,7 @@ export function TokenPreview({ token }: { token: RRToken }) {
   );
 }
 
-export function TokenStack({ tokens }: { tokens: RRToken[] }) {
+export function TokenStack({ tokens }: { tokens: RRCharacter[] }) {
   const [topIdx, setTopIdx] = useState(0);
 
   // Allow to click through all tokens

@@ -25,7 +25,7 @@ export function JoinGame({
         color: randomColor(),
         currentMap: maps.ids[0]!,
         isGM: false,
-        tokenIds: [],
+        characterIds: [],
       })
     );
     setMyPlayerId(action.payload.id);
