@@ -250,16 +250,18 @@ function Healthbar({
         fillStyle="solid"
         roughness={1}
       />
-      <RoughRectangle
-        x={0}
-        y={0}
-        w={tokenSize * clamp(0, token.hp / token.maxHP, 1)}
-        h={16}
-        stroke="transparent"
-        fill="#c5d87c"
-        fillStyle="solid"
-        roughness={1}
-      />
+      {token.maxHP > 0 && (
+        <RoughRectangle
+          x={0}
+          y={0}
+          w={tokenSize * clamp(0, token.hp / token.maxHP, 1)}
+          h={16}
+          stroke="transparent"
+          fill="#c5d87c"
+          fillStyle="solid"
+          roughness={1}
+        />
+      )}
       <RoughRectangle
         x={0}
         y={0}
