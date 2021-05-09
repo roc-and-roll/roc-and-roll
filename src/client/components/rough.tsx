@@ -235,7 +235,7 @@ export const RoughLine = makeRoughComponent<{
 }>(
   "RoughLine",
   (generator, { w, h }, options) => generator.line(0, 0, w, h, options),
-  ({ x, y, w, h, ...rest }) => (
+  ({ x, y, w, h, strokeLineDash: _, ...rest }) => (
     <line x1={x} y1={y} x2={x + w} y2={y + h} {...rest} />
   )
 );
@@ -269,7 +269,7 @@ export const RoughRectangle = makeRoughComponent<{
 }>(
   "RoughRectangle",
   (generator, { w, h }, options) => generator.rectangle(0, 0, w, h, options),
-  ({ x: ox, y: oy, w: ow, h: oh, ...rest }) => {
+  ({ x: ox, y: oy, w: ow, h: oh, strokeLineDash: _, ...rest }) => {
     const { x, y, w, h } = correctNegativeSize({ x: ox, y: oy, w: ow, h: oh });
     return <rect x={x} y={y} width={w} height={h} {...rest} />;
   }
@@ -282,7 +282,7 @@ export const RoughEllipse = makeRoughComponent<{
   "RoughEllipse",
   (generator, { w, h }, options) =>
     generator.ellipse(w / 2, h / 2, w, h, options),
-  ({ x: ox, y: oy, w: ow, h: oh, ...rest }) => {
+  ({ x: ox, y: oy, w: ow, h: oh, strokeLineDash: _, ...rest }) => {
     const { x, y, w, h } = correctNegativeSize({ x: ox, y: oy, w: ow, h: oh });
     return (
       <ellipse cx={x + w / 2} cy={y + h / 2} rx={w / 2} ry={h / 2} {...rest} />
@@ -295,7 +295,7 @@ export const RoughCircle = makeRoughComponent<{
 }>(
   "RoughCircle",
   (generator, { d }, options) => generator.circle(d / 2, d / 2, d, options),
-  ({ x: ox, y: oy, d: od, ...rest }) => {
+  ({ x: ox, y: oy, d: od, strokeLineDash: _, ...rest }) => {
     const { x, y, w: d } = correctNegativeSize({ x: ox, y: oy, w: od, h: od });
     return <circle cx={x + d / 2} cy={y + d / 2} r={d / 2} {...rest} />;
   }
@@ -306,7 +306,9 @@ export const RoughSVGPath = makeRoughComponent<{
 }>(
   "RoughSVGPath",
   (generator, { path }, options) => generator.path(path, options),
-  ({ x, y, path, ...rest }) => <path x={x} y={y} d={path} {...rest} />
+  ({ x, y, path, strokeLineDash: _, ...rest }) => (
+    <path x={x} y={y} d={path} {...rest} />
+  )
 );
 
 export const RoughLinearPath = makeRoughComponent<{
@@ -318,7 +320,7 @@ export const RoughLinearPath = makeRoughComponent<{
       [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
       options
     ),
-  ({ x, y, points, fill, ...rest }) => (
+  ({ x, y, points, fill, strokeLineDash: _, ...rest }) => (
     <polyline
       fill="transparent"
       points={[makePoint(0), ...points]
@@ -338,7 +340,7 @@ export const RoughPolygon = makeRoughComponent<{
       [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
       options
     ),
-  ({ x, y, points, ...rest }) => (
+  ({ x, y, points, strokeLineDash: _, ...rest }) => (
     <polygon
       points={[makePoint(0), ...points]
         .map(({ x: px, y: py }) => `${x + px},${y + py}`)
