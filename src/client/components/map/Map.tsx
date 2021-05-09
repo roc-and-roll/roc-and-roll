@@ -134,6 +134,7 @@ export const RRMapView = React.memo<{
   backgroundColor: RRColor;
   transformRef: React.MutableRefObject<Matrix>;
   onMoveMapObjects: (d: RRPoint) => void;
+  onStopMoveMapObjects: () => void;
   onSetHP: (tokenId: RRCharacterID, hp: number) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
   players: EntityCollection<RRPlayer>;
@@ -150,6 +151,7 @@ export const RRMapView = React.memo<{
   onSetHP,
   handleKeyDown,
   onMoveMapObjects,
+  onStopMoveMapObjects,
   transformRef,
   players,
   measurePathDebounce,
@@ -487,6 +489,7 @@ export const RRMapView = React.memo<{
   const handleMouseUp = useRecoilCallback(
     ({ snapshot }) => (e: MouseEvent) => {
       if (mouseActionRef.current === MouseAction.MOVE_MAP_OBJECT) {
+        onStopMoveMapObjects();
         setMeasurePath([]);
         dragStartIdRef.current = null;
       }
@@ -520,6 +523,7 @@ export const RRMapView = React.memo<{
       setSelectedMapObjectIds,
       toolHandler,
       transformRef,
+      onStopMoveMapObjects,
     ]
   );
 

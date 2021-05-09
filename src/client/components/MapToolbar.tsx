@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import { mapObjectUpdate, mapUpdate } from "../../shared/actions";
-import { RRMap, RRPlayer } from "../../shared/state";
+import { RRMap, RRMapObjectID, RRPlayer } from "../../shared/state";
 import {
   useOptimisticDebouncedServerUpdate,
   useServerDispatch,
@@ -76,15 +76,7 @@ export const MapToolbar = React.memo<{
     );
   }, [tool, drawColor, drawType, snap, setEditState]);
 
-  const updateLock = useRecoilCallback(({ snapshot }) => () => {
-    const lockedState = snapshot
-      .getLoadable(selectedMapObjectIdsAtom)
-      .getValue()
-      .some((id) => {
-        const object = snapshot.getLoadable(mapObjectsFamily(id)).getValue();
-        if (!object || object.type === "token") return false;
-        return !object.locked;
-      });
+  const updateLock = useRecoilCallback(({ snapshot }) => (locked: boolean) => {
     dispatch(
       snapshot
         .getLoadable(selectedMapObjectIdsAtom)
@@ -98,11 +90,44 @@ export const MapToolbar = React.memo<{
             return [];
           return mapObjectUpdate(map.id, {
             id: selectedMapObjectId,
-            changes: { locked: lockedState },
+            changes: { locked },
           });
         })
     );
   });
+
+  const [lockedStates, setLockedStates] = useState(
+    new Map<RRMapObjectID, boolean>()
+  );
+
+  const lockedCheckboxRef = useRef<HTMLInputElement | null>(null);
+
+  const isLockedToggleChecked = Array.from(lockedStates.values()).every(
+    (locked) => locked
+  );
+  const isLockedToggleIndeterminate =
+    Array.from(lockedStates.values()).some((locked) => locked) &&
+    !isLockedToggleChecked;
+
+  useEffect(() => {
+    if (lockedCheckboxRef.current) {
+      lockedCheckboxRef.current.indeterminate = isLockedToggleIndeterminate;
+    }
+  }, [isLockedToggleIndeterminate]);
+
+  useEffect(() => {
+    setLockedStates((old) => {
+      const newMap = new Map();
+
+      Array.from(old.entries()).forEach(([id, isLocked]) => {
+        if (selectedMapObjectIds.includes(id)) {
+          newMap.set(id, isLocked);
+        }
+      });
+
+      return newMap.size === 0 && old.size === 0 ? old : newMap;
+    });
+  }, [selectedMapObjectIds]);
 
   return (
     <div className="map-toolbar">
@@ -127,7 +152,35 @@ export const MapToolbar = React.memo<{
       {tool === "move" && selectedMapObjectIds.length > 0 && (
         <>
           <ColorInput value={drawColor} onChange={setDrawColor} />
-          <Button onClick={updateLock}>lock</Button>
+          <label className="locked-toggle">
+            lock
+            <input
+              type="checkbox"
+              checked={isLockedToggleChecked}
+              ref={lockedCheckboxRef}
+              onChange={(e) =>
+                updateLock(
+                  isLockedToggleIndeterminate ? true : e.target.checked
+                )
+              }
+            />
+          </label>
+          {selectedMapObjectIds.map((selectedMapObjectId) => (
+            <MapObjectLockedObserver
+              key={selectedMapObjectId}
+              id={selectedMapObjectId}
+              onLockedStateChanged={(isLocked) => {
+                setLockedStates((old) => {
+                  if (old.get(selectedMapObjectId) === isLocked) {
+                    return old;
+                  }
+                  const newMap = new Map(old);
+                  newMap.set(selectedMapObjectId, isLocked);
+                  return newMap;
+                });
+              }}
+            />
+          ))}
         </>
       )}
       {tool === "draw" && (
@@ -198,6 +251,30 @@ export const MapToolbar = React.memo<{
     </div>
   );
 });
+
+function MapObjectLockedObserver({
+  id,
+  onLockedStateChanged,
+}: {
+  id: RRMapObjectID;
+  onLockedStateChanged: (locked: boolean) => void;
+}) {
+  const mapObject = useRecoilValue(mapObjectsFamily(id));
+
+  const mapObjectLocked = mapObject
+    ? mapObject.type === "token"
+      ? "ignore"
+      : mapObject.locked
+    : "ignore";
+
+  useEffect(() => {
+    if (mapObjectLocked !== "ignore") {
+      onLockedStateChanged(mapObjectLocked);
+    }
+  }, [mapObjectLocked, onLockedStateChanged]);
+
+  return null;
+}
 
 function MapSettings({ map }: { map: RRMap }) {
   const [name, setName] = useOptimisticDebouncedServerUpdate(

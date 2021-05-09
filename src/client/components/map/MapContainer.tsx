@@ -40,10 +40,11 @@ import composeRefs from "@seznam/compose-react-refs";
 import { identity, Matrix } from "transformation-matrix";
 import { MapToolbar } from "../MapToolbar";
 import { GRID_SIZE } from "../../../shared/constants";
-import { rrid, timestamp } from "../../../shared/util";
+import { rrid, timestamp, withDo } from "../../../shared/util";
 import { useRRSettings } from "../../settings";
 import produce, { Draft } from "immer";
 import {
+  makePoint,
   pointAdd,
   pointScale,
   pointSubtract,
@@ -462,6 +463,52 @@ export default function MapContainer() {
     },
     [setLocalObjectsOnMap]
   );
+  const onStopMoveMapObjects = useRecoilCallback(
+    ({ snapshot }) => () => {
+      setLocalObjectsOnMap((localObjectsOnMap) => {
+        const updatedLocalObjectsOnMap: Record<RRMapObjectID, RRMapObject> = {};
+
+        snapshot
+          .getLoadable(selectedMapObjectIdsAtom)
+          .getValue()
+          .forEach((selectedMapObjectId) => {
+            const object = byId<Draft<RRMapObject>>(
+              localObjectsOnMap.entities,
+              selectedMapObjectId
+            );
+            if (object && (object.type === "token" || !object.locked)) {
+              const position = withDo(object, (object) => {
+                // TODO: We have a "snapping" button in the toolbar, which we
+                // should probably respect somehow.
+                if (object.type === "token" || object.type === "image") {
+                  // TODO: Calculate center based on token / map object size
+                  const center = pointAdd(
+                    object.position,
+                    makePoint(GRID_SIZE / 2)
+                  );
+                  return snapPointToGrid(center);
+                }
+                return object.position;
+              });
+
+              setById(updatedLocalObjectsOnMap, object.id, {
+                ...object,
+                position,
+              });
+            }
+          });
+
+        return {
+          ...localObjectsOnMap,
+          entities: {
+            ...localObjectsOnMap.entities,
+            ...updatedLocalObjectsOnMap,
+          },
+        };
+      });
+    },
+    [setLocalObjectsOnMap]
+  );
 
   return (
     <div ref={dropRef} className="map-container">
@@ -486,6 +533,7 @@ export default function MapContainer() {
         transformRef={transformRef}
         // map objects
         onMoveMapObjects={onMoveMapObjects}
+        onStopMoveMapObjects={onStopMoveMapObjects}
         onSetHP={onSetHP}
         // misc
         handleKeyDown={handleKeyDown}
