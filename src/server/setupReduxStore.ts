@@ -1,7 +1,7 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { initiativeTrackerReducer } from "./features/initiativeTracker";
 import { playersReducer } from "./features/players";
-import { tokensReducer } from "./features/tokens";
+import { charactersReducer } from "./features/characters";
 import { mapsReducer } from "./features/maps";
 import { privateChatsReducer } from "./features/privateChats";
 import { logEntriesReducer } from "./features/logEntries";
@@ -11,6 +11,8 @@ import {
   ephermalSongsReducer,
 } from "./features/ephermal";
 import { diceTemplatesReducer } from "./features/diceTemplate";
+import { assetsReducer } from "./features/assets";
+import { characterTemplatesReducer } from "./features/charactersTemplates";
 
 const options = {
   reducer: {
@@ -19,11 +21,13 @@ const options = {
     // when adding a new slice.
     initiativeTracker: initiativeTrackerReducer,
     players: playersReducer,
-    tokens: tokensReducer,
+    characters: charactersReducer,
+    characterTemplates: characterTemplatesReducer,
     maps: mapsReducer,
     privateChats: privateChatsReducer,
     logEntries: logEntriesReducer,
     diceTemplates: diceTemplatesReducer,
+    assets: assetsReducer,
     ephermal: combineReducers({
       players: ephermalPlayersReducer,
       activeSongs: ephermalSongsReducer,

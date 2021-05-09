@@ -4,8 +4,8 @@ import {
   initiativeTrackerEntryLairActionAdd,
   initiativeTrackerEntryLairActionUpdate,
   initiativeTrackerEntryRemove,
-  initiativeTrackerEntryTokenAdd,
-  initiativeTrackerEntryTokenUpdate,
+  initiativeTrackerEntryCharacterAdd,
+  initiativeTrackerEntryCharacterUpdate,
   initiativeTrackerSetCurrentEntry,
   logEntryDiceRollAdd,
 } from "../../shared/actions";
@@ -14,8 +14,8 @@ import {
   entries,
   RRInitiativeTrackerEntry,
   RRPlayer,
-  RRToken,
-  TokensSyncedState,
+  RRCharacter,
+  CharactersSyncedState,
 } from "../../shared/state";
 import { useMyMap, useMyself } from "../myself";
 import { canControlToken } from "../permissions";
@@ -27,7 +27,7 @@ import {
 } from "../state";
 import useLocalState from "../useLocalState";
 import { GMArea } from "./GMArea";
-import { TokenStack } from "./TokenManager";
+import { TokenStack } from "./tokens/TokenPreview";
 import { Button } from "./ui/Button";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { useRecoilValue } from "recoil";
@@ -38,13 +38,13 @@ import ReactDOM from "react-dom";
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
   myself: RRPlayer,
-  tokenCollection: TokensSyncedState
+  tokenCollection: CharactersSyncedState
 ) {
   if (entry.type === "lairAction") {
     return myself.isGM;
   }
 
-  return entry.tokenIds.some((tokenId) => {
+  return entry.characterIds.some((tokenId) => {
     const token = byId(tokenCollection.entities, tokenId);
     return token && canControlToken(token, { ...myself, isGM: false });
   });
@@ -52,7 +52,7 @@ function canEditEntry(
 
 const InitiativeEntry = React.memo<{
   entry: RRInitiativeTrackerEntry;
-  tokenCollection: TokensSyncedState;
+  tokenCollection: CharactersSyncedState;
   isCurrentEntry: boolean;
   myself: RRPlayer;
   inverseIdx: number;
@@ -79,7 +79,7 @@ const InitiativeEntry = React.memo<{
       </>
     );
   } else {
-    const tokens = entry.tokenIds.map((id) =>
+    const tokens = entry.characterIds.map((id) =>
       byId(tokenCollection.entities, id)
     );
     const names = new Set(
@@ -87,7 +87,9 @@ const InitiativeEntry = React.memo<{
     );
     content = (
       <>
-        <TokenStack tokens={tokens.filter((token) => !!token) as RRToken[]} />
+        <TokenStack
+          tokens={tokens.filter((token) => !!token) as RRCharacter[]}
+        />
         <p>{[...names].join(", ")}</p>
       </>
     );
@@ -101,8 +103,8 @@ const InitiativeEntry = React.memo<{
         return;
       }
 
-      if (entry.type === "token") {
-        return initiativeTrackerEntryTokenUpdate({
+      if (entry.type === "character") {
+        return initiativeTrackerEntryCharacterUpdate({
           id: entry.id,
           changes: {
             initiative,
@@ -159,7 +161,7 @@ export function InitiativeTracker() {
   const dispatch = useServerDispatch();
   const myself = useMyself();
   const initiativeTracker = useServerState((state) => state.initiativeTracker);
-  const tokenCollection = useServerState((state) => state.tokens);
+  const tokenCollection = useServerState((state) => state.characters);
 
   const mapObjects = useMyMap((map) => map?.objects ?? EMPTY_ENTITY_COLLECTION);
   const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom).filter(
@@ -170,13 +172,13 @@ export function InitiativeTracker() {
     ...new Set(
       selectedMapObjectIds.flatMap((mapObjectId) => {
         const mapObject = byId(mapObjects.entities, mapObjectId);
-        return mapObject?.type === "token" ? mapObject?.tokenId : [];
+        return mapObject?.type === "token" ? mapObject?.characterId : [];
       })
     ),
   ];
 
   const selectionAlreadyInList = entries(initiativeTracker.entries)
-    .flatMap((entry) => (entry.type === "token" ? entry.tokenIds : []))
+    .flatMap((entry) => (entry.type === "character" ? entry.characterIds : []))
     .some((id) => selectedTokenIds.includes(id));
   const hasSelection = selectedTokenIds.length !== 0;
 
@@ -187,9 +189,9 @@ export function InitiativeTracker() {
     );
     dispatch([
       action,
-      initiativeTrackerEntryTokenAdd({
+      initiativeTrackerEntryCharacterAdd({
         initiative: diceResult(action.payload),
-        tokenIds: selectedTokenIds,
+        characterIds: selectedTokenIds,
       }),
     ]);
   };

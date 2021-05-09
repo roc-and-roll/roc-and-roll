@@ -5,7 +5,7 @@ import {
   mapObjectAdd,
   mapObjectRemove,
   mapObjectUpdate,
-  tokenUpdate,
+  characterUpdate,
 } from "../../../shared/actions";
 import {
   byId,
@@ -18,8 +18,8 @@ import {
   RRMapObjectID,
   RRPlayerID,
   RRPoint,
-  RRToken,
-  RRTokenID,
+  RRCharacter,
+  RRCharacterID,
   setById,
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
@@ -54,7 +54,7 @@ import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
-export type ToolButtonState = "select" | "tool";
+export type ToolButtonState = "select" | "tool" | "measure";
 
 export type MapEditState =
   | { tool: "move"; updateColor: RRColor }
@@ -87,12 +87,12 @@ export const mapObjectIdsAtom = atom<RRMapObjectID[]>({
   default: [],
 });
 
-export const tokenFamily = atomFamily<RRToken | null, RRTokenID>({
+export const tokenFamily = atomFamily<RRCharacter | null, RRCharacterID>({
   key: "Token",
   default: null,
 });
 
-export const tokenIdsAtom = atom<RRTokenID[]>({
+export const tokenIdsAtom = atom<RRCharacterID[]>({
   key: "TokenIds",
   default: [],
 });
@@ -122,7 +122,7 @@ export default function MapContainer() {
   const transformRef = useRef<Matrix>(identity());
 
   const dropRef2 = useRef<HTMLDivElement>(null);
-  const [, dropRef1] = useDrop<RRToken, void, never>(
+  const [, dropRef1] = useDrop<RRCharacter, void, never>(
     () => ({
       accept: "token",
       drop: (item, monitor) => {
@@ -142,7 +142,7 @@ export default function MapContainer() {
               })
             ),
             playerId: myself.id,
-            tokenId: item.id,
+            characterId: item.id,
           })
         );
       },
@@ -305,13 +305,13 @@ export default function MapContainer() {
     true
   );
 
-  const updateTokenPath = useCallback(
-    (tokenPath: RRPoint[]) =>
+  const updateMeasurePath = useCallback(
+    (measurePath: RRPoint[]) =>
       dispatch(
         ephermalPlayerUpdate({
           id: myself.id,
           changes: {
-            tokenPath,
+            measurePath,
           },
         })
       ),
@@ -325,14 +325,15 @@ export default function MapContainer() {
       ? "select"
       : editState.tool === "draw"
       ? "tool"
-      : // TODO adapt for measure
-        "select";
+      : editState.tool === "measure"
+      ? "measure"
+      : "select";
 
   const toolHandler = useMapToolHandler(myself, map, editState, transformRef);
 
   const onSetHP = useCallback(
-    (tokenId: RRTokenID, hp: number) => {
-      dispatch(tokenUpdate({ id: tokenId, changes: { hp } }));
+    (tokenId: RRCharacterID, hp: number) => {
+      dispatch(characterUpdate({ id: tokenId, changes: { hp } }));
     },
     [dispatch]
   );
@@ -406,10 +407,10 @@ export default function MapContainer() {
         toolButtonState={toolButtonState}
         toolHandler={toolHandler}
         // mouse position and token path sync
-        tokenPathDebounce={syncedDebounce.current}
+        measurePathDebounce={syncedDebounce.current}
         onMousePositionChanged={sendMousePositionToServer}
         players={players}
-        onUpdateTokenPath={updateTokenPath}
+        onUpdateMeasurePath={updateMeasurePath}
         // zoom and position
         transformRef={transformRef}
         // map objects
@@ -481,7 +482,7 @@ function ReduxToRecoilBridge({
   );
   useReduxToRecoilBridge(
     "tokens",
-    useServerState((s) => s.tokens),
+    useServerState((s) => s.characters),
     tokenIdsAtom,
     tokenFamily
   );

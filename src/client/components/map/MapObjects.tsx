@@ -5,7 +5,7 @@ import {
   RRColor,
   RRMapObject,
   RRMapObjectID,
-  RRTokenID,
+  RRCharacterID,
 } from "../../../shared/state";
 import { assertNever } from "../../../shared/util";
 import {
@@ -20,7 +20,7 @@ export const MapObjects = React.memo<{
   contrastColor: RRColor;
   toolButtonState: ToolButtonState;
   zoom: number;
-  setHP: (tokenId: RRTokenID, hp: number) => void;
+  setHP: (tokenId: RRCharacterID, hp: number) => void;
   handleStartMoveMapObject: (
     object: RRMapObject,
     event: React.MouseEvent
@@ -94,7 +94,7 @@ const MapObjectWrapper = React.memo<{
   // additional parameters for tokens
   zoom: number;
   contrastColor: string;
-  setHP: (tokenId: RRTokenID, hp: number) => void;
+  setHP: (tokenId: RRCharacterID, hp: number) => void;
 }>(function MapObjectWrapper({
   mapObjectId,
   canStartMoving,

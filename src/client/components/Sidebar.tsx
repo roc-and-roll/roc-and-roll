@@ -1,6 +1,6 @@
 import React from "react";
 import { DiceInterface } from "./DiceInterface";
-import { TokenManager } from "./TokenManager";
+import { TokenManager } from "./tokens/TokenManager";
 import { Collapsible } from "./Collapsible";
 import { Playground } from "./Playground";
 import { Resizable } from "re-resizable";

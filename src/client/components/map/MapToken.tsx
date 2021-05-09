@@ -4,13 +4,13 @@ import {
   RRAura,
   RRMapObject,
   RRPlayer,
+  RRCharacter,
+  RRCharacterID,
   RRToken,
-  RRTokenID,
-  RRTokenOnMap,
 } from "../../../shared/state";
 import { tokenImageUrl } from "../../files";
 import { canControlToken, canViewTokenOnMap } from "../../permissions";
-import { RoughRectangle, RoughText, RoughCircle } from "../rough";
+import { RoughRectangle, RoughText } from "../rough";
 import tinycolor from "tinycolor2";
 import { assertNever, clamp } from "../../../shared/util";
 import { useMyself } from "../../myself";
@@ -21,14 +21,14 @@ import { hoveredMapObjectsFamily } from "./Map";
 import { selectedMapObjectsFamily, tokenFamily } from "./MapContainer";
 
 export const MapToken = React.memo<{
-  object: RRTokenOnMap;
+  object: RRToken;
   canStartMoving: boolean;
   onStartMove: (o: RRMapObject, e: React.MouseEvent) => void;
   auraArea: SVGGElement | null;
   healthbarArea: SVGGElement | null;
   zoom: number;
   contrastColor: string;
-  setHP: (tokenId: RRTokenID, hp: number) => void;
+  setHP: (tokenId: RRCharacterID, hp: number) => void;
 }>(function MapToken({
   object,
   canStartMoving,
@@ -40,7 +40,7 @@ export const MapToken = React.memo<{
   setHP: _setHP,
 }) {
   const myself = useMyself();
-  const token = useRecoilValue(tokenFamily(object.tokenId));
+  const token = useRecoilValue(tokenFamily(object.characterId));
 
   const isHovered = useRecoilValue(hoveredMapObjectsFamily(object.id));
   const isSelected = useRecoilValue(selectedMapObjectsFamily(object.id));
@@ -146,15 +146,16 @@ function Aura({
 }: {
   x: number;
   y: number;
-  token: RRToken;
+  token: RRCharacter;
   aura: RRAura;
   myself: RRPlayer;
 }) {
   if (
-    (aura.visibility === "playerOnly" && !myself.tokenIds.includes(token.id)) ||
+    (aura.visibility === "playerOnly" &&
+      !myself.characterIds.includes(token.id)) ||
     (aura.visibility === "playerAndGM" &&
       !myself.isGM &&
-      !myself.tokenIds.includes(token.id))
+      !myself.characterIds.includes(token.id))
   ) {
     return null;
   }
@@ -192,7 +193,7 @@ function Healthbar({
   contrastColor,
   setHP,
 }: {
-  token: RRToken;
+  token: RRCharacter;
   contrastColor: string;
   setHP: (hp: number) => void;
 }) {
