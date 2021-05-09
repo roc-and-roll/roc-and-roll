@@ -85,6 +85,27 @@ export function TokenEditor({
     1000
   );
 
+  const [
+    initiativeModifier,
+    setInitiativeModifier,
+  ] = useOptimisticDebouncedServerUpdate(
+    token.initiativeModifier?.toString(),
+    (initiativeModifierString) => {
+      if (!initiativeModifierString || initiativeModifierString.length === 0) {
+        return updateFunc({
+          id: token.id,
+          changes: { initiativeModifier: null },
+        });
+      }
+      const initiativeModifier = parseInt(initiativeModifierString);
+      if (isNaN(initiativeModifier)) {
+        return;
+      }
+      return updateFunc({ id: token.id, changes: { initiativeModifier } });
+    },
+    1000
+  );
+
   const [auras, setAuras] = useOptimisticDebouncedServerUpdate(
     token.auras,
     (auras) => updateFunc({ id: token.id, changes: { auras } }),
@@ -149,6 +170,17 @@ export function TokenEditor({
             min={1}
             placeholder="max HP"
             onChange={(e) => setMaxHP(e.target.value)}
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          Initiative Modifier:{" "}
+          <input
+            value={initiativeModifier}
+            type="number"
+            placeholder="Mod ..."
+            onChange={(e) => setInitiativeModifier(e.target.value)}
           />
         </label>
       </div>

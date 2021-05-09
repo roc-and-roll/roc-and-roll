@@ -91,6 +91,7 @@ export type RRCharacter = {
   auras: RRAura[];
   hp: number;
   maxHP: number;
+  initiativeModifier: number | null;
   conditions: RRCharacterCondition[];
 
   visibility: "gmOnly" | "everyone";
