@@ -259,6 +259,7 @@ export default function MapContainer() {
         );
       }
 
+      let keyHandled = true;
       switch (e.key) {
         case "Delete": {
           dispatch(
@@ -294,6 +295,14 @@ export default function MapContainer() {
         case "ArrowDown":
           move((position) => ({ x: position.x, y: position.y + GRID_SIZE }));
           break;
+        default:
+          keyHandled = false;
+          break;
+      }
+
+      if (keyHandled) {
+        e.preventDefault();
+        e.stopPropagation();
       }
     },
     [dispatch, map.id, setLocalObjectsOnMap]
