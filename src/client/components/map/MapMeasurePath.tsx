@@ -60,7 +60,7 @@ export const MapMeasurePath = React.memo<{
     ephermalPlayersFamily(ephermalPlayerId)
   );
 
-  const path = overwritePath ?? ephermalPlayer?.tokenPath ?? [];
+  const path = overwritePath ?? ephermalPlayer?.measurePath ?? [];
   if (path.length === 0) {
     return null;
   }

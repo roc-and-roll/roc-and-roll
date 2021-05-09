@@ -59,6 +59,7 @@ import { useStateWithRef } from "../../useRefState";
 import { Debouncer, useDebounce } from "../../debounce";
 import { useRRSettings } from "../../settings";
 import { assertNever } from "../../../shared/util";
+import { ephermalPlayerUpdate } from "../../../shared/actions";
 
 type Rectangle = [number, number, number, number];
 
@@ -92,6 +93,7 @@ enum MouseAction {
   SELECTION_AREA,
   MOVE_MAP_OBJECT,
   USE_TOOL,
+  MEASURE,
 }
 
 export const globalToLocal = (transform: Matrix, p: RRPoint) => {
@@ -136,8 +138,8 @@ export const RRMapView = React.memo<{
   onSetHP: (tokenId: RRTokenID, hp: number) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
   players: EntityCollection<RRPlayer>;
-  tokenPathDebounce: Debouncer;
-  onUpdateTokenPath: (path: RRPoint[]) => void;
+  measurePathDebounce: Debouncer;
+  onUpdateMeasurePath: (path: RRPoint[]) => void;
   onMousePositionChanged: (position: RRPoint) => void;
   toolHandler: MapMouseHandler;
   toolButtonState: ToolButtonState;
@@ -151,8 +153,8 @@ export const RRMapView = React.memo<{
   onMoveMapObjects,
   transformRef,
   players,
-  tokenPathDebounce,
-  onUpdateTokenPath,
+  measurePathDebounce,
+  onUpdateMeasurePath,
   onMousePositionChanged,
   toolButtonState,
   toolHandler,
@@ -185,15 +187,15 @@ export const RRMapView = React.memo<{
 
   const [selectionArea, setSelectionArea] = useState<Rectangle | null>(null);
 
-  const [tokenPath, tokenPathRef, setTokenPath] = useStateWithRef<RRPoint[]>(
-    []
-  );
+  const [measurePath, measurePathRef, setMeasurePath] = useStateWithRef<
+    RRPoint[]
+  >([]);
 
-  const syncTokenPath = useDebounce(onUpdateTokenPath, tokenPathDebounce);
+  const syncMeasurePath = useDebounce(onUpdateMeasurePath, measurePathDebounce);
 
   useEffect(() => {
-    syncTokenPath(tokenPath);
-  }, [tokenPath, syncTokenPath]);
+    syncMeasurePath(measurePath);
+  }, [measurePath, syncMeasurePath]);
 
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -235,9 +237,9 @@ export const RRMapView = React.memo<{
 
   const addPointToPath = useCallback(
     (p: RRPoint) => {
-      const path = tokenPathRef.current;
+      const path = measurePathRef.current;
       const gridPosition = pointScale(snapPointToGrid(p), 1 / GRID_SIZE);
-      if (path.length < 1) return setTokenPath([gridPosition]);
+      if (path.length < 1) return setMeasurePath([gridPosition]);
 
       // to make moving along a diagonal easier, we only count hits that are not on the corners
       const radius = (GRID_SIZE * 0.8) / 2;
@@ -265,18 +267,18 @@ export const RRMapView = React.memo<{
           path.length > 1 &&
           path.slice(1).some((p) => pointEquals(p, gridPosition))
         ) {
-          setTokenPath(
+          setMeasurePath(
             path.slice(0, path.findIndex((p) => pointEquals(p, gridPosition))!)
           );
         } else {
-          setTokenPath([
+          setMeasurePath([
             ...path,
             ...pointsToReach(path[path.length - 1]!, gridPosition),
           ]);
         }
       }
     },
-    [setTokenPath, tokenPathRef]
+    [setMeasurePath, measurePathRef]
   );
 
   const handleMouseMove = useRecoilCallback(
@@ -321,6 +323,30 @@ export const RRMapView = React.memo<{
           onMoveMapObjects(pointScale(frameDelta, 1 / transformRef.current.a));
           break;
         }
+        case MouseAction.MEASURE: {
+          const innerLocal = globalToLocal(transformRef.current, {
+            x,
+            y,
+          });
+          const pointsInPath = (from: RRPoint, to: RRPoint) => {
+            const points: RRPoint[] = [from];
+            while (!pointEquals(from, to)) {
+              const step = pointSign(pointSubtract(to, from));
+              from = pointAdd(from, step);
+              points.push(from);
+            }
+            return points;
+          };
+          setMeasurePath((measurePath) => {
+            if (measurePath.length === 0) return measurePath;
+            return pointsInPath(
+              measurePath[0]!,
+              pointScale(snapPointToGrid(innerLocal), 1 / GRID_SIZE)
+            );
+          });
+          break;
+        }
+
         case MouseAction.USE_TOOL: {
           toolHandler.onMouseMove(
             globalToLocal(transformRef.current, { x, y })
@@ -334,11 +360,10 @@ export const RRMapView = React.memo<{
       }
     },
     [
-      setTransform,
       transformRef,
-      setSelectionArea,
       addPointToPath,
       onMoveMapObjects,
+      setMeasurePath,
       toolHandler,
     ]
   );
@@ -354,6 +379,8 @@ export const RRMapView = React.memo<{
           : e.button === TOOL_BUTTON
           ? toolButtonState === "select"
             ? MouseAction.SELECTION_AREA
+            : toolButtonState === "measure"
+            ? MouseAction.MEASURE
             : MouseAction.USE_TOOL
           : MouseAction.NONE;
 
@@ -379,9 +406,19 @@ export const RRMapView = React.memo<{
         ]);
       } else if (newMouseAction === MouseAction.USE_TOOL) {
         toolHandler.onMouseDown(innerLocal);
+      } else if (newMouseAction === MouseAction.MEASURE) {
+        setMeasurePath([
+          pointScale(snapPointToGrid(innerLocal), 1 / GRID_SIZE),
+        ]);
       }
     },
-    [settings.renderMode, toolButtonState, toolHandler, transformRef]
+    [
+      setMeasurePath,
+      settings.renderMode,
+      toolButtonState,
+      toolHandler,
+      transformRef,
+    ]
   );
 
   const updateHoveredMapObjects = useRecoilCallback(
@@ -451,7 +488,7 @@ export const RRMapView = React.memo<{
   const handleMouseUp = useRecoilCallback(
     ({ snapshot }) => (e: MouseEvent) => {
       if (mouseActionRef.current === MouseAction.MOVE_MAP_OBJECT) {
-        setTokenPath([]);
+        setMeasurePath([]);
         dragStartIdRef.current = null;
       }
       if (mouseActionRef.current === MouseAction.SELECTION_AREA) {
@@ -467,6 +504,9 @@ export const RRMapView = React.memo<{
           globalToLocal(transformRef.current, localCoords(e))
         );
       }
+      if (mouseActionRef.current === MouseAction.MEASURE) {
+        setMeasurePath([]);
+      }
       if (
         mouseActionRef.current === MouseAction.PAN &&
         settings.renderMode === "mostly-fancy"
@@ -477,7 +517,7 @@ export const RRMapView = React.memo<{
     },
     [
       settings.renderMode,
-      setTokenPath,
+      setMeasurePath,
       setSelectedMapObjectIds,
       toolHandler,
       transformRef,
@@ -615,7 +655,7 @@ export const RRMapView = React.memo<{
           )}
           <MeasurePaths
             myId={myself.id}
-            myTokenPath={tokenPath}
+            myMeasurePath={measurePath}
             mapId={mapId}
             zoom={transform.a}
             backgroundColor={backgroundColor}
@@ -636,14 +676,14 @@ export const RRMapView = React.memo<{
 
 function MeasurePaths({
   myId,
-  myTokenPath,
+  myMeasurePath,
   mapId,
   zoom,
   backgroundColor,
   players,
 }: {
   myId: RRPlayerID;
-  myTokenPath: RRPoint[];
+  myMeasurePath: RRPoint[];
   mapId: RRMapID;
   zoom: number;
   backgroundColor: string;
@@ -664,7 +704,9 @@ function MeasurePaths({
             zoom={zoom}
             color={player.color}
             mapBackgroundColor={backgroundColor}
-            overwritePath={ephermalPlayerId === myId ? myTokenPath : undefined}
+            overwritePath={
+              ephermalPlayerId === myId ? myMeasurePath : undefined
+            }
           />
         );
       })}

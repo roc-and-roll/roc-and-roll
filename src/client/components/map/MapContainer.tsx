@@ -54,7 +54,7 @@ import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
-export type ToolButtonState = "select" | "tool";
+export type ToolButtonState = "select" | "tool" | "measure";
 
 export type MapEditState =
   | { tool: "move"; updateColor: RRColor }
@@ -305,13 +305,13 @@ export default function MapContainer() {
     true
   );
 
-  const updateTokenPath = useCallback(
-    (tokenPath: RRPoint[]) =>
+  const updateMeasurePath = useCallback(
+    (measurePath: RRPoint[]) =>
       dispatch(
         ephermalPlayerUpdate({
           id: myself.id,
           changes: {
-            tokenPath,
+            measurePath,
           },
         })
       ),
@@ -325,8 +325,9 @@ export default function MapContainer() {
       ? "select"
       : editState.tool === "draw"
       ? "tool"
-      : // TODO adapt for measure
-        "select";
+      : editState.tool === "measure"
+      ? "measure"
+      : "select";
 
   const toolHandler = useMapToolHandler(myself, map, editState, transformRef);
 
@@ -406,10 +407,10 @@ export default function MapContainer() {
         toolButtonState={toolButtonState}
         toolHandler={toolHandler}
         // mouse position and token path sync
-        tokenPathDebounce={syncedDebounce.current}
+        measurePathDebounce={syncedDebounce.current}
         onMousePositionChanged={sendMousePositionToServer}
         players={players}
-        onUpdateTokenPath={updateTokenPath}
+        onUpdateMeasurePath={updateMeasurePath}
         // zoom and position
         transformRef={transformRef}
         // map objects
