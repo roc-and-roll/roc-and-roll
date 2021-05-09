@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { useRecoilValue } from "recoil";
-import { mapUpdate } from "../../shared/actions";
+import { useRecoilCallback, useRecoilValue } from "recoil";
+import { mapObjectUpdate, mapUpdate } from "../../shared/actions";
 import { RRMap, RRPlayer } from "../../shared/state";
-import { useOptimisticDebouncedServerUpdate } from "../state";
+import {
+  useOptimisticDebouncedServerUpdate,
+  useServerDispatch,
+} from "../state";
 import useLocalState from "../useLocalState";
 import {
   MapEditState,
+  mapObjectsFamily,
   MapSnap,
   selectedMapObjectIdsAtom,
 } from "./map/MapContainer";
@@ -28,6 +32,7 @@ export const MapToolbar = React.memo<{
   const [snap, setSnap] = useLocalState<MapSnap>("map/toolbar/snap", "grid");
 
   const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom);
+  const dispatch = useServerDispatch();
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -68,6 +73,34 @@ export const MapToolbar = React.memo<{
     );
   }, [tool, drawColor, drawType, snap, setEditState]);
 
+  const updateLock = useRecoilCallback(({ snapshot }) => () => {
+    const lockedState = snapshot
+      .getLoadable(selectedMapObjectIdsAtom)
+      .getValue()
+      .some((id) => {
+        const object = snapshot.getLoadable(mapObjectsFamily(id)).getValue();
+        if (!object || object.type === "token") return false;
+        return !object.locked;
+      });
+    dispatch(
+      snapshot
+        .getLoadable(selectedMapObjectIdsAtom)
+        .getValue()
+        .flatMap((selectedMapObjectId) => {
+          if (
+            snapshot
+              .getLoadable(mapObjectsFamily(selectedMapObjectId))
+              .getValue()?.type === "token"
+          )
+            return [];
+          return mapObjectUpdate(map.id, {
+            id: selectedMapObjectId,
+            changes: { locked: lockedState },
+          });
+        })
+    );
+  });
+
   return (
     <div className="map-toolbar">
       <Button
@@ -89,7 +122,10 @@ export const MapToolbar = React.memo<{
         measure
       </Button>
       {tool === "move" && selectedMapObjectIds.length > 0 && (
-        <ColorInput value={drawColor} onChange={setDrawColor} />
+        <>
+          <ColorInput value={drawColor} onChange={setDrawColor} />
+          <Button onClick={updateLock}>lock</Button>
+        </>
       )}
       {tool === "draw" && (
         <>

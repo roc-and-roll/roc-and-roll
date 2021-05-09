@@ -255,12 +255,17 @@ export default function MapContainer() {
           snapshot
             .getLoadable(selectedMapObjectIdsAtom)
             .getValue()
-            .map((selectedMapObjectId) =>
-              mapObjectUpdate(map.id, {
-                id: selectedMapObjectId,
-                changes: { color },
-              })
-            )
+            .flatMap((selectedMapObjectId) => {
+              const object = snapshot
+                .getLoadable(mapObjectsFamily(selectedMapObjectId))
+                .getValue();
+              if (object && object.type !== "token" && !object.locked) {
+                return mapObjectUpdate(map.id, {
+                  id: selectedMapObjectId,
+                  changes: { color },
+                });
+              } else return [];
+            })
         );
       }
     },
@@ -354,7 +359,7 @@ export default function MapContainer() {
                 localObjectsOnMap.entities,
                 selectedMapObjectId
               );
-              if (object) {
+              if (object && (object.type === "token" || !object.locked)) {
                 setById(updatedLocalObjectsOnMap, object.id, {
                   ...object,
                   position: pointAdd(object.position, d),
