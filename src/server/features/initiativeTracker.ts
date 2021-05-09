@@ -3,9 +3,9 @@ import {
   initiativeTrackerSetVisible,
   initiativeTrackerSetCurrentEntry,
   initiativeTrackerEntryRemove,
-  initiativeTrackerEntryTokenAdd,
+  initiativeTrackerEntryCharacterAdd,
   initiativeTrackerEntryLairActionAdd,
-  initiativeTrackerEntryTokenUpdate,
+  initiativeTrackerEntryCharacterUpdate,
   initiativeTrackerEntryLairActionUpdate,
 } from "../../shared/actions";
 import {
@@ -13,7 +13,7 @@ import {
   InitiativeTrackerSyncedState,
   RRInitiativeTrackerEntry,
   RRInitiativeTrackerEntryLairAction,
-  RRInitiativeTrackerEntryToken,
+  RRInitiativeTrackerEntryCharacter,
 } from "../../shared/state";
 
 // Automatically sort all entries by their initiative
@@ -30,7 +30,7 @@ const config = {
 const initiativeTrackerEntryAdapter = createEntityAdapter<RRInitiativeTrackerEntry>(
   config
 );
-const initiativeTrackerEntryTokenAdapter = createEntityAdapter<RRInitiativeTrackerEntryToken>(
+const initiativeTrackerEntryCharacterAdapter = createEntityAdapter<RRInitiativeTrackerEntryCharacter>(
   config
 );
 const initiativeTrackerEntryLairActionAdapter = createEntityAdapter<RRInitiativeTrackerEntryLairAction>(
@@ -42,16 +42,16 @@ const initiativeTrackerEntriesReducer = createReducer(
   (builder) => {
     builder
       .addCase(
-        initiativeTrackerEntryTokenAdd,
-        initiativeTrackerEntryTokenAdapter.addOne
+        initiativeTrackerEntryCharacterAdd,
+        initiativeTrackerEntryCharacterAdapter.addOne
       )
       .addCase(
         initiativeTrackerEntryLairActionAdd,
         initiativeTrackerEntryLairActionAdapter.addOne
       )
       .addCase(
-        initiativeTrackerEntryTokenUpdate,
-        initiativeTrackerEntryTokenAdapter.updateOne
+        initiativeTrackerEntryCharacterUpdate,
+        initiativeTrackerEntryCharacterAdapter.updateOne
       )
       .addCase(
         initiativeTrackerEntryLairActionUpdate,

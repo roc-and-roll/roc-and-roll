@@ -5,7 +5,7 @@ import {
   mapObjectAdd,
   mapObjectRemove,
   mapObjectUpdate,
-  tokenUpdate,
+  characterUpdate,
 } from "../../../shared/actions";
 import {
   byId,
@@ -18,8 +18,8 @@ import {
   RRMapObjectID,
   RRPlayerID,
   RRPoint,
-  RRToken,
-  RRTokenID,
+  RRCharacter,
+  RRCharacterID,
   setById,
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
@@ -87,12 +87,12 @@ export const mapObjectIdsAtom = atom<RRMapObjectID[]>({
   default: [],
 });
 
-export const tokenFamily = atomFamily<RRToken | null, RRTokenID>({
+export const tokenFamily = atomFamily<RRCharacter | null, RRCharacterID>({
   key: "Token",
   default: null,
 });
 
-export const tokenIdsAtom = atom<RRTokenID[]>({
+export const tokenIdsAtom = atom<RRCharacterID[]>({
   key: "TokenIds",
   default: [],
 });
@@ -122,7 +122,7 @@ export default function MapContainer() {
   const transformRef = useRef<Matrix>(identity());
 
   const dropRef2 = useRef<HTMLDivElement>(null);
-  const [, dropRef1] = useDrop<RRToken, void, never>(
+  const [, dropRef1] = useDrop<RRCharacter, void, never>(
     () => ({
       accept: "token",
       drop: (item, monitor) => {
@@ -142,7 +142,7 @@ export default function MapContainer() {
               })
             ),
             playerId: myself.id,
-            tokenId: item.id,
+            characterId: item.id,
           })
         );
       },
@@ -332,8 +332,8 @@ export default function MapContainer() {
   const toolHandler = useMapToolHandler(myself, map, editState, transformRef);
 
   const onSetHP = useCallback(
-    (tokenId: RRTokenID, hp: number) => {
-      dispatch(tokenUpdate({ id: tokenId, changes: { hp } }));
+    (tokenId: RRCharacterID, hp: number) => {
+      dispatch(characterUpdate({ id: tokenId, changes: { hp } }));
     },
     [dispatch]
   );
@@ -482,7 +482,7 @@ function ReduxToRecoilBridge({
   );
   useReduxToRecoilBridge(
     "tokens",
-    useServerState((s) => s.tokens),
+    useServerState((s) => s.characters),
     tokenIdsAtom,
     tokenFamily
   );

@@ -1,9 +1,17 @@
 import { useCallback, useState } from "react";
-import { RRFile } from "../shared/state";
+import { RRAsset, RRFile } from "../shared/state";
 import { apiHost } from "./util";
 
 export function fileUrl(file: RRFile) {
-  return `${apiHost()}/files/${encodeURIComponent(file.filename)}`;
+  return _fileUrl(file.filename);
+}
+
+function _fileUrl(filename: string) {
+  return `${apiHost()}/files/${encodeURIComponent(filename)}`;
+}
+
+export function assetUrl(a: RRAsset) {
+  return a.external ? a.filenameOrUrl : _fileUrl(a.filenameOrUrl);
 }
 
 export function tokenImageUrl(file: RRFile, size: number, zoom: number = 1) {

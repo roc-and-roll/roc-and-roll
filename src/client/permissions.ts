@@ -1,13 +1,13 @@
-import { RRMapObject, RRPlayer, RRToken } from "../shared/state";
+import { RRMapObject, RRPlayer, RRCharacter } from "../shared/state";
 
-export const canControlToken = (token: RRToken, player: RRPlayer) => {
-  return player.isGM || player.tokenIds.includes(token.id);
+export const canControlToken = (token: RRCharacter, player: RRPlayer) => {
+  return player.isGM || player.characterIds.includes(token.id);
 };
 
 export const canControlMapObject = (object: RRMapObject, player: RRPlayer) => {
   return object.playerId === player.id || player.isGM;
 };
 
-export const canViewTokenOnMap = (token: RRToken, player: RRPlayer) => {
+export const canViewTokenOnMap = (token: RRCharacter, player: RRPlayer) => {
   return token.visibility === "everyone" || canControlToken(token, player);
 };

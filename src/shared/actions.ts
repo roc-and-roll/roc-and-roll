@@ -6,7 +6,7 @@ import {
   RRID,
   RRInitiativeTrackerEntry,
   RRInitiativeTrackerEntryLairAction,
-  RRInitiativeTrackerEntryToken,
+  RRInitiativeTrackerEntryCharacter,
   RRLogEntry,
   RRLogEntryDiceRoll,
   RRLogEntryMessage,
@@ -18,12 +18,14 @@ import {
   RRPrivateChat,
   RRPrivateChatID,
   RRPrivateChatMessage,
-  RRToken,
-  RRTokenID,
+  RRCharacter,
+  RRCharacterID,
   RRMapObjectID,
   RRDiceTemplate,
   RRLogEntryAchievement,
   RRActiveSong,
+  RRImage,
+  RRSong,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -46,27 +48,50 @@ export const playerAdd = createAction(
 
 export const playerUpdate = createAction<Update<RRPlayer>>("player/update");
 
-export const playerUpdateAddTokenId = createAction<{
+export const playerUpdateAddCharacterId = createAction<{
   id: RRPlayer["id"];
-  tokenId: RRTokenID;
-}>("player/update/tokenid");
+  characterId: RRCharacterID;
+}>("player/update/characterid");
 
 export const playerRemove = createAction<RRPlayer["id"]>("player/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
-// Tokens
+// Characters
 ////////////////////////////////////////////////////////////////////////////////
 
-export const tokenAdd = createAction(
-  "token/add",
-  (token: Omit<RRToken, "id">): { payload: RRToken } => ({
-    payload: { id: rrid<RRToken>(), ...token },
+export const characterAdd = createAction(
+  "character/add",
+  (character: Omit<RRCharacter, "id">): { payload: RRCharacter } => ({
+    payload: { id: rrid<RRCharacter>(), ...character },
   })
 );
 
-export const tokenUpdate = createAction<Update<RRToken>>("token/update");
+export const characterUpdate = createAction<Update<RRCharacter>>(
+  "character/update"
+);
 
-export const tokenRemove = createAction<RRToken["id"]>("token/remove");
+export const characterRemove = createAction<RRCharacter["id"]>(
+  "character/remove"
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// Character Templates
+////////////////////////////////////////////////////////////////////////////////
+
+export const characterTemplateAdd = createAction(
+  "characterTemplate/add",
+  (character: Omit<RRCharacter, "id">): { payload: RRCharacter } => ({
+    payload: { id: rrid<RRCharacter>(), ...character },
+  })
+);
+
+export const characterTemplateUpdate = createAction<Update<RRCharacter>>(
+  "characterTemplate/update"
+);
+
+export const characterTemplateRemove = createAction<RRCharacter["id"]>(
+  "characterTemplate/remove"
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Maps
@@ -256,14 +281,17 @@ export const initiativeTrackerSetCurrentEntry = createAction<
   InitiativeTrackerSyncedState["currentEntryId"]
 >("initiativeTracker/currentEntryId");
 
-export const initiativeTrackerEntryTokenAdd = createAction(
-  "initiativetracker/entry/token/add",
+export const initiativeTrackerEntryCharacterAdd = createAction(
+  "initiativetracker/entry/character/add",
   (
-    initiativetrackerEntry: Omit<RRInitiativeTrackerEntryToken, "id" | "type">
-  ): { payload: RRInitiativeTrackerEntryToken } => ({
+    initiativetrackerEntry: Omit<
+      RRInitiativeTrackerEntryCharacter,
+      "id" | "type"
+    >
+  ): { payload: RRInitiativeTrackerEntryCharacter } => ({
     payload: {
-      id: rrid<RRInitiativeTrackerEntryToken>(),
-      type: "token",
+      id: rrid<RRInitiativeTrackerEntryCharacter>(),
+      type: "character",
       ...initiativetrackerEntry,
     },
   })
@@ -285,9 +313,9 @@ export const initiativeTrackerEntryLairActionAdd = createAction(
   })
 );
 
-export const initiativeTrackerEntryTokenUpdate = createAction<
-  Update<RRInitiativeTrackerEntryToken>
->("initiativetracker/entry/token/update");
+export const initiativeTrackerEntryCharacterUpdate = createAction<
+  Update<RRInitiativeTrackerEntryCharacter>
+>("initiativetracker/entry/character/update");
 
 export const initiativeTrackerEntryLairActionUpdate = createAction<
   Update<RRInitiativeTrackerEntryLairAction>
@@ -335,4 +363,26 @@ export const diceTemplateUpdate = createAction<Update<RRDiceTemplate>>(
 
 export const diceTemplateRemove = createAction<RRDiceTemplate["id"]>(
   "diceTemplate/remove"
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// Asset state
+////////////////////////////////////////////////////////////////////////////////
+
+export const assetSongAdd = createAction<RRSong>("asset/song/add");
+
+export const assetImageAdd = createAction<RRImage>("asset/image/add");
+
+export const assetSongUpdate = createAction<Update<RRSong>>(
+  "asset/song/update"
+);
+
+export const assetImageUpdate = createAction<Update<RRImage>>(
+  "asset/image/update"
+);
+
+export const assetSongRemove = createAction<RRSong["id"]>("asset/song/remove");
+
+export const assetImageRemove = createAction<RRImage["id"]>(
+  "asset/image/remove"
 );

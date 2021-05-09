@@ -3,7 +3,7 @@ import {
   playerAdd,
   playerRemove,
   playerUpdate,
-  playerUpdateAddTokenId,
+  playerUpdateAddCharacterId,
 } from "../../shared/actions";
 import {
   byId,
@@ -20,12 +20,12 @@ export const playersReducer = createReducer(
     builder
       .addCase(playerAdd, playersAdapter.addOne)
       .addCase(playerUpdate, playersAdapter.updateOne)
-      .addCase(playerUpdateAddTokenId, (state, action) => {
+      .addCase(playerUpdateAddCharacterId, (state, action) => {
         const player = byId(
           (state as PlayersSyncedState).entities,
           action.payload.id
         );
-        player?.tokenIds.push(action.payload.tokenId);
+        player?.characterIds.push(action.payload.characterId);
       })
       .addCase(playerRemove, playersAdapter.removeOne);
   }

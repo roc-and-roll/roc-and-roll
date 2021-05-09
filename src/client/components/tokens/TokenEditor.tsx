@@ -1,15 +1,15 @@
 import React, { useRef, useEffect } from "react";
-import { tokenUpdate, tokenRemove } from "../../shared/actions";
-import { randomColor } from "../../shared/colors";
-import { RRToken } from "../../shared/state";
-import { useFileUpload } from "../files";
+import { characterUpdate, characterRemove } from "../../../shared/actions";
+import { randomColor } from "../../../shared/colors";
+import { RRCharacter } from "../../../shared/state";
+import { useFileUpload } from "../../files";
 import {
   useServerDispatch,
   useOptimisticDebouncedServerUpdate,
-} from "../state";
-import { Button } from "./ui/Button";
-import { ColorInput } from "./ui/ColorInput";
-import { Select } from "./ui/Select";
+} from "../../state";
+import { Button } from "../ui/Button";
+import { ColorInput } from "../ui/ColorInput";
+import { Select } from "../ui/Select";
 
 export function TokenEditor({
   token,
@@ -17,7 +17,7 @@ export function TokenEditor({
   onClose,
   onNameFirstEdited,
 }: {
-  token: RRToken;
+  token: RRCharacter;
   onClose: () => void;
   wasJustCreated: boolean;
   onNameFirstEdited: () => void;
@@ -31,14 +31,14 @@ export function TokenEditor({
   const updateImage = async () => {
     const uploadedFiles = await upload(fileInput.current!.files);
     dispatch(
-      tokenUpdate({ id: token.id, changes: { image: uploadedFiles[0]! } })
+      characterUpdate({ id: token.id, changes: { image: uploadedFiles[0]! } })
     );
     fileInput.current!.value = "";
   };
 
   const [name, setName] = useOptimisticDebouncedServerUpdate(
     token.name,
-    (name) => tokenUpdate({ id: token.id, changes: { name } }),
+    (name) => characterUpdate({ id: token.id, changes: { name } }),
     1000
   );
 
@@ -49,7 +49,7 @@ export function TokenEditor({
       if (isNaN(scale)) {
         return;
       }
-      return tokenUpdate({ id: token.id, changes: { scale } });
+      return characterUpdate({ id: token.id, changes: { scale } });
     },
     1000
   );
@@ -61,7 +61,7 @@ export function TokenEditor({
       if (isNaN(hp)) {
         return;
       }
-      return tokenUpdate({ id: token.id, changes: { hp } });
+      return characterUpdate({ id: token.id, changes: { hp } });
     },
     1000
   );
@@ -73,14 +73,14 @@ export function TokenEditor({
       if (isNaN(maxHP)) {
         return;
       }
-      return tokenUpdate({ id: token.id, changes: { maxHP } });
+      return characterUpdate({ id: token.id, changes: { maxHP } });
     },
     1000
   );
 
   const [auras, setAuras] = useOptimisticDebouncedServerUpdate(
     token.auras,
-    (auras) => tokenUpdate({ id: token.id, changes: { auras } }),
+    (auras) => characterUpdate({ id: token.id, changes: { auras } }),
     1000
   );
 
@@ -95,7 +95,7 @@ export function TokenEditor({
   }, [name, onNameFirstEdited, wasJustCreated]);
 
   const remove = () => {
-    dispatch(tokenRemove(token.id));
+    dispatch(characterRemove(token.id));
     onClose();
   };
 
