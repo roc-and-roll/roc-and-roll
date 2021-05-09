@@ -59,7 +59,6 @@ import { useStateWithRef } from "../../useRefState";
 import { Debouncer, useDebounce } from "../../debounce";
 import { useRRSettings } from "../../settings";
 import { assertNever } from "../../../shared/util";
-import { ephermalPlayerUpdate } from "../../../shared/actions";
 
 type Rectangle = [number, number, number, number];
 

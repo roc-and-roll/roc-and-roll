@@ -32,7 +32,7 @@ import { Button } from "./ui/Button";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { useRecoilValue } from "recoil";
 import { selectedMapObjectIdsAtom } from "./map/MapContainer";
-import { EMPTY_ENTITY_COLLECTION } from "../../shared/util";
+import { EMPTY_ENTITY_COLLECTION, withDo } from "../../shared/util";
 import ReactDOM from "react-dom";
 
 function canEditEntry(
@@ -177,13 +177,29 @@ export function InitiativeTracker() {
     ),
   ];
 
-  const selectionAlreadyInList = entries(initiativeTracker.entries)
-    .flatMap((entry) => (entry.type === "character" ? entry.characterIds : []))
-    .some((id) => selectedTokenIds.includes(id));
+  const characterIdsInTracker = entries(
+    initiativeTracker.entries
+  ).flatMap((entry) => (entry.type === "character" ? entry.characterIds : []));
+  const selectionAlreadyInList = characterIdsInTracker.some((id) =>
+    selectedTokenIds.includes(id)
+  );
   const hasSelection = selectedTokenIds.length !== 0;
 
+  const characters = selectedMapObjectIds.flatMap((id) =>
+    withDo(byId(mapObjects.entities, id), (obj) =>
+      obj?.type === "token"
+        ? byId(tokenCollection.entities, obj.characterId)
+        : []
+    )
+  );
+  const characterModifiers = [
+    ...new Set(characters.map((c) => c?.initiativeModifier)),
+  ];
+  const haveSameModifier =
+    characterModifiers.length === 1 && characterModifiers[0]! !== null;
+
   const roll = () => {
-    const mod = parseInt(modifier);
+    const mod = haveSameModifier ? characterModifiers[0]! : parseInt(modifier);
     const action = logEntryDiceRollAdd(
       rollInitiative(isNaN(mod) ? 0 : mod, "none", myself.id)
     );
@@ -274,10 +290,15 @@ export function InitiativeTracker() {
           Roll Initiative
         </Button>
         <input
-          value={modifier}
+          value={haveSameModifier ? characterModifiers[0]! : modifier}
+          disabled={haveSameModifier}
           onChange={(e) => setModifier(e.target.value)}
           placeholder="mod"
-          title="modifier"
+          title={
+            haveSameModifier
+              ? `Using configured Modifier ${characterModifiers[0]!}`
+              : "Modifier"
+          }
         />
       </div>
       {myself.isGM && (
