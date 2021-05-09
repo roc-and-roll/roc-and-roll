@@ -642,3 +642,9 @@ button.color-picker-color {
     color: #000;
   }
 }
+
+.clearfix:after {
+  content: "";
+  display: table;
+  clear: both;
+}

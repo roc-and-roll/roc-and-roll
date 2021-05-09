@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   playerUpdateAddCharacterId,
   characterAdd,
+  characterTemplateAdd,
 } from "../../../shared/actions";
 import { entries, RRCharacter, RRCharacterID } from "../../../shared/state";
 import { generateRandomToken } from "../../files";
@@ -10,9 +11,8 @@ import { useDrag } from "react-dnd";
 import { useMyself } from "../../myself";
 import { GMArea } from "../GMArea";
 import { Popover } from "../Popover";
-import { GRID_SIZE } from "../../../shared/constants";
 import { Button } from "../ui/Button";
-import { randomName } from "../../../shared/util";
+import { randomName, rrid } from "../../../shared/util";
 import { TokenEditor } from "./TokenEditor";
 import { TokenPreview } from "./TokenPreview";
 
@@ -24,7 +24,6 @@ async function makeNewToken(): Promise<Parameters<typeof characterAdd>[0]> {
     maxHP: 0,
     scale: 1,
     visibility: "everyone",
-    isTemplate: false,
     name: await randomName(),
     image: await generateRandomToken(),
   };
@@ -33,9 +32,6 @@ async function makeNewToken(): Promise<Parameters<typeof characterAdd>[0]> {
 export function TokenManager() {
   const myself = useMyself();
   const tokens = useServerState((s) => s.characters);
-  const [selectedToken, setSelectedToken] = useState<RRCharacterID | null>(
-    null
-  );
   const [newTokenIds, setNewTokenIds] = useState<RRCharacterID[]>([]);
 
   const dispatch = useServerDispatch();
@@ -55,41 +51,35 @@ export function TokenManager() {
         }),
       ]);
       setNewTokenIds((l) => [...l, newToken.id]);
-      setSelectedToken(newToken.id);
     })().finally(() => setIsAddingToken(false));
   };
-
-  const tokenPreview = (t: RRCharacter) => (
-    <EditableTokenPreview
-      token={t}
-      key={t.id}
-      wasJustCreated={newTokenIds.includes(t.id)}
-      onNameFirstEdited={() =>
-        setNewTokenIds((l) => l.filter((id) => id !== t.id))
-      }
-      isSelected={selectedToken === t.id}
-      setSelectedToken={(t) => setSelectedToken(t?.id ?? null)}
-    />
-  );
 
   return (
     <>
       <Button onClick={addToken} disabled={isAddingToken}>
-        Add Token
+        Add Character
       </Button>
+      <TokenList
+        newTokenIds={newTokenIds}
+        setNewTokenIds={setNewTokenIds}
+        tokens={entries(tokens).filter((t) =>
+          myself.characterIds.includes(t.id)
+        )}
+      />
 
-      <div className="token-list">
-        {entries(tokens)
-          .filter((t) => myself.characterIds.includes(t.id))
-          .map(tokenPreview)}
-      </div>
+      {myself.isGM && <TemplateEditor />}
+
       {myself.isGM && (
         <GMArea>
           <h4>Tokens of other players</h4>
           <div className="token-list">
-            {entries(tokens)
-              .filter((t) => !myself.characterIds.includes(t.id))
-              .map(tokenPreview)}
+            <TokenList
+              newTokenIds={newTokenIds}
+              setNewTokenIds={setNewTokenIds}
+              tokens={entries(tokens).filter(
+                (t) => !myself.characterIds.includes(t.id) && !t.localToMap
+              )}
+            />
           </div>
         </GMArea>
       )}
@@ -97,43 +87,113 @@ export function TokenManager() {
   );
 }
 
+function TemplateEditor() {
+  const [newTokenIds, setNewTokenIds] = useState<RRCharacterID[]>([]);
+
+  const dispatch = useServerDispatch();
+
+  const [isAddingToken, setIsAddingToken] = useState(false);
+
+  const addTemplate = () => {
+    setIsAddingToken(true);
+    (async () => {
+      const tokenAddAction = characterTemplateAdd(await makeNewToken());
+      const newToken = tokenAddAction.payload;
+      dispatch(tokenAddAction);
+      setNewTokenIds((l) => [...l, newToken.id]);
+    })().finally(() => setIsAddingToken(false));
+  };
+
+  const templates = entries(
+    useServerState((state) => state.characterTemplates)
+  );
+
+  return (
+    <GMArea>
+      <div className="clearfix">
+        <Button
+          style={{ float: "right" }}
+          onClick={addTemplate}
+          disabled={isAddingToken}
+        >
+          Add
+        </Button>
+        <h4>Character Templates</h4>
+        <TokenList
+          isTemplate={true}
+          newTokenIds={newTokenIds}
+          setNewTokenIds={setNewTokenIds}
+          tokens={templates}
+        />
+      </div>
+    </GMArea>
+  );
+}
+
+function TokenList({
+  tokens,
+  newTokenIds,
+  setNewTokenIds,
+  isTemplate,
+}: {
+  tokens: RRCharacter[];
+  newTokenIds: RRCharacterID[];
+  setNewTokenIds: React.Dispatch<React.SetStateAction<RRCharacterID[]>>;
+  isTemplate?: boolean;
+}) {
+  const tokenPreview = (t: RRCharacter) => (
+    <EditableTokenPreview
+      token={t}
+      key={t.id}
+      isTemplate={isTemplate}
+      wasJustCreated={newTokenIds.includes(t.id)}
+      onNameFirstEdited={() =>
+        setNewTokenIds((l) => l.filter((id) => id !== t.id))
+      }
+    />
+  );
+
+  return <div className="token-list">{tokens.map(tokenPreview)}</div>;
+}
+
 function EditableTokenPreview({
   token,
-  isSelected,
-  setSelectedToken,
   onNameFirstEdited,
   wasJustCreated,
+  isTemplate,
 }: {
   token: RRCharacter;
-  isSelected: boolean;
-  setSelectedToken: (t: RRCharacter | null) => void;
   onNameFirstEdited: () => void;
   wasJustCreated: boolean;
+  isTemplate?: boolean;
 }) {
-  const [, dragRef] = useDrag<RRCharacter, void, null>(() => ({
-    type: "token",
-    item: token,
+  const [, dragRef] = useDrag<{ id: RRCharacterID }, void, null>(() => ({
+    type: isTemplate ? "tokenTemplate" : "token",
+    item: { id: token.id },
   }));
+
+  const [selected, setSelected] = useState(wasJustCreated);
 
   return (
     <Popover
       content={
         <TokenEditor
+          isTemplate={isTemplate}
           token={token}
           wasJustCreated={wasJustCreated}
           onNameFirstEdited={onNameFirstEdited}
-          onClose={() => setSelectedToken(null)}
+          onClose={() => setSelected(false)}
         />
       }
-      visible={!!isSelected}
-      onClickOutside={() => setSelectedToken(null)}
+      visible={selected}
+      onClickOutside={() => setSelected(false)}
       interactive
       placement="right"
     >
       <div
         ref={dragRef}
         className="token-preview"
-        onClick={() => setSelectedToken(token)}
+        onClick={() => setSelected(true)}
       >
         <p>{token.name}</p>
         <TokenPreview token={token} />
