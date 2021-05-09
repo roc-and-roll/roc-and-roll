@@ -27,7 +27,7 @@ import {
 } from "../state";
 import useLocalState from "../useLocalState";
 import { GMArea } from "./GMArea";
-import { TokenStack } from "./TokenManager";
+import { TokenStack } from "./tokens/TokenPreview";
 import { Button } from "./ui/Button";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { useRecoilValue } from "recoil";

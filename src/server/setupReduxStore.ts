@@ -12,6 +12,7 @@ import {
 } from "./features/ephermal";
 import { diceTemplatesReducer } from "./features/diceTemplate";
 import { assetsReducer } from "./features/assets";
+import { characterTemplatesReducer } from "./features/charactersTemplates";
 
 const options = {
   reducer: {
@@ -21,6 +22,7 @@ const options = {
     initiativeTracker: initiativeTrackerReducer,
     players: playersReducer,
     characters: charactersReducer,
+    characterTemplates: characterTemplatesReducer,
     maps: mapsReducer,
     privateChats: privateChatsReducer,
     logEntries: logEntriesReducer,

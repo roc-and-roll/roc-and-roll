@@ -1,15 +1,15 @@
 import React, { useRef, useEffect } from "react";
-import { characterUpdate, characterRemove } from "../../shared/actions";
-import { randomColor } from "../../shared/colors";
-import { RRCharacter } from "../../shared/state";
-import { useFileUpload } from "../files";
+import { characterUpdate, characterRemove } from "../../../shared/actions";
+import { randomColor } from "../../../shared/colors";
+import { RRCharacter } from "../../../shared/state";
+import { useFileUpload } from "../../files";
 import {
   useServerDispatch,
   useOptimisticDebouncedServerUpdate,
-} from "../state";
-import { Button } from "./ui/Button";
-import { ColorInput } from "./ui/ColorInput";
-import { Select } from "./ui/Select";
+} from "../../state";
+import { Button } from "../ui/Button";
+import { ColorInput } from "../ui/ColorInput";
+import { Select } from "../ui/Select";
 
 export function TokenEditor({
   token,

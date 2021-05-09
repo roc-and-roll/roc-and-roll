@@ -1,16 +1,20 @@
-import React, { useEffect, useState } from "react";
-import { playerUpdateAddCharacterId, characterAdd } from "../../shared/actions";
-import { entries, RRCharacter, RRCharacterID } from "../../shared/state";
-import { generateRandomToken, tokenImageUrl } from "../files";
-import { useServerDispatch, useServerState } from "../state";
+import React, { useState } from "react";
+import {
+  playerUpdateAddCharacterId,
+  characterAdd,
+} from "../../../shared/actions";
+import { entries, RRCharacter, RRCharacterID } from "../../../shared/state";
+import { generateRandomToken } from "../../files";
+import { useServerDispatch, useServerState } from "../../state";
 import { useDrag } from "react-dnd";
-import { useMyself } from "../myself";
-import { GMArea } from "./GMArea";
-import { Popover } from "./Popover";
-import { GRID_SIZE } from "../../shared/constants";
-import { Button } from "./ui/Button";
-import { clamp, randomName } from "../../shared/util";
+import { useMyself } from "../../myself";
+import { GMArea } from "../GMArea";
+import { Popover } from "../Popover";
+import { GRID_SIZE } from "../../../shared/constants";
+import { Button } from "../ui/Button";
+import { randomName } from "../../../shared/util";
 import { TokenEditor } from "./TokenEditor";
+import { TokenPreview } from "./TokenPreview";
 
 async function makeNewToken(): Promise<Parameters<typeof characterAdd>[0]> {
   return {
@@ -135,54 +139,5 @@ function EditableTokenPreview({
         <TokenPreview token={token} />
       </div>
     </Popover>
-  );
-}
-
-export function TokenPreview({ token }: { token: RRCharacter }) {
-  return (
-    <div
-      className="token-image"
-      title={token.name}
-      style={{
-        backgroundImage: token.image
-          ? `url(${tokenImageUrl(token.image, GRID_SIZE)})`
-          : "none",
-      }}
-    />
-  );
-}
-
-export function TokenStack({ tokens }: { tokens: RRCharacter[] }) {
-  const [topIdx, setTopIdx] = useState(0);
-
-  // Allow to click through all tokens
-  const sortedTokens = [...tokens.slice(topIdx), ...tokens.slice(0, topIdx)];
-  useEffect(() => {
-    setTopIdx((old) => clamp(0, old, tokens.length - 1));
-  }, [tokens.length]);
-
-  return (
-    <div
-      className="token-stack"
-      onClick={() =>
-        setTopIdx((old) => (old === 0 ? tokens.length - 1 : old - 1))
-      }
-    >
-      {sortedTokens.map((token, i) => (
-        <div
-          key={token.id}
-          style={{
-            left:
-              tokens.length === 1
-                ? 24 / 2 // center token if there is just one in the stack
-                : i === 0
-                ? 0 // avoid division by 0
-                : i * (24 / (tokens.length - 1)),
-          }}
-        >
-          <TokenPreview token={token} />
-        </div>
-      ))}
-    </div>
   );
 }

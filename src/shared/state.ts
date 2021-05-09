@@ -272,6 +272,7 @@ export interface RRSong extends RRAsset {
 
 export interface RRImage extends RRAsset {
   type: "image";
+  // TODO: evaluate if this is necessary
   originalFunction: "token" | "map";
 }
 
@@ -292,6 +293,8 @@ export interface InitiativeTrackerSyncedState {
 export type PlayersSyncedState = EntityCollection<RRPlayer>;
 
 export type CharactersSyncedState = EntityCollection<RRCharacter>;
+
+export type CharacterTemplatesSyncedState = EntityCollection<RRCharacter>;
 
 export type MapsSyncedState = EntityCollection<RRMap>;
 
@@ -330,6 +333,7 @@ export interface SyncedState {
   initiativeTracker: InitiativeTrackerSyncedState;
   players: PlayersSyncedState;
   characters: CharactersSyncedState;
+  characterTemplates: CharacterTemplatesSyncedState;
   maps: MapsSyncedState;
   privateChats: PrivateChatsSyncedState;
   logEntries: LogEntriesSyncedState;
@@ -365,6 +369,10 @@ export const initialSyncedState: SyncedState = {
     ids: [],
   },
   characters: {
+    entities: {},
+    ids: [],
+  },
+  characterTemplates: {
     entities: {},
     ids: [],
   },

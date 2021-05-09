@@ -75,6 +75,25 @@ export const characterRemove = createAction<RRCharacter["id"]>(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
+// Character Templates
+////////////////////////////////////////////////////////////////////////////////
+
+export const characterTemplateAdd = createAction(
+  "characterTemplate/add",
+  (character: Omit<RRCharacter, "id">): { payload: RRCharacter } => ({
+    payload: { id: rrid<RRCharacter>(), ...character },
+  })
+);
+
+export const characterTemplateUpdate = createAction<Update<RRCharacter>>(
+  "characterTemplate/update"
+);
+
+export const characterTemplateRemove = createAction<RRCharacter["id"]>(
+  "characterTemplate/remove"
+);
+
+////////////////////////////////////////////////////////////////////////////////
 // Maps
 ////////////////////////////////////////////////////////////////////////////////
 
