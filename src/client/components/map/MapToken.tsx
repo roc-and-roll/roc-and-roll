@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { GRID_SIZE } from "../../../shared/constants";
 import {
   RRAura,
@@ -7,6 +7,7 @@ import {
   RRCharacter,
   RRCharacterID,
   RRToken,
+  RRPoint,
 } from "../../../shared/state";
 import { tokenImageUrl } from "../../files";
 import { canControlToken, canViewTokenOnMap } from "../../permissions";
@@ -19,6 +20,9 @@ import { HPInlineEdit } from "./HPInlineEdit";
 import { useRecoilValue } from "recoil";
 import { hoveredMapObjectsFamily } from "./Map";
 import { selectedMapObjectsFamily, tokenFamily } from "./MapContainer";
+import { Popover } from "../Popover";
+import { TokenEditor } from "../tokens/TokenEditor";
+import { pointEquals } from "../../point";
 
 export const MapToken = React.memo<{
   object: RRToken;
@@ -46,6 +50,9 @@ export const MapToken = React.memo<{
   const isSelected = useRecoilValue(selectedMapObjectsFamily(object.id));
   const isSelectedOrHovered = isHovered || isSelected;
 
+  const [editorVisible, setEditorVisible] = useState(false);
+  const firstMouseDownPos = useRef<RRPoint>();
+
   const setHP = useCallback(
     (hp: number) => {
       token?.id && _setHP(token.id, hp);
@@ -55,6 +62,16 @@ export const MapToken = React.memo<{
 
   const handleMouseDown = (e: React.MouseEvent) => {
     onStartMove(object, e);
+    firstMouseDownPos.current = { x: e.clientX, y: e.clientY };
+  };
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (
+      e.button === 2 &&
+      firstMouseDownPos.current &&
+      pointEquals(firstMouseDownPos.current, { x: e.clientX, y: e.clientY })
+    ) {
+      setEditorVisible(true);
+    }
   };
 
   if (!token || !canViewTokenOnMap(token, myself)) {
@@ -69,6 +86,29 @@ export const MapToken = React.memo<{
   const tokenStyle = canControl ? { cursor: "move" } : {};
 
   const tokenSize = GRID_SIZE * token.scale;
+  const tokenRepresentation = token.image ? (
+    <image
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      x={x}
+      y={y}
+      style={tokenStyle}
+      width={tokenSize}
+      height={tokenSize}
+      href={tokenImageUrl(token.image, tokenSize, Math.ceil(zoom))}
+    />
+  ) : (
+    <circle
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      cx={x + tokenSize / 2}
+      cy={y + tokenSize / 2}
+      r={tokenSize / 2}
+      fill="red"
+      style={tokenStyle}
+    />
+  );
+
   return (
     <>
       {auraArea &&
@@ -102,29 +142,28 @@ export const MapToken = React.memo<{
           </g>,
           healthbarArea
         )}
-      {token.image ? (
-        <image
-          onMouseDown={handleMouseDown}
-          x={x}
-          y={y}
-          style={tokenStyle}
-          width={tokenSize}
-          height={tokenSize}
-          href={tokenImageUrl(token.image, tokenSize, Math.ceil(zoom))}
-        />
-      ) : (
-        <circle
-          onMouseDown={handleMouseDown}
-          cx={x + tokenSize / 2}
-          cy={y + tokenSize / 2}
-          r={tokenSize / 2}
-          fill="red"
-          style={tokenStyle}
-        />
-      )}
+
+      <Popover
+        content={
+          <TokenEditor
+            isTemplate={false}
+            token={token}
+            wasJustCreated={false}
+            onNameFirstEdited={() => {}}
+            onClose={() => setEditorVisible(false)}
+          />
+        }
+        visible={editorVisible}
+        onClickOutside={() => setEditorVisible(false)}
+        interactive
+        placement="right"
+      >
+        {tokenRepresentation}
+      </Popover>
       {isSelectedOrHovered && (
         <circle
           onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
           cx={x + tokenSize / 2}
           cy={y + tokenSize / 2}
           r={tokenSize / 2 - 2}
