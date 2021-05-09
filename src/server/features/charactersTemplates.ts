@@ -6,7 +6,7 @@ import {
 } from "../../shared/actions";
 import { initialSyncedState, RRCharacter } from "../../shared/state";
 
-const characterTemplatesAdapter = createEntityAdapter<RRCharacter>();
+export const characterTemplatesAdapter = createEntityAdapter<RRCharacter>();
 
 export const characterTemplatesReducer = createReducer(
   initialSyncedState.characterTemplates,

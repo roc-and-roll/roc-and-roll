@@ -6,6 +6,7 @@ import {
   mapObjectRemove,
   mapObjectUpdate,
   characterUpdate,
+  characterAdd,
 } from "../../../shared/actions";
 import {
   byId,
@@ -92,8 +93,21 @@ export const tokenFamily = atomFamily<RRCharacter | null, RRCharacterID>({
   default: null,
 });
 
+export const characterTemplateFamily = atomFamily<
+  RRCharacter | null,
+  RRCharacterID
+>({
+  key: "CharacterTemplate",
+  default: null,
+});
+
 export const tokenIdsAtom = atom<RRCharacterID[]>({
   key: "TokenIds",
+  default: [],
+});
+
+export const characterTemplateIdsAtom = atom<RRCharacterID[]>({
+  key: "CharacterTemplateIds",
   default: [],
 });
 
@@ -122,14 +136,42 @@ export default function MapContainer() {
   const transformRef = useRef<Matrix>(identity());
 
   const dropRef2 = useRef<HTMLDivElement>(null);
-  const [, dropRef1] = useDrop<RRCharacter, void, never>(
+
+  const getCharacter = useRecoilCallback(
+    ({ snapshot }) => (id: RRCharacterID) => {
+      return snapshot.getLoadable(tokenFamily(id)).getValue();
+    }
+  );
+
+  const getTemplateCharacter = useRecoilCallback(
+    ({ snapshot }) => (id: RRCharacterID) => {
+      return snapshot.getLoadable(characterTemplateFamily(id)).getValue();
+    }
+  );
+
+  const [, dropRef1] = useDrop<{ id: RRCharacterID }, void, never>(
     () => ({
-      accept: "token",
-      drop: (item, monitor) => {
+      accept: ["token", "tokenTemplate"],
+      drop: ({ id: characterId }, monitor) => {
         const topLeft = dropRef2.current!.getBoundingClientRect();
         const dropPosition = monitor.getClientOffset();
         const x = dropPosition!.x - topLeft.x;
         const y = dropPosition!.y - topLeft.y;
+
+        const character =
+          monitor.getItemType() === "tokenTemplate"
+            ? getTemplateCharacter(characterId)
+            : getCharacter(characterId);
+
+        if (!character) return;
+
+        // first create copy
+        if (monitor.getItemType() === "tokenTemplate") {
+          const { id: _, ...copy } = character;
+          characterId = dispatch(
+            characterAdd({ ...copy, visibility: "gmOnly", localToMap: map.id })
+          ).payload.id;
+        }
 
         dispatch(
           mapObjectAdd(map.id, {
@@ -142,12 +184,12 @@ export default function MapContainer() {
               })
             ),
             playerId: myself.id,
-            characterId: item.id,
+            characterId,
           })
         );
       },
     }),
-    [dispatch, map.id, myself.id, transformRef]
+    [dispatch, getCharacter, getTemplateCharacter, map.id, myself.id]
   );
   const dropRef = composeRefs<HTMLDivElement>(dropRef2, dropRef1);
 
@@ -217,14 +259,30 @@ export default function MapContainer() {
         );
       }
 
+      let keyHandled = true;
       switch (e.key) {
-        case "Delete":
+        case "Delete": {
           dispatch(
-            selectedMapObjectIds.map((mapObjectId) =>
-              mapObjectRemove({ mapId: map.id, mapObjectId })
-            )
+            selectedMapObjectIds.map((mapObjectId) => {
+              const mapObject = snapshot
+                .getLoadable(mapObjectsFamily(mapObjectId))
+                .getValue()!;
+              if (mapObject.type === "token") {
+                const character = snapshot
+                  .getLoadable(tokenFamily(mapObject.characterId))
+                  .getValue()!;
+                return mapObjectRemove({
+                  mapId: map.id,
+                  mapObject,
+                  relatedCharacter: character,
+                });
+              } else {
+                return mapObjectRemove({ mapId: map.id, mapObjectId });
+              }
+            })
           );
           break;
+        }
         case "ArrowLeft":
           move((position) => ({ x: position.x - GRID_SIZE, y: position.y }));
           break;
@@ -237,6 +295,14 @@ export default function MapContainer() {
         case "ArrowDown":
           move((position) => ({ x: position.x, y: position.y + GRID_SIZE }));
           break;
+        default:
+          keyHandled = false;
+          break;
+      }
+
+      if (keyHandled) {
+        e.preventDefault();
+        e.stopPropagation();
       }
     },
     [dispatch, map.id, setLocalObjectsOnMap]
@@ -490,6 +556,12 @@ function ReduxToRecoilBridge({
     useServerState((s) => s.characters),
     tokenIdsAtom,
     tokenFamily
+  );
+  useReduxToRecoilBridge(
+    "characterTemplates",
+    useServerState((s) => s.characterTemplates),
+    tokenIdsAtom,
+    characterTemplateFamily
   );
   useReduxToRecoilBridge(
     "ephermal players",

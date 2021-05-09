@@ -94,7 +94,7 @@ export type RRCharacter = {
   conditions: RRCharacterCondition[];
 
   visibility: "gmOnly" | "everyone";
-  isTemplate: boolean;
+  localToMap?: RRMapID;
 };
 
 type RRMapObjectBase = {

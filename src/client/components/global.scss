@@ -642,3 +642,27 @@ button.color-picker-color {
     color: #000;
   }
 }
+
+.clearfix:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.buttons-full-width button,
+.buttons-half-width button {
+  width: 100%;
+}
+
+.buttons-half-width div {
+  width: 50%;
+}
+
+.buttons-half-width {
+  display: flex;
+}
+
+.roll-it-button {
+  width: "100%";
+  height: "150px";
+}
