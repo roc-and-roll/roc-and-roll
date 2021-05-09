@@ -116,7 +116,7 @@ export function Music() {
         onChange={(e) => setFilter(e.target.value)}
         placeholder="search music..."
       />
-      <UploadAudio />
+      <UploadAudio onUploaded={() => setFilter("")} />
       {error}
       <div>
         <strong>- Playing -</strong>
@@ -145,7 +145,7 @@ export function Music() {
   );
 }
 
-function UploadAudio() {
+function UploadAudio({ onUploaded }: { onUploaded: () => void }) {
   const [isUploading, upload] = useFileUpload();
   const dispatch = useServerDispatch();
   const myself = useMyself();
@@ -167,6 +167,7 @@ function UploadAudio() {
           })
         )
       );
+      onUploaded();
     }
   };
 
@@ -236,7 +237,7 @@ function Song({
             ADD
           </div>
           <div className="tabletopaudio-button" onClick={onReplace}>
-            REPLACE
+            PLAY
           </div>
         </>
       )}
