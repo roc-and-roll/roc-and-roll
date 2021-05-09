@@ -12,7 +12,7 @@ import { useMyself } from "../../myself";
 import { GMArea } from "../GMArea";
 import { Popover } from "../Popover";
 import { Button } from "../ui/Button";
-import { randomName, rrid } from "../../../shared/util";
+import { randomName } from "../../../shared/util";
 import { TokenEditor } from "./TokenEditor";
 import { TokenPreview } from "./TokenPreview";
 

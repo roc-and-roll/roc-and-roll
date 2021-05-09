@@ -20,12 +20,13 @@ import {
   RRPrivateChatMessage,
   RRCharacter,
   RRCharacterID,
-  RRMapObjectID,
   RRDiceTemplate,
   RRLogEntryAchievement,
   RRActiveSong,
   RRImage,
   RRSong,
+  RRToken,
+  RRMapObjectID,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -138,10 +139,39 @@ export const mapObjectUpdate = createAction(
   }
 );
 
-export const mapObjectRemove = createAction<{
+interface TokenRemoval {
+  mapId: RRMapID;
+  mapObject: RRToken;
+  relatedCharacter: RRCharacter;
+}
+interface OtherMapObjectRemoval {
   mapId: RRMapID;
   mapObjectId: RRMapObjectID;
-}>("map/object/remove");
+}
+
+function isTokenRemoval(
+  o: TokenRemoval | OtherMapObjectRemoval
+): o is TokenRemoval {
+  return "mapObject" in o;
+}
+
+export const mapObjectRemove = createAction(
+  "map/object/remove",
+  (removal: TokenRemoval | OtherMapObjectRemoval) => {
+    return {
+      payload: {
+        mapId: removal.mapId,
+        mapObjectId: isTokenRemoval(removal)
+          ? removal.mapObject.id
+          : removal.mapObjectId,
+        removeTemplateId:
+          isTokenRemoval(removal) && removal.relatedCharacter.localToMap
+            ? removal.relatedCharacter?.id
+            : null,
+      },
+    };
+  }
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 // PrivateChats

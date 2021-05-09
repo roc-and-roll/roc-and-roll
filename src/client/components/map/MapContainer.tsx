@@ -260,13 +260,28 @@ export default function MapContainer() {
       }
 
       switch (e.key) {
-        case "Delete":
+        case "Delete": {
           dispatch(
-            selectedMapObjectIds.map((mapObjectId) =>
-              mapObjectRemove({ mapId: map.id, mapObjectId })
-            )
+            selectedMapObjectIds.map((mapObjectId) => {
+              const mapObject = snapshot
+                .getLoadable(mapObjectsFamily(mapObjectId))
+                .getValue()!;
+              if (mapObject.type === "token") {
+                const character = snapshot
+                  .getLoadable(tokenFamily(mapObject.characterId))
+                  .getValue()!;
+                return mapObjectRemove({
+                  mapId: map.id,
+                  mapObject,
+                  relatedCharacter: character,
+                });
+              } else {
+                return mapObjectRemove({ mapId: map.id, mapObjectId });
+              }
+            })
           );
           break;
+        }
         case "ArrowLeft":
           move((position) => ({ x: position.x - GRID_SIZE, y: position.y }));
           break;
