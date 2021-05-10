@@ -15,6 +15,7 @@ import { useMyself } from "../myself";
 import { Maps } from "./Maps";
 import { Achievements } from "./Achievements";
 import { Music } from "./Music";
+import { DiceInput } from "./DiceInput";
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
@@ -53,6 +54,7 @@ export function Sidebar({ logout }: { logout: () => void }) {
 
         <Collapsible title="Dice">
           <DiceInterface />
+          <DiceInput />
         </Collapsible>
 
         {myself.isGM && (
