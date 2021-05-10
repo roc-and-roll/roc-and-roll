@@ -5,6 +5,7 @@ import { useRRSettings } from "./settings";
 import { useLatest, useServerState } from "./state";
 import { Howl } from "howler";
 import { assetUrl } from "./files";
+import { LoopPingPong } from "three";
 
 /**
  * Returns a function to play a sound. Might skip playing the sound if howler is
@@ -78,6 +79,7 @@ export function useRRComplexSound(
         howlRef.current = new Howl({
           src: urlRef.current,
           html5: streamSound,
+          loop: loop,
           onplay: () => setState("playing"),
           onpause: () => setState("paused"),
           onstop: () => setState("stopped"),
@@ -93,7 +95,7 @@ export function useRRComplexSound(
       }
       howlRef.current.play();
     },
-    [globalMute, globalVolume, streamSound, urlRef]
+    [globalMute, globalVolume, loop, streamSound, urlRef]
   );
 
   const pause = useCallback(() => {
