@@ -62,6 +62,14 @@ import { assertNever } from "../../../shared/util";
 
 type Rectangle = [number, number, number, number];
 
+export type MapAreas = {
+  imageArea: SVGGElement;
+  auraArea: SVGGElement;
+  defaultArea: SVGGElement;
+  tokenArea: SVGGElement;
+  healthbarArea: SVGGElement;
+};
+
 const PANNING_BUTTON = 2;
 const TOOL_BUTTON = 0;
 
@@ -624,6 +632,26 @@ export const RRMapView = React.memo<{
     }
   }, [settings.renderMode]);
 
+  const [imageArea, setImageArea] = useState<SVGGElement | null>(null);
+  const [auraArea, setAuraArea] = useState<SVGGElement | null>(null);
+  const [defaultArea, setDefaultArea] = useState<SVGGElement | null>(null);
+  const [tokenArea, setTokenArea] = useState<SVGGElement | null>(null);
+  const [healthbarArea, setHealthbarArea] = useState<SVGGElement | null>(null);
+
+  const areas = useMemo(
+    () =>
+      imageArea && auraArea && defaultArea && tokenArea && healthbarArea
+        ? {
+            imageArea: imageArea,
+            auraArea: auraArea,
+            defaultArea: defaultArea,
+            tokenArea: tokenArea,
+            healthbarArea: healthbarArea,
+          }
+        : null,
+    [imageArea, auraArea, defaultArea, tokenArea, healthbarArea]
+  );
+
   return (
     <RoughContextProvider enabled={roughEnabled}>
       <svg
@@ -635,14 +663,23 @@ export const RRMapView = React.memo<{
         onMouseMove={handleMapMouseMove}
       >
         <g transform={toSVG(transform)}>
+          <g ref={setImageArea} />
+          <g ref={setAuraArea} />
+          <g ref={setDefaultArea} />
           {gridEnabled && <MapGrid transform={transform} />}
-          <MapObjects
-            contrastColor={contrastColor}
-            setHP={onSetHP}
-            toolButtonState={toolButtonState}
-            handleStartMoveMapObject={handleStartMoveMapObject}
-            zoom={transform.a}
-          />
+          <g ref={setTokenArea} />
+          <g ref={setHealthbarArea} />
+
+          {areas && (
+            <MapObjects
+              areas={areas}
+              contrastColor={contrastColor}
+              setHP={onSetHP}
+              toolButtonState={toolButtonState}
+              handleStartMoveMapObject={handleStartMoveMapObject}
+              zoom={transform.a}
+            />
+          )}
           {withSelectionAreaDo(
             selectionArea,
             (x, y, w, h) => (

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 import { useRecoilValue } from "recoil";
 import {
@@ -8,6 +8,7 @@ import {
   RRCharacterID,
 } from "../../../shared/state";
 import { assertNever } from "../../../shared/util";
+import { MapAreas } from "./Map";
 import {
   mapObjectIdsAtom,
   mapObjectsFamily,
@@ -17,6 +18,7 @@ import { MapObjectThatIsNotAToken } from "./MapObjectThatIsNotAToken";
 import { MapToken } from "./MapToken";
 
 export const MapObjects = React.memo<{
+  areas: MapAreas;
   contrastColor: RRColor;
   toolButtonState: ToolButtonState;
   zoom: number;
@@ -26,6 +28,7 @@ export const MapObjects = React.memo<{
     event: React.MouseEvent
   ) => void;
 }>(function MapObjects({
+  areas,
   contrastColor,
   toolButtonState,
   zoom,
@@ -35,47 +38,21 @@ export const MapObjects = React.memo<{
   const mapObjectIds = useRecoilValue(mapObjectIdsAtom);
   const canStartMoving = toolButtonState === "select";
 
-  const [imageArea, setImageArea] = useState<SVGGElement | null>(null);
-  const [auraArea, setAuraArea] = useState<SVGGElement | null>(null);
-  const [defaultArea, setDefaultArea] = useState<SVGGElement | null>(null);
-  const [tokenArea, setTokenArea] = useState<SVGGElement | null>(null);
-  const [healthbarArea, setHealthbarArea] = useState<SVGGElement | null>(null);
-
-  const areas = useMemo(
-    () =>
-      imageArea && auraArea && defaultArea && tokenArea && healthbarArea
-        ? {
-            imageArea: imageArea,
-            auraArea: auraArea,
-            defaultArea: defaultArea,
-            tokenArea: tokenArea,
-            healthbarArea: healthbarArea,
-          }
-        : null,
-    [imageArea, auraArea, defaultArea, tokenArea, healthbarArea]
-  );
-
   return (
     <>
-      {areas &&
-        mapObjectIds.map((mapObjectId) => (
-          <MapObjectWrapper
-            key={mapObjectId}
-            mapObjectId={mapObjectId}
-            canStartMoving={canStartMoving}
-            onStartMove={handleStartMoveMapObject}
-            areas={areas}
-            // additional parameters for tokens
-            zoom={zoom}
-            setHP={setHP}
-            contrastColor={contrastColor}
-          />
-        ))}
-      <g ref={setImageArea} />
-      <g ref={setAuraArea} />
-      <g ref={setDefaultArea} />
-      <g ref={setTokenArea} />
-      <g ref={setHealthbarArea} />
+      {mapObjectIds.map((mapObjectId) => (
+        <MapObjectWrapper
+          key={mapObjectId}
+          mapObjectId={mapObjectId}
+          canStartMoving={canStartMoving}
+          onStartMove={handleStartMoveMapObject}
+          areas={areas}
+          // additional parameters for tokens
+          zoom={zoom}
+          setHP={setHP}
+          contrastColor={contrastColor}
+        />
+      ))}
     </>
   );
 });
@@ -84,13 +61,7 @@ const MapObjectWrapper = React.memo<{
   mapObjectId: RRMapObjectID;
   canStartMoving: boolean;
   onStartMove: (object: RRMapObject, event: React.MouseEvent) => void;
-  areas: {
-    imageArea: SVGGElement;
-    auraArea: SVGGElement;
-    defaultArea: SVGGElement;
-    tokenArea: SVGGElement;
-    healthbarArea: SVGGElement;
-  };
+  areas: MapAreas;
   // additional parameters for tokens
   zoom: number;
   contrastColor: string;
