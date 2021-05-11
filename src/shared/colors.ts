@@ -1,3 +1,5 @@
+import { randomBetweenInclusive } from "../client/roll";
+
 export const colors = [
   // Generated with https://medialab.github.io/iwanthue/
   "#c49fa6",
@@ -43,5 +45,5 @@ export const colors = [
 ];
 
 export function randomColor() {
-  return colors[Math.floor(Math.random() * colors.length)]!;
+  return colors[randomBetweenInclusive(0, colors.length - 1)]!;
 }

@@ -8,6 +8,24 @@ import {
 } from "../shared/state";
 import { assertNever } from "../shared/util";
 
+export function randomBetweenInclusive(min: number, max: number) {
+  if (max < min) {
+    throw new Error(
+      `Cannot generate a random number where max is less than min!`
+    );
+  }
+  const range = max - min + 1;
+
+  if (!Number.isInteger(min) || !Number.isInteger(max) || range >= 0xffffffff) {
+    throw new Error(`min and/or max are invalid.`);
+  }
+
+  const array = new Uint32Array(1);
+  crypto.getRandomValues(array);
+
+  return (array[0]! % range) + min;
+}
+
 export function rollInitiative(
   mod: number,
   multiple: RRMultipleRoll,
@@ -58,9 +76,8 @@ export function roll({
   if (modified !== "none" && count <= 1) {
     count = 2;
   }
-  const results = Array.from(
-    { length: count },
-    () => Math.floor(Math.random() * faces) + 1
+  const results = Array.from({ length: count }, () =>
+    randomBetweenInclusive(1, faces)
   );
   return {
     type: "dice",
