@@ -166,6 +166,7 @@ export type RRMap = {
 
   backgroundColor: RRColor;
   gridEnabled: boolean;
+  gridColor: RRColor;
 
   gmWorldPosition: RRPoint;
 };
@@ -352,6 +353,7 @@ export const defaultMap: RRMap = {
   },
   gmWorldPosition: { x: 0, y: 0 },
   gridEnabled: true,
+  gridColor: "#808080",
   name: "unnamed",
   id: rrid<RRMap>(),
 };

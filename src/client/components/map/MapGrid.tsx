@@ -1,8 +1,12 @@
 import React from "react";
 import { Matrix } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
+import { RRColor } from "../../../shared/state";
 
-export function MapGrid({ transform }: { transform: Matrix }) {
+export const MapGrid = React.memo<{
+  transform: Matrix;
+  color: RRColor;
+}>(function MapGrid({ transform, color }) {
   return (
     <>
       <defs>
@@ -15,7 +19,7 @@ export function MapGrid({ transform }: { transform: Matrix }) {
           <path
             d={`M ${GRID_SIZE} 0 L 0 0 0 ${GRID_SIZE}`}
             fill="none"
-            stroke="gray"
+            stroke={color}
             strokeWidth="1"
           />
         </pattern>
@@ -30,4 +34,4 @@ export function MapGrid({ transform }: { transform: Matrix }) {
       />
     </>
   );
-}
+});

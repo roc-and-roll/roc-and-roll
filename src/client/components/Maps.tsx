@@ -63,6 +63,7 @@ export function Maps() {
                 mapAdd({
                   backgroundColor: randomColor(),
                   gridEnabled: true,
+                  gridColor: "#808080",
                   name,
                   objects: {
                     entities: {},

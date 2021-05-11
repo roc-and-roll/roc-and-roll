@@ -518,6 +518,7 @@ export default function MapContainer() {
         // map entity data
         mapId={map.id}
         gridEnabled={map.gridEnabled}
+        gridColor={map.gridColor}
         backgroundColor={map.backgroundColor}
         // other entities
         myself={myself}

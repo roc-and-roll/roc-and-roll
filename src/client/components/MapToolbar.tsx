@@ -296,6 +296,11 @@ function MapSettings({ map }: { map: RRMap }) {
     (gridEnabled) => mapUpdate({ id: map.id, changes: { gridEnabled } }),
     100
   );
+  const [gridColor, setGridColor] = useOptimisticDebouncedServerUpdate(
+    map.gridColor,
+    (gridColor) => mapUpdate({ id: map.id, changes: { gridColor } }),
+    100
+  );
 
   const [visible, setVisible] = useState(false);
 
@@ -324,6 +329,12 @@ function MapSettings({ map }: { map: RRMap }) {
               onChange={(e) => setGridEnabled(e.target.checked)}
             />
           </label>
+          {gridEnabled && (
+            <div>
+              Grid color{" "}
+              <ColorInput value={gridColor} onChange={setGridColor} />
+            </div>
+          )}
         </>
       }
       interactive

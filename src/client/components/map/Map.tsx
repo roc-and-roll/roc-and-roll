@@ -139,6 +139,7 @@ export const RRMapView = React.memo<{
   myself: RRPlayer;
   mapId: RRMapID;
   gridEnabled: boolean;
+  gridColor: RRColor;
   backgroundColor: RRColor;
   transformRef: React.MutableRefObject<Matrix>;
   onMoveMapObjects: (d: RRPoint) => void;
@@ -155,6 +156,7 @@ export const RRMapView = React.memo<{
   myself,
   mapId,
   gridEnabled,
+  gridColor,
   backgroundColor,
   onSetHP,
   handleKeyDown,
@@ -666,7 +668,7 @@ export const RRMapView = React.memo<{
           <g ref={setImageArea} />
           <g ref={setAuraArea} />
           <g ref={setDefaultArea} />
-          {gridEnabled && <MapGrid transform={transform} />}
+          {gridEnabled && <MapGrid transform={transform} color={gridColor} />}
           <g ref={setTokenArea} />
           <g ref={setHealthbarArea} />
 
