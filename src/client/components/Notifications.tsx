@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   byId,
   entries,
@@ -19,13 +19,21 @@ import { Flipper, Flipped } from "react-flip-toolkit";
 
 const NOTIFICATION_TIMEOUT = 6000;
 
-export function Notifications() {
-  const notifications = useServerState((state) => state.logEntries);
+export function Notifications({
+  permanentNotifications,
+}: {
+  permanentNotifications: RRLogEntry[];
+}) {
+  const serverNotifications = useServerState((state) => state.logEntries);
+  const notifications = useMemo(
+    () => [...permanentNotifications, ...entries(serverNotifications)],
+    [permanentNotifications, serverNotifications]
+  );
   const [lastShownID, setLastShownID] = useState<RRLogEntryID>();
   const [newNotifications, setNewNotifications] = useState<RRLogEntry[]>([]);
 
   useEffect(() => {
-    const list = entries(notifications);
+    const list = notifications;
     if (lastShownID === undefined && list.length > 1) {
       setLastShownID(list[list.length - 1]?.id);
       return;

@@ -427,6 +427,10 @@ $gmAreaColor: #ab62c0;
   text-align: center;
   font-size: 2rem;
 
+  @media (max-width: 1000px) {
+    font-size: 1.5rem;
+  }
+
   background: orange;
 }
 
