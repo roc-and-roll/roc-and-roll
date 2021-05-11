@@ -9,6 +9,7 @@ const CURRENT_SETTINGS_VERSION = 3;
 export type RRSettings = ReadonlyDeep<{
   version: number;
   volume: number;
+  mute: boolean;
   renderMode: "fast" | "mostly-fancy" | "fancy";
   debug: {
     mapTokenPositions: boolean;
@@ -18,6 +19,7 @@ export type RRSettings = ReadonlyDeep<{
 const initialSettings: RRSettings = {
   version: CURRENT_SETTINGS_VERSION,
   volume: 1,
+  mute: false,
   renderMode: "fancy",
   debug: {
     mapTokenPositions: false,

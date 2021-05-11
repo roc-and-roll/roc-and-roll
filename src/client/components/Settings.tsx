@@ -21,6 +21,16 @@ export function Settings() {
         />
         {settings.volume}
       </p>
+      <label>
+        Mute{" "}
+        <input
+          type="checkbox"
+          checked={settings.mute}
+          onChange={(e) =>
+            setSettings((old) => ({ ...old, mute: e.target.checked }))
+          }
+        />
+      </label>
       <div>
         <label>
           fast render mode{" "}
