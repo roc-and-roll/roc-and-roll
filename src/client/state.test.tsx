@@ -347,6 +347,7 @@ describe("applyStatePatch", () => {
       gmWorldPosition: { x: 0, y: 0 },
       gridEnabled: true,
       gridColor: "#808080",
+      revealedAreas: null,
       objects: {
         entities: {},
         ids: [],

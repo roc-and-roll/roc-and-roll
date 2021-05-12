@@ -1,10 +1,11 @@
-import { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   mapObjectAdd,
   mapObjectRemove,
   mapObjectUpdate,
 } from "../../../shared/actions";
 import {
+  RRCapPoint,
   RRMap,
   RRMapDrawingBase,
   RRMapObject,
@@ -16,9 +17,10 @@ import { useServerDispatch } from "../../state";
 import { GRID_SIZE } from "../../../shared/constants";
 import { assertNever, rrid } from "../../../shared/util";
 import { askAndUploadFiles } from "../../files";
-import { pointEquals, pointSubtract } from "../../point";
+import { pointAdd, pointEquals, pointSubtract, toCap } from "../../point";
 import { MapEditState } from "./MapContainer";
 import { Matrix } from "transformation-matrix";
+import Shape from "@doodle3d/clipper-js";
 
 export interface MapMouseHandler {
   onMouseDown: (p: RRPoint) => void;
@@ -54,7 +56,14 @@ export function useMapToolHandler(
   myself: RRPlayer,
   map: RRMap,
   editState: MapEditState,
-  transform: React.MutableRefObject<Matrix>
+  transform: React.MutableRefObject<Matrix>,
+  {
+    setRevealedAreas,
+  }: {
+    setRevealedAreas: React.Dispatch<
+      React.SetStateAction<RRCapPoint[][] | null>
+    >;
+  }
 ): MapMouseHandler {
   const dispatch = useServerDispatch();
 
@@ -67,6 +76,8 @@ export function useMapToolHandler(
   const pointsRef = useRef<RRPoint[]>([]);
 
   const toolHandlerRef = useRef<MapMouseHandler>();
+
+  const [mouseDown, setMouseDown] = useState(false);
 
   if (editState.tool === "draw") {
     const create = (p: RRPoint): RRMapDrawingBase => ({
@@ -314,6 +325,33 @@ export function useMapToolHandler(
       default:
         assertNever(editState);
     }
+  } else if (editState.tool === "reveal") {
+    toolHandlerRef.current = {
+      onMouseDown: (p: RRPoint) => {},
+      onMouseMove: (p: RRPoint) => {
+        if (mouseDown) {
+          const stampSize = 30;
+          const stamp = [
+            toCap(pointAdd(p, { x: -stampSize, y: -stampSize })),
+            toCap(pointAdd(p, { x: -stampSize, y: stampSize })),
+            toCap(pointAdd(p, { x: stampSize, y: stampSize })),
+            toCap(pointAdd(p, { x: stampSize, y: -stampSize })),
+          ];
+          setRevealedAreas((shapes) => {
+            let shape: RRCapPoint[][];
+            if (!shapes || shapes.length < 1) {
+              shape = [stamp];
+            } else {
+              let clip = new Shape(shapes, true);
+              clip = clip.union(new Shape([stamp], true));
+              shape = clip.paths;
+            }
+            return shape;
+          });
+        }
+      },
+      onMouseUp: (p: RRPoint) => {},
+    };
   } else {
     toolHandlerRef.current = {
       onMouseDown: (p: RRPoint) => {},
@@ -323,8 +361,14 @@ export function useMapToolHandler(
   }
 
   return useRef({
-    onMouseDown: (p: RRPoint) => toolHandlerRef.current!.onMouseDown(p),
+    onMouseDown: (p: RRPoint) => {
+      setMouseDown(true);
+      toolHandlerRef.current!.onMouseDown(p);
+    },
     onMouseMove: (p: RRPoint) => toolHandlerRef.current!.onMouseMove(p),
-    onMouseUp: (p: RRPoint) => toolHandlerRef.current!.onMouseUp(p),
+    onMouseUp: (p: RRPoint) => {
+      setMouseDown(false);
+      toolHandlerRef.current!.onMouseUp(p);
+    },
   }).current;
 }

@@ -27,6 +27,7 @@ import {
   RRPlayerID,
   RRPoint,
   RRCharacterID,
+  RRCapPoint,
 } from "../../../shared/state";
 import { canControlMapObject } from "../../permissions";
 import {
@@ -59,6 +60,7 @@ import { useStateWithRef } from "../../useRefState";
 import { Debouncer, useDebounce } from "../../debounce";
 import { useRRSettings } from "../../settings";
 import { assertNever } from "../../../shared/util";
+import { FogOfWar } from "./FogOfWar";
 
 type Rectangle = [number, number, number, number];
 
@@ -152,6 +154,7 @@ export const RRMapView = React.memo<{
   onMousePositionChanged: (position: RRPoint) => void;
   toolHandler: MapMouseHandler;
   toolButtonState: ToolButtonState;
+  revealedAreas: RRCapPoint[][] | null;
 }>(function RRMapView({
   myself,
   mapId,
@@ -169,6 +172,7 @@ export const RRMapView = React.memo<{
   onMousePositionChanged,
   toolButtonState,
   toolHandler,
+  revealedAreas,
 }) {
   const [settings] = useRRSettings();
   const [roughEnabled, setRoughEnabled] = useState(
@@ -692,6 +696,9 @@ export const RRMapView = React.memo<{
               zoom={transform.a}
             />
           )}
+
+          <FogOfWar revealedAreas={revealedAreas} />
+
           {withSelectionAreaDo(
             selectionArea,
             (x, y, w, h) => (

@@ -28,6 +28,8 @@ export type RRColor = string;
 
 export type RRPoint = { readonly x: number; readonly y: number };
 
+export type RRCapPoint = { readonly X: number; readonly Y: number };
+
 export type RRDiceTemplateID = Opaque<string, "diceTemplate">;
 
 export type RRActiveSongID = Opaque<string, "activeSong">;
@@ -168,6 +170,8 @@ export type RRMap = {
   backgroundColor: RRColor;
   gridEnabled: boolean;
   gridColor: RRColor;
+  // if null, all should be revealed; if empty array, everything is occluded
+  revealedAreas: RRCapPoint[][] | null;
 
   gmWorldPosition: RRPoint;
 };
@@ -361,6 +365,7 @@ export const defaultMap: RRMap = {
   gridEnabled: true,
   gridColor: "#808080",
   name: "unnamed",
+  revealedAreas: null,
   id: rrid<RRMap>(),
 };
 

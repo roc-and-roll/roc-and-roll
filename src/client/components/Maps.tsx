@@ -69,6 +69,7 @@ export function Maps() {
                     entities: {},
                     ids: [],
                   },
+                  revealedAreas: null,
                   gmWorldPosition: { x: 0, y: 0 },
                 })
               );

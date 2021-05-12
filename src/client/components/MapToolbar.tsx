@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import { mapObjectUpdate, mapUpdate } from "../../shared/actions";
 import { RRMap, RRMapObjectID, RRPlayer } from "../../shared/state";
+import { assertNever } from "../../shared/util";
 import {
   useOptimisticDebouncedServerUpdate,
   useServerDispatch,
@@ -54,6 +55,9 @@ export const MapToolbar = React.memo<{
         case "m":
           setTool("measure");
           break;
+        case "f":
+          setTool("reveal");
+          break;
       }
     };
     window.addEventListener("keypress", handleKeyPress);
@@ -63,17 +67,16 @@ export const MapToolbar = React.memo<{
   }, [setDrawType]);
 
   useEffect(() => {
-    setEditState((old) =>
-      tool === "move"
-        ? { tool, updateColor: drawColor }
-        : tool === "measure"
-        ? { tool, snap }
-        : tool === "draw"
-        ? drawType === "text" || drawType === "freehand"
+    setEditState((old) => {
+      if (tool === "move") return { tool, updateColor: drawColor };
+      if (tool === "measure") return { tool, snap };
+      if (tool === "reveal") return { tool };
+      if (tool === "draw")
+        return drawType === "text" || drawType === "freehand"
           ? { tool, type: drawType, color: drawColor }
-          : { tool, type: drawType, color: drawColor, snap }
-        : old
-    );
+          : { tool, type: drawType, color: drawColor, snap };
+      return assertNever(tool);
+    });
   }, [tool, drawColor, drawType, snap, setEditState]);
 
   const updateLock = useRecoilCallback(({ snapshot }) => (locked: boolean) => {
@@ -134,6 +137,14 @@ export const MapToolbar = React.memo<{
     []
   );
 
+  const hideAll = () => {
+    dispatch(mapUpdate({ id: map.id, changes: { revealedAreas: [] } }));
+  };
+
+  const revealAll = () => {
+    dispatch(mapUpdate({ id: map.id, changes: { revealedAreas: null } }));
+  };
+
   return (
     <div className="map-toolbar">
       <Button
@@ -153,6 +164,12 @@ export const MapToolbar = React.memo<{
         className={tool === "measure" ? "active" : undefined}
       >
         measure
+      </Button>
+      <Button
+        onClick={() => setTool("reveal")}
+        className={tool === "reveal" ? "active" : undefined}
+      >
+        reveal
       </Button>
       {tool === "move" && selectedMapObjectIds.length > 0 && (
         <>
@@ -177,6 +194,12 @@ export const MapToolbar = React.memo<{
               onLockedStateChanged={onLockedStateChanged}
             />
           ))}
+        </>
+      )}
+      {tool === "reveal" && (
+        <>
+          <Button onClick={hideAll}>Hide all</Button>
+          <Button onClick={revealAll}>Reveal all</Button>
         </>
       )}
       {tool === "draw" && (

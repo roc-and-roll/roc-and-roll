@@ -1,5 +1,5 @@
 import { GRID_SIZE } from "../shared/constants";
-import { RRPoint } from "../shared/state";
+import { RRCapPoint, RRPoint } from "../shared/state";
 
 export const pointSubtract = (p1: RRPoint, p2: RRPoint) => ({
   x: p1.x - p2.x,
@@ -40,4 +40,9 @@ const snapToGrid = (num: number) => Math.floor(num / GRID_SIZE) * GRID_SIZE;
 export const snapPointToGrid = (p: RRPoint) => ({
   x: snapToGrid(p.x),
   y: snapToGrid(p.y),
+});
+
+export const toCap = (p: RRPoint): RRCapPoint => ({
+  X: p.x,
+  Y: p.y,
 });

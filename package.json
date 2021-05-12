@@ -19,6 +19,7 @@
     "postinstall": "husky install"
   },
   "dependencies": {
+    "@doodle3d/clipper-js": "^1.0.11",
     "@react-three/fiber": "^6.0.18",
     "@reduxjs/toolkit": "^1.5.1",
     "@seznam/compose-react-refs": "^1.0.6",

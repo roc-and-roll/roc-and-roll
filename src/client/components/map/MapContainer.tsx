@@ -7,6 +7,7 @@ import {
   mapObjectUpdate,
   characterUpdate,
   characterAdd,
+  mapUpdate,
 } from "../../../shared/actions";
 import {
   byId,
@@ -26,6 +27,7 @@ import {
 import { useMyself } from "../../myself";
 import {
   useOptimisticDebouncedLerpedServerUpdate,
+  useOptimisticDebouncedServerUpdate,
   useServerDispatch,
   useServerState,
 } from "../../state";
@@ -40,7 +42,7 @@ import composeRefs from "@seznam/compose-react-refs";
 import { identity, Matrix } from "transformation-matrix";
 import { MapToolbar } from "../MapToolbar";
 import { GRID_SIZE } from "../../../shared/constants";
-import { rrid, timestamp, withDo } from "../../../shared/util";
+import { assertNever, rrid, timestamp, withDo } from "../../../shared/util";
 import { useRRSettings } from "../../settings";
 import produce, { Draft } from "immer";
 import {
@@ -61,6 +63,7 @@ export type ToolButtonState = "select" | "tool" | "measure";
 export type MapEditState =
   | { tool: "move"; updateColor: RRColor }
   | { tool: "measure"; snap: MapSnap }
+  | { tool: "reveal" }
   | {
       tool: "draw";
       type: "line" | "polygon" | "rectangle" | "ellipse" | "image";
@@ -398,16 +401,26 @@ export default function MapContainer() {
 
   const players = useServerState((state) => state.players);
 
-  const toolButtonState: ToolButtonState =
-    editState.tool === "move"
-      ? "select"
-      : editState.tool === "draw"
-      ? "tool"
-      : editState.tool === "measure"
-      ? "measure"
-      : "select";
+  const convertToolButtonState = (): ToolButtonState => {
+    if (editState.tool === "move") return "select";
+    if (editState.tool === "draw") return "tool";
+    if (editState.tool === "measure") return "measure";
+    if (editState.tool === "reveal") return "tool";
+    return assertNever(editState);
+  };
 
-  const toolHandler = useMapToolHandler(myself, map, editState, transformRef);
+  const toolButtonState = convertToolButtonState();
+
+  const [revealedAreas, setRevealedAreas] = useOptimisticDebouncedServerUpdate(
+    map.revealedAreas,
+    (areas) =>
+      dispatch(mapUpdate({ changes: { revealedAreas: areas }, id: map.id })),
+    1000
+  );
+
+  const toolHandler = useMapToolHandler(myself, map, editState, transformRef, {
+    setRevealedAreas,
+  });
 
   const onSetHP = useCallback(
     (tokenId: RRCharacterID, hp: number) => {
@@ -544,6 +557,7 @@ export default function MapContainer() {
         onSetHP={onSetHP}
         // misc
         handleKeyDown={handleKeyDown}
+        revealedAreas={revealedAreas}
       />
       {process.env.NODE_ENV === "development" &&
         settings.debug.mapTokenPositions && (
