@@ -22,7 +22,7 @@ import { hoveredMapObjectsFamily } from "./Map";
 import { selectedMapObjectsFamily, tokenFamily } from "./MapContainer";
 import { Popover } from "../Popover";
 import { TokenEditor } from "../tokens/TokenEditor";
-import { pointEquals } from "../../point";
+import { makePoint, pointAdd, pointEquals } from "../../point";
 
 export const MapToken = React.memo<{
   object: RRToken;
@@ -109,6 +109,8 @@ export const MapToken = React.memo<{
     />
   );
 
+  const center = pointAdd(object.position, makePoint(tokenSize / 2));
+
   return (
     <>
       {auraArea &&
@@ -158,20 +160,48 @@ export const MapToken = React.memo<{
         interactive
         placement="right"
       >
-        {tokenRepresentation}
+        <g>
+          {tokenRepresentation}
+          {isSelectedOrHovered && (
+            <circle
+              // do not block pointer events
+              pointerEvents="none"
+              cx={center.x}
+              cy={center.y}
+              r={tokenSize / 2 - 2}
+              fill="transparent"
+              stroke={contrastColor}
+              className="selection-area-highlight"
+              style={tokenStyle}
+            />
+          )}
+          {token.visibility !== "everyone" && (
+            <>
+              <title>only visible to GMs</title>
+              <RoughText
+                // do not block pointer events
+                pointerEvents="none"
+                x={center.x}
+                y={center.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill="red"
+                stroke="black"
+                strokeWidth={5}
+                paintOrder="stroke"
+                fontSize={`calc(1.2rem * ${tokenSize / GRID_SIZE})`}
+                fontWeight="bold"
+                transform={`rotate(-30, ${center.x}, ${center.y})`}
+                style={{
+                  letterSpacing: ".3rem",
+                }}
+              >
+                HIDDEN
+              </RoughText>
+            </>
+          )}
+        </g>
       </Popover>
-      {isSelectedOrHovered && (
-        <circle
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-          cx={x + tokenSize / 2}
-          cy={y + tokenSize / 2}
-          r={tokenSize / 2 - 2}
-          fill="transparent"
-          className="selection-area-highlight"
-          style={tokenStyle}
-        />
-      )}
     </>
   );
 });
