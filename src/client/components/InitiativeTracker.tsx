@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React from "react";
+import React, { useContext } from "react";
 import {
   initiativeTrackerEntryLairActionAdd,
   initiativeTrackerEntryLairActionUpdate,
@@ -34,6 +34,7 @@ import { useRecoilValue } from "recoil";
 import { selectedMapObjectIdsAtom } from "./map/MapContainer";
 import { EMPTY_ENTITY_COLLECTION, withDo } from "../../shared/util";
 import ReactDOM from "react-dom";
+import { NotificationTopAreaPortal } from "./Notifications";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -337,8 +338,13 @@ function EndTurnButton({
 }
 
 function YourTurn({ endTurnButton }: { endTurnButton: React.ReactNode }) {
-  return ReactDOM.createPortal(
-    <div className="your-turn">It is your turn! {endTurnButton}</div>,
-    document.body
+  const portal = useContext(NotificationTopAreaPortal);
+  return (
+    portal &&
+    portal.current &&
+    ReactDOM.createPortal(
+      <div className="your-turn">It is your turn! {endTurnButton}</div>,
+      portal.current
+    )
   );
 }

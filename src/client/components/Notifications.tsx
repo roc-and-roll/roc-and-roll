@@ -19,13 +19,22 @@ import { Flipper, Flipped } from "react-flip-toolkit";
 
 const NOTIFICATION_TIMEOUT = 6000;
 
-export function Notifications() {
-  const notifications = useServerState((state) => state.logEntries);
+export const NotificationTopAreaPortal = React.createContext<React.RefObject<HTMLDivElement> | null>(
+  null
+);
+
+export function Notifications({
+  topAreaPortal,
+}: {
+  topAreaPortal: React.RefObject<HTMLDivElement>;
+}) {
+  const serverNotifications = useServerState((state) => state.logEntries);
+  const notifications = entries(serverNotifications);
   const [lastShownID, setLastShownID] = useState<RRLogEntryID>();
   const [newNotifications, setNewNotifications] = useState<RRLogEntry[]>([]);
 
   useEffect(() => {
-    const list = entries(notifications);
+    const list = notifications;
     if (lastShownID === undefined && list.length > 1) {
       setLastShownID(list[list.length - 1]?.id);
       return;
@@ -45,6 +54,7 @@ export function Notifications() {
 
   return (
     <div className="notifications">
+      <div className="notitifactions-top-area" ref={topAreaPortal}></div>
       <Flipper flipKey={newNotifications.map((n) => n.id).join("")}>
         {newNotifications.map((notification) => (
           <Notification
