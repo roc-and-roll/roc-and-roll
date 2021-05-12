@@ -14,7 +14,7 @@ export function CollapseButton(props: {
         props.setCollapsed((collapsed) => !collapsed);
       }}
     >
-      {props.collapsed ? "▲" : "▼"}
+      {props.collapsed ? "◀" : "▼"}
     </Button>
   );
 }
