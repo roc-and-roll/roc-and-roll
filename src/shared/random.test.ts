@@ -1,16 +1,6 @@
-import { randomBetweenInclusive } from "./roll";
-import nodeCrypto from "crypto";
+import { randomBetweenInclusive } from "./random";
 
-// Tests run on Node.js, therefore window.crypto is not defined.
-// We need to define it ourselves using Node.js' crypto API.
-Object.defineProperty(globalThis, "crypto", {
-  value: {
-    getRandomValues: (arr: NodeJS.ArrayBufferView) =>
-      nodeCrypto.randomFillSync(arr),
-  },
-});
-
-describe("goodRandom", () => {
+describe("randomBetweenInclusive", () => {
   it.each([
     [0, 0],
     [0, 10],

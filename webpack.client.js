@@ -62,6 +62,7 @@ module.exports = (webpackEnv) => {
     },
     resolve: {
       extensions: [".tsx", ".ts", ".js", ".jsx"],
+      fallback: { "crypto": false }
     },
     plugins: [
       new HtmlWebpackPlugin({

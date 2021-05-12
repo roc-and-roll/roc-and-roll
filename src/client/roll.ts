@@ -1,3 +1,4 @@
+import { randomBetweenInclusive } from "../shared/random";
 import {
   RRMultipleRoll,
   RRLogEntryDiceRoll,
@@ -7,24 +8,6 @@ import {
   RRModifier,
 } from "../shared/state";
 import { assertNever } from "../shared/util";
-
-export function randomBetweenInclusive(min: number, max: number) {
-  if (max < min) {
-    throw new Error(
-      `Cannot generate a random number where max is less than min!`
-    );
-  }
-  const range = max - min + 1;
-
-  if (!Number.isInteger(min) || !Number.isInteger(max) || range >= 0xffffffff) {
-    throw new Error(`min and/or max are invalid.`);
-  }
-
-  const array = new Uint32Array(1);
-  crypto.getRandomValues(array);
-
-  return (array[0]! % range) + min;
-}
 
 export function rollInitiative(
   mod: number,

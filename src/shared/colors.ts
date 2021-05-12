@@ -1,4 +1,4 @@
-import { randomBetweenInclusive } from "../client/roll";
+import { randomBetweenInclusive } from "./random";
 
 export const colors = [
   // Generated with https://medialab.github.io/iwanthue/
