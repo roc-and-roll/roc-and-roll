@@ -419,16 +419,16 @@ $gmAreaColor: #ab62c0;
 }
 
 .your-turn {
-  position: fixed;
-  top: 1rem;
-  left: 50%;
-  margin-left: -15vw;
-  width: 30vw;
   text-align: center;
   font-size: 2rem;
+  margin-top: 1rem;
 
   @media (max-width: 1000px) {
     font-size: 1.5rem;
+  }
+
+  @media (max-width: 600px) {
+    font-size: 1rem;
   }
 
   background: orange;
