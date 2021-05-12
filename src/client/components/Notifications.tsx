@@ -146,9 +146,17 @@ function Notification({
     assertNever(notification);
   };
 
+  const transition = "opacity 150ms ease-out";
+  const [style, setStyle] = useState({ opacity: 0, transition });
+  useEffect(() => {
+    setStyle({ opacity: 1, transition });
+  }, []);
+
   return (
     <Flipped flipId={notification.id}>
-      <div className="notification">{view(notification)}</div>
+      <div className="notification" style={style}>
+        {view(notification)}
+      </div>
     </Flipped>
   );
 }

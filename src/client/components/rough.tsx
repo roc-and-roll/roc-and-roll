@@ -356,10 +356,10 @@ export const RoughText = React.memo<SVGProps<SVGTextElement>>(
   function RoughText({ children, x, y, ...props }) {
     return (
       <text
-        {...props}
         x={x}
         y={y}
         dominantBaseline="text-before-edge"
+        {...props}
         className={clsx("rough-text", props.className)}
       >
         {children}

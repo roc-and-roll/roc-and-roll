@@ -87,9 +87,7 @@ const InitiativeEntry = React.memo<{
     );
     content = (
       <>
-        <TokenStack
-          tokens={tokens.filter((token) => !!token) as RRCharacter[]}
-        />
+        <TokenStack tokens={tokens.flatMap((token) => token ?? [])} />
         <p>{[...names].join(", ")}</p>
       </>
     );

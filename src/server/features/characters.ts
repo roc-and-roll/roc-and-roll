@@ -18,7 +18,10 @@ export const charactersReducer = createReducer(
       .addCase(characterRemove, charactersAdapter.removeOne)
       .addCase(mapObjectRemove, (state, action) => {
         if (action.payload.removeTemplateId) {
-          charactersAdapter.removeOne(state, action.payload.removeTemplateId);
+          return charactersAdapter.removeOne(
+            state,
+            action.payload.removeTemplateId
+          );
         }
         return state;
       });

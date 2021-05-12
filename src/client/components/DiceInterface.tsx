@@ -83,8 +83,7 @@ export function DiceInterface() {
   }
 
   function addBonus(bonus: number) {
-    const num = boni + bonus;
-    setBoni(num);
+    setBoni((boni) => boni + bonus);
   }
 
   return (

@@ -3,6 +3,7 @@ import {
   characterUpdate,
   characterRemove,
   characterTemplateUpdate,
+  characterTemplateRemove,
 } from "../../../shared/actions";
 import { randomColor } from "../../../shared/colors";
 import { RRCharacter } from "../../../shared/state";
@@ -34,6 +35,7 @@ export function TokenEditor({
 
   const dispatch = useServerDispatch();
   const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
+  const removeFunc = isTemplate ? characterTemplateRemove : characterRemove;
 
   const updateImage = async () => {
     const uploadedFiles = await upload(fileInput.current!.files);
@@ -123,7 +125,7 @@ export function TokenEditor({
   }, [name, onNameFirstEdited, wasJustCreated]);
 
   const remove = () => {
-    dispatch(characterRemove(token.id));
+    dispatch(removeFunc(token.id));
     onClose();
   };
 

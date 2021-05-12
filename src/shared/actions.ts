@@ -166,7 +166,7 @@ export const mapObjectRemove = createAction(
           : removal.mapObjectId,
         removeTemplateId:
           isTokenRemoval(removal) && removal.relatedCharacter.localToMap
-            ? removal.relatedCharacter?.id
+            ? removal.relatedCharacter.id
             : null,
       },
     };

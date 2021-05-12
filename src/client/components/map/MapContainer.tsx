@@ -141,13 +141,15 @@ export default function MapContainer() {
   const getCharacter = useRecoilCallback(
     ({ snapshot }) => (id: RRCharacterID) => {
       return snapshot.getLoadable(tokenFamily(id)).getValue();
-    }
+    },
+    []
   );
 
   const getTemplateCharacter = useRecoilCallback(
     ({ snapshot }) => (id: RRCharacterID) => {
       return snapshot.getLoadable(characterTemplateFamily(id)).getValue();
-    }
+    },
+    []
   );
 
   const [, dropRef1] = useDrop<{ id: RRCharacterID }, void, never>(

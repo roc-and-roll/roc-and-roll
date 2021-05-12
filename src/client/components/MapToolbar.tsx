@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import { mapObjectUpdate, mapUpdate } from "../../shared/actions";
 import { RRMap, RRMapObjectID, RRPlayer } from "../../shared/state";
@@ -115,19 +115,24 @@ export const MapToolbar = React.memo<{
     }
   }, [isLockedToggleIndeterminate]);
 
-  useEffect(() => {
-    setLockedStates((old) => {
-      const newMap = new Map();
-
-      Array.from(old.entries()).forEach(([id, isLocked]) => {
-        if (selectedMapObjectIds.includes(id)) {
-          newMap.set(id, isLocked);
+  const onLockedStateChanged = useCallback(
+    (selectedMapObjectId: RRMapObjectID, isLocked: boolean | "remove") => {
+      setLockedStates((oldMap) => {
+        if (isLocked === "remove") {
+          const newMap = new Map(oldMap);
+          newMap.delete(selectedMapObjectId);
+          return newMap.size === oldMap.size ? oldMap : newMap;
         }
+        if (oldMap.get(selectedMapObjectId) === isLocked) {
+          return oldMap;
+        }
+        const newMap = new Map(oldMap);
+        newMap.set(selectedMapObjectId, isLocked);
+        return newMap;
       });
-
-      return newMap.size === 0 && old.size === 0 ? old : newMap;
-    });
-  }, [selectedMapObjectIds]);
+    },
+    []
+  );
 
   return (
     <div className="map-toolbar">
@@ -169,16 +174,7 @@ export const MapToolbar = React.memo<{
             <MapObjectLockedObserver
               key={selectedMapObjectId}
               id={selectedMapObjectId}
-              onLockedStateChanged={(isLocked) => {
-                setLockedStates((old) => {
-                  if (old.get(selectedMapObjectId) === isLocked) {
-                    return old;
-                  }
-                  const newMap = new Map(old);
-                  newMap.set(selectedMapObjectId, isLocked);
-                  return newMap;
-                });
-              }}
+              onLockedStateChanged={onLockedStateChanged}
             />
           ))}
         </>
@@ -257,7 +253,7 @@ function MapObjectLockedObserver({
   onLockedStateChanged,
 }: {
   id: RRMapObjectID;
-  onLockedStateChanged: (locked: boolean) => void;
+  onLockedStateChanged: (id: RRMapObjectID, locked: boolean | "remove") => void;
 }) {
   const mapObject = useRecoilValue(mapObjectsFamily(id));
 
@@ -269,9 +265,15 @@ function MapObjectLockedObserver({
 
   useEffect(() => {
     if (mapObjectLocked !== "ignore") {
-      onLockedStateChanged(mapObjectLocked);
+      onLockedStateChanged(id, mapObjectLocked);
     }
-  }, [mapObjectLocked, onLockedStateChanged]);
+  }, [id, mapObjectLocked, onLockedStateChanged]);
+
+  useEffect(() => {
+    // When this map object is no longer selected, remove its lockedState from
+    // the map.
+    return () => onLockedStateChanged(id, "remove");
+  }, [id, onLockedStateChanged]);
 
   return null;
 }

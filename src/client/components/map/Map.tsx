@@ -357,13 +357,16 @@ export const RRMapView = React.memo<{
           });
           break;
         }
-
         case MouseAction.USE_TOOL: {
           toolHandler.onMouseMove(
             globalToLocal(transformRef.current, { x, y })
           );
           break;
         }
+        case MouseAction.NONE:
+          break;
+        default:
+          assertNever(mouseActionRef.current);
       }
 
       if (mouseActionRef.current !== MouseAction.NONE) {
@@ -498,33 +501,40 @@ export const RRMapView = React.memo<{
 
   const handleMouseUp = useRecoilCallback(
     ({ snapshot }) => (e: MouseEvent) => {
-      if (mouseActionRef.current === MouseAction.MOVE_MAP_OBJECT) {
-        onStopMoveMapObjects();
-        setMeasurePath([]);
-        dragStartIdRef.current = null;
+      switch (mouseActionRef.current) {
+        case MouseAction.MOVE_MAP_OBJECT:
+          onStopMoveMapObjects();
+          setMeasurePath([]);
+          dragStartIdRef.current = null;
+          break;
+        case MouseAction.SELECTION_AREA: {
+          const lastHoveredObjectIds = snapshot
+            .getLoadable(hoveredMapObjectIdsAtom)
+            .getValue()
+            .filter(Boolean);
+          setSelectedMapObjectIds(lastHoveredObjectIds);
+          setSelectionArea(null);
+          break;
+        }
+        case MouseAction.USE_TOOL:
+          toolHandler.onMouseUp(
+            globalToLocal(transformRef.current, localCoords(e))
+          );
+          break;
+        case MouseAction.MEASURE:
+          setMeasurePath([]);
+          break;
+        case MouseAction.PAN:
+          if (settings.renderMode === "mostly-fancy") {
+            setRoughEnabled(true);
+          }
+          break;
+        case MouseAction.NONE:
+          break;
+        default:
+          assertNever(mouseActionRef.current);
       }
-      if (mouseActionRef.current === MouseAction.SELECTION_AREA) {
-        const lastHoveredObjectIds = snapshot
-          .getLoadable(hoveredMapObjectIdsAtom)
-          .getValue()
-          .filter(Boolean);
-        setSelectedMapObjectIds(lastHoveredObjectIds);
-        setSelectionArea(null);
-      }
-      if (mouseActionRef.current === MouseAction.USE_TOOL) {
-        toolHandler.onMouseUp(
-          globalToLocal(transformRef.current, localCoords(e))
-        );
-      }
-      if (mouseActionRef.current === MouseAction.MEASURE) {
-        setMeasurePath([]);
-      }
-      if (
-        mouseActionRef.current === MouseAction.PAN &&
-        settings.renderMode === "mostly-fancy"
-      ) {
-        setRoughEnabled(true);
-      }
+
       mouseActionRef.current = MouseAction.NONE;
     },
     [

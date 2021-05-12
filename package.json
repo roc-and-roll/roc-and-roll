@@ -136,6 +136,7 @@
     },
     "setupFiles": [],
     "globals": {
+      "__VERSION__": "master",
       "ts-jest": {
         "tsconfig": "tsconfig.json",
         "babelConfig": {
