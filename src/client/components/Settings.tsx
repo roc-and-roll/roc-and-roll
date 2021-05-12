@@ -1,9 +1,12 @@
 import React from "react";
+import { useMyself } from "../myself";
 import { RRSettings, useRRSettings } from "../settings";
+import { GMArea } from "./GMArea";
 import { Select } from "./ui/Select";
 
 export function Settings() {
   const [settings, setSettings] = useRRSettings();
+  const myself = useMyself();
 
   return (
     <>
@@ -50,6 +53,23 @@ export function Settings() {
           />
         </label>
       </div>
+      {myself.isGM && (
+        <GMArea>
+          <label>
+            Music is GM-only{" "}
+            <input
+              type="checkbox"
+              checked={settings.musicIsGMOnly}
+              onChange={(e) =>
+                setSettings((old) => ({
+                  ...old,
+                  musicIsGMOnly: e.target.checked,
+                }))
+              }
+            />
+          </label>
+        </GMArea>
+      )}
       {process.env.NODE_ENV === "development" && (
         <>
           <h4>debug settings</h4>

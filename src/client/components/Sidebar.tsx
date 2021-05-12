@@ -16,10 +16,13 @@ import { Maps } from "./Maps";
 import { Achievements } from "./Achievements";
 import { Music } from "./Music";
 import { DiceInput } from "./DiceInput";
+import { useRRSettings } from "../settings";
+import { GMArea } from "./GMArea";
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
   const myself = useMyself();
+  const [settings] = useRRSettings();
 
   return (
     <Resizable
@@ -71,9 +74,21 @@ export function Sidebar({ logout }: { logout: () => void }) {
           <Players />
         </Collapsible>
 
-        <Collapsible title="Music" defaultCollapsed>
-          <Music />
-        </Collapsible>
+        {settings.musicIsGMOnly ? (
+          myself.isGM ? (
+            <Collapsible title="Music" defaultCollapsed>
+              <GMArea>
+                <Music />
+              </GMArea>
+            </Collapsible>
+          ) : (
+            <></>
+          )
+        ) : (
+          <Collapsible title="Music" defaultCollapsed>
+            <Music />
+          </Collapsible>
+        )}
 
         <Collapsible title="Achievements" defaultCollapsed>
           <Achievements />
