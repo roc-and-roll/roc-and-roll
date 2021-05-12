@@ -332,7 +332,12 @@ export type EphermalSyncedState = {
   activeSongs: EntityCollection<RRActiveSong>;
 };
 
+export interface RRGlobalSettings {
+  musicIsGMOnly: boolean;
+}
+
 export interface SyncedState {
+  globalSettings: RRGlobalSettings;
   initiativeTracker: InitiativeTrackerSyncedState;
   players: PlayersSyncedState;
   characters: CharactersSyncedState;
@@ -360,6 +365,9 @@ export const defaultMap: RRMap = {
 };
 
 export const initialSyncedState: SyncedState = {
+  globalSettings: {
+    musicIsGMOnly: false,
+  },
   initiativeTracker: {
     visible: false,
     currentEntryId: null,

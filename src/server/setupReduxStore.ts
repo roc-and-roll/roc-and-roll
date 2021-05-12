@@ -13,12 +13,14 @@ import {
 import { diceTemplatesReducer } from "./features/diceTemplate";
 import { assetsReducer } from "./features/assets";
 import { characterTemplatesReducer } from "./features/charactersTemplates";
+import { globalSettingsReducer } from "./features/globalSettings";
 
 const options = {
   reducer: {
     // Add new slices of state here.
     // You need to edit SyncedState and initialSyncedState in shared/state.ts
     // when adding a new slice.
+    globalSettings: globalSettingsReducer,
     initiativeTracker: initiativeTrackerReducer,
     players: playersReducer,
     characters: charactersReducer,

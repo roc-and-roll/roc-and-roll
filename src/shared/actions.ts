@@ -28,6 +28,7 @@ import {
   RRToken,
   RRMapObjectID,
   RRAssetID,
+  RRGlobalSettings,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -426,4 +427,12 @@ export const assetSongRemove = createAction<RRSong["id"]>("asset/song/remove");
 
 export const assetImageRemove = createAction<RRImage["id"]>(
   "asset/image/remove"
+);
+
+////////////////////////////////////////////////////////////////////////////////
+// Asset state
+////////////////////////////////////////////////////////////////////////////////
+
+export const globalSettingsUpdate = createAction<Partial<RRGlobalSettings>>(
+  "globalsettings/update"
 );

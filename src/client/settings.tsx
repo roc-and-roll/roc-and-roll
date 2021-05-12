@@ -11,7 +11,6 @@ export type RRSettings = ReadonlyDeep<{
   volume: number;
   mute: boolean;
   renderMode: "fast" | "mostly-fancy" | "fancy";
-  musicIsGMOnly: boolean;
   debug: {
     mapTokenPositions: boolean;
   };
@@ -22,7 +21,6 @@ const initialSettings: RRSettings = {
   volume: 1,
   mute: false,
   renderMode: "fancy",
-  musicIsGMOnly: false,
   debug: {
     mapTokenPositions: false,
   },

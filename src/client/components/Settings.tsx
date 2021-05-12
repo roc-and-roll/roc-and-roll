@@ -1,12 +1,18 @@
 import React from "react";
+import { globalSettingsUpdate } from "../../shared/actions";
 import { useMyself } from "../myself";
 import { RRSettings, useRRSettings } from "../settings";
+import { useServerDispatch, useServerState } from "../state";
 import { GMArea } from "./GMArea";
 import { Select } from "./ui/Select";
 
 export function Settings() {
   const [settings, setSettings] = useRRSettings();
   const myself = useMyself();
+  const musicIsGMOnly = useServerState(
+    (state) => state.globalSettings.musicIsGMOnly
+  );
+  const dispatch = useServerDispatch();
 
   return (
     <>
@@ -59,12 +65,11 @@ export function Settings() {
             Music is GM-only{" "}
             <input
               type="checkbox"
-              checked={settings.musicIsGMOnly}
+              checked={musicIsGMOnly}
               onChange={(e) =>
-                setSettings((old) => ({
-                  ...old,
-                  musicIsGMOnly: e.target.checked,
-                }))
+                dispatch(
+                  globalSettingsUpdate({ musicIsGMOnly: e.target.checked })
+                )
               }
             />
           </label>
