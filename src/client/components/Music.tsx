@@ -3,8 +3,16 @@ import {
   assetSongAdd,
   ephermalSongAdd,
   ephermalSongRemove,
+  playerUpdateAddFavoritedAssetId,
+  playerUpdateRemoveFavoritedAssetId,
 } from "../../shared/actions";
-import { entries, RRActiveSong, RRAsset, RRSong } from "../../shared/state";
+import {
+  entries,
+  RRActiveSong,
+  RRAsset,
+  RRAssetID,
+  RRSong,
+} from "../../shared/state";
 import { rrid } from "../../shared/util";
 import { useFileUpload } from "../files";
 import { useMyself } from "../myself";
@@ -44,7 +52,8 @@ export function Music() {
       .then((l: TabletopAudioResponse) =>
         setTabletopAudio(
           l.tracks.map((t) => ({
-            id: rrid<RRAsset>(),
+            // use a stable ID such that favoriting external tracks works
+            id: t.link as RRAssetID,
             type: "song",
             name: t.track_title,
             durationSeconds: 0,
@@ -67,6 +76,19 @@ export function Music() {
 
   const onStop = (s: RRActiveSong) => {
     dispatch(ephermalSongRemove(s.id));
+  };
+
+  // FIXME: can be a race condition if the user clicks the button quickly
+  const onFavorite = (s: RRSong) => {
+    if (myself.favoritedAssetIds.includes(s.id)) {
+      dispatch(
+        playerUpdateRemoveFavoritedAssetId({ id: myself.id, assetId: s.id })
+      );
+    } else {
+      dispatch(
+        playerUpdateAddFavoritedAssetId({ id: myself.id, assetId: s.id })
+      );
+    }
   };
 
   const onReplace = (t: RRSong) => {
@@ -105,8 +127,11 @@ export function Music() {
           onAdd={() => onStart(t)}
           onReplace={() => onReplace(t)}
           onStop={onStop}
+          onFavorite={() => onFavorite(t)}
         />
       ));
+
+  const allSongs = [...ownSongs, ...(tabletopAudio ?? [])];
 
   return (
     <div>
@@ -130,8 +155,17 @@ export function Music() {
               onAdd={() => onStart(s.song)}
               onReplace={() => onReplace(s.song)}
               onStop={() => onStop(s)}
+              onFavorite={() => onFavorite(s.song)}
             />
           ))}
+      </div>
+      <div>
+        <strong>- Favorites -</strong>
+        {showSongList(
+          myself.favoritedAssetIds.flatMap(
+            (id) => allSongs.find((song) => song.id === id) ?? []
+          )
+        )}
       </div>
       <div>
         <strong>- Own Audio -</strong>
@@ -208,6 +242,7 @@ function Song({
   onAdd,
   onReplace,
   onStop,
+  onFavorite,
   filterText,
 }: {
   audio: RRSong;
@@ -216,6 +251,7 @@ function Song({
   onAdd: () => void;
   onReplace: () => void;
   onStop: (a: RRActiveSong) => void;
+  onFavorite: () => void;
 }) {
   const showTags = filterText.length > 0;
 
@@ -233,6 +269,9 @@ function Song({
         </div>
       ) : (
         <>
+          <div className="tabletopaudio-button" onClick={onFavorite}>
+            FAV
+          </div>
           <div className="tabletopaudio-button" onClick={onAdd}>
             ADD
           </div>

@@ -79,6 +79,7 @@ export type RRPlayer = {
   isGM: boolean;
   currentMap: RRMapID;
   characterIds: RRCharacterID[];
+  favoritedAssetIds: RRAssetID[];
 };
 
 export type RRCharacter = {

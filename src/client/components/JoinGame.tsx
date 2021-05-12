@@ -26,6 +26,7 @@ export function JoinGame({
         currentMap: maps.ids[0]!,
         isGM: false,
         characterIds: [],
+        favoritedAssetIds: [],
       })
     );
     setMyPlayerId(action.payload.id);

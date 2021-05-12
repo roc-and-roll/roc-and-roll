@@ -27,6 +27,7 @@ import {
   RRSong,
   RRToken,
   RRMapObjectID,
+  RRAssetID,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -53,6 +54,16 @@ export const playerUpdateAddCharacterId = createAction<{
   id: RRPlayer["id"];
   characterId: RRCharacterID;
 }>("player/update/characterid");
+
+export const playerUpdateAddFavoritedAssetId = createAction<{
+  id: RRPlayer["id"];
+  assetId: RRAssetID;
+}>("player/update/assetid/add");
+
+export const playerUpdateRemoveFavoritedAssetId = createAction<{
+  id: RRPlayer["id"];
+  assetId: RRAssetID;
+}>("player/update/assetid/remove");
 
 export const playerRemove = createAction<RRPlayer["id"]>("player/remove");
 
