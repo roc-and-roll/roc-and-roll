@@ -14,7 +14,6 @@ import {
   entries,
   RRInitiativeTrackerEntry,
   RRPlayer,
-  RRCharacter,
   CharactersSyncedState,
 } from "../../shared/state";
 import { useMyMap, useMyself } from "../myself";
@@ -47,7 +46,11 @@ function canEditEntry(
 
   return entry.characterIds.some((tokenId) => {
     const token = byId(tokenCollection.entities, tokenId);
-    return token && canControlToken(token, { ...myself, isGM: false });
+    return (
+      token &&
+      (canControlToken(token, { ...myself, isGM: false }) ||
+        (myself.isGM && token.localToMap))
+    );
   });
 }
 
