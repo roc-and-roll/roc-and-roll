@@ -63,7 +63,7 @@ export type ToolButtonState = "select" | "tool" | "measure";
 export type MapEditState =
   | { tool: "move"; updateColor: RRColor }
   | { tool: "measure"; snap: MapSnap }
-  | { tool: "reveal" }
+  | { tool: "reveal"; revealType: "show" | "hide" }
   | {
       tool: "draw";
       type: "line" | "polygon" | "rectangle" | "ellipse" | "image";

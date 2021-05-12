@@ -32,6 +32,8 @@ export const MapToolbar = React.memo<{
   const [drawColor, setDrawColor] = useState(myself.color);
   const [snap, setSnap] = useLocalState<MapSnap>("map/toolbar/snap", "grid");
 
+  const [revealType, setRevealType] = useState<"show" | "hide">("show");
+
   const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom);
   const dispatch = useServerDispatch();
 
@@ -70,14 +72,14 @@ export const MapToolbar = React.memo<{
     setEditState((old) => {
       if (tool === "move") return { tool, updateColor: drawColor };
       if (tool === "measure") return { tool, snap };
-      if (tool === "reveal") return { tool };
+      if (tool === "reveal") return { tool, revealType };
       if (tool === "draw")
         return drawType === "text" || drawType === "freehand"
           ? { tool, type: drawType, color: drawColor }
           : { tool, type: drawType, color: drawColor, snap };
       return assertNever(tool);
     });
-  }, [tool, drawColor, drawType, snap, setEditState]);
+  }, [tool, drawColor, drawType, snap, setEditState, revealType]);
 
   const updateLock = useRecoilCallback(({ snapshot }) => (locked: boolean) => {
     dispatch(
@@ -198,6 +200,18 @@ export const MapToolbar = React.memo<{
       )}
       {tool === "reveal" && (
         <>
+          <Button
+            className={revealType === "show" ? "active" : undefined}
+            onClick={() => setRevealType("show")}
+          >
+            Show
+          </Button>
+          <Button
+            className={revealType === "hide" ? "active" : undefined}
+            onClick={() => setRevealType("hide")}
+          >
+            Hide
+          </Button>
           <Button onClick={hideAll}>Hide all</Button>
           <Button onClick={revealAll}>Reveal all</Button>
         </>

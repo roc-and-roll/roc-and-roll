@@ -343,7 +343,11 @@ export function useMapToolHandler(
               shape = [stamp];
             } else {
               let clip = new Shape(shapes, true);
-              clip = clip.union(new Shape([stamp], true));
+              if (editState.revealType === "show") {
+                clip = clip.union(new Shape([stamp], true));
+              } else {
+                clip = clip.difference(new Shape([stamp], true));
+              }
               shape = clip.paths;
             }
             return shape;
