@@ -86,6 +86,11 @@ export function DiceInterface() {
     setBoni((boni) => boni + bonus);
   }
 
+  function clear() {
+    setBoni(0);
+    setDiceTypes([]);
+  }
+
   return (
     <>
       <div id="pane">
@@ -118,6 +123,7 @@ export function DiceInterface() {
                     <Button onClick={() => addBonus(2)}>+2</Button>
                     <Button onClick={() => addBonus(3)}>+3</Button>
                     <Button onClick={() => addBonus(4)}>+4</Button>
+                    <Button onClick={() => addBonus(10)}>+10</Button>
                   </div>
                   <div>
                     <Button onClick={() => addBonus(5)}>+5</Button>
@@ -125,6 +131,7 @@ export function DiceInterface() {
                     <Button onClick={() => addBonus(7)}>+7</Button>
                     <Button onClick={() => addBonus(8)}>+8</Button>
                     <Button onClick={() => addBonus(9)}>+9</Button>
+                    <Button onClick={() => clear()}>DEL</Button>
                   </div>
                 </td>
 
