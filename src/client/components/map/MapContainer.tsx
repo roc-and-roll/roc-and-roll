@@ -172,7 +172,11 @@ export default function MapContainer() {
         if (monitor.getItemType() === "tokenTemplate") {
           const { id: _, ...copy } = character;
           characterId = dispatch(
-            characterAdd({ ...copy, visibility: "gmOnly", localToMap: map.id })
+            characterAdd({
+              ...copy,
+              visibility: "everyone",
+              localToMap: map.id,
+            })
           ).payload.id;
         }
 
