@@ -697,7 +697,14 @@ export const RRMapView = React.memo<{
             />
           )}
 
-          <FogOfWar revealedAreas={revealedAreas} />
+          <FogOfWar
+            transform={transform}
+            viewportSize={{
+              x: svgRef.current?.clientWidth ?? 0,
+              y: svgRef.current?.clientHeight ?? 0,
+            }}
+            revealedAreas={revealedAreas}
+          />
 
           {withSelectionAreaDo(
             selectionArea,
