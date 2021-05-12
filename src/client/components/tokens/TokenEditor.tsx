@@ -51,6 +51,12 @@ export function TokenEditor({
     1000
   );
 
+  const [visibility, setVisibility] = useOptimisticDebouncedServerUpdate(
+    token.visibility,
+    (visibility) => updateFunc({ id: token.id, changes: { visibility } }),
+    1000
+  );
+
   const [scale, setScale] = useOptimisticDebouncedServerUpdate(
     token.scale.toString(),
     (scaleString) => {
@@ -141,6 +147,19 @@ export function TokenEditor({
             ref={nameInput}
             value={name}
             onChange={(e) => setName(e.target.value)}
+            className="token-name"
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          Visible to GM only:{" "}
+          <input
+            type="checkbox"
+            checked={visibility === "gmOnly"}
+            onChange={(e) =>
+              setVisibility(e.target.checked ? "gmOnly" : "everyone")
+            }
             className="token-name"
           />
         </label>
