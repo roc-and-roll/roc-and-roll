@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import { mapObjectUpdate, mapUpdate } from "../../shared/actions";
@@ -167,12 +168,17 @@ export const MapToolbar = React.memo<{
       >
         measure
       </Button>
-      <Button
-        onClick={() => setTool("reveal")}
-        className={tool === "reveal" ? "active" : undefined}
-      >
-        reveal
-      </Button>
+      {myself.isGM && (
+        <Button
+          onClick={() => setTool("reveal")}
+          className={clsx(
+            tool === "reveal" ? "active" : undefined,
+            "gm-button"
+          )}
+        >
+          reveal
+        </Button>
+      )}
       {tool === "move" && selectedMapObjectIds.length > 0 && (
         <>
           <ColorInput value={drawColor} onChange={setDrawColor} />
