@@ -1,12 +1,15 @@
 import React from "react";
-import { Matrix } from "transformation-matrix";
+import { applyToPoint, inverse, Matrix } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
 import { RRColor } from "../../../shared/state";
+import { makePoint } from "../../point";
 
 export const MapGrid = React.memo<{
   transform: Matrix;
   color: RRColor;
 }>(function MapGrid({ transform, color }) {
+  const topLeft = applyToPoint(inverse(transform), makePoint(0));
+
   return (
     <>
       <defs>
@@ -26,8 +29,8 @@ export const MapGrid = React.memo<{
       </defs>
 
       <rect
-        x={-transform.e / transform.a}
-        y={-transform.f / transform.a}
+        x={topLeft.x}
+        y={topLeft.y}
         width={`${100 / transform.a}%`}
         height={`${100 / transform.a}%`}
         fill="url(#grid)"

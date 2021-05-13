@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useRecoilValue } from "recoil";
+import { applyToPoint, inverse, Matrix } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
 import {
   EphermalPlayer,
@@ -7,6 +8,13 @@ import {
   RRPlayerID,
   RRPoint,
 } from "../../../shared/state";
+import {
+  makePoint,
+  pointAdd,
+  pointClamp,
+  pointScale,
+  pointSubtract,
+} from "../../point";
 import useRafLoop from "../../useRafLoop";
 import { RoughSVGPath, RoughText } from "../rough";
 import { CURSOR_POSITION_SYNC_DEBOUNCE } from "./Map";
@@ -16,7 +24,8 @@ export const MouseCursor = React.memo<{
   playerId: RRPlayerID;
   playerName: string;
   playerColor: RRColor;
-  zoom: number;
+  transform: Matrix;
+  viewPortSize: RRPoint;
   contrastColor: RRColor;
 }>(function MouseCursor(props) {
   const ephermalPlayer = useRecoilValue(ephermalPlayersFamily(props.playerId));
@@ -32,7 +41,8 @@ const MouseCursorInner = React.memo<{
   playerId: RRPlayerID;
   playerName: string;
   playerColor: RRColor;
-  zoom: number;
+  transform: Matrix;
+  viewPortSize: RRPoint;
   contrastColor: RRColor;
   mapMouse: NonNullable<EphermalPlayer["mapMouse"]>;
 }>(function MouseCursorInner(props) {
@@ -78,10 +88,21 @@ const MouseCursorInner = React.memo<{
     };
   }, [prevPosition, props.mapMouse.position, props.mapMouse.positionHistory, rafStart, rafStop]);
 
+  const topLeft = applyToPoint(inverse(props.transform), makePoint(0));
+  const padding = pointScale(makePoint(GRID_SIZE / 4), 1 / props.transform.a);
+  const clampedPosition = pointClamp(
+    pointAdd(topLeft, padding),
+    position,
+    pointSubtract(
+      pointAdd(topLeft, pointScale(props.viewPortSize, 1 / props.transform.a)),
+      padding
+    )
+  );
+
   return (
     <g
-      transform={`translate(${position.x},${position.y}) scale(${
-        0.5 / props.zoom
+      transform={`translate(${clampedPosition.x},${clampedPosition.y}) scale(${
+        0.5 / props.transform.a
       })`}
     >
       <RoughSVGPath

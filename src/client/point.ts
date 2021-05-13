@@ -1,5 +1,6 @@
 import { GRID_SIZE } from "../shared/constants";
 import { RRCapPoint, RRPoint } from "../shared/state";
+import { clamp } from "../shared/util";
 
 export const pointSubtract = (p1: RRPoint, p2: RRPoint) => ({
   x: p1.x - p2.x,
@@ -45,4 +46,9 @@ export const snapPointToGrid = (p: RRPoint) => ({
 export const toCap = (p: RRPoint): RRCapPoint => ({
   X: p.x,
   Y: p.y,
+});
+
+export const pointClamp = (min: RRPoint, p: RRPoint, max: RRPoint) => ({
+  x: clamp(min.x, p.x, max.x),
+  y: clamp(min.y, p.y, max.y),
 });

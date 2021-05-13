@@ -668,6 +668,12 @@ export const RRMapView = React.memo<{
     [imageArea, auraArea, defaultArea, tokenArea, healthbarArea]
   );
 
+  // TODO: Should this be observed using a ResizeObserver?
+  const viewPortSize = {
+    x: svgRef.current?.clientWidth ?? 0,
+    y: svgRef.current?.clientHeight ?? 0,
+  };
+
   return (
     <RoughContextProvider enabled={roughEnabled}>
       <svg
@@ -699,10 +705,7 @@ export const RRMapView = React.memo<{
 
           <FogOfWar
             transform={transform}
-            viewportSize={{
-              x: svgRef.current?.clientWidth ?? 0,
-              y: svgRef.current?.clientHeight ?? 0,
-            }}
+            viewportSize={viewPortSize}
             revealedAreas={revealedAreas}
           />
 
@@ -730,7 +733,8 @@ export const RRMapView = React.memo<{
           <MouseCursors
             myId={myself.id}
             mapId={mapId}
-            zoom={transform.a}
+            transform={transform}
+            viewPortSize={viewPortSize}
             contrastColor={contrastColor}
             players={players}
           />
@@ -783,13 +787,15 @@ function MeasurePaths({
 function MouseCursors({
   myId,
   mapId,
-  zoom,
+  transform,
+  viewPortSize,
   contrastColor,
   players,
 }: {
   myId: RRPlayerID;
   mapId: RRMapID;
-  zoom: number;
+  transform: Matrix;
+  viewPortSize: RRPoint;
   contrastColor: string;
   players: EntityCollection<RRPlayer>;
 }) {
@@ -812,7 +818,8 @@ function MouseCursors({
             playerId={player.id}
             playerColor={player.color}
             playerName={player.name}
-            zoom={zoom}
+            transform={transform}
+            viewPortSize={viewPortSize}
             contrastColor={contrastColor}
           />
         );
