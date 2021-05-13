@@ -9,11 +9,13 @@ import multer from "multer";
 import { nanoid } from "@reduxjs/toolkit";
 import { RRFile } from "../shared/state";
 import sharp from "sharp";
-import { clamp } from "../shared/util";
+import { fittingTokenSize } from "../shared/util";
 import { readFile } from "fs/promises";
 import { existsSync } from "fs";
 import { randomColor } from "../shared/colors";
 import fetch from "node-fetch";
+import AsyncLock from "async-lock";
+import { GRID_SIZE } from "../shared/constants";
 
 export async function setupWebServer(
   httpPort: number,
@@ -46,127 +48,133 @@ export async function setupWebServer(
       cb(null, `${nanoid()}${path.extname(file.originalname)}`),
   });
 
-  app.post("/upload", multer({ storage }).array("files"), (req, res, next) => {
-    if (!Array.isArray(req.files)) {
-      res.status(400);
-      return;
+  app.post(
+    "/upload",
+    multer({ storage }).array("files"),
+    async (req, res, next) => {
+      try {
+        if (!Array.isArray(req.files)) {
+          res.status(400);
+          return;
+        }
+        const data: RRFile[] = req.files.map((file) => ({
+          originalFilename: file.originalname,
+          filename: file.filename,
+        }));
+        res.json(data);
+      } catch (err) {
+        next(err);
+      }
     }
-    const data: RRFile[] = req.files.map((file) => ({
-      originalFilename: file.originalname,
-      filename: file.filename,
-    }));
-    res.json(data);
-  });
+  );
 
   let cachedTabletopaudioResponse: any;
-  app.get("/tabletopaudio", (req, res) => {
-    if (cachedTabletopaudioResponse) {
-      res.json(cachedTabletopaudioResponse);
-      return;
-    }
+  app.get("/tabletopaudio", async (req, res, next) => {
+    try {
+      if (cachedTabletopaudioResponse) {
+        res.json(cachedTabletopaudioResponse);
+        return;
+      }
 
-    fetch("https://tabletopaudio.com/tta_data")
-      .then((res) => res.json())
-      .then((j) => {
-        res.json((cachedTabletopaudioResponse = j));
-      })
-      .catch((err) => {
-        console.error(err);
-        res.status(500).send();
-      });
+      const result = await fetch("https://tabletopaudio.com/tta_data");
+      res.json((cachedTabletopaudioResponse = await result.json()));
+    } catch (err) {
+      next(err);
+    }
   });
 
   // (3) Serve uploaded files
   app.use("/files", express.static(uploadedFilesDir));
 
+  const lock = new AsyncLock();
+
   // (4) Add an endpoint to generate tokens from already uploaded files
   app.get<{ filename: string; size: string; zoom: string }>(
-    "/token-image/:filename/:size/:zoom",
-    async (req, res) => {
-      const filename = req.params.filename;
-      let size = parseInt(req.params.size);
-      let zoom = parseInt(req.params.zoom);
-      if (
-        !/^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)?$/.test(filename) ||
-        isNaN(size) ||
-        isNaN(zoom)
-      ) {
-        res.status(400);
-        console.error("Invalid request", { filename, size, zoom });
-        return;
-      }
-
-      size = clamp(16, size * zoom, 2000);
-      zoom = clamp(1, zoom, 8);
-
-      const inputPath = path.join(uploadedFilesDir, filename);
-      const outputPath = path.join(
-        uploadedFilesCacheDir,
-        `${size}-${zoom}-${filename}`
-      );
-
-      if (!existsSync(outputPath)) {
-        const CENTER = size / 2;
-        const RADIUS = size / 2 - 1;
-        const BORDER_WIDTH = zoom * 3;
-        const mask = await sharp(
-          Buffer.from(
-            `<svg viewBox="0 0 ${size} ${size}">
-              <circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="#000" />
-            </svg>`,
-            "utf-8"
-          )
-        ).toBuffer();
-        const border = await sharp(
-          Buffer.from(
-            `<svg viewBox="0 0 ${size} ${size}">
-              <circle
-                cx="${CENTER}"
-                cy="${CENTER}"
-                r="${RADIUS - BORDER_WIDTH / 2 - 0.5}"
-                fill="transparent"
-                stroke-width="${BORDER_WIDTH}"
-                stroke="#502d16" />
-              <circle
-                cx="${CENTER}"
-                cy="${CENTER}"
-                r="${RADIUS - BORDER_WIDTH / 2}"
-                fill="transparent"
-                stroke-width="${BORDER_WIDTH}"
-                stroke="#b39671" />
-            </svg>`,
-            "utf-8"
-          )
-        ).toBuffer();
-
-        try {
-          console.log("Generating token");
-          await sharp(inputPath)
-            .resize({
-              width: size,
-              height: size,
-              fit: "cover",
-              position: "top",
-            })
-            .composite([
-              { input: mask, blend: "dest-in" },
-              { input: border, blend: "over" },
-            ])
-            .png()
-            .toFile(outputPath);
-        } catch (err) {
-          console.error(err);
-          res.status(500);
+    "/token-image/:filename/:size",
+    async (req, res, next) => {
+      try {
+        const filename = req.params.filename;
+        const requestedSize = parseInt(req.params.size);
+        if (
+          !/^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)?$/.test(filename) ||
+          isNaN(requestedSize)
+        ) {
+          res.status(400);
+          console.error("Invalid request", { filename, size: requestedSize });
           return;
         }
-      }
 
-      const file = await readFile(outputPath);
-      res.writeHead(200, {
-        "Content-Type": "image/png",
-        "Content-Length": file.length,
-      });
-      res.end(file);
+        // Only allow to generate one token size per token in parallel.
+        await lock.acquire(filename, async () => {
+          const size = fittingTokenSize(requestedSize);
+
+          const inputPath = path.join(uploadedFilesDir, filename);
+          const outputPath = path.join(
+            uploadedFilesCacheDir,
+            `${size}-${filename}.png`
+          );
+
+          if (!existsSync(outputPath)) {
+            const CENTER = size / 2;
+            const RADIUS = size / 2 - 1;
+            const BORDER_WIDTH = 3 * (size / GRID_SIZE);
+            const mask = await sharp(
+              Buffer.from(
+                `<svg viewBox="0 0 ${size} ${size}">
+                <circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="#000" />
+              </svg>`,
+                "utf-8"
+              )
+            ).toBuffer();
+            const border = await sharp(
+              Buffer.from(
+                `<svg viewBox="0 0 ${size} ${size}">
+                <circle
+                  cx="${CENTER}"
+                  cy="${CENTER}"
+                  r="${RADIUS - BORDER_WIDTH / 2 - 0.5}"
+                  fill="transparent"
+                  stroke-width="${BORDER_WIDTH}"
+                  stroke="#502d16" />
+                <circle
+                  cx="${CENTER}"
+                  cy="${CENTER}"
+                  r="${RADIUS - BORDER_WIDTH / 2}"
+                  fill="transparent"
+                  stroke-width="${BORDER_WIDTH}"
+                  stroke="#b39671" />
+              </svg>`,
+                "utf-8"
+              )
+            ).toBuffer();
+
+            console.log("Generating token", filename, size);
+            await sharp(inputPath)
+              .resize({
+                width: size,
+                height: size,
+                fit: "cover",
+                position: "top",
+              })
+              .composite([
+                { input: mask, blend: "dest-in" },
+                { input: border, blend: "over" },
+              ])
+              .png()
+              .toFile(outputPath);
+            console.log("Finished token", filename, size);
+          }
+
+          const file = await readFile(outputPath);
+          res.writeHead(200, {
+            "Content-Type": "image/png",
+            "Content-Length": file.length,
+          });
+          res.end(file);
+        });
+      } catch (err) {
+        next(err);
+      }
     }
   );
 
@@ -178,33 +186,30 @@ export async function setupWebServer(
     .map((id) => (__webpack_require__ as (str: string) => string)(id))
     .map((each) => path.join(__dirname, each));
 
-  app.post("/random-token", async (req, res) => {
-    const icon = icons[Math.floor(Math.random() * icons.length)];
-    if (!icon) {
-      res.status(500);
-      return;
-    }
-
-    const filename = `generated-${nanoid()}.svg`;
-    const background = randomColor();
-
+  app.post("/random-token", async (req, res, next) => {
     try {
+      const icon = icons[Math.floor(Math.random() * icons.length)];
+      if (!icon) {
+        throw new Error();
+      }
+
+      const filename = `generated-${nanoid()}.svg`;
+      const background = randomColor();
+
       await sharp(await sharp(icon).resize(450, 450).toBuffer())
         .extend({ top: 50, left: 50, right: 50, bottom: 50, background })
         .flatten({ background })
         .png()
         .toFile(path.join(uploadedFilesDir, filename));
-    } catch (err) {
-      console.error(err);
-      res.status(500);
-      return;
-    }
 
-    const file: RRFile = {
-      filename,
-      originalFilename: filename,
-    };
-    return res.json(file);
+      const file: RRFile = {
+        filename,
+        originalFilename: filename,
+      };
+      return res.json(file);
+    } catch (err) {
+      next(err);
+    }
   });
 
   // (6) Serve the client code to the browser

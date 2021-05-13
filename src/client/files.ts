@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { RRAsset, RRFile } from "../shared/state";
+import { fittingTokenSize } from "../shared/util";
 import { apiHost } from "./util";
 
 export function fileUrl(file: RRFile) {
@@ -14,10 +15,10 @@ export function assetUrl(a: RRAsset) {
   return a.external ? a.filenameOrUrl : _fileUrl(a.filenameOrUrl);
 }
 
-export function tokenImageUrl(file: RRFile, size: number, zoom: number = 1) {
+export function tokenImageUrl(file: RRFile, size: number) {
   return `${apiHost()}/token-image/${encodeURIComponent(
     file.filename
-  )}/${encodeURIComponent(size)}/${encodeURIComponent(zoom)}`;
+  )}/${encodeURIComponent(fittingTokenSize(size))}`;
 }
 
 export async function generateRandomToken(): Promise<RRFile> {

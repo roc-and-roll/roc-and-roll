@@ -1942,6 +1942,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/async-lock@npm:^1":
+  version: 1.1.2
+  resolution: "@types/async-lock@npm:1.1.2"
+  checksum: 3a3f861c3b822c11c285e6a251ffb8a2e5ac65f10d52d38a316125b23b25f59342ee3ba706bb1b2c95b88a7bcd712ca5e7c6568c315f59f04915eaa67e099b45
+  languageName: node
+  linkType: hard
+
 "@types/babel__core@npm:^7.0.0, @types/babel__core@npm:^7.1.7":
   version: 7.1.14
   resolution: "@types/babel__core@npm:7.1.14"
@@ -3238,6 +3245,13 @@ __metadata:
   version: 1.0.1
   resolution: "async-limiter@npm:1.0.1"
   checksum: d123312ace75c07399ddc58e06cc028dacce35f71cdf59cf9b22f6c31dde221c22285e6185ede823ecb67f3b3065e26205eb9f74fcbba3f12ce7a2c2b09d7763
+  languageName: node
+  linkType: hard
+
+"async-lock@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "async-lock@npm:1.3.0"
+  checksum: 22dd2901d904c22d587c217ed116e6b91027ad9a47a362396608ef8ec1122d2570c4f82f030a775374869ffa6df4a5739e15687ad1be8150e7ef173474f557e3
   languageName: node
   linkType: hard
 
@@ -5732,13 +5746,6 @@ __metadata:
     jest-message-util: ^26.6.2
     jest-regex-util: ^26.0.0
   checksum: a4ec4cbafac8b05eb02a8af5f086dede84a3a701abbfdafeadca24a1d286bd07035b32b2864a6ff012a733009beb0b96c10469b40832c5ee0d2dd0bb6b50a5b0
-  languageName: node
-  linkType: hard
-
-"express-async-handler@npm:^1.1.4":
-  version: 1.1.4
-  resolution: "express-async-handler@npm:1.1.4"
-  checksum: 0cc72e8be4d748d40c27b0049653d2143c75ddbce0d3e7d5319db4d1a364f3934cd8eeb77ea3a2919a80e1e5eb9666f3008328fbe70141d4ce0f0e11d368be18
   languageName: node
   linkType: hard
 
@@ -11422,6 +11429,7 @@ resolve@^2.0.0-next.3:
     "@testing-library/react": ^11.2.6
     "@testing-library/react-hooks": ^5.1.2
     "@tippyjs/react": ^4.2.5
+    "@types/async-lock": ^1
     "@types/express": ^4.17.11
     "@types/howler": ^2.2.2
     "@types/jest": ^26.0.23
@@ -11442,6 +11450,7 @@ resolve@^2.0.0-next.3:
     "@types/webpack-env": ^1.16.0
     "@typescript-eslint/eslint-plugin": ^4.22.0
     "@typescript-eslint/parser": ^4.22.0
+    async-lock: ^1.3.0
     babel-jest: ^26.6.3
     babel-loader: ^8.2.2
     bufferutil: ^4.0.3
@@ -11458,7 +11467,6 @@ resolve@^2.0.0-next.3:
     eslint-plugin-react: ^7.23.2
     eslint-plugin-react-hooks: ^4.2.0
     express: ^4.17.1
-    express-async-handler: ^1.1.4
     file-loader: ^6.2.0
     fork-ts-checker-webpack-plugin: ^6.2.5
     git-revision-webpack-plugin: ^3.0.6

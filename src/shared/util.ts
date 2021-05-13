@@ -1,4 +1,5 @@
 import { nanoid } from "@reduxjs/toolkit";
+import { TOKEN_SIZES } from "./constants";
 import { RRID, RRTimestamp } from "./state";
 
 export async function randomName(pattern = "!<s|B|Bv|v><V|s|'|V><s|V|C>") {
@@ -93,4 +94,11 @@ export function identityHash(object: object): number {
   hashes.set(object, nextHash++);
 
   return identityHash(object);
+}
+
+export function fittingTokenSize(requestedSize: number): number {
+  return (
+    TOKEN_SIZES.find((possibleSize) => possibleSize >= requestedSize) ??
+    TOKEN_SIZES[TOKEN_SIZES.length - 1]!
+  );
 }

@@ -95,7 +95,7 @@ export const MapToken = React.memo<{
       style={tokenStyle}
       width={tokenSize}
       height={tokenSize}
-      href={tokenImageUrl(token.image, tokenSize, Math.ceil(zoom))}
+      href={tokenImageUrl(token.image, tokenSize * zoom)}
     />
   ) : (
     <circle

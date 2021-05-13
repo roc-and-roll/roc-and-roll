@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { GRID_SIZE } from "../../../shared/constants";
 import { RRCharacter } from "../../../shared/state";
 import { clamp } from "../../../shared/util";
 import { tokenImageUrl } from "../../files";
@@ -11,7 +10,7 @@ export function TokenPreview({ token }: { token: RRCharacter }) {
       title={token.name}
       style={{
         backgroundImage: token.image
-          ? `url(${tokenImageUrl(token.image, GRID_SIZE)})`
+          ? `url(${tokenImageUrl(token.image, 32)})`
           : "none",
       }}
     />
