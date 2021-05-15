@@ -1,14 +1,65 @@
-import React from "react";
-import { RRMapLink } from "../../../shared/state";
-import { RoughRectangle } from "../rough";
+import React, { useCallback, useMemo, useState } from "react";
+import { byId, RRMapLink, RRMapObject } from "../../../shared/state";
+import { useMyself } from "../../myself";
+import { useLatest, useServerState } from "../../state";
+import { MapListEntry } from "../Maps";
+import { Popover } from "../Popover";
+import { RoughCircle, RoughRectangle } from "../rough";
 
-export function MapLink({ link }: { link: RRMapLink }) {
+export function MapLink({
+  link,
+  canStartMoving,
+  onStartMove,
+}: {
+  link: RRMapLink;
+  canStartMoving: boolean;
+  onStartMove: (object: RRMapObject, event: React.MouseEvent) => void;
+}) {
+  const myself = useMyself();
+  const canControl = canStartMoving && link.playerId === myself.id;
+  const style = useMemo(() => (canControl ? { cursor: "move" } : {}), [
+    canControl,
+  ]);
+  const map = useServerState((state) => byId(state.maps.entities, link.mapId));
+  const players = useServerState((state) => state.players);
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  const ref = useLatest({ link, onStartMove });
+  const onMouseDown = useCallback(
+    (e: React.MouseEvent<SVGElement>) => {
+      if (e.button === 2) {
+        setMenuVisible(true);
+        return;
+      }
+
+      ref.current.onStartMove(ref.current.link, e);
+    },
+    [ref]
+  );
+
   return (
-    <RoughRectangle
-      w={30}
-      h={30}
-      x={link.position.x}
-      y={link.position.y}
-    ></RoughRectangle>
+    <Popover
+      content={
+        map && (
+          <div onMouseDown={(e) => e.stopPropagation()}>
+            <MapListEntry players={players} map={map} myself={myself} />
+          </div>
+        )
+      }
+      visible={menuVisible}
+      onClickOutside={() => setMenuVisible(false)}
+      interactive
+      placement="right"
+    >
+      <g
+        style={style}
+        className="map-link"
+        onMouseDown={onMouseDown}
+        transform={`translate(${link.position.x}, ${link.position.y})`}
+      >
+        <text y={-2}>{map?.name}</text>
+        <RoughCircle x={0} y={0} d={30} fill={link.color}></RoughCircle>
+      </g>
+    </Popover>
   );
 }

@@ -106,7 +106,11 @@ const MapObjectWrapper = React.memo<{
       );
     case "mapLink":
       return ReactDOM.createPortal(
-        <MapLink link={mapObject} />,
+        <MapLink
+          link={mapObject}
+          canStartMoving={canStartMoving}
+          onStartMove={onStartMove}
+        />,
         areas.tokenArea
       );
     case "token": {

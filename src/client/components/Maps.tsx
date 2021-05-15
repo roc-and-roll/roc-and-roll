@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import React from "react";
 import { useDrag, useDrop } from "react-dnd";
-import { mapAdd, playerUpdate } from "../../shared/actions";
+import { mapAdd, mapUpdate, playerUpdate } from "../../shared/actions";
 import { randomColor } from "../../shared/colors";
 import {
   EntityCollection,
@@ -12,7 +12,11 @@ import {
   RRPlayerID,
 } from "../../shared/state";
 import { useMyself } from "../myself";
-import { useServerDispatch, useServerState } from "../state";
+import {
+  useOptimisticDebouncedServerUpdate,
+  useServerDispatch,
+  useServerState,
+} from "../state";
 import { GMArea } from "./GMArea";
 import { Button } from "./ui/Button";
 
@@ -31,6 +35,7 @@ export function Maps() {
             map={map}
             myself={myself}
             players={players}
+            showDragHandle
           />
         ))}
         <li className="maps-create">
@@ -65,14 +70,16 @@ export function Maps() {
   );
 }
 
-function MapListEntry({
+export function MapListEntry({
   map,
   myself,
   players: allPlayers,
+  showDragHandle,
 }: {
   map: RRMap;
   myself: RRPlayer;
   players: EntityCollection<RRPlayer>;
+  showDragHandle?: boolean;
 }) {
   const dispatch = useServerDispatch();
   const players = entries(allPlayers).filter(
@@ -84,6 +91,12 @@ function MapListEntry({
     type: "map",
     item: { id: map.id },
   }));
+
+  const [name, setName] = useOptimisticDebouncedServerUpdate(
+    map.name,
+    (name) => dispatch(mapUpdate({ id: map.id, changes: { name } })),
+    1000
+  );
 
   const [{ canDropAndHovered, canDrop }, dropRef] = useDrop<
     { id: RRPlayerID },
@@ -107,14 +120,25 @@ function MapListEntry({
   );
 
   return (
-    <li ref={dragRef}>
-      <h3>
-        {map.name}
+    <li>
+      <h3 className="maps-map-title">
+        <input
+          className="maps-map-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
         {isMyCurrentMap && (
           <>
             {" "}
             <span className="maps-you-are-here">you are here</span>
           </>
+        )}
+        {showDragHandle && (
+          <div
+            title="Drag to create link"
+            className="maps-drag-handle"
+            ref={dragRef}
+          ></div>
         )}
       </h3>
       <div

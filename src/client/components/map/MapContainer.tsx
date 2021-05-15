@@ -175,7 +175,7 @@ export default function MapContainer() {
             mapObjectAdd(map.id, {
               id: rrid<RRMapObject>(),
               type: "mapLink",
-              position: point,
+              position: pointSubtract(point, { x: 10, y: 10 }),
               playerId: myself.id,
               mapId,
               locked: false,

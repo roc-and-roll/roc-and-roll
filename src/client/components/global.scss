@@ -698,6 +698,29 @@ button.color-picker-color {
   font-size: 0.75rem;
 }
 
+.maps-map-title {
+  display: flex;
+
+  .maps-map-name {
+    flex-grow: 1;
+    background: none;
+    color: inherit;
+    border: none;
+    outline: none;
+  }
+
+  .maps-drag-handle {
+    $size: 20px;
+    margin-left: 0.5rem;
+    border-radius: $size;
+    width: $size;
+    height: $size;
+    background: #f00;
+    cursor: pointer;
+    border: 2px solid black;
+  }
+}
+
 .maps-create {
   text-align: right;
 }
@@ -736,4 +759,15 @@ button.color-picker-color {
 
 .map-grid {
   pointer-events: none;
+}
+
+.map-link {
+  text {
+    paint-order: stroke;
+    stroke: #fff;
+    stroke-width: 4px;
+    stroke-linecap: butt;
+    stroke-linejoin: miter;
+    font-weight: 800;
+  }
 }
