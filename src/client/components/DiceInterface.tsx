@@ -63,7 +63,16 @@ export function DiceInterface() {
   function addDiceType(diceType: string) {
     const index = diceTypes.findIndex((element) => element.includes(diceType));
     if (index >= 0) {
-      const diceInfo = diceTypes[index]?.split("d");
+      let splitLetter = "";
+      if (diceTypes[index]?.includes("d")) {
+        splitLetter = "d";
+      } else if (diceTypes[index]?.includes("a")) {
+        splitLetter = "a";
+      } else if (diceTypes[index]?.includes("i")) {
+        splitLetter = "i";
+      }
+
+      const diceInfo = diceTypes[index]?.split(splitLetter);
       if (diceInfo === undefined) {
         return;
       }
@@ -74,7 +83,7 @@ export function DiceInterface() {
       } else {
         newCount = 2;
       }
-      const newDiceType = `${newCount}d${diceInfo[1]!}`;
+      const newDiceType = `${newCount}${splitLetter}${diceInfo[1]!}`;
       diceTypes[index] = newDiceType;
       setDiceTypes([...diceTypes]);
     } else {
@@ -114,7 +123,24 @@ export function DiceInterface() {
                   <Button onClick={() => addDiceType("d8")}>d8</Button>
                   <Button onClick={() => addDiceType("d10")}>d10</Button>
                   <Button onClick={() => addDiceType("d12")}>d12</Button>
-                  <Button onClick={() => addDiceType("d20")}>d20</Button>
+                  <Button
+                    style={{ width: "50%" }}
+                    onClick={() => addDiceType("d20")}
+                  >
+                    d20
+                  </Button>
+                  <Button
+                    style={{ width: "25%" }}
+                    onClick={() => addDiceType("a20")}
+                  >
+                    Adv
+                  </Button>
+                  <Button
+                    style={{ width: "25%" }}
+                    onClick={() => addDiceType("i20")}
+                  >
+                    Dis
+                  </Button>
                 </td>
                 <td className="buttons-half-width">
                   <div>
