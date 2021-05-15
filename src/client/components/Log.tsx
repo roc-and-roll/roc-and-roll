@@ -19,7 +19,9 @@ function LogEntry(props: { logEntry: RRLogEntry }) {
     return (
       <div title={formatTimestamp(logEntry.timestamp)}>
         {player?.name ?? "system"}: {diceResultString(logEntry)} ={" "}
-        {diceResult(logEntry)}
+        <u>
+          <b>{diceResult(logEntry)}</b>
+        </u>
       </div>
     );
   }
