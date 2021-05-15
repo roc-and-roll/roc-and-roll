@@ -33,6 +33,7 @@ export const MapGrid = React.memo<{
         y={topLeft.y}
         width={`${100 / transform.a}%`}
         height={`${100 / transform.a}%`}
+        className="map-grid"
         fill="url(#grid)"
       />
     </>

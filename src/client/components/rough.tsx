@@ -134,16 +134,17 @@ function makeRoughComponent<C extends object>(
     options: PassedThroughOptions
   ) => Drawable,
   generateSimple: (
-    customProps: C & { x: number; y: number } & Pick<
-        PassedThroughOptions,
-        "fill" | "stroke" | "strokeLineDash"
-      >
+    customProps: C & {
+      x: number;
+      y: number;
+      onMouseDown?: (e: React.MouseEvent<SVGElement>) => void;
+    } & Pick<PassedThroughOptions, "fill" | "stroke" | "strokeLineDash">
   ) => React.ReactElement
 ) {
   const component = React.memo<
     C &
       PassedThroughOptions &
-      Pick<SVGProps<SVGGElement>, "onMouseDown" | "style"> & {
+      Pick<SVGProps<SVGElement>, "onMouseDown" | "style"> & {
         x: number;
         y: number;
       }

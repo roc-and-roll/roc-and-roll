@@ -7,6 +7,7 @@ import {
   EntityCollection,
   entries,
   RRMap,
+  RRMapID,
   RRPlayer,
   RRPlayerID,
 } from "../../shared/state";
@@ -79,6 +80,11 @@ function MapListEntry({
   );
   const isMyCurrentMap = myself.currentMap === map.id;
 
+  const [, dragRef] = useDrag<{ id: RRMapID }, void, null>(() => ({
+    type: "map",
+    item: { id: map.id },
+  }));
+
   const [{ canDropAndHovered, canDrop }, dropRef] = useDrop<
     { id: RRPlayerID },
     void,
@@ -101,7 +107,7 @@ function MapListEntry({
   );
 
   return (
-    <li>
+    <li ref={dragRef}>
       <h3>
         {map.name}
         {isMyCurrentMap && (

@@ -14,6 +14,7 @@ import {
   mapObjectsFamily,
   ToolButtonState,
 } from "./MapContainer";
+import { MapLink } from "./MapLink";
 import { MapObjectThatIsNotAToken } from "./MapObjectThatIsNotAToken";
 import { MapToken } from "./MapToken";
 
@@ -102,6 +103,11 @@ const MapObjectWrapper = React.memo<{
           onStartMove={onStartMove}
         />,
         areas.defaultArea
+      );
+    case "mapLink":
+      return ReactDOM.createPortal(
+        <MapLink link={mapObject} />,
+        areas.tokenArea
       );
     case "token": {
       return ReactDOM.createPortal(

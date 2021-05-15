@@ -23,6 +23,7 @@ import {
   RRCharacter,
   RRCharacterID,
   setById,
+  RRMapID,
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import {
@@ -155,14 +156,36 @@ export default function MapContainer() {
     []
   );
 
-  const [, dropRef1] = useDrop<{ id: RRCharacterID }, void, never>(
+  const [, dropRef1] = useDrop<{ id: RRCharacterID | RRMapID }, void, never>(
     () => ({
-      accept: ["token", "tokenTemplate"],
-      drop: ({ id: characterId }, monitor) => {
+      accept: ["token", "tokenTemplate", "map"],
+      drop: ({ id }, monitor) => {
         const topLeft = dropRef2.current!.getBoundingClientRect();
         const dropPosition = monitor.getClientOffset();
         const x = dropPosition!.x - topLeft.x;
         const y = dropPosition!.y - topLeft.y;
+        const point = globalToLocal(transformRef.current, {
+          x,
+          y,
+        });
+
+        if (monitor.getItemType() === "map") {
+          const mapId = id as RRMapID;
+          dispatch(
+            mapObjectAdd(map.id, {
+              id: rrid<RRMapObject>(),
+              type: "mapLink",
+              position: point,
+              playerId: myself.id,
+              mapId,
+              locked: false,
+              color: "#000",
+            })
+          );
+          return;
+        }
+
+        let characterId = id as RRCharacterID;
 
         const character =
           monitor.getItemType() === "tokenTemplate"
@@ -187,12 +210,7 @@ export default function MapContainer() {
           mapObjectAdd(map.id, {
             id: rrid<RRMapObject>(),
             type: "token",
-            position: snapPointToGrid(
-              globalToLocal(transformRef.current, {
-                x,
-                y,
-              })
-            ),
+            position: snapPointToGrid(point),
             playerId: myself.id,
             characterId,
           })

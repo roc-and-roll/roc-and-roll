@@ -112,6 +112,13 @@ export interface RRToken extends RRMapObjectBase {
   characterId: RRCharacterID;
 }
 
+export interface RRMapLink extends RRMapObjectBase {
+  type: "mapLink";
+  locked: boolean;
+  mapId: RRMapID;
+  color: RRColor;
+}
+
 export interface RRMapDrawingBase extends RRMapObjectBase {
   locked: boolean;
   color: RRColor;
@@ -154,6 +161,7 @@ export interface RRMapDrawingText extends RRMapDrawingBase {
 
 export type RRMapObject =
   | RRToken
+  | RRMapLink
   | RRMapDrawingImage
   | RRMapDrawingRectangle
   | RRMapDrawingEllipse

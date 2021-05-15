@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import { GRID_SIZE } from "../../../shared/constants";
-import { RRMapObject, RRToken } from "../../../shared/state";
+import { RRMapLink, RRMapObject, RRToken } from "../../../shared/state";
 import { fileUrl } from "../../files";
 import {
   RoughEllipse,
@@ -18,7 +18,7 @@ import { hoveredMapObjectsFamily } from "./Map";
 import { selectedMapObjectsFamily } from "./MapContainer";
 
 export const MapObjectThatIsNotAToken = React.memo<{
-  object: Exclude<RRMapObject, RRToken>;
+  object: Exclude<Exclude<RRMapObject, RRToken>, RRMapLink>;
   onStartMove: (object: RRMapObject, event: React.MouseEvent) => void;
   canStartMoving: boolean;
 }>(function MapObjectThatIsNotAToken({ object, onStartMove, canStartMoving }) {
@@ -40,7 +40,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
 
   const ref = useLatest({ object, onStartMove });
   const onMouseDown = useCallback(
-    (e) => {
+    (e: React.MouseEvent<SVGElement>) => {
       ref.current.onStartMove(ref.current.object, e);
     },
     [ref]
