@@ -23,6 +23,7 @@ import { selectedMapObjectsFamily, tokenFamily } from "./MapContainer";
 import { Popover } from "../Popover";
 import { TokenEditor } from "../tokens/TokenEditor";
 import { makePoint, pointAdd, pointEquals } from "../../point";
+import { EmanationArea } from "./Areas";
 
 export const MapToken = React.memo<{
   object: RRToken;
@@ -235,12 +236,22 @@ function Aura({
   const fill = tinycolor(aura.color).setAlpha(0.3).toRgbString();
   if (aura.shape === "circle") {
     return (
-      <circle
-        cx={x + tokenSize / 2}
-        cy={y + tokenSize / 2}
-        fill={fill}
-        r={size}
-      />
+      <>
+        <circle
+          cx={x + tokenSize / 2}
+          cy={y + tokenSize / 2}
+          fill={tinycolor(fill).setAlpha(0.15).toRgbString()}
+          r={size}
+        />
+        <EmanationArea
+          r={Math.round(aura.size / 5)}
+          creatureX={x / GRID_SIZE}
+          creatureY={y / GRID_SIZE}
+          creatureW={token.scale}
+          creatureH={token.scale}
+          fill={fill}
+        />
+      </>
     );
   } else if (aura.shape === "square") {
     return (
