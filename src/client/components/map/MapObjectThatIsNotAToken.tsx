@@ -18,7 +18,7 @@ import { hoveredMapObjectsFamily } from "./Map";
 import { selectedMapObjectsFamily } from "./MapContainer";
 
 export const MapObjectThatIsNotAToken = React.memo<{
-  object: Exclude<Exclude<RRMapObject, RRToken>, RRMapLink>;
+  object: Exclude<RRMapObject, RRToken | RRMapLink>;
   onStartMove: (object: RRMapObject, event: React.MouseEvent) => void;
   canStartMoving: boolean;
 }>(function MapObjectThatIsNotAToken({ object, onStartMove, canStartMoving }) {

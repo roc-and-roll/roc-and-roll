@@ -1,10 +1,11 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { GRID_SIZE } from "../../../shared/constants";
 import { byId, RRMapLink, RRMapObject } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import { useLatest, useServerState } from "../../state";
 import { MapListEntry } from "../Maps";
 import { Popover } from "../Popover";
-import { RoughCircle, RoughRectangle } from "../rough";
+import { RoughCircle, RoughText } from "../rough";
 
 export function MapLink({
   link,
@@ -57,8 +58,17 @@ export function MapLink({
         onMouseDown={onMouseDown}
         transform={`translate(${link.position.x}, ${link.position.y})`}
       >
-        <text y={-2}>{map?.name}</text>
-        <RoughCircle x={0} y={0} d={30} fill={link.color}></RoughCircle>
+        <RoughText x={0} y={-5} dominantBaseline="text-bottom">
+          {map?.name}
+        </RoughText>
+        <RoughCircle
+          x={0}
+          y={0}
+          d={GRID_SIZE / 2}
+          fill={link.color}
+          fillStyle="solid"
+          roughness={1}
+        />
       </g>
     </Popover>
   );

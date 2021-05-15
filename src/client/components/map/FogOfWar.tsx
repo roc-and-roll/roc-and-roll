@@ -50,19 +50,18 @@ export function FogOfWar({
   ]);
   const outerFill = viewport.difference(background);
 
-  const shapeToSVGPath = (shape: Shape) => (
-    <path
-      fill={`rgba(0, 0, 0, ${myself.isGM ? 0.3 : 1})`}
-      fillRule="evenodd"
-      d={
-        shape.paths
-          .flatMap((p) =>
-            p.map((p, i) => (i === 0 ? "M " : "L ") + `${p.X},${p.Y} `)
-          )
-          .join(" ") + "Z"
-      }
-    />
-  );
+  const shapeToSVGPath = (shape: Shape) => {
+    const points = shape.paths.flatMap((p) =>
+      p.map((p, i) => (i === 0 ? "M " : "L ") + `${p.X},${p.Y} `)
+    );
+    return points.length === 0 ? null : (
+      <path
+        fill={`rgba(0, 0, 0, ${myself.isGM ? 0.3 : 1})`}
+        fillRule="evenodd"
+        d={points.join(" ") + "Z"}
+      />
+    );
+  };
 
   return (
     <>
