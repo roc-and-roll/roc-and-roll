@@ -155,6 +155,7 @@ export const RRMapView = React.memo<{
   toolHandler: MapMouseHandler;
   toolButtonState: ToolButtonState;
   revealedAreas: RRCapPoint[][] | null;
+  toolOverlay: JSX.Element | null;
 }>(function RRMapView({
   myself,
   mapId,
@@ -173,6 +174,7 @@ export const RRMapView = React.memo<{
   toolButtonState,
   toolHandler,
   revealedAreas,
+  toolOverlay,
 }) {
   const [settings] = useRRSettings();
   const [roughEnabled, setRoughEnabled] = useState(
@@ -225,29 +227,30 @@ export const RRMapView = React.memo<{
       e.preventDefault();
       e.stopPropagation();
 
+      // https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
+      const delta =
+        e.deltaMode === 0x00 // pixel mode
+          ? (e.deltaY / 100) * 16 * ZOOM_SCALE_FACTOR
+          : e.deltaMode === 0x01 // line mode
+          ? e.deltaY
+          : // weird page mode
+            3;
+
+      toolHandler.onMouseWheel?.(delta);
+
       if (mouseActionRef.current !== MouseAction.NONE) return;
 
       const { x, y } = localCoords(e);
-      setTransform((t) => {
-        // debugger;
-        // https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
-        const delta =
-          e.deltaMode === 0x00 // pixel mode
-            ? (e.deltaY / 100) * 16 * ZOOM_SCALE_FACTOR
-            : e.deltaMode === 0x01 // line mode
-            ? e.deltaY
-            : // weird page mode
-              3;
-
-        return compose(
+      setTransform((t) =>
+        compose(
           translate(x, y),
           scale(Math.pow(1.05, -delta)),
           translate(-x, -y),
           t
-        );
-      });
+        )
+      );
     },
-    [setTransform]
+    [toolHandler]
   );
 
   const addPointToPath = useCallback(
@@ -738,6 +741,7 @@ export const RRMapView = React.memo<{
             contrastColor={contrastColor}
             players={players}
           />
+          {toolOverlay}
         </g>
       </svg>
     </RoughContextProvider>

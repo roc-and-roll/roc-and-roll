@@ -418,9 +418,15 @@ export default function MapContainer() {
     1000
   );
 
-  const toolHandler = useMapToolHandler(myself, map, editState, transformRef, {
-    setRevealedAreas,
-  });
+  const [toolHandler, toolOverlay] = useMapToolHandler(
+    myself,
+    map,
+    editState,
+    transformRef,
+    {
+      setRevealedAreas,
+    }
+  );
 
   const onSetHP = useCallback(
     (tokenId: RRCharacterID, hp: number) => {
@@ -558,6 +564,7 @@ export default function MapContainer() {
         // misc
         handleKeyDown={handleKeyDown}
         revealedAreas={revealedAreas}
+        toolOverlay={toolOverlay}
       />
       {process.env.NODE_ENV === "development" &&
         settings.debug.mapTokenPositions && (

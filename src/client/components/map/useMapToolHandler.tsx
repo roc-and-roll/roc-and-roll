@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   mapObjectAdd,
   mapObjectRemove,
@@ -21,11 +21,13 @@ import { pointAdd, pointEquals, pointSubtract, toCap } from "../../point";
 import { MapEditState } from "./MapContainer";
 import { Matrix } from "transformation-matrix";
 import Shape from "@doodle3d/clipper-js";
+import tinycolor from "tinycolor2";
 
 export interface MapMouseHandler {
   onMouseDown: (p: RRPoint) => void;
   onMouseMove: (p: RRPoint) => void;
   onMouseUp: (p: RRPoint) => void;
+  onMouseWheel?: (delta: number) => void;
 }
 
 // Thin points using the idea described here
@@ -64,7 +66,7 @@ export function useMapToolHandler(
       React.SetStateAction<RRCapPoint[][] | null>
     >;
   }
-): MapMouseHandler {
+): [MapMouseHandler, JSX.Element | null] {
   const dispatch = useServerDispatch();
 
   const currentId = useRef<RRMapObjectID | null>(null);
@@ -78,6 +80,17 @@ export function useMapToolHandler(
   const toolHandlerRef = useRef<MapMouseHandler>();
 
   const [mouseDown, setMouseDown] = useState(false);
+  const [mousePosition, setMousePosition] = useState<RRPoint>({ x: 0, y: 0 });
+  const [revealToolSize, setRevealToolSize] = useState(30);
+
+  const contrastColor = useMemo(
+    () =>
+      tinycolor
+        .mostReadable(map.backgroundColor, ["#fff", "#000"])
+        .setAlpha(0.3)
+        .toRgbString(),
+    [map.backgroundColor]
+  );
 
   if (editState.tool === "draw") {
     const create = (p: RRPoint): RRMapDrawingBase => ({
@@ -327,15 +340,18 @@ export function useMapToolHandler(
     }
   } else if (editState.tool === "reveal") {
     toolHandlerRef.current = {
-      onMouseDown: (p: RRPoint) => {},
+      onMouseDown: (p: RRPoint) => {
+        setMousePosition(p);
+        setMouseDown(true);
+      },
       onMouseMove: (p: RRPoint) => {
         if (mouseDown) {
-          const stampSize = 30;
+          setMousePosition(p);
           const stamp = [
-            toCap(pointAdd(p, { x: -stampSize, y: -stampSize })),
-            toCap(pointAdd(p, { x: -stampSize, y: stampSize })),
-            toCap(pointAdd(p, { x: stampSize, y: stampSize })),
-            toCap(pointAdd(p, { x: stampSize, y: -stampSize })),
+            toCap(pointAdd(p, { x: -revealToolSize, y: -revealToolSize })),
+            toCap(pointAdd(p, { x: -revealToolSize, y: revealToolSize })),
+            toCap(pointAdd(p, { x: revealToolSize, y: revealToolSize })),
+            toCap(pointAdd(p, { x: revealToolSize, y: -revealToolSize })),
           ];
           setRevealedAreas((shapes) => {
             let shape: RRCapPoint[][];
@@ -354,7 +370,12 @@ export function useMapToolHandler(
           });
         }
       },
-      onMouseUp: (p: RRPoint) => {},
+      onMouseUp: (p: RRPoint) => {
+        setMouseDown(false);
+      },
+      onMouseWheel: (delta: number) => {
+        setRevealToolSize((s) => s + delta);
+      },
     };
   } else {
     toolHandlerRef.current = {
@@ -364,15 +385,29 @@ export function useMapToolHandler(
     };
   }
 
-  return useRef({
-    onMouseDown: (p: RRPoint) => {
-      setMouseDown(true);
-      toolHandlerRef.current!.onMouseDown(p);
-    },
-    onMouseMove: (p: RRPoint) => toolHandlerRef.current!.onMouseMove(p),
-    onMouseUp: (p: RRPoint) => {
-      setMouseDown(false);
-      toolHandlerRef.current!.onMouseUp(p);
-    },
-  }).current;
+  return [
+    useRef({
+      onMouseDown: (p: RRPoint) => {
+        toolHandlerRef.current!.onMouseDown(p);
+      },
+      onMouseMove: (p: RRPoint) => {
+        toolHandlerRef.current!.onMouseMove(p);
+      },
+      onMouseUp: (p: RRPoint) => {
+        toolHandlerRef.current!.onMouseUp(p);
+      },
+      onMouseWheel: (delta: number) => {
+        toolHandlerRef.current!.onMouseWheel?.(delta);
+      },
+    }).current,
+    editState.tool === "reveal" && mouseDown ? (
+      <rect
+        x={mousePosition.x - revealToolSize}
+        y={mousePosition.y - revealToolSize}
+        width={revealToolSize * 2}
+        height={revealToolSize * 2}
+        fill={contrastColor}
+      />
+    ) : null,
+  ];
 }
