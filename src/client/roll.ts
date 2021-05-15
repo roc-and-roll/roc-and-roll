@@ -88,9 +88,9 @@ export function diceResultString(logEntry: RRLogEntryDiceRoll) {
             .map((r) => `${r} (d${part.faces})`)
             .join(" + ")}`;
         }
-        return `${prefix}(${part.diceResults
-          .map((r) => `${r} (d${part.faces})`)
-          .join(", ")})`;
+        return `${prefix}${
+          part.modified === "advantage" ? "a" : "i"
+        }(${part.diceResults.map((r) => `${r} (d${part.faces})`).join(", ")})`;
       }
       assertNever(part);
     })

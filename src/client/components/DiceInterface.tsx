@@ -124,19 +124,19 @@ export function DiceInterface() {
                   <Button onClick={() => addDiceType("d10")}>d10</Button>
                   <Button onClick={() => addDiceType("d12")}>d12</Button>
                   <Button
-                    style={{ width: "50%" }}
+                    style={{ width: "40%" }}
                     onClick={() => addDiceType("d20")}
                   >
                     d20
                   </Button>
                   <Button
-                    style={{ width: "25%" }}
+                    style={{ width: "30%", color: "green" }}
                     onClick={() => addDiceType("a20")}
                   >
                     Adv
                   </Button>
                   <Button
-                    style={{ width: "25%" }}
+                    style={{ width: "30%", color: "red" }}
                     onClick={() => addDiceType("i20")}
                   >
                     Dis
