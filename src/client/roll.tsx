@@ -1,3 +1,4 @@
+import React from "react";
 import { randomBetweenInclusive } from "../shared/random";
 import {
   RRMultipleRoll,
@@ -76,25 +77,82 @@ export function diceResultString(logEntry: RRLogEntryDiceRoll) {
   return logEntry.payload.dice
     .map((part) => {
       if (part.type === "modifier") {
-        return part.modifier;
+        return <b>{part.modifier}</b>;
       }
       const prefix = part.negated ? "-" : "";
       if (part.type === "dice") {
         if (part.diceResults.length === 1) {
-          return `${prefix}${part.diceResults[0]!} (d${part.faces})`;
+          return (
+            <>
+              {prefix}
+              <b>{part.diceResults[0]!}</b> (d{part.faces})
+            </>
+          );
         }
         if (part.modified === "none") {
-          return `${prefix}${part.diceResults
-            .map((r) => `${r} (d${part.faces})`)
-            .join(" + ")}`;
+          return (
+            <>
+              {prefix}
+              {part.diceResults
+                .map((r) => (
+                  <>
+                    <b>{r}</b> (d{part.faces})
+                  </>
+                ))
+                .reduce((prev, curr, index) => {
+                  return (
+                    <>
+                      {prev} + {curr}
+                    </>
+                  );
+                })}
+            </>
+          );
         }
-        return `${prefix}${
-          part.modified === "advantage" ? "a" : "i"
-        }(${part.diceResults.map((r) => `${r} (d${part.faces})`).join(", ")})`;
+        const boldValue =
+          part.modified === "advantage"
+            ? Math.max(...part.diceResults)
+            : Math.min(...part.diceResults);
+        return (
+          <>
+            {prefix}
+            {part.modified === "advantage" ? "a" : "i"}(
+            {part.diceResults
+              .map((r) => {
+                if (r === boldValue) {
+                  return (
+                    <>
+                      <b>{r}</b> (d{part.faces})
+                    </>
+                  );
+                } else {
+                  return (
+                    <>
+                      {r} (d{part.faces})
+                    </>
+                  );
+                }
+              })
+              .reduce((prev, curr, index) => {
+                return (
+                  <>
+                    {prev}, {curr}
+                  </>
+                );
+              })}
+            )
+          </>
+        );
       }
       assertNever(part);
     })
-    .join(" + ");
+    .reduce((prev, curr, index) => {
+      return (
+        <>
+          {prev} + {curr}
+        </>
+      );
+    });
 }
 
 export function diceResult(logEntry: RRLogEntryDiceRoll) {
