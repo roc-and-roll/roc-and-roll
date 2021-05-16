@@ -696,6 +696,7 @@ button.color-picker-color {
   text-transform: uppercase;
   color: $gmAreaColor;
   font-size: 0.75rem;
+  flex-shrink: 0;
 }
 
 .maps-map-title {
@@ -707,6 +708,7 @@ button.color-picker-color {
     color: inherit;
     border: none;
     outline: none;
+    min-width: 0;
   }
 
   .maps-drag-handle {
@@ -718,6 +720,7 @@ button.color-picker-color {
     background: #f00;
     cursor: pointer;
     border: 2px solid black;
+    flex-shrink: 0;
   }
 }
 
