@@ -1,7 +1,7 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { Dispatch } from "redux";
 import type { IterableElement, Opaque } from "type-fest";
-import { rrid } from "./util";
+import { assertNever, rrid } from "./util";
 
 export type RRID = Opaque<string>;
 
@@ -296,6 +296,41 @@ export const damageTypes = [
   "force",
   "psychic",
 ] as const;
+
+export const colorForDamageType = (type: RRDamageType["type"]) => {
+  switch (type) {
+    case null:
+      return "#000";
+    case "piercing":
+      return "#cccccc";
+    case "slashing":
+      return "#969696";
+    case "bludgeoning":
+      return "#5e5e5e";
+    case "poison":
+      return "#046e24";
+    case "acid":
+      return "#7bed00";
+    case "fire":
+      return "#c43a04";
+    case "cold":
+      return "#cbeff2";
+    case "radiant":
+      return "#fcfbae";
+    case "necrotic":
+      return "#303005";
+    case "lightning":
+      return "#ffff00";
+    case "thunder":
+      return "#597dff";
+    case "force":
+      return "#ebb0f7";
+    case "psychic":
+      return "#ff4ade";
+    default:
+      assertNever(type);
+  }
+};
 
 export const damageTypeModifiers = ["magical", "silver", "adamantine"] as const;
 

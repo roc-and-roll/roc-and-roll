@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
+import tinycolor from "tinycolor2";
 import {
   diceTemplateAdd,
   diceTemplateRemove,
@@ -9,6 +10,7 @@ import {
 } from "../../shared/actions";
 import {
   byId,
+  colorForDamageType,
   damageTypes,
   entries,
   multipleRollValues,
@@ -282,15 +284,6 @@ function DiceTemplateInner({
     1000
   );
 
-  const [notes, setNotes] = useOptimisticDebouncedServerUpdate(
-    template.notes,
-    (notes) =>
-      template
-        ? diceTemplateUpdate({ id: template.id, changes: { notes } })
-        : undefined,
-    1000
-  );
-
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   const [, dropRef] = useDrop<RRDiceTemplatePart, void, never>(
@@ -447,7 +440,13 @@ function DamageTypeEditor({
       Damage Type:
       <select
         value={damageType ?? ""}
-        onChange={(e) => setDamageType(e.target.value as RRDamageType["type"])}
+        onChange={(e) =>
+          setDamageType(
+            e.target.value === ""
+              ? null
+              : (e.target.value as RRDamageType["type"])
+          )
+        }
       >
         {damageTypes.map((t) => (
           <option key={t ?? ""} value={t ?? ""}>
@@ -638,6 +637,7 @@ const DiceTemplatePartMenuWrapper: React.FC<{
           setMenuVisible(true);
         }}
         onClick={(e) => e.button === 2 && e.stopPropagation()}
+        className="dice-template-outer"
       >
         {children}
       </div>
@@ -655,21 +655,35 @@ const DiceTemplatePart = React.forwardRef<
 >(function DiceTemplatePart({ part, newIds, onRoll }, ref) {
   let content: JSX.Element;
 
+  const styleFor = (part: RRDiceTemplatePartWithDamage) => ({
+    background: colorForDamageType(part.damage.type),
+    color: tinycolor
+      .mostReadable(tinycolor(colorForDamageType(part.damage.type)), [
+        "#000",
+        "#fff",
+      ])
+      .toHexString(),
+  });
+
   switch (part.type) {
     case "modifier":
       content = (
-        <div className="dice-option">
+        <div className="dice-option" style={styleFor(part)}>
           {part.number >= 0 && "+"}
           {part.number}
         </div>
       );
       break;
     case "linkedModifier":
-      content = <div className="dice-option">{part.name}</div>;
+      content = (
+        <div className="dice-option" style={styleFor(part)}>
+          {part.name}
+        </div>
+      );
       break;
     case "dice":
       content = (
-        <div className="dice-option">
+        <div className="dice-option" style={styleFor(part)}>
           {part.count}d{part.faces}
         </div>
       );
