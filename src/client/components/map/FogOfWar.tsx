@@ -56,6 +56,7 @@ export function FogOfWar({
     );
     return points.length === 0 ? null : (
       <path
+        className="map-reveal-areas"
         fill={`rgba(0, 0, 0, ${myself.isGM ? 0.3 : 1})`}
         fillRule="evenodd"
         d={points.join(" ") + "Z"}
