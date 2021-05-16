@@ -454,7 +454,8 @@ export default function MapContainer() {
   );
 
   const onMoveMapObjectsUpdater = useRecoilCallback(
-    ({ snapshot }) => (d: RRPoint) => (
+    ({ snapshot }) => (
+      d: RRPoint,
       localObjectsOnMap: typeof localMapObjects
     ) => {
       const updatedLocalObjectsOnMap: Record<RRMapObjectID, RRMapObject> = {};
@@ -510,7 +511,10 @@ export default function MapContainer() {
   // To circumvent that problem, we use a separate useRecoilCallback that is
   // executed right when React decides to schedule the state update.
   const onMoveMapObjects = useCallback(
-    (d: RRPoint) => setLocalObjectsOnMap(onMoveMapObjectsUpdater(d)),
+    (d: RRPoint) =>
+      setLocalObjectsOnMap((localObjectsOnMap) =>
+        onMoveMapObjectsUpdater(d, localObjectsOnMap)
+      ),
     [setLocalObjectsOnMap, onMoveMapObjectsUpdater]
   );
 
