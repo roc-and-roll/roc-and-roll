@@ -265,6 +265,10 @@ a {
       font-size: 0.8rem;
     }
 
+    textarea {
+      width: 100%;
+    }
+
     &.created {
       border-style: solid;
       border-width: 2px;

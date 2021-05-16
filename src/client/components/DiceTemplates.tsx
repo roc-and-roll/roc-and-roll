@@ -35,8 +35,24 @@ import { Popover } from "./Popover";
 export function DiceTemplates({ open }: { open: boolean }) {
   const [pickerShown, setPickerShown] = useState(false);
   const myself = useMyself();
-  const templates = useServerState((state) =>
+
+  const allTemplates = useServerState((state) =>
     entries(state.diceTemplates).filter((t) => t.playerId === myself.id)
+  );
+  const hasNested = (
+    template: RRDiceTemplate,
+    find: RRDiceTemplateID
+  ): boolean =>
+    template.parts.some(
+      (p) =>
+        p.type === "template" &&
+        (p.templateId === find ||
+          hasNested(allTemplates.find((t) => t.id === p.templateId)!, find))
+    );
+
+  const templates = allTemplates.filter(
+    (templateCandidate) =>
+      !allTemplates.some((t) => hasNested(t, templateCandidate.id))
   );
 
   const dispatch = useServerDispatch();
@@ -59,10 +75,48 @@ export function DiceTemplates({ open }: { open: boolean }) {
           })
         );
       },
-      canDrop: (item, monitor) => monitor.isOver({ shallow: true }),
+      canDrop: (_item, monitor) => monitor.isOver({ shallow: true }),
     }),
     [dispatch, myself.id]
   );
+
+  function evaluateDiceTemplatePart(
+    part: RRDiceTemplatePart,
+    modified: RRMultipleRoll
+  ): Array<RRDice | RRModifier> {
+    switch (part.type) {
+      case "dice":
+        return [roll({ ...part, modified })];
+      case "linkedModifier":
+        return [
+          {
+            type: "modifier",
+            // TODO
+            modifier: 0,
+            damageType: part.damage,
+          },
+        ];
+      case "modifier":
+        return [
+          {
+            type: "modifier",
+            modifier: part.number,
+            damageType: part.damage,
+          },
+        ];
+      case "template": {
+        return (
+          templates
+            .find((t) => t.id === part.templateId)
+            ?.parts?.flatMap((part) =>
+              evaluateDiceTemplatePart(part, modified)
+            ) ?? []
+        );
+      }
+      default:
+        assertNever(part);
+    }
+  }
 
   return (
     <div className={clsx("dice-templates", { opened: open })} ref={dropRef}>
@@ -70,7 +124,27 @@ export function DiceTemplates({ open }: { open: boolean }) {
       <div className="dice-templates-container">
         <button onClick={() => setPickerShown((b) => !b)}>Picker</button>
         {templates.map((t) => (
-          <DiceTemplate newIds={newIds} key={t.id} templateId={t.id} />
+          <DiceTemplate
+            onRoll={(templates, modified) =>
+              dispatch(
+                logEntryDiceRollAdd({
+                  silent: false,
+                  playerId: myself.id,
+                  payload: {
+                    rollType: "attack", // TODO
+                    dice: templates.flatMap((t) =>
+                      t.parts.flatMap((p) =>
+                        evaluateDiceTemplatePart(p, modified)
+                      )
+                    ),
+                  },
+                })
+              )
+            }
+            newIds={newIds}
+            key={t.id}
+            templateId={t.id}
+          />
         ))}
       </div>
     </div>
@@ -103,8 +177,18 @@ function DicePicker() {
           number: 1,
         }}
       />
+      <PickerDiceTemplateNested />
     </div>
   );
+}
+
+function PickerDiceTemplateNested() {
+  const [, dragRef] = useDrag<Record<string, never>, void, null>(() => ({
+    type: "diceTemplateNested",
+    item: {},
+  }));
+
+  return <div ref={dragRef}>Nested Template</div>;
 }
 
 function PickerDiceTemplatePart({ part }: { part: RRDiceTemplatePart }) {
@@ -115,15 +199,24 @@ function PickerDiceTemplatePart({ part }: { part: RRDiceTemplatePart }) {
 
   const newIds = useRef([]);
 
-  return <DiceTemplatePart ref={dragRef} newIds={newIds} part={part} />;
+  return (
+    <DiceTemplatePart
+      onRoll={() => {}}
+      ref={dragRef}
+      newIds={newIds}
+      part={part}
+    />
+  );
 }
 
 const DiceTemplate = React.memo(function DiceTemplate({
   templateId,
   newIds,
+  onRoll,
 }: {
   templateId: RRDiceTemplateID;
   newIds: React.MutableRefObject<RRDiceTemplateID[]>;
+  onRoll: (template: RRDiceTemplate[], modified: RRMultipleRoll) => void;
 }) {
   const template = useServerState((state) =>
     byId(state.diceTemplates.entities, templateId)
@@ -133,15 +226,19 @@ const DiceTemplate = React.memo(function DiceTemplate({
     return null;
   }
 
-  return <DiceTemplateInner template={template} newIds={newIds} />;
+  return (
+    <DiceTemplateInner onRoll={onRoll} template={template} newIds={newIds} />
+  );
 });
 
 function DiceTemplateInner({
   template,
   newIds,
+  onRoll,
 }: {
   template: RRDiceTemplate;
   newIds: React.MutableRefObject<RRDiceTemplateID[]>;
+  onRoll: (templates: RRDiceTemplate[], modified: RRMultipleRoll) => void;
 }) {
   const myself = useMyself();
   const dispatch = useServerDispatch();
@@ -168,8 +265,24 @@ function DiceTemplateInner({
 
   const [, dropRef] = useDrop<RRDiceTemplatePart, void, never>(
     () => ({
-      accept: "diceTemplatePart",
-      drop: (item) => {
+      accept: ["diceTemplatePart", "diceTemplateNested"],
+      drop: (item, monitor) => {
+        if (monitor.getItemType() === "diceTemplateNested") {
+          item = {
+            type: "template",
+            templateId: dispatch(
+              diceTemplateAdd({
+                playerId: myself.id,
+                name: "",
+                notes: "",
+                parts: [],
+                rollType: "attack",
+                id: rrid<RRDiceTemplate>(),
+              })
+            ).payload.id,
+          };
+        }
+
         dispatch(
           diceTemplateUpdate({
             id: template.id,
@@ -180,7 +293,7 @@ function DiceTemplateInner({
         );
       },
     }),
-    [dispatch, template]
+    [dispatch, myself.id, template.id, template.parts]
   );
 
   useEffect(() => {
@@ -190,64 +303,6 @@ function DiceTemplateInner({
     }
   }, [newIds, template]);
 
-  function evaluateDiceTemplatePart(
-    part: RRDiceTemplatePart
-  ): Array<RRDice | RRModifier> {
-    switch (part.type) {
-      case "dice":
-        return [roll(part)];
-      case "linkedModifier":
-        return [
-          {
-            type: "modifier",
-            // TODO
-            modifier: 0,
-            damageType: part.damage,
-          },
-        ];
-      case "modifier":
-        return [
-          {
-            type: "modifier",
-            modifier: part.number,
-            damageType: part.damage,
-          },
-        ];
-      case "template":
-        // TODO
-        return [
-          {
-            type: "modifier",
-            modifier: 0,
-            damageType: {
-              type: null,
-              modifiers: [],
-            },
-          },
-        ];
-      // return evaluateDiceTemplatePart(part.templateId);
-      default:
-        assertNever(part);
-    }
-  }
-
-  function doRoll(modified: RRMultipleRoll) {
-    // TODO: Use modified
-    if (template) {
-      dispatch(
-        logEntryDiceRollAdd({
-          silent: false,
-          playerId: myself.id,
-          payload: {
-            rollType: "attack", // TODO
-            dice: template.parts.flatMap(evaluateDiceTemplatePart),
-          },
-        })
-      );
-    }
-  }
-
-  // TODO
   const canMultipleRoll = template.parts.some(
     (d) => d.type === "dice" && d.faces === 20
   );
@@ -255,7 +310,10 @@ function DiceTemplateInner({
   return (
     <div
       ref={dropRef}
-      onClick={() => doRoll("none")}
+      onClick={(e) => {
+        e.stopPropagation();
+        onRoll([template], "none");
+      }}
       className={clsx("dice-template", { created: template })}
     >
       {template ? (
@@ -270,6 +328,7 @@ function DiceTemplateInner({
             onClick={(e) => e.stopPropagation()}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
+            className="dice-template-notes"
           />
           {template.parts.map((part, i) => (
             <DiceTemplatePartMenuWrapper
@@ -277,7 +336,13 @@ function DiceTemplateInner({
               key={i}
               part={part}
             >
-              <DiceTemplatePart part={part} newIds={newIds} />
+              <DiceTemplatePart
+                onRoll={(templates, modified) =>
+                  onRoll([template, ...templates], modified)
+                }
+                part={part}
+                newIds={newIds}
+              />
             </DiceTemplatePartMenuWrapper>
           ))}
           {canMultipleRoll && (
@@ -285,7 +350,7 @@ function DiceTemplateInner({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  doRoll("advantage");
+                  onRoll([template], "advantage");
                 }}
               >
                 ADV
@@ -293,7 +358,7 @@ function DiceTemplateInner({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  doRoll("disadvantage");
+                  onRoll([template], "disadvantage");
                 }}
               >
                 DIS
@@ -494,8 +559,9 @@ const DiceTemplatePart = React.forwardRef<
   {
     part: RRDiceTemplatePart;
     newIds: React.MutableRefObject<RRDiceTemplateID[]>;
+    onRoll: (templates: RRDiceTemplate[], modified: RRMultipleRoll) => void;
   }
->(function DiceTemplatePart({ part, newIds }, ref) {
+>(function DiceTemplatePart({ part, newIds, onRoll }, ref) {
   let content: JSX.Element;
 
   switch (part.type) {
@@ -518,7 +584,13 @@ const DiceTemplatePart = React.forwardRef<
       );
       break;
     case "template":
-      content = <DiceTemplate templateId={part.templateId} newIds={newIds} />;
+      content = (
+        <DiceTemplate
+          onRoll={(templates, modified) => onRoll(templates, modified)}
+          templateId={part.templateId}
+          newIds={newIds}
+        />
+      );
       break;
     default:
       assertNever(part);
