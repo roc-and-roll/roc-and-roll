@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import {
   diceTemplateAdd,
+  diceTemplateRemove,
   diceTemplateUpdate,
   logEntryDiceRollAdd,
 } from "../../shared/actions";
@@ -31,6 +32,7 @@ import {
   useServerState,
 } from "../state";
 import { Popover } from "./Popover";
+import { Button } from "./ui/Button";
 
 export function DiceTemplates({ open }: { open: boolean }) {
   const [pickerShown, setPickerShown] = useState(false);
@@ -536,6 +538,20 @@ const DiceTemplatePartMenuWrapper: React.FC<{
     );
   };
 
+  const applyDelete = (part: RRDiceTemplatePart) => {
+    dispatch(
+      [
+        diceTemplateUpdate({
+          changes: {
+            parts: template.parts.filter((p) => p !== part),
+          },
+          id: template.id,
+        }),
+        part.type === "template" && diceTemplateRemove(part.templateId),
+      ].flatMap((a) => (a ? a : []))
+    );
+  };
+
   return (
     <Popover
       content={
@@ -557,6 +573,7 @@ const DiceTemplatePartMenuWrapper: React.FC<{
           {part.type === "template" && (
             <TemplateNoteEditor templateId={part.templateId} />
           )}
+          {<Button onClick={() => applyDelete(part)}> Delete </Button>}
         </div>
       }
       visible={menuVisible}
