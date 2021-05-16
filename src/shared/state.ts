@@ -243,29 +243,42 @@ export const linkedModifierNames = [
   "proficiency",
 ] as const;
 
+export type RRDiceTemplatePartTemplate = {
+  type: "template";
+  templateId: RRDiceTemplateID;
+};
+
+export type RRDiceTemplatePartModifier = {
+  type: "modifier";
+  number: number;
+  damage: RRDamageType;
+};
+
+export type RRDiceTemplatePartLinkedModifier = {
+  type: "linkedModifier";
+  name: IterableElement<typeof linkedModifierNames>;
+  damage: RRDamageType;
+};
+
+export type RRDiceTemplatePartDice = {
+  type: "dice";
+  count: number;
+  faces: number; // 4, 6, 8, 10, 12, 20, 100, but also 3, 2, etc.
+  negated: boolean;
+  damage: RRDamageType;
+  modified: RRMultipleRoll;
+};
+
+export type RRDiceTemplatePartWithDamage =
+  | RRDiceTemplatePartDice
+  | RRDiceTemplatePartModifier
+  | RRDiceTemplatePartLinkedModifier;
+
 export type RRDiceTemplatePart =
-  | {
-      type: "template";
-      templateId: RRDiceTemplateID;
-    }
-  | {
-      type: "modifier";
-      number: number;
-      damage: RRDamageType;
-    }
-  | {
-      type: "linkedModifier";
-      name: IterableElement<typeof linkedModifierNames>;
-      damage: RRDamageType;
-    }
-  | {
-      type: "dice";
-      count: number;
-      faces: number; // 4, 6, 8, 10, 12, 20, 100, but also 3, 2, etc.
-      negated: boolean;
-      damage: RRDamageType;
-      modified: RRMultipleRoll;
-    };
+  | RRDiceTemplatePartTemplate
+  | RRDiceTemplatePartModifier
+  | RRDiceTemplatePartLinkedModifier
+  | RRDiceTemplatePartDice;
 
 export const damageTypes = [
   null,
@@ -291,7 +304,13 @@ export type RRDamageType = {
   modifiers: ReadonlyArray<IterableElement<typeof damageTypeModifiers>>;
 };
 
-export type RRMultipleRoll = "advantage" | "disadvantage" | "none";
+export const multipleRollValues = [
+  "advantage",
+  "disadvantage",
+  "none",
+] as const;
+
+export type RRMultipleRoll = IterableElement<typeof multipleRollValues>;
 
 export interface RRRollPart {
   damageType: RRDamageType;

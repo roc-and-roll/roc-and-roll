@@ -10,10 +10,15 @@ import {
   byId,
   damageTypes,
   entries,
+  multipleRollValues,
+  RRDamageType,
   RRDice,
   RRDiceTemplate,
   RRDiceTemplateID,
   RRDiceTemplatePart,
+  RRDiceTemplatePartDice,
+  RRDiceTemplatePartModifier,
+  RRDiceTemplatePartWithDamage,
   RRModifier,
   RRMultipleRoll,
 } from "../../shared/state";
@@ -27,13 +32,7 @@ import {
 } from "../state";
 import { Popover } from "./Popover";
 
-export function DiceTemplates({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
+export function DiceTemplates({ open }: { open: boolean }) {
   const [pickerShown, setPickerShown] = useState(false);
   const myself = useMyself();
   const templates = useServerState((state) =>
@@ -66,11 +65,7 @@ export function DiceTemplates({
   );
 
   return (
-    <div
-      onMouseLeave={onClose}
-      className={clsx("dice-templates", { opened: open })}
-      ref={dropRef}
-    >
+    <div className={clsx("dice-templates", { opened: open })} ref={dropRef}>
       {pickerShown && <DicePicker />}
       <div className="dice-templates-container">
         <button onClick={() => setPickerShown((b) => !b)}>Picker</button>
@@ -277,7 +272,13 @@ function DiceTemplateInner({
             onChange={(e) => setNotes(e.target.value)}
           />
           {template.parts.map((part, i) => (
-            <DiceTemplatePart key={i} part={part} newIds={newIds} />
+            <DiceTemplatePartMenuWrapper
+              template={template}
+              key={i}
+              part={part}
+            >
+              <DiceTemplatePart part={part} newIds={newIds} />
+            </DiceTemplatePartMenuWrapper>
           ))}
           {canMultipleRoll && (
             <>
@@ -307,22 +308,147 @@ function DiceTemplateInner({
   );
 }
 
-const DiceTemplatePartMenuWrapper: React.FC<{ part: RRDiceTemplatePart }> = ({
+function DamageTypeEditor({
   part,
-  children,
-}) => {
-  const [menuVisible, setMenuVisible] = useState(false);
+  onChange,
+}: {
+  part: RRDiceTemplatePartWithDamage;
+  onChange: (oldPart: RRDiceTemplatePart, newPart: RRDiceTemplatePart) => void;
+}) {
+  const [damageType, setDamageType] = useOptimisticDebouncedServerUpdate<
+    RRDamageType["type"]
+  >(
+    part.damage.type,
+    (type) => {
+      onChange(part, { ...part, damage: { type, modifiers: [] } });
+      return undefined;
+    },
+    1000
+  );
 
-  // TODO
-  /*
-  dispatch(
-    diceTemplateUpdate({
-      changes: {
-        parts: parts.map((p) => (p === part ? {} : p)),
-      },
-      id: template.id,
-    })
-  );*/
+  return (
+    <div>
+      Damage Type:
+      <select
+        value={damageType ?? ""}
+        onChange={(e) => setDamageType(e.target.value as RRDamageType["type"])}
+      >
+        {damageTypes.map((t) => (
+          <option key={t ?? ""} value={t ?? ""}>
+            {t ?? ""}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function DiceMultipleRollEditor({
+  part,
+  onChange,
+}: {
+  part: RRDiceTemplatePartDice;
+  onChange: (oldPart: RRDiceTemplatePart, newPart: RRDiceTemplatePart) => void;
+}) {
+  const [
+    multiple,
+    setMultiple,
+  ] = useOptimisticDebouncedServerUpdate<RRMultipleRoll>(
+    part.modified,
+    (multiple) => {
+      onChange(part, { ...part, modified: multiple });
+      return undefined;
+    },
+    1000
+  );
+
+  return (
+    <div>
+      Multiple:
+      <select
+        value={multiple ?? ""}
+        onChange={(e) => setMultiple(e.target.value as RRMultipleRoll)}
+      >
+        {multipleRollValues.map((t) => (
+          <option key={t ?? ""} value={t ?? ""}>
+            {t ?? ""}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function DiceCountEditor({
+  part,
+  onChange,
+}: {
+  part: RRDiceTemplatePartDice;
+  onChange: (oldPart: RRDiceTemplatePart, newPart: RRDiceTemplatePart) => void;
+}) {
+  const [count, setCount] = useOptimisticDebouncedServerUpdate<string>(
+    part.count.toString(),
+    (count) => {
+      if (!isNaN(parseInt(count)))
+        onChange(part, { ...part, count: parseInt(count) });
+      return undefined;
+    },
+    1000
+  );
+
+  return (
+    <div>
+      Count:
+      <input value={count} onChange={(e) => setCount(e.target.value)} />
+    </div>
+  );
+}
+
+function ModifierNumberEditor({
+  part,
+  onChange,
+}: {
+  part: RRDiceTemplatePartModifier;
+  onChange: (oldPart: RRDiceTemplatePart, newPart: RRDiceTemplatePart) => void;
+}) {
+  const [count, setCount] = useOptimisticDebouncedServerUpdate<string>(
+    part.number.toString(),
+    (modifier) => {
+      if (!isNaN(parseInt(modifier)))
+        onChange(part, { ...part, number: parseInt(modifier) });
+      return undefined;
+    },
+    1000
+  );
+
+  return (
+    <div>
+      Modifier:
+      <input value={count} onChange={(e) => setCount(e.target.value)} />
+    </div>
+  );
+}
+
+const DiceTemplatePartMenuWrapper: React.FC<{
+  part: RRDiceTemplatePart;
+  template: RRDiceTemplate;
+}> = ({ part, template, children }) => {
+  const [menuVisible, setMenuVisible] = useState(false);
+  const dispatch = useServerDispatch();
+
+  const applyChange = (
+    oldPart: RRDiceTemplatePart,
+    newPart: RRDiceTemplatePart
+  ) => {
+    dispatch(
+      diceTemplateUpdate({
+        changes: {
+          parts: template.parts.map((p) => (p === oldPart ? newPart : p)),
+        },
+        id: template.id,
+      })
+    );
+  };
 
   return (
     <Popover
@@ -331,13 +457,16 @@ const DiceTemplatePartMenuWrapper: React.FC<{ part: RRDiceTemplatePart }> = ({
           {(part.type === "dice" ||
             part.type === "linkedModifier" ||
             part.type === "modifier") && (
-            <select value={part.damage.type ?? ""}>
-              {damageTypes.map((t) => (
-                <option key={t ?? ""} value={t ?? ""}>
-                  {t ?? ""}
-                </option>
-              ))}
-            </select>
+            <DamageTypeEditor onChange={applyChange} part={part} />
+          )}
+          {part.type === "dice" && (
+            <DiceCountEditor onChange={applyChange} part={part} />
+          )}
+          {part.type === "dice" && (
+            <DiceMultipleRollEditor onChange={applyChange} part={part} />
+          )}
+          {part.type === "modifier" && (
+            <ModifierNumberEditor onChange={applyChange} part={part} />
           )}
         </div>
       }
@@ -372,28 +501,20 @@ const DiceTemplatePart = React.forwardRef<
   switch (part.type) {
     case "modifier":
       content = (
-        <DiceTemplatePartMenuWrapper part={part}>
-          <div className="dice-option">
-            {part.number >= 0 && "+"}
-            {part.number}
-          </div>
-        </DiceTemplatePartMenuWrapper>
+        <div className="dice-option">
+          {part.number >= 0 && "+"}
+          {part.number}
+        </div>
       );
       break;
     case "linkedModifier":
-      content = (
-        <DiceTemplatePartMenuWrapper part={part}>
-          <div className="dice-option">{part.name}</div>,
-        </DiceTemplatePartMenuWrapper>
-      );
+      content = <div className="dice-option">{part.name}</div>;
       break;
     case "dice":
       content = (
-        <DiceTemplatePartMenuWrapper part={part}>
-          <div className="dice-option">
-            {part.count}d{part.faces}
-          </div>
-        </DiceTemplatePartMenuWrapper>
+        <div className="dice-option">
+          {part.count}d{part.faces}
+        </div>
       );
       break;
     case "template":

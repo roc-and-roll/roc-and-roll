@@ -11,7 +11,7 @@ export function BottomFloats() {
       <div className="bottom-floats-upper">
         <div
           className="dice-template-opener"
-          onMouseEnter={() => setDiceTemplatesOpen(true)}
+          onClick={() => setDiceTemplatesOpen((o) => !o)}
         >
           DICE
         </div>
@@ -19,10 +19,7 @@ export function BottomFloats() {
         <Log />
       </div>
 
-      <DiceTemplates
-        onClose={() => setDiceTemplatesOpen(false)}
-        open={diceTemplatesOpen}
-      />
+      <DiceTemplates open={diceTemplatesOpen} />
     </div>
   );
 }
