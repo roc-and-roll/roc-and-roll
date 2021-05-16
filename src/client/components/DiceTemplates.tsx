@@ -8,8 +8,8 @@ import {
 } from "../../shared/actions";
 import {
   byId,
+  damageTypes,
   entries,
-  RRDamageType,
   RRDice,
   RRDiceTemplate,
   RRDiceTemplateID,
@@ -25,6 +25,7 @@ import {
   useServerDispatch,
   useServerState,
 } from "../state";
+import { Popover } from "./Popover";
 
 export function DiceTemplates({
   open,
@@ -252,9 +253,9 @@ function DiceTemplateInner({
   }
 
   // TODO
-  const canMultipleRoll = true; /*template?.dice.some(
+  const canMultipleRoll = template.parts.some(
     (d) => d.type === "dice" && d.faces === 20
-  );*/
+  );
 
   return (
     <div
@@ -270,7 +271,11 @@ function DiceTemplateInner({
             onClick={(e) => e.stopPropagation()}
             onChange={(e) => setName(e.target.value)}
           />
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
+          <textarea
+            onClick={(e) => e.stopPropagation()}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
           {template.parts.map((part, i) => (
             <DiceTemplatePart key={i} part={part} newIds={newIds} />
           ))}
@@ -302,17 +307,58 @@ function DiceTemplateInner({
   );
 }
 
-function withMenu(inner: JSX.Element, damageType: RRDamageType) {
-  if (damageType.type === null && damageType.modifiers.length === 0) {
-    return inner;
-  }
+const DiceTemplatePartMenuWrapper: React.FC<{ part: RRDiceTemplatePart }> = ({
+  part,
+  children,
+}) => {
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  // TODO
+  /*
+  dispatch(
+    diceTemplateUpdate({
+      changes: {
+        parts: parts.map((p) => (p === part ? {} : p)),
+      },
+      id: template.id,
+    })
+  );*/
 
   return (
-    <div title={`${damageType.type ?? ""} ${damageType.modifiers.join(", ")}`}>
-      {inner}
-    </div>
+    <Popover
+      content={
+        <div onClick={(e) => e.stopPropagation()}>
+          {(part.type === "dice" ||
+            part.type === "linkedModifier" ||
+            part.type === "modifier") && (
+            <select value={part.damage.type ?? ""}>
+              {damageTypes.map((t) => (
+                <option key={t ?? ""} value={t ?? ""}>
+                  {t ?? ""}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      }
+      visible={menuVisible}
+      onClickOutside={() => setMenuVisible(false)}
+      interactive
+      placement="top"
+    >
+      <div
+        onContextMenu={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          setMenuVisible(true);
+        }}
+        onClick={(e) => e.button === 2 && e.stopPropagation()}
+      >
+        {children}
+      </div>
+    </Popover>
   );
-}
+};
 
 const DiceTemplatePart = React.forwardRef<
   HTMLDivElement,
@@ -325,26 +371,29 @@ const DiceTemplatePart = React.forwardRef<
 
   switch (part.type) {
     case "modifier":
-      content = withMenu(
-        <div className="dice-option">
-          {part.number >= 0 && "+"}
-          {part.number}
-        </div>,
-        part.damage
+      content = (
+        <DiceTemplatePartMenuWrapper part={part}>
+          <div className="dice-option">
+            {part.number >= 0 && "+"}
+            {part.number}
+          </div>
+        </DiceTemplatePartMenuWrapper>
       );
       break;
     case "linkedModifier":
-      content = withMenu(
-        <div className="dice-option">{part.name}</div>,
-        part.damage
+      content = (
+        <DiceTemplatePartMenuWrapper part={part}>
+          <div className="dice-option">{part.name}</div>,
+        </DiceTemplatePartMenuWrapper>
       );
       break;
     case "dice":
-      content = withMenu(
-        <div className="dice-option">
-          {part.count}d{part.faces}
-        </div>,
-        part.damage
+      content = (
+        <DiceTemplatePartMenuWrapper part={part}>
+          <div className="dice-option">
+            {part.count}d{part.faces}
+          </div>
+        </DiceTemplatePartMenuWrapper>
       );
       break;
     case "template":
