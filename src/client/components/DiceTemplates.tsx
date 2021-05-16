@@ -88,7 +88,15 @@ export function DiceTemplates({ open }: { open: boolean }) {
   ): Array<RRDice | RRModifier> {
     switch (part.type) {
       case "dice":
-        return [roll({ ...part, modified })];
+        return [
+          roll({
+            ...part,
+            // click on none, is advantage --> none
+            // click on disadvatage, is none --> disadvantage
+            // click on none, is none --> none
+            modified: part.faces !== 20 ? "none" : modified,
+          }),
+        ];
       case "linkedModifier":
         return [
           {
@@ -330,12 +338,24 @@ function DiceTemplateInner({
     (d) => d.type === "dice" && d.faces === 20
   );
 
+  const anyHasAdvantage = template.parts.some(
+    (d) => d.type === "dice" && d.faces === 20 && d.modified === "advantage"
+  );
+  const anyHasDisadvantage = template.parts.some(
+    (d) => d.type === "dice" && d.faces === 20 && d.modified === "disadvantage"
+  );
+  const defaultModified: RRMultipleRoll = anyHasAdvantage
+    ? "advantage"
+    : anyHasDisadvantage
+    ? "disadvantage"
+    : "none";
+
   return (
     <div
       ref={dropRef}
       onClick={(e) => {
         e.stopPropagation();
-        onRoll([template], "none");
+        onRoll([template], defaultModified);
       }}
       className={clsx("dice-template", { created: template })}
     >
@@ -364,22 +384,36 @@ function DiceTemplateInner({
           ))}
           {canMultipleRoll && (
             <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRoll([template], "advantage");
-                }}
-              >
-                ADV
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRoll([template], "disadvantage");
-                }}
-              >
-                DIS
-              </button>
+              {defaultModified !== "advantage" && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRoll([template], "advantage");
+                  }}
+                >
+                  ADV
+                </button>
+              )}
+              {defaultModified !== "none" && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRoll([template], "none");
+                  }}
+                >
+                  REG
+                </button>
+              )}
+              {defaultModified !== "disadvantage" && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRoll([template], "disadvantage");
+                  }}
+                >
+                  DIS
+                </button>
+              )}
             </>
           )}
         </>
