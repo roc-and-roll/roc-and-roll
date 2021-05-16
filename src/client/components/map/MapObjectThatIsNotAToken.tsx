@@ -28,7 +28,8 @@ export const MapObjectThatIsNotAToken = React.memo<{
 
   const myself = useMyself();
 
-  const canControl = canStartMoving && object.playerId === myself.id;
+  const canControl =
+    !object.locked && canStartMoving && object.playerId === myself.id;
   const style = useMemo(() => (canControl ? { cursor: "move" } : {}), [
     canControl,
   ]);
@@ -50,7 +51,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
     x: object.position.x,
     y: object.position.y,
     style,
-    onMouseDown,
+    onMouseDown: canControl ? onMouseDown : undefined,
     fill: isSelectedOrHovered
       ? object.color
       : tinycolor(object.color).setAlpha(0.3).toRgbString(),

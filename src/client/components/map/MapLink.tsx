@@ -17,7 +17,8 @@ export function MapLink({
   onStartMove: (object: RRMapObject, event: React.MouseEvent) => void;
 }) {
   const myself = useMyself();
-  const canControl = canStartMoving && link.playerId === myself.id;
+  const canControl =
+    !link.locked && canStartMoving && link.playerId === myself.id;
   const style = useMemo(() => (canControl ? { cursor: "move" } : {}), [
     canControl,
   ]);
@@ -55,7 +56,7 @@ export function MapLink({
       <g
         style={style}
         className="map-link"
-        onMouseDown={onMouseDown}
+        onMouseDown={canControl ? onMouseDown : undefined}
         transform={`translate(${link.position.x}, ${link.position.y})`}
       >
         <RoughText x={0} y={-5} dominantBaseline="text-bottom">
