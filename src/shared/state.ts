@@ -1,6 +1,6 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { Dispatch } from "redux";
-import type { Opaque } from "type-fest";
+import type { IterableElement, Opaque } from "type-fest";
 import { rrid } from "./util";
 
 export type RRID = Opaque<string>;
@@ -224,14 +224,72 @@ export interface RRLogEntryAchievement extends RRBaseLogEntry {
 }
 
 export interface RRDiceTemplate {
-  name?: string;
   id: RRDiceTemplateID;
   playerId: RRPlayerID;
+  name: string;
+  notes: string;
+  parts: RRDiceTemplatePart[];
   rollType: "initiative" | "hit" | "attack" | null;
-  dice: Array<RRDice | RRModifier>;
 }
 
-export type RRDamageType = null | "fire" | "thunder";
+export const linkedModifierNames = [
+  "STR",
+  "DEX",
+  "CON",
+  "INT",
+  "WIS",
+  "CHA",
+  "initiative",
+  "proficiency",
+] as const;
+
+export type RRDiceTemplatePart =
+  | {
+      type: "template";
+      templateId: RRDiceTemplateID;
+    }
+  | {
+      type: "modifier";
+      number: number;
+      damage: RRDamageType;
+    }
+  | {
+      type: "linkedModifier";
+      name: IterableElement<typeof linkedModifierNames>;
+      damage: RRDamageType;
+    }
+  | {
+      type: "dice";
+      count: number;
+      faces: number; // 4, 6, 8, 10, 12, 20, 100, but also 3, 2, etc.
+      negated: boolean;
+      damage: RRDamageType;
+      modified: RRMultipleRoll;
+    };
+
+export const damageTypes = [
+  null,
+  "slashing",
+  "piercing",
+  "bludgeoning",
+  "poison",
+  "acid",
+  "fire",
+  "cold",
+  "radiant",
+  "necrotic",
+  "lightning",
+  "thunder",
+  "force",
+  "psychic",
+] as const;
+
+export const damageTypeModifiers = ["magical", "silver", "adamantine"] as const;
+
+export type RRDamageType = {
+  type: IterableElement<typeof damageTypes>;
+  modifiers: ReadonlyArray<IterableElement<typeof damageTypeModifiers>>;
+};
 
 export type RRMultipleRoll = "advantage" | "disadvantage" | "none";
 

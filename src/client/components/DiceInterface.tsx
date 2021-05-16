@@ -31,13 +31,20 @@ export function DiceInterface() {
             modified:
               die === "a" ? "advantage" : die === "i" ? "disadvantage" : "none",
             negated,
+            damage: {
+              type: null,
+              modifiers: [],
+            },
           });
         } else if (mod) {
           // mod
           const modifier = parseInt(mod) * (negated ? -1 : 1);
           return {
             type: "modifier",
-            damageType: null,
+            damageType: {
+              type: null,
+              modifiers: [],
+            },
             modifier,
           };
         }

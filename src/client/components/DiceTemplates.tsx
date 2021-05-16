@@ -1,21 +1,23 @@
 import clsx from "clsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
-import { IterableElement } from "type-fest";
 import {
   diceTemplateAdd,
   diceTemplateUpdate,
   logEntryDiceRollAdd,
 } from "../../shared/actions";
 import {
+  byId,
   entries,
   RRDamageType,
+  RRDice,
   RRDiceTemplate,
   RRDiceTemplateID,
+  RRDiceTemplatePart,
+  RRModifier,
   RRMultipleRoll,
-  RRPlayerID,
 } from "../../shared/state";
-import { rrid } from "../../shared/util";
+import { assertNever, rrid } from "../../shared/util";
 import { useMyself } from "../myself";
 import { roll } from "../roll";
 import {
@@ -23,30 +25,6 @@ import {
   useServerDispatch,
   useServerState,
 } from "../state";
-
-interface RRRollPart {
-  type: "modifier" | "dice";
-  number: number;
-  damageType: RRDamageType;
-}
-
-const partToDice = (
-  item: RRRollPart
-): IterableElement<RRDiceTemplate["dice"]> =>
-  item.type === "modifier"
-    ? {
-        type: "modifier",
-        damageType: "fire",
-        modifier: item.number,
-      }
-    : {
-        type: "dice",
-        faces: item.number,
-        modified: "none",
-        negated: false,
-        damageType: "fire",
-        diceResults: [0],
-      };
 
 export function DiceTemplates({
   open,
@@ -64,125 +42,116 @@ export function DiceTemplates({
   const dispatch = useServerDispatch();
   const newIds = useRef<RRDiceTemplateID[]>([]);
 
-  const addTemplateFrom = (parts: RRRollPart[]) => {
-    const id = rrid<RRDiceTemplate>();
-    newIds.current.push(id);
-    dispatch(
-      diceTemplateAdd({
-        id,
-        playerId: myself.id,
-        rollType: "attack",
-        dice: parts.map(partToDice),
-      })
-    );
-  };
+  const [, dropRef] = useDrop<RRDiceTemplatePart, void, never>(
+    () => ({
+      accept: "diceTemplatePart",
+      drop: (item, monitor) => {
+        const id = rrid<RRDiceTemplate>();
+        newIds.current.push(id);
+        dispatch(
+          diceTemplateAdd({
+            id,
+            playerId: myself.id,
+            name: "",
+            notes: "",
+            rollType: "attack",
+            parts: [item],
+          })
+        );
+      },
+      canDrop: (item, monitor) => monitor.isOver({ shallow: true }),
+    }),
+    [dispatch, myself.id]
+  );
 
   return (
     <div
       onMouseLeave={onClose}
       className={clsx("dice-templates", { opened: open })}
+      ref={dropRef}
     >
-      {pickerShown && <DicePicker onAddTemplate={addTemplateFrom} />}
+      {pickerShown && <DicePicker />}
       <div className="dice-templates-container">
         <button onClick={() => setPickerShown((b) => !b)}>Picker</button>
         {templates.map((t) => (
-          <DiceTemplate
-            newIds={newIds}
-            playerId={myself.id}
-            key={t.id}
-            template={t}
-          />
+          <DiceTemplate newIds={newIds} key={t.id} templateId={t.id} />
         ))}
-        {pickerShown && <DiceTemplate newIds={newIds} playerId={myself.id} />}
       </div>
     </div>
   );
 }
 
-function DicePicker({
-  onAddTemplate,
-}: {
-  onAddTemplate: (p: RRRollPart[]) => void;
-}) {
-  const [templateString, setTemplateString] = useState("");
-
-  const addFromTemplate = () => {
-    const regex = /(^| *[+-] *)(?:(\d*)(d|a|i)(\d+)|(\d+))/g;
-    onAddTemplate(
-      [...templateString.matchAll(regex)].flatMap(
-        ([_, sign, diceCount, die, dieFaces, mod]):
-          | RRRollPart
-          | RRRollPart[] => {
-          // TODO support negative dice?
-          const negated = sign?.trim() === "-";
-          if (diceCount !== undefined && dieFaces !== undefined) {
-            const faces = parseInt(dieFaces);
-            const count = diceCount === "" ? 1 : parseInt(diceCount);
-            return Array.from<RRRollPart>({ length: count }).fill({
-              type: "dice",
-              number: faces,
-              damageType: "fire",
-            });
-          } else if (mod) {
-            return {
-              type: "modifier",
-              number: parseInt(mod) * (negated ? -1 : 1),
-              damageType: "fire",
-            };
-          }
-          throw new Error();
-        }
-      )
-    );
-    setTemplateString("");
-  };
+function DicePicker() {
+  const makeDicePart = (faces: number) =>
+    ({
+      damage: { type: null, modifiers: [] },
+      type: "dice",
+      faces,
+      count: 1,
+      negated: false,
+      modified: "none",
+    } as const);
 
   return (
     <div className="dice-picker">
-      <RollPart part={{ damageType: "fire", type: "dice", number: 4 }} />
-      <RollPart part={{ damageType: "fire", type: "dice", number: 6 }} />
-      <RollPart part={{ damageType: "fire", type: "dice", number: 8 }} />
-      <RollPart part={{ damageType: "fire", type: "dice", number: 10 }} />
-      <RollPart part={{ damageType: "fire", type: "dice", number: 12 }} />
-      <RollPart part={{ damageType: "fire", type: "dice", number: 20 }} />
-      <RollPart part={{ damageType: "fire", type: "modifier", number: 1 }} />
-      <input
-        value={templateString}
-        placeholder="Enter dice shorthand ..."
-        onKeyPress={(e) => e.key === "Enter" && addFromTemplate()}
-        onChange={(e) => setTemplateString(e.target.value)}
+      <PickerDiceTemplatePart part={makeDicePart(4)} />
+      <PickerDiceTemplatePart part={makeDicePart(6)} />
+      <PickerDiceTemplatePart part={makeDicePart(8)} />
+      <PickerDiceTemplatePart part={makeDicePart(10)} />
+      <PickerDiceTemplatePart part={makeDicePart(12)} />
+      <PickerDiceTemplatePart part={makeDicePart(20)} />
+      <PickerDiceTemplatePart
+        part={{
+          type: "modifier",
+          damage: { type: null, modifiers: [] },
+          number: 1,
+        }}
       />
     </div>
   );
 }
 
-function RollPart({ part }: { part: RRRollPart }) {
-  const [, dragRef] = useDrag<RRRollPart, void, null>(() => ({
-    type: "rollPart",
+function PickerDiceTemplatePart({ part }: { part: RRDiceTemplatePart }) {
+  const [, dragRef] = useDrag<RRDiceTemplatePart, void, null>(() => ({
+    type: "diceTemplatePart",
     item: part,
   }));
 
-  return (
-    <div ref={dragRef} className="dice-option">
-      {part.type === "dice" ? "d" : "+"}
-      {part.number}
-    </div>
-  );
+  const newIds = useRef([]);
+
+  return <DiceTemplatePart ref={dragRef} newIds={newIds} part={part} />;
 }
 
 const DiceTemplate = React.memo(function DiceTemplate({
-  template,
-  playerId,
+  templateId,
   newIds,
 }: {
-  template?: RRDiceTemplate;
-  playerId: RRPlayerID;
+  templateId: RRDiceTemplateID;
   newIds: React.MutableRefObject<RRDiceTemplateID[]>;
 }) {
+  const template = useServerState((state) =>
+    byId(state.diceTemplates.entities, templateId)
+  );
+
+  if (!template) {
+    return null;
+  }
+
+  return <DiceTemplateInner template={template} newIds={newIds} />;
+});
+
+function DiceTemplateInner({
+  template,
+  newIds,
+}: {
+  template: RRDiceTemplate;
+  newIds: React.MutableRefObject<RRDiceTemplateID[]>;
+}) {
+  const myself = useMyself();
   const dispatch = useServerDispatch();
 
   const [name, setName] = useOptimisticDebouncedServerUpdate(
-    template?.name ?? "",
+    template.name,
     (name) =>
       template
         ? diceTemplateUpdate({ id: template.id, changes: { name } })
@@ -190,36 +159,32 @@ const DiceTemplate = React.memo(function DiceTemplate({
     1000
   );
 
+  const [notes, setNotes] = useOptimisticDebouncedServerUpdate(
+    template.notes,
+    (notes) =>
+      template
+        ? diceTemplateUpdate({ id: template.id, changes: { notes } })
+        : undefined,
+    1000
+  );
+
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  const [, dropRef] = useDrop<RRRollPart, void, never>(
+  const [, dropRef] = useDrop<RRDiceTemplatePart, void, never>(
     () => ({
-      accept: "rollPart",
-      drop: (item, monitor) => {
-        if (!template) {
-          const id = rrid<RRDiceTemplate>();
-          newIds.current.push(id);
-          dispatch(
-            diceTemplateAdd({
-              id,
-              playerId,
-              rollType: "attack",
-              dice: [partToDice(item)],
-            })
-          );
-        } else {
-          dispatch(
-            diceTemplateUpdate({
-              id: template.id,
-              changes: {
-                dice: [...template.dice, partToDice(item)],
-              },
-            })
-          );
-        }
+      accept: "diceTemplatePart",
+      drop: (item) => {
+        dispatch(
+          diceTemplateUpdate({
+            id: template.id,
+            changes: {
+              parts: [...template.parts, item],
+            },
+          })
+        );
       },
     }),
-    [dispatch, newIds, playerId, template]
+    [dispatch, template]
   );
 
   useEffect(() => {
@@ -229,28 +194,67 @@ const DiceTemplate = React.memo(function DiceTemplate({
     }
   }, [newIds, template]);
 
+  function evaluateDiceTemplatePart(
+    part: RRDiceTemplatePart
+  ): Array<RRDice | RRModifier> {
+    switch (part.type) {
+      case "dice":
+        return [roll(part)];
+      case "linkedModifier":
+        return [
+          {
+            type: "modifier",
+            // TODO
+            modifier: 0,
+            damageType: part.damage,
+          },
+        ];
+      case "modifier":
+        return [
+          {
+            type: "modifier",
+            modifier: part.number,
+            damageType: part.damage,
+          },
+        ];
+      case "template":
+        // TODO
+        return [
+          {
+            type: "modifier",
+            modifier: 0,
+            damageType: {
+              type: null,
+              modifiers: [],
+            },
+          },
+        ];
+      // return evaluateDiceTemplatePart(part.templateId);
+      default:
+        assertNever(part);
+    }
+  }
+
   function doRoll(modified: RRMultipleRoll) {
+    // TODO: Use modified
     if (template) {
       dispatch(
         logEntryDiceRollAdd({
           silent: false,
-          playerId,
+          playerId: myself.id,
           payload: {
-            dice: template.dice.map((d) =>
-              d.type === "dice"
-                ? roll({ ...d, count: d.diceResults.length, modified })
-                : d
-            ),
-            rollType: template.rollType,
+            rollType: "attack", // TODO
+            dice: template.parts.flatMap(evaluateDiceTemplatePart),
           },
         })
       );
     }
   }
 
-  const canMultipleRoll = template?.dice.some(
+  // TODO
+  const canMultipleRoll = true; /*template?.dice.some(
     (d) => d.type === "dice" && d.faces === 20
-  );
+  );*/
 
   return (
     <div
@@ -266,11 +270,9 @@ const DiceTemplate = React.memo(function DiceTemplate({
             onClick={(e) => e.stopPropagation()}
             onChange={(e) => setName(e.target.value)}
           />
-          {template.dice.map((p, i) => (
-            <div key={i} className="dice-option">
-              {p.type === "dice" ? "d" : "+"}
-              {p.type === "dice" ? p.faces : p.modifier}
-            </div>
+          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
+          {template.parts.map((part, i) => (
+            <DiceTemplatePart key={i} part={part} newIds={newIds} />
           ))}
           {canMultipleRoll && (
             <>
@@ -298,4 +300,59 @@ const DiceTemplate = React.memo(function DiceTemplate({
       )}
     </div>
   );
+}
+
+function withMenu(inner: JSX.Element, damageType: RRDamageType) {
+  if (damageType.type === null && damageType.modifiers.length === 0) {
+    return inner;
+  }
+
+  return (
+    <div title={`${damageType.type ?? ""} ${damageType.modifiers.join(", ")}`}>
+      {inner}
+    </div>
+  );
+}
+
+const DiceTemplatePart = React.forwardRef<
+  HTMLDivElement,
+  {
+    part: RRDiceTemplatePart;
+    newIds: React.MutableRefObject<RRDiceTemplateID[]>;
+  }
+>(function DiceTemplatePart({ part, newIds }, ref) {
+  let content: JSX.Element;
+
+  switch (part.type) {
+    case "modifier":
+      content = withMenu(
+        <div className="dice-option">
+          {part.number >= 0 && "+"}
+          {part.number}
+        </div>,
+        part.damage
+      );
+      break;
+    case "linkedModifier":
+      content = withMenu(
+        <div className="dice-option">{part.name}</div>,
+        part.damage
+      );
+      break;
+    case "dice":
+      content = withMenu(
+        <div className="dice-option">
+          {part.count}d{part.faces}
+        </div>,
+        part.damage
+      );
+      break;
+    case "template":
+      content = <DiceTemplate templateId={part.templateId} newIds={newIds} />;
+      break;
+    default:
+      assertNever(part);
+  }
+
+  return <div ref={ref}>{content}</div>;
 });

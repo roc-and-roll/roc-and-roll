@@ -3,10 +3,10 @@ import { randomBetweenInclusive } from "../shared/random";
 import {
   RRMultipleRoll,
   RRLogEntryDiceRoll,
-  RRDamageType,
   RRDice,
   RRPlayerID,
   RRModifier,
+  RRDamageType,
 } from "../shared/state";
 import { assertNever } from "../shared/util";
 
@@ -27,7 +27,10 @@ export function rollInitiative(
 
 function modifier(
   modifier: number,
-  damageType: RRDamageType = null
+  damageType: RRDamageType = {
+    type: null,
+    modifiers: [],
+  }
 ): RRModifier {
   return {
     type: "modifier",
@@ -41,19 +44,23 @@ function rollD20(multiple: RRMultipleRoll = "none") {
     faces: 20,
     count: multiple == "none" ? 1 : 2,
     modified: multiple,
+    damage: {
+      type: null,
+      modifiers: [],
+    },
   });
 }
 
 export function roll({
   faces,
   count,
-  damageType,
+  damage,
   modified,
   negated,
 }: {
   faces: number;
   count: number;
-  damageType?: RRDamageType;
+  damage: RRDamageType;
   modified?: RRMultipleRoll;
   negated?: boolean;
 }): RRDice {
@@ -68,7 +75,7 @@ export function roll({
     faces,
     modified: modified ?? "none",
     diceResults: results,
-    damageType: damageType ?? null,
+    damageType: damage ?? null,
     negated: negated ?? false,
   };
 }
