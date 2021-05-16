@@ -452,105 +452,117 @@ export default function MapContainer() {
     },
     [dispatch]
   );
-  const onMoveMapObjects = useRecoilCallback(
-    ({ snapshot }) => (d: RRPoint) => {
-      setLocalObjectsOnMap(
-        (localObjectsOnMap) => {
-          const updatedLocalObjectsOnMap: Record<
-            RRMapObjectID,
-            RRMapObject
-          > = {};
 
-          snapshot
-            .getLoadable(selectedMapObjectIdsAtom)
-            .getValue()
-            .forEach((selectedMapObjectId) => {
-              const object = byId<Draft<RRMapObject>>(
-                localObjectsOnMap.entities,
-                selectedMapObjectId
-              );
-              if (object && (object.type === "token" || !object.locked)) {
-                setById(updatedLocalObjectsOnMap, object.id, {
-                  ...object,
-                  position: pointAdd(object.position, d),
-                });
+  const onMoveMapObjectsUpdater = useRecoilCallback(
+    ({ snapshot }) => (d: RRPoint) => (
+      localObjectsOnMap: typeof localMapObjects
+    ) => {
+      const updatedLocalObjectsOnMap: Record<RRMapObjectID, RRMapObject> = {};
+
+      snapshot
+        .getLoadable(selectedMapObjectIdsAtom)
+        .getValue()
+        .forEach((selectedMapObjectId) => {
+          const object = byId<Draft<RRMapObject>>(
+            localObjectsOnMap.entities,
+            selectedMapObjectId
+          );
+          if (object && (object.type === "token" || !object.locked)) {
+            setById(updatedLocalObjectsOnMap, object.id, {
+              ...object,
+              position: pointAdd(object.position, d),
+            });
+          }
+        });
+
+      return {
+        ...localObjectsOnMap,
+        entities: {
+          ...localObjectsOnMap.entities,
+          ...updatedLocalObjectsOnMap,
+        },
+      };
+    }
+    // We don't use the equivalent immmer producer here, because moving
+    // objects around the map is very performance critical.
+    //
+    // produce((draft) => {
+    //   snapshot
+    //     .getLoadable(selectedMapObjectIdsAtom)
+    //     .getValue()
+    //     .forEach((selectedMapObjectId) => {
+    //       const object = byId<Draft<RRMapObject>>(
+    //         draft.entities,
+    //         selectedMapObjectId
+    //       );
+    //       if (object) {
+    //         object.position = pointAdd(object.position, d);
+    //       }
+    //     });
+    // })
+  );
+
+  // This must not use useRecoilCallback, because the setLocalObjectsOnMap may
+  // be batched by React and executed at a later point. If we used
+  // useRecoilCallback here, we would still access the old snapshot when the
+  // setLocalObjectsOnMap is finally executed by React.
+  //
+  // To circumvent that problem, we use a separate useRecoilCallback that is
+  // executed right when React decides to schedule the state update.
+  const onMoveMapObjects = useCallback(
+    (d: RRPoint) => setLocalObjectsOnMap(onMoveMapObjectsUpdater(d)),
+    [setLocalObjectsOnMap, onMoveMapObjectsUpdater]
+  );
+
+  const onStopMoveMapObjectsUpdater = useRecoilCallback(
+    ({ snapshot }) => (localObjectsOnMap: typeof localMapObjects) => {
+      const updatedLocalObjectsOnMap: Record<RRMapObjectID, RRMapObject> = {};
+
+      snapshot
+        .getLoadable(selectedMapObjectIdsAtom)
+        .getValue()
+        .forEach((selectedMapObjectId) => {
+          const object = byId<Draft<RRMapObject>>(
+            localObjectsOnMap.entities,
+            selectedMapObjectId
+          );
+          if (object && (object.type === "token" || !object.locked)) {
+            const position = withDo(object, (object) => {
+              // TODO: We have a "snapping" button in the toolbar, which we
+              // should probably respect somehow.
+              if (object.type === "token" || object.type === "image") {
+                // TODO: Calculate center based on token / map object size
+                const center = pointAdd(
+                  object.position,
+                  makePoint(GRID_SIZE / 2)
+                );
+                return snapPointToGrid(center);
               }
+              return object.position;
             });
 
-          return {
-            ...localObjectsOnMap,
-            entities: {
-              ...localObjectsOnMap.entities,
-              ...updatedLocalObjectsOnMap,
-            },
-          };
-        }
-        // We don't use the equivalent immmer producer here, because moving
-        // objects around the map is very performance critical.
-        //
-        // produce((draft) => {
-        //   snapshot
-        //     .getLoadable(selectedMapObjectIdsAtom)
-        //     .getValue()
-        //     .forEach((selectedMapObjectId) => {
-        //       const object = byId<Draft<RRMapObject>>(
-        //         draft.entities,
-        //         selectedMapObjectId
-        //       );
-        //       if (object) {
-        //         object.position = pointAdd(object.position, d);
-        //       }
-        //     });
-        // })
-      );
+            setById(updatedLocalObjectsOnMap, object.id, {
+              ...object,
+              position,
+            });
+          }
+        });
+
+      return {
+        ...localObjectsOnMap,
+        entities: {
+          ...localObjectsOnMap.entities,
+          ...updatedLocalObjectsOnMap,
+        },
+      };
     },
-    [setLocalObjectsOnMap]
+    []
   );
-  const onStopMoveMapObjects = useRecoilCallback(
-    ({ snapshot }) => () => {
-      setLocalObjectsOnMap((localObjectsOnMap) => {
-        const updatedLocalObjectsOnMap: Record<RRMapObjectID, RRMapObject> = {};
 
-        snapshot
-          .getLoadable(selectedMapObjectIdsAtom)
-          .getValue()
-          .forEach((selectedMapObjectId) => {
-            const object = byId<Draft<RRMapObject>>(
-              localObjectsOnMap.entities,
-              selectedMapObjectId
-            );
-            if (object && (object.type === "token" || !object.locked)) {
-              const position = withDo(object, (object) => {
-                // TODO: We have a "snapping" button in the toolbar, which we
-                // should probably respect somehow.
-                if (object.type === "token" || object.type === "image") {
-                  // TODO: Calculate center based on token / map object size
-                  const center = pointAdd(
-                    object.position,
-                    makePoint(GRID_SIZE / 2)
-                  );
-                  return snapPointToGrid(center);
-                }
-                return object.position;
-              });
-
-              setById(updatedLocalObjectsOnMap, object.id, {
-                ...object,
-                position,
-              });
-            }
-          });
-
-        return {
-          ...localObjectsOnMap,
-          entities: {
-            ...localObjectsOnMap.entities,
-            ...updatedLocalObjectsOnMap,
-          },
-        };
-      });
-    },
-    [setLocalObjectsOnMap]
+  // Refer to the comment on onMoveMapObjects
+  const onStopMoveMapObjects = useCallback(
+    () => setLocalObjectsOnMap(onStopMoveMapObjectsUpdater),
+    [onStopMoveMapObjectsUpdater, setLocalObjectsOnMap]
   );
 
   return (
