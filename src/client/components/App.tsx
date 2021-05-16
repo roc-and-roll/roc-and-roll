@@ -10,6 +10,7 @@ import { JoinGame } from "./JoinGame";
 import { BottomFloats } from "./BottomFloats";
 import { Notifications, NotificationTopAreaPortal } from "./Notifications";
 import { SongPlayer } from "../sound";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 // Load the map lazily to enable code splitting -> the sidebar will load faster.
 const MapContainer = React.lazy(() => import("./map/MapContainer"));
@@ -34,17 +35,25 @@ export function App() {
         {myself ? (
           <div className="app-wrapper">
             <SongPlayer />
-            <Sidebar logout={forgetMyPlayerId} />
+            <ErrorBoundary>
+              <Sidebar logout={forgetMyPlayerId} />
+            </ErrorBoundary>
             <Suspense fallback="Map is loading...">
               <main className="app-map">
-                <MapContainer />
-                <BottomFloats />
+                <ErrorBoundary>
+                  <MapContainer />
+                </ErrorBoundary>
+                <ErrorBoundary>
+                  <BottomFloats />
+                </ErrorBoundary>
               </main>
             </Suspense>
             <Notifications topAreaPortal={notificationTopAreaPortal} />
           </div>
         ) : (
-          <JoinGame setMyPlayerId={setMyPlayerId} />
+          <ErrorBoundary>
+            <JoinGame setMyPlayerId={setMyPlayerId} />
+          </ErrorBoundary>
         )}
       </NotificationTopAreaPortal.Provider>
     </MyselfContext.Provider>
