@@ -177,13 +177,22 @@ function DicePicker() {
       <PickerDiceTemplatePart part={makeDicePart(10)} />
       <PickerDiceTemplatePart part={makeDicePart(12)} />
       <PickerDiceTemplatePart part={makeDicePart(20)} />
-      <PickerDiceTemplatePart
-        part={{
-          type: "modifier",
-          damage: { type: null, modifiers: [] },
-          number: 1,
-        }}
-      />
+      {Array(18)
+        .fill(0)
+        .map((_, i) =>
+          i - 5 === 0 ? (
+            <></>
+          ) : (
+            <PickerDiceTemplatePart
+              key={i}
+              part={{
+                type: "modifier",
+                damage: { type: null, modifiers: [] },
+                number: i - 5,
+              }}
+            />
+          )
+        )}
       <PickerDiceTemplateNested />
     </div>
   );
