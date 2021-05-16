@@ -25,9 +25,17 @@ export const DiceGeometry: React.FC<
     numFaces: number;
     used: boolean;
     finalRotation: THREE.Quaternion;
+    color: string;
     onAnimationFinished?: () => void;
   }
-> = ({ finalRotation, used, numFaces, onAnimationFinished, ...meshProps }) => {
+> = ({
+  finalRotation,
+  used,
+  numFaces,
+  color,
+  onAnimationFinished,
+  ...meshProps
+}) => {
   const startVelocity = 30;
 
   const mesh = useRef<THREE.Mesh>(null!);
@@ -65,7 +73,7 @@ export const DiceGeometry: React.FC<
     <mesh {...meshProps} ref={mesh} scale={0.7} quaternion={finalRotation}>
       <meshStandardMaterial
         map={image}
-        color={used && animationFinished.current ? "orange" : "gray"}
+        color={used && animationFinished.current ? color : "gray"}
       />
     </mesh>
   );
@@ -77,6 +85,7 @@ export function Dice({
   x,
   y,
   used,
+  color,
   onAnimationFinished,
 }: {
   faces: number;
@@ -84,6 +93,7 @@ export function Dice({
   x: number;
   y: number;
   used: boolean;
+  color: string;
   onAnimationFinished?: () => void;
 }) {
   const dice = useLoader(GLTFLoader, [
@@ -103,6 +113,7 @@ export function Dice({
         used={used}
         onAnimationFinished={onAnimationFinished}
         numFaces={faces}
+        color={color}
         geometry={descriptor.geometry()}
         position={[x - (DICE_DISPLAY_COLUMNS - 1) / 2, y, 0]}
       />

@@ -20,12 +20,14 @@ interface DisplayDie extends DisplayPart {
   faces: number;
   result: number;
   used: boolean;
+  color: string;
 }
 interface DisplayWeirdDie extends DisplayPart {
   type: "weirdDie";
   faces: number;
   result: number;
   used: boolean;
+  color: string;
 }
 
 type RollSlots = (DisplayDie | DisplayModifier | DisplayWeirdDie)[];
@@ -73,6 +75,7 @@ function DiceContainer({
         part.type === "die" ? (
           <Dice
             used={part.used}
+            color={part.color}
             key={i}
             result={part.result}
             faces={part.faces}
@@ -139,6 +142,14 @@ const calculateSlots = (diceRoll: RRLogEntryDiceRoll) => {
           type: [4, 6, 8, 10, 12, 20].includes(part.faces) ? "die" : "weirdDie",
           faces: part.faces,
           result: result,
+          color:
+            part.faces !== 20
+              ? "orange"
+              : result === 1
+              ? "darkred"
+              : result === 20
+              ? "green"
+              : "orange",
           used:
             part.modified === "none"
               ? true

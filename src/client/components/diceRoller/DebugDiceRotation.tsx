@@ -56,6 +56,7 @@ export function DebugDiceRotation() {
           <DiceGeometry
             numFaces={20}
             used={true}
+            color={"orange"}
             geometry={geometryFrom(die)}
             finalRotation={new THREE.Quaternion().setFromEuler(
               new THREE.Euler(x, y, z)
