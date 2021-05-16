@@ -124,27 +124,32 @@ export function DiceTemplates({ open }: { open: boolean }) {
       <div className="dice-templates-container">
         <button onClick={() => setPickerShown((b) => !b)}>Picker</button>
         {templates.map((t) => (
-          <DiceTemplate
-            onRoll={(templates, modified) =>
-              dispatch(
-                logEntryDiceRollAdd({
-                  silent: false,
-                  playerId: myself.id,
-                  payload: {
-                    rollType: "attack", // TODO
-                    dice: templates.flatMap((t) =>
-                      t.parts.flatMap((p) =>
-                        evaluateDiceTemplatePart(p, modified)
-                      )
-                    ),
-                  },
-                })
-              )
-            }
-            newIds={newIds}
+          <DiceTemplatePartMenuWrapper
             key={t.id}
-            templateId={t.id}
-          />
+            template={t}
+            part={{ type: "template", templateId: t.id }}
+          >
+            <DiceTemplate
+              onRoll={(templates, modified) =>
+                dispatch(
+                  logEntryDiceRollAdd({
+                    silent: false,
+                    playerId: myself.id,
+                    payload: {
+                      rollType: "attack", // TODO
+                      dice: templates.flatMap((t) =>
+                        t.parts.flatMap((p) =>
+                          evaluateDiceTemplatePart(p, modified)
+                        )
+                      ),
+                    },
+                  })
+                )
+              }
+              newIds={newIds}
+              templateId={t.id}
+            />
+          </DiceTemplatePartMenuWrapper>
         ))}
       </div>
     </div>
@@ -324,12 +329,6 @@ function DiceTemplateInner({
             onClick={(e) => e.stopPropagation()}
             onChange={(e) => setName(e.target.value)}
           />
-          <textarea
-            onClick={(e) => e.stopPropagation()}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="dice-template-notes"
-          />
           {template.parts.map((part, i) => (
             <DiceTemplatePartMenuWrapper
               template={template}
@@ -494,6 +493,28 @@ function ModifierNumberEditor({
   );
 }
 
+function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
+  const template = useServerState((state) =>
+    byId(state.diceTemplates.entities, templateId)
+  )!;
+  const [notes, setNotes] = useOptimisticDebouncedServerUpdate<string>(
+    template.notes,
+    (notes) => diceTemplateUpdate({ id: templateId, changes: { notes } }),
+    1000
+  );
+
+  return (
+    <div>
+      Notes:
+      <textarea
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        className="dice-template-notes"
+      />
+    </div>
+  );
+}
+
 const DiceTemplatePartMenuWrapper: React.FC<{
   part: RRDiceTemplatePart;
   template: RRDiceTemplate;
@@ -532,6 +553,9 @@ const DiceTemplatePartMenuWrapper: React.FC<{
           )}
           {part.type === "modifier" && (
             <ModifierNumberEditor onChange={applyChange} part={part} />
+          )}
+          {part.type === "template" && (
+            <TemplateNoteEditor templateId={part.templateId} />
           )}
         </div>
       }
