@@ -216,10 +216,11 @@ a {
 }
 
 .dice-templates {
+  $panel-background: rgb(59, 28, 6);
   $animation-duration: 200ms;
 
   height: 0;
-  background: rgb(59, 28, 6);
+  background: $panel-background;
   box-shadow: inset 0 0 30px black;
   border-top: 1px solid black;
   border-left: 1px solid black;
@@ -230,6 +231,7 @@ a {
   justify-content: flex-start;
   padding-left: 8px;
   position: relative;
+  user-select: none;
 
   &.opened {
     height: 200px;
@@ -241,7 +243,7 @@ a {
     flex-wrap: wrap;
     height: 100%;
     width: 100%;
-    align-items: stretch;
+    align-items: flex-start;
     justify-content: flex-start;
   }
 
@@ -261,6 +263,29 @@ a {
     flex-grow: 0;
     cursor: pointer;
     align-items: center;
+    background: $panel-background;
+
+    &.selected {
+      border: 1px solid white;
+      background: adjust-color($color: $panel-background, $lightness: 9%);
+    }
+
+    .dice-template-selection-count {
+      $size: 16px;
+      position: absolute;
+      left: $size / -2;
+      top: $size / -2;
+      height: $size;
+      width: $size;
+      background: #fff;
+      color: #000;
+      border-radius: $size;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
 
     input {
       background: none;

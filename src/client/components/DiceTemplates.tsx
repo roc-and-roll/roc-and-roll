@@ -61,6 +61,9 @@ export function DiceTemplates({ open }: { open: boolean }) {
 
   const dispatch = useServerDispatch();
   const newIds = useRef<RRDiceTemplateID[]>([]);
+  const [selectedTemplates, setSelectedTemplates] = useState<
+    RRDiceTemplateID[]
+  >([]);
 
   const [, dropRef] = useDrop<RRDiceTemplatePart, void, never>(
     () => ({
@@ -130,8 +133,67 @@ export function DiceTemplates({ open }: { open: boolean }) {
     }
   }
 
+  const doRoll = () => {
+    if (selectedTemplates.length < 1) return;
+
+    dispatch(
+      logEntryDiceRollAdd({
+        silent: false,
+        playerId: myself.id,
+        payload: {
+          rollType: "attack", // TODO
+          dice: selectedTemplates
+            .map((id) => allTemplates.find((t) => t.id === id)!)
+            .flatMap((t) =>
+              // TODO
+              t.parts.flatMap((p) => evaluateDiceTemplatePart(p, "none"))
+            ),
+        },
+      })
+    );
+  };
+
+  const clickedTemplates = (
+    templates: RRDiceTemplate[],
+    event: React.MouseEvent
+  ) => {
+    setSelectedTemplates((ids) => {
+      const countForTemplate = (id: RRDiceTemplateID) =>
+        selectedTemplates.filter((tid) => tid === id).length;
+
+      const clicked = templates[templates.length - 1]!;
+
+      if (event.ctrlKey) {
+        // add parents if my count is bigger than their count
+        const myCount = countForTemplate(clicked.id) + 1;
+        const parents = templates.slice(0, templates.length - 1);
+        const parentsToAdd = parents
+          .filter((p) => (countForTemplate(p.id) >= myCount ? [] : p.id))
+          .map((p) => p.id);
+        return [...ids, ...parentsToAdd, clicked.id];
+      }
+      if (event.shiftKey) {
+        return [...ids, clicked.id];
+      }
+
+      return ids.includes(clicked.id)
+        ? ids.filter((id) => id !== clicked.id)
+        : [
+            ...ids,
+            ...templates.flatMap((t) => (ids.includes(t.id) ? [] : t.id)),
+          ];
+    });
+  };
+
   return (
-    <div className={clsx("dice-templates", { opened: open })} ref={dropRef}>
+    <div
+      className={clsx("dice-templates", { opened: open })}
+      ref={dropRef}
+      onClick={() => {
+        doRoll();
+        setSelectedTemplates([]);
+      }}
+    >
       {pickerShown && <DicePicker />}
       <div className="dice-templates-container">
         <button onClick={() => setPickerShown((b) => !b)}>
@@ -148,24 +210,12 @@ export function DiceTemplates({ open }: { open: boolean }) {
             part={{ type: "template", templateId: t.id }}
           >
             <DiceTemplate
-              onRoll={(templates, modified) =>
-                dispatch(
-                  logEntryDiceRollAdd({
-                    silent: false,
-                    playerId: myself.id,
-                    payload: {
-                      rollType: "attack", // TODO
-                      dice: templates.flatMap((t) =>
-                        t.parts.flatMap((p) =>
-                          evaluateDiceTemplatePart(p, modified)
-                        )
-                      ),
-                    },
-                  })
-                )
+              onRoll={(templates, modified, event) =>
+                clickedTemplates(templates, event)
               }
               newIds={newIds}
               templateId={t.id}
+              selectedTemplateIds={selectedTemplates}
             />
           </DiceTemplatePartMenuWrapper>
         ))}
@@ -234,6 +284,7 @@ function PickerDiceTemplatePart({ part }: { part: RRDiceTemplatePart }) {
   return (
     <DiceTemplatePart
       onRoll={() => {}}
+      selectedTemplateIds={[]}
       ref={dragRef}
       newIds={newIds}
       part={part}
@@ -245,10 +296,16 @@ const DiceTemplate = React.memo(function DiceTemplate({
   templateId,
   newIds,
   onRoll,
+  selectedTemplateIds,
 }: {
   templateId: RRDiceTemplateID;
   newIds: React.MutableRefObject<RRDiceTemplateID[]>;
-  onRoll: (template: RRDiceTemplate[], modified: RRMultipleRoll) => void;
+  onRoll: (
+    template: RRDiceTemplate[],
+    modified: RRMultipleRoll,
+    event: React.MouseEvent
+  ) => void;
+  selectedTemplateIds: RRDiceTemplateID[];
 }) {
   const template = useServerState((state) =>
     byId(state.diceTemplates.entities, templateId)
@@ -259,7 +316,12 @@ const DiceTemplate = React.memo(function DiceTemplate({
   }
 
   return (
-    <DiceTemplateInner onRoll={onRoll} template={template} newIds={newIds} />
+    <DiceTemplateInner
+      onRoll={onRoll}
+      template={template}
+      newIds={newIds}
+      selectedTemplateIds={selectedTemplateIds}
+    />
   );
 });
 
@@ -267,10 +329,16 @@ function DiceTemplateInner({
   template,
   newIds,
   onRoll,
+  selectedTemplateIds,
 }: {
   template: RRDiceTemplate;
   newIds: React.MutableRefObject<RRDiceTemplateID[]>;
-  onRoll: (templates: RRDiceTemplate[], modified: RRMultipleRoll) => void;
+  onRoll: (
+    templates: RRDiceTemplate[],
+    modified: RRMultipleRoll,
+    event: React.MouseEvent
+  ) => void;
+  selectedTemplateIds: RRDiceTemplateID[];
 }) {
   const myself = useMyself();
   const dispatch = useServerDispatch();
@@ -343,75 +411,75 @@ function DiceTemplateInner({
     ? "disadvantage"
     : "none";
 
+  const selectionCount = selectedTemplateIds.filter((id) => template.id == id)
+    .length;
+
   return (
     <div
       ref={dropRef}
       onClick={(e) => {
         e.stopPropagation();
-        onRoll([template], defaultModified);
+        onRoll([template], defaultModified, e);
       }}
-      className={clsx("dice-template", { created: template })}
+      className={clsx("dice-template", {
+        created: template,
+        selected: selectionCount > 0,
+      })}
     >
-      {template ? (
-        <>
-          <input
-            ref={nameInputRef}
-            value={name}
-            onClick={(e) => e.stopPropagation()}
-            onChange={(e) => setName(e.target.value)}
+      {selectionCount > 1 && (
+        <div className="dice-template-selection-count">{selectionCount}</div>
+      )}
+      <input
+        ref={nameInputRef}
+        value={name}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) => setName(e.target.value)}
+      />
+      {template.parts.map((part, i) => (
+        <DiceTemplatePartMenuWrapper template={template} key={i} part={part}>
+          <DiceTemplatePart
+            selectedTemplateIds={selectedTemplateIds}
+            onRoll={(templates, modified, event) =>
+              onRoll([template, ...templates], modified, event)
+            }
+            part={part}
+            newIds={newIds}
           />
-          {template.parts.map((part, i) => (
-            <DiceTemplatePartMenuWrapper
-              template={template}
-              key={i}
-              part={part}
+        </DiceTemplatePartMenuWrapper>
+      ))}
+      {canMultipleRoll && (
+        <>
+          {defaultModified !== "advantage" && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRoll([template], "advantage", e);
+              }}
             >
-              <DiceTemplatePart
-                onRoll={(templates, modified) =>
-                  onRoll([template, ...templates], modified)
-                }
-                part={part}
-                newIds={newIds}
-              />
-            </DiceTemplatePartMenuWrapper>
-          ))}
-          {canMultipleRoll && (
-            <>
-              {defaultModified !== "advantage" && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRoll([template], "advantage");
-                  }}
-                >
-                  ADV
-                </button>
-              )}
-              {defaultModified !== "none" && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRoll([template], "none");
-                  }}
-                >
-                  REG
-                </button>
-              )}
-              {defaultModified !== "disadvantage" && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRoll([template], "disadvantage");
-                  }}
-                >
-                  DIS
-                </button>
-              )}
-            </>
+              ADV
+            </button>
+          )}
+          {defaultModified !== "none" && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRoll([template], "none", e);
+              }}
+            >
+              REG
+            </button>
+          )}
+          {defaultModified !== "disadvantage" && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRoll([template], "disadvantage", e);
+              }}
+            >
+              DIS
+            </button>
           )}
         </>
-      ) : (
-        "New Template"
       )}
     </div>
   );
@@ -650,9 +718,17 @@ const DiceTemplatePart = React.forwardRef<
   {
     part: RRDiceTemplatePart;
     newIds: React.MutableRefObject<RRDiceTemplateID[]>;
-    onRoll: (templates: RRDiceTemplate[], modified: RRMultipleRoll) => void;
+    onRoll: (
+      templates: RRDiceTemplate[],
+      modified: RRMultipleRoll,
+      event: React.MouseEvent
+    ) => void;
+    selectedTemplateIds: RRDiceTemplateID[];
   }
->(function DiceTemplatePart({ part, newIds, onRoll }, ref) {
+>(function DiceTemplatePart(
+  { part, newIds, onRoll, selectedTemplateIds },
+  ref
+) {
   let content: JSX.Element;
 
   const styleFor = (part: RRDiceTemplatePartWithDamage) => ({
@@ -691,9 +767,12 @@ const DiceTemplatePart = React.forwardRef<
     case "template":
       content = (
         <DiceTemplate
-          onRoll={(templates, modified) => onRoll(templates, modified)}
+          onRoll={(templates, modified, event) =>
+            onRoll(templates, modified, event)
+          }
           templateId={part.templateId}
           newIds={newIds}
+          selectedTemplateIds={selectedTemplateIds}
         />
       );
       break;
