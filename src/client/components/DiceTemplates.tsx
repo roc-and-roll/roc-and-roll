@@ -124,7 +124,13 @@ export function DiceTemplates({ open }: { open: boolean }) {
     <div className={clsx("dice-templates", { opened: open })} ref={dropRef}>
       {pickerShown && <DicePicker />}
       <div className="dice-templates-container">
-        <button onClick={() => setPickerShown((b) => !b)}>Picker</button>
+        <button onClick={() => setPickerShown((b) => !b)}>
+          Show
+          <br />
+          Dice
+          <br />
+          Picker
+        </button>
         {templates.map((t) => (
           <DiceTemplatePartMenuWrapper
             key={t.id}
@@ -308,6 +314,7 @@ function DiceTemplateInner({
           })
         );
       },
+      canDrop: (_item, monitor) => monitor.isOver({ shallow: true }),
     }),
     [dispatch, myself.id, template.id, template.parts]
   );
