@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { DiceTemplates } from "./DiceTemplates";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { Log } from "./Log";
 import { PrivateChatsWrapper } from "./privateChat/PrivateChatsWrapper";
 
@@ -15,11 +16,17 @@ export function BottomFloats() {
         >
           DICE
         </div>
-        <PrivateChatsWrapper />
-        <Log />
+        <ErrorBoundary>
+          <PrivateChatsWrapper />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <Log />
+        </ErrorBoundary>
       </div>
 
-      <DiceTemplates open={diceTemplatesOpen} />
+      <ErrorBoundary>
+        <DiceTemplates open={diceTemplatesOpen} />
+      </ErrorBoundary>
     </div>
   );
 }

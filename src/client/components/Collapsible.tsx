@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import useLocalState from "../useLocalState";
 import { CollapseButton } from "./CollapseButton";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 export function Collapsible(
   props: React.PropsWithChildren<{
@@ -60,7 +61,7 @@ function CollapsibleImpl(
           setCollapsed={props.setCollapsed}
         />
       </div>
-      {!props.collapsed && props.children}
+      {!props.collapsed && <ErrorBoundary>{props.children}</ErrorBoundary>}
     </div>
   );
 }
