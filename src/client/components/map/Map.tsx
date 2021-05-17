@@ -391,7 +391,7 @@ export const RRMapView = React.memo<{
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      (document.activeElement as HTMLElement)?.blur();
+      (document.activeElement as HTMLElement | null)?.blur();
       e.preventDefault();
       e.stopPropagation();
       const newMouseAction =
@@ -586,7 +586,7 @@ export const RRMapView = React.memo<{
       ) {
         const local = localCoords(event);
 
-        (document.activeElement as HTMLElement)?.blur();
+        (document.activeElement as HTMLElement | null)?.blur();
         event.preventDefault();
         event.stopPropagation();
         dragStartIdRef.current = object.id;

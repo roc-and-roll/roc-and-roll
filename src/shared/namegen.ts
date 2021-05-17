@@ -593,7 +593,7 @@ class Group {
   }
 
   public split(): void {
-    if (this.set.length == 0) {
+    if (this.set.length === 0) {
       this.set.push(new Sequence([]));
     }
     this.set.push(new Sequence([]));
@@ -616,7 +616,7 @@ class Group {
             break;
         }
       }
-      if (this.set.length == 0) {
+      if (this.set.length === 0) {
         this.set.push(new Sequence([]));
       }
       this.set[this.set.length - 1]!.add(g);
@@ -634,9 +634,10 @@ class GroupSymbol extends Group {
     super(GroupTypes.symbol);
   }
 
-  public add(a: keyof typeof symbolMap): void {
+  public add(a: string): void {
     const g = new Random([]);
-    const symbols = symbolMap[a];
+    const symbols =
+      a in symbolMap ? symbolMap[a as keyof typeof symbolMap] : null;
     if (symbols) {
       symbols.forEach((symbol) => g.add(new Literal(symbol)));
     } else {
@@ -686,11 +687,11 @@ export default class Generator {
           break;
         case ">":
         case ")":
-          if (stack.length == 0) {
+          if (stack.length === 0) {
             throw new Error("Unbalanced brackets");
-          } else if (chr === ">" && top.type != GroupTypes.symbol) {
+          } else if (chr === ">" && top.type !== GroupTypes.symbol) {
             throw new Error("Unexpected '>' in pattern");
-          } else if (chr === ")" && top.type != GroupTypes.literal) {
+          } else if (chr === ")" && top.type !== GroupTypes.literal) {
             throw new Error("Unexpected ')' in pattern");
           }
           last = top.produce();
@@ -701,14 +702,14 @@ export default class Generator {
           top.split();
           break;
         case "!":
-          if (top.type == GroupTypes.symbol) {
+          if (top.type === GroupTypes.symbol) {
             top.wrap(Wrappers.capitalizer);
           } else {
             top.add(chr);
           }
           break;
         case "~":
-          if (top.type == GroupTypes.symbol) {
+          if (top.type === GroupTypes.symbol) {
             top.wrap(Wrappers.reverser);
           } else {
             top.add(chr);
@@ -720,7 +721,7 @@ export default class Generator {
       }
     }
 
-    if (stack.length != 0) {
+    if (stack.length !== 0) {
       throw new Error("Missing closing brackets");
     }
 
@@ -804,7 +805,7 @@ class Random extends Generator {
   }
 
   public toString(): string {
-    if (!this.generators) {
+    if (this.generators.length === 0) {
       return "";
     }
     const rnd = Math.floor(Math.random() * this.generators.length);

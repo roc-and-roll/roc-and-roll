@@ -30,7 +30,7 @@ type OptimisticUpdateExecutedSubscriber = (
   optimisticUpdateIds: OptimisticUpdateID[]
 ) => void;
 
-const DEBUG = false;
+const DEBUG = false as boolean;
 
 // This context is subscribed to using the useServerState and useServerDispatch
 // hooks. It is deliberately not exported. The context must not change on state

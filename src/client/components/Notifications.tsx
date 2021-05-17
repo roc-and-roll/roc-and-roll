@@ -149,11 +149,16 @@ function Notification({
   };
 
   const view = (notification: RRLogEntry) => {
-    if (notification.type === "diceRoll") return viewDiceRoll(notification);
-    if (notification.type === "message") return viewMessage(notification);
-    if (notification.type === "achievement")
-      return viewAchievement(notification);
-    assertNever(notification);
+    switch (notification.type) {
+      case "diceRoll":
+        return viewDiceRoll(notification);
+      case "message":
+        return viewMessage(notification);
+      case "achievement":
+        return viewAchievement(notification);
+      default:
+        assertNever(notification);
+    }
   };
 
   const transition = "opacity 150ms ease-out";

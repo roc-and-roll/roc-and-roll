@@ -42,7 +42,7 @@ export const MapToolbar = React.memo<{
     const handleKeyPress = (event: KeyboardEvent) => {
       if (
         ["INPUT", "BUTTON", "TEXTAREA"].includes(
-          (event?.target as HTMLElement)?.nodeName
+          (event.target as HTMLElement).nodeName
         )
       ) {
         return;
@@ -70,15 +70,21 @@ export const MapToolbar = React.memo<{
   }, [setDrawType]);
 
   useEffect(() => {
-    setEditState((old) => {
-      if (tool === "move") return { tool, updateColor: drawColor };
-      if (tool === "measure") return { tool, snap };
-      if (tool === "reveal") return { tool, revealType };
-      if (tool === "draw")
-        return drawType === "text" || drawType === "freehand"
-          ? { tool, type: drawType, color: drawColor }
-          : { tool, type: drawType, color: drawColor, snap };
-      return assertNever(tool);
+    setEditState(() => {
+      switch (tool) {
+        case "move":
+          return { tool, updateColor: drawColor };
+        case "measure":
+          return { tool, snap };
+        case "reveal":
+          return { tool, revealType };
+        case "draw":
+          return drawType === "text" || drawType === "freehand"
+            ? { tool, type: drawType, color: drawColor }
+            : { tool, type: drawType, color: drawColor, snap };
+        default:
+          assertNever(tool);
+      }
     });
   }, [tool, drawColor, drawType, snap, setEditState, revealType]);
 
@@ -182,19 +188,22 @@ export const MapToolbar = React.memo<{
       {tool === "move" && selectedMapObjectIds.length > 0 && (
         <>
           <ColorInput value={drawColor} onChange={setDrawColor} />
-          <label className="locked-toggle">
-            lock
-            <input
-              type="checkbox"
-              checked={isLockedToggleChecked}
-              ref={lockedCheckboxRef}
-              onChange={(e) =>
-                updateLock(
-                  isLockedToggleIndeterminate ? true : e.target.checked
-                )
-              }
-            />
-          </label>
+          {lockedStates.size > 0 && (
+            // lockedStates.size can be 0 if only tokens are selected
+            <label className="locked-toggle">
+              lock
+              <input
+                type="checkbox"
+                checked={isLockedToggleChecked}
+                ref={lockedCheckboxRef}
+                onChange={(e) =>
+                  updateLock(
+                    isLockedToggleIndeterminate ? true : e.target.checked
+                  )
+                }
+              />
+            </label>
+          )}
           {selectedMapObjectIds.map((selectedMapObjectId) => (
             <MapObjectLockedObserver
               key={selectedMapObjectId}

@@ -53,12 +53,10 @@ function Chat({ id, close }: { id: RRPrivateChatID; close: () => void }) {
 
   useEffect(() => {
     if (chat && tabFocused) {
-      const messagesToMarkAsRead = chat
-        ? entries(chat.messages).filter(
-            (message) => !wasSentByMe(chat, message, myself.id) && !message.read
-          )
-        : [];
-      if (messagesToMarkAsRead) {
+      const messagesToMarkAsRead = entries(chat.messages).filter(
+        (message) => !wasSentByMe(chat, message, myself.id) && !message.read
+      );
+      if (messagesToMarkAsRead.length > 0) {
         dispatch(
           messagesToMarkAsRead.map((message) =>
             privateChatMessageUpdate(chat.id, {

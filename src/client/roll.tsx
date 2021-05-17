@@ -42,7 +42,7 @@ function modifier(
 function rollD20(multiple: RRMultipleRoll = "none") {
   return roll({
     faces: 20,
-    count: multiple == "none" ? 1 : 2,
+    count: multiple === "none" ? 1 : 2,
     modified: multiple,
     damage: {
       type: null,
@@ -75,7 +75,7 @@ export function roll({
     faces,
     modified: modified ?? "none",
     diceResults: results,
-    damageType: damage ?? null,
+    damageType: damage,
     negated: negated ?? false,
   };
 }
@@ -83,75 +83,78 @@ export function roll({
 export function diceResultString(logEntry: RRLogEntryDiceRoll) {
   return logEntry.payload.dice
     .map((part) => {
-      if (part.type === "modifier") {
-        return <b>{part.modifier}</b>;
-      }
-      const prefix = part.negated ? "-" : "";
-      if (part.type === "dice") {
-        if (part.diceResults.length === 1) {
-          return (
-            <>
-              {prefix}
-              <b>{part.diceResults[0]!}</b> (d{part.faces})
-            </>
-          );
-        }
-        if (part.modified === "none") {
-          return (
-            <>
-              {prefix}
-              {part.diceResults
-                .map((r) => (
-                  <>
-                    <b>{r}</b> (d{part.faces})
-                  </>
-                ))
-                .reduce((prev, curr, index) => {
-                  return (
-                    <>
-                      {prev} + {curr}
-                    </>
-                  );
-                })}
-            </>
-          );
-        }
-        const boldValue =
-          part.modified === "advantage"
-            ? Math.max(...part.diceResults)
-            : Math.min(...part.diceResults);
-        return (
-          <>
-            {prefix}
-            {part.modified === "advantage" ? "a" : "i"}(
-            {part.diceResults
-              .map((r) => {
-                if (r === boldValue) {
-                  return (
+      switch (part.type) {
+        case "modifier":
+          return <b>{part.modifier}</b>;
+
+        case "dice": {
+          const prefix = part.negated ? "-" : "";
+          if (part.diceResults.length === 1) {
+            return (
+              <>
+                {prefix}
+                <b>{part.diceResults[0]!}</b> (d{part.faces})
+              </>
+            );
+          }
+          if (part.modified === "none") {
+            return (
+              <>
+                {prefix}
+                {part.diceResults
+                  .map((r) => (
                     <>
                       <b>{r}</b> (d{part.faces})
                     </>
-                  );
-                } else {
+                  ))
+                  .reduce((prev, curr, index) => {
+                    return (
+                      <>
+                        {prev} + {curr}
+                      </>
+                    );
+                  })}
+              </>
+            );
+          }
+          const boldValue =
+            part.modified === "advantage"
+              ? Math.max(...part.diceResults)
+              : Math.min(...part.diceResults);
+          return (
+            <>
+              {prefix}
+              {part.modified === "advantage" ? "a" : "i"}(
+              {part.diceResults
+                .map((r) => {
+                  if (r === boldValue) {
+                    return (
+                      <>
+                        <b>{r}</b> (d{part.faces})
+                      </>
+                    );
+                  } else {
+                    return (
+                      <>
+                        {r} (d{part.faces})
+                      </>
+                    );
+                  }
+                })
+                .reduce((prev, curr, index) => {
                   return (
                     <>
-                      {r} (d{part.faces})
+                      {prev}, {curr}
                     </>
                   );
-                }
-              })
-              .reduce((prev, curr, index) => {
-                return (
-                  <>
-                    {prev}, {curr}
-                  </>
-                );
-              })}
-            )
-          </>
-        );
+                })}
+              )
+            </>
+          );
+        }
+        default:
+          assertNever(part);
       }
-      assertNever(part);
     })
     .reduce((prev, curr, index) => {
       return (
@@ -165,21 +168,29 @@ export function diceResultString(logEntry: RRLogEntryDiceRoll) {
 export function diceResult(logEntry: RRLogEntryDiceRoll) {
   return logEntry.payload.dice
     .map((part) => {
-      if (part.type === "modifier") {
-        return part.modifier;
+      switch (part.type) {
+        case "modifier":
+          return part.modifier;
+        case "dice":
+          {
+            const sign = part.negated ? -1 : 1;
+            switch (part.modified) {
+              case "none":
+                return (
+                  part.diceResults.reduce((sum, each) => sum + each) * sign
+                );
+              case "advantage":
+                return Math.max(...part.diceResults) * sign;
+              case "disadvantage":
+                return Math.min(...part.diceResults) * sign;
+              default:
+                assertNever(part.modified);
+            }
+          }
+          break;
+        default:
+          assertNever(part);
       }
-      if (part.type === "dice") {
-        const sign = part.negated ? -1 : 1;
-        if (part.modified === "none") {
-          return part.diceResults.reduce((sum, each) => sum + each) * sign;
-        } else if (part.modified === "advantage") {
-          return Math.max(...part.diceResults) * sign;
-        } else if (part.modified === "disadvantage") {
-          return Math.min(...part.diceResults) * sign;
-        }
-        assertNever(part.modified);
-      }
-      assertNever(part);
     })
     .reduce((sum, each) => sum + each);
 }

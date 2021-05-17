@@ -31,7 +31,11 @@ import { Button } from "./ui/Button";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { useRecoilValue } from "recoil";
 import { selectedMapObjectIdsAtom } from "./map/MapContainer";
-import { EMPTY_ENTITY_COLLECTION, withDo } from "../../shared/util";
+import {
+  assertNever,
+  EMPTY_ENTITY_COLLECTION,
+  withDo,
+} from "../../shared/util";
 import ReactDOM from "react-dom";
 import { NotificationTopAreaPortal } from "./Notifications";
 
@@ -105,20 +109,23 @@ const InitiativeEntry = React.memo<{
         return;
       }
 
-      if (entry.type === "character") {
-        return initiativeTrackerEntryCharacterUpdate({
-          id: entry.id,
-          changes: {
-            initiative,
-          },
-        });
-      } else if (entry.type === "lairAction") {
-        return initiativeTrackerEntryLairActionUpdate({
-          id: entry.id,
-          changes: {
-            initiative,
-          },
-        });
+      switch (entry.type) {
+        case "character":
+          return initiativeTrackerEntryCharacterUpdate({
+            id: entry.id,
+            changes: {
+              initiative,
+            },
+          });
+        case "lairAction":
+          return initiativeTrackerEntryLairActionUpdate({
+            id: entry.id,
+            changes: {
+              initiative,
+            },
+          });
+        default:
+          assertNever(entry);
       }
     },
     1000
@@ -174,7 +181,7 @@ export function InitiativeTracker() {
     ...new Set(
       selectedMapObjectIds.flatMap((mapObjectId) => {
         const mapObject = byId(mapObjects.entities, mapObjectId);
-        return mapObject?.type === "token" ? mapObject?.characterId : [];
+        return mapObject?.type === "token" ? mapObject.characterId : [];
       })
     ),
   ];
@@ -198,7 +205,7 @@ export function InitiativeTracker() {
     ...new Set(characters.map((c) => c?.initiativeModifier)),
   ];
   const haveSameModifier =
-    characterModifiers.length === 1 && characterModifiers[0]! !== null;
+    characterModifiers.length === 1 && characterModifiers[0] !== null;
 
   const roll = () => {
     const mod = haveSameModifier ? characterModifiers[0]! : parseInt(modifier);

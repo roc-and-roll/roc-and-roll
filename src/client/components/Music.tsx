@@ -186,7 +186,7 @@ function UploadAudio({ onUploaded }: { onUploaded: () => void }) {
 
   const doUpload = async (files: FileList | null) => {
     const uploadedFiles = await upload(files);
-    if (uploadedFiles) {
+    if (uploadedFiles.length > 0) {
       dispatch(
         uploadedFiles.map((f) =>
           assetSongAdd({
