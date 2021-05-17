@@ -317,6 +317,7 @@ a {
     align-items: flex-start;
     justify-content: flex-start;
     align-content: flex-start;
+    padding: 0.5rem;
   }
 
   &.opened .dice-picker {
@@ -343,6 +344,16 @@ a {
     min-height: 0;
     font-size: 0.7rem;
     margin: 0 2px;
+  }
+
+  .nested-template {
+    width: 100px;
+  }
+
+  hr.solid {
+    border-top: 1px solid #333;
+    position: relative;
+    width: 100%;
   }
 }
 

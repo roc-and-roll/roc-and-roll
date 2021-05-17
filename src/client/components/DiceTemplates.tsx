@@ -243,6 +243,7 @@ function DicePicker() {
       <PickerDiceTemplatePart part={makeDicePart(10)} />
       <PickerDiceTemplatePart part={makeDicePart(12)} />
       <PickerDiceTemplatePart part={makeDicePart(20)} />
+      <hr className="solid"></hr>
       {Array(18)
         .fill(0)
         .map((_, i) =>
@@ -259,7 +260,9 @@ function DicePicker() {
             />
           )
         )}
+      <hr className="solid"></hr>
       <PickerDiceTemplateNested />
+      <hr className="solid"></hr>
     </div>
   );
 }
@@ -270,7 +273,11 @@ function PickerDiceTemplateNested() {
     item: {},
   }));
 
-  return <div ref={dragRef}>Nested Template</div>;
+  return (
+    <div className="dice-option nested-template" ref={dragRef}>
+      Nested Template
+    </div>
+  );
 }
 
 function PickerDiceTemplatePart({ part }: { part: RRDiceTemplatePart }) {
