@@ -35,6 +35,7 @@ import {
 } from "../state";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
+import { Select } from "./ui/Select";
 
 export function DiceTemplates({ open }: { open: boolean }) {
   const [pickerShown, setPickerShown] = useState(false);
@@ -513,22 +514,13 @@ function DamageTypeEditor({
   return (
     <div>
       Damage Type:
-      <select
+      <Select
         value={damageType ?? ""}
-        onChange={(e) =>
-          setDamageType(
-            e.target.value === ""
-              ? null
-              : (e.target.value as RRDamageType["type"])
-          )
+        onChange={(damageType) =>
+          setDamageType(damageType === "" ? null : damageType)
         }
-      >
-        {damageTypes.map((t) => (
-          <option key={t ?? ""} value={t ?? ""}>
-            {t ?? ""}
-          </option>
-        ))}
-      </select>
+        options={damageTypes.map((t) => ({ value: t ?? "", label: t ?? "" }))}
+      />
     </div>
   );
 }
@@ -555,16 +547,14 @@ function DiceMultipleRollEditor({
   return (
     <div>
       Multiple:
-      <select
+      <Select
         value={multiple ?? ""}
-        onChange={(e) => setMultiple(e.target.value as RRMultipleRoll)}
-      >
-        {multipleRollValues.map((t) => (
-          <option key={t ?? ""} value={t ?? ""}>
-            {t ?? ""}
-          </option>
-        ))}
-      </select>
+        onChange={setMultiple}
+        options={multipleRollValues.map((t) => ({
+          value: t,
+          label: t,
+        }))}
+      />
     </div>
   );
 }
@@ -709,7 +699,7 @@ const DiceTemplatePartMenuWrapper: React.FC<{
         onContextMenu={(e) => {
           e.stopPropagation();
           e.preventDefault();
-          setMenuVisible(true);
+          setMenuVisible((visible) => !visible);
         }}
         onClick={(e) => e.button === 2 && e.stopPropagation()}
         className="dice-template-outer"

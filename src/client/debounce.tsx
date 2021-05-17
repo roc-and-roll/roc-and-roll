@@ -26,7 +26,7 @@ export class SyncedDebouncer {
       debounced: (...args: A) => {
         const data = this.fns.get(id);
         if (!data) {
-          throw new Error("Already disposed!");
+          return;
         }
 
         data.lastArgs = args;

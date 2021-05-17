@@ -64,9 +64,7 @@ describe("synced debouncer", () => {
       `"Already disposed!"`
     );
 
-    expect(() => debounced()).toThrowErrorMatchingInlineSnapshot(
-      `"Already disposed!"`
-    );
+    expect(() => debounced()).not.toThrow();
   });
 
   it("executes pending callbacks on dispose if instructed so", async () => {
