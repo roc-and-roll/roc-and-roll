@@ -194,14 +194,16 @@ export function InitiativeTracker() {
         : []
     )
   );
-  const characterModifiers = [
-    ...new Set(characters.map((c) => c?.initiativeModifier)),
+  const allSelectedInitiatives = [
+    ...new Set(characters.map((c) => c?.attributes?.["initiative"] ?? null)),
   ];
-  const haveSameModifier =
-    characterModifiers.length === 1 && characterModifiers[0]! !== null;
+  const allHaveSameInitiative =
+    allSelectedInitiatives.length === 1 && allSelectedInitiatives[0]! !== null;
 
   const roll = () => {
-    const mod = haveSameModifier ? characterModifiers[0]! : parseInt(modifier);
+    const mod = allHaveSameInitiative
+      ? allSelectedInitiatives[0]!
+      : parseInt(modifier);
     const action = logEntryDiceRollAdd(
       rollInitiative(isNaN(mod) ? 0 : mod, "none", myself.id)
     );
@@ -292,13 +294,13 @@ export function InitiativeTracker() {
           Roll Initiative
         </Button>
         <input
-          value={haveSameModifier ? characterModifiers[0]! : modifier}
-          disabled={haveSameModifier}
+          value={allHaveSameInitiative ? allSelectedInitiatives[0]! : modifier}
+          disabled={allHaveSameInitiative}
           onChange={(e) => setModifier(e.target.value)}
           placeholder="mod"
           title={
-            haveSameModifier
-              ? `Using configured Modifier ${characterModifiers[0]!}`
+            allHaveSameInitiative
+              ? `Using configured Modifier ${allSelectedInitiatives[0]! ?? ""}`
               : "Modifier"
           }
         />

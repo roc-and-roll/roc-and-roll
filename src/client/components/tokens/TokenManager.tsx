@@ -24,7 +24,7 @@ async function makeNewToken(): Promise<Parameters<typeof characterAdd>[0]> {
     maxHP: 0,
     scale: 1,
     visibility: "everyone",
-    initiativeModifier: null,
+    attributes: {},
     name: await randomName(),
     image: await generateRandomToken(),
   };

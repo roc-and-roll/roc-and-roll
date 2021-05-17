@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import {
   characterUpdate,
   characterRemove,
@@ -6,7 +6,7 @@ import {
   characterTemplateRemove,
 } from "../../../shared/actions";
 import { randomColor } from "../../../shared/colors";
-import { RRCharacter } from "../../../shared/state";
+import { linkedModifierNames, RRCharacter } from "../../../shared/state";
 import { useFileUpload } from "../../files";
 import {
   useServerDispatch,
@@ -93,24 +93,9 @@ export function TokenEditor({
     1000
   );
 
-  const [
-    initiativeModifier,
-    setInitiativeModifier,
-  ] = useOptimisticDebouncedServerUpdate(
-    token.initiativeModifier?.toString(),
-    (initiativeModifierString) => {
-      if (!initiativeModifierString || initiativeModifierString.length === 0) {
-        return updateFunc({
-          id: token.id,
-          changes: { initiativeModifier: null },
-        });
-      }
-      const initiativeModifier = parseInt(initiativeModifierString);
-      if (isNaN(initiativeModifier)) {
-        return;
-      }
-      return updateFunc({ id: token.id, changes: { initiativeModifier } });
-    },
+  const [attributes, setAttributes] = useOptimisticDebouncedServerUpdate(
+    token.attributes,
+    (attributes) => updateFunc({ id: token.id, changes: { attributes } }),
     1000
   );
 
@@ -194,17 +179,19 @@ export function TokenEditor({
           />
         </label>
       </div>
-      <div>
-        <label>
-          Initiative Modifier:{" "}
-          <input
-            value={initiativeModifier}
-            type="number"
-            placeholder="Mod ..."
-            onChange={(e) => setInitiativeModifier(e.target.value)}
-          />
-        </label>
-      </div>
+      {linkedModifierNames.map((modifier) => (
+        <AttributeEditor
+          initValue={attributes[modifier] ?? null}
+          key={modifier}
+          modifier={modifier}
+          onChange={(newValue) =>
+            setAttributes((oldAttributes) => ({
+              ...oldAttributes,
+              [modifier]: newValue,
+            }))
+          }
+        />
+      ))}
       <div>
         <label>
           Size in #squares:{" "}
@@ -362,6 +349,45 @@ export function TokenEditor({
       </div>
       <hr />
       <Button onClick={remove}>delete token</Button>
+    </div>
+  );
+}
+
+function AttributeEditor({
+  modifier,
+  onChange,
+  initValue,
+}: {
+  modifier: string;
+  onChange: (newValue: number | null) => void;
+  initValue: number | null;
+}) {
+  const [value, setValue] = useState(
+    initValue === null ? "" : initValue.toString()
+  );
+
+  const handleChange = (val: string) => {
+    setValue(val);
+
+    const num = parseInt(val);
+    if (!isNaN(num)) {
+      onChange(num);
+    } else {
+      onChange(null);
+    }
+  };
+
+  return (
+    <div>
+      <label>
+        {modifier + " "}
+        <input
+          value={value}
+          type="number"
+          placeholder="Mod ..."
+          onChange={(e) => handleChange(e.target.value)}
+        />
+      </label>
     </div>
   );
 }
