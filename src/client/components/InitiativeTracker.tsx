@@ -349,11 +349,10 @@ function EndTurnButton({
 
 function YourTurn({ endTurnButton }: { endTurnButton: React.ReactNode }) {
   const portal = useContext(NotificationTopAreaPortal);
-  return (
-    portal?.current &&
-    ReactDOM.createPortal(
-      <div className="your-turn">It is your turn! {endTurnButton}</div>,
-      portal.current
-    )
-  );
+  return portal?.current
+    ? ReactDOM.createPortal(
+        <div className="your-turn">It is your turn! {endTurnButton}</div>,
+        portal.current
+      )
+    : null;
 }
