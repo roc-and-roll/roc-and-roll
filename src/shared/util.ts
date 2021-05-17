@@ -76,7 +76,7 @@ export function withDo<V, R>(value: V, block: (v: V) => R) {
 export const EMPTY_ENTITY_COLLECTION = {
   entities: {},
   ids: [],
-} as const;
+};
 
 //
 // For debugging only

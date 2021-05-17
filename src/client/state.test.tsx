@@ -5,6 +5,7 @@ import {
   useOptimisticDebouncedServerUpdate,
   applyStatePatch,
   useServerState,
+  useOptimisticDebouncedLerpedServerUpdate,
 } from "./state";
 import {
   byId,
@@ -112,7 +113,6 @@ describe("optimistic state updates", () => {
       | SyncedStateAction<unknown, string, never>
       | SyncedStateAction<unknown, string, never>[];
     debounceTime: number;
-    lerp?: (start: V, end: V, amount: number) => V;
   }) {
     return setup(initialProps, ({ serverValue, actionCreator, debounceTime }) =>
       useOptimisticDebouncedServerUpdate(
@@ -120,6 +120,29 @@ describe("optimistic state updates", () => {
         actionCreator,
         debounceTime
       )
+    );
+  }
+
+  function setupUseOptimisticDebouncedLerpedServerUpdate<V>(initialProps: {
+    selector: (state: SyncedState) => V;
+    actionCreator: (
+      p: V
+    ) =>
+      | undefined
+      | SyncedStateAction<unknown, string, never>
+      | SyncedStateAction<unknown, string, never>[];
+    debounceTime: number;
+    lerp: (start: V, end: V, amount: number) => V;
+  }) {
+    return setup(
+      initialProps,
+      ({ selector, actionCreator, debounceTime, lerp }) =>
+        useOptimisticDebouncedLerpedServerUpdate(
+          selector,
+          actionCreator,
+          debounceTime,
+          lerp
+        )
     );
   }
 
@@ -341,6 +364,38 @@ describe("optimistic state updates", () => {
     expect(result.current[0]).toBe(40);
 
     unmount();
+  });
+
+  it("rerenders when the selector changes and returns a different result", async () => {
+    function makeActionCreator() {
+      return () => ({ type: "an-action", payload: undefined });
+    }
+
+    const { result, rerender } = setupUseOptimisticDebouncedLerpedServerUpdate({
+      selector: (state) => "foo",
+      actionCreator: makeActionCreator(),
+      debounceTime: 100,
+      lerp: (start, end, amount) => end,
+    });
+
+    expect(result.current[0]).toBe("foo");
+    expect(result.all).toHaveLength(1);
+
+    rerender({
+      selector: (state) => "bar",
+      actionCreator: makeActionCreator(),
+      debounceTime: 100,
+      lerp: (start, end, amount) => end,
+    });
+    expect(result.current[0]).toBe("foo");
+    expect(result.all).toHaveLength(2);
+
+    act(() => {
+      clock.runAll();
+    });
+    expect(clock.now).toBeGreaterThanOrEqual(100);
+    expect(result.current[0]).toBe("bar");
+    expect(result.all).toHaveLength(3);
   });
 });
 

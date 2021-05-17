@@ -43,7 +43,13 @@ import composeRefs from "@seznam/compose-react-refs";
 import { identity, Matrix } from "transformation-matrix";
 import { MapToolbar } from "../MapToolbar";
 import { GRID_SIZE } from "../../../shared/constants";
-import { assertNever, rrid, timestamp, withDo } from "../../../shared/util";
+import {
+  assertNever,
+  EMPTY_ENTITY_COLLECTION,
+  rrid,
+  timestamp,
+  withDo,
+} from "../../../shared/util";
 import { useRRSettings } from "../../settings";
 import produce, { Draft } from "immer";
 import {
@@ -78,7 +84,7 @@ export const selectedMapObjectsFamily = atomFamily<boolean, RRMapObjectID>({
   default: false,
 });
 
-export const selectedMapObjectIdsAtom = atom<RRMapObjectID[]>({
+export const selectedMapObjectIdsAtom = atom<ReadonlyArray<RRMapObjectID>>({
   key: "SelectedMapObjectIds",
   default: [],
 });
@@ -88,7 +94,7 @@ export const mapObjectsFamily = atomFamily<RRMapObject | null, RRMapObjectID>({
   default: null,
 });
 
-export const mapObjectIdsAtom = atom<RRMapObjectID[]>({
+export const mapObjectIdsAtom = atom<ReadonlyArray<RRMapObjectID>>({
   key: "MapObjectIds",
   default: [],
 });
@@ -106,12 +112,12 @@ export const characterTemplateFamily = atomFamily<
   default: null,
 });
 
-export const tokenIdsAtom = atom<RRCharacterID[]>({
+export const tokenIdsAtom = atom<ReadonlyArray<RRCharacterID>>({
   key: "TokenIds",
   default: [],
 });
 
-export const characterTemplateIdsAtom = atom<RRCharacterID[]>({
+export const characterTemplateIdsAtom = atom<ReadonlyArray<RRCharacterID>>({
   key: "CharacterTemplateIds",
   default: [],
 });
@@ -124,7 +130,7 @@ export const ephermalPlayersFamily = atomFamily<
   default: null,
 });
 
-export const ephermalPlayerIdsAtom = atom<RRPlayerID[]>({
+export const ephermalPlayerIdsAtom = atom<ReadonlyArray<RRPlayerID>>({
   key: "EphermalPlayerIds",
   default: [],
 });
@@ -225,7 +231,12 @@ export default function MapContainer() {
     localMapObjects,
     setLocalObjectsOnMap,
   ] = useOptimisticDebouncedLerpedServerUpdate(
-    (state) => byId(state.maps.entities, myself.currentMap)!.objects,
+    (state) => {
+      return (
+        byId(state.maps.entities, myself.currentMap)?.objects ??
+        EMPTY_ENTITY_COLLECTION
+      );
+    },
     useRecoilCallback(({ snapshot }) => (localMapObjects) =>
       snapshot
         .getLoadable(selectedMapObjectIdsAtom)
@@ -614,7 +625,7 @@ export default function MapContainer() {
 function useReduxToRecoilBridge<E extends { id: RRID }>(
   debugIdentifier: string,
   entities: EntityCollection<E>,
-  idsAtom: RecoilState<E["id"][]>,
+  idsAtom: RecoilState<ReadonlyArray<E["id"]>>,
   familyAtom: (id: E["id"]) => RecoilState<E | null>
 ) {
   const updateRecoilObjects = useRecoilCallback(

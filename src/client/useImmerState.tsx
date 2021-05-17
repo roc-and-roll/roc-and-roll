@@ -6,7 +6,7 @@ import { Primitive } from "type-fest";
 export function useImmerState<
   // V is allowed to be basically everything, except for functions. Feel free
   // to extend V further.
-  V extends Primitive | Record<string | number, unknown>
+  V extends Primitive | Record<string | number, unknown> | Array<unknown>
 >(initialValue: V | (() => V)) {
   const [state, setState] = useState(initialValue);
   const setImmerState = useCallback(
