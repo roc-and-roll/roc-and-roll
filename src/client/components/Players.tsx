@@ -18,7 +18,7 @@ export function Players({
         return (
           <li
             key={player.id}
-            onClick={() => onClickPlayer && onClickPlayer(player)}
+            onClick={() => onClickPlayer?.(player)}
             style={{
               cursor: onClickPlayer ? "pointer" : "auto",
               textDecorationColor: player.color,

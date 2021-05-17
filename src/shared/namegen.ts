@@ -607,7 +607,7 @@ class Group {
     if (typeof a === "object") {
       let g = a;
       while (this.wrappers.length > 0) {
-        switch (this.wrappers.pop()) {
+        switch (this.wrappers.pop()!) {
           case Wrappers.reverser:
             g = new Reverser(g);
             break;
