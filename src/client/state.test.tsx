@@ -159,7 +159,6 @@ describe("optimistic state updates", () => {
   it("passes through server updates when there is no local update", async () => {
     const {
       mockSocket,
-      socket,
       result,
       rerender,
       unmount,

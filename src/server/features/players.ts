@@ -41,9 +41,7 @@ export const playersReducer = createReducer(
           (state as PlayersSyncedState).entities,
           action.payload.id
         );
-        const index = player?.favoritedAssetIds?.indexOf(
-          action.payload.assetId
-        );
+        const index = player?.favoritedAssetIds.indexOf(action.payload.assetId);
         if (index !== undefined && index >= 0) {
           player?.favoritedAssetIds.splice(index, 1);
         }

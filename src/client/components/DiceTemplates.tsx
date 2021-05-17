@@ -110,7 +110,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
         return [
           {
             type: "modifier",
-            modifier: selectedCharacter?.attributes?.[part.name] ?? 0,
+            modifier: selectedCharacter?.attributes[part.name] ?? 0,
             damageType: part.damage,
           },
         ];
@@ -126,7 +126,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
         return (
           templates
             .find((t) => t.id === part.templateId)
-            ?.parts?.flatMap((part) =>
+            ?.parts.flatMap((part) =>
               evaluateDiceTemplatePart(part, modified)
             ) ?? []
         );
@@ -171,9 +171,9 @@ export function DiceTemplates({ open }: { open: boolean }) {
         // add parents if my count is bigger than their count
         const myCount = countForTemplate(clicked.id) + 1;
         const parents = templates.slice(0, templates.length - 1);
-        const parentsToAdd = parents
-          .filter((p) => (countForTemplate(p.id) >= myCount ? [] : p.id))
-          .map((p) => p.id);
+        const parentsToAdd = parents.flatMap((p) =>
+          countForTemplate(p.id) >= myCount ? [] : p.id
+        );
         return [...ids, ...parentsToAdd, clicked.id];
       }
       if (event.shiftKey) {
@@ -392,10 +392,7 @@ function DiceTemplateInner({
 
   const [name, setName] = useOptimisticDebouncedServerUpdate(
     template.name,
-    (name) =>
-      template
-        ? diceTemplateUpdate({ id: template.id, changes: { name } })
-        : undefined,
+    (name) => diceTemplateUpdate({ id: template.id, changes: { name } }),
     1000
   );
 
@@ -436,7 +433,7 @@ function DiceTemplateInner({
   );
 
   useEffect(() => {
-    if (template && newIds.current.includes(template.id)) {
+    if (newIds.current.includes(template.id)) {
       nameInputRef.current?.focus();
       newIds.current = newIds.current.filter((id) => id !== template.id);
     }
@@ -458,7 +455,7 @@ function DiceTemplateInner({
     ? "disadvantage"
     : "none";
 
-  const selectionCount = selectedTemplateIds.filter((id) => template.id == id)
+  const selectionCount = selectedTemplateIds.filter((id) => template.id === id)
     .length;
 
   return (
@@ -588,7 +585,7 @@ function DiceMultipleRollEditor({
     <div>
       Multiple:
       <Select
-        value={multiple ?? ""}
+        value={multiple}
         onChange={setMultiple}
         options={multipleRollValues.map((t) => ({
           value: t,
@@ -792,7 +789,7 @@ const DiceTemplatePart = React.forwardRef<
       content = (
         <div className="dice-option" style={styleFor(part)}>
           <div className="dice-option-linked-modifier">
-            {selectedCharacter?.attributes?.[part.name] ?? null}
+            {selectedCharacter?.attributes[part.name] ?? null}
           </div>
           <div className="dice-option-linked-modifier-name">
             {part.name[0]!.toUpperCase() + part.name.substring(1, 4)}

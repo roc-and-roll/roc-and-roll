@@ -234,37 +234,38 @@ function Aura({
 
   const size = (aura.size * GRID_SIZE) / 5 + tokenSize / 2;
   const fill = tinycolor(aura.color).setAlpha(0.3).toRgbString();
-  if (aura.shape === "circle") {
-    return (
-      <>
-        <circle
-          cx={x + tokenSize / 2}
-          cy={y + tokenSize / 2}
-          fill={tinycolor(fill).setAlpha(0.15).toRgbString()}
-          r={size}
-        />
-        <EmanationArea
-          r={Math.round(aura.size / 5)}
-          creatureX={x / GRID_SIZE}
-          creatureY={y / GRID_SIZE}
-          creatureW={token.scale}
-          creatureH={token.scale}
+  switch (aura.shape) {
+    case "circle":
+      return (
+        <>
+          <circle
+            cx={x + tokenSize / 2}
+            cy={y + tokenSize / 2}
+            fill={tinycolor(fill).setAlpha(0.15).toRgbString()}
+            r={size}
+          />
+          <EmanationArea
+            r={Math.round(aura.size / 5)}
+            creatureX={x / GRID_SIZE}
+            creatureY={y / GRID_SIZE}
+            creatureW={token.scale}
+            creatureH={token.scale}
+            fill={fill}
+          />
+        </>
+      );
+    case "square":
+      return (
+        <rect
+          x={x - size + tokenSize / 2}
+          y={y - size + tokenSize / 2}
           fill={fill}
+          height={size * 2}
+          width={size * 2}
         />
-      </>
-    );
-  } else if (aura.shape === "square") {
-    return (
-      <rect
-        x={x - size + tokenSize / 2}
-        y={y - size + tokenSize / 2}
-        fill={fill}
-        height={size * 2}
-        width={size * 2}
-      />
-    );
-  } else {
-    assertNever(aura.shape);
+      );
+    default:
+      assertNever(aura.shape);
   }
 }
 

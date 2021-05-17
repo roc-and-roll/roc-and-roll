@@ -31,7 +31,11 @@ import { Button } from "./ui/Button";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { useRecoilValue } from "recoil";
 import { selectedMapObjectIdsAtom } from "./map/MapContainer";
-import { EMPTY_ENTITY_COLLECTION, withDo } from "../../shared/util";
+import {
+  assertNever,
+  EMPTY_ENTITY_COLLECTION,
+  withDo,
+} from "../../shared/util";
 import ReactDOM from "react-dom";
 import { NotificationTopAreaPortal } from "./Notifications";
 
@@ -105,20 +109,23 @@ const InitiativeEntry = React.memo<{
         return;
       }
 
-      if (entry.type === "character") {
-        return initiativeTrackerEntryCharacterUpdate({
-          id: entry.id,
-          changes: {
-            initiative,
-          },
-        });
-      } else if (entry.type === "lairAction") {
-        return initiativeTrackerEntryLairActionUpdate({
-          id: entry.id,
-          changes: {
-            initiative,
-          },
-        });
+      switch (entry.type) {
+        case "character":
+          return initiativeTrackerEntryCharacterUpdate({
+            id: entry.id,
+            changes: {
+              initiative,
+            },
+          });
+        case "lairAction":
+          return initiativeTrackerEntryLairActionUpdate({
+            id: entry.id,
+            changes: {
+              initiative,
+            },
+          });
+        default:
+          assertNever(entry);
       }
     },
     1000
@@ -174,7 +181,7 @@ export function InitiativeTracker() {
     ...new Set(
       selectedMapObjectIds.flatMap((mapObjectId) => {
         const mapObject = byId(mapObjects.entities, mapObjectId);
-        return mapObject?.type === "token" ? mapObject?.characterId : [];
+        return mapObject?.type === "token" ? mapObject.characterId : [];
       })
     ),
   ];
@@ -195,10 +202,10 @@ export function InitiativeTracker() {
     )
   );
   const allSelectedInitiatives = [
-    ...new Set(characters.map((c) => c?.attributes?.["initiative"] ?? null)),
+    ...new Set(characters.map((c) => c?.attributes["initiative"] ?? null)),
   ];
   const allHaveSameInitiative =
-    allSelectedInitiatives.length === 1 && allSelectedInitiatives[0]! !== null;
+    allSelectedInitiatives.length === 1 && allSelectedInitiatives[0] !== null;
 
   const roll = () => {
     const mod = allHaveSameInitiative
@@ -300,7 +307,7 @@ export function InitiativeTracker() {
           placeholder="mod"
           title={
             allHaveSameInitiative
-              ? `Using configured Modifier ${allSelectedInitiatives[0]! ?? ""}`
+              ? `Using configured Modifier ${allSelectedInitiatives[0] ?? ""}`
               : "Modifier"
           }
         />
@@ -344,12 +351,10 @@ function EndTurnButton({
 
 function YourTurn({ endTurnButton }: { endTurnButton: React.ReactNode }) {
   const portal = useContext(NotificationTopAreaPortal);
-  return (
-    portal &&
-    portal.current &&
-    ReactDOM.createPortal(
-      <div className="your-turn">It is your turn! {endTurnButton}</div>,
-      portal.current
-    )
-  );
+  return portal?.current
+    ? ReactDOM.createPortal(
+        <div className="your-turn">It is your turn! {endTurnButton}</div>,
+        portal.current
+      )
+    : null;
 }

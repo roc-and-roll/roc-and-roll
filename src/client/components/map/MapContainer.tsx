@@ -431,11 +431,17 @@ export default function MapContainer() {
   const players = useServerState((state) => state.players);
 
   const convertToolButtonState = (): ToolButtonState => {
-    if (editState.tool === "move") return "select";
-    if (editState.tool === "draw") return "tool";
-    if (editState.tool === "measure") return "measure";
-    if (editState.tool === "reveal") return "tool";
-    return assertNever(editState);
+    switch (editState.tool) {
+      case "move":
+        return "select";
+      case "draw":
+      case "reveal":
+        return "tool";
+      case "measure":
+        return "measure";
+      default:
+        assertNever(editState);
+    }
   };
 
   const toolButtonState = convertToolButtonState();

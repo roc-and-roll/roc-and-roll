@@ -112,23 +112,23 @@ export function DebugMapContainerOverlay(props: {
                 <tr key={mapObjectId}>
                   <td>{mapObjectId}</td>
                   <td>
-                    x: {serverMapObject?.size.x}
+                    x: {serverMapObject.size.x}
                     <br />
-                    y: {serverMapObject?.size.y}
+                    y: {serverMapObject.size.y}
                   </td>
                   <td>
-                    x: {localMapObject?.size.x}
+                    x: {localMapObject.size.x}
                     <br />
-                    y: {localMapObject?.size.y}
+                    y: {localMapObject.size.y}
                   </td>
                   <td>
-                    {localMapObject && serverMapObject && (
+                    {
                       <>
                         x: {localMapObject.size.x - serverMapObject.size.x}
                         <br />
                         y: {localMapObject.size.y - serverMapObject.size.y}
                       </>
-                    )}
+                    }
                   </td>
                 </tr>
               );

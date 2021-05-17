@@ -19,7 +19,7 @@ export default function RRTippy(props: TippyProps) {
 
   const computedProps = { ...props };
 
-  computedProps.plugins = [lazyPlugin, ...(props.plugins || [])];
+  computedProps.plugins = [lazyPlugin, ...(props.plugins ?? [])];
 
   if (props.render) {
     const render = props.render;
