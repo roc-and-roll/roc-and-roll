@@ -153,13 +153,14 @@ export function diceResultString(logEntry: RRLogEntryDiceRoll) {
       }
       assertNever(part);
     })
-    .reduce((prev, curr, index) => {
-      return (
+    .reduce(
+      (prev, curr, index) => (
         <>
           {prev} + {curr}
         </>
-      );
-    });
+      ),
+      <></>
+    );
 }
 
 export function diceResult(logEntry: RRLogEntryDiceRoll) {
@@ -181,5 +182,5 @@ export function diceResult(logEntry: RRLogEntryDiceRoll) {
       }
       assertNever(part);
     })
-    .reduce((sum, each) => sum + each);
+    .reduce((sum, each) => sum + each, 0);
 }

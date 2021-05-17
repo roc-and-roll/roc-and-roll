@@ -179,19 +179,21 @@ export function TokenEditor({
           />
         </label>
       </div>
-      {linkedModifierNames.map((modifier) => (
-        <AttributeEditor
-          initValue={attributes[modifier] ?? null}
-          key={modifier}
-          modifier={modifier}
-          onChange={(newValue) =>
-            setAttributes((oldAttributes) => ({
-              ...oldAttributes,
-              [modifier]: newValue,
-            }))
-          }
-        />
-      ))}
+      <div className="character-editor-attributes">
+        {linkedModifierNames.map((modifier) => (
+          <AttributeEditor
+            initValue={attributes[modifier] ?? null}
+            key={modifier}
+            modifier={modifier}
+            onChange={(newValue) =>
+              setAttributes((oldAttributes) => ({
+                ...oldAttributes,
+                [modifier]: newValue,
+              }))
+            }
+          />
+        ))}
+      </div>
       <div>
         <label>
           Size in #squares:{" "}
@@ -378,9 +380,9 @@ function AttributeEditor({
   };
 
   return (
-    <div>
+    <div className="character-editor-attribute">
       <label>
-        {modifier + " "}
+        <div className="character-editor-attribute-label">{modifier}</div>
         <input
           value={value}
           type="number"

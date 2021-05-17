@@ -336,7 +336,13 @@ a {
     border-radius: 5px;
     background: #000;
     margin: 0.1rem;
+    flex-direction: column;
+    line-height: 1;
     text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  .dice-option-linked-modifier-name {
+    font-size: 0.7em;
   }
 
   button {
@@ -821,5 +827,20 @@ button.color-picker-color {
     stroke-linecap: butt;
     stroke-linejoin: miter;
     font-weight: 800;
+  }
+}
+
+.character-editor-attributes {
+  display: flex;
+  flex-wrap: wrap;
+
+  .character-editor-attribute-label {
+    font-size: 0.8rem;
+    text-align: center;
+  }
+  .character-editor-attribute {
+    input {
+      width: 3rem;
+    }
   }
 }

@@ -13,7 +13,9 @@ import {
   colorForDamageType,
   damageTypes,
   entries,
+  linkedModifierNames,
   multipleRollValues,
+  RRCharacter,
   RRDamageType,
   RRDice,
   RRDiceTemplate,
@@ -33,6 +35,7 @@ import {
   useServerDispatch,
   useServerState,
 } from "../state";
+import useLocalState from "../useLocalState";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { Select } from "./ui/Select";
@@ -107,8 +110,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
         return [
           {
             type: "modifier",
-            // TODO
-            modifier: 0,
+            modifier: selectedCharacter?.attributes?.[part.name] ?? 0,
             damageType: part.damage,
           },
         ];
@@ -135,7 +137,13 @@ export function DiceTemplates({ open }: { open: boolean }) {
   }
 
   const doRoll = () => {
-    if (selectedTemplates.length < 1) return;
+    const parts = selectedTemplates
+      .map((id) => allTemplates.find((t) => t.id === id)!)
+      .flatMap((t) =>
+        // TODO
+        t.parts.flatMap((p) => evaluateDiceTemplatePart(p, "none"))
+      );
+    if (parts.length < 1) return;
 
     dispatch(
       logEntryDiceRollAdd({
@@ -143,12 +151,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
         playerId: myself.id,
         payload: {
           rollType: "attack", // TODO
-          dice: selectedTemplates
-            .map((id) => allTemplates.find((t) => t.id === id)!)
-            .flatMap((t) =>
-              // TODO
-              t.parts.flatMap((p) => evaluateDiceTemplatePart(p, "none"))
-            ),
+          dice: parts,
         },
       })
     );
@@ -186,6 +189,16 @@ export function DiceTemplates({ open }: { open: boolean }) {
     });
   };
 
+  const characters = entries(
+    useServerState((state) => state.characters)
+  ).filter((c) => myself.characterIds.includes(c.id));
+  const [selectedCharacterId, setSelectedCharacterId, _] = useLocalState(
+    "dice-templates-selected-character-id",
+    characters[0]?.id ?? null
+  );
+  const selectedCharacter =
+    characters.find((c) => c.id === selectedCharacterId) ?? null;
+
   return (
     <div
       className={clsx("dice-templates", { opened: open })}
@@ -216,10 +229,21 @@ export function DiceTemplates({ open }: { open: boolean }) {
               }
               newIds={newIds}
               templateId={t.id}
+              selectedCharacter={selectedCharacter}
               selectedTemplateIds={selectedTemplates}
             />
           </DiceTemplatePartMenuWrapper>
         ))}
+        <Select
+          value={selectedCharacterId ?? ""}
+          options={[
+            { label: "", value: "" },
+            ...characters.map((c) => ({ label: c.name, value: c.id })),
+          ]}
+          onChange={(v) => {
+            setSelectedCharacterId(v === "" ? null : v);
+          }}
+        ></Select>
       </div>
     </div>
   );
@@ -247,23 +271,32 @@ function DicePicker() {
       <hr className="solid"></hr>
       {Array(18)
         .fill(0)
-        .map((_, i) =>
-          i - 5 === 0 ? (
-            <></>
-          ) : (
-            <PickerDiceTemplatePart
-              key={i}
-              part={{
-                type: "modifier",
-                damage: { type: null, modifiers: [] },
-                number: i - 5,
-              }}
-            />
-          )
+        .map(
+          (_, i) =>
+            i - 5 !== 0 && (
+              <PickerDiceTemplatePart
+                key={i}
+                part={{
+                  type: "modifier",
+                  damage: { type: null, modifiers: [] },
+                  number: i - 5,
+                }}
+              />
+            )
         )}
       <hr className="solid"></hr>
       <PickerDiceTemplateNested />
       <hr className="solid"></hr>
+      {linkedModifierNames.map((name) => (
+        <PickerDiceTemplatePart
+          key={name}
+          part={{
+            type: "linkedModifier",
+            damage: { type: null, modifiers: [] },
+            name,
+          }}
+        />
+      ))}
     </div>
   );
 }
@@ -294,6 +327,7 @@ function PickerDiceTemplatePart({ part }: { part: RRDiceTemplatePart }) {
       onRoll={() => {}}
       selectedTemplateIds={[]}
       ref={dragRef}
+      selectedCharacter={null}
       newIds={newIds}
       part={part}
     />
@@ -304,10 +338,12 @@ const DiceTemplate = React.memo(function DiceTemplate({
   templateId,
   newIds,
   onRoll,
+  selectedCharacter,
   selectedTemplateIds,
 }: {
   templateId: RRDiceTemplateID;
   newIds: React.MutableRefObject<RRDiceTemplateID[]>;
+  selectedCharacter: RRCharacter | null;
   onRoll: (
     template: RRDiceTemplate[],
     modified: RRMultipleRoll,
@@ -329,6 +365,7 @@ const DiceTemplate = React.memo(function DiceTemplate({
       template={template}
       newIds={newIds}
       selectedTemplateIds={selectedTemplateIds}
+      selectedCharacter={selectedCharacter}
     />
   );
 });
@@ -338,9 +375,11 @@ function DiceTemplateInner({
   newIds,
   onRoll,
   selectedTemplateIds,
+  selectedCharacter,
 }: {
   template: RRDiceTemplate;
   newIds: React.MutableRefObject<RRDiceTemplateID[]>;
+  selectedCharacter: RRCharacter | null;
   onRoll: (
     templates: RRDiceTemplate[],
     modified: RRMultipleRoll,
@@ -446,6 +485,7 @@ function DiceTemplateInner({
       {template.parts.map((part, i) => (
         <DiceTemplatePartMenuWrapper template={template} key={i} part={part}>
           <DiceTemplatePart
+            selectedCharacter={selectedCharacter}
             selectedTemplateIds={selectedTemplateIds}
             onRoll={(templates, modified, event) =>
               onRoll([template, ...templates], modified, event)
@@ -721,9 +761,10 @@ const DiceTemplatePart = React.forwardRef<
       event: React.MouseEvent
     ) => void;
     selectedTemplateIds: RRDiceTemplateID[];
+    selectedCharacter: RRCharacter | null;
   }
 >(function DiceTemplatePart(
-  { part, newIds, onRoll, selectedTemplateIds },
+  { part, newIds, onRoll, selectedTemplateIds, selectedCharacter },
   ref
 ) {
   let content: JSX.Element;
@@ -750,7 +791,12 @@ const DiceTemplatePart = React.forwardRef<
     case "linkedModifier":
       content = (
         <div className="dice-option" style={styleFor(part)}>
-          {part.name}
+          <div className="dice-option-linked-modifier">
+            {selectedCharacter?.attributes?.[part.name] ?? null}
+          </div>
+          <div className="dice-option-linked-modifier-name">
+            {part.name[0]!.toUpperCase() + part.name.substring(1, 4)}
+          </div>
         </div>
       );
       break;
@@ -767,6 +813,7 @@ const DiceTemplatePart = React.forwardRef<
           onRoll={(templates, modified, event) =>
             onRoll(templates, modified, event)
           }
+          selectedCharacter={null}
           templateId={part.templateId}
           newIds={newIds}
           selectedTemplateIds={selectedTemplateIds}
