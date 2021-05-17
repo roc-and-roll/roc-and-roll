@@ -42,7 +42,7 @@ export const MapToolbar = React.memo<{
     const handleKeyPress = (event: KeyboardEvent) => {
       if (
         ["INPUT", "BUTTON", "TEXTAREA"].includes(
-          (event.target as HTMLElement).nodeName
+          (event.target as HTMLElement | null)?.nodeName ?? ""
         )
       ) {
         return;
