@@ -1,10 +1,16 @@
 import React, { useState } from "react";
 import { Button } from "./ui/Button";
-import { logEntryDiceRollAdd } from "../../shared/actions";
-import { RRDice, RRModifier } from "../../shared/state";
+import { diceTemplateAdd, logEntryDiceRollAdd } from "../../shared/actions";
+import {
+  RRDice,
+  RRDiceTemplate,
+  RRDiceTemplatePart,
+  RRModifier,
+} from "../../shared/state";
 import { useMyself } from "../myself";
 import { useServerDispatch } from "../state";
 import { roll } from "../roll";
+import { rrid } from "../../shared/util";
 
 export function DiceInterface() {
   const [diceTypes, setDiceTypes] = useState<string[]>([]);
@@ -12,7 +18,7 @@ export function DiceInterface() {
   const myself = useMyself();
   const dispatch = useServerDispatch();
 
-  const doRoll = () => {
+  const doRoll = (addTemplate: boolean) => {
     const boniString = boni >= 0 ? "+" + boni.toString() : boni.toString();
     const rollString = diceTypes.join("+") + boniString;
 
@@ -53,13 +59,41 @@ export function DiceInterface() {
     );
 
     if (dice.length) {
-      dispatch(
-        logEntryDiceRollAdd({
-          silent: false,
-          playerId: myself.id,
-          payload: { dice, rollType: null },
-        })
-      );
+      if (addTemplate) {
+        dispatch(
+          diceTemplateAdd({
+            id: rrid<RRDiceTemplate>(),
+            name: "",
+            notes: "",
+            parts: dice.flatMap<RRDiceTemplatePart>((d) =>
+              d.type === "modifier"
+                ? {
+                    type: "modifier",
+                    number: d.modifier,
+                    damage: d.damageType,
+                  }
+                : {
+                    type: "dice",
+                    count: d.diceResults.length,
+                    faces: d.faces,
+                    modified: d.modified,
+                    negated: d.negated,
+                    damage: d.damageType,
+                  }
+            ),
+            playerId: myself.id,
+            rollType: "attack",
+          })
+        );
+      } else {
+        dispatch(
+          logEntryDiceRollAdd({
+            silent: false,
+            playerId: myself.id,
+            payload: { dice, rollType: null },
+          })
+        );
+      }
       setDiceTypes([]);
       setBoni(0);
     } else {
@@ -169,7 +203,16 @@ export function DiceInterface() {
                 </td>
 
                 <td>
-                  <Button className="roll-it-button" onClick={doRoll}>
+                  <Button
+                    className="add-template-button"
+                    onClick={() => doRoll(true)}
+                  >
+                    <p>Template</p>
+                  </Button>
+                  <Button
+                    className="roll-it-button"
+                    onClick={() => doRoll(false)}
+                  >
                     <p>ROLL IT</p>
                     <p>{diceTypes.join(" + ")}</p>
                     <div>
