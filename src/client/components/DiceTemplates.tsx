@@ -40,6 +40,8 @@ import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { Select } from "./ui/Select";
 
+type SelectionPair = { id: RRDiceTemplateID; modified: RRMultipleRoll };
+
 export function DiceTemplates({ open }: { open: boolean }) {
   const [pickerShown, setPickerShown] = useState(false);
   const myself = useMyself();
@@ -65,9 +67,9 @@ export function DiceTemplates({ open }: { open: boolean }) {
 
   const dispatch = useServerDispatch();
   const newIds = useRef<RRDiceTemplateID[]>([]);
-  const [selectedTemplates, setSelectedTemplates] = useState<
-    RRDiceTemplateID[]
-  >([]);
+  const [selectedTemplates, setSelectedTemplates] = useState<SelectionPair[]>(
+    []
+  );
 
   const [, dropRef] = useDrop<RRDiceTemplatePart, void, never>(
     () => ({
@@ -137,12 +139,11 @@ export function DiceTemplates({ open }: { open: boolean }) {
   }
 
   const doRoll = () => {
-    const parts = selectedTemplates
-      .map((id) => allTemplates.find((t) => t.id === id)!)
-      .flatMap((t) =>
-        // TODO
-        t.parts.flatMap((p) => evaluateDiceTemplatePart(p, "none"))
-      );
+    const parts = selectedTemplates.flatMap(({ id, modified }) =>
+      allTemplates
+        .find((t) => t.id === id)!
+        .parts.flatMap((p) => evaluateDiceTemplatePart(p, modified))
+    );
     if (parts.length < 1) return;
 
     dispatch(
@@ -159,11 +160,13 @@ export function DiceTemplates({ open }: { open: boolean }) {
 
   const clickedTemplates = (
     templates: RRDiceTemplate[],
-    event: React.MouseEvent
+    event: React.MouseEvent,
+    modified: RRMultipleRoll
   ) => {
-    setSelectedTemplates((ids) => {
-      const countForTemplate = (id: RRDiceTemplateID) =>
-        selectedTemplates.filter((tid) => tid === id).length;
+    setSelectedTemplates((current): SelectionPair[] => {
+      const currentIds = current.map(({ id }) => id);
+      const countForTemplate = (tid: RRDiceTemplateID) =>
+        selectedTemplates.filter(({ id }) => tid === id).length;
 
       const clicked = templates[templates.length - 1]!;
 
@@ -171,20 +174,22 @@ export function DiceTemplates({ open }: { open: boolean }) {
         // add parents if my count is bigger than their count
         const myCount = countForTemplate(clicked.id) + 1;
         const parents = templates.slice(0, templates.length - 1);
-        const parentsToAdd = parents.flatMap((p) =>
-          countForTemplate(p.id) >= myCount ? [] : p.id
+        const parentsToAdd = parents.flatMap<SelectionPair>((p) =>
+          countForTemplate(p.id) >= myCount ? [] : { id: p.id, modified }
         );
-        return [...ids, ...parentsToAdd, clicked.id];
+        return [...current, ...parentsToAdd, { id: clicked.id, modified }];
       }
       if (event.shiftKey) {
-        return [...ids, clicked.id];
+        return [...current, { id: clicked.id, modified }];
       }
 
-      return ids.includes(clicked.id)
-        ? ids.filter((id) => id !== clicked.id)
+      return currentIds.includes(clicked.id)
+        ? current.filter(({ id }) => id !== clicked.id)
         : [
-            ...ids,
-            ...templates.flatMap((t) => (ids.includes(t.id) ? [] : t.id)),
+            ...current,
+            ...templates.flatMap<SelectionPair>((t) =>
+              currentIds.includes(t.id) ? [] : { id: t.id, modified }
+            ),
           ];
     });
   };
@@ -225,7 +230,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
           >
             <DiceTemplate
               onRoll={(templates, modified, event) =>
-                clickedTemplates(templates, event)
+                clickedTemplates(templates, event, modified)
               }
               newIds={newIds}
               templateId={t.id}
@@ -349,7 +354,7 @@ const DiceTemplate = React.memo(function DiceTemplate({
     modified: RRMultipleRoll,
     event: React.MouseEvent
   ) => void;
-  selectedTemplateIds: RRDiceTemplateID[];
+  selectedTemplateIds: SelectionPair[];
 }) {
   const template = useServerState((state) =>
     byId(state.diceTemplates.entities, templateId)
@@ -385,7 +390,7 @@ function DiceTemplateInner({
     modified: RRMultipleRoll,
     event: React.MouseEvent
   ) => void;
-  selectedTemplateIds: RRDiceTemplateID[];
+  selectedTemplateIds: SelectionPair[];
 }) {
   const myself = useMyself();
   const dispatch = useServerDispatch();
@@ -455,8 +460,9 @@ function DiceTemplateInner({
     ? "disadvantage"
     : "none";
 
-  const selectionCount = selectedTemplateIds.filter((id) => template.id === id)
-    .length;
+  const selectionCount = selectedTemplateIds.filter(
+    ({ id }) => template.id === id
+  ).length;
 
   return (
     <div
@@ -757,7 +763,7 @@ const DiceTemplatePart = React.forwardRef<
       modified: RRMultipleRoll,
       event: React.MouseEvent
     ) => void;
-    selectedTemplateIds: RRDiceTemplateID[];
+    selectedTemplateIds: SelectionPair[];
     selectedCharacter: RRCharacter | null;
   }
 >(function DiceTemplatePart(
