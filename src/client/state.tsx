@@ -20,6 +20,7 @@ import {
 import { mergeDeep, rrid } from "../shared/util";
 import { Debouncer, debouncerTime, useDebounce } from "./debounce";
 import useRafLoop from "./useRafLoop";
+import { useStateWithRef } from "./useRefState";
 
 type StatePatch<D> = { patch: DeepPartial<D>; deletedKeys: string[] };
 
@@ -252,18 +253,25 @@ export function applyStatePatch(
 export function useServerState<T>(selector: (state: SyncedState) => T): T {
   const { subscribe, unsubscribe, stateRef } = useContext(ServerStateContext);
 
-  const selectorRef = useLatest(selector);
-  const [selectedState, setSelectedState] = useState(() =>
-    selectorRef.current(stateRef.current)
+  const [selectedState, selectedStateRef, setSelectedState] = useStateWithRef(
+    selector(stateRef.current)
   );
 
+  const selectorRef = useLatest(selector);
   useEffect(() => {
     const subscriber = (newState: SyncedState) => {
       setSelectedState(selectorRef.current(newState));
     };
     subscribe(subscriber);
     return () => unsubscribe(subscriber);
-  }, [selectorRef, subscribe, unsubscribe]);
+  }, [selectorRef, setSelectedState, subscribe, unsubscribe]);
+
+  useEffect(() => {
+    const newState = selector(stateRef.current);
+    if (!Object.is(newState, selectedStateRef.current)) {
+      setSelectedState(newState);
+    }
+  }, [selectedStateRef, selector, setSelectedState, stateRef]);
 
   return selectedState;
 }

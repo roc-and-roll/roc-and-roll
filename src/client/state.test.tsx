@@ -1,9 +1,10 @@
 import React from "react";
-import { renderHook, WrapperComponent } from "@testing-library/react-hooks";
+import { act, renderHook } from "@testing-library/react-hooks";
 import {
   ServerStateProvider,
   useOptimisticDebouncedServerUpdate,
   applyStatePatch,
+  useServerState,
 } from "./state";
 import {
   byId,
@@ -12,13 +13,13 @@ import {
   RRMap,
   RRMapObject,
   RRPlayer,
+  RRPlayerID,
   SyncedState,
   SyncedStateAction,
 } from "../shared/state";
-import { act } from "@testing-library/react-hooks";
 import ReactDOM from "react-dom";
 import FakeTimers from "@sinonjs/fake-timers";
-import { rrid } from "../shared/util";
+import { EMPTY_ENTITY_COLLECTION, rrid } from "../shared/util";
 
 type Subscriber = (payload: any) => void;
 type OnEmitSubscriber = (name: string, payload: any) => void;
@@ -54,25 +55,16 @@ class MockClientSocket {
   }
 }
 
-type HookArgs<V> = {
-  serverValue: V;
-  actionCreator: (
-    p: V
-  ) =>
-    | undefined
-    | SyncedStateAction<unknown, string, never>
-    | SyncedStateAction<unknown, string, never>[];
-  debounceTime: number;
-  lerp?: (start: V, end: V, amount: number) => V;
-};
-
-function setup<V>(initialProps: HookArgs<V>) {
+function setup<A extends Record<string, unknown>, H>(
+  initialProps: A,
+  hookCreator: (hookArgs: A) => H
+) {
   const mockSocket = new MockClientSocket();
   const socket = (mockSocket as unknown) as SocketIOClient.Socket;
-  const wrapper: WrapperComponent<{ socket: SocketIOClient.Socket }> = ({
+  const wrapper = ({
     children,
     socket,
-  }) => {
+  }: React.PropsWithChildren<{ socket: SocketIOClient.Socket }>) => {
     return (
       <ServerStateProvider socket={socket}>{children}</ServerStateProvider>
     );
@@ -85,33 +77,24 @@ function setup<V>(initialProps: HookArgs<V>) {
     waitFor,
     waitForNextUpdate,
     waitForValueToChange,
-  } = renderHook(
-    ({
-      serverValue,
-      actionCreator,
-      debounceTime,
-    }: HookArgs<V> & {
+  } = renderHook<
+    A & {
       socket: SocketIOClient.Socket;
-    }) =>
-      useOptimisticDebouncedServerUpdate(
-        serverValue,
-        actionCreator,
-        debounceTime
-      ),
-    {
-      wrapper,
-      initialProps: {
-        ...initialProps,
-        socket,
-      },
-    }
-  );
+    },
+    H
+  >((hookArgs) => hookCreator(hookArgs), {
+    wrapper,
+    initialProps: {
+      ...initialProps,
+      socket,
+    },
+  });
 
   return {
     mockSocket,
     socket,
     result,
-    rerender,
+    rerender: (props: A) => rerender({ ...props, socket }),
     unmount,
     waitFor,
     waitForNextUpdate,
@@ -120,6 +103,26 @@ function setup<V>(initialProps: HookArgs<V>) {
 }
 
 describe("optimistic state updates", () => {
+  function setupUseOptimisticDebouncedServerUpdate<V>(initialProps: {
+    serverValue: V;
+    actionCreator: (
+      p: V
+    ) =>
+      | undefined
+      | SyncedStateAction<unknown, string, never>
+      | SyncedStateAction<unknown, string, never>[];
+    debounceTime: number;
+    lerp?: (start: V, end: V, amount: number) => V;
+  }) {
+    return setup(initialProps, ({ serverValue, actionCreator, debounceTime }) =>
+      useOptimisticDebouncedServerUpdate(
+        serverValue,
+        actionCreator,
+        debounceTime
+      )
+    );
+  }
+
   let clock: FakeTimers.Clock;
 
   beforeEach(() => {
@@ -131,7 +134,13 @@ describe("optimistic state updates", () => {
   });
 
   it("passes through server updates when there is no local update", async () => {
-    const { mockSocket, socket, result, rerender, unmount } = setup({
+    const {
+      mockSocket,
+      socket,
+      result,
+      rerender,
+      unmount,
+    } = setupUseOptimisticDebouncedServerUpdate({
       serverValue: 123,
       actionCreator: () => undefined,
       debounceTime: 100,
@@ -143,7 +152,6 @@ describe("optimistic state updates", () => {
       serverValue: 42,
       actionCreator: () => undefined,
       debounceTime: 100,
-      socket,
     });
     expect(result.current[0]).toBe(42);
 
@@ -166,7 +174,12 @@ describe("optimistic state updates", () => {
       });
     }
 
-    const { mockSocket, socket, result, rerender, unmount } = setup({
+    const {
+      mockSocket,
+      result,
+      rerender,
+      unmount,
+    } = setupUseOptimisticDebouncedServerUpdate({
       serverValue: 123,
       actionCreator: makeActionCreator(),
       debounceTime: 100,
@@ -198,7 +211,6 @@ describe("optimistic state updates", () => {
       serverValue: 1337,
       actionCreator: makeActionCreator(),
       debounceTime: 100,
-      socket,
     });
     expect(result.current[0]).toBe(42);
 
@@ -253,7 +265,11 @@ describe("optimistic state updates", () => {
       });
     }
 
-    const { mockSocket, result, unmount } = setup({
+    const {
+      mockSocket,
+      result,
+      unmount,
+    } = setupUseOptimisticDebouncedServerUpdate({
       serverValue: 123,
       actionCreator: makeActionCreator(),
       debounceTime: 100,
@@ -288,7 +304,7 @@ describe("optimistic state updates", () => {
       });
     }
 
-    const { result, unmount } = setup({
+    const { result, unmount } = setupUseOptimisticDebouncedServerUpdate({
       serverValue: 0,
       actionCreator: makeActionCreator(),
       debounceTime: 100,
@@ -477,5 +493,53 @@ describe("applyStatePatch", () => {
     );
 
     expect(nextState.players).toStrictEqual(prevState.players);
+  });
+});
+
+describe("useServerState", () => {
+  function setupUseServerState(initialProps: {
+    selector: (state: SyncedState) => unknown;
+  }) {
+    return setup(initialProps, ({ selector }) => useServerState(selector));
+  }
+
+  it("re-executes the selector on every render", () => {
+    const { result, rerender, mockSocket } = setupUseServerState({
+      selector: (state) => state.players,
+    });
+
+    expect(result.current).toEqual(EMPTY_ENTITY_COLLECTION);
+
+    act(() => {
+      mockSocket.__receive("PATCH_STATE", {
+        patch: JSON.stringify({
+          deletedKeys: [],
+          patch: {
+            players: {
+              entities: { a: { id: "a" }, b: { id: "b" } },
+              ids: ["a", "b"],
+            },
+          },
+        }),
+        finishedOptimisticUpdateIds: [],
+      });
+    });
+
+    expect(result.current).toEqual({
+      entities: { a: { id: "a" }, b: { id: "b" } },
+      ids: ["a", "b"],
+    });
+
+    rerender({
+      selector: (state) => byId(state.players.entities, "a" as RRPlayerID),
+    });
+
+    expect(result.current).toEqual({ id: "a" });
+
+    rerender({
+      selector: (state) => byId(state.players.entities, "b" as RRPlayerID),
+    });
+
+    expect(result.current).toEqual({ id: "b" });
   });
 });

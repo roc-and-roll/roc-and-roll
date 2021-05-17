@@ -171,7 +171,7 @@ export function useRRComplexSound(
 }
 
 export function SongPlayer() {
-  const songs = useServerState((state) => entries(state.ephermal.activeSongs));
+  const songs = entries(useServerState((state) => state.ephermal.activeSongs));
   // We can't usually autoplay audio, so prompt the user to confirm it.
   // It may not be sufficient to prompt the user just once, when many additional
   // sounds are played at once.

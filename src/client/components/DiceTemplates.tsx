@@ -40,9 +40,9 @@ export function DiceTemplates({ open }: { open: boolean }) {
   const [pickerShown, setPickerShown] = useState(false);
   const myself = useMyself();
 
-  const allTemplates = useServerState((state) =>
-    entries(state.diceTemplates).filter((t) => t.playerId === myself.id)
-  );
+  const allTemplates = entries(
+    useServerState((state) => state.diceTemplates)
+  ).filter((t) => t.playerId === myself.id);
   const hasNested = (
     template: RRDiceTemplate,
     find: RRDiceTemplateID
