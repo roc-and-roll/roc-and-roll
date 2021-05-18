@@ -127,6 +127,11 @@ a {
   }
 }
 
+.token-condition-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .token-stack {
   $tokenSize: 32px;
   $offset: 24px;
@@ -847,4 +852,19 @@ button.color-picker-color {
       width: 3rem;
     }
   }
+}
+.character-editor-condition-icon {
+  width: 32px;
+  height: 32px;
+  margin: 0.2rem 0.2rem;
+
+  &.selected {
+    background: white;
+    border-radius: 5px;
+  }
+}
+
+.character-editor-condition-icons {
+  display: flex;
+  flex-wrap: wrap;
 }

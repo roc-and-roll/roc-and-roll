@@ -21,7 +21,11 @@ import { useRecoilValue } from "recoil";
 import { hoveredMapObjectsFamily } from "./Map";
 import { selectedMapObjectsFamily, tokenFamily } from "./MapContainer";
 import { Popover } from "../Popover";
-import { TokenEditor } from "../tokens/TokenEditor";
+import {
+  TokenEditor,
+  conditionIcons,
+  ConditionWithIcon,
+} from "../tokens/TokenEditor";
 import { makePoint, pointAdd, pointEquals } from "../../point";
 import { EmanationArea } from "./Areas";
 
@@ -201,6 +205,15 @@ export const MapToken = React.memo<{
               </RoughText>
             </>
           )}
+          {token.conditions.map((condition, index) => (
+            <image
+              className="token-condition-icon"
+              x={object.position.x + (index % 4) * 16}
+              y={object.position.y + Math.floor(index / 4) * 16}
+              key={condition}
+              href={conditionIcons.find((i) => i.name === condition)?.icon}
+            />
+          ))}
         </g>
       </Popover>
     </>

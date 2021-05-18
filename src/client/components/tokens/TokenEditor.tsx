@@ -6,7 +6,11 @@ import {
   characterTemplateRemove,
 } from "../../../shared/actions";
 import { randomColor } from "../../../shared/colors";
-import { linkedModifierNames, RRCharacter } from "../../../shared/state";
+import {
+  linkedModifierNames,
+  RRCharacter,
+  RRCharacterCondition,
+} from "../../../shared/state";
 import { useFileUpload } from "../../files";
 import {
   useServerDispatch,
@@ -15,6 +19,45 @@ import {
 import { Button } from "../ui/Button";
 import { ColorInput } from "../ui/ColorInput";
 import { Select } from "../ui/Select";
+import blinded from "../../../third-party/icons/conditions/blinded.png";
+import charmed from "../../../third-party/icons/conditions/charmed.png";
+import deafened from "../../../third-party/icons/conditions/deafened.png";
+import exhaustion from "../../../third-party/icons/conditions/exhaustion.png";
+import frightened from "../../../third-party/icons/conditions/frightened.png";
+import grappled from "../../../third-party/icons/conditions/grappled.png";
+import incapacitated from "../../../third-party/icons/conditions/incapacitated.png";
+import invisible from "../../../third-party/icons/conditions/invisible.png";
+import paralysed from "../../../third-party/icons/conditions/paralysed.png";
+import petrified from "../../../third-party/icons/conditions/petrified.png";
+import poisoned from "../../../third-party/icons/conditions/poisoned.png";
+import prone from "../../../third-party/icons/conditions/prone.png";
+import restrained from "../../../third-party/icons/conditions/restrained.png";
+import stunned from "../../../third-party/icons/conditions/stunned.png";
+import unconscious from "../../../third-party/icons/conditions/unconscious.png";
+import clsx from "clsx";
+
+export interface ConditionWithIcon {
+  name: RRCharacterCondition;
+  icon: string;
+}
+
+export const conditionIcons: ConditionWithIcon[] = [
+  { name: "blinded", icon: blinded },
+  { name: "charmed", icon: charmed },
+  { name: "deafened", icon: deafened },
+  { name: "exhaustion", icon: exhaustion },
+  { name: "frightened", icon: frightened },
+  { name: "grappled", icon: grappled },
+  { name: "incapacitated", icon: incapacitated },
+  { name: "invisible", icon: invisible },
+  { name: "paralysed", icon: paralysed },
+  { name: "petrified", icon: petrified },
+  { name: "poisoned", icon: poisoned },
+  { name: "prone", icon: prone },
+  { name: "restrained", icon: restrained },
+  { name: "stunned", icon: stunned },
+  { name: "unconscious", icon: unconscious },
+];
 
 export function TokenEditor({
   token,
@@ -102,6 +145,12 @@ export function TokenEditor({
   const [auras, setAuras] = useOptimisticDebouncedServerUpdate(
     token.auras,
     (auras) => updateFunc({ id: token.id, changes: { auras } }),
+    1000
+  );
+
+  const [conditions, setConditions] = useOptimisticDebouncedServerUpdate(
+    token.conditions,
+    (conditions) => updateFunc({ id: token.id, changes: { conditions } }),
     1000
   );
 
@@ -337,6 +386,33 @@ export function TokenEditor({
           </button>
         </li>
       </ul>
+      <h3>Status</h3>
+      <div className="character-editor-condition-icons">
+        {conditionIcons.map((item) => {
+          return (
+            <img
+              key={item.name}
+              title={item.name}
+              className={clsx("character-editor-condition-icon", {
+                selected: conditions.includes(item.name),
+              })}
+              src={item.icon}
+              onClick={() => {
+                if (conditions.includes(item.name))
+                  setConditions((prev) => {
+                    const newItems = prev.filter((i) => i !== item.name);
+                    return newItems;
+                  });
+                else
+                  setConditions((oldConditions) => [
+                    ...oldConditions,
+                    item.name,
+                  ]);
+              }}
+            />
+          );
+        })}
+      </div>
       <hr />
       <div>
         <label>

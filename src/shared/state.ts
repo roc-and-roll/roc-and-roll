@@ -49,7 +49,25 @@ export type RRAura = {
   visibileWhen: "always" | "onTurn" | "hover";
 };
 
-export type RRCharacterCondition = string;
+export const conditionNames = [
+  "blinded",
+  "charmed",
+  "deafened",
+  "exhaustion",
+  "frightened",
+  "grappled",
+  "incapacitated",
+  "invisible",
+  "paralysed",
+  "petrified",
+  "poisoned",
+  "prone",
+  "restrained",
+  "stunned",
+  "unconscious",
+] as const;
+
+export type RRCharacterCondition = IterableElement<typeof conditionNames>;
 
 export type RRTimestamp = Opaque<number, "timestamp">;
 

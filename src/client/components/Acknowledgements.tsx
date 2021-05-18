@@ -82,6 +82,12 @@ export function Acknowledgements() {
           </li>
         ))}
       </ul>
+      Icons for conditions were created by{" "}
+      <a href="https://www.reddit.com/user/FatMani/">u/FatMani</a>{" "}
+      <a href="https://www.reddit.com/r/DnD/comments/g1yb4j/5e_roll20_token_markers_conditions_damage_types/">
+        on Reddit
+      </a>{" "}
+      <License license={licenses["CC-BY 3.0"]} />
       <h3>Audio</h3>
       <ul>
         {audio.map((audio, i) => (
