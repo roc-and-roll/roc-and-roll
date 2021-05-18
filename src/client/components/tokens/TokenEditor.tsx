@@ -34,6 +34,11 @@ import prone from "../../../third-party/icons/conditions/prone.png";
 import restrained from "../../../third-party/icons/conditions/restrained.png";
 import stunned from "../../../third-party/icons/conditions/stunned.png";
 import unconscious from "../../../third-party/icons/conditions/unconscious.png";
+import speedometer from "../../../third-party/game-icons.net/ffffff/transparent/1x1/delapouite/speedometer.svg";
+import tortoise from "../../../third-party/game-icons.net/ffffff/transparent/1x1/delapouite/tortoise.svg";
+import snail from "../../../third-party/game-icons.net/ffffff/transparent/1x1/lorc/snail.svg";
+import voodooDoll from "../../../third-party/game-icons.net/ffffff/transparent/1x1/lorc/voodoo-doll.svg";
+import bullseye from "../../../third-party/game-icons.net/ffffff/transparent/1x1/skoll/bullseye.svg";
 import clsx from "clsx";
 
 export interface ConditionWithIcon {
@@ -57,6 +62,11 @@ export const conditionIcons: ConditionWithIcon[] = [
   { name: "restrained", icon: restrained },
   { name: "stunned", icon: stunned },
   { name: "unconscious", icon: unconscious },
+  { name: "hasted", icon: speedometer },
+  { name: "cursed", icon: voodooDoll },
+  { name: "hunters mark", icon: bullseye },
+  { name: "polymorphed", icon: snail },
+  { name: "slowed", icon: tortoise },
 ];
 
 export function TokenEditor({

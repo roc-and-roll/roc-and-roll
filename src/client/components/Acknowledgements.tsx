@@ -82,7 +82,7 @@ export function Acknowledgements() {
           </li>
         ))}
       </ul>
-      Icons for conditions were created by{" "}
+      Some icons for conditions were created by{" "}
       <a href="https://www.reddit.com/user/FatMani/">u/FatMani</a>{" "}
       <a href="https://www.reddit.com/r/DnD/comments/g1yb4j/5e_roll20_token_markers_conditions_damage_types/">
         on Reddit

@@ -65,6 +65,11 @@ export const conditionNames = [
   "restrained",
   "stunned",
   "unconscious",
+  "hasted",
+  "polymorphed",
+  "hunters mark",
+  "slowed",
+  "cursed",
 ] as const;
 
 export type RRCharacterCondition = IterableElement<typeof conditionNames>;
