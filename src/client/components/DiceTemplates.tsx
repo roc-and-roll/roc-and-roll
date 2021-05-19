@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
+import ReactDOM from "react-dom";
 import tinycolor from "tinycolor2";
 import {
   diceTemplateAdd,
@@ -210,11 +211,30 @@ export function DiceTemplates({ open }: { open: boolean }) {
     <div
       className={clsx("dice-templates", { opened: open })}
       ref={dropRef}
-      onClick={() => {
+      onContextMenu={(e) => {
+        e.preventDefault();
         doRoll();
         setSelectedTemplates([]);
       }}
+      onClick={() => {
+        setSelectedTemplates([]);
+      }}
     >
+      {selectedTemplates.length > 0 &&
+        ReactDOM.createPortal(
+          <div className="dice-template-roll-hints">
+            <button
+              onClick={() => {
+                doRoll();
+                setSelectedTemplates([]);
+              }}
+            >
+              Roll the Dice!
+            </button>
+            <em>Or right-click the pane to roll</em>
+          </div>,
+          document.body
+        )}
       {pickerShown && <DicePicker />}
       <div className="dice-templates-container">
         <button onClick={() => setPickerShown((b) => !b)}>
@@ -483,8 +503,10 @@ function DiceTemplateInner({
     <div
       ref={dropRef}
       onClick={(e) => {
-        e.stopPropagation();
-        onRoll([template], defaultModified, e);
+        if (e.button === 0) {
+          e.stopPropagation();
+          onRoll([template], defaultModified, e);
+        }
       }}
       className={clsx("dice-template", {
         created: template,
@@ -518,8 +540,10 @@ function DiceTemplateInner({
           {defaultModified !== "advantage" && (
             <button
               onClick={(e) => {
-                e.stopPropagation();
-                onRoll([template], "advantage", e);
+                if (e.button === 0) {
+                  e.stopPropagation();
+                  onRoll([template], "advantage", e);
+                }
               }}
             >
               ADV
@@ -528,8 +552,10 @@ function DiceTemplateInner({
           {defaultModified !== "none" && (
             <button
               onClick={(e) => {
-                e.stopPropagation();
-                onRoll([template], "none", e);
+                if (e.button === 0) {
+                  e.stopPropagation();
+                  onRoll([template], "none", e);
+                }
               }}
             >
               REG
@@ -538,8 +564,10 @@ function DiceTemplateInner({
           {defaultModified !== "disadvantage" && (
             <button
               onClick={(e) => {
-                e.stopPropagation();
-                onRoll([template], "disadvantage", e);
+                if (e.button === 0) {
+                  e.stopPropagation();
+                  onRoll([template], "disadvantage", e);
+                }
               }}
             >
               DIS
