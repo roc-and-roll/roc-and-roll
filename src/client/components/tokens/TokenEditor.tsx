@@ -7,6 +7,7 @@ import {
 } from "../../../shared/actions";
 import { randomColor } from "../../../shared/colors";
 import {
+  byId,
   linkedModifierNames,
   RRCharacter,
   RRCharacterCondition,
@@ -89,19 +90,31 @@ export function TokenEditor({
   };
 
   const [name, setName] = useOptimisticDebouncedServerUpdate(
-    token.name,
+    (state) =>
+      byId(
+        (isTemplate ? state.characterTemplates : state.characters).entities,
+        token.id
+      )?.name ?? "",
     (name) => updateFunc({ id: token.id, changes: { name } }),
     1000
   );
 
   const [visibility, setVisibility] = useOptimisticDebouncedServerUpdate(
-    token.visibility,
+    (state) =>
+      byId(
+        (isTemplate ? state.characterTemplates : state.characters).entities,
+        token.id
+      )?.visibility ?? "everyone",
     (visibility) => updateFunc({ id: token.id, changes: { visibility } }),
     1000
   );
 
   const [scale, setScale] = useOptimisticDebouncedServerUpdate(
-    token.scale.toString(),
+    (state) =>
+      byId(
+        (isTemplate ? state.characterTemplates : state.characters).entities,
+        token.id
+      )?.scale.toString() ?? "",
     (scaleString) => {
       const scale = parseInt(scaleString);
       if (isNaN(scale)) {
@@ -113,7 +126,11 @@ export function TokenEditor({
   );
 
   const [hp, setHP] = useOptimisticDebouncedServerUpdate(
-    token.hp.toString(),
+    (state) =>
+      byId(
+        (isTemplate ? state.characterTemplates : state.characters).entities,
+        token.id
+      )?.hp.toString() ?? "",
     (hpString) => {
       const hp = parseInt(hpString);
       if (isNaN(hp)) {
@@ -125,7 +142,11 @@ export function TokenEditor({
   );
 
   const [maxHP, setMaxHP] = useOptimisticDebouncedServerUpdate(
-    token.maxHP.toString(),
+    (state) =>
+      byId(
+        (isTemplate ? state.characterTemplates : state.characters).entities,
+        token.id
+      )?.maxHP.toString() ?? "",
     (maxHPString) => {
       const maxHP = parseInt(maxHPString);
       if (isNaN(maxHP)) {
@@ -137,19 +158,31 @@ export function TokenEditor({
   );
 
   const [attributes, setAttributes] = useOptimisticDebouncedServerUpdate(
-    token.attributes,
+    (state) =>
+      byId(
+        (isTemplate ? state.characterTemplates : state.characters).entities,
+        token.id
+      )?.attributes ?? {},
     (attributes) => updateFunc({ id: token.id, changes: { attributes } }),
     1000
   );
 
   const [auras, setAuras] = useOptimisticDebouncedServerUpdate(
-    token.auras,
+    (state) =>
+      byId(
+        (isTemplate ? state.characterTemplates : state.characters).entities,
+        token.id
+      )?.auras ?? [],
     (auras) => updateFunc({ id: token.id, changes: { auras } }),
     1000
   );
 
   const [conditions, setConditions] = useOptimisticDebouncedServerUpdate(
-    token.conditions,
+    (state) =>
+      byId(
+        (isTemplate ? state.characterTemplates : state.characters).entities,
+        token.id
+      )?.conditions ?? [],
     (conditions) => updateFunc({ id: token.id, changes: { conditions } }),
     1000
   );

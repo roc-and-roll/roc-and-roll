@@ -68,11 +68,13 @@ export function DiceInterface() {
             parts: dice.flatMap<RRDiceTemplatePart>((d) =>
               d.type === "modifier"
                 ? {
+                    id: rrid<RRDiceTemplatePart>(),
                     type: "modifier",
                     number: d.modifier,
                     damage: d.damageType,
                   }
                 : {
+                    id: rrid<RRDiceTemplatePart>(),
                     type: "dice",
                     count: d.diceResults.length,
                     faces: d.faces,

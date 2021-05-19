@@ -4,6 +4,8 @@ import { useDrag, useDrop } from "react-dnd";
 import tinycolor from "tinycolor2";
 import {
   diceTemplateAdd,
+  diceTemplatePartRemove,
+  diceTemplatePartUpdate,
   diceTemplateRemove,
   diceTemplateUpdate,
   logEntryDiceRollAdd,
@@ -226,7 +228,11 @@ export function DiceTemplates({ open }: { open: boolean }) {
           <DiceTemplatePartMenuWrapper
             key={t.id}
             template={t}
-            part={{ type: "template", templateId: t.id }}
+            part={{
+              id: rrid<RRDiceTemplatePart>(),
+              type: "template",
+              templateId: t.id,
+            }}
           >
             <DiceTemplate
               onRoll={(templates, modified, event) =>
@@ -257,6 +263,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
 function DicePicker() {
   const makeDicePart = (faces: number) =>
     ({
+      id: rrid<RRDiceTemplatePart>(),
       damage: { type: null, modifiers: [] },
       type: "dice",
       faces,
@@ -282,6 +289,7 @@ function DicePicker() {
               <PickerDiceTemplatePart
                 key={i}
                 part={{
+                  id: rrid<RRDiceTemplatePart>(),
                   type: "modifier",
                   damage: { type: null, modifiers: [] },
                   number: i - 5,
@@ -296,6 +304,7 @@ function DicePicker() {
         <PickerDiceTemplatePart
           key={name}
           part={{
+            id: rrid<RRDiceTemplatePart>(),
             type: "linkedModifier",
             damage: { type: null, modifiers: [] },
             name,
@@ -396,7 +405,7 @@ function DiceTemplateInner({
   const dispatch = useServerDispatch();
 
   const [name, setName] = useOptimisticDebouncedServerUpdate(
-    template.name,
+    (state) => byId(state.diceTemplates.entities, template.id)?.name ?? "",
     (name) => diceTemplateUpdate({ id: template.id, changes: { name } }),
     1000
   );
@@ -409,6 +418,7 @@ function DiceTemplateInner({
       drop: (item, monitor) => {
         if (monitor.getItemType() === "diceTemplateNested") {
           item = {
+            id: rrid<RRDiceTemplatePart>(),
             type: "template",
             templateId: dispatch(
               diceTemplateAdd({
@@ -420,6 +430,11 @@ function DiceTemplateInner({
                 id: rrid<RRDiceTemplate>(),
               })
             ).payload.id,
+          };
+        } else {
+          item = {
+            ...item,
+            id: rrid<RRDiceTemplatePart>(),
           };
         }
 
@@ -538,24 +553,29 @@ function DiceTemplateInner({
 
 function DamageTypeEditor({
   part,
-  onChange,
+  templateId,
 }: {
   part: RRDiceTemplatePartWithDamage;
-  onChange: (oldPart: RRDiceTemplatePart, newPart: RRDiceTemplatePart) => void;
+  templateId: RRDiceTemplateID;
 }) {
   const [damageType, setDamageType] = useOptimisticDebouncedServerUpdate<
     RRDamageType["type"]
   >(
-    part.damage.type,
-    (type) => {
-      onChange(part, { ...part, damage: { type, modifiers: [] } });
-      return undefined;
-    },
+    (state) =>
+      (byId(state.diceTemplates.entities, templateId)?.parts.find(
+        (each) => each.id === part.id
+      ) as RRDiceTemplatePartWithDamage | undefined)?.damage.type ?? null,
+    (type) =>
+      diceTemplatePartUpdate({
+        id: part.id,
+        templateId,
+        changes: { damage: { type, modifiers: [] } },
+      }),
     1000
   );
 
   return (
-    <div>
+    <label>
       Damage Type:
       <Select
         value={damageType ?? ""}
@@ -564,31 +584,36 @@ function DamageTypeEditor({
         }
         options={damageTypes.map((t) => ({ value: t ?? "", label: t ?? "" }))}
       />
-    </div>
+    </label>
   );
 }
 
 function DiceMultipleRollEditor({
   part,
-  onChange,
+  templateId,
 }: {
   part: RRDiceTemplatePartDice;
-  onChange: (oldPart: RRDiceTemplatePart, newPart: RRDiceTemplatePart) => void;
+  templateId: RRDiceTemplateID;
 }) {
   const [
     multiple,
     setMultiple,
   ] = useOptimisticDebouncedServerUpdate<RRMultipleRoll>(
-    part.modified,
-    (multiple) => {
-      onChange(part, { ...part, modified: multiple });
-      return undefined;
-    },
+    (state) =>
+      (byId(state.diceTemplates.entities, templateId)?.parts.find(
+        (each) => each.id === part.id
+      ) as RRDiceTemplatePartDice | undefined)?.modified ?? "none",
+    (multiple) =>
+      diceTemplatePartUpdate({
+        id: part.id,
+        templateId,
+        changes: { modified: multiple },
+      }),
     1000
   );
 
   return (
-    <div>
+    <label>
       Multiple:
       <Select
         value={multiple}
@@ -598,57 +623,77 @@ function DiceMultipleRollEditor({
           label: t,
         }))}
       />
-    </div>
+    </label>
   );
 }
 
 function DiceCountEditor({
   part,
-  onChange,
+  templateId,
 }: {
   part: RRDiceTemplatePartDice;
-  onChange: (oldPart: RRDiceTemplatePart, newPart: RRDiceTemplatePart) => void;
+  templateId: RRDiceTemplateID;
 }) {
-  const [count, setCount] = useOptimisticDebouncedServerUpdate<string>(
-    part.count.toString(),
-    (count) => {
-      if (!isNaN(parseInt(count)))
-        onChange(part, { ...part, count: parseInt(count) });
-      return undefined;
+  const [count, setCount] = useOptimisticDebouncedServerUpdate(
+    (state) =>
+      (byId(state.diceTemplates.entities, templateId)?.parts.find(
+        (each) => each.id === part.id
+      ) as RRDiceTemplatePartDice | undefined)?.count.toString() ?? "",
+    (countStr) => {
+      const count = parseInt(countStr);
+      if (isNaN(count)) {
+        return undefined;
+      }
+
+      return diceTemplatePartUpdate({
+        id: part.id,
+        templateId,
+        changes: { count },
+      });
     },
     1000
   );
 
   return (
-    <div>
+    <label>
       Count:
       <input value={count} onChange={(e) => setCount(e.target.value)} />
-    </div>
+    </label>
   );
 }
 
 function ModifierNumberEditor({
   part,
-  onChange,
+  templateId,
 }: {
   part: RRDiceTemplatePartModifier;
-  onChange: (oldPart: RRDiceTemplatePart, newPart: RRDiceTemplatePart) => void;
+  templateId: RRDiceTemplateID;
 }) {
-  const [count, setCount] = useOptimisticDebouncedServerUpdate<string>(
-    part.number.toString(),
-    (modifier) => {
-      if (!isNaN(parseInt(modifier)))
-        onChange(part, { ...part, number: parseInt(modifier) });
-      return undefined;
+  const [count, setCount] = useOptimisticDebouncedServerUpdate(
+    (state) =>
+      (byId(state.diceTemplates.entities, templateId)?.parts.find(
+        (each) => each.id === part.id
+      ) as RRDiceTemplatePartModifier | undefined)?.number.toString() ?? "",
+    (modifierStr) => {
+      const number = parseInt(modifierStr);
+      if (isNaN(number)) {
+        return undefined;
+      }
+
+      return diceTemplatePartUpdate({
+        id: part.id,
+        templateId,
+        changes: { number },
+      });
     },
     1000
   );
 
   return (
-    <div>
+    <label>
       Modifier:
       <input value={count} onChange={(e) => setCount(e.target.value)} />
-    </div>
+    </label>
   );
 }
 
@@ -657,20 +702,20 @@ function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
     byId(state.diceTemplates.entities, templateId)
   )!;
   const [notes, setNotes] = useOptimisticDebouncedServerUpdate<string>(
-    template.notes,
+    (state) => byId(state.diceTemplates.entities, template.id)?.notes ?? "",
     (notes) => diceTemplateUpdate({ id: templateId, changes: { notes } }),
     1000
   );
 
   return (
-    <div>
+    <label>
       Notes:
       <textarea
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         className="dice-template-notes"
       />
-    </div>
+    </label>
   );
 }
 
@@ -681,28 +726,12 @@ const DiceTemplatePartMenuWrapper: React.FC<{
   const [menuVisible, setMenuVisible] = useState(false);
   const dispatch = useServerDispatch();
 
-  const applyChange = (
-    oldPart: RRDiceTemplatePart,
-    newPart: RRDiceTemplatePart
-  ) => {
-    dispatch(
-      diceTemplateUpdate({
-        changes: {
-          parts: template.parts.map((p) => (p === oldPart ? newPart : p)),
-        },
-        id: template.id,
-      })
-    );
-  };
-
   const applyDelete = (part: RRDiceTemplatePart) => {
     dispatch(
       [
-        diceTemplateUpdate({
-          changes: {
-            parts: template.parts.filter((p) => p !== part),
-          },
-          id: template.id,
+        diceTemplatePartRemove({
+          id: part.id,
+          templateId: template.id,
         }),
         part.type === "template" && diceTemplateRemove(part.templateId),
       ].flatMap((a) => (a ? a : []))
@@ -716,16 +745,16 @@ const DiceTemplatePartMenuWrapper: React.FC<{
           {(part.type === "dice" ||
             part.type === "linkedModifier" ||
             part.type === "modifier") && (
-            <DamageTypeEditor onChange={applyChange} part={part} />
+            <DamageTypeEditor part={part} templateId={template.id} />
           )}
           {part.type === "dice" && (
-            <DiceCountEditor onChange={applyChange} part={part} />
+            <DiceCountEditor part={part} templateId={template.id} />
           )}
           {part.type === "dice" && (
-            <DiceMultipleRollEditor onChange={applyChange} part={part} />
+            <DiceMultipleRollEditor part={part} templateId={template.id} />
           )}
           {part.type === "modifier" && (
-            <ModifierNumberEditor onChange={applyChange} part={part} />
+            <ModifierNumberEditor part={part} templateId={template.id} />
           )}
           {part.type === "template" && (
             <TemplateNoteEditor templateId={part.templateId} />

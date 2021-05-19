@@ -102,7 +102,11 @@ const InitiativeEntry = React.memo<{
   }
 
   const [initiative, setInitiative] = useOptimisticDebouncedServerUpdate(
-    entry.initiative.toString(),
+    (state) =>
+      byId(
+        state.initiativeTracker.entries.entities,
+        entry.id
+      )?.initiative.toString() ?? "",
     (initiativeStr) => {
       const initiative = parseInt(initiativeStr);
       if (isNaN(initiative)) {
