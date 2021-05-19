@@ -400,26 +400,27 @@ export type RRLogEntry =
   | RRLogEntryAchievement
   | RRLogEntryDiceRoll;
 
-export interface RRAsset {
+interface RRBaseAsset {
   id: RRAssetID;
-  type: string;
   name: string;
   external: boolean;
   filenameOrUrl: string;
   playerId: RRPlayerID;
 }
 
-export interface RRSong extends RRAsset {
+export interface RRSong extends RRBaseAsset {
   type: "song";
   tags: string[];
   durationSeconds: number;
 }
 
-export interface RRImage extends RRAsset {
+export interface RRImage extends RRBaseAsset {
   type: "image";
   // TODO: evaluate if this is necessary
   originalFunction: "token" | "map";
 }
+
+export type RRAsset = RRSong | RRImage;
 
 // This must resemble the EntityState type from @reduxjs/toolkit to work with
 // createEntityAdapter
