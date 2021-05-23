@@ -16,7 +16,7 @@ import {
 import { useServerDispatch } from "../../state";
 import { GRID_SIZE } from "../../../shared/constants";
 import { assertNever, rrid } from "../../../shared/util";
-import { askAndUploadFiles } from "../../files";
+import { askAndUploadImages } from "../../files";
 import { pointAdd, pointEquals, pointSubtract, toCap } from "../../point";
 import { MapEditState } from "./MapContainer";
 import { Matrix } from "transformation-matrix";
@@ -296,38 +296,17 @@ export function useMapToolHandler(
           onMouseDown: (p: RRPoint) => {},
           onMouseMove: (p: RRPoint) => {},
           onMouseUp: async (p: RRPoint) => {
-            const files = await askAndUploadFiles();
+            const files = await askAndUploadImages();
             if (files === null) {
               return;
             }
-            const image = files[0]!;
-
-            const widthText = prompt(
-              "enter the width of the image in #number of squares"
-            );
-            if (widthText === null) {
-              return;
-            }
-            const width = parseInt(widthText);
-            if (isNaN(width)) {
-              return;
-            }
-
-            const heightText = prompt(
-              "enter the height of the image in #number of squares"
-            );
-            if (heightText === null) {
-              return;
-            }
-            const height = parseInt(heightText);
-            if (isNaN(height)) {
-              return;
-            }
+            const [image, size] = files[0]!;
 
             dispatch(
               mapObjectAdd(map.id, {
                 type: "image",
-                size: { x: width * GRID_SIZE, y: height * GRID_SIZE },
+                height: 200,
+                originalSize: size,
                 image,
                 ...create(p),
               })

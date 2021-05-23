@@ -6,6 +6,7 @@ import {
   RRMapObject,
   RRMapObjectID,
   RRCharacterID,
+  RRMapID,
 } from "../../../shared/state";
 import { assertNever } from "../../../shared/util";
 import { MapAreas } from "./Map";
@@ -23,6 +24,7 @@ export const MapObjects = React.memo<{
   contrastColor: RRColor;
   toolButtonState: ToolButtonState;
   zoom: number;
+  mapId: RRMapID;
   setHP: (tokenId: RRCharacterID, hp: number) => void;
   handleStartMoveMapObject: (
     object: RRMapObject,
@@ -33,6 +35,7 @@ export const MapObjects = React.memo<{
   contrastColor,
   toolButtonState,
   zoom,
+  mapId,
   setHP,
   handleStartMoveMapObject,
 }) {
@@ -45,6 +48,7 @@ export const MapObjects = React.memo<{
         <MapObjectWrapper
           key={mapObjectId}
           mapObjectId={mapObjectId}
+          mapId={mapId}
           canStartMoving={canStartMoving}
           onStartMove={handleStartMoveMapObject}
           areas={areas}
@@ -66,6 +70,7 @@ const MapObjectWrapper = React.memo<{
   // additional parameters for tokens
   zoom: number;
   contrastColor: string;
+  mapId: RRMapID;
   setHP: (tokenId: RRCharacterID, hp: number) => void;
 }>(function MapObjectWrapper({
   mapObjectId,
@@ -73,6 +78,7 @@ const MapObjectWrapper = React.memo<{
   onStartMove,
   areas,
   zoom,
+  mapId,
   contrastColor,
   setHP,
 }) {
@@ -85,6 +91,7 @@ const MapObjectWrapper = React.memo<{
     case "image":
       return ReactDOM.createPortal(
         <MapObjectThatIsNotAToken
+          mapId={mapId}
           object={mapObject}
           canStartMoving={canStartMoving}
           onStartMove={onStartMove}
@@ -98,6 +105,7 @@ const MapObjectWrapper = React.memo<{
     case "text":
       return ReactDOM.createPortal(
         <MapObjectThatIsNotAToken
+          mapId={mapId}
           object={mapObject}
           canStartMoving={canStartMoving}
           onStartMove={onStartMove}

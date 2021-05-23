@@ -160,7 +160,8 @@ export interface RRMapDrawingBase extends RRMapObjectBase {
 export interface RRMapDrawingImage extends RRMapDrawingBase {
   type: "image";
   image: RRFile;
-  size: RRPoint;
+  originalSize: RRPoint;
+  height: number;
 }
 
 export interface RRMapDrawingRectangle extends RRMapDrawingBase {

@@ -137,14 +137,20 @@ function makeRoughComponent<C extends object>(
     customProps: C & {
       x: number;
       y: number;
+      onClick?: (e: React.MouseEvent<SVGElement>) => void;
       onMouseDown?: (e: React.MouseEvent<SVGElement>) => void;
+      onMouseUp?: (e: React.MouseEvent<SVGElement>) => void;
+      onContextMenu?: (e: React.MouseEvent<SVGElement>) => void;
     } & Pick<PassedThroughOptions, "fill" | "stroke" | "strokeLineDash">
   ) => React.ReactElement
 ) {
   const component = React.memo<
     C &
       PassedThroughOptions &
-      Pick<SVGProps<SVGElement>, "onMouseDown" | "style"> & {
+      Pick<
+        SVGProps<SVGElement>,
+        "onClick" | "onMouseDown" | "onMouseUp" | "onContextMenu" | "style"
+      > & {
         x: number;
         y: number;
       }
@@ -159,7 +165,16 @@ function makeRoughComponent<C extends object>(
       ...props
     }) => {
       const generator = useContext(RoughContext);
-      const { style, onMouseDown, x, y, ...generatorProps } = props;
+      const {
+        style,
+        onClick,
+        onMouseDown,
+        onMouseUp,
+        onContextMenu,
+        x,
+        y,
+        ...generatorProps
+      } = props;
       const realSeed = useMemo(
         // seed must not be float for some reason.
         () =>
@@ -206,7 +221,10 @@ function makeRoughComponent<C extends object>(
             generator={generator}
             x={x}
             y={y}
+            onClick={onClick}
             onMouseDown={onMouseDown}
+            onMouseUp={onMouseUp}
+            onContextMenu={onContextMenu}
             style={style}
           />
         );
@@ -214,7 +232,10 @@ function makeRoughComponent<C extends object>(
         return generateSimple({
           x,
           y,
+          onClick,
           onMouseDown,
+          onMouseUp,
+          onContextMenu,
           style,
           fill,
           stroke,
