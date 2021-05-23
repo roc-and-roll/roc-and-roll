@@ -94,7 +94,11 @@ export function Log() {
           </Button>
         </>
       ) : (
-        lastLogEntry && <LogEntry logEntry={lastLogEntry} />
+        lastLogEntry && (
+          <div className="log-preview">
+            <LogEntry logEntry={lastLogEntry} />
+          </div>
+        )
       )}
     </div>
   );

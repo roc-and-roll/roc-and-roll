@@ -166,6 +166,11 @@ a {
   padding-left: 17px;
 }
 
+.log-preview {
+  margin: 0.5em 0;
+  max-height: 1em;
+}
+
 .log-title {
   display: flex;
   justify-content: space-between;
@@ -348,6 +353,24 @@ $dice-templates-height: 200px;
   &.opened .dice-picker {
     height: $dice-picker-height;
     top: -$dice-picker-height;
+  }
+
+  .dice-holder {
+    width: 100%;
+    display: flex;
+    align-items: left;
+    justify-content: left;
+    border-radius: 5px;
+    border-color: #ccc;
+    border-width: 1px;
+    border-style: solid;
+    margin: 0.1rem;
+    padding: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    align-content: flex-start;
   }
 
   .dice-option {
