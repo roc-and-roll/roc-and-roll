@@ -34,6 +34,14 @@ import prone from "../../../third-party/icons/conditions/prone.png";
 import restrained from "../../../third-party/icons/conditions/restrained.png";
 import stunned from "../../../third-party/icons/conditions/stunned.png";
 import unconscious from "../../../third-party/icons/conditions/unconscious.png";
+import concealed from "../../../third-party/icons/conditions/concealed.png";
+import disarmed from "../../../third-party/icons/conditions/disarmed.png";
+import halfCover from "../../../third-party/icons/conditions/half-cover.png";
+import hidden from "../../../third-party/icons/conditions/hidden.png";
+import raging from "../../../third-party/icons/conditions/raging.png";
+import surprised from "../../../third-party/icons/conditions/surprised.png";
+import totalCover from "../../../third-party/icons/conditions/total-cover.png";
+import threeQuarterCovers from "../../../third-party/icons/conditions/three-quarters-cover.png";
 import speedometer from "../../../third-party/game-icons.net/ffffff/transparent/1x1/delapouite/speedometer.svg";
 import tortoise from "../../../third-party/game-icons.net/ffffff/transparent/1x1/delapouite/tortoise.svg";
 import snail from "../../../third-party/game-icons.net/ffffff/transparent/1x1/lorc/snail.svg";
@@ -62,6 +70,14 @@ export const conditionIcons: ConditionWithIcon[] = [
   { name: "restrained", icon: restrained },
   { name: "stunned", icon: stunned },
   { name: "unconscious", icon: unconscious },
+  { name: "concealed", icon: concealed },
+  { name: "disarmed", icon: disarmed },
+  { name: "half-cover", icon: halfCover },
+  { name: "hidden", icon: hidden },
+  { name: "raging", icon: raging },
+  { name: "surprised", icon: surprised },
+  { name: "total-cover", icon: totalCover },
+  { name: "three-quarters-cover", icon: threeQuarterCovers },
   { name: "hasted", icon: speedometer },
   { name: "cursed", icon: voodooDoll },
   { name: "hunters mark", icon: bullseye },

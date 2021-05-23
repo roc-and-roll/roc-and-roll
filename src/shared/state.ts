@@ -70,6 +70,14 @@ export const conditionNames = [
   "hunters mark",
   "slowed",
   "cursed",
+  "concealed",
+  "disarmed",
+  "half-cover",
+  "hidden",
+  "raging",
+  "surprised",
+  "three-quarters-cover",
+  "total-cover",
 ] as const;
 
 export type RRCharacterCondition = IterableElement<typeof conditionNames>;

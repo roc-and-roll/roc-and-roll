@@ -21,11 +21,7 @@ import { useRecoilValue } from "recoil";
 import { hoveredMapObjectsFamily } from "./Map";
 import { selectedMapObjectsFamily, tokenFamily } from "./MapContainer";
 import { Popover } from "../Popover";
-import {
-  TokenEditor,
-  conditionIcons,
-  ConditionWithIcon,
-} from "../tokens/TokenEditor";
+import { TokenEditor, conditionIcons } from "../tokens/TokenEditor";
 import { makePoint, pointAdd, pointEquals } from "../../point";
 import { EmanationArea } from "./Areas";
 
