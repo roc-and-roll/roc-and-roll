@@ -697,6 +697,7 @@ export const RRMapView = React.memo<{
 
           {areas && (
             <MapObjects
+              mapId={mapId}
               areas={areas}
               contrastColor={contrastColor}
               setHP={onSetHP}

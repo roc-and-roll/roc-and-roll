@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { RRAsset, RRFile } from "../shared/state";
+import { RRAsset, RRFile, RRPoint } from "../shared/state";
 import { fittingTokenSize } from "../shared/util";
 import { apiHost } from "./util";
 
@@ -51,7 +51,9 @@ export function useFileUpload() {
   return [isUploading, upload] as const;
 }
 
-export async function askAndUploadFiles(multiple: boolean = false) {
+export async function askAndUploadImages(
+  multiple: boolean = false
+): Promise<[RRFile, RRPoint][] | null> {
   const input = document.createElement("input");
   input.type = "file";
   input.multiple = multiple;
@@ -66,10 +68,27 @@ export async function askAndUploadFiles(multiple: boolean = false) {
   if (fileList === null) {
     return null;
   }
-  return uploadFiles(fileList);
+
+  const uploadedFiles = await uploadFiles(fileList);
+  const sizes = await Promise.all(
+    fileListToArray(fileList).map(
+      (f) =>
+        new Promise<RRPoint>((resolve) => {
+          const url = URL.createObjectURL(f);
+          const i = new Image();
+          i.onload = () => {
+            resolve({ x: i.width, y: i.height });
+            URL.revokeObjectURL(url);
+          };
+          i.src = url;
+        })
+    )
+  );
+
+  return uploadedFiles.map((f, i) => [f, sizes[i]!]);
 }
 
-async function uploadFiles(fileList: FileList) {
+const fileListToArray = (fileList: FileList) => {
   const files: File[] = [];
   for (let i = 0; i < fileList.length; i++) {
     const file = fileList.item(i);
@@ -82,6 +101,11 @@ async function uploadFiles(fileList: FileList) {
     return [];
   }
 
+  return files;
+};
+
+async function uploadFiles(fileList: FileList) {
+  const files = fileListToArray(fileList);
   const formData = new FormData();
   files.forEach((file) => formData.append("files", file));
 

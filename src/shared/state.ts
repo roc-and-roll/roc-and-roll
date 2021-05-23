@@ -138,6 +138,7 @@ type RRMapObjectBase = {
   id: RRMapObjectID;
   position: RRPoint;
   playerId: RRPlayerID;
+  visibility: "gmOnly" | "everyone";
 };
 
 export interface RRToken extends RRMapObjectBase {
@@ -160,7 +161,8 @@ export interface RRMapDrawingBase extends RRMapObjectBase {
 export interface RRMapDrawingImage extends RRMapDrawingBase {
   type: "image";
   image: RRFile;
-  size: RRPoint;
+  originalSize: RRPoint;
+  height: number;
 }
 
 export interface RRMapDrawingRectangle extends RRMapDrawingBase {
