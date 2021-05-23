@@ -61,6 +61,7 @@ import { Debouncer, useDebounce } from "../../debounce";
 import { useRRSettings } from "../../settings";
 import { assertNever } from "../../../shared/util";
 import { FogOfWar } from "./FogOfWar";
+import { MapReactions } from "./MapReactions";
 
 type Rectangle = [number, number, number, number];
 
@@ -734,6 +735,7 @@ export const RRMapView = React.memo<{
             backgroundColor={backgroundColor}
             players={players}
           />
+          <MapReactions />
           <MouseCursors
             myId={myself.id}
             mapId={mapId}

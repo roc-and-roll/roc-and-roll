@@ -25,6 +25,7 @@ import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { ColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
+import Picker from "emoji-picker-react";
 
 export const MapToolbar = React.memo<{
   map: RRMap;
@@ -45,6 +46,16 @@ export const MapToolbar = React.memo<{
     "map/toolbar/defaultVisibility",
     "everyone"
   );
+
+  const [favoritedReactions, setFavoritedReactions] = useLocalState<string[]>(
+    "map/toolbar/favoritedReactions",
+    []
+  );
+  const [reactionCode, setReactionCode] = useLocalState<string>(
+    "map/toolbar/reactionCode",
+    "🥰"
+  );
+  const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
 
   const [revealType, setRevealType] = useState<"show" | "hide">("show");
 
@@ -73,6 +84,9 @@ export const MapToolbar = React.memo<{
           break;
         case "f":
           setTool("reveal");
+          break;
+        case "e":
+          setTool("react");
           break;
       }
     };
@@ -106,11 +120,13 @@ export const MapToolbar = React.memo<{
                 snap,
                 visibility: defaultVisibility,
               };
+        case "react":
+          return { tool, reactionCode };
         default:
           assertNever(tool);
       }
     });
-  }, [tool, drawColor, drawType, snap, setEditState, revealType, defaultVisibility]);
+  }, [tool, drawColor, drawType, snap, setEditState, revealType, defaultVisibility, reactionCode]);
 
   const updateLock = useRecoilCallback(({ snapshot }) => (locked: boolean) => {
     dispatch(
@@ -209,6 +225,12 @@ export const MapToolbar = React.memo<{
           reveal
         </Button>
       )}
+      <Button
+        onClick={() => setTool("react")}
+        className={tool === "react" ? "active" : undefined}
+      >
+        react
+      </Button>
       {tool === "move" && selectedMapObjectIds.length > 0 && (
         <>
           <ColorInput value={drawColor} onChange={setDrawColor} />
@@ -234,6 +256,51 @@ export const MapToolbar = React.memo<{
               id={selectedMapObjectId}
               onLockedStateChanged={onLockedStateChanged}
             />
+          ))}
+        </>
+      )}
+      {tool === "react" && (
+        <>
+          <Popover
+            className="popover-no-padding"
+            content={
+              <Picker
+                native={true}
+                onEmojiClick={(_, { emoji }) => {
+                  setEmojiPickerVisible(false);
+                  setReactionCode(emoji);
+                }}
+              />
+            }
+            visible={emojiPickerVisible}
+            onClickOutside={() => setEmojiPickerVisible(false)}
+            interactive
+            placement="bottom"
+          >
+            <Button onClick={() => setEmojiPickerVisible((t) => !t)}>
+              select
+            </Button>
+          </Popover>
+          <Button
+            onClick={() =>
+              setFavoritedReactions((l) =>
+                l.includes(reactionCode)
+                  ? l.filter((e) => e !== reactionCode)
+                  : [reactionCode, ...l]
+              )
+            }
+          >
+            {favoritedReactions.includes(reactionCode) ? "unfav" : "fav"}
+            {reactionCode}
+          </Button>
+          {favoritedReactions.map((code) => (
+            <Button
+              key={code}
+              className={reactionCode === code ? "active" : undefined}
+              onClick={() => setReactionCode(code)}
+            >
+              {code}
+            </Button>
           ))}
         </>
       )}

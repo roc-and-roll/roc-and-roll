@@ -122,7 +122,11 @@ function Notification({
         {player!.name}
       </span>
       {" wrote: "}
-      <strong>{notification.payload.text}</strong>
+      <strong>
+        {notification.payload.text.length > 200
+          ? notification.payload.text.substr(0, 200) + "..."
+          : notification.payload.text}
+      </strong>
     </>
   );
 

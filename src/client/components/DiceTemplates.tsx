@@ -2,6 +2,7 @@ import clsx from "clsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import ReactDOM from "react-dom";
+import { selector } from "recoil";
 import tinycolor from "tinycolor2";
 import {
   diceTemplateAdd,
@@ -29,6 +30,7 @@ import {
   RRDiceTemplatePartWithDamage,
   RRModifier,
   RRMultipleRoll,
+  SyncedStateAction,
 } from "../../shared/state";
 import { assertNever, rrid } from "../../shared/util";
 import { useMyself } from "../myself";
@@ -37,6 +39,7 @@ import {
   useOptimisticDebouncedServerUpdate,
   useServerDispatch,
   useServerState,
+  useServerStateRef,
 } from "../state";
 import useLocalState from "../useLocalState";
 import { Popover } from "./Popover";
@@ -232,7 +235,6 @@ export function DiceTemplates({ open }: { open: boolean }) {
   return (
     <div
       className={clsx("dice-templates", { opened: open })}
-      ref={dropRef}
       onContextMenu={(e) => {
         e.preventDefault();
         doRoll();
@@ -266,7 +268,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
           document.body
         )}
       {pickerShown && <DicePicker />}
-      <div className="dice-templates-container">
+      <div className="dice-templates-container" ref={dropRef}>
         <button onClick={() => setPickerShown((b) => !b)}>
           Show
           <br />
@@ -596,6 +598,38 @@ function DiceTemplateInner({
     ({ id }) => template.id === id
   ).length;
 
+  function sortTemplateParts(a: RRDiceTemplatePart, b: RRDiceTemplatePart) {
+    let damageTypeResult = 0;
+    //sort by damage type
+    if (a.type !== "template" && b.type !== "template") {
+      damageTypeResult = (a.damage.type ?? "zzzz").localeCompare(
+        b.damage.type ?? "zzzz"
+      );
+    }
+
+    //afterwards sort by template type
+    //first dice, then modifiers, then templates
+    let typeResult = 0;
+    if (a.type === b.type) typeResult = 0;
+    else if (a.type === "template") typeResult = 1;
+    else if (b.type === "template") typeResult = -1;
+    else if (a.type === "dice") typeResult = -1;
+    else if (b.type === "dice") typeResult = 1;
+    else if (a.type === "linkedModifier") typeResult = -1;
+    else if (b.type === "linkedModifier") typeResult = 1;
+
+    //lastly sort the dice and modifiers by value
+    let valueResult = 0;
+    if (a.type === "template" || b.type === "template") valueResult = 0;
+    else if (a.type === "dice" && b.type === "dice")
+      valueResult = a.faces - b.faces;
+    else if (a.type === "modifier" && b.type === "modifier")
+      valueResult = a.number - b.number;
+
+    //combine all the sorts
+    return damageTypeResult || typeResult || valueResult;
+  }
+
   return (
     <div
       ref={dropRef}
@@ -619,7 +653,7 @@ function DiceTemplateInner({
         onClick={(e) => e.stopPropagation()}
         onChange={(e) => setName(e.target.value)}
       />
-      {template.parts.map((part, i) => (
+      {template.parts.sort(sortTemplateParts).map((part, i) => (
         <DiceTemplatePartMenuWrapper template={template} key={i} part={part}>
           <DiceTemplatePart
             selectedCharacter={selectedCharacter}
@@ -851,16 +885,28 @@ const DiceTemplatePartMenuWrapper: React.FC<{
   const [menuVisible, setMenuVisible] = useState(false);
   const dispatch = useServerDispatch();
 
+  const templateParts = useServerStateRef((state) => {
+    return state.diceTemplates.entities;
+  });
+
+  const deleteActions = (
+    part: RRDiceTemplatePart
+  ): SyncedStateAction<unknown, string, never>[] => {
+    return [
+      diceTemplatePartRemove({
+        id: part.id,
+        templateId: template.id,
+      }),
+      part.type === "template" && diceTemplateRemove(part.templateId),
+      part.type === "template" &&
+        byId(templateParts.current, part.templateId)?.parts.flatMap((p) =>
+          deleteActions(p)
+        ),
+    ].flatMap((a) => (a ? a : []));
+  };
+
   const applyDelete = (part: RRDiceTemplatePart) => {
-    dispatch(
-      [
-        diceTemplatePartRemove({
-          id: part.id,
-          templateId: template.id,
-        }),
-        part.type === "template" && diceTemplateRemove(part.templateId),
-      ].flatMap((a) => (a ? a : []))
-    );
+    dispatch(deleteActions(part));
   };
 
   return (

@@ -166,6 +166,11 @@ a {
   padding-left: 17px;
 }
 
+.log-preview {
+  margin: 0.5em 0;
+  max-height: 1em;
+}
+
 .log-title {
   display: flex;
   justify-content: space-between;
@@ -917,4 +922,32 @@ button.color-picker-color {
 
 .modding-warning {
   color: red;
+}
+
+.map-reaction {
+  animation: map-reaction 700ms forwards;
+  transform-origin: 50% 50%;
+}
+@keyframes map-reaction {
+  0% {
+    opacity: 0;
+    font-size: 30px;
+  }
+  10% {
+    opacity: 1;
+  }
+  60% {
+    font-size: 70px;
+    transform: translate(0, -110px);
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    font-size: 20px;
+    transform: translate(0, -110px);
+  }
+}
+
+aside.emoji-picker-react {
+  box-shadow: none !important;
 }
