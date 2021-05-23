@@ -9,7 +9,7 @@ import {
   RRLogEntryMessage,
 } from "../../shared/state";
 import { assertNever } from "../../shared/util";
-import { diceResult } from "../roll";
+import { diceResult, DiceResultWithTypes } from "../roll";
 import { useRRSimpleSound } from "../sound";
 import { useServerState } from "../state";
 import DiceDisplay from "./diceRoller/DiceDisplay";
@@ -108,7 +108,13 @@ function Notification({
         {player!.name}
       </span>
       {" rolled a "}
-      {notificationReady ? <strong>{diceResult(notification)}</strong> : "..."}
+      {notificationReady ? (
+        <strong>
+          <DiceResultWithTypes logEntry={notification} />
+        </strong>
+      ) : (
+        "..."
+      )}
       <DiceDisplay
         onAnimationFinished={() => setNotificationReady(true)}
         diceRoll={notification}

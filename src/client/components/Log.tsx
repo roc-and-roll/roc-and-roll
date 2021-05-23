@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { logEntryMessageAdd } from "../../shared/actions";
 import { byId, entries, RRLogEntry } from "../../shared/state";
 import { useMyself } from "../myself";
-import { diceResult, diceResultString } from "../roll";
+import { diceResultString, DiceResultWithTypes } from "../roll";
 import { useServerDispatch, useServerState } from "../state";
 import { useScrollToBottom } from "../useScrollToBottom";
 import { formatTimestamp } from "../util";
@@ -20,7 +20,7 @@ function LogEntry(props: { logEntry: RRLogEntry }) {
       <div title={formatTimestamp(logEntry.timestamp)}>
         {player?.name ?? "system"}: {diceResultString(logEntry)} ={" "}
         <u>
-          <b>{diceResult(logEntry)}</b>
+          <DiceResultWithTypes logEntry={logEntry} />
         </u>
       </div>
     );

@@ -1,8 +1,13 @@
 import React, { Suspense, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { RRLogEntryDiceRoll } from "../../../shared/state";
+import {
+  colorForDamageType,
+  RRDamageType,
+  RRLogEntryDiceRoll,
+} from "../../../shared/state";
 import { Dice } from "./Dice";
 import clsx from "clsx";
+import tinycolor from "tinycolor2";
 
 const SLOT_SIZE = 50;
 const COLUMNS = 7;
@@ -10,6 +15,7 @@ export const DICE_DISPLAY_COLUMNS = COLUMNS;
 
 interface DisplayPart {
   type: string;
+  damageType: RRDamageType;
 }
 interface DisplayModifier extends DisplayPart {
   type: "modifier";
@@ -91,13 +97,19 @@ function DiceContainer({
 }
 
 function ModifierContainer({ slots }: { slots: RollSlots }) {
-  const SPACING = 3;
-  const cssOffsetFromSlot = ({ x, y }: { x: number; y: number }) => {
+  const SPACING = 5;
+  const css = ({ x, y }: { x: number; y: number }, type: RRDamageType) => {
+    const color = colorForDamageType(type.type);
     return {
       left: x * SLOT_SIZE + SPACING,
       top: y * SLOT_SIZE + SPACING,
       width: SLOT_SIZE - SPACING * 2,
       height: SLOT_SIZE - SPACING * 2,
+      color: tinycolor
+        .mostReadable(tinycolor(color), ["#000", "#fff"])
+        .toRgbString(),
+      borderRadius: "5px",
+      backgroundColor: color,
     };
   };
 
@@ -111,7 +123,7 @@ function ModifierContainer({ slots }: { slots: RollSlots }) {
           <div
             key={i}
             className="modifier"
-            style={cssOffsetFromSlot(indexToXY(i))}
+            style={css(indexToXY(i), part.damageType)}
           >
             {part.modifier < 0 ? part.modifier : `+${part.modifier}`}
           </div>
@@ -119,7 +131,7 @@ function ModifierContainer({ slots }: { slots: RollSlots }) {
           <div
             key={i}
             className={clsx("weird-die", part.used ? "used" : "unused")}
-            style={cssOffsetFromSlot(indexToXY(i))}
+            style={css(indexToXY(i), part.damageType)}
           >
             <div className="weird-die-result">{part.result}</div>
             <div className="weird-die-faces">{part.faces}</div>
@@ -140,11 +152,12 @@ const calculateSlots = (diceRoll: RRLogEntryDiceRoll) => {
       for (const result of part.diceResults) {
         slots.push({
           type: [4, 6, 8, 10, 12, 20].includes(part.faces) ? "die" : "weirdDie",
+          damageType: part.damageType,
           faces: part.faces,
           result: result,
           color:
             part.faces !== 20
-              ? "orange"
+              ? colorForDamageType(part.damageType.type)
               : result === 1
               ? "darkred"
               : result === 20

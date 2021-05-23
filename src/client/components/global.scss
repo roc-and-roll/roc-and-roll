@@ -628,7 +628,7 @@ button.color-picker-color {
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 1.5rem;
+    font-size: 1rem;
   }
 
   .dice-display-modifiers {
@@ -927,4 +927,11 @@ button.color-picker-color {
 
 aside.emoji-picker-react {
   box-shadow: none !important;
+}
+
+.dice-results-per-damage {
+  padding: 0 2px;
+  border-radius: 2px;
+  margin: 0 2px;
+  font-size: 0.85em;
 }

@@ -2,6 +2,7 @@ import React, { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import diceFaces from "./dice/dice-faces.png";
+import diceFacesInverted from "./dice/dice-faces-inverted.png";
 import d4Glb from "./dice/d4.glb";
 import d6Glb from "./dice/d6.glb";
 import d8Glb from "./dice/d8.glb";
@@ -11,6 +12,7 @@ import d20Glb from "./dice/d20.glb";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { descriptorMap } from "./dice/diceDescriptors";
 import { DICE_DISPLAY_COLUMNS } from "./DiceDisplay";
+import { contrastColor } from "../../util";
 
 const randomAxis = () => {
   return new THREE.Vector3(
@@ -69,11 +71,18 @@ export const DiceGeometry: React.FC<
   const [image] = useLoader(THREE.TextureLoader, [diceFaces]);
   image && (image.flipY = false);
 
+  const [invertedImage] = useLoader(THREE.TextureLoader, [diceFacesInverted]);
+  invertedImage && (invertedImage.flipY = false);
+
+  const finalColor = used && animationFinished.current ? color : "gray";
+
   return (
     <mesh {...meshProps} ref={mesh} scale={0.7} quaternion={finalRotation}>
       <meshStandardMaterial
         map={image}
-        color={used && animationFinished.current ? color : "gray"}
+        emissive={new THREE.Color(contrastColor(finalColor))}
+        emissiveMap={invertedImage}
+        color={finalColor}
       />
     </mesh>
   );
@@ -106,10 +115,18 @@ export function Dice({
   ]);
   const descriptor = descriptorMap(dice)[faces.toString()];
 
+  const r = 0.1;
+  const addedRotation = useMemo(
+    () => new THREE.Euler(Math.random() * r * 2 - r, 0, 0),
+    []
+  );
+
   if (descriptor) {
     return (
       <DiceGeometry
-        finalRotation={descriptor.rotations[result - 1]!}
+        finalRotation={new THREE.Quaternion()
+          .setFromEuler(addedRotation)
+          .multiply(descriptor.rotations[result - 1]!)}
         used={used}
         onAnimationFinished={onAnimationFinished}
         numFaces={faces}

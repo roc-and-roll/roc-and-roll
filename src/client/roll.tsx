@@ -7,8 +7,10 @@ import {
   RRPlayerID,
   RRModifier,
   RRDamageType,
+  colorForDamageType,
 } from "../shared/state";
 import { assertNever } from "../shared/util";
+import { contrastColor } from "./util";
 
 export function rollInitiative(
   mod: number,
@@ -81,18 +83,29 @@ export function roll({
 }
 
 export function diceResultString(logEntry: RRLogEntryDiceRoll) {
+  let isFirst = true;
+  const emit = (prefix: string) => {
+    if (isFirst) {
+      isFirst = false;
+      return "";
+    } else {
+      return prefix;
+    }
+  };
+
   return logEntry.payload.dice
     .map((part) => {
       switch (part.type) {
         case "modifier":
-          return <b>{part.modifier}</b>;
-
+          return (
+            <b>{`${emit(part.modifier >= 0 ? "+" : "")} ${part.modifier}`}</b>
+          );
         case "dice": {
-          const prefix = part.negated ? "-" : "";
+          const prefix = () => (part.negated ? "-" : emit("+"));
           if (part.diceResults.length === 1) {
             return (
               <>
-                {prefix}
+                {prefix()}
                 <b>{part.diceResults[0]!}</b> (d{part.faces})
               </>
             );
@@ -100,20 +113,19 @@ export function diceResultString(logEntry: RRLogEntryDiceRoll) {
           if (part.modified === "none") {
             return (
               <>
-                {prefix}
                 {part.diceResults
                   .map((r) => (
                     <>
                       <b>{r}</b> (d{part.faces})
                     </>
                   ))
-                  .reduce((prev, curr, index) => {
+                  .reduce((prev, curr) => {
                     return (
                       <>
-                        {prev} + {curr}
+                        {prev} {prefix()} {curr}
                       </>
                     );
-                  })}
+                  }, <></>)}
               </>
             );
           }
@@ -123,7 +135,7 @@ export function diceResultString(logEntry: RRLogEntryDiceRoll) {
               : Math.min(...part.diceResults);
           return (
             <>
-              {prefix}
+              {prefix()}
               {part.modified === "advantage" ? "a" : "i"}(
               {part.diceResults
                 .map((r) => {
@@ -141,7 +153,7 @@ export function diceResultString(logEntry: RRLogEntryDiceRoll) {
                     );
                   }
                 })
-                .reduce((prev, curr, index) => {
+                .reduce((prev, curr) => {
                   return (
                     <>
                       {prev}, {curr}
@@ -157,9 +169,10 @@ export function diceResultString(logEntry: RRLogEntryDiceRoll) {
       }
     })
     .reduce(
-      (prev, curr, index) => (
+      (prev, curr) => (
         <>
-          {prev} + {curr}
+          {" "}
+          {prev} {curr}{" "}
         </>
       ),
       <></>
@@ -194,4 +207,82 @@ export function diceResult(logEntry: RRLogEntryDiceRoll) {
       }
     })
     .reduce((sum, each) => sum + each, 0);
+}
+
+export function DiceResultWithTypes({
+  logEntry,
+}: {
+  logEntry: RRLogEntryDiceRoll;
+}) {
+  const total = diceResult(logEntry);
+  const damageTypeSums = new Map<string, { type: RRDamageType; sum: number }>();
+
+  logEntry.payload.dice.forEach((part) => {
+    let subSum: number;
+    switch (part.type) {
+      case "modifier":
+        subSum = part.modifier;
+        break;
+      case "dice":
+        {
+          const sign = part.negated ? -1 : 1;
+          switch (part.modified) {
+            case "none":
+              subSum =
+                part.diceResults.reduce((sum, each) => sum + each) * sign;
+              break;
+            case "advantage":
+              subSum = Math.max(...part.diceResults) * sign;
+              break;
+            case "disadvantage":
+              subSum = Math.min(...part.diceResults) * sign;
+              break;
+            default:
+              assertNever(part.modified);
+          }
+        }
+        break;
+      default:
+        assertNever(part);
+    }
+
+    const key = `${part.damageType.type ?? ""}:${part.damageType.modifiers.join(
+      ":"
+    )}`;
+    damageTypeSums.set(key, {
+      type: part.damageType,
+      sum: (damageTypeSums.get(key)?.sum ?? 0) + subSum,
+    });
+  });
+
+  return (
+    <>
+      <strong>{total}</strong>
+      {!(
+        damageTypeSums.size === 1 &&
+        [...damageTypeSums.values()][0]!.type.type === null
+      ) && (
+        <>
+          {" ("}
+          {[...damageTypeSums.entries()].map(([key, { type, sum }]) => {
+            const color = colorForDamageType(type.type);
+            return (
+              <span
+                className="dice-results-per-damage"
+                key={key}
+                style={{
+                  backgroundColor: color,
+                  color: contrastColor(color),
+                }}
+                title={type.type ?? "unspecified"}
+              >
+                {sum}
+              </span>
+            );
+          })}
+          )
+        </>
+      )}
+    </>
+  );
 }

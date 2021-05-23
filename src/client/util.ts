@@ -1,3 +1,4 @@
+import tinycolor from "tinycolor2";
 import { RRTimestamp } from "../shared/state";
 
 export function apiHost() {
@@ -36,3 +37,6 @@ export function partition<E, A extends E = E, B extends E = E>(
 
   return [a, b] as const;
 }
+
+export const contrastColor = (color: string) =>
+  tinycolor.mostReadable(color, ["#000", "#fff"]).toRgbString();
