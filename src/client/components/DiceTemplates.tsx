@@ -2,6 +2,7 @@ import clsx from "clsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import ReactDOM from "react-dom";
+import { selector } from "recoil";
 import tinycolor from "tinycolor2";
 import {
   diceTemplateAdd,
@@ -29,6 +30,7 @@ import {
   RRDiceTemplatePartWithDamage,
   RRModifier,
   RRMultipleRoll,
+  SyncedStateAction,
 } from "../../shared/state";
 import { assertNever, rrid } from "../../shared/util";
 import { useMyself } from "../myself";
@@ -37,6 +39,7 @@ import {
   useOptimisticDebouncedServerUpdate,
   useServerDispatch,
   useServerState,
+  useServerStateRef,
 } from "../state";
 import useLocalState from "../useLocalState";
 import { Popover } from "./Popover";
@@ -806,16 +809,28 @@ const DiceTemplatePartMenuWrapper: React.FC<{
   const [menuVisible, setMenuVisible] = useState(false);
   const dispatch = useServerDispatch();
 
+  const templateParts = useServerStateRef((state) => {
+    return state.diceTemplates.entities;
+  });
+
+  const deleteActions = (
+    part: RRDiceTemplatePart
+  ): SyncedStateAction<unknown, string, never>[] => {
+    return [
+      diceTemplatePartRemove({
+        id: part.id,
+        templateId: template.id,
+      }),
+      part.type === "template" && diceTemplateRemove(part.templateId),
+      part.type === "template" &&
+        byId(templateParts.current, part.templateId)?.parts.flatMap((p) =>
+          deleteActions(p)
+        ),
+    ].flatMap((a) => (a ? a : []));
+  };
+
   const applyDelete = (part: RRDiceTemplatePart) => {
-    dispatch(
-      [
-        diceTemplatePartRemove({
-          id: part.id,
-          templateId: template.id,
-        }),
-        part.type === "template" && diceTemplateRemove(part.templateId),
-      ].flatMap((a) => (a ? a : []))
-    );
+    dispatch(deleteActions(part));
   };
 
   return (
