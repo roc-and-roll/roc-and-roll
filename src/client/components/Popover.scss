@@ -1,9 +1,9 @@
-.tippy-box[data-theme~='roc-and-roll'] {
+.tippy-box[data-theme~="roc-and-roll"] {
   background: #333;
   border: 1px solid #ccc;
   border-radius: 4px;
 
-  & > .tippy-content {
+  &:not(.popover-no-padding) > .tippy-content {
     padding: 1rem;
   }
 }

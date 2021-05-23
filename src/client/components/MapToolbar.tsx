@@ -262,6 +262,7 @@ export const MapToolbar = React.memo<{
       {tool === "react" && (
         <>
           <Popover
+            className="popover-no-padding"
             content={
               <Picker
                 native={true}
