@@ -3,10 +3,12 @@ import {
   assetSongAdd,
   ephermalSongAdd,
   ephermalSongRemove,
+  ephermalSongUpdate,
   playerUpdateAddFavoritedAssetId,
   playerUpdateRemoveFavoritedAssetId,
 } from "../../shared/actions";
 import {
+  byId,
   entries,
   RRActiveSong,
   RRAsset,
@@ -16,8 +18,13 @@ import {
 import { rrid } from "../../shared/util";
 import { useFileUpload } from "../files";
 import { useMyself } from "../myself";
-import { useServerDispatch, useServerState } from "../state";
+import {
+  useOptimisticDebouncedServerUpdate,
+  useServerDispatch,
+  useServerState,
+} from "../state";
 import { apiHost } from "../util";
+import { VolumeSlider } from "./VolumeSlider";
 
 interface TabletopAudio {
   key: number;
@@ -104,7 +111,7 @@ export function Music() {
         startedAt: +new Date(),
         id: rrid<RRActiveSong>(),
         song: t,
-        volume: 1,
+        volume: 0.5, // TODO
       })
     );
   };
@@ -146,16 +153,16 @@ export function Music() {
       <div>
         <strong>- Playing -</strong>
         {tabletopAudio &&
-          activeSongs.map((s) => (
+          activeSongs.map((activeSong) => (
             <Song
               filterText={""}
-              key={s.id}
-              active={s}
-              audio={s.song}
-              onAdd={() => onStart(s.song)}
-              onReplace={() => onReplace(s.song)}
-              onStop={() => onStop(s)}
-              onFavorite={() => onFavorite(s.song)}
+              key={activeSong.id}
+              active={activeSong}
+              audio={activeSong.song}
+              onAdd={() => onStart(activeSong.song)}
+              onReplace={() => onReplace(activeSong.song)}
+              onStop={() => onStop(activeSong)}
+              onFavorite={() => onFavorite(activeSong.song)}
             />
           ))}
       </div>
@@ -253,6 +260,15 @@ function Song({
   onStop: (a: RRActiveSong) => void;
   onFavorite: () => void;
 }) {
+  const [volume, setVolume] = useOptimisticDebouncedServerUpdate(
+    (state) =>
+      active ? byId(state.ephermal.activeSongs.entities, active.id)?.volume : 0,
+    (volume) =>
+      active
+        ? ephermalSongUpdate({ id: active.id, changes: { volume: volume } })
+        : undefined,
+    1000
+  );
   const showTags = filterText.length > 0;
 
   return (
@@ -264,9 +280,17 @@ function Song({
         </div>
       </div>
       {active ? (
-        <div className="tabletopaudio-button" onClick={() => onStop(active)}>
-          STOP
-        </div>
+        <>
+          <VolumeSlider
+            volume={volume ?? 0}
+            onChange={(volume) => {
+              setVolume(volume);
+            }}
+          />
+          <div className="tabletopaudio-button" onClick={() => onStop(active)}>
+            STOP
+          </div>
+        </>
       ) : (
         <>
           <div className="tabletopaudio-button" onClick={onFavorite}>

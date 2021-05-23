@@ -51,22 +51,19 @@ export function RoughContextProvider({
  * @license MIT
  * Copyright (c) 2019 Preet Shihn
  */
-function DrawablePrimitive({
-  drawable,
-  generator,
-  x,
-  y,
-  ...props
-}: {
-  x: number;
-  y: number;
-  drawable: Drawable;
-  generator: RoughGenerator;
-} & SVGProps<SVGGElement>) {
+const DrawablePrimitive = React.forwardRef<
+  SVGGElement,
+  {
+    x: number;
+    y: number;
+    drawable: Drawable;
+    generator: RoughGenerator;
+  } & SVGProps<SVGGElement>
+>(function DrawablePrimitive({ drawable, generator, x, y, ...props }, ref) {
   const options = drawable.options;
 
   return (
-    <g {...props} transform={`translate(${x}, ${y})`}>
+    <g {...props} transform={`translate(${x}, ${y})`} ref={ref}>
       {drawable.sets.map((drawing, i) => {
         switch (drawing.type) {
           case "path":
@@ -118,7 +115,7 @@ function DrawablePrimitive({
       })}
     </g>
   );
-}
+});
 
 type PassedThroughOptions = Pick<
   Options,
@@ -126,7 +123,7 @@ type PassedThroughOptions = Pick<
 >;
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-function makeRoughComponent<C extends object>(
+function makeRoughComponent<C extends object, E extends SVGElement>(
   displayName: string,
   generateRough: (
     rc: RoughGenerator,
@@ -141,124 +138,130 @@ function makeRoughComponent<C extends object>(
       onMouseDown?: (e: React.MouseEvent<SVGElement>) => void;
       onMouseUp?: (e: React.MouseEvent<SVGElement>) => void;
       onContextMenu?: (e: React.MouseEvent<SVGElement>) => void;
-    } & Pick<PassedThroughOptions, "fill" | "stroke" | "strokeLineDash">
+    } & Pick<PassedThroughOptions, "fill" | "stroke" | "strokeLineDash">,
+    ref: React.ForwardedRef<E>
   ) => React.ReactElement
 ) {
-  const component = React.memo<
-    C &
-      PassedThroughOptions &
-      Pick<
-        SVGProps<SVGElement>,
-        "onClick" | "onMouseDown" | "onMouseUp" | "onContextMenu" | "style"
-      > & {
-        x: number;
-        y: number;
-      }
-  >(
-    ({
-      fill,
-      fillStyle,
-      stroke,
-      strokeLineDash,
-      seed,
-      roughness,
-      ...props
-    }) => {
-      const generator = useContext(RoughContext);
-      const {
-        style,
-        onClick,
-        onMouseDown,
-        onMouseUp,
-        onContextMenu,
-        x,
-        y,
-        ...generatorProps
-      } = props;
-      const realSeed = useMemo(
-        // seed must not be float for some reason.
-        () =>
-          seed === undefined || seed === 0
-            ? Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
-            : seed,
-        [seed]
-      );
-      const drawable = useMemo(
-        () =>
-          generator
-            ? generateRough(generator, generatorProps as C, {
-                fill,
-                fillStyle,
-                stroke,
-                strokeLineDash,
-                roughness: roughness ?? DEFAULT_ROUGHNESS,
-                seed: realSeed,
-              })
-            : null,
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [
-          generator,
-          fill,
-          fillStyle,
-          stroke,
-          strokeLineDash,
-          roughness,
-          realSeed,
-          // TODO
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          ...Object.values(generatorProps),
-        ]
-      );
-
-      if (generator) {
-        if (!drawable) {
-          return null;
+  const component = React.memo(
+    React.forwardRef<
+      E | SVGGElement,
+      C &
+        PassedThroughOptions &
+        Pick<
+          SVGProps<SVGElement>,
+          "onClick" | "onMouseDown" | "onMouseUp" | "onContextMenu" | "style"
+        > & {
+          x: number;
+          y: number;
         }
-
-        return (
-          <DrawablePrimitive
-            drawable={drawable}
-            generator={generator}
-            x={x}
-            y={y}
-            onClick={onClick}
-            onMouseDown={onMouseDown}
-            onMouseUp={onMouseUp}
-            onContextMenu={onContextMenu}
-            style={style}
-          />
-        );
-      } else {
-        return generateSimple({
-          x,
-          y,
+    >(
+      (
+        { fill, fillStyle, stroke, strokeLineDash, seed, roughness, ...props },
+        ref
+      ) => {
+        const generator = useContext(RoughContext);
+        const {
+          style,
           onClick,
           onMouseDown,
           onMouseUp,
           onContextMenu,
-          style,
-          fill,
-          stroke,
-          strokeLineDash,
-          strokeWidth: STROKE_WIDTH_SIMPLE,
-          ...(generatorProps as C),
-        });
+          x,
+          y,
+          ...generatorProps
+        } = props;
+        const realSeed = useMemo(
+          // seed must not be float for some reason.
+          () =>
+            seed === undefined || seed === 0
+              ? Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
+              : seed,
+          [seed]
+        );
+        const drawable = useMemo(
+          () =>
+            generator
+              ? generateRough(generator, generatorProps as C, {
+                  fill,
+                  fillStyle,
+                  stroke,
+                  strokeLineDash,
+                  roughness: roughness ?? DEFAULT_ROUGHNESS,
+                  seed: realSeed,
+                })
+              : null,
+          // eslint-disable-next-line react-hooks/exhaustive-deps
+          [
+            generator,
+            fill,
+            fillStyle,
+            stroke,
+            strokeLineDash,
+            roughness,
+            realSeed,
+            // TODO
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            ...Object.values(generatorProps),
+          ]
+        );
+
+        if (generator) {
+          if (!drawable) {
+            return null;
+          }
+
+          return (
+            <DrawablePrimitive
+              ref={ref as React.ForwardedRef<SVGGElement>}
+              drawable={drawable}
+              generator={generator}
+              x={x}
+              y={y}
+              onClick={onClick}
+              onMouseDown={onMouseDown}
+              onMouseUp={onMouseUp}
+              onContextMenu={onContextMenu}
+              style={style}
+            />
+          );
+        } else {
+          return generateSimple(
+            {
+              x,
+              y,
+              onClick,
+              onMouseDown,
+              onMouseUp,
+              onContextMenu,
+              style,
+              fill,
+              stroke,
+              strokeLineDash,
+              strokeWidth: STROKE_WIDTH_SIMPLE,
+              ...(generatorProps as C),
+            },
+            ref as React.ForwardedRef<E>
+          );
+        }
       }
-    }
+    )
   );
 
   component.displayName = displayName;
   return component;
 }
 
-export const RoughLine = makeRoughComponent<{
-  w: number;
-  h: number;
-}>(
+export const RoughLine = makeRoughComponent<
+  {
+    w: number;
+    h: number;
+  },
+  SVGLineElement
+>(
   "RoughLine",
   (generator, { w, h }, options) => generator.line(0, 0, w, h, options),
-  ({ x, y, w, h, strokeLineDash: _, ...rest }) => (
-    <line x1={x} y1={y} x2={x + w} y2={y + h} {...rest} />
+  ({ x, y, w, h, strokeLineDash: _, ...rest }, ref) => (
+    <line x1={x} y1={y} x2={x + w} y2={y + h} ref={ref} {...rest} />
   )
 );
 
@@ -285,65 +288,85 @@ function correctNegativeSize({
   return { x, y, w, h };
 }
 
-export const RoughRectangle = makeRoughComponent<{
-  w: number;
-  h: number;
-}>(
+export const RoughRectangle = makeRoughComponent<
+  {
+    w: number;
+    h: number;
+  },
+  SVGRectElement
+>(
   "RoughRectangle",
   (generator, { w, h }, options) => generator.rectangle(0, 0, w, h, options),
-  ({ x: ox, y: oy, w: ow, h: oh, strokeLineDash: _, ...rest }) => {
+  ({ x: ox, y: oy, w: ow, h: oh, strokeLineDash: _, ...rest }, ref) => {
     const { x, y, w, h } = correctNegativeSize({ x: ox, y: oy, w: ow, h: oh });
-    return <rect x={x} y={y} width={w} height={h} {...rest} />;
+    return <rect x={x} y={y} width={w} height={h} ref={ref} {...rest} />;
   }
 );
 
-export const RoughEllipse = makeRoughComponent<{
-  w: number;
-  h: number;
-}>(
+export const RoughEllipse = makeRoughComponent<
+  {
+    w: number;
+    h: number;
+  },
+  SVGEllipseElement
+>(
   "RoughEllipse",
   (generator, { w, h }, options) =>
     generator.ellipse(w / 2, h / 2, w, h, options),
-  ({ x: ox, y: oy, w: ow, h: oh, strokeLineDash: _, ...rest }) => {
+  ({ x: ox, y: oy, w: ow, h: oh, strokeLineDash: _, ...rest }, ref) => {
     const { x, y, w, h } = correctNegativeSize({ x: ox, y: oy, w: ow, h: oh });
     return (
-      <ellipse cx={x + w / 2} cy={y + h / 2} rx={w / 2} ry={h / 2} {...rest} />
+      <ellipse
+        cx={x + w / 2}
+        cy={y + h / 2}
+        rx={w / 2}
+        ry={h / 2}
+        ref={ref}
+        {...rest}
+      />
     );
   }
 );
 
-export const RoughCircle = makeRoughComponent<{
-  d: number;
-}>(
+export const RoughCircle = makeRoughComponent<{ d: number }, SVGCircleElement>(
   "RoughCircle",
   (generator, { d }, options) => generator.circle(d / 2, d / 2, d, options),
-  ({ x: ox, y: oy, d: od, strokeLineDash: _, ...rest }) => {
+  ({ x: ox, y: oy, d: od, strokeLineDash: _, ...rest }, ref) => {
     const { x, y, w: d } = correctNegativeSize({ x: ox, y: oy, w: od, h: od });
-    return <circle cx={x + d / 2} cy={y + d / 2} r={d / 2} {...rest} />;
+    return (
+      <circle cx={x + d / 2} cy={y + d / 2} r={d / 2} ref={ref} {...rest} />
+    );
   }
 );
 
-export const RoughSVGPath = makeRoughComponent<{
-  path: string;
-}>(
+export const RoughSVGPath = makeRoughComponent<
+  {
+    path: string;
+  },
+  SVGPathElement
+>(
   "RoughSVGPath",
   (generator, { path }, options) => generator.path(path, options),
-  ({ x, y, path, strokeLineDash: _, ...rest }) => (
-    <path x={x} y={y} d={path} {...rest} />
+  ({ x, y, path, strokeLineDash: _, ...rest }, ref) => (
+    <path x={x} y={y} d={path} ref={ref} {...rest} />
   )
 );
 
-export const RoughLinearPath = makeRoughComponent<{
-  points: RRPoint[];
-}>(
+export const RoughLinearPath = makeRoughComponent<
+  {
+    points: RRPoint[];
+  },
+  SVGPolylineElement
+>(
   "RoughLinearPath",
   (generator, { points }, options) =>
     generator.linearPath(
       [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
       options
     ),
-  ({ x, y, points, fill, strokeLineDash: _, ...rest }) => (
+  ({ x, y, points, fill, strokeLineDash: _, ...rest }, ref) => (
     <polyline
+      ref={ref}
       fill="transparent"
       points={[makePoint(0), ...points]
         .map(({ x: px, y: py }) => `${x + px},${y + py}`)
@@ -353,20 +376,24 @@ export const RoughLinearPath = makeRoughComponent<{
   )
 );
 
-export const RoughPolygon = makeRoughComponent<{
-  points: RRPoint[];
-}>(
+export const RoughPolygon = makeRoughComponent<
+  {
+    points: RRPoint[];
+  },
+  SVGPolygonElement
+>(
   "RoughPolygon",
   (generator, { points }, options) =>
     generator.polygon(
       [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
       options
     ),
-  ({ x, y, points, strokeLineDash: _, ...rest }) => (
+  ({ x, y, points, strokeLineDash: _, ...rest }, ref) => (
     <polygon
       points={[makePoint(0), ...points]
         .map(({ x: px, y: py }) => `${x + px},${y + py}`)
         .join(" ")}
+      ref={ref}
       {...rest}
     />
   )
@@ -374,10 +401,14 @@ export const RoughPolygon = makeRoughComponent<{
 
 // Rough.JS does not support text. We simply use a handwritten font to "fake"
 // that look.
-export const RoughText = React.memo<SVGProps<SVGTextElement>>(
-  function RoughText({ children, x, y, ...props }) {
+export const RoughText = React.memo(
+  React.forwardRef<SVGTextElement, SVGProps<SVGTextElement>>(function RoughText(
+    { children, x, y, ...props },
+    ref
+  ) {
     return (
       <text
+        ref={ref}
         x={x}
         y={y}
         dominantBaseline="text-before-edge"
@@ -387,5 +418,5 @@ export const RoughText = React.memo<SVGProps<SVGTextElement>>(
         {children}
       </text>
     );
-  }
+  })
 );

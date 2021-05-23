@@ -117,6 +117,8 @@ export type RRPlayer = {
   favoritedAssetIds: RRAssetID[];
 };
 
+export type RRObjectVisibility = "gmOnly" | "everyone";
+
 export type RRCharacter = {
   id: RRCharacterID;
   name: string;
@@ -130,7 +132,7 @@ export type RRCharacter = {
   attributes: Record<string, number | null>;
   conditions: RRCharacterCondition[];
 
-  visibility: "gmOnly" | "everyone";
+  visibility: RRObjectVisibility;
   localToMap?: RRMapID;
 };
 
@@ -138,7 +140,7 @@ type RRMapObjectBase = {
   id: RRMapObjectID;
   position: RRPoint;
   playerId: RRPlayerID;
-  visibility: "gmOnly" | "everyone";
+  visibility: RRObjectVisibility;
 };
 
 export interface RRToken extends RRMapObjectBase {
