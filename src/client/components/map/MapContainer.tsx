@@ -24,6 +24,7 @@ import {
   RRCharacterID,
   setById,
   RRMapID,
+  RRObjectVisibility,
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import {
@@ -76,8 +77,14 @@ export type MapEditState =
       type: "line" | "polygon" | "rectangle" | "ellipse" | "image";
       color: RRColor;
       snap: MapSnap;
+      visibility: RRObjectVisibility;
     }
-  | { tool: "draw"; type: "text" | "freehand"; color: RRColor };
+  | {
+      tool: "draw";
+      type: "text" | "freehand";
+      color: RRColor;
+      visibility: RRObjectVisibility;
+    };
 
 export const selectedMapObjectsFamily = atomFamily<boolean, RRMapObjectID>({
   key: "SelectedMapObject",

@@ -99,7 +99,7 @@ export function useMapToolHandler(
       color: editState.color,
       position: p,
       locked: false,
-      visibility: "everyone",
+      visibility: editState.visibility,
     });
 
     switch (editState.type) {

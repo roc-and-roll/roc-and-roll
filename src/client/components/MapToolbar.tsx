@@ -2,7 +2,13 @@ import clsx from "clsx";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import { mapObjectUpdate, mapUpdate } from "../../shared/actions";
-import { byId, RRMap, RRMapObjectID, RRPlayer } from "../../shared/state";
+import {
+  byId,
+  RRMap,
+  RRMapObjectID,
+  RRObjectVisibility,
+  RRPlayer,
+} from "../../shared/state";
 import { assertNever } from "../../shared/util";
 import {
   useOptimisticDebouncedServerUpdate,
@@ -32,6 +38,13 @@ export const MapToolbar = React.memo<{
   >("map/toolbar/drawType", "freehand");
   const [drawColor, setDrawColor] = useState(myself.color);
   const [snap, setSnap] = useLocalState<MapSnap>("map/toolbar/snap", "grid");
+  const [
+    defaultVisibility,
+    setDefaultVisibility,
+  ] = useLocalState<RRObjectVisibility>(
+    "map/toolbar/defaultVisibility",
+    "everyone"
+  );
 
   const [revealType, setRevealType] = useState<"show" | "hide">("show");
 
@@ -80,13 +93,24 @@ export const MapToolbar = React.memo<{
           return { tool, revealType };
         case "draw":
           return drawType === "text" || drawType === "freehand"
-            ? { tool, type: drawType, color: drawColor }
-            : { tool, type: drawType, color: drawColor, snap };
+            ? {
+                tool,
+                type: drawType,
+                color: drawColor,
+                visibility: defaultVisibility,
+              }
+            : {
+                tool,
+                type: drawType,
+                color: drawColor,
+                snap,
+                visibility: defaultVisibility,
+              };
         default:
           assertNever(tool);
       }
     });
-  }, [tool, drawColor, drawType, snap, setEditState, revealType]);
+  }, [tool, drawColor, drawType, snap, setEditState, revealType, defaultVisibility]);
 
   const updateLock = useRecoilCallback(({ snapshot }) => (locked: boolean) => {
     dispatch(
@@ -277,6 +301,17 @@ export const MapToolbar = React.memo<{
           </Button>
           <>
             <ColorInput value={drawColor} onChange={setDrawColor} />
+            <label>
+              Default Visibility
+              <Select
+                value={defaultVisibility}
+                onChange={setDefaultVisibility}
+                options={[
+                  { value: "gmOnly", label: "GM only" },
+                  { value: "everyone", label: "Everyone" },
+                ]}
+              />
+            </label>
             {drawType !== "freehand" && drawType !== "text" && (
               <label>
                 snap to grid{" "}
