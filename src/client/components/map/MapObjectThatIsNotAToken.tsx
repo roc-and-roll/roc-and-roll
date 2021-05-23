@@ -87,15 +87,6 @@ export const MapObjectThatIsNotAToken = React.memo<{
     strokeLineDash,
   };
 
-  const extraPopupContent = () => {
-    switch (object.type) {
-      case "image":
-        return <ImageEditOptions object={object} mapId={mapId} />;
-      default:
-        return <></>;
-    }
-  };
-
   const content = () => {
     switch (object.type) {
       case "rectangle":
@@ -147,15 +138,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
 
   return (
     <Popover
-      content={
-        <div onMouseDown={(e) => e.stopPropagation()}>
-          <label>
-            Visible to GM only:
-            <input type="checkbox" checked={false} />
-          </label>
-          {extraPopupContent()}
-        </div>
-      }
+      content={<ObjectEditOptions object={object} mapId={mapId} />}
       visible={editorVisible}
       onClickOutside={() => setEditorVisible(false)}
       interactive
@@ -165,6 +148,57 @@ export const MapObjectThatIsNotAToken = React.memo<{
     </Popover>
   );
 });
+
+function ObjectEditOptions({
+  object,
+  mapId,
+}: {
+  object: RRMapObject;
+  mapId: RRMapID;
+}) {
+  const extraPopupContent = () => {
+    switch (object.type) {
+      case "image":
+        return <ImageEditOptions object={object} mapId={mapId} />;
+      default:
+        return <></>;
+    }
+  };
+
+  const [hidden, setHidden] = useOptimisticDebouncedServerUpdate(
+    (state) =>
+      withDo(
+        byId(state.maps.entities, mapId)?.objects.entities,
+        (objects) =>
+          objects &&
+          withDo(
+            byId(objects, object.id),
+            (object) => object && object.visibility === "gmOnly"
+          )
+      ),
+    (hidden) => {
+      return mapObjectUpdate(mapId, {
+        id: object.id,
+        changes: { visibility: hidden ? "gmOnly" : "everyone" },
+      });
+    },
+    100
+  );
+
+  return (
+    <div onMouseDown={(e) => e.stopPropagation()}>
+      <label>
+        Visible to GM only:
+        <input
+          type="checkbox"
+          checked={hidden}
+          onChange={(e) => setHidden(e.target.checked)}
+        />
+      </label>
+      {extraPopupContent()}
+    </div>
+  );
+}
 
 function ImageEditOptions({
   object,

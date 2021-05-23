@@ -186,6 +186,7 @@ export default function MapContainer() {
               mapId,
               locked: false,
               color: "#000",
+              visibility: "everyone",
             })
           );
           return;
@@ -219,6 +220,7 @@ export default function MapContainer() {
             position: snapPointToGrid(point),
             playerId: myself.id,
             characterId,
+            visibility: "everyone",
           })
         );
       },

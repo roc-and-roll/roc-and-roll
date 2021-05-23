@@ -9,6 +9,8 @@ import {
   RRMapID,
 } from "../../../shared/state";
 import { assertNever } from "../../../shared/util";
+import { useIsGM, useMyId } from "../../myself";
+import { canViewObjectOnMap } from "../../permissions";
 import { MapAreas } from "./Map";
 import {
   mapObjectIdsAtom,
@@ -83,7 +85,9 @@ const MapObjectWrapper = React.memo<{
   setHP,
 }) {
   const mapObject = useRecoilValue(mapObjectsFamily(mapObjectId));
-  if (!mapObject) {
+  const myId = useMyId();
+  const isGM = useIsGM();
+  if (!mapObject || !canViewObjectOnMap(mapObject, myId, isGM)) {
     return null;
   }
 

@@ -138,6 +138,7 @@ type RRMapObjectBase = {
   id: RRMapObjectID;
   position: RRPoint;
   playerId: RRPlayerID;
+  visibility: "gmOnly" | "everyone";
 };
 
 export interface RRToken extends RRMapObjectBase {

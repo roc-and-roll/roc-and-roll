@@ -452,6 +452,7 @@ describe("applyStatePatch", () => {
       playerId: rrid<RRPlayer>(),
       position: { x: 0, y: 0 },
       size: { x: 0, y: 0 },
+      visibility: "everyone",
     };
 
     nextState = applyStatePatch((prevState = nextState), {
@@ -499,6 +500,7 @@ describe("applyStatePatch", () => {
       playerId: rrid<RRPlayer>(),
       position: { x: 0, y: 0 },
       size: { x: 0, y: 0 },
+      visibility: "everyone",
     };
 
     nextState = applyStatePatch((prevState = nextState), {
