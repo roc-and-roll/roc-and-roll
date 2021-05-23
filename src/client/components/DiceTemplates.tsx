@@ -520,6 +520,38 @@ function DiceTemplateInner({
     ({ id }) => template.id === id
   ).length;
 
+  function sortTemplateParts(a: RRDiceTemplatePart, b: RRDiceTemplatePart) {
+    let damageTypeResult = 0;
+    //sort by damage type
+    if (a.type !== "template" && b.type !== "template") {
+      damageTypeResult = (a.damage.type ?? "zzzz").localeCompare(
+        b.damage.type ?? "zzzz"
+      );
+    }
+
+    //afterwards sort by template type
+    //first dice, then modifiers, then templates
+    let typeResult = 0;
+    if (a.type === b.type) typeResult = 0;
+    else if (a.type === "template") typeResult = 1;
+    else if (b.type === "template") typeResult = -1;
+    else if (a.type === "dice") typeResult = -1;
+    else if (b.type === "dice") typeResult = 1;
+    else if (a.type === "linkedModifier") typeResult = -1;
+    else if (b.type === "linkedModifier") typeResult = 1;
+
+    //lastly sort the dice and modifiers by value
+    let valueResult = 0;
+    if (a.type === "template" || b.type === "template") valueResult = 0;
+    else if (a.type === "dice" && b.type === "dice")
+      valueResult = a.faces - b.faces;
+    else if (a.type === "modifier" && b.type === "modifier")
+      valueResult = a.number - b.number;
+
+    //combine all the sorts
+    return damageTypeResult || typeResult || valueResult;
+  }
+
   return (
     <div
       ref={dropRef}
@@ -543,7 +575,7 @@ function DiceTemplateInner({
         onClick={(e) => e.stopPropagation()}
         onChange={(e) => setName(e.target.value)}
       />
-      {template.parts.map((part, i) => (
+      {template.parts.sort(sortTemplateParts).map((part, i) => (
         <DiceTemplatePartMenuWrapper template={template} key={i} part={part}>
           <DiceTemplatePart
             selectedCharacter={selectedCharacter}
