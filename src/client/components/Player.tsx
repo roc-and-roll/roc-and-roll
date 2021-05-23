@@ -1,5 +1,6 @@
 import React from "react";
 import { playerUpdate } from "../../shared/actions";
+import { byId } from "../../shared/state";
 import { useMyself } from "../myself";
 import {
   useOptimisticDebouncedServerUpdate,
@@ -13,7 +14,7 @@ export function Player({ logout }: { logout: () => void }) {
   const myself = useMyself();
 
   const [name, setName] = useOptimisticDebouncedServerUpdate(
-    myself.name,
+    (state) => byId(state.players.entities, myself.id)?.name ?? "",
     (name) =>
       playerUpdate({
         id: myself.id,
@@ -23,7 +24,7 @@ export function Player({ logout }: { logout: () => void }) {
   );
 
   const [color, setColor] = useOptimisticDebouncedServerUpdate(
-    myself.color,
+    (state) => byId(state.players.entities, myself.id)?.color ?? "",
     (color) =>
       playerUpdate({
         id: myself.id,

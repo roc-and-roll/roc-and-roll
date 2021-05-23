@@ -46,6 +46,10 @@ button {
   background: rgb(239, 239, 239);
 }
 
+label {
+  display: block;
+}
+
 .root {
   background: #111;
   color: white;
@@ -220,6 +224,22 @@ a {
   cursor: pointer;
 }
 
+$dice-templates-height: 200px;
+.dice-template-roll-hints {
+  $width: 200px;
+  bottom: $dice-templates-height + 70px;
+  position: fixed;
+  left: 50%;
+  width: $width;
+  margin-left: $width / -2;
+  color: #fff;
+
+  button {
+    display: block;
+    margin: auto;
+  }
+}
+
 .dice-templates {
   $panel-background: rgb(59, 28, 6);
   $animation-duration: 200ms;
@@ -239,7 +259,7 @@ a {
   user-select: none;
 
   &.opened {
-    height: 200px;
+    height: $dice-templates-height;
   }
 
   .dice-templates-container {
@@ -867,4 +887,16 @@ button.color-picker-color {
 .character-editor-condition-icons {
   display: flex;
   flex-wrap: wrap;
+}
+
+.modding {
+  textarea {
+    width: 100%;
+    line-height: 1.2;
+    font-size: 0.9rem;
+  }
+}
+
+.modding-warning {
+  color: red;
 }

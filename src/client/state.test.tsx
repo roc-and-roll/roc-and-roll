@@ -105,7 +105,7 @@ function setup<A extends Record<string, unknown>, H>(
 
 describe("optimistic state updates", () => {
   function setupUseOptimisticDebouncedServerUpdate<V>(initialProps: {
-    serverValue: V;
+    selector: (state: SyncedState) => V;
     actionCreator: (
       p: V
     ) =>
@@ -114,12 +114,8 @@ describe("optimistic state updates", () => {
       | SyncedStateAction<unknown, string, never>[];
     debounceTime: number;
   }) {
-    return setup(initialProps, ({ serverValue, actionCreator, debounceTime }) =>
-      useOptimisticDebouncedServerUpdate(
-        serverValue,
-        actionCreator,
-        debounceTime
-      )
+    return setup(initialProps, ({ selector, actionCreator, debounceTime }) =>
+      useOptimisticDebouncedServerUpdate(selector, actionCreator, debounceTime)
     );
   }
 
@@ -163,7 +159,7 @@ describe("optimistic state updates", () => {
       rerender,
       unmount,
     } = setupUseOptimisticDebouncedServerUpdate({
-      serverValue: 123,
+      selector: () => 123,
       actionCreator: () => undefined,
       debounceTime: 100,
     });
@@ -171,7 +167,7 @@ describe("optimistic state updates", () => {
     expect(result.current[0]).toBe(123);
 
     rerender({
-      serverValue: 42,
+      selector: () => 42,
       actionCreator: () => undefined,
       debounceTime: 100,
     });
@@ -202,7 +198,7 @@ describe("optimistic state updates", () => {
       rerender,
       unmount,
     } = setupUseOptimisticDebouncedServerUpdate({
-      serverValue: 123,
+      selector: () => 123,
       actionCreator: makeActionCreator(),
       debounceTime: 100,
     });
@@ -230,7 +226,7 @@ describe("optimistic state updates", () => {
     // receive a new state from the server, which should not overwrite the local
     // state
     rerender({
-      serverValue: 1337,
+      selector: () => 1337,
       actionCreator: makeActionCreator(),
       debounceTime: 100,
     });
@@ -292,7 +288,7 @@ describe("optimistic state updates", () => {
       result,
       unmount,
     } = setupUseOptimisticDebouncedServerUpdate({
-      serverValue: 123,
+      selector: () => 123,
       actionCreator: makeActionCreator(),
       debounceTime: 100,
     });
@@ -327,7 +323,7 @@ describe("optimistic state updates", () => {
     }
 
     const { result, unmount } = setupUseOptimisticDebouncedServerUpdate({
-      serverValue: 0,
+      selector: () => 0,
       actionCreator: makeActionCreator(),
       debounceTime: 100,
     });

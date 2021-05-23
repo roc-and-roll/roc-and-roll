@@ -5,10 +5,10 @@ import { randomColor } from "../../shared/colors";
 import { useServerDispatch, useServerState } from "../state";
 import "./JoinGame.scss";
 
-export function JoinGame({
-  setMyPlayerId,
+export const JoinGame = React.memo(function JoinGame({
+  login,
 }: {
-  setMyPlayerId: (id: RRPlayerID) => void;
+  login: (id: RRPlayerID) => void;
 }) {
   const dispatch = useServerDispatch();
   const players = useServerState((state) => state.players);
@@ -29,7 +29,7 @@ export function JoinGame({
         favoritedAssetIds: [],
       })
     );
-    setMyPlayerId(action.payload.id);
+    login(action.payload.id);
   };
 
   return (
@@ -39,7 +39,7 @@ export function JoinGame({
         {entries(players).map((player) => (
           <li
             key={player.id}
-            onClick={() => setMyPlayerId(player.id)}
+            onClick={() => login(player.id)}
             style={{
               textDecoration: "underline",
               textDecorationColor: player.color,
@@ -54,4 +54,4 @@ export function JoinGame({
       </ul>
     </div>
   );
-}
+});

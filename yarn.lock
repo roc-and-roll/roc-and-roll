@@ -4499,6 +4499,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"conditional-type-checks@npm:^1.0.5":
+  version: 1.0.5
+  resolution: "conditional-type-checks@npm:1.0.5"
+  checksum: a86e3d2d4afd561492d1e555be3146e599189e462e4f10a56050dfbd6f80c79d8eeee730d87982614828eb2a27ce81fedcc3f0cf7bf9c34f673b7b6b4ed581f0
+  languageName: node
+  linkType: hard
+
 "configstore@npm:^5.0.1":
   version: 5.0.1
   resolution: "configstore@npm:5.0.1"
@@ -11596,6 +11603,7 @@ resolve@^2.0.0-next.3:
     clsx: ^1.1.1
     commander: ^7.2.0
     concurrently: ^6.1.0
+    conditional-type-checks: ^1.0.5
     copy-webpack-plugin: ^8.1.1
     core-js: ^3.12.1
     css-loader: ^5.2.4
@@ -11650,6 +11658,7 @@ resolve@^2.0.0-next.3:
     ts-jest: ^26.5.6
     ts-loader: ^9.1.2
     ts-node: ^9.1.1
+    typanion: ^3.3.1
     type-fest: ^1.1.1
     typescript: ^4.2.4
     utf-8-validate: ^5.0.5
@@ -13238,6 +13247,13 @@ resolve@^2.0.0-next.3:
   version: 0.14.5
   resolution: "tweetnacl@npm:0.14.5"
   checksum: e1c9d52e2e9f582fd0df9ea26ba5a9ab88b9a38b69625d8e55c5e8870a4832ac8c32f8854b41fce7b59f97258bb103535363f9eda7050aa70e75824b972c7dde
+  languageName: node
+  linkType: hard
+
+"typanion@npm:^3.3.1":
+  version: 3.3.1
+  resolution: "typanion@npm:3.3.1"
+  checksum: 4341c4199f5ce022c9e486a47fff9509bb887768c9496fec86e10bdac9631f34298b9257dc5c9425e2eb177c3df5189ba029570114a5fddbfb11928330023262
   languageName: node
   linkType: hard
 

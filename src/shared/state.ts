@@ -32,6 +32,8 @@ export type RRCapPoint = { readonly X: number; readonly Y: number };
 
 export type RRDiceTemplateID = Opaque<string, "diceTemplate">;
 
+export type RRDiceTemplatePartID = Opaque<string, "diceTemplatePart">;
+
 export type RRActiveSongID = Opaque<string, "activeSong">;
 
 export type RRAssetID = Opaque<string, "asset">;
@@ -274,36 +276,41 @@ export const linkedModifierNames = [
   "proficiency",
 ] as const;
 
-export type RRDiceTemplatePartTemplate = {
-  type: "template";
-  templateId: RRDiceTemplateID;
+type RRDiceTemplatePartBase = {
+  id: RRDiceTemplatePartID;
 };
 
-export type RRDiceTemplatePartModifier = {
+export interface RRDiceTemplatePartTemplate extends RRDiceTemplatePartBase {
+  type: "template";
+  templateId: RRDiceTemplateID;
+}
+
+export interface RRDiceTemplatePartModifier extends RRDiceTemplatePartBase {
   type: "modifier";
   number: number;
   damage: RRDamageType;
-};
+}
 
-export type RRDiceTemplatePartLinkedModifier = {
+export interface RRDiceTemplatePartLinkedModifier
+  extends RRDiceTemplatePartBase {
   type: "linkedModifier";
   name: IterableElement<typeof linkedModifierNames>;
   damage: RRDamageType;
-};
+}
 
-export type RRDiceTemplatePartDice = {
+export interface RRDiceTemplatePartDice extends RRDiceTemplatePartBase {
   type: "dice";
   count: number;
   faces: number; // 4, 6, 8, 10, 12, 20, 100, but also 3, 2, etc.
   negated: boolean;
   damage: RRDamageType;
   modified: RRMultipleRoll;
-};
+}
 
-export type RRDiceTemplatePartWithDamage =
-  | RRDiceTemplatePartDice
-  | RRDiceTemplatePartModifier
-  | RRDiceTemplatePartLinkedModifier;
+export type RRDiceTemplatePartWithDamage = Extract<
+  RRDiceTemplatePart,
+  { damage: RRDamageType }
+>;
 
 export type RRDiceTemplatePart =
   | RRDiceTemplatePartTemplate
@@ -413,26 +420,27 @@ export type RRLogEntry =
   | RRLogEntryAchievement
   | RRLogEntryDiceRoll;
 
-export interface RRAsset {
+interface RRBaseAsset {
   id: RRAssetID;
-  type: string;
   name: string;
   external: boolean;
   filenameOrUrl: string;
   playerId: RRPlayerID;
 }
 
-export interface RRSong extends RRAsset {
+export interface RRSong extends RRBaseAsset {
   type: "song";
   tags: string[];
   durationSeconds: number;
 }
 
-export interface RRImage extends RRAsset {
+export interface RRImage extends RRBaseAsset {
   type: "image";
   // TODO: evaluate if this is necessary
   originalFunction: "token" | "map";
 }
+
+export type RRAsset = RRSong | RRImage;
 
 // This must resemble the EntityState type from @reduxjs/toolkit to work with
 // createEntityAdapter

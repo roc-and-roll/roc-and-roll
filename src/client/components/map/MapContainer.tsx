@@ -447,7 +447,7 @@ export default function MapContainer() {
   const toolButtonState = convertToolButtonState();
 
   const [revealedAreas, setRevealedAreas] = useOptimisticDebouncedServerUpdate(
-    map.revealedAreas,
+    (state) => byId(state.maps.entities, map.id)?.revealedAreas ?? null,
     (areas) =>
       dispatch(mapUpdate({ changes: { revealedAreas: areas }, id: map.id })),
     1000

@@ -2,7 +2,7 @@ import clsx from "clsx";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import { mapObjectUpdate, mapUpdate } from "../../shared/actions";
-import { RRMap, RRMapObjectID, RRPlayer } from "../../shared/state";
+import { byId, RRMap, RRMapObjectID, RRPlayer } from "../../shared/state";
 import { assertNever } from "../../shared/util";
 import {
   useOptimisticDebouncedServerUpdate,
@@ -332,7 +332,7 @@ function MapObjectLockedObserver({
 
 function MapSettings({ map }: { map: RRMap }) {
   const [name, setName] = useOptimisticDebouncedServerUpdate(
-    map.name,
+    (state) => byId(state.maps.entities, map.id)?.name ?? "",
     (name) => mapUpdate({ id: map.id, changes: { name } }),
     1000
   );
@@ -340,18 +340,18 @@ function MapSettings({ map }: { map: RRMap }) {
     backgroundColor,
     setBackgroundColor,
   ] = useOptimisticDebouncedServerUpdate(
-    map.backgroundColor,
+    (state) => byId(state.maps.entities, map.id)?.backgroundColor ?? "",
     (backgroundColor) =>
       mapUpdate({ id: map.id, changes: { backgroundColor } }),
     500
   );
   const [gridEnabled, setGridEnabled] = useOptimisticDebouncedServerUpdate(
-    map.gridEnabled,
+    (state) => byId(state.maps.entities, map.id)?.gridEnabled ?? false,
     (gridEnabled) => mapUpdate({ id: map.id, changes: { gridEnabled } }),
     100
   );
   const [gridColor, setGridColor] = useOptimisticDebouncedServerUpdate(
-    map.gridColor,
+    (state) => byId(state.maps.entities, map.id)?.gridColor ?? "",
     (gridColor) => mapUpdate({ id: map.id, changes: { gridColor } }),
     100
   );
@@ -362,7 +362,7 @@ function MapSettings({ map }: { map: RRMap }) {
     <Popover
       content={
         <>
-          <p>
+          <label>
             Name{" "}
             <input
               type="text"
@@ -370,11 +370,11 @@ function MapSettings({ map }: { map: RRMap }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-          </p>
-          <div>
+          </label>
+          <label>
             Background color{" "}
             <ColorInput value={backgroundColor} onChange={setBackgroundColor} />
-          </div>
+          </label>
           <label>
             Grid enabled{" "}
             <input
@@ -384,10 +384,10 @@ function MapSettings({ map }: { map: RRMap }) {
             />
           </label>
           {gridEnabled && (
-            <div>
+            <label>
               Grid color{" "}
               <ColorInput value={gridColor} onChange={setGridColor} />
-            </div>
+            </label>
           )}
         </>
       }

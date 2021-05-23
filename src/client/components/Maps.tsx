@@ -4,6 +4,7 @@ import { useDrag, useDrop } from "react-dnd";
 import { mapAdd, mapUpdate, playerUpdate } from "../../shared/actions";
 import { randomColor } from "../../shared/colors";
 import {
+  byId,
   EntityCollection,
   entries,
   RRMap,
@@ -93,7 +94,7 @@ export function MapListEntry({
   }));
 
   const [name, setName] = useOptimisticDebouncedServerUpdate(
-    map.name,
+    (state) => byId(state.maps.entities, map.id)?.name ?? "",
     (name) => dispatch(mapUpdate({ id: map.id, changes: { name } })),
     1000
   );

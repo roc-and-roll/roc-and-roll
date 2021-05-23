@@ -29,6 +29,8 @@ import {
   RRMapObjectID,
   RRAssetID,
   RRGlobalSettings,
+  RRDiceTemplatePart,
+  RRDiceTemplateID,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -403,9 +405,18 @@ export const diceTemplateUpdate = createAction<Update<RRDiceTemplate>>(
   "diceTemplate/update"
 );
 
+export const diceTemplatePartUpdate = createAction<
+  Update<RRDiceTemplatePart> & { templateId: RRDiceTemplateID }
+>("diceTemplate/part/update");
+
 export const diceTemplateRemove = createAction<RRDiceTemplate["id"]>(
   "diceTemplate/remove"
 );
+
+export const diceTemplatePartRemove = createAction<{
+  id: RRDiceTemplatePart["id"];
+  templateId: RRDiceTemplateID;
+}>("diceTemplate/part/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
 // Asset state

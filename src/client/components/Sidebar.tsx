@@ -18,6 +18,8 @@ import { Music } from "./Music";
 import { DiceInput } from "./DiceInput";
 import { GMArea } from "./GMArea";
 import { useServerState } from "../state";
+import { Modding } from "./Modding";
+import { Compendium } from "./compendium/Compendium";
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
@@ -96,8 +98,16 @@ export function Sidebar({ logout }: { logout: () => void }) {
           <Achievements />
         </Collapsible>
 
+        <Collapsible title="Compendium">
+          <Compendium />
+        </Collapsible>
+
         <Collapsible title="Settings">
           <Settings />
+        </Collapsible>
+
+        <Collapsible title="Modding">
+          <Modding />
         </Collapsible>
 
         <Collapsible title="Acknowledgements" defaultCollapsed={true}>
