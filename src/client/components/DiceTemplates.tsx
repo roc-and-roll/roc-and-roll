@@ -74,10 +74,19 @@ export function DiceTemplates({ open }: { open: boolean }) {
     []
   );
 
-  const [, dropRef] = useDrop<RRDiceTemplatePart, void, never>(
+  const [, dropRef] = useDrop<
+    RRDiceTemplatePart | RRDiceTemplatePart[],
+    void,
+    never
+  >(
     () => ({
-      accept: "diceTemplatePart",
+      accept: ["diceTemplatePart", "diceTemplate"],
       drop: (item, monitor) => {
+        if (Array.isArray(item)) {
+          item = item.map((part) => {
+            return { ...part, id: rrid<RRDiceTemplatePart>() };
+          });
+        }
         const id = rrid<RRDiceTemplate>();
         newIds.current.push(id);
         dispatch(
@@ -87,7 +96,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
             name: "",
             notes: "",
             rollType: "attack",
-            parts: [item],
+            parts: Array.isArray(item) ? item : [item],
           })
         );
       },
@@ -312,46 +321,90 @@ function DicePicker() {
       negated: false,
       modified: "none",
     } as const);
+  const [diceHolder, setDiceHolder] = useState<RRDiceTemplatePart[]>([]);
+  const diceParts = [4, 6, 8, 10, 12, 20].map((faces) => makeDicePart(faces));
 
   return (
     <div className="dice-picker">
-      <PickerDiceTemplatePart part={makeDicePart(4)} />
-      <PickerDiceTemplatePart part={makeDicePart(6)} />
-      <PickerDiceTemplatePart part={makeDicePart(8)} />
-      <PickerDiceTemplatePart part={makeDicePart(10)} />
-      <PickerDiceTemplatePart part={makeDicePart(12)} />
-      <PickerDiceTemplatePart part={makeDicePart(20)} />
+      {diceParts.map((part) => {
+        return (
+          <PickerDiceTemplatePart
+            part={part}
+            key={part.id}
+            onClick={() => setDiceHolder([...diceHolder, part])}
+          />
+        );
+      })}
       <hr className="solid"></hr>
       {Array(18)
         .fill(0)
-        .map(
-          (_, i) =>
+        .map((_, i) => {
+          const part = {
+            id: rrid<RRDiceTemplatePart>(),
+            type: "modifier" as const,
+            damage: { type: null, modifiers: [] },
+            number: i - 5,
+          };
+          return (
             i - 5 !== 0 && (
               <PickerDiceTemplatePart
                 key={i}
-                part={{
-                  id: rrid<RRDiceTemplatePart>(),
-                  type: "modifier",
-                  damage: { type: null, modifiers: [] },
-                  number: i - 5,
-                }}
+                part={part}
+                onClick={() => setDiceHolder([...diceHolder, part])}
               />
             )
-        )}
+          );
+        })}
       <hr className="solid"></hr>
       <PickerDiceTemplateNested />
       <hr className="solid"></hr>
-      {linkedModifierNames.map((name) => (
-        <PickerDiceTemplatePart
-          key={name}
-          part={{
-            id: rrid<RRDiceTemplatePart>(),
-            type: "linkedModifier",
-            damage: { type: null, modifiers: [] },
-            name,
-          }}
-        />
-      ))}
+      {linkedModifierNames.map((name) => {
+        const part = {
+          id: rrid<RRDiceTemplatePart>(),
+          type: "linkedModifier" as const,
+          damage: { type: null, modifiers: [] },
+          name,
+        };
+        return (
+          <PickerDiceTemplatePart
+            key={name}
+            part={part}
+            onClick={() => setDiceHolder([...diceHolder, part])}
+          />
+        );
+      })}
+      <hr className="solid"></hr>
+      <DiceHolder diceTemplateParts={diceHolder} />
+      <Button onClick={() => setDiceHolder([])}>EMPTY</Button>
+    </div>
+  );
+}
+
+function DiceHolder({
+  diceTemplateParts,
+}: {
+  diceTemplateParts: RRDiceTemplatePart[];
+}) {
+  const [, dragRef] = useDrag<RRDiceTemplatePart[], void, null>(
+    () => ({
+      type: "diceTemplate",
+      item: diceTemplateParts,
+      options: { dropEffect: "copy" },
+    }),
+    [diceTemplateParts]
+  );
+
+  return (
+    <div className="dice-holder" ref={dragRef}>
+      {diceTemplateParts.map((part) => {
+        return (
+          <PickerDiceTemplatePart // TODO: make them not draggable
+            part={part}
+            key={part.id}
+            onClick={() => {}}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -369,7 +422,13 @@ function PickerDiceTemplateNested() {
   );
 }
 
-function PickerDiceTemplatePart({ part }: { part: RRDiceTemplatePart }) {
+function PickerDiceTemplatePart({
+  part,
+  onClick,
+}: {
+  part: RRDiceTemplatePart;
+  onClick: () => void;
+}) {
   const [, dragRef] = useDrag<RRDiceTemplatePart, void, null>(() => ({
     type: "diceTemplatePart",
     item: part,
@@ -382,6 +441,7 @@ function PickerDiceTemplatePart({ part }: { part: RRDiceTemplatePart }) {
       onRoll={() => {}}
       selectedTemplateIds={[]}
       ref={dragRef}
+      onClick={onClick}
       selectedCharacter={null}
       newIds={newIds}
       part={part}
@@ -453,37 +513,53 @@ function DiceTemplateInner({
 
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  const [, dropRef] = useDrop<RRDiceTemplatePart, void, never>(
+  const [, dropRef] = useDrop<
+    RRDiceTemplatePart | RRDiceTemplatePart[],
+    void,
+    never
+  >(
     () => ({
-      accept: ["diceTemplatePart", "diceTemplateNested"],
+      accept: ["diceTemplatePart", "diceTemplateNested", "diceTemplate"],
       drop: (item, monitor) => {
-        if (monitor.getItemType() === "diceTemplateNested") {
-          item = {
-            id: rrid<RRDiceTemplatePart>(),
-            type: "template",
-            templateId: dispatch(
-              diceTemplateAdd({
-                playerId: myself.id,
-                name: "",
-                notes: "",
-                parts: [],
-                rollType: "attack",
-                id: rrid<RRDiceTemplate>(),
-              })
-            ).payload.id,
-          };
-        } else {
-          item = {
-            ...item,
-            id: rrid<RRDiceTemplatePart>(),
-          };
+        switch (monitor.getItemType()) {
+          case "diceTemplateNested":
+            item = {
+              id: rrid<RRDiceTemplatePart>(),
+              type: "template",
+              templateId: dispatch(
+                diceTemplateAdd({
+                  playerId: myself.id,
+                  name: "",
+                  notes: "",
+                  parts: [],
+                  rollType: "attack",
+                  id: rrid<RRDiceTemplate>(),
+                })
+              ).payload.id,
+            };
+            break;
+          case "diceTemplatePart":
+            item = {
+              ...item,
+              id: rrid<RRDiceTemplatePart>(),
+            };
+            break;
+          case "diceTemplate":
+            item = (item as RRDiceTemplatePart[]).map((part) => {
+              return { ...part, id: rrid<RRDiceTemplatePart>() };
+            });
+            break;
+          default:
+            throw new Error("Unsupported Drop Type!");
         }
 
         dispatch(
           diceTemplateUpdate({
             id: template.id,
             changes: {
-              parts: [...template.parts, item],
+              parts: Array.isArray(item)
+                ? [...template.parts, ...item] // TODO: Create new nested Template?
+                : [...template.parts, item],
             },
           })
         );
@@ -843,9 +919,10 @@ const DiceTemplatePart = React.forwardRef<
     ) => void;
     selectedTemplateIds: SelectionPair[];
     selectedCharacter: RRCharacter | null;
+    onClick?: () => void;
   }
 >(function DiceTemplatePart(
-  { part, newIds, onRoll, selectedTemplateIds, selectedCharacter },
+  { part, newIds, onRoll, selectedTemplateIds, selectedCharacter, onClick },
   ref
 ) {
   let content: JSX.Element;
@@ -905,5 +982,9 @@ const DiceTemplatePart = React.forwardRef<
       assertNever(part);
   }
 
-  return <div ref={ref}>{content}</div>;
+  return (
+    <div ref={ref} onClick={onClick}>
+      {content}
+    </div>
+  );
 });
