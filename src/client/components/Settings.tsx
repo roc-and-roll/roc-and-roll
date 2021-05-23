@@ -1,15 +1,11 @@
 import React from "react";
 import { globalSettingsUpdate } from "../../shared/actions";
-import { clamp } from "../../shared/util";
 import { useMyself } from "../myself";
 import { RRSettings, useRRSettings } from "../settings";
 import { useServerDispatch, useServerState } from "../state";
 import { GMArea } from "./GMArea";
 import { Select } from "./ui/Select";
-
-// from https://www.dr-lex.be/info-stuff/volumecontrols.html#table1
-const LOUDNESS_A = 3.1623e-3;
-const LOUDNESS_B = 5.757;
+import { VolumeSlider } from "./VolumeSlider";
 
 export function Settings() {
   const [settings, setSettings] = useRRSettings();
@@ -19,37 +15,16 @@ export function Settings() {
   );
   const dispatch = useServerDispatch();
 
-  const linearVolume =
-    settings.volume === 0
-      ? 0
-      : Math.log(settings.volume / LOUDNESS_A) / LOUDNESS_B;
-
   return (
     <>
       <p>
         Volume{" "}
-        <input
-          type="range"
-          value={linearVolume}
-          min={0}
-          step={0.01}
-          max={1}
-          onChange={(e) => {
-            const logarithmicVolume =
-              e.target.valueAsNumber === 0
-                ? 0
-                : clamp(
-                    0,
-                    LOUDNESS_A * Math.exp(LOUDNESS_B * e.target.valueAsNumber),
-                    1
-                  );
-            setSettings((old) => ({
-              ...old,
-              volume: logarithmicVolume,
-            }));
+        <VolumeSlider
+          volume={settings.volume}
+          onChange={(volume) => {
+            setSettings((old) => ({ ...old, volume: volume }));
           }}
         />
-        {Math.round(linearVolume * 100)}%
       </p>
       <label>
         Mute{" "}

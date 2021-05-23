@@ -79,6 +79,7 @@ type SoundState =
 
 export function useRRComplexSound(
   url: string,
+  soundVolume: number,
   // if true, the sound does not need to be downloaded in its entirety before it
   // starts playing
   stream: boolean,
@@ -89,9 +90,10 @@ export function useRRComplexSound(
 
   const howlRef = useRef<Howl | null>(null);
 
-  const [{ volume: globalVolume, mute: globalMute }] = useRRSettings();
-  const globalVolumeRef = useLatest(globalVolume);
-  const globalMuteRef = useLatest(globalMute);
+  const [{ volume: globalUserVolume, mute: globalUserMute }] = useRRSettings();
+  const volume = globalUserVolume * soundVolume;
+  const volumeRef = useLatest(volume);
+  const globalUserMuteRef = useLatest(globalUserMute);
 
   useEffect(() => {
     return () => {
@@ -123,8 +125,8 @@ export function useRRComplexSound(
           // effect below, because howlRef.current is null when the effect is
           // executed before calling play for the first time.
           loop: loopRef.current,
-          mute: globalMuteRef.current,
-          volume: globalVolumeRef.current,
+          mute: globalUserMuteRef.current,
+          volume: volumeRef.current,
           onplay: () => setState("playing"),
           onpause: () => setState("paused"),
           onstop: () => setState("stopped"),
@@ -147,14 +149,14 @@ export function useRRComplexSound(
       }
       howlRef.current.play();
     },
-    [globalMuteRef, globalVolumeRef, loopRef, stream, urlRef]
+    [globalUserMuteRef, volumeRef, loopRef, stream, urlRef]
   );
 
   useEffect(() => {
-    howlRef.current?.volume(globalVolume);
-    howlRef.current?.mute(globalMute);
+    howlRef.current?.volume(volume);
+    howlRef.current?.mute(globalUserMute);
     howlRef.current?.loop(loop);
-  }, [globalMute, globalVolume, loop]);
+  }, [globalUserMute, volume, loop]);
 
   const pause = useCallback(() => {
     howlRef.current?.pause();
@@ -190,7 +192,12 @@ export function SongPlayer() {
 }
 
 export function ActiveSongPlayer({ song }: { song: RRActiveSong }) {
-  const [play] = useRRComplexSound(assetUrl(song.song), true, true);
+  const [play] = useRRComplexSound(
+    assetUrl(song.song),
+    song.volume,
+    true,
+    true
+  );
 
   useEffect(() => {
     play(song.startedAt);
