@@ -22,6 +22,7 @@ import { MapEditState } from "./MapContainer";
 import { Matrix } from "transformation-matrix";
 import Shape from "@doodle3d/clipper-js";
 import tinycolor from "tinycolor2";
+import { useServerMessages } from "../../serverMessages";
 
 export interface MapMouseHandler {
   onMouseDown: (p: RRPoint) => void;
@@ -91,6 +92,8 @@ export function useMapToolHandler(
         .toRgbString(),
     [map.backgroundColor]
   );
+
+  const { send } = useServerMessages();
 
   if (editState.tool === "draw") {
     const create = (p: RRPoint): RRMapDrawingBase => ({
@@ -356,6 +359,24 @@ export function useMapToolHandler(
       onMouseWheel: (delta: number) => {
         setRevealToolSize((s) => s + delta);
       },
+    };
+  } else if (editState.tool === "react") {
+    toolHandlerRef.current = {
+      onMouseDown: (p: RRPoint) => {
+        send({
+          type: "reaction",
+          point: p,
+          code: editState.reactionCode,
+        });
+      },
+      onMouseMove: (p: RRPoint) => {
+        send({
+          type: "reaction",
+          point: p,
+          code: editState.reactionCode,
+        });
+      },
+      onMouseUp: (p: RRPoint) => {},
     };
   } else {
     toolHandlerRef.current = {

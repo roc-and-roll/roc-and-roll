@@ -72,6 +72,7 @@ export type MapEditState =
   | { tool: "move"; updateColor: RRColor }
   | { tool: "measure"; snap: MapSnap }
   | { tool: "reveal"; revealType: "show" | "hide" }
+  | { tool: "react"; reactionCode: string }
   | {
       tool: "draw";
       type: "line" | "polygon" | "rectangle" | "ellipse" | "image";
@@ -445,6 +446,7 @@ export default function MapContainer() {
         return "select";
       case "draw":
       case "reveal":
+      case "react":
         return "tool";
       case "measure":
         return "measure";

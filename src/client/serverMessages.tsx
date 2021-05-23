@@ -1,12 +1,31 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useContext, useEffect, useRef } from "react";
+import { RRPoint } from "../shared/state";
 
-type RRMessageType = "reaction";
+// TODO: reuse other as soon as you need a new message type, this is just to
+//       make the linter happy as the type is otherwise a constant
+type RRMessageType = "reaction" | "other";
 
-interface RRMessage {
+export type RRMessage = RRMessageReaction | RRMessageOther;
+
+interface RRMessageBase {
   type: RRMessageType;
 }
 
+export interface RRMessageReaction extends RRMessageBase {
+  type: "reaction";
+  code: string;
+  point: RRPoint;
+}
+
+interface RRMessageOther extends RRMessageBase {
+  type: "other";
+}
+
 type MessageSubscriber = (message: RRMessage) => void;
+
+export const useServerMessages = () => {
+  return useContext(ServerMessagesContext);
+};
 
 const ServerMessagesContext = React.createContext<{
   subscribe: (subscriber: MessageSubscriber) => void;
@@ -36,16 +55,19 @@ export function ServerMessagesProvider({
   }, []);
 
   const send = (message: RRMessage) => {
+    subscribers.current.forEach((subscriber) => subscriber(message));
     socket.emit("MESSAGE", message);
   };
 
   useEffect(() => {
-    const onMessage = () => {};
+    const onMessage = (message: RRMessage) => {
+      subscribers.current.forEach((subscriber) => subscriber(message));
+    };
     socket.on("MESSAGE", onMessage);
     return () => {
       socket.off("MESSAGE", onMessage);
     };
-  });
+  }, [socket]);
 
   return (
     <ServerMessagesContext.Provider
