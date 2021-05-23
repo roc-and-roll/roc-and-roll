@@ -26,6 +26,8 @@ import { Button } from "./ui/Button";
 import { ColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
 
+const reactions = ["🥰", "🙄", "🥶", "🥳", "😱", "🦖"];
+
 export const MapToolbar = React.memo<{
   map: RRMap;
   myself: RRPlayer;
@@ -44,6 +46,11 @@ export const MapToolbar = React.memo<{
   ] = useLocalState<RRObjectVisibility>(
     "map/toolbar/defaultVisibility",
     "everyone"
+  );
+
+  const [reactionCode, setReactionCode] = useLocalState<string>(
+    "map/toolbar/reactionCode",
+    reactions[0]!
   );
 
   const [revealType, setRevealType] = useState<"show" | "hide">("show");
@@ -73,6 +80,9 @@ export const MapToolbar = React.memo<{
           break;
         case "f":
           setTool("reveal");
+          break;
+        case "e":
+          setTool("react");
           break;
       }
     };
@@ -106,11 +116,13 @@ export const MapToolbar = React.memo<{
                 snap,
                 visibility: defaultVisibility,
               };
+        case "react":
+          return { tool, reactionCode };
         default:
           assertNever(tool);
       }
     });
-  }, [tool, drawColor, drawType, snap, setEditState, revealType, defaultVisibility]);
+  }, [tool, drawColor, drawType, snap, setEditState, revealType, defaultVisibility, reactionCode]);
 
   const updateLock = useRecoilCallback(({ snapshot }) => (locked: boolean) => {
     dispatch(
@@ -209,6 +221,12 @@ export const MapToolbar = React.memo<{
           reveal
         </Button>
       )}
+      <Button
+        onClick={() => setTool("react")}
+        className={tool === "react" ? "active" : undefined}
+      >
+        react
+      </Button>
       {tool === "move" && selectedMapObjectIds.length > 0 && (
         <>
           <ColorInput value={drawColor} onChange={setDrawColor} />
@@ -237,6 +255,16 @@ export const MapToolbar = React.memo<{
           ))}
         </>
       )}
+      {tool === "react" &&
+        reactions.map((code) => (
+          <Button
+            key={code}
+            className={reactionCode === code ? "active" : undefined}
+            onClick={() => setReactionCode(code)}
+          >
+            {code}
+          </Button>
+        ))}
       {tool === "reveal" && (
         <>
           <Button
