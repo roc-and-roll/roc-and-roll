@@ -342,7 +342,7 @@ export const damageTypes = [
 export const colorForDamageType = (type: RRDamageType["type"]) => {
   switch (type) {
     case null:
-      return "#000";
+      return "#ffffff";
     case "piercing":
       return "#cccccc";
     case "slashing":

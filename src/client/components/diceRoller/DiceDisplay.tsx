@@ -1,4 +1,5 @@
 import React, { Suspense, useEffect, useRef } from "react";
+import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
 import {
   colorForDamageType,
@@ -193,15 +194,16 @@ export default function DiceDisplay({
           width: SLOT_SIZE * COLUMNS,
           height: SLOT_SIZE * numRows,
         }}
-        orthographic
         camera={{
+          fov: 10,
+          aspect: (SLOT_SIZE * COLUMNS) / (SLOT_SIZE * numRows),
           near: 0.1,
-          far: 10,
-          zoom: 50,
+          position: new THREE.Vector3(0, 2, 6 * numRows),
+          far: 50,
         }}
       >
-        <ambientLight />
-        <pointLight position={[10, 10, 10]} intensity={2} />
+        <ambientLight intensity={0.2} />
+        <pointLight position={[4, 4, 10]} intensity={1} />
         <Suspense fallback={null}>
           <DiceContainer
             onAnimationFinished={onAnimationFinished}

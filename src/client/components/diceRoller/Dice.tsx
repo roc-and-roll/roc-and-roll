@@ -1,7 +1,7 @@
 import React, { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-import diceFaces from "./dice/dice-faces.png";
+import diceFaces from "./dice/dice-faces-plain.png";
 import diceFacesInverted from "./dice/dice-faces-inverted.png";
 import d4Glb from "./dice/d4.glb";
 import d6Glb from "./dice/d6.glb";
@@ -77,12 +77,15 @@ export const DiceGeometry: React.FC<
   const finalColor = used && animationFinished.current ? color : "gray";
 
   return (
-    <mesh {...meshProps} ref={mesh} scale={0.7} quaternion={finalRotation}>
-      <meshStandardMaterial
+    <mesh {...meshProps} ref={mesh} scale={0.65} quaternion={finalRotation}>
+      <meshPhysicalMaterial
         map={image}
+        roughness={0.4}
         emissive={new THREE.Color(contrastColor(finalColor))}
         emissiveMap={invertedImage}
         color={finalColor}
+        clearcoat={0.3}
+        clearcoatRoughness={0.8}
       />
     </mesh>
   );
@@ -115,18 +118,10 @@ export function Dice({
   ]);
   const descriptor = descriptorMap(dice)[faces.toString()];
 
-  const r = 0.1;
-  const addedRotation = useMemo(
-    () => new THREE.Euler(Math.random() * r * 2 - r, 0, 0),
-    []
-  );
-
   if (descriptor) {
     return (
       <DiceGeometry
-        finalRotation={new THREE.Quaternion()
-          .setFromEuler(addedRotation)
-          .multiply(descriptor.rotations[result - 1]!)}
+        finalRotation={descriptor.rotations[result - 1]!}
         used={used}
         onAnimationFinished={onAnimationFinished}
         numFaces={faces}
