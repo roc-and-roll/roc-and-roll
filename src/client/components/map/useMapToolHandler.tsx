@@ -22,7 +22,7 @@ import { MapEditState } from "./MapContainer";
 import { Matrix } from "transformation-matrix";
 import Shape from "@doodle3d/clipper-js";
 import tinycolor from "tinycolor2";
-import { useServerMessages } from "../../serverMessages";
+import { RRMessage, useServerMessages } from "../../serverMessages";
 
 export interface MapMouseHandler {
   onMouseDown: (p: RRPoint) => void;
@@ -367,6 +367,7 @@ export function useMapToolHandler(
           type: "reaction",
           point: p,
           code: editState.reactionCode,
+          id: rrid<RRMessage>(),
         });
       },
       onMouseMove: (p: RRPoint) => {
@@ -374,6 +375,7 @@ export function useMapToolHandler(
           type: "reaction",
           point: p,
           code: editState.reactionCode,
+          id: rrid<RRMessage>(),
         });
       },
       onMouseUp: (p: RRPoint) => {},

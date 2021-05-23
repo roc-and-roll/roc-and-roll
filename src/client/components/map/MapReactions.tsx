@@ -16,7 +16,7 @@ export function MapReactions() {
   const [reactions, setReactions] = useState<RRMessageReaction[]>([]);
 
   const handleExpired = useCallback((message: RRMessageReaction) => {
-    setReactions((r) => r.filter((r) => r !== message));
+    setReactions((r) => r.filter((r) => r.id !== message.id));
   }, []);
 
   useEffect(() => {
@@ -30,12 +30,12 @@ export function MapReactions() {
     return () => {
       unsubscribe(onMessage);
     };
-  });
+  }, [subscribe, unsubscribe]);
 
   return (
     <>
-      {reactions.map((msg, i) => (
-        <MapReaction key={i} reaction={msg} onExpired={handleExpired} />
+      {reactions.map((msg) => (
+        <MapReaction key={msg.id} reaction={msg} onExpired={handleExpired} />
       ))}
     </>
   );

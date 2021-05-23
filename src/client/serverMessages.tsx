@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useEffect, useRef } from "react";
+import { Opaque } from "type-fest";
 import { RRPoint } from "../shared/state";
 
 // TODO: reuse other as soon as you need a new message type, this is just to
@@ -7,8 +8,11 @@ type RRMessageType = "reaction" | "other";
 
 export type RRMessage = RRMessageReaction | RRMessageOther;
 
+type RRMessageID = Opaque<string, "message">;
+
 interface RRMessageBase {
   type: RRMessageType;
+  id: RRMessageID;
 }
 
 export interface RRMessageReaction extends RRMessageBase {
