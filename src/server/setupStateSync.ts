@@ -179,6 +179,9 @@ export const setupStateSync = (
         }
       }
     );
+    socket.on("MESSAGE", (message) => {
+      socket.broadcast.emit("MESSAGE", message);
+    });
   };
 
   // Setup new clients
