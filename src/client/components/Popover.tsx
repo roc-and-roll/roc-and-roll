@@ -10,6 +10,7 @@ export function Popover({
   ...props
 }: Pick<
   TippyProps,
+  | "className"
   | "content"
   | "visible"
   | "onClickOutside"

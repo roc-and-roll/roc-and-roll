@@ -25,8 +25,7 @@ import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { ColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
-
-const reactions = ["🥰", "🙄", "🥶", "🥳", "😱", "🦖"];
+import Picker from "emoji-picker-react";
 
 export const MapToolbar = React.memo<{
   map: RRMap;
@@ -48,10 +47,15 @@ export const MapToolbar = React.memo<{
     "everyone"
   );
 
+  const [favoritedReactions, setFavoritedReactions] = useLocalState<string[]>(
+    "map/toolbar/favoritedReactions",
+    []
+  );
   const [reactionCode, setReactionCode] = useLocalState<string>(
     "map/toolbar/reactionCode",
-    reactions[0]!
+    "🥰"
   );
+  const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
 
   const [revealType, setRevealType] = useState<"show" | "hide">("show");
 
@@ -255,16 +259,51 @@ export const MapToolbar = React.memo<{
           ))}
         </>
       )}
-      {tool === "react" &&
-        reactions.map((code) => (
-          <Button
-            key={code}
-            className={reactionCode === code ? "active" : undefined}
-            onClick={() => setReactionCode(code)}
+      {tool === "react" && (
+        <>
+          <Popover
+            className="popover-no-padding"
+            content={
+              <Picker
+                native={true}
+                onEmojiClick={(_, { emoji }) => {
+                  setEmojiPickerVisible(false);
+                  setReactionCode(emoji);
+                }}
+              />
+            }
+            visible={emojiPickerVisible}
+            onClickOutside={() => setEmojiPickerVisible(false)}
+            interactive
+            placement="bottom"
           >
-            {code}
+            <Button onClick={() => setEmojiPickerVisible((t) => !t)}>
+              select
+            </Button>
+          </Popover>
+          <Button
+            onClick={() =>
+              setFavoritedReactions((l) =>
+                l.includes(reactionCode)
+                  ? l.filter((e) => e !== reactionCode)
+                  : [reactionCode, ...l]
+              )
+            }
+          >
+            {favoritedReactions.includes(reactionCode) ? "unfav" : "fav"}
+            {reactionCode}
           </Button>
-        ))}
+          {favoritedReactions.map((code) => (
+            <Button
+              key={code}
+              className={reactionCode === code ? "active" : undefined}
+              onClick={() => setReactionCode(code)}
+            >
+              {code}
+            </Button>
+          ))}
+        </>
+      )}
       {tool === "reveal" && (
         <>
           <Button

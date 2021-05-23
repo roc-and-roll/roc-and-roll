@@ -29,6 +29,7 @@
     "clsx": "^1.1.1",
     "commander": "^7.2.0",
     "core-js": "^3.12.1",
+    "emoji-picker-react": "^3.4.5",
     "express": "^4.17.1",
     "howler": "^2.2.1",
     "immer": "^9.0.2",
