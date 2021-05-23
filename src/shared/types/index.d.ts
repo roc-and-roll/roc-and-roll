@@ -51,3 +51,7 @@ declare namespace NodeJS {
     readonly HEROKU?: string;
   }
 }
+
+interface Window {
+  MODDING?: unknown;
+}

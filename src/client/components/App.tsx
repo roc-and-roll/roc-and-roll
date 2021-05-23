@@ -7,6 +7,7 @@ import { JoinGame } from "./JoinGame";
 import { BottomFloats } from "./BottomFloats";
 import { Notifications, NotificationTopAreaPortal } from "./Notifications";
 import { SongPlayer } from "../sound";
+import QuickReferenceWrapper from "./quickReference/QuickReferenceWrapper";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 // Load the map lazily to enable code splitting -> the sidebar will load faster.
@@ -50,6 +51,7 @@ const Game = React.memo<{
           <ErrorBoundary>
             <BottomFloats />
           </ErrorBoundary>
+          <QuickReferenceWrapper />
         </main>
       </Suspense>
       <Notifications topAreaPortal={notificationTopAreaPortal} />

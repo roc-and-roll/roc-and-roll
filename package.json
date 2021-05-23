@@ -54,6 +54,7 @@
     "three": "^0.127.0",
     "tinycolor2": "^1.4.2",
     "transformation-matrix": "^2.8.0",
+    "typanion": "^3.3.1",
     "utf-8-validate": "^5.0.5"
   },
   "devDependencies": {
@@ -93,6 +94,7 @@
     "babel-loader": "^8.2.2",
     "clean-webpack-plugin": "^3.0.0",
     "concurrently": "^6.1.0",
+    "conditional-type-checks": "^1.0.5",
     "copy-webpack-plugin": "^8.1.1",
     "css-loader": "^5.2.4",
     "eslint": "^7.26.0",
@@ -169,7 +171,8 @@
       "node"
     ],
     "moduleNameMapper": {
-      "src/(.*)": "<rootDir>/src/$1"
+      "src/(.*)": "<rootDir>/src/$1",
+      "^.+\\.(css|less|scss)$": "babel-jest"
     },
     "roots": [
       "<rootDir>/src"

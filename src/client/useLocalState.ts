@@ -3,13 +3,34 @@
 // https://github.com/streamich/react-use/pull/1438
 // Licensed under the Unlicense.
 import { useState, useCallback, Dispatch, SetStateAction } from "react";
+import { JsonValue } from "type-fest";
 import { isBrowser, noop } from "./util";
 
 const deserializer = JSON.parse;
 
 const serializer = JSON.stringify;
 
-export default function useLocalState<T>(
+export default function useLocalState(
+  key: string,
+  initialValue: number
+): [number, Dispatch<SetStateAction<number>>, () => void];
+
+export default function useLocalState(
+  key: string,
+  initialValue: boolean
+): [boolean, Dispatch<SetStateAction<boolean>>, () => void];
+
+export default function useLocalState(
+  key: string,
+  initialValue: string
+): [string, Dispatch<SetStateAction<string>>, () => void];
+
+export default function useLocalState<T extends JsonValue>(
+  key: string,
+  initialValue: T
+): [T, Dispatch<SetStateAction<T>>, () => void];
+
+export default function useLocalState<T extends JsonValue>(
   key: string,
   initialValue: T
 ): [T, Dispatch<SetStateAction<T>>, () => void] {

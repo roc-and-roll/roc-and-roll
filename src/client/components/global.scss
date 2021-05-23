@@ -888,3 +888,15 @@ button.color-picker-color {
   display: flex;
   flex-wrap: wrap;
 }
+
+.modding {
+  textarea {
+    width: 100%;
+    line-height: 1.2;
+    font-size: 0.9rem;
+  }
+}
+
+.modding-warning {
+  color: red;
+}

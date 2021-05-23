@@ -1,0 +1,55 @@
+.quick-reference {
+  position: fixed;
+  z-index: 999;
+
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(55, 55, 55, 0.5);
+}
+
+.quick-reference-modal {
+  margin: 20vh auto;
+  width: 60vw;
+  max-height: 70vh;
+  overflow: auto;
+
+  padding: 1rem;
+
+  background: rgba(55, 55, 55, 0.95);
+  color: white;
+
+  h1 {
+    text-align: center;
+    padding-bottom: 0.5rem;
+  }
+
+  input[type="search"] {
+    width: 100%;
+    height: 4rem;
+    font-size: 2rem;
+    padding: 0 1rem;
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: max-content auto;
+    column-gap: .5rem;
+  }
+
+  dt {
+    grid-column-start: 1;
+  }
+
+  dd {
+    grid-column-start: 2;
+  }
+
+  dt {
+    font-weight: bold;
+    &::after {
+      content: ":";
+    }
+  }
+}

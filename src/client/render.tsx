@@ -12,6 +12,8 @@ import { SettingsProvider } from "./settings";
 import { RecoilRoot } from "recoil";
 import { USE_CONCURRENT_MODE } from "../shared/constants";
 import { MyselfProvider } from "./myself";
+import { CompendiumProvider } from "./components/compendium/Compendium";
+import { ModApi } from "./components/Modding";
 
 export function render(socket: SocketIOClient.Socket) {
   // Create a new div element, add it to the DOM, and render our app into it.
@@ -35,9 +37,12 @@ function Root({ socket }: { socket: SocketIOClient.Socket }) {
         <SettingsProvider>
           <ServerStateProvider socket={socket}>
             <MyselfProvider>
-              <DndProvider backend={HTML5Backend}>
-                <App />
-              </DndProvider>
+              <CompendiumProvider>
+                <DndProvider backend={HTML5Backend}>
+                  <ModApi />
+                  <App />
+                </DndProvider>
+              </CompendiumProvider>
             </MyselfProvider>
           </ServerStateProvider>
         </SettingsProvider>
