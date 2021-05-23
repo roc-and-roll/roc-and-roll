@@ -98,11 +98,12 @@ export function DiceTemplates({ open }: { open: boolean }) {
 
   function evaluateDiceTemplatePart(
     part: RRDiceTemplatePart,
-    modified: RRMultipleRoll
+    modified: RRMultipleRoll,
+    crit: boolean = false
   ): Array<RRDice | RRModifier> {
     switch (part.type) {
-      case "dice":
-        return [
+      case "dice": {
+        const res = [
           roll({
             ...part,
             // click on none, is advantage --> none
@@ -111,6 +112,16 @@ export function DiceTemplates({ open }: { open: boolean }) {
             modified: part.faces !== 20 ? "none" : modified,
           }),
         ];
+        if (crit) {
+          res.push(
+            roll({
+              ...part,
+              modified: part.faces !== 20 ? "none" : modified,
+            })
+          );
+        }
+        return res;
+      }
       case "linkedModifier":
         return [
           {
@@ -132,7 +143,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
           templates
             .find((t) => t.id === part.templateId)
             ?.parts.flatMap((part) =>
-              evaluateDiceTemplatePart(part, modified)
+              evaluateDiceTemplatePart(part, modified, crit)
             ) ?? []
         );
       }
@@ -141,11 +152,13 @@ export function DiceTemplates({ open }: { open: boolean }) {
     }
   }
 
-  const doRoll = () => {
+  const doRoll = (crit: boolean = false) => {
     const parts = selectedTemplates.flatMap(({ id, modified }) =>
       allTemplates
         .find((t) => t.id === id)!
-        .parts.flatMap((p) => evaluateDiceTemplatePart(p, modified))
+        .parts.flatMap((p) => {
+          return evaluateDiceTemplatePart(p, modified, crit);
+        })
     );
     if (parts.length < 1) return;
 
@@ -230,6 +243,14 @@ export function DiceTemplates({ open }: { open: boolean }) {
               }}
             >
               Roll the Dice!
+            </button>
+            <button
+              onClick={() => {
+                doRoll(true);
+                setSelectedTemplates([]);
+              }}
+            >
+              Roll a Crit!
             </button>
             <em>Or right-click the pane to roll</em>
           </div>,
