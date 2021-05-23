@@ -223,7 +223,6 @@ export function DiceTemplates({ open }: { open: boolean }) {
   return (
     <div
       className={clsx("dice-templates", { opened: open })}
-      ref={dropRef}
       onContextMenu={(e) => {
         e.preventDefault();
         doRoll();
@@ -257,7 +256,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
           document.body
         )}
       {pickerShown && <DicePicker />}
-      <div className="dice-templates-container">
+      <div className="dice-templates-container" ref={dropRef}>
         <button onClick={() => setPickerShown((b) => !b)}>
           Show
           <br />
