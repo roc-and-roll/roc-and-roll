@@ -10,6 +10,7 @@ import {
 import {
   byId,
   defaultMap,
+  EMPTY_ENTITY_COLLECTION,
   initialSyncedState,
   RRMap,
   RRMapObject,
@@ -20,7 +21,7 @@ import {
 } from "../shared/state";
 import ReactDOM from "react-dom";
 import FakeTimers from "@sinonjs/fake-timers";
-import { EMPTY_ENTITY_COLLECTION, rrid } from "../shared/util";
+import { rrid } from "../shared/util";
 
 type Subscriber = (payload: any) => void;
 type OnEmitSubscriber = (name: string, payload: any) => void;
@@ -414,10 +415,7 @@ describe("applyStatePatch", () => {
       gridEnabled: true,
       gridColor: "#808080",
       revealedAreas: null,
-      objects: {
-        entities: {},
-        ids: [],
-      },
+      objects: EMPTY_ENTITY_COLLECTION,
     };
     let nextState = applyStatePatch(prevState, {
       deletedKeys: [],

@@ -219,7 +219,7 @@ export const isSyncedState = t.isObject({
           (sharedValidators) =>
             t.isOneOf([
               t.isObject({
-                ...sharedValidators,
+                ...withDo(sharedValidators, ({ visibility, ...v }) => v),
                 type: t.isLiteral("token"),
                 characterId: isRRID<RRCharacterID>(),
               }),
