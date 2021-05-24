@@ -153,7 +153,7 @@ function ObjectEditOptions({
   object,
   mapId,
 }: {
-  object: RRMapObject;
+  object: Exclude<RRMapObject, RRToken>;
   mapId: RRMapID;
 }) {
   const extraPopupContent = () => {
@@ -173,7 +173,10 @@ function ObjectEditOptions({
           objects &&
           withDo(
             byId(objects, object.id),
-            (object) => object && object.visibility === "gmOnly"
+            (object) =>
+              object &&
+              object.type !== "token" &&
+              object.visibility === "gmOnly"
           )
       ),
     (hidden) => {

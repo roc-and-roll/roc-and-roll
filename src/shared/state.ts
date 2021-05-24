@@ -143,7 +143,7 @@ type RRMapObjectBase = {
   visibility: RRObjectVisibility;
 };
 
-export interface RRToken extends RRMapObjectBase {
+export interface RRToken extends Omit<RRMapObjectBase, "visibility"> {
   type: "token";
   characterId: RRCharacterID;
 }

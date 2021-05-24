@@ -13,8 +13,10 @@ export const canControlMapObject = (object: RRMapObject, player: RRPlayer) => {
   return object.playerId === player.id || player.isGM;
 };
 
-export const canViewTokenOnMap = (token: RRCharacter, player: RRPlayer) => {
-  return token.visibility === "everyone" || canControlToken(token, player);
+export const canViewTokenOnMap = (character: RRCharacter, player: RRPlayer) => {
+  return (
+    character.visibility === "everyone" || canControlToken(character, player)
+  );
 };
 
 export const canViewObjectOnMap = (
@@ -22,5 +24,10 @@ export const canViewObjectOnMap = (
   id: RRPlayerID,
   isGM: boolean
 ) => {
-  return object.visibility === "everyone" || object.playerId === id || isGM;
+  return (
+    object.type === "token" ||
+    object.visibility === "everyone" ||
+    object.playerId === id ||
+    isGM
+  );
 };

@@ -228,7 +228,6 @@ export default function MapContainer() {
             position: snapPointToGrid(point),
             playerId: myself.id,
             characterId,
-            visibility: "everyone",
           })
         );
       },
