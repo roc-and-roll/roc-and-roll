@@ -7,7 +7,6 @@
 		"firefox-devtools.vscode-firefox-debug",
 		"ryanluker.vscode-coverage-gutters",
 		"dbaeumer.vscode-eslint",
-		"orta.vscode-jest",
 	],
 	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
 	"unwantedRecommendations": [

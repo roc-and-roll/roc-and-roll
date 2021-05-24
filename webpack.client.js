@@ -104,6 +104,8 @@ module.exports = (webpackEnv) => {
         // during build time:
         // $ heroku config:set HEROKU=1
         '__VERSION__': JSON.stringify(process.env.HEROKU ? "master" : gitRevisionPlugin.version()),
+        // Used for GitHub Code Spaces
+        '__CODESPACE_NAME__': JSON.stringify(process.env.CODESPACE_NAME ?? null),
       }),
       isEnvDevelopment && new webpack.HotModuleReplacementPlugin(),
       isEnvDevelopment && new ReactRefreshWebpackPlugin(),
@@ -173,6 +175,7 @@ module.exports = (webpackEnv) => {
       hot: true,
       host: '0.0.0.0',
       port: 3001,
+      sockPort: process.env.CODESPACE_NAME ? 443 : 3001,
       historyApiFallback: {
         // Paths with dots should still use the history fallback.
         // See https://github.com/facebook/create-react-app/issues/387.

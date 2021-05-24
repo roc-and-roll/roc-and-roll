@@ -216,7 +216,11 @@ export async function setupWebServer(
       if (req.url.startsWith("/api")) {
         return next();
       }
-      res.redirect(`${req.protocol}://${req.hostname}:3001${req.originalUrl}`);
+      res.redirect(
+        __CODESPACE_NAME__
+          ? `${req.protocol}://${__CODESPACE_NAME__}-3001.githubpreview.dev${req.originalUrl}`
+          : `${req.protocol}://${req.hostname}:3001${req.originalUrl}`
+      );
     });
   } else {
     // 1. In production, serve the client code and static assets.
