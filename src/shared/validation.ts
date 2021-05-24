@@ -90,7 +90,7 @@ const isReadonlyArray = <S extends t.StrictValidator<unknown, unknown>>(
 ): t.StrictValidator<unknown, ReadonlyArray<t.InferType<S>>> =>
   t.isArray(schema);
 
-const isDamageType = t.isObject({
+export const isDamageType = t.isObject({
   type: t.isEnum(damageTypes),
   modifiers: isReadonlyArray(t.isEnum(damageTypeModifiers)),
 });

@@ -1,7 +1,9 @@
+import * as t from "typanion";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { Dispatch } from "redux";
 import type { IterableElement, Opaque } from "type-fest";
 import { assertNever, rrid } from "./util";
+import { isDamageType, isSyncedState } from "./validation";
 
 export type RRID = Opaque<string>;
 
@@ -376,10 +378,7 @@ export const colorForDamageType = (type: RRDamageType["type"]) => {
 
 export const damageTypeModifiers = ["magical", "silver", "adamantine"] as const;
 
-export type RRDamageType = {
-  type: IterableElement<typeof damageTypes>;
-  modifiers: ReadonlyArray<IterableElement<typeof damageTypeModifiers>>;
-};
+export type RRDamageType = t.InferType<typeof isDamageType>;
 
 export const multipleRollValues = [
   "advantage",
@@ -389,60 +388,32 @@ export const multipleRollValues = [
 
 export type RRMultipleRoll = IterableElement<typeof multipleRollValues>;
 
-export interface RRRollPart {
-  damageType: RRDamageType;
-}
+export type RRDice = Extract<
+  RRLogEntryDiceRoll["payload"]["dice"],
+  { type: "dice" }
+>;
 
-export interface RRDice extends RRRollPart {
-  type: "dice";
-  faces: number; // 4, 6, 8, 10, 12, 20, 100
-  modified: RRMultipleRoll;
-  diceResults: number[];
-  negated: boolean;
+export type RRModifier = Extract<
+  RRLogEntryDiceRoll["payload"]["dice"],
+  { type: "modifier" }
+>;
 
-  // TODO
-  //         used: number;
-  //         style: string;
-  //         effect: string;
-}
+export type RRLogEntryDiceRoll = Extract<
+  SyncedState["logEntries"]["__trait"],
+  { type: "diceRoll" }
+>;
 
-export interface RRModifier extends RRRollPart {
-  type: "modifier";
-  modifier: number;
-}
+export type RRLogEntry = SyncedState["logEntries"]["__trait"];
 
-export interface RRLogEntryDiceRoll extends RRBaseLogEntry {
-  type: "diceRoll";
-  payload: {
-    rollType: "initiative" | "hit" | "attack" | null;
-    dice: Array<RRDice | RRModifier>;
-  };
-}
+export type RRSong = Extract<
+  SyncedState["assets"]["__trait"],
+  { type: "song" }
+>;
 
-export type RRLogEntry =
-  | RRLogEntryMessage
-  | RRLogEntryAchievement
-  | RRLogEntryDiceRoll;
-
-interface RRBaseAsset {
-  id: RRAssetID;
-  name: string;
-  external: boolean;
-  filenameOrUrl: string;
-  playerId: RRPlayerID;
-}
-
-export interface RRSong extends RRBaseAsset {
-  type: "song";
-  tags: string[];
-  durationSeconds: number;
-}
-
-export interface RRImage extends RRBaseAsset {
-  type: "image";
-  // TODO: evaluate if this is necessary
-  originalFunction: "token" | "map";
-}
+export type RRImage = Extract<
+  SyncedState["assets"]["__trait"],
+  { type: "image" }
+>;
 
 export type RRAsset = RRSong | RRImage;
 
@@ -495,69 +466,17 @@ export const EMPTY_ENTITY_COLLECTION = makeEntityCollection<never>({
   ids: [],
 });
 
-export interface InitiativeTrackerSyncedState {
-  visible: boolean;
-  entries: EntityCollection<RRInitiativeTrackerEntry>;
-  currentEntryId: RRInitiativeTrackerEntryID | null;
-}
+export type InitiativeTrackerSyncedState = SyncedState["initiativeTracker"];
 
-export type PlayersSyncedState = EntityCollection<RRPlayer>;
+export type EphermalPlayer = SyncedState["ephermal"]["players"]["__trait"];
 
-export type CharactersSyncedState = EntityCollection<RRCharacter>;
+export type RRActiveSong = SyncedState["ephermal"]["activeSongs"]["__trait"];
 
-export type CharacterTemplatesSyncedState = EntityCollection<RRCharacter>;
+export type EphermalSyncedState = SyncedState["ephermal"];
 
-export type MapsSyncedState = EntityCollection<RRMap>;
+export type RRGlobalSettings = SyncedState["globalSettings"];
 
-export type PrivateChatsSyncedState = EntityCollection<RRPrivateChat>;
-
-export type LogEntriesSyncedState = EntityCollection<RRLogEntry>;
-
-export type DiceTemplateState = EntityCollection<RRDiceTemplate>;
-
-export type AssetsSyncedState = EntityCollection<RRAsset>;
-
-export type EphermalPlayer = {
-  id: RRPlayerID;
-  isOnline: boolean;
-  mapMouse: null | {
-    position: RRPoint;
-    positionHistory: RRPoint[];
-    lastUpdate: RRTimestamp;
-  };
-  measurePath: RRPoint[];
-};
-
-export interface RRActiveSong {
-  id: RRActiveSongID;
-  song: RRSong;
-  startedAt: RRTimestamp;
-  volume: number;
-}
-
-export type EphermalSyncedState = {
-  players: EntityCollection<EphermalPlayer>;
-  activeSongs: EntityCollection<RRActiveSong>;
-};
-
-export interface RRGlobalSettings {
-  musicIsGMOnly: boolean;
-}
-
-export interface SyncedState {
-  globalSettings: RRGlobalSettings;
-  initiativeTracker: InitiativeTrackerSyncedState;
-  players: PlayersSyncedState;
-  characters: CharactersSyncedState;
-  characterTemplates: CharacterTemplatesSyncedState;
-  maps: MapsSyncedState;
-  privateChats: PrivateChatsSyncedState;
-  logEntries: LogEntriesSyncedState;
-  diceTemplates: DiceTemplateState;
-  assets: AssetsSyncedState;
-  // All ephermal state is cleared when the server restarts
-  ephermal: EphermalSyncedState;
-}
+export type SyncedState = t.InferType<typeof isSyncedState>;
 
 export const defaultMap: RRMap = {
   backgroundColor: "#000",
