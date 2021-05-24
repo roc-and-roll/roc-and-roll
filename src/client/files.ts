@@ -1,14 +1,13 @@
 import { useCallback, useState } from "react";
 import { RRAsset, RRFile, RRPoint } from "../shared/state";
 import { fittingTokenSize } from "../shared/util";
-import { apiHost } from "./util";
 
 export function fileUrl(file: RRFile) {
   return _fileUrl(file.filename);
 }
 
 function _fileUrl(filename: string) {
-  return `${apiHost()}/files/${encodeURIComponent(filename)}`;
+  return `/api/files/${encodeURIComponent(filename)}`;
 }
 
 export function assetUrl(a: RRAsset) {
@@ -16,13 +15,13 @@ export function assetUrl(a: RRAsset) {
 }
 
 export function tokenImageUrl(file: RRFile, size: number) {
-  return `${apiHost()}/token-image/${encodeURIComponent(
+  return `/api/token-image/${encodeURIComponent(
     file.filename
   )}/${encodeURIComponent(fittingTokenSize(size))}`;
 }
 
 export async function generateRandomToken(): Promise<RRFile> {
-  const result = await fetch(`${apiHost()}/random-token`, {
+  const result = await fetch(`/api/random-token`, {
     method: "POST",
   });
 
@@ -109,7 +108,7 @@ async function uploadFiles(fileList: FileList) {
   const formData = new FormData();
   files.forEach((file) => formData.append("files", file));
 
-  const result = await fetch(`${apiHost()}/upload`, {
+  const result = await fetch(`/api/upload`, {
     method: "POST",
     body: formData,
   });

@@ -15,7 +15,7 @@ import { existsSync } from "fs";
 import { randomColor } from "../shared/colors";
 import fetch from "node-fetch";
 import AsyncLock from "async-lock";
-import { GRID_SIZE } from "../shared/constants";
+import { GRID_SIZE, SOCKET_IO_PATH } from "../shared/constants";
 
 export async function setupWebServer(
   httpPort: number,
@@ -32,11 +32,7 @@ export async function setupWebServer(
     // communicate with the server. This is necessary, because client and
     // server run on different ports in development.
     app.use((req, res, next) => {
-      if (!res.headersSent) {
-        // Only set header if the headers have not already been sent.
-        // This happens, e.g., when calling res.redirect()
-        res.setHeader("Access-Control-Allow-Origin", `*`);
-      }
+      res.setHeader("Access-Control-Allow-Origin", `*`);
       next();
     });
   }
@@ -49,7 +45,7 @@ export async function setupWebServer(
   });
 
   app.post(
-    "/upload",
+    "/api/upload",
     multer({ storage }).array("files"),
     async (req, res, next) => {
       try {
@@ -69,7 +65,7 @@ export async function setupWebServer(
   );
 
   let cachedTabletopaudioResponse: any;
-  app.get("/tabletopaudio", async (req, res, next) => {
+  app.get("/api/tabletopaudio", async (req, res, next) => {
     try {
       if (cachedTabletopaudioResponse) {
         res.json(cachedTabletopaudioResponse);
@@ -90,7 +86,7 @@ export async function setupWebServer(
 
   // (4) Add an endpoint to generate tokens from already uploaded files
   app.get<{ filename: string; size: string; zoom: string }>(
-    "/token-image/:filename/:size",
+    "/api/token-image/:filename/:size",
     async (req, res, next) => {
       try {
         const filename = req.params.filename;
@@ -186,7 +182,7 @@ export async function setupWebServer(
     .map((id) => (__webpack_require__ as (str: string) => string)(id))
     .map((each) => path.join(__dirname, each));
 
-  app.post("/random-token", async (req, res, next) => {
+  app.post("/api/random-token", async (req, res, next) => {
     try {
       const icon = icons[Math.floor(Math.random() * icons.length)];
       if (!icon) {
@@ -214,21 +210,12 @@ export async function setupWebServer(
 
   // (6) Serve the client code to the browser
   if (process.env.NODE_ENV === "development") {
-    // In development, simply redirect all requests (except websockets) to the
-    // webpack dev server, which serves the client code on its own.
+    // In development, simply redirect all non-api requests to the webpack dev
+    // server, which serves the client code on its own.
     app.get("*", (req, res, next) => {
-      // If we add non-websocket routes later, these might need to be excluded
-      // here.
-      //
-      // if (
-      //   req.url.startsWith("/images") ||
-      //   req.url === "/reset" ||
-      //   req.url === "/verify"
-      // ) {
-      //   // Because the image registry can only be registered after loading the
-      //   // workspace, we need to make sure this catch-all route ignores /images.
-      //   return next();
-      // }
+      if (req.url.startsWith("/api")) {
+        return next();
+      }
       res.redirect(`${req.protocol}://${req.hostname}:3001${req.originalUrl}`);
     });
   } else {
@@ -249,6 +236,7 @@ export async function setupWebServer(
   // In development, we need to allow CORS access not only from the url of the
   // server, but also from the webpack dev server port.
   const io = new SocketIOServer(http, {
+    path: SOCKET_IO_PATH,
     cors: {
       origin: process.env.NODE_ENV !== "development" ? url : "*",
     },

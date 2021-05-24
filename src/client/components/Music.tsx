@@ -23,7 +23,6 @@ import {
   useServerDispatch,
   useServerState,
 } from "../state";
-import { apiHost } from "../util";
 import { VolumeSlider } from "./VolumeSlider";
 
 interface TabletopAudio {
@@ -54,7 +53,7 @@ export function Music() {
   );
 
   useEffect(() => {
-    fetch(`${apiHost()}/tabletopaudio`)
+    fetch(`/api/tabletopaudio`)
       .then((res) => res.json())
       .then((l: TabletopAudioResponse) =>
         setTabletopAudio(

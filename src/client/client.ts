@@ -1,9 +1,12 @@
 import { render } from "./render";
-import { apiHost } from "./util";
 import io from "socket.io-client";
+import { SOCKET_IO_PATH } from "../shared/constants";
 
 // Create a new socket, but do not connect yet
-const socket = io(apiHost(), { autoConnect: false });
+const socket = io("/", {
+  path: SOCKET_IO_PATH,
+  autoConnect: false,
+});
 // Render the app
 render(socket);
 // Now connect the socket
