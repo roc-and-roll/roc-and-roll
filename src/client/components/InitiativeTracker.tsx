@@ -15,6 +15,7 @@ import {
   RRInitiativeTrackerEntry,
   RRPlayer,
   CharactersSyncedState,
+  EMPTY_ENTITY_COLLECTION,
 } from "../../shared/state";
 import { useMyMap, useMyself } from "../myself";
 import { canControlToken } from "../permissions";
@@ -31,11 +32,7 @@ import { Button } from "./ui/Button";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { useRecoilValue } from "recoil";
 import { selectedMapObjectIdsAtom } from "./map/MapContainer";
-import {
-  assertNever,
-  EMPTY_ENTITY_COLLECTION,
-  withDo,
-} from "../../shared/util";
+import { assertNever, withDo } from "../../shared/util";
 import ReactDOM from "react-dom";
 import { NotificationTopAreaPortal } from "./Notifications";
 

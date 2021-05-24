@@ -25,6 +25,7 @@ import {
   setById,
   RRMapID,
   RRObjectVisibility,
+  EMPTY_ENTITY_COLLECTION,
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import {
@@ -44,13 +45,7 @@ import composeRefs from "@seznam/compose-react-refs";
 import { identity, Matrix } from "transformation-matrix";
 import { MapToolbar } from "../MapToolbar";
 import { GRID_SIZE } from "../../../shared/constants";
-import {
-  assertNever,
-  EMPTY_ENTITY_COLLECTION,
-  rrid,
-  timestamp,
-  withDo,
-} from "../../../shared/util";
+import { assertNever, rrid, timestamp, withDo } from "../../../shared/util";
 import { useRRSettings } from "../../settings";
 import produce, { Draft } from "immer";
 import {

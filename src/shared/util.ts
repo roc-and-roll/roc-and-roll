@@ -36,7 +36,7 @@ export function rrid<E extends { id: RRID }>() {
 }
 
 export function timestamp(): RRTimestamp {
-  return Date.now() as RRTimestamp;
+  return Date.now();
 }
 
 export function debounced<A extends unknown[], R extends unknown>(
@@ -70,13 +70,6 @@ export function clamp(min: number, val: number, max: number) {
 export function withDo<V, R>(value: V, block: (v: V) => R) {
   return block(value);
 }
-
-// useful if you want to make sure that the identity of the empty collection
-// never changes.
-export const EMPTY_ENTITY_COLLECTION = {
-  entities: {},
-  ids: [],
-};
 
 //
 // For debugging only

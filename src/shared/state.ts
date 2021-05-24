@@ -84,7 +84,7 @@ export const conditionNames = [
 
 export type RRCharacterCondition = IterableElement<typeof conditionNames>;
 
-export type RRTimestamp = Opaque<number, "timestamp">;
+export type RRTimestamp = number;
 
 interface RRInitiativeTrackerEntryBase {
   id: RRInitiativeTrackerEntryID;
@@ -133,7 +133,7 @@ export type RRCharacter = {
   conditions: RRCharacterCondition[];
 
   visibility: RRObjectVisibility;
-  localToMap?: RRMapID;
+  localToMap: RRMapID | null;
 };
 
 type RRMapObjectBase = {
@@ -452,7 +452,48 @@ export type RRAsset = RRSong | RRImage;
 export interface EntityCollection<E extends { id: RRID }> {
   entities: Record<E["id"], E>;
   ids: E["id"][];
+  // __trait is only needed for type checking. Otherwise, our checks to verify
+  // that the schema matches the state always return true as soon as they
+  // encounter an entity collection. This is because they get confused by our
+  // opaque RRIDs as Record keys.
+  //
+  // assert<IsExact<SchemaType, SyncedState>>(true);
+  __trait: E;
 }
+
+export function byId<E extends { id: RRID }>(
+  entities: Record<E["id"], E>,
+  id: E["id"]
+): E | undefined {
+  return entities[id];
+}
+
+export function setById<E extends { id: RRID }>(
+  entities: Record<E["id"], E>,
+  id: E["id"],
+  value: E
+): void {
+  entities[id] = value;
+}
+
+export function entries<E extends { id: RRID }>(
+  collection: EntityCollection<E>
+): E[] {
+  return collection.ids.map((id) => byId(collection.entities, id)!);
+}
+
+export function makeEntityCollection<E extends { id: RRID }>(
+  collection: Omit<EntityCollection<E>, "__trait">
+): EntityCollection<E> {
+  return collection as EntityCollection<E>;
+}
+
+// useful if you want to make sure that the identity of the empty collection
+// never changes.
+export const EMPTY_ENTITY_COLLECTION = makeEntityCollection<never>({
+  entities: {},
+  ids: [],
+});
 
 export interface InitiativeTrackerSyncedState {
   visible: boolean;
@@ -490,7 +531,7 @@ export type EphermalPlayer = {
 export interface RRActiveSong {
   id: RRActiveSongID;
   song: RRSong;
-  startedAt: number;
+  startedAt: RRTimestamp;
   volume: number;
 }
 
@@ -520,10 +561,7 @@ export interface SyncedState {
 
 export const defaultMap: RRMap = {
   backgroundColor: "#000",
-  objects: {
-    entities: {},
-    ids: [],
-  },
+  objects: EMPTY_ENTITY_COLLECTION,
   gmWorldPosition: { x: 0, y: 0 },
   gridEnabled: true,
   gridColor: "#808080",
@@ -539,52 +577,22 @@ export const initialSyncedState: SyncedState = {
   initiativeTracker: {
     visible: false,
     currentEntryId: null,
-    entries: {
-      entities: {},
-      ids: [],
-    },
+    entries: EMPTY_ENTITY_COLLECTION,
   },
-  players: {
-    entities: {},
-    ids: [],
-  },
-  characters: {
-    entities: {},
-    ids: [],
-  },
-  characterTemplates: {
-    entities: {},
-    ids: [],
-  },
-  diceTemplates: {
-    entities: {},
-    ids: [],
-  },
-  maps: {
+  players: EMPTY_ENTITY_COLLECTION,
+  characters: EMPTY_ENTITY_COLLECTION,
+  characterTemplates: EMPTY_ENTITY_COLLECTION,
+  diceTemplates: EMPTY_ENTITY_COLLECTION,
+  maps: makeEntityCollection({
     entities: { [defaultMap.id]: defaultMap },
     ids: [defaultMap.id],
-  },
-  privateChats: {
-    entities: {},
-    ids: [],
-  },
-  logEntries: {
-    entities: {},
-    ids: [],
-  },
-  assets: {
-    entities: {},
-    ids: [],
-  },
+  }),
+  privateChats: EMPTY_ENTITY_COLLECTION,
+  logEntries: EMPTY_ENTITY_COLLECTION,
+  assets: EMPTY_ENTITY_COLLECTION,
   ephermal: {
-    players: {
-      entities: {},
-      ids: [],
-    },
-    activeSongs: {
-      entities: {},
-      ids: [],
-    },
+    players: EMPTY_ENTITY_COLLECTION,
+    activeSongs: EMPTY_ENTITY_COLLECTION,
   },
 };
 
@@ -599,24 +607,3 @@ export type SyncedStateAction<
 };
 
 export type SyncedStateDispatch = Dispatch<SyncedStateAction>;
-
-export function byId<E extends { id: RRID }>(
-  entities: Record<E["id"], E>,
-  id: E["id"]
-): E | undefined {
-  return entities[id];
-}
-
-export function setById<E extends { id: RRID }>(
-  entities: Record<E["id"], E>,
-  id: E["id"],
-  value: E
-): void {
-  entities[id] = value;
-}
-
-export function entries<E extends { id: RRID }>(
-  collection: EntityCollection<E>
-): E[] {
-  return collection.ids.map((id) => byId(collection.entities, id)!);
-}

@@ -7,6 +7,7 @@ import { setupStatePersistence } from "./setupStatePersistence";
 import { entries, SyncedState } from "../shared/state";
 import { ephermalPlayerUpdate } from "../shared/actions";
 import { setupArgs } from "./setupArgs";
+import { EMPTY_ENTITY_COLLECTION } from "../shared/state";
 
 void (async () => {
   const { workspace: workspaceDir, quiet, port: httpPort } = setupArgs();
@@ -33,14 +34,8 @@ void (async () => {
     ) as SyncedState;
     // Reset ephermal state
     initialState.ephermal = {
-      players: {
-        ids: [],
-        entities: {},
-      },
-      activeSongs: {
-        ids: [],
-        entities: {},
-      },
+      players: EMPTY_ENTITY_COLLECTION,
+      activeSongs: EMPTY_ENTITY_COLLECTION,
     };
   }
   const store = setupReduxStore(initialState);

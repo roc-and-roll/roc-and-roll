@@ -31,6 +31,7 @@ import {
   RRGlobalSettings,
   RRDiceTemplatePart,
   RRDiceTemplateID,
+  EMPTY_ENTITY_COLLECTION,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -211,10 +212,7 @@ export const privateChatAdd = createAction(
         id: rrid<RRPrivateChat>(),
         idA,
         idB,
-        messages: {
-          entities: {},
-          ids: [],
-        },
+        messages: EMPTY_ENTITY_COLLECTION,
       },
     };
   }

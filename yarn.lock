@@ -11666,7 +11666,7 @@ resolve@^2.0.0-next.3:
     ts-jest: ^26.5.6
     ts-loader: ^9.1.2
     ts-node: ^9.1.1
-    typanion: ^3.3.1
+    typanion: "patch:typanion@^3.3.1#./patches/typanion.patch"
     type-fest: ^1.1.1
     typescript: ^4.2.4
     utf-8-validate: ^5.0.5
@@ -13258,10 +13258,17 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"typanion@npm:^3.3.1":
+typanion@^3.3.1:
   version: 3.3.1
   resolution: "typanion@npm:3.3.1"
   checksum: 4341c4199f5ce022c9e486a47fff9509bb887768c9496fec86e10bdac9631f34298b9257dc5c9425e2eb177c3df5189ba029570114a5fddbfb11928330023262
+  languageName: node
+  linkType: hard
+
+"typanion@patch:typanion@^3.3.1#./patches/typanion.patch::locator=roc-and-roll%40workspace%3A.":
+  version: 3.3.1
+  resolution: "typanion@patch:typanion@npm%3A3.3.1#./patches/typanion.patch::version=3.3.1&hash=1613b1&locator=roc-and-roll%40workspace%3A."
+  checksum: f9812780081a6f83189301d8e3153cd53f178b0c08c0f5047e03475db6eb782f9f8e8a7409514b9ed8209400b71138d40f1471c9ae3f775b1205f414a386571f
   languageName: node
   linkType: hard
 

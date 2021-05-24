@@ -12,6 +12,7 @@ import {
   RRPlayer,
   RRPlayerID,
 } from "../../shared/state";
+import { EMPTY_ENTITY_COLLECTION } from "../../shared/state";
 import { useMyself } from "../myself";
 import {
   useOptimisticDebouncedServerUpdate,
@@ -53,10 +54,7 @@ export function Maps() {
                   gridEnabled: true,
                   gridColor: "#808080",
                   name,
-                  objects: {
-                    entities: {},
-                    ids: [],
-                  },
+                  objects: EMPTY_ENTITY_COLLECTION,
                   revealedAreas: null,
                   gmWorldPosition: { x: 0, y: 0 },
                 })

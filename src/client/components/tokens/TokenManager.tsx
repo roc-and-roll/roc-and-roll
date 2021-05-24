@@ -27,6 +27,7 @@ async function makeNewToken(): Promise<Parameters<typeof characterAdd>[0]> {
     attributes: {},
     name: await randomName(),
     image: await generateRandomToken(),
+    localToMap: null,
   };
 }
 

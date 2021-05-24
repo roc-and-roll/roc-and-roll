@@ -1,7 +1,7 @@
 import * as t from "typanion";
 import { assert, IsExact } from "conditional-type-checks";
 import { Opaque } from "type-fest";
-import { RRID } from "../../../shared/state";
+import { isRRID } from "../../../shared/validation";
 
 export type CompendiumTextEntry =
   | string
@@ -148,9 +148,7 @@ export const isSpell = t.isObject(
       t.isOneOf(
         [
           t.isObject({
-            type: t.isOneOf([t.isLiteral("instant"), t.isLiteral("special")], {
-              exclusive: true,
-            }),
+            type: t.isEnum(["instant", "special"] as const),
           }),
           t.isObject({
             type: t.isLiteral("permanent"),
@@ -163,15 +161,7 @@ export const isSpell = t.isObject(
           t.isObject({
             type: t.isLiteral("timed"),
             duration: t.isObject({
-              type: t.isOneOf(
-                [
-                  t.isLiteral("round"),
-                  t.isLiteral("minute"),
-                  t.isLiteral("hour"),
-                  t.isLiteral("day"),
-                ],
-                { exclusive: true }
-              ),
+              type: t.isEnum(["round", "minute", "hour", "day"] as const),
               amount: t.applyCascade(t.isNumber(), [
                 t.isInteger(),
                 t.isPositive(),
@@ -189,22 +179,17 @@ export const isSpell = t.isObject(
     range: t.isOneOf(
       [
         t.isObject({
-          type: t.isOneOf(
-            [
-              t.isLiteral("point"),
-              t.isLiteral("radius"),
-              t.isLiteral("line"),
-              t.isLiteral("cone"),
-              t.isLiteral("hemisphere"),
-              t.isLiteral("sphere"),
-              t.isLiteral("cube"),
-            ],
-            { exclusive: true }
-          ),
+          type: t.isEnum([
+            "point",
+            "radius",
+            "line",
+            "cone",
+            "hemisphere",
+            "sphere",
+            "cube",
+          ] as const),
           distance: t.isObject({
-            type: t.isOneOf([t.isLiteral("feet"), t.isLiteral("miles")], {
-              exclusive: true,
-            }),
+            type: t.isEnum(["feet", "miles"] as const),
             amount: t.applyCascade(t.isNumber(), [
               t.isInteger(),
               t.isPositive(),
@@ -214,15 +199,7 @@ export const isSpell = t.isObject(
         t.isObject({
           type: t.isLiteral("point"),
           distance: t.isObject({
-            type: t.isOneOf(
-              [
-                t.isLiteral("self"),
-                t.isLiteral("touch"),
-                t.isLiteral("sight"),
-                t.isLiteral("unlimited"),
-              ],
-              { exclusive: true }
-            ),
+            type: t.isEnum(["self", "touch", "sight", "unlimited"] as const),
           }),
         }),
         t.isObject({ type: t.isLiteral("special") }),
@@ -241,15 +218,7 @@ export const isSpell = t.isObject(
               t.isInteger(),
               t.isPositive(),
             ]),
-            unit: t.isOneOf(
-              [
-                t.isLiteral("action"),
-                t.isLiteral("bonus"),
-                t.isLiteral("minute"),
-                t.isLiteral("hour"),
-              ],
-              { exclusive: true }
-            ),
+            unit: t.isEnum(["action", "bonus", "minute", "hour"] as const),
           }),
           t.isObject({
             number: t.applyCascade(t.isNumber(), [
@@ -296,13 +265,6 @@ export type CompendiumSource = {
   meta: string;
   data: CompendiumData;
 };
-
-function isRRID<ID extends RRID>() {
-  return t.makeValidator({
-    test: (value, state): value is ID =>
-      t.applyCascade(t.isString(), [t.hasExactLength(21)])(value, state),
-  });
-}
 
 export const isCompendiumSource = t.isObject({
   id: isRRID<CompendiumSourceID>(),
