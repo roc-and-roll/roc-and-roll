@@ -1,4 +1,5 @@
 declare const __VERSION__: string;
+declare const __CODESPACE_NAME__: string | undefined;
 
 declare module "!!raw-loader!*" {
   const contents: string;
