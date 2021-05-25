@@ -62,7 +62,7 @@ function setup<A extends Record<string, unknown>, H>(
   hookCreator: (hookArgs: A) => H
 ) {
   const mockSocket = new MockClientSocket();
-  const socket = (mockSocket as unknown) as SocketIOClient.Socket;
+  const socket = mockSocket as unknown as SocketIOClient.Socket;
   const wrapper = ({
     children,
     socket,
@@ -154,16 +154,12 @@ describe("optimistic state updates", () => {
   });
 
   it("passes through server updates when there is no local update", async () => {
-    const {
-      mockSocket,
-      result,
-      rerender,
-      unmount,
-    } = setupUseOptimisticDebouncedServerUpdate({
-      selector: () => 123,
-      actionCreator: () => undefined,
-      debounceTime: 100,
-    });
+    const { mockSocket, result, rerender, unmount } =
+      setupUseOptimisticDebouncedServerUpdate({
+        selector: () => 123,
+        actionCreator: () => undefined,
+        debounceTime: 100,
+      });
 
     expect(result.current[0]).toBe(123);
 
@@ -193,16 +189,12 @@ describe("optimistic state updates", () => {
       });
     }
 
-    const {
-      mockSocket,
-      result,
-      rerender,
-      unmount,
-    } = setupUseOptimisticDebouncedServerUpdate({
-      selector: () => 123,
-      actionCreator: makeActionCreator(),
-      debounceTime: 100,
-    });
+    const { mockSocket, result, rerender, unmount } =
+      setupUseOptimisticDebouncedServerUpdate({
+        selector: () => 123,
+        actionCreator: makeActionCreator(),
+        debounceTime: 100,
+      });
 
     let updateId: string;
     const onEmit = jest.fn((name, actions) => {
@@ -284,15 +276,12 @@ describe("optimistic state updates", () => {
       });
     }
 
-    const {
-      mockSocket,
-      result,
-      unmount,
-    } = setupUseOptimisticDebouncedServerUpdate({
-      selector: () => 123,
-      actionCreator: makeActionCreator(),
-      debounceTime: 100,
-    });
+    const { mockSocket, result, unmount } =
+      setupUseOptimisticDebouncedServerUpdate({
+        selector: () => 123,
+        actionCreator: makeActionCreator(),
+        debounceTime: 100,
+      });
 
     const onEmit = jest.fn((name, action) => {
       const optimisticUpdateId = action.meta.__optimisticUpdateId__;

@@ -26,10 +26,8 @@ export function buildPatch(old: any, cur: any, keyPrefix: string = "") {
         if (!isObject(valOld) || !isObject(valCur)) {
           patch[keyOld] = valCur;
         } else {
-          const {
-            patch: innerPatch,
-            deletedKeys: innerDeletedKeys,
-          } = buildPatch(valOld, valCur, `${keyPrefix}${keyOld}.`);
+          const { patch: innerPatch, deletedKeys: innerDeletedKeys } =
+            buildPatch(valOld, valCur, `${keyPrefix}${keyOld}.`);
           if (!isEmptyObject(innerPatch)) {
             patch[keyOld] = innerPatch;
           }

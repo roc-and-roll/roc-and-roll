@@ -3,11 +3,12 @@ import { clamp } from "../shared/util";
 
 export default function useRafLoop() {
   const rafFrameId = useRef<number | null>(null);
-  const rafCallback = useRef<{
-    callback: (delta: number) => void;
-    duration: number;
-    start: number;
-  } | null>(null);
+  const rafCallback =
+    useRef<{
+      callback: (delta: number) => void;
+      duration: number;
+      start: number;
+    } | null>(null);
 
   const step = useCallback((time: number) => {
     if (rafCallback.current) {

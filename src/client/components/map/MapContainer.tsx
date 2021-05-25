@@ -152,16 +152,18 @@ export default function MapContainer() {
   const dropRef2 = useRef<HTMLDivElement>(null);
 
   const getCharacter = useRecoilCallback(
-    ({ snapshot }) => (id: RRCharacterID) => {
-      return snapshot.getLoadable(tokenFamily(id)).getValue();
-    },
+    ({ snapshot }) =>
+      (id: RRCharacterID) => {
+        return snapshot.getLoadable(tokenFamily(id)).getValue();
+      },
     []
   );
 
   const getTemplateCharacter = useRecoilCallback(
-    ({ snapshot }) => (id: RRCharacterID) => {
-      return snapshot.getLoadable(characterTemplateFamily(id)).getValue();
-    },
+    ({ snapshot }) =>
+      (id: RRCharacterID) => {
+        return snapshot.getLoadable(characterTemplateFamily(id)).getValue();
+      },
     []
   );
 
@@ -231,123 +233,127 @@ export default function MapContainer() {
   );
   const dropRef = composeRefs<HTMLDivElement>(dropRef2, dropRef1);
 
-  const [
-    localMapObjects,
-    setLocalObjectsOnMap,
-  ] = useOptimisticDebouncedLerpedServerUpdate(
-    (state) => {
-      return (
-        byId(state.maps.entities, myself.currentMap)?.objects ??
-        EMPTY_ENTITY_COLLECTION
-      );
-    },
-    useRecoilCallback(({ snapshot }) => (localMapObjects) =>
-      snapshot
-        .getLoadable(selectedMapObjectIdsAtom)
-        .getValue()
-        .flatMap((selectedMapObjectId) => {
-          const mapObject = byId(localMapObjects.entities, selectedMapObjectId);
-          if (!mapObject) {
-            return [];
-          }
+  const [localMapObjects, setLocalObjectsOnMap] =
+    useOptimisticDebouncedLerpedServerUpdate(
+      (state) => {
+        return (
+          byId(state.maps.entities, myself.currentMap)?.objects ??
+          EMPTY_ENTITY_COLLECTION
+        );
+      },
+      useRecoilCallback(
+        ({ snapshot }) =>
+          (localMapObjects) =>
+            snapshot
+              .getLoadable(selectedMapObjectIdsAtom)
+              .getValue()
+              .flatMap((selectedMapObjectId) => {
+                const mapObject = byId(
+                  localMapObjects.entities,
+                  selectedMapObjectId
+                );
+                if (!mapObject) {
+                  return [];
+                }
 
-          return mapObjectUpdate(map.id, {
-            id: mapObject.id,
-            changes: {
-              position: mapObject.position,
-            },
-          });
-        })
-    ),
-    syncedDebounce.current,
-    (start, end, t) =>
-      produce(end, (draft) =>
-        entries<Draft<RRMapObject>>(end).forEach((e) => {
-          const s = byId(start.entities, e.id);
-          // Only lerp the position if
-          // 1. the object existed before (s)
-          // 2. it has changed (s !== e)
-          if (s && s !== e) {
-            // We deliberately only use the draft here, instead of iterating
-            // over it directly, so that less proxies need to be created.
-            const obj = byId<Draft<RRMapObject>>(draft.entities, e.id)!;
-            obj.position = pointAdd(
-              s.position,
-              pointScale(pointSubtract(e.position, s.position), t)
-            );
-          }
-        })
-      )
-  );
+                return mapObjectUpdate(map.id, {
+                  id: mapObject.id,
+                  changes: {
+                    position: mapObject.position,
+                  },
+                });
+              })
+      ),
+      syncedDebounce.current,
+      (start, end, t) =>
+        produce(end, (draft) =>
+          entries<Draft<RRMapObject>>(end).forEach((e) => {
+            const s = byId(start.entities, e.id);
+            // Only lerp the position if
+            // 1. the object existed before (s)
+            // 2. it has changed (s !== e)
+            if (s && s !== e) {
+              // We deliberately only use the draft here, instead of iterating
+              // over it directly, so that less proxies need to be created.
+              const obj = byId<Draft<RRMapObject>>(draft.entities, e.id)!;
+              obj.position = pointAdd(
+                s.position,
+                pointScale(pointSubtract(e.position, s.position), t)
+              );
+            }
+          })
+        )
+    );
 
   const handleKeyDown = useRecoilCallback(
-    ({ snapshot }) => (e: KeyboardEvent) => {
-      const selectedMapObjectIds = snapshot
-        .getLoadable(selectedMapObjectIdsAtom)
-        .getValue();
+    ({ snapshot }) =>
+      (e: KeyboardEvent) => {
+        const selectedMapObjectIds = snapshot
+          .getLoadable(selectedMapObjectIdsAtom)
+          .getValue();
 
-      function move(positionUpdater: (position: RRPoint) => RRPoint) {
-        setLocalObjectsOnMap(
-          produce((draft) => {
-            selectedMapObjectIds.forEach((selectedMapObjectId) => {
-              const object = byId<Draft<RRMapObject>>(
-                draft.entities,
-                selectedMapObjectId
-              );
-              if (object) {
-                object.position = positionUpdater(object.position);
-              }
-            });
-          })
-        );
-      }
-
-      let keyHandled = true;
-      switch (e.key) {
-        case "Delete": {
-          dispatch(
-            selectedMapObjectIds.map((mapObjectId) => {
-              const mapObject = snapshot
-                .getLoadable(mapObjectsFamily(mapObjectId))
-                .getValue()!;
-              if (mapObject.type === "token") {
-                const character = snapshot
-                  .getLoadable(tokenFamily(mapObject.characterId))
-                  .getValue()!;
-                return mapObjectRemove({
-                  mapId: map.id,
-                  mapObject,
-                  relatedCharacter: character,
-                });
-              } else {
-                return mapObjectRemove({ mapId: map.id, mapObjectId });
-              }
+        function move(positionUpdater: (position: RRPoint) => RRPoint) {
+          setLocalObjectsOnMap(
+            produce((draft) => {
+              selectedMapObjectIds.forEach((selectedMapObjectId) => {
+                const object = byId<Draft<RRMapObject>>(
+                  draft.entities,
+                  selectedMapObjectId
+                );
+                if (object) {
+                  object.position = positionUpdater(object.position);
+                }
+              });
             })
           );
-          break;
         }
-        case "ArrowLeft":
-          move((position) => ({ x: position.x - GRID_SIZE, y: position.y }));
-          break;
-        case "ArrowRight":
-          move((position) => ({ x: position.x + GRID_SIZE, y: position.y }));
-          break;
-        case "ArrowUp":
-          move((position) => ({ x: position.x, y: position.y - GRID_SIZE }));
-          break;
-        case "ArrowDown":
-          move((position) => ({ x: position.x, y: position.y + GRID_SIZE }));
-          break;
-        default:
-          keyHandled = false;
-          break;
-      }
 
-      if (keyHandled) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    },
+        let keyHandled = true;
+        switch (e.key) {
+          case "Delete": {
+            dispatch(
+              selectedMapObjectIds.map((mapObjectId) => {
+                const mapObject = snapshot
+                  .getLoadable(mapObjectsFamily(mapObjectId))
+                  .getValue()!;
+                if (mapObject.type === "token") {
+                  const character = snapshot
+                    .getLoadable(tokenFamily(mapObject.characterId))
+                    .getValue()!;
+                  return mapObjectRemove({
+                    mapId: map.id,
+                    mapObject,
+                    relatedCharacter: character,
+                  });
+                } else {
+                  return mapObjectRemove({ mapId: map.id, mapObjectId });
+                }
+              })
+            );
+            break;
+          }
+          case "ArrowLeft":
+            move((position) => ({ x: position.x - GRID_SIZE, y: position.y }));
+            break;
+          case "ArrowRight":
+            move((position) => ({ x: position.x + GRID_SIZE, y: position.y }));
+            break;
+          case "ArrowUp":
+            move((position) => ({ x: position.x, y: position.y - GRID_SIZE }));
+            break;
+          case "ArrowDown":
+            move((position) => ({ x: position.x, y: position.y + GRID_SIZE }));
+            break;
+          default:
+            keyHandled = false;
+            break;
+        }
+
+        if (keyHandled) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      },
     [dispatch, map.id, setLocalObjectsOnMap]
   );
 
@@ -358,26 +364,27 @@ export default function MapContainer() {
 
   const updatedColor = editState.tool === "move" && editState.updateColor;
   const onUpdateColor = useRecoilCallback(
-    ({ snapshot }) => (color: string) => {
-      if (color) {
-        dispatch(
-          snapshot
-            .getLoadable(selectedMapObjectIdsAtom)
-            .getValue()
-            .flatMap((selectedMapObjectId) => {
-              const object = snapshot
-                .getLoadable(mapObjectsFamily(selectedMapObjectId))
-                .getValue();
-              if (object && object.type !== "token" && !object.locked) {
-                return mapObjectUpdate(map.id, {
-                  id: selectedMapObjectId,
-                  changes: { color },
-                });
-              } else return [];
-            })
-        );
-      }
-    },
+    ({ snapshot }) =>
+      (color: string) => {
+        if (color) {
+          dispatch(
+            snapshot
+              .getLoadable(selectedMapObjectIdsAtom)
+              .getValue()
+              .flatMap((selectedMapObjectId) => {
+                const object = snapshot
+                  .getLoadable(mapObjectsFamily(selectedMapObjectId))
+                  .getValue();
+                if (object && object.type !== "token" && !object.locked) {
+                  return mapObjectUpdate(map.id, {
+                    id: selectedMapObjectId,
+                    changes: { color },
+                  });
+                } else return [];
+              })
+          );
+        }
+      },
     [dispatch, map.id]
   );
 
@@ -476,36 +483,34 @@ export default function MapContainer() {
   );
 
   const onMoveMapObjectsUpdater = useRecoilCallback(
-    ({ snapshot }) => (
-      d: RRPoint,
-      localObjectsOnMap: typeof localMapObjects
-    ) => {
-      const updatedLocalObjectsOnMap: Record<RRMapObjectID, RRMapObject> = {};
+    ({ snapshot }) =>
+      (d: RRPoint, localObjectsOnMap: typeof localMapObjects) => {
+        const updatedLocalObjectsOnMap: Record<RRMapObjectID, RRMapObject> = {};
 
-      snapshot
-        .getLoadable(selectedMapObjectIdsAtom)
-        .getValue()
-        .forEach((selectedMapObjectId) => {
-          const object = byId<Draft<RRMapObject>>(
-            localObjectsOnMap.entities,
-            selectedMapObjectId
-          );
-          if (object && (object.type === "token" || !object.locked)) {
-            setById(updatedLocalObjectsOnMap, object.id, {
-              ...object,
-              position: pointAdd(object.position, d),
-            });
-          }
-        });
+        snapshot
+          .getLoadable(selectedMapObjectIdsAtom)
+          .getValue()
+          .forEach((selectedMapObjectId) => {
+            const object = byId<Draft<RRMapObject>>(
+              localObjectsOnMap.entities,
+              selectedMapObjectId
+            );
+            if (object && (object.type === "token" || !object.locked)) {
+              setById(updatedLocalObjectsOnMap, object.id, {
+                ...object,
+                position: pointAdd(object.position, d),
+              });
+            }
+          });
 
-      return {
-        ...localObjectsOnMap,
-        entities: {
-          ...localObjectsOnMap.entities,
-          ...updatedLocalObjectsOnMap,
-        },
-      };
-    }
+        return {
+          ...localObjectsOnMap,
+          entities: {
+            ...localObjectsOnMap.entities,
+            ...updatedLocalObjectsOnMap,
+          },
+        };
+      }
     // We don't use the equivalent immmer producer here, because moving
     // objects around the map is very performance critical.
     //
@@ -541,47 +546,48 @@ export default function MapContainer() {
   );
 
   const onStopMoveMapObjectsUpdater = useRecoilCallback(
-    ({ snapshot }) => (localObjectsOnMap: typeof localMapObjects) => {
-      const updatedLocalObjectsOnMap: Record<RRMapObjectID, RRMapObject> = {};
+    ({ snapshot }) =>
+      (localObjectsOnMap: typeof localMapObjects) => {
+        const updatedLocalObjectsOnMap: Record<RRMapObjectID, RRMapObject> = {};
 
-      snapshot
-        .getLoadable(selectedMapObjectIdsAtom)
-        .getValue()
-        .forEach((selectedMapObjectId) => {
-          const object = byId<Draft<RRMapObject>>(
-            localObjectsOnMap.entities,
-            selectedMapObjectId
-          );
-          if (object && (object.type === "token" || !object.locked)) {
-            const position = withDo(object, (object) => {
-              // TODO: We have a "snapping" button in the toolbar, which we
-              // should probably respect somehow.
-              if (object.type === "token" || object.type === "image") {
-                // TODO: Calculate center based on token / map object size
-                const center = pointAdd(
-                  object.position,
-                  makePoint(GRID_SIZE / 2)
-                );
-                return snapPointToGrid(center);
-              }
-              return object.position;
-            });
+        snapshot
+          .getLoadable(selectedMapObjectIdsAtom)
+          .getValue()
+          .forEach((selectedMapObjectId) => {
+            const object = byId<Draft<RRMapObject>>(
+              localObjectsOnMap.entities,
+              selectedMapObjectId
+            );
+            if (object && (object.type === "token" || !object.locked)) {
+              const position = withDo(object, (object) => {
+                // TODO: We have a "snapping" button in the toolbar, which we
+                // should probably respect somehow.
+                if (object.type === "token" || object.type === "image") {
+                  // TODO: Calculate center based on token / map object size
+                  const center = pointAdd(
+                    object.position,
+                    makePoint(GRID_SIZE / 2)
+                  );
+                  return snapPointToGrid(center);
+                }
+                return object.position;
+              });
 
-            setById(updatedLocalObjectsOnMap, object.id, {
-              ...object,
-              position,
-            });
-          }
-        });
+              setById(updatedLocalObjectsOnMap, object.id, {
+                ...object,
+                position,
+              });
+            }
+          });
 
-      return {
-        ...localObjectsOnMap,
-        entities: {
-          ...localObjectsOnMap.entities,
-          ...updatedLocalObjectsOnMap,
-        },
-      };
-    },
+        return {
+          ...localObjectsOnMap,
+          entities: {
+            ...localObjectsOnMap.entities,
+            ...updatedLocalObjectsOnMap,
+          },
+        };
+      },
     []
   );
 
@@ -640,30 +646,28 @@ function useReduxToRecoilBridge<E extends { id: RRID }>(
   familyAtom: (id: E["id"]) => RecoilState<E | null>
 ) {
   const updateRecoilObjects = useRecoilCallback(
-    ({ snapshot, set, reset }) => ({
-      ids: newIds,
-      entities,
-    }: EntityCollection<E>) => {
-      const oldIds = snapshot.getLoadable(mapObjectIdsAtom).getValue();
-      if (oldIds !== newIds) {
-        set(idsAtom, newIds);
-      }
-
-      newIds.forEach((id) => {
-        const atom = familyAtom(id);
-        const newEntity = byId(entities, id)!;
-        const oldEntity = snapshot.getLoadable(atom).getValue();
-        if (!Object.is(newEntity, oldEntity)) {
-          set(atom, newEntity);
+    ({ snapshot, set, reset }) =>
+      ({ ids: newIds, entities }: EntityCollection<E>) => {
+        const oldIds = snapshot.getLoadable(mapObjectIdsAtom).getValue();
+        if (oldIds !== newIds) {
+          set(idsAtom, newIds);
         }
-      });
 
-      oldIds
-        .filter((oldId) => !newIds.includes(oldId))
-        .forEach((removedId) => {
-          reset(familyAtom(removedId));
+        newIds.forEach((id) => {
+          const atom = familyAtom(id);
+          const newEntity = byId(entities, id)!;
+          const oldEntity = snapshot.getLoadable(atom).getValue();
+          if (!Object.is(newEntity, oldEntity)) {
+            set(atom, newEntity);
+          }
         });
-    },
+
+        oldIds
+          .filter((oldId) => !newIds.includes(oldId))
+          .forEach((removedId) => {
+            reset(familyAtom(removedId));
+          });
+      },
     [familyAtom, idsAtom]
   );
 

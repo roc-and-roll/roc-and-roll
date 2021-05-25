@@ -13,22 +13,22 @@ const lockedSoundsAtom = atom<string[]>({
   default: [],
 });
 
-const updateLockedSounds = (key: string, needsUnlock: boolean) => (
-  keys: string[]
-): string[] => {
-  if (needsUnlock) {
-    if (keys.includes(key)) {
-      return keys;
-    }
-    return [...keys, key];
-  } else {
-    if (keys.includes(key)) {
-      return keys.filter((each) => each !== key);
+const updateLockedSounds =
+  (key: string, needsUnlock: boolean) =>
+  (keys: string[]): string[] => {
+    if (needsUnlock) {
+      if (keys.includes(key)) {
+        return keys;
+      }
+      return [...keys, key];
     } else {
-      return keys;
+      if (keys.includes(key)) {
+        return keys.filter((each) => each !== key);
+      } else {
+        return keys;
+      }
     }
-  }
-};
+  };
 
 /**
  * Returns a function to play a sound. Might skip playing the sound if howler is

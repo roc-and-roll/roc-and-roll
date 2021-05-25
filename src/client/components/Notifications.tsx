@@ -9,7 +9,7 @@ import {
   RRLogEntryMessage,
 } from "../../shared/state";
 import { assertNever } from "../../shared/util";
-import { diceResult, DiceResultWithTypes } from "../roll";
+import { DiceResultWithTypes } from "../roll";
 import { useRRSimpleSound } from "../sound";
 import { useServerState } from "../state";
 import DiceDisplay from "./diceRoller/DiceDisplay";
@@ -19,9 +19,8 @@ import { Flipper, Flipped } from "react-flip-toolkit";
 
 const NOTIFICATION_TIMEOUT = 6000;
 
-export const NotificationTopAreaPortal = React.createContext<React.RefObject<HTMLDivElement> | null>(
-  null
-);
+export const NotificationTopAreaPortal =
+  React.createContext<React.RefObject<HTMLDivElement> | null>(null);
 
 export function Notifications({
   topAreaPortal,

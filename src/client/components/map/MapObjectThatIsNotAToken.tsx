@@ -48,9 +48,10 @@ export const MapObjectThatIsNotAToken = React.memo<{
 
   const canControl =
     !object.locked && canStartMoving && object.playerId === myself.id;
-  const style = useMemo(() => (canControl ? { cursor: "move" } : {}), [
-    canControl,
-  ]);
+  const style = useMemo(
+    () => (canControl ? { cursor: "move" } : {}),
+    [canControl]
+  );
 
   const strokeLineDash = useMemo(
     () => (isSelectedOrHovered ? [GRID_SIZE / 10, GRID_SIZE / 10] : undefined),

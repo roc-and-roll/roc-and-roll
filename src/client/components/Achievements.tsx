@@ -8,10 +8,8 @@ import { RRPlayerID } from "../../shared/state";
 export function Achievements() {
   const dispatch = useServerDispatch();
   const [filterText, setFilterText] = useState("");
-  const [
-    selectedAchievement,
-    setSelectedAchievement,
-  ] = useState<RRAchievement | null>(null);
+  const [selectedAchievement, setSelectedAchievement] =
+    useState<RRAchievement | null>(null);
 
   function unlockAchievement(playerId: RRPlayerID, achievement: RRAchievement) {
     dispatch(

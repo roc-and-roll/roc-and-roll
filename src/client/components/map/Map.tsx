@@ -301,86 +301,89 @@ export const RRMapView = React.memo<{
   );
 
   const handleMouseMove = useRecoilCallback(
-    ({ snapshot }) => (e: MouseEvent) => {
-      const { x, y } = localCoords(e);
-      const frameDelta = {
-        // we must not use dragLastMouse here, because it might not have
-        // updated to reflect the value set during the last frame (since React
-        // can batch multiple setState() calls, particularly if the browser is
-        // very busy).
-        // Instead use the ref, which is guranteed to have been updated.
-        x: x - dragLastMouseRef.current.x,
-        y: y - dragLastMouseRef.current.y,
-      };
+    ({ snapshot }) =>
+      (e: MouseEvent) => {
+        const { x, y } = localCoords(e);
+        const frameDelta = {
+          // we must not use dragLastMouse here, because it might not have
+          // updated to reflect the value set during the last frame (since React
+          // can batch multiple setState() calls, particularly if the browser is
+          // very busy).
+          // Instead use the ref, which is guranteed to have been updated.
+          x: x - dragLastMouseRef.current.x,
+          y: y - dragLastMouseRef.current.y,
+        };
 
-      switch (mouseActionRef.current) {
-        case MouseAction.PAN: {
-          setTransform((t) =>
-            compose(translate(frameDelta.x, frameDelta.y), t)
-          );
-          break;
-        }
-        case MouseAction.SELECTION_AREA: {
-          const innerLocal = globalToLocal(transformRef.current, {
-            x,
-            y,
-          });
-          setSelectionArea(
-            (a) => a && [a[0], a[1], innerLocal.x, innerLocal.y]
-          );
-          break;
-        }
-        case MouseAction.MOVE_MAP_OBJECT: {
-          // TODO consider actual bounding box
-          const innerLocal = pointAdd(
-            snapshot
-              .getLoadable(mapObjectsFamily(dragStartIdRef.current!))
-              .getValue()!.position,
-            makePoint(GRID_SIZE * 0.5)
-          );
-          addPointToPath(innerLocal);
-          onMoveMapObjects(pointScale(frameDelta, 1 / transformRef.current.a));
-          break;
-        }
-        case MouseAction.MEASURE: {
-          const innerLocal = globalToLocal(transformRef.current, {
-            x,
-            y,
-          });
-          const pointsInPath = (from: RRPoint, to: RRPoint) => {
-            const points: RRPoint[] = [from];
-            while (!pointEquals(from, to)) {
-              const step = pointSign(pointSubtract(to, from));
-              from = pointAdd(from, step);
-              points.push(from);
-            }
-            return points;
-          };
-          setMeasurePath((measurePath) => {
-            if (measurePath.length === 0) return measurePath;
-            return pointsInPath(
-              measurePath[0]!,
-              pointScale(snapPointToGrid(innerLocal), 1 / GRID_SIZE)
+        switch (mouseActionRef.current) {
+          case MouseAction.PAN: {
+            setTransform((t) =>
+              compose(translate(frameDelta.x, frameDelta.y), t)
             );
-          });
-          break;
+            break;
+          }
+          case MouseAction.SELECTION_AREA: {
+            const innerLocal = globalToLocal(transformRef.current, {
+              x,
+              y,
+            });
+            setSelectionArea(
+              (a) => a && [a[0], a[1], innerLocal.x, innerLocal.y]
+            );
+            break;
+          }
+          case MouseAction.MOVE_MAP_OBJECT: {
+            // TODO consider actual bounding box
+            const innerLocal = pointAdd(
+              snapshot
+                .getLoadable(mapObjectsFamily(dragStartIdRef.current!))
+                .getValue()!.position,
+              makePoint(GRID_SIZE * 0.5)
+            );
+            addPointToPath(innerLocal);
+            onMoveMapObjects(
+              pointScale(frameDelta, 1 / transformRef.current.a)
+            );
+            break;
+          }
+          case MouseAction.MEASURE: {
+            const innerLocal = globalToLocal(transformRef.current, {
+              x,
+              y,
+            });
+            const pointsInPath = (from: RRPoint, to: RRPoint) => {
+              const points: RRPoint[] = [from];
+              while (!pointEquals(from, to)) {
+                const step = pointSign(pointSubtract(to, from));
+                from = pointAdd(from, step);
+                points.push(from);
+              }
+              return points;
+            };
+            setMeasurePath((measurePath) => {
+              if (measurePath.length === 0) return measurePath;
+              return pointsInPath(
+                measurePath[0]!,
+                pointScale(snapPointToGrid(innerLocal), 1 / GRID_SIZE)
+              );
+            });
+            break;
+          }
+          case MouseAction.USE_TOOL: {
+            toolHandler.onMouseMove(
+              globalToLocal(transformRef.current, { x, y })
+            );
+            break;
+          }
+          case MouseAction.NONE:
+            break;
+          default:
+            assertNever(mouseActionRef.current);
         }
-        case MouseAction.USE_TOOL: {
-          toolHandler.onMouseMove(
-            globalToLocal(transformRef.current, { x, y })
-          );
-          break;
-        }
-        case MouseAction.NONE:
-          break;
-        default:
-          assertNever(mouseActionRef.current);
-      }
 
-      if (mouseActionRef.current !== MouseAction.NONE) {
-        dragLastMouseRef.current = { x, y };
-      }
-    },
+        if (mouseActionRef.current !== MouseAction.NONE) {
+          dragLastMouseRef.current = { x, y };
+        }
+      },
     [
       transformRef,
       addPointToPath,
@@ -444,47 +447,48 @@ export const RRMapView = React.memo<{
   );
 
   const updateHoveredMapObjects = useRecoilCallback(
-    ({ snapshot, set, reset }) => (selectionArea: Rectangle | null) => {
-      const lastHoveredObjectIds = snapshot
-        .getLoadable(hoveredMapObjectIdsAtom)
-        .getValue();
+    ({ snapshot, set, reset }) =>
+      (selectionArea: Rectangle | null) => {
+        const lastHoveredObjectIds = snapshot
+          .getLoadable(hoveredMapObjectIdsAtom)
+          .getValue();
 
-      withSelectionAreaDo<void>(
-        selectionArea,
-        (x, y, w, h) => {
-          lastHoveredObjectIds.forEach((hoveredObjectId) =>
-            reset(hoveredMapObjectsFamily(hoveredObjectId))
-          );
-          const hoveredMapObjectIds = snapshot
-            .getLoadable(mapObjectIdsAtom)
-            .getValue()
-            .filter((mapObjectId) => {
-              const mapObject = snapshot
-                .getLoadable(mapObjectsFamily(mapObjectId))
-                .getValue();
-              return (
-                mapObject &&
-                canControlMapObject(mapObject, myself) &&
-                mapObjectIntersectsWithRectangle(mapObject, { x, y, w, h })
-              );
+        withSelectionAreaDo<void>(
+          selectionArea,
+          (x, y, w, h) => {
+            lastHoveredObjectIds.forEach((hoveredObjectId) =>
+              reset(hoveredMapObjectsFamily(hoveredObjectId))
+            );
+            const hoveredMapObjectIds = snapshot
+              .getLoadable(mapObjectIdsAtom)
+              .getValue()
+              .filter((mapObjectId) => {
+                const mapObject = snapshot
+                  .getLoadable(mapObjectsFamily(mapObjectId))
+                  .getValue();
+                return (
+                  mapObject &&
+                  canControlMapObject(mapObject, myself) &&
+                  mapObjectIntersectsWithRectangle(mapObject, { x, y, w, h })
+                );
+              });
+
+            hoveredMapObjectIds.forEach((mapObjectId) => {
+              set(hoveredMapObjectsFamily(mapObjectId), true);
             });
-
-          hoveredMapObjectIds.forEach((mapObjectId) => {
-            set(hoveredMapObjectsFamily(mapObjectId), true);
-          });
-          set(
-            hoveredMapObjectIdsAtom,
-            hoveredMapObjectIds.map((each) => each)
-          );
-        },
-        () => {
-          lastHoveredObjectIds.forEach((mapObjectId) =>
-            reset(hoveredMapObjectsFamily(mapObjectId))
-          );
-          set(hoveredMapObjectIdsAtom, []);
-        }
-      );
-    },
+            set(
+              hoveredMapObjectIdsAtom,
+              hoveredMapObjectIds.map((each) => each)
+            );
+          },
+          () => {
+            lastHoveredObjectIds.forEach((mapObjectId) =>
+              reset(hoveredMapObjectsFamily(mapObjectId))
+            );
+            set(hoveredMapObjectIdsAtom, []);
+          }
+        );
+      },
     [myself]
   );
 
@@ -493,58 +497,60 @@ export const RRMapView = React.memo<{
   }, [updateHoveredMapObjects, selectionArea]);
 
   const setSelectedMapObjectIds = useRecoilCallback(
-    ({ snapshot, set, reset }) => (ids: RRMapObjectID[]) => {
-      const lastSelectedObjectIds = snapshot
-        .getLoadable(selectedMapObjectIdsAtom)
-        .getValue();
-      lastSelectedObjectIds.forEach((id) =>
-        reset(selectedMapObjectsFamily(id))
-      );
+    ({ snapshot, set, reset }) =>
+      (ids: RRMapObjectID[]) => {
+        const lastSelectedObjectIds = snapshot
+          .getLoadable(selectedMapObjectIdsAtom)
+          .getValue();
+        lastSelectedObjectIds.forEach((id) =>
+          reset(selectedMapObjectsFamily(id))
+        );
 
-      set(selectedMapObjectIdsAtom, ids);
-      ids.map((id) => set(selectedMapObjectsFamily(id), true));
-    },
+        set(selectedMapObjectIdsAtom, ids);
+        ids.map((id) => set(selectedMapObjectsFamily(id), true));
+      },
     []
   );
 
   const handleMouseUp = useRecoilCallback(
-    ({ snapshot }) => (e: MouseEvent) => {
-      switch (mouseActionRef.current) {
-        case MouseAction.MOVE_MAP_OBJECT:
-          onStopMoveMapObjects();
-          setMeasurePath([]);
-          dragStartIdRef.current = null;
-          break;
-        case MouseAction.SELECTION_AREA: {
-          const lastHoveredObjectIds = snapshot
-            .getLoadable(hoveredMapObjectIdsAtom)
-            .getValue()
-            .filter(Boolean);
-          setSelectedMapObjectIds(lastHoveredObjectIds);
-          setSelectionArea(null);
-          break;
-        }
-        case MouseAction.USE_TOOL:
-          toolHandler.onMouseUp(
-            globalToLocal(transformRef.current, localCoords(e))
-          );
-          break;
-        case MouseAction.MEASURE:
-          setMeasurePath([]);
-          break;
-        case MouseAction.PAN:
-          if (settings.renderMode === "mostly-fancy") {
-            setRoughEnabled(true);
+    ({ snapshot }) =>
+      (e: MouseEvent) => {
+        switch (mouseActionRef.current) {
+          case MouseAction.MOVE_MAP_OBJECT:
+            onStopMoveMapObjects();
+            setMeasurePath([]);
+            dragStartIdRef.current = null;
+            break;
+          case MouseAction.SELECTION_AREA: {
+            const lastHoveredObjectIds = snapshot
+              .getLoadable(hoveredMapObjectIdsAtom)
+              .getValue()
+              .filter(Boolean);
+            setSelectedMapObjectIds(lastHoveredObjectIds);
+            setSelectionArea(null);
+            break;
           }
-          break;
-        case MouseAction.NONE:
-          break;
-        default:
-          assertNever(mouseActionRef.current);
-      }
+          case MouseAction.USE_TOOL:
+            toolHandler.onMouseUp(
+              globalToLocal(transformRef.current, localCoords(e))
+            );
+            break;
+          case MouseAction.MEASURE:
+            setMeasurePath([]);
+            break;
+          case MouseAction.PAN:
+            if (settings.renderMode === "mostly-fancy") {
+              setRoughEnabled(true);
+            }
+            break;
+          case MouseAction.NONE:
+            break;
+          default:
+            assertNever(mouseActionRef.current);
+        }
 
-      mouseActionRef.current = MouseAction.NONE;
-    },
+        mouseActionRef.current = MouseAction.NONE;
+      },
     [
       settings.renderMode,
       setMeasurePath,
@@ -579,30 +585,31 @@ export const RRMapView = React.memo<{
   );
 
   const handleStartMoveMapObject = useRecoilCallback(
-    ({ snapshot }) => (object: RRMapObject, event: React.MouseEvent) => {
-      if (
-        event.button === TOOL_BUTTON &&
-        toolButtonState === "select" &&
-        canControlMapObject(object, myself)
-      ) {
-        const local = localCoords(event);
-
-        (document.activeElement as HTMLElement | null)?.blur();
-        event.preventDefault();
-        event.stopPropagation();
-        dragStartIdRef.current = object.id;
-        dragLastMouseRef.current = local;
+    ({ snapshot }) =>
+      (object: RRMapObject, event: React.MouseEvent) => {
         if (
-          !snapshot
-            .getLoadable(selectedMapObjectIdsAtom)
-            .getValue()
-            .includes(object.id)
+          event.button === TOOL_BUTTON &&
+          toolButtonState === "select" &&
+          canControlMapObject(object, myself)
         ) {
-          setSelectedMapObjectIds([object.id]);
+          const local = localCoords(event);
+
+          (document.activeElement as HTMLElement | null)?.blur();
+          event.preventDefault();
+          event.stopPropagation();
+          dragStartIdRef.current = object.id;
+          dragLastMouseRef.current = local;
+          if (
+            !snapshot
+              .getLoadable(selectedMapObjectIdsAtom)
+              .getValue()
+              .includes(object.id)
+          ) {
+            setSelectedMapObjectIds([object.id]);
+          }
+          mouseActionRef.current = MouseAction.MOVE_MAP_OBJECT;
         }
-        mouseActionRef.current = MouseAction.MOVE_MAP_OBJECT;
-      }
-    },
+      },
     [myself, setSelectedMapObjectIds, toolButtonState]
   );
 

@@ -39,13 +39,11 @@ export const MapToolbar = React.memo<{
   >("map/toolbar/drawType", "freehand");
   const [drawColor, setDrawColor] = useState(myself.color);
   const [snap, setSnap] = useLocalState<MapSnap>("map/toolbar/snap", "grid");
-  const [
-    defaultVisibility,
-    setDefaultVisibility,
-  ] = useLocalState<RRObjectVisibility>(
-    "map/toolbar/defaultVisibility",
-    "everyone"
-  );
+  const [defaultVisibility, setDefaultVisibility] =
+    useLocalState<RRObjectVisibility>(
+      "map/toolbar/defaultVisibility",
+      "everyone"
+    );
 
   const [favoritedReactions, setFavoritedReactions] = useLocalState<string[]>(
     "map/toolbar/favoritedReactions",
@@ -438,15 +436,13 @@ function MapSettings({ map }: { map: RRMap }) {
     (name) => mapUpdate({ id: map.id, changes: { name } }),
     1000
   );
-  const [
-    backgroundColor,
-    setBackgroundColor,
-  ] = useOptimisticDebouncedServerUpdate(
-    (state) => byId(state.maps.entities, map.id)?.backgroundColor ?? "",
-    (backgroundColor) =>
-      mapUpdate({ id: map.id, changes: { backgroundColor } }),
-    500
-  );
+  const [backgroundColor, setBackgroundColor] =
+    useOptimisticDebouncedServerUpdate(
+      (state) => byId(state.maps.entities, map.id)?.backgroundColor ?? "",
+      (backgroundColor) =>
+        mapUpdate({ id: map.id, changes: { backgroundColor } }),
+      500
+    );
   const [gridEnabled, setGridEnabled] = useOptimisticDebouncedServerUpdate(
     (state) => byId(state.maps.entities, map.id)?.gridEnabled ?? false,
     (gridEnabled) => mapUpdate({ id: map.id, changes: { gridEnabled } }),

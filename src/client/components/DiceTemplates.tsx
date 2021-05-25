@@ -2,7 +2,6 @@ import clsx from "clsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import ReactDOM from "react-dom";
-import { selector } from "recoil";
 import tinycolor from "tinycolor2";
 import {
   diceTemplateAdd,
@@ -721,9 +720,11 @@ function DamageTypeEditor({
     RRDamageType["type"]
   >(
     (state) =>
-      (byId(state.diceTemplates.entities, templateId)?.parts.find(
-        (each) => each.id === part.id
-      ) as RRDiceTemplatePartWithDamage | undefined)?.damage.type ?? null,
+      (
+        byId(state.diceTemplates.entities, templateId)?.parts.find(
+          (each) => each.id === part.id
+        ) as RRDiceTemplatePartWithDamage | undefined
+      )?.damage.type ?? null,
     (type) =>
       diceTemplatePartUpdate({
         id: part.id,
@@ -754,22 +755,22 @@ function DiceMultipleRollEditor({
   part: RRDiceTemplatePartDice;
   templateId: RRDiceTemplateID;
 }) {
-  const [
-    multiple,
-    setMultiple,
-  ] = useOptimisticDebouncedServerUpdate<RRMultipleRoll>(
-    (state) =>
-      (byId(state.diceTemplates.entities, templateId)?.parts.find(
-        (each) => each.id === part.id
-      ) as RRDiceTemplatePartDice | undefined)?.modified ?? "none",
-    (multiple) =>
-      diceTemplatePartUpdate({
-        id: part.id,
-        templateId,
-        changes: { modified: multiple },
-      }),
-    1000
-  );
+  const [multiple, setMultiple] =
+    useOptimisticDebouncedServerUpdate<RRMultipleRoll>(
+      (state) =>
+        (
+          byId(state.diceTemplates.entities, templateId)?.parts.find(
+            (each) => each.id === part.id
+          ) as RRDiceTemplatePartDice | undefined
+        )?.modified ?? "none",
+      (multiple) =>
+        diceTemplatePartUpdate({
+          id: part.id,
+          templateId,
+          changes: { modified: multiple },
+        }),
+      1000
+    );
 
   return (
     <label>
@@ -795,9 +796,11 @@ function DiceCountEditor({
 }) {
   const [count, setCount] = useOptimisticDebouncedServerUpdate(
     (state) =>
-      (byId(state.diceTemplates.entities, templateId)?.parts.find(
-        (each) => each.id === part.id
-      ) as RRDiceTemplatePartDice | undefined)?.count.toString() ?? "",
+      (
+        byId(state.diceTemplates.entities, templateId)?.parts.find(
+          (each) => each.id === part.id
+        ) as RRDiceTemplatePartDice | undefined
+      )?.count.toString() ?? "",
     (countStr) => {
       const count = parseInt(countStr);
       if (isNaN(count)) {
@@ -830,9 +833,11 @@ function ModifierNumberEditor({
 }) {
   const [count, setCount] = useOptimisticDebouncedServerUpdate(
     (state) =>
-      (byId(state.diceTemplates.entities, templateId)?.parts.find(
-        (each) => each.id === part.id
-      ) as RRDiceTemplatePartModifier | undefined)?.number.toString() ?? "",
+      (
+        byId(state.diceTemplates.entities, templateId)?.parts.find(
+          (each) => each.id === part.id
+        ) as RRDiceTemplatePartModifier | undefined
+      )?.number.toString() ?? "",
     (modifierStr) => {
       const number = parseInt(modifierStr);
       if (isNaN(number)) {

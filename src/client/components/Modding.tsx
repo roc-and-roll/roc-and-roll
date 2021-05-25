@@ -61,10 +61,8 @@ export interface MODDING {
 }
 
 export function ModApi() {
-  const {
-    sources: compendiumSources,
-    addSource: addCompendiumSource,
-  } = useCompendium();
+  const { sources: compendiumSources, addSource: addCompendiumSource } =
+    useCompendium();
   const compendiumSourcesRef = useLatest(compendiumSources);
   const addCompendiumSourceRef = useLatest(addCompendiumSource);
 

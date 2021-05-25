@@ -52,10 +52,10 @@ export function SettingsProvider(props: { children: React.ReactNode }) {
     }
   }, [settings, forgetSettings]);
 
-  const value = useMemo(() => [settings, setSettings] as const, [
-    settings,
-    setSettings,
-  ]);
+  const value = useMemo(
+    () => [settings, setSettings] as const,
+    [settings, setSettings]
+  );
 
   return (
     <RRSettingsContext.Provider value={value}>

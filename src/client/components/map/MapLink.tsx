@@ -19,9 +19,10 @@ export function MapLink({
   const myself = useMyself();
   const canControl =
     !link.locked && canStartMoving && link.playerId === myself.id;
-  const style = useMemo(() => (canControl ? { cursor: "move" } : {}), [
-    canControl,
-  ]);
+  const style = useMemo(
+    () => (canControl ? { cursor: "move" } : {}),
+    [canControl]
+  );
   const map = useServerState((state) => byId(state.maps.entities, link.mapId));
   const players = useServerState((state) => state.players);
   const [menuVisible, setMenuVisible] = useState(false);

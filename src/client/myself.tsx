@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useMemo } from "react";
 import { useRecoilValue } from "recoil";
-import { useRecoilState } from "recoil";
 import { useSetRecoilState } from "recoil";
 import { atom } from "recoil";
 import { byId, RRMap, RRPlayer, RRPlayerID } from "../shared/state";
@@ -43,11 +42,8 @@ export function useIsGM() {
 
 export function MyselfProvider({ children }: { children: React.ReactNode }) {
   const players = useServerState((state) => state.players);
-  const [
-    myPlayerId,
-    setMyPlayerId,
-    forgetMyPlayerId,
-  ] = useLocalState<RRPlayerID | null>("myPlayerId", null);
+  const [myPlayerId, setMyPlayerId, forgetMyPlayerId] =
+    useLocalState<RRPlayerID | null>("myPlayerId", null);
 
   // Important: Use useMyself everywhere else!
   const myself = myPlayerId ? byId(players.entities, myPlayerId) ?? null : null;
@@ -100,9 +96,11 @@ export function useMyMap<T>(selector: (map: RRMap | undefined) => T) {
 }
 
 export function useLoginLogout() {
-  const { setMyPlayerId: login, forgetMyPlayerId: logout, player } = useContext(
-    MyselfContext
-  );
+  const {
+    setMyPlayerId: login,
+    forgetMyPlayerId: logout,
+    player,
+  } = useContext(MyselfContext);
 
   return { login, logout, loggedIn: !!player };
 }

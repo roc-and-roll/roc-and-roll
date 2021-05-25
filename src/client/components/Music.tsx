@@ -76,9 +76,9 @@ export function Music() {
 
   const [filter, setFilter] = useState("");
 
-  const ownSongs = entries(
-    useServerState((state) => state.assets)
-  ).flatMap((a) => (a.type === "song" ? a : []));
+  const ownSongs = entries(useServerState((state) => state.assets)).flatMap(
+    (a) => (a.type === "song" ? a : [])
+  );
 
   const onStop = (s: RRActiveSong) => {
     dispatch(ephermalSongRemove(s.id));

@@ -94,7 +94,8 @@ export type RRInitiativeTrackerEntryLairAction = Extract<
   { type: "lairAction" }
 >;
 
-export type RRInitiativeTrackerEntry = SyncedState["initiativeTracker"]["entries"]["__trait"];
+export type RRInitiativeTrackerEntry =
+  SyncedState["initiativeTracker"]["entries"]["__trait"];
 
 export type RRPlayer = SyncedState["players"]["__trait"];
 
@@ -146,7 +147,8 @@ export type RRMapObject = SyncedState["maps"]["__trait"]["objects"]["__trait"];
 
 export type RRMap = SyncedState["maps"]["__trait"];
 
-export type RRPrivateChatMessage = SyncedState["privateChats"]["__trait"]["messages"]["__trait"];
+export type RRPrivateChatMessage =
+  SyncedState["privateChats"]["__trait"]["messages"]["__trait"];
 
 export type RRPrivateChat = SyncedState["privateChats"]["__trait"];
 
@@ -403,14 +405,11 @@ export const initialSyncedState: SyncedState = {
   },
 };
 
-export type SyncedStateAction<
-  P = void,
-  T extends string = string,
-  M = never
-> = PayloadAction<P, T, M, never> & {
-  meta?: {
-    __optimisticUpdateId__?: OptimisticUpdateID;
+export type SyncedStateAction<P = void, T extends string = string, M = never> =
+  PayloadAction<P, T, M, never> & {
+    meta?: {
+      __optimisticUpdateId__?: OptimisticUpdateID;
+    };
   };
-};
 
 export type SyncedStateDispatch = Dispatch<SyncedStateAction>;

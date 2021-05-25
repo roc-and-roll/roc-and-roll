@@ -27,15 +27,12 @@ const config = {
   ) => b.initiative - a.initiative,
 };
 
-const initiativeTrackerEntryAdapter = createEntityAdapter<RRInitiativeTrackerEntry>(
-  config
-);
-const initiativeTrackerEntryCharacterAdapter = createEntityAdapter<RRInitiativeTrackerEntryCharacter>(
-  config
-);
-const initiativeTrackerEntryLairActionAdapter = createEntityAdapter<RRInitiativeTrackerEntryLairAction>(
-  config
-);
+const initiativeTrackerEntryAdapter =
+  createEntityAdapter<RRInitiativeTrackerEntry>(config);
+const initiativeTrackerEntryCharacterAdapter =
+  createEntityAdapter<RRInitiativeTrackerEntryCharacter>(config);
+const initiativeTrackerEntryLairActionAdapter =
+  createEntityAdapter<RRInitiativeTrackerEntryLairAction>(config);
 
 const initiativeTrackerEntriesReducer = createReducer(
   initialSyncedState.initiativeTracker.entries,

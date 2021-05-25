@@ -25,9 +25,8 @@ import { PrivateChatInput } from "./PrivateChatInput";
 import { Button } from "../ui/Button";
 
 export default function PrivateChats() {
-  const [selectedChatId, setSelectedChatId] = useState<RRPrivateChatID | null>(
-    null
-  );
+  const [selectedChatId, setSelectedChatId] =
+    useState<RRPrivateChatID | null>(null);
 
   return selectedChatId ? (
     <Chat id={selectedChatId} close={() => setSelectedChatId(null)} />

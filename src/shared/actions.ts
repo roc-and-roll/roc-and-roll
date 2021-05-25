@@ -82,13 +82,11 @@ export const characterAdd = createAction(
   })
 );
 
-export const characterUpdate = createAction<Update<RRCharacter>>(
-  "character/update"
-);
+export const characterUpdate =
+  createAction<Update<RRCharacter>>("character/update");
 
-export const characterRemove = createAction<RRCharacter["id"]>(
-  "character/remove"
-);
+export const characterRemove =
+  createAction<RRCharacter["id"]>("character/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
 // Character Templates
@@ -218,13 +216,11 @@ export const privateChatAdd = createAction(
   }
 );
 
-export const privateChatUpdate = createAction<
-  Update<Omit<RRPrivateChat, "messages">>
->("privatechat/update");
+export const privateChatUpdate =
+  createAction<Update<Omit<RRPrivateChat, "messages">>>("privatechat/update");
 
-export const privateChatRemove = createAction<RRPrivateChat["id"]>(
-  "privatechat/remove"
-);
+export const privateChatRemove =
+  createAction<RRPrivateChat["id"]>("privatechat/remove");
 
 export const privateChatMessageAdd = createAction(
   "privatechat/message/add",
@@ -424,19 +420,16 @@ export const assetSongAdd = createAction<RRSong>("asset/song/add");
 
 export const assetImageAdd = createAction<RRImage>("asset/image/add");
 
-export const assetSongUpdate = createAction<Update<RRSong>>(
-  "asset/song/update"
-);
+export const assetSongUpdate =
+  createAction<Update<RRSong>>("asset/song/update");
 
-export const assetImageUpdate = createAction<Update<RRImage>>(
-  "asset/image/update"
-);
+export const assetImageUpdate =
+  createAction<Update<RRImage>>("asset/image/update");
 
 export const assetSongRemove = createAction<RRSong["id"]>("asset/song/remove");
 
-export const assetImageRemove = createAction<RRImage["id"]>(
-  "asset/image/remove"
-);
+export const assetImageRemove =
+  createAction<RRImage["id"]>("asset/image/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
 // Asset state

@@ -188,9 +188,9 @@ export function InitiativeTracker() {
     ),
   ];
 
-  const characterIdsInTracker = entries(
-    initiativeTracker.entries
-  ).flatMap((entry) => (entry.type === "character" ? entry.characterIds : []));
+  const characterIdsInTracker = entries(initiativeTracker.entries).flatMap(
+    (entry) => (entry.type === "character" ? entry.characterIds : [])
+  );
   const selectionAlreadyInList = characterIdsInTracker.some((id) =>
     selectedTokenIds.includes(id)
   );
