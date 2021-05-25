@@ -7,7 +7,6 @@ import {
 import {
   RRCapPoint,
   RRMap,
-  RRMapDrawingBase,
   RRMapObject,
   RRMapObjectID,
   RRPlayer,
@@ -96,7 +95,7 @@ export function useMapToolHandler(
   const { send } = useServerMessages();
 
   if (editState.tool === "draw") {
-    const create = (p: RRPoint): RRMapDrawingBase => ({
+    const create = (p: RRPoint) => ({
       id: rrid<RRMapObject>(),
       playerId: myself.id,
       color: editState.color,

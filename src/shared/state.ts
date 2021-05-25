@@ -28,6 +28,8 @@ export type OptimisticUpdateID = Opaque<string, "optimisticUpdate">;
 
 export type RRColor = string;
 
+export type RRTimestamp = number;
+
 export type RRPoint = { readonly x: number; readonly y: number };
 
 export type RRCapPoint = { readonly X: number; readonly Y: number };
@@ -45,13 +47,9 @@ export type RRFile = {
   filename: string;
 };
 
-export type RRAura = {
-  size: number;
-  color: RRColor;
-  shape: "circle" | "square";
-  visibility: "playerOnly" | "playerAndGM" | "everyone";
-  visibileWhen: "always" | "onTurn" | "hover";
-};
+export type RRAura = IterableElement<
+  SyncedState["characters"]["__trait"]["auras"]
+>;
 
 export const conditionNames = [
   "blinded",
@@ -86,190 +84,83 @@ export const conditionNames = [
 
 export type RRCharacterCondition = IterableElement<typeof conditionNames>;
 
-export type RRTimestamp = number;
+export type RRInitiativeTrackerEntryCharacter = Extract<
+  SyncedState["initiativeTracker"]["entries"]["__trait"],
+  { type: "character" }
+>;
 
-interface RRInitiativeTrackerEntryBase {
-  id: RRInitiativeTrackerEntryID;
-  initiative: number;
-}
+export type RRInitiativeTrackerEntryLairAction = Extract<
+  SyncedState["initiativeTracker"]["entries"]["__trait"],
+  { type: "lairAction" }
+>;
 
-export interface RRInitiativeTrackerEntryCharacter
-  extends RRInitiativeTrackerEntryBase {
-  type: "character";
-  characterIds: RRCharacterID[];
-}
+export type RRInitiativeTrackerEntry = SyncedState["initiativeTracker"]["entries"]["__trait"];
 
-export interface RRInitiativeTrackerEntryLairAction
-  extends RRInitiativeTrackerEntryBase {
-  type: "lairAction";
-  description: string;
-}
-
-export type RRInitiativeTrackerEntry =
-  | RRInitiativeTrackerEntryCharacter
-  | RRInitiativeTrackerEntryLairAction;
-
-export type RRPlayer = {
-  id: RRPlayerID;
-  name: string;
-  color: RRColor;
-  isGM: boolean;
-  currentMap: RRMapID;
-  characterIds: RRCharacterID[];
-  favoritedAssetIds: RRAssetID[];
-};
+export type RRPlayer = SyncedState["players"]["__trait"];
 
 export type RRObjectVisibility = "gmOnly" | "everyone";
 
-export type RRCharacter = {
-  id: RRCharacterID;
-  name: string;
+export type RRCharacter = SyncedState["characters"]["__trait"];
 
-  image: RRFile | null;
-  scale: number;
+export type RRToken = Extract<
+  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  { type: "token" }
+>;
 
-  auras: RRAura[];
-  hp: number;
-  maxHP: number;
-  attributes: Record<string, number | null>;
-  conditions: RRCharacterCondition[];
+export type RRMapLink = Extract<
+  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  { type: "mapLink" }
+>;
 
-  visibility: RRObjectVisibility;
-  localToMap: RRMapID | null;
-};
+export type RRMapDrawingImage = Extract<
+  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  { type: "image" }
+>;
 
-type RRMapObjectBase = {
-  id: RRMapObjectID;
-  position: RRPoint;
-  playerId: RRPlayerID;
-  visibility: RRObjectVisibility;
-};
+export type RRMapDrawingRectangle = Extract<
+  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  { type: "rectangle" }
+>;
 
-export interface RRToken extends Omit<RRMapObjectBase, "visibility"> {
-  type: "token";
-  characterId: RRCharacterID;
-}
+export type RRMapDrawingEllipse = Extract<
+  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  { type: "ellipse" }
+>;
 
-export interface RRMapLink extends RRMapObjectBase {
-  type: "mapLink";
-  locked: boolean;
-  mapId: RRMapID;
-  color: RRColor;
-}
+export type RRMapDrawingPolygon = Extract<
+  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  { type: "polygon" }
+>;
 
-export interface RRMapDrawingBase extends RRMapObjectBase {
-  locked: boolean;
-  color: RRColor;
-}
+export type RRMapDrawingFreehand = Extract<
+  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  { type: "freehand" }
+>;
 
-export interface RRMapDrawingImage extends RRMapDrawingBase {
-  type: "image";
-  image: RRFile;
-  originalSize: RRPoint;
-  height: number;
-}
+export type RRMapDrawingText = Extract<
+  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  { type: "text" }
+>;
 
-export interface RRMapDrawingRectangle extends RRMapDrawingBase {
-  type: "rectangle";
-  size: RRPoint;
-}
+export type RRMapObject = SyncedState["maps"]["__trait"]["objects"]["__trait"];
 
-export interface RRMapDrawingEllipse extends RRMapDrawingBase {
-  type: "ellipse";
-  size: RRPoint;
-}
+export type RRMap = SyncedState["maps"]["__trait"];
 
-export interface RRMapDrawingPolygon extends RRMapDrawingBase {
-  type: "polygon";
-  // a polygon with three corners only has two entries in the points array,
-  // because the first point is always implicitly 0, 0.
-  points: RRPoint[];
-}
+export type RRPrivateChatMessage = SyncedState["privateChats"]["__trait"]["messages"]["__trait"];
 
-export interface RRMapDrawingFreehand extends RRMapDrawingBase {
-  type: "freehand";
-  // a freehand drawing with three points only has two entries in the points
-  // array, because the first point is always implicitly 0, 0.
-  points: RRPoint[];
-}
+export type RRPrivateChat = SyncedState["privateChats"]["__trait"];
 
-export interface RRMapDrawingText extends RRMapDrawingBase {
-  type: "text";
-  text: string;
-}
+export type RRLogEntryMessage = Extract<
+  SyncedState["logEntries"]["__trait"],
+  { type: "message" }
+>;
 
-export type RRMapObject =
-  | RRToken
-  | RRMapLink
-  | RRMapDrawingImage
-  | RRMapDrawingRectangle
-  | RRMapDrawingEllipse
-  | RRMapDrawingPolygon
-  | RRMapDrawingFreehand
-  | RRMapDrawingText;
+export type RRLogEntryAchievement = Extract<
+  SyncedState["logEntries"]["__trait"],
+  { type: "achievement" }
+>;
 
-export type RRMap = {
-  id: RRMapID;
-  name: string;
-
-  objects: EntityCollection<RRMapObject>;
-
-  backgroundColor: RRColor;
-  gridEnabled: boolean;
-  gridColor: RRColor;
-  // if null, all should be revealed; if empty array, everything is occluded
-  revealedAreas: RRCapPoint[][] | null;
-
-  gmWorldPosition: RRPoint;
-};
-
-export type RRPrivateChatMessage = {
-  id: RRPrivateChatMessageID;
-  direction: "a2b" | "b2a";
-  text: string;
-  read: boolean;
-  timestamp: RRTimestamp;
-};
-
-export type RRPrivateChat = {
-  id: RRPrivateChatID;
-  idA: RRPlayerID;
-  idB: RRPlayerID;
-  messages: EntityCollection<RRPrivateChatMessage>;
-};
-
-// We extend JsonObject here just to verify that we do not use any
-// non-serializable properties like Dates.
-// Extending JsonObject makes no difference at runtime.
-interface RRBaseLogEntry {
-  id: RRLogEntryID;
-  silent: boolean;
-  playerId: RRPlayerID | null;
-  timestamp: RRTimestamp;
-}
-
-export interface RRLogEntryMessage extends RRBaseLogEntry {
-  type: "message";
-  payload: {
-    text: string;
-  };
-}
-
-export interface RRLogEntryAchievement extends RRBaseLogEntry {
-  type: "achievement";
-  payload: {
-    achievementId: number;
-  };
-}
-
-export interface RRDiceTemplate {
-  id: RRDiceTemplateID;
-  playerId: RRPlayerID;
-  name: string;
-  notes: string;
-  parts: RRDiceTemplatePart[];
-  rollType: "initiative" | "hit" | "attack" | null;
-}
+export type RRDiceTemplate = SyncedState["diceTemplates"]["__trait"];
 
 export const linkedModifierNames = [
   "STR",
@@ -282,47 +173,44 @@ export const linkedModifierNames = [
   "proficiency",
 ] as const;
 
-type RRDiceTemplatePartBase = {
-  id: RRDiceTemplatePartID;
-};
-
-export interface RRDiceTemplatePartTemplate extends RRDiceTemplatePartBase {
-  type: "template";
-  templateId: RRDiceTemplateID;
-}
-
-export interface RRDiceTemplatePartModifier extends RRDiceTemplatePartBase {
-  type: "modifier";
-  number: number;
-  damage: RRDamageType;
-}
-
-export interface RRDiceTemplatePartLinkedModifier
-  extends RRDiceTemplatePartBase {
-  type: "linkedModifier";
-  name: IterableElement<typeof linkedModifierNames>;
-  damage: RRDamageType;
-}
-
-export interface RRDiceTemplatePartDice extends RRDiceTemplatePartBase {
-  type: "dice";
-  count: number;
-  faces: number; // 4, 6, 8, 10, 12, 20, 100, but also 3, 2, etc.
-  negated: boolean;
-  damage: RRDamageType;
-  modified: RRMultipleRoll;
-}
-
-export type RRDiceTemplatePartWithDamage = Extract<
-  RRDiceTemplatePart,
-  { damage: RRDamageType }
+export type RRDiceTemplatePartTemplate = Extract<
+  IterableElement<SyncedState["diceTemplates"]["__trait"]["parts"]>,
+  {
+    type: "template";
+  }
 >;
 
-export type RRDiceTemplatePart =
-  | RRDiceTemplatePartTemplate
-  | RRDiceTemplatePartModifier
-  | RRDiceTemplatePartLinkedModifier
-  | RRDiceTemplatePartDice;
+export type RRDiceTemplatePartModifier = Extract<
+  IterableElement<SyncedState["diceTemplates"]["__trait"]["parts"]>,
+  {
+    type: "modifier";
+  }
+>;
+
+export type RRDiceTemplatePartLinkedModifier = Extract<
+  IterableElement<SyncedState["diceTemplates"]["__trait"]["parts"]>,
+  {
+    type: "linkedModifier";
+  }
+>;
+
+export type RRDiceTemplatePartDice = Extract<
+  IterableElement<SyncedState["diceTemplates"]["__trait"]["parts"]>,
+  {
+    type: "dice";
+  }
+>;
+
+export type RRDiceTemplatePartWithDamage = Extract<
+  IterableElement<SyncedState["diceTemplates"]["__trait"]["parts"]>,
+  {
+    damage: RRDamageType;
+  }
+>;
+
+export type RRDiceTemplatePart = IterableElement<
+  SyncedState["diceTemplates"]["__trait"]["parts"]
+>;
 
 export const damageTypes = [
   null,
