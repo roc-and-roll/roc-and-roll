@@ -98,7 +98,7 @@ export function Sidebar({ logout }: { logout: () => void }) {
           <Achievements />
         </Collapsible>
 
-        <Collapsible title="Compendium">
+        <Collapsible title="Compendium" defaultCollapsed>
           <Compendium />
         </Collapsible>
 
@@ -106,7 +106,7 @@ export function Sidebar({ logout }: { logout: () => void }) {
           <Settings />
         </Collapsible>
 
-        <Collapsible title="Modding">
+        <Collapsible title="Modding" defaultCollapsed>
           <Modding />
         </Collapsible>
 

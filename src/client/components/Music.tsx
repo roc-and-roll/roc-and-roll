@@ -15,7 +15,7 @@ import {
   RRAssetID,
   RRSong,
 } from "../../shared/state";
-import { rrid } from "../../shared/util";
+import { rrid, timestamp } from "../../shared/util";
 import { useFileUpload } from "../files";
 import { useMyself } from "../myself";
 import {
@@ -107,7 +107,7 @@ export function Music() {
   const onStart = (t: RRSong) => {
     dispatch(
       ephermalSongAdd({
-        startedAt: +new Date(),
+        startedAt: timestamp(),
         id: rrid<RRActiveSong>(),
         song: t,
         volume: 0.5, // TODO

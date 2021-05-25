@@ -68,47 +68,53 @@ export function Compendium() {
   const { sources, addSource, removeSource } = useCompendium();
 
   return (
-    <ul>
-      <li>
-        <p>upload new source</p>
-        <input
-          type="file"
-          multiple
-          onChange={async (e) => {
-            const files = Array.from(e.target.files ?? []);
-            console.log(files);
+    <>
+      <p>
+        Press <kbd>SHIFT</kbd> twice to open the quick reference.
+      </p>
+      <ul>
+        <li>
+          <p>upload new source</p>
+          <input
+            type="file"
+            multiple
+            onChange={async (e) => {
+              const files = Array.from(e.target.files ?? []);
+              const jsons = await Promise.all(
+                files.map(
+                  async (file) =>
+                    [
+                      file.name,
+                      JSON.parse(await file.text()) as unknown,
+                    ] as const
+                )
+              );
 
-            const jsons = await Promise.all(
-              files.map(
-                async (file) =>
-                  [file.name, JSON.parse(await file.text()) as unknown] as const
-              )
-            );
-
-            jsons.forEach(([fileName, json]) => {
-              const errors: string[] = [];
-              if (isCompendiumData(json, { errors })) {
-                addSource({
-                  id: rrid<CompendiumSource>(),
-                  title: fileName,
-                  data: json,
-                  meta: "",
-                });
-              } else {
-                console.error({ json, errors });
-                alert("Invalid data");
-              }
-            });
-          }}
-        />
-      </li>
-      {sources.map((source, i) => (
-        <li key={i}>
-          <p>{source.title}</p>
-          <p>Spells: {source.data.spell.length}</p>
-          <button onClick={() => removeSource(source.id)}>remove</button>
+              jsons.forEach(([fileName, json]) => {
+                const errors: string[] = [];
+                if (isCompendiumData(json, { errors })) {
+                  addSource({
+                    id: rrid<CompendiumSource>(),
+                    title: fileName,
+                    data: json,
+                    meta: "",
+                  });
+                } else {
+                  console.error({ json, errors });
+                  alert("Invalid data");
+                }
+              });
+            }}
+          />
         </li>
-      ))}
-    </ul>
+        {sources.map((source, i) => (
+          <li key={i}>
+            <p>{source.title}</p>
+            <p>Spells: {source.data.spell.length}</p>
+            <button onClick={() => removeSource(source.id)}>remove</button>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
