@@ -84,7 +84,12 @@ export const MapToken = React.memo<{
   } = object;
 
   const canControl = canStartMoving && canControlToken(token, myself);
-  const tokenStyle = canControl ? { cursor: "move" } : {};
+  const tokenStyle = {
+    ...(token.maxHP > 0 && token.hp <= token.maxHP / 2
+      ? { filter: "url(#tokenHurtShadow)" }
+      : {}),
+    ...(canControl ? { cursor: "move" } : {}),
+  };
 
   const tokenSize = GRID_SIZE * token.scale;
   const tokenRepresentation = token.image ? (
@@ -134,15 +139,35 @@ export const MapToken = React.memo<{
           auraArea
         )}
       {healthbarArea &&
-        canControl &&
         ReactDOM.createPortal(
-          <g transform={`translate(${x},${y - 16})`}>
-            <Healthbar
-              token={token}
-              setHP={setHP}
-              contrastColor={contrastColor}
-            />
-          </g>,
+          <>
+            {canControl && (
+              <g transform={`translate(${x},${y - 16})`}>
+                <Healthbar
+                  token={token}
+                  setHP={setHP}
+                  contrastColor={contrastColor}
+                />
+              </g>
+            )}
+            {token.conditions.map((condition, index) => (
+              <image
+                key={condition}
+                // TODO: Normally, we'd want to disable pointer events on
+                // condition icons, so that clicking on them will still allow
+                // you to select and move your token. However, this causes the
+                // <title> not to show when hovering the condition icon.
+                //
+                // pointerEvents="none"
+                className="token-condition-icon"
+                x={object.position.x + (index % 4) * 16}
+                y={object.position.y + Math.floor(index / 4) * 16}
+                href={conditionIcons.find((i) => i.name === condition)?.icon}
+              >
+                <title>{condition}</title>
+              </image>
+            ))}
+          </>,
           healthbarArea
         )}
 
@@ -173,7 +198,6 @@ export const MapToken = React.memo<{
               fill="transparent"
               stroke={contrastColor}
               className="selection-area-highlight"
-              style={tokenStyle}
             />
           )}
           {token.visibility !== "everyone" && (
@@ -201,15 +225,6 @@ export const MapToken = React.memo<{
               </RoughText>
             </>
           )}
-          {token.conditions.map((condition, index) => (
-            <image
-              className="token-condition-icon"
-              x={object.position.x + (index % 4) * 16}
-              y={object.position.y + Math.floor(index / 4) * 16}
-              key={condition}
-              href={conditionIcons.find((i) => i.name === condition)?.icon}
-            />
-          ))}
         </g>
       </Popover>
     </>

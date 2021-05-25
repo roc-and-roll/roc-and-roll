@@ -21,6 +21,10 @@ import { MapLink } from "./MapLink";
 import { MapObjectThatIsNotAToken } from "./MapObjectThatIsNotAToken";
 import { MapToken } from "./MapToken";
 
+const HURT_SHADOW_BLUR_SIZE = 8;
+// If this is too low, then the shadow is cut off inside a too small square.
+const HURT_SHADOW_CLIPPING_PERCENTAGE = 25;
+
 export const MapObjects = React.memo<{
   areas: MapAreas;
   contrastColor: RRColor;
@@ -46,6 +50,26 @@ export const MapObjects = React.memo<{
 
   return (
     <>
+      <defs>
+        <filter
+          id="tokenHurtShadow"
+          x={`-${HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
+          y={`-${HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
+          width={`${100 + 2 * HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
+          height={`${100 + 2 * HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
+        >
+          <feDropShadow dx="0" dy="0" floodColor="red">
+            <animate
+              attributeName="stdDeviation"
+              calcMode="paced"
+              begin="0s"
+              dur="4s"
+              values={`0;${HURT_SHADOW_BLUR_SIZE};0`}
+              repeatCount="indefinite"
+            />
+          </feDropShadow>
+        </filter>
+      </defs>
       {mapObjectIds.map((mapObjectId) => (
         <MapObjectWrapper
           key={mapObjectId}
