@@ -1,4 +1,9 @@
-import { createEntityAdapter, createReducer, isAnyOf } from "@reduxjs/toolkit";
+import {
+  createEntityAdapter,
+  createReducer,
+  Draft,
+  isAnyOf,
+} from "@reduxjs/toolkit";
 import {
   mapAdd,
   mapUpdate,
@@ -10,7 +15,6 @@ import {
 import {
   byId,
   initialSyncedState,
-  MapsSyncedState,
   RRMap,
   RRMapObject,
 } from "../../shared/state";
@@ -27,7 +31,7 @@ export const mapsReducer = createReducer(initialSyncedState.maps, (builder) => {
       isAnyOf(mapObjectAdd, mapObjectUpdate, mapObjectRemove),
       (state, action) => {
         const { mapId } = action.payload;
-        const map = byId((state as MapsSyncedState).entities, mapId);
+        const map = byId<Draft<RRMap>>(state.entities, mapId);
         if (!map) {
           console.error("Trying to update map token of unknown map.");
           return state;

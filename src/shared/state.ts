@@ -389,12 +389,12 @@ export const multipleRollValues = [
 export type RRMultipleRoll = IterableElement<typeof multipleRollValues>;
 
 export type RRDice = Extract<
-  RRLogEntryDiceRoll["payload"]["dice"],
+  IterableElement<RRLogEntryDiceRoll["payload"]["dice"]>,
   { type: "dice" }
 >;
 
 export type RRModifier = Extract<
-  RRLogEntryDiceRoll["payload"]["dice"],
+  IterableElement<RRLogEntryDiceRoll["payload"]["dice"]>,
   { type: "modifier" }
 >;
 

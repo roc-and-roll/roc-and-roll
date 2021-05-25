@@ -14,8 +14,9 @@ import {
   entries,
   RRInitiativeTrackerEntry,
   RRPlayer,
-  CharactersSyncedState,
   EMPTY_ENTITY_COLLECTION,
+  EntityCollection,
+  RRCharacter,
 } from "../../shared/state";
 import { useMyMap, useMyself } from "../myself";
 import { canControlToken } from "../permissions";
@@ -39,7 +40,7 @@ import { NotificationTopAreaPortal } from "./Notifications";
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
   myself: RRPlayer,
-  tokenCollection: CharactersSyncedState
+  tokenCollection: EntityCollection<RRCharacter>
 ) {
   if (entry.type === "lairAction") {
     return myself.isGM;
@@ -57,7 +58,7 @@ function canEditEntry(
 
 const InitiativeEntry = React.memo<{
   entry: RRInitiativeTrackerEntry;
-  tokenCollection: CharactersSyncedState;
+  tokenCollection: EntityCollection<RRCharacter>;
   isCurrentEntry: boolean;
   myself: RRPlayer;
   inverseIdx: number;
