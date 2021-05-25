@@ -101,7 +101,7 @@ export const isDamageType = t.isObject({
 });
 
 const sharedAssetValidators = {
-  id: isRRID<RRAssetID>(),
+  id: isRRID<RRAssetID>(false),
   name: t.isString(),
   external: t.isBoolean(),
   filenameOrUrl: t.isString(),
@@ -454,7 +454,7 @@ export const isSyncedState = t.isObject({
     ),
     activeSongs: isEntityCollection(
       t.isObject({
-        id: isRRID<RRActiveSongID>(),
+        id: isRRID<RRActiveSongID>(false),
         song: isRRSong,
         startedAt: isTimestamp,
         volume: t.applyCascade(t.isNumber(), [t.isInInclusiveRange(0, 1)]),
