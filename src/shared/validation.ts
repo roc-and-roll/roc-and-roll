@@ -25,10 +25,13 @@ import {
 import { withDo } from "./util";
 import tinycolor from "tinycolor2";
 
-export function isRRID<ID extends RRID>() {
+export function isRRID<ID extends RRID>(testLength: boolean = true) {
   return t.makeValidator({
     test: (value, state): value is ID =>
-      t.applyCascade(t.isString(), [t.hasExactLength(21)])(value, state),
+      t.applyCascade(t.isString(), testLength ? [t.hasExactLength(21)] : [])(
+        value,
+        state
+      ),
   });
 }
 
@@ -54,7 +57,9 @@ function isEntityCollection<
     entities: isDictByRRID(entityValidator, {
       keys: isRRID<V["__trait"]["id"]>(),
     }),
-    ids: t.isArray(isRRID<V["__trait"]["id"]>()),
+    ids: t.applyCascade(t.isArray(isRRID<V["__trait"]["id"]>()), [
+      t.hasUniqueItems(),
+    ]),
   });
 }
 
@@ -155,7 +160,7 @@ export const isSyncedState = t.isObject({
       isGM: t.isBoolean(),
       currentMap: isRRID<RRMapID>(),
       characterIds: t.isArray(isRRID<RRCharacterID>()),
-      favoritedAssetIds: t.isArray(isRRID<RRAssetID>()),
+      favoritedAssetIds: t.isArray(isRRID<RRAssetID>(false)),
     })
   ),
   ...withDo(
