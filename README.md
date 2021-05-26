@@ -1,5 +1,10 @@
 # Roc & Roll
 
+## Demo
+
+A live demo of the current master branch is deployed at https://roc-and-roll.herokuapp.com/.
+Warning: All state is regularly reset.
+
 ## Development
 
 1. Install [Node.js](https://nodejs.org/en/) version 14 or newer.
