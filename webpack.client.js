@@ -15,6 +15,13 @@ const gitRevisionPlugin = new GitRevisionPlugin();
 module.exports = (webpackEnv) => {
   const isEnvDevelopment = webpackEnv.development === true;
   const isEnvProduction = webpackEnv.production === true;
+  const isCodeSpaces = !!process.env.CODESPACES;
+
+  const DEV_SERVER_SOCK_PORT = isCodeSpaces ? 443 : 3001;
+
+  if (isCodeSpaces) {
+    console.log("Running on GitHub Codespaces.");
+  }
 
   return {
     target: "web",
@@ -108,7 +115,11 @@ module.exports = (webpackEnv) => {
         '__CODESPACE_NAME__': JSON.stringify(process.env.CODESPACE_NAME ?? null),
       }),
       isEnvDevelopment && new webpack.HotModuleReplacementPlugin(),
-      isEnvDevelopment && new ReactRefreshWebpackPlugin(),
+      isEnvDevelopment && new ReactRefreshWebpackPlugin({
+        overlay: {
+          sockPort: DEV_SERVER_SOCK_PORT
+        },
+      }),
       new ForkTsCheckerWebpackPlugin({
         typescript: { configFile: "tsconfig.client.json" },
         async: isEnvDevelopment,
@@ -175,7 +186,7 @@ module.exports = (webpackEnv) => {
       hot: true,
       host: '0.0.0.0',
       port: 3001,
-      sockPort: process.env.CODESPACE_NAME ? 443 : 3001,
+      sockPort: DEV_SERVER_SOCK_PORT,
       historyApiFallback: {
         // Paths with dots should still use the history fallback.
         // See https://github.com/facebook/create-react-app/issues/387.
