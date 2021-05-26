@@ -80,7 +80,7 @@ export async function setupWebServer(
   });
 
   // (3) Serve uploaded files
-  app.use("/files", express.static(uploadedFilesDir));
+  app.use("/api/files", express.static(uploadedFilesDir));
 
   const lock = new AsyncLock();
 
@@ -216,6 +216,7 @@ export async function setupWebServer(
       if (req.url.startsWith("/api")) {
         return next();
       }
+      console.log(__CODESPACE_NAME__);
       res.redirect(
         __CODESPACE_NAME__
           ? `${req.protocol}://${__CODESPACE_NAME__}-3001.githubpreview.dev${req.originalUrl}`
