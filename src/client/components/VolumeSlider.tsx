@@ -12,27 +12,30 @@ export function VolumeSlider({
   volume: number;
   onChange: (volume: number) => any;
 }) {
-  const linearVolume =
-    volume === 0 ? 0 : Math.log(volume / LOUDNESS_A) / LOUDNESS_B;
+  const linearVolume = volumeLog2linear(volume);
 
   return (
-    <input
-      type="range"
-      value={linearVolume}
-      min={0}
-      step={0.01}
-      max={1}
-      onChange={(e) => {
-        const logarithmicVolume =
-          e.target.valueAsNumber === 0
-            ? 0
-            : clamp(
-                0,
-                LOUDNESS_A * Math.exp(LOUDNESS_B * e.target.valueAsNumber),
-                1
-              );
-        onChange(logarithmicVolume);
-      }}
-    />
+    <>
+      {" "}
+      <input
+        type="range"
+        value={linearVolume}
+        min={0}
+        step={0.01}
+        max={1}
+        onChange={(e) => onChange(volumeLinear2Log(e.target.valueAsNumber))}
+      />
+      {Math.round(100 * linearVolume)}%
+    </>
   );
+}
+
+export function volumeLog2linear(volume: number) {
+  return volume === 0 ? 0 : Math.log(volume / LOUDNESS_A) / LOUDNESS_B;
+}
+
+export function volumeLinear2Log(volume: number) {
+  return volume === 0
+    ? 0
+    : clamp(0, LOUDNESS_A * Math.exp(LOUDNESS_B * volume), 1);
 }

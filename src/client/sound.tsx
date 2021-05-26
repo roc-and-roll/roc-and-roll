@@ -7,6 +7,7 @@ import { Howl } from "howler";
 import { assetUrl } from "./files";
 import { atom, useRecoilValue, useSetRecoilState } from "recoil";
 import { nanoid } from "@reduxjs/toolkit";
+import { volumeLinear2Log, volumeLog2linear } from "./components/VolumeSlider";
 
 const lockedSoundsAtom = atom<string[]>({
   key: "lockedSounds",
@@ -91,7 +92,9 @@ export function useRRComplexSound(
   const howlRef = useRef<Howl | null>(null);
 
   const [{ volume: globalUserVolume, mute: globalUserMute }] = useRRSettings();
-  const volume = globalUserVolume * soundVolume;
+  const volume = volumeLinear2Log(
+    volumeLog2linear(globalUserVolume) * volumeLog2linear(soundVolume)
+  );
   const volumeRef = useLatest(volume);
   const globalUserMuteRef = useLatest(globalUserMute);
 

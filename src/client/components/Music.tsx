@@ -110,7 +110,7 @@ export function Music() {
         startedAt: timestamp(),
         id: rrid<RRActiveSong>(),
         song: t,
-        volume: 0.5, // TODO
+        volume: 1.0,
       })
     );
   };
