@@ -10,12 +10,12 @@ import { nanoid } from "@reduxjs/toolkit";
 import { RRFile } from "../shared/state";
 import sharp from "sharp";
 import { fittingTokenSize } from "../shared/util";
-import { readFile } from "fs/promises";
 import { existsSync } from "fs";
 import { randomColor } from "../shared/colors";
 import fetch from "node-fetch";
 import AsyncLock from "async-lock";
 import { GRID_SIZE, SOCKET_IO_PATH } from "../shared/constants";
+import compression from "compression";
 
 export async function setupWebServer(
   httpPort: number,
@@ -26,6 +26,8 @@ export async function setupWebServer(
 
   // First, create a new Express JS app that we use to serve our website.
   const app = express();
+  app.set("etag", true);
+  app.use(compression());
 
   if (process.env.NODE_ENV === "development") {
     // (1) In development, add a CORS header so that the client is allowed to
@@ -80,7 +82,7 @@ export async function setupWebServer(
   });
 
   // (3) Serve uploaded files
-  app.use("/api/files", express.static(uploadedFilesDir));
+  app.use("/api/files", express.static(uploadedFilesDir, { etag: true }));
 
   const lock = new AsyncLock();
 
@@ -161,12 +163,7 @@ export async function setupWebServer(
             console.log("Finished token", filename, size);
           }
 
-          const file = await readFile(outputPath);
-          res.writeHead(200, {
-            "Content-Type": "image/png",
-            "Content-Length": file.length,
-          });
-          res.end(file);
+          res.sendFile(outputPath);
         });
       } catch (err) {
         next(err);
@@ -225,8 +222,14 @@ export async function setupWebServer(
     });
   } else {
     // 1. In production, serve the client code and static assets.
-    app.use(express.static(path.resolve(__dirname, "client")));
-    app.use(express.static(path.resolve(__dirname, "public")));
+    app.use(
+      express.static(path.resolve(__dirname, "client"), {
+        etag: true,
+        immutable: true,
+        maxAge: 1000 * 60 * 60 * 24 * 365,
+      })
+    );
+    app.use(express.static(path.resolve(__dirname, "public"), { etag: true }));
     // 2. If no asset with that name exists, serve the client code again.
     //    This makes it easy to support routing in the frontend (later).
     app.get("*", (req, res, next) =>
