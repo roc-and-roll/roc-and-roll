@@ -1,3 +1,5 @@
+# LICENSE
+
 Icons provided under the Creative Commons 3.0 BY or CC0 if mentioned below.
 
 Each sub-folders in this archive correspond to a different contributor :
