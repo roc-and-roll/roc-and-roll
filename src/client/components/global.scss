@@ -897,13 +897,17 @@ button.color-picker-color {
   }
 }
 .character-editor-condition-icon {
-  width: 32px;
-  height: 32px;
-  margin: 0.2rem 0.2rem;
+  margin: 0.1rem;
+  padding: 0.1rem;
+
+  img {
+    width: 32px;
+    height: 32px;
+  }
 
   &.selected {
+    border-radius: 0.3rem;
     background: white;
-    border-radius: 5px;
   }
 }
 

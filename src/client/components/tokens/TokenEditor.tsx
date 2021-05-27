@@ -447,30 +447,26 @@ export function TokenEditor({
       </ul>
       <h3>Status</h3>
       <div className="character-editor-condition-icons">
-        {conditionIcons.map((item) => {
-          return (
+        {conditionIcons.map((item) => (
+          <div
+            key={item.name}
+            className={clsx("character-editor-condition-icon", {
+              selected: conditions.includes(item.name),
+            })}
+          >
             <img
-              key={item.name}
               title={item.name}
-              className={clsx("character-editor-condition-icon", {
-                selected: conditions.includes(item.name),
-              })}
               src={item.icon}
-              onClick={() => {
-                if (conditions.includes(item.name))
-                  setConditions((prev) => {
-                    const newItems = prev.filter((i) => i !== item.name);
-                    return newItems;
-                  });
-                else
-                  setConditions((oldConditions) => [
-                    ...oldConditions,
-                    item.name,
-                  ]);
-              }}
+              onClick={() =>
+                setConditions((oldConditions) =>
+                  oldConditions.includes(item.name)
+                    ? oldConditions.filter((each) => each !== item.name)
+                    : [...oldConditions, item.name]
+                )
+              }
             />
-          );
-        })}
+          </div>
+        ))}
       </div>
       <hr />
       <div>
