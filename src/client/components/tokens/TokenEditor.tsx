@@ -110,7 +110,7 @@ export function TokenEditor({
   const updateImage = async () => {
     const uploadedFiles = await upload(fileInput.current!.files);
     dispatch(
-      updateFunc({ id: token.id, changes: { image: uploadedFiles[0]! } })
+      updateFunc({ id: token.id, changes: { tokenImage: uploadedFiles[0]! } })
     );
     fileInput.current!.value = "";
   };
@@ -212,6 +212,18 @@ export function TokenEditor({
     (conditions) => updateFunc({ id: token.id, changes: { conditions } }),
     1000
   );
+
+  const [tokenBorderColor, setTokenBorderColor] =
+    useOptimisticDebouncedServerUpdate(
+      (state) =>
+        byId(
+          (isTemplate ? state.characterTemplates : state.characters).entities,
+          token.id
+        )?.tokenBorderColor ?? "",
+      (tokenBorderColor) =>
+        updateFunc({ id: token.id, changes: { tokenBorderColor } }),
+      1000
+    );
 
   useEffect(() => {
     fileInput.current!.value = "";
@@ -469,6 +481,15 @@ export function TokenEditor({
         ))}
       </div>
       <hr />
+      <div>
+        <label>
+          Token border color:{" "}
+          <ColorInput
+            value={tokenBorderColor}
+            onChange={(color) => setTokenBorderColor(color)}
+          />
+        </label>
+      </div>
       <div>
         <label>
           Image:{" "}

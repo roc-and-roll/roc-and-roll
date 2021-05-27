@@ -93,12 +93,19 @@ export async function setupWebServer(
       try {
         const filename = req.params.filename;
         const requestedSize = parseInt(req.params.size);
+        const borderColor = req.query["borderColor"];
         if (
           !/^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)?$/.test(filename) ||
-          isNaN(requestedSize)
+          isNaN(requestedSize) ||
+          typeof borderColor !== "string" ||
+          !/^#[0-9a-f]{6}$/i.test(borderColor)
         ) {
           res.status(400);
-          console.error("Invalid request", { filename, size: requestedSize });
+          console.error("Invalid request", {
+            filename,
+            size: requestedSize,
+            borderColor,
+          });
           return;
         }
 
@@ -109,7 +116,7 @@ export async function setupWebServer(
           const inputPath = path.join(uploadedFilesDir, filename);
           const outputPath = path.join(
             uploadedFilesCacheDir,
-            `${size}-${filename}.png`
+            `${size}-${filename}-${borderColor}.png`
           );
 
           if (!existsSync(outputPath)) {
@@ -119,28 +126,21 @@ export async function setupWebServer(
             const mask = await sharp(
               Buffer.from(
                 `<svg viewBox="0 0 ${size} ${size}">
-                <circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="#000" />
-              </svg>`,
+                   <circle cx="${CENTER}" cy="${CENTER}" r="${RADIUS}" fill="#000" />
+                 </svg>`,
                 "utf-8"
               )
             ).toBuffer();
             const border = await sharp(
               Buffer.from(
                 `<svg viewBox="0 0 ${size} ${size}">
-                <circle
-                  cx="${CENTER}"
-                  cy="${CENTER}"
-                  r="${RADIUS - BORDER_WIDTH / 2 - 0.5}"
-                  fill="transparent"
-                  stroke-width="${BORDER_WIDTH}"
-                  stroke="#502d16" />
-                <circle
-                  cx="${CENTER}"
-                  cy="${CENTER}"
-                  r="${RADIUS - BORDER_WIDTH / 2}"
-                  fill="transparent"
-                  stroke-width="${BORDER_WIDTH}"
-                  stroke="#b39671" />
+                   <circle
+                     cx="${CENTER}"
+                     cy="${CENTER}"
+                     r="${RADIUS - BORDER_WIDTH / 2}"
+                     fill="transparent"
+                     stroke-width="${BORDER_WIDTH}"
+                     stroke="${borderColor}" />
               </svg>`,
                 "utf-8"
               )

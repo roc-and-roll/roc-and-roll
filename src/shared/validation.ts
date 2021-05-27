@@ -176,7 +176,8 @@ export const isSyncedState = t.isObject({
           id: isRRID<RRCharacterID>(),
           name: t.isString(),
 
-          image: t.isNullable(isRRFile),
+          tokenImage: t.isNullable(isRRFile),
+          tokenBorderColor: isColor(),
           scale: t.applyCascade(t.isNumber(), [t.isAtLeast(1)]),
 
           auras: t.isArray(

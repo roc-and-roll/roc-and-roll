@@ -90,7 +90,7 @@ export const MapToken = React.memo<{
   };
 
   const tokenSize = GRID_SIZE * token.scale;
-  const tokenRepresentation = token.image ? (
+  const tokenRepresentation = token.tokenImage ? (
     <image
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
@@ -99,7 +99,13 @@ export const MapToken = React.memo<{
       style={tokenStyle}
       width={tokenSize}
       height={tokenSize}
-      href={tokenImageUrl(token.image, tokenSize * zoom)}
+      href={tokenImageUrl(
+        {
+          tokenImage: token.tokenImage,
+          tokenBorderColor: token.tokenBorderColor,
+        },
+        tokenSize * zoom
+      )}
     />
   ) : (
     <circle

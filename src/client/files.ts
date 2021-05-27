@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { RRAsset, RRFile, RRPoint } from "../shared/state";
+import { RRAsset, RRCharacter, RRFile, RRPoint } from "../shared/state";
 import { fittingTokenSize } from "../shared/util";
 
 export function fileUrl(file: RRFile) {
@@ -14,10 +14,18 @@ export function assetUrl(a: RRAsset) {
   return a.external ? a.filenameOrUrl : _fileUrl(a.filenameOrUrl);
 }
 
-export function tokenImageUrl(file: RRFile, size: number) {
+export function tokenImageUrl(
+  token: {
+    tokenImage: NonNullable<RRCharacter["tokenImage"]>;
+    tokenBorderColor: RRCharacter["tokenBorderColor"];
+  },
+  size: number
+) {
   return `/api/token-image/${encodeURIComponent(
-    file.filename
-  )}/${encodeURIComponent(fittingTokenSize(size))}`;
+    token.tokenImage.filename
+  )}/${encodeURIComponent(
+    fittingTokenSize(size)
+  )}?borderColor=${encodeURIComponent(token.tokenBorderColor)}`;
 }
 
 export async function generateRandomToken(): Promise<RRFile> {

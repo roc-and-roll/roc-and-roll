@@ -11,8 +11,14 @@ export function TokenPreview({ token }: { token: RRCharacter }) {
       className={clsx("token-image", { hurt })}
       title={token.name}
       style={{
-        backgroundImage: token.image
-          ? `url(${tokenImageUrl(token.image, 32)})`
+        backgroundImage: token.tokenImage
+          ? `url(${tokenImageUrl(
+              {
+                tokenImage: token.tokenImage,
+                tokenBorderColor: token.tokenBorderColor,
+              },
+              32
+            )})`
           : "none",
       }}
     />

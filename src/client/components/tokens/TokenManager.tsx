@@ -15,6 +15,7 @@ import { Button } from "../ui/Button";
 import { randomName } from "../../../shared/util";
 import { TokenEditor } from "./TokenEditor";
 import { TokenPreview } from "./TokenPreview";
+import { randomColor } from "../../../shared/colors";
 
 async function makeNewToken(): Promise<Parameters<typeof characterAdd>[0]> {
   return {
@@ -26,7 +27,8 @@ async function makeNewToken(): Promise<Parameters<typeof characterAdd>[0]> {
     visibility: "everyone",
     attributes: {},
     name: await randomName(),
-    image: await generateRandomToken(),
+    tokenImage: await generateRandomToken(),
+    tokenBorderColor: randomColor(),
     localToMap: null,
   };
 }
