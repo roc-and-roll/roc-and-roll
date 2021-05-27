@@ -125,7 +125,7 @@ export function ServerStateProvider({
       state: string;
       finishedOptimisticUpdateIds: OptimisticUpdateID[];
     }) => {
-      const state: SyncedState = JSON.parse(msg.state);
+      const state = JSON.parse(msg.state) as SyncedState;
       process.env.NODE_ENV === "development" &&
         DEBUG &&
         console.log(
@@ -147,7 +147,7 @@ export function ServerStateProvider({
       patch: string;
       finishedOptimisticUpdateIds: OptimisticUpdateID[];
     }) => {
-      const patch: StatePatch<SyncedState> = JSON.parse(msg.patch);
+      const patch = JSON.parse(msg.patch) as StatePatch<SyncedState>;
       process.env.NODE_ENV === "development" &&
         DEBUG &&
         console.log(

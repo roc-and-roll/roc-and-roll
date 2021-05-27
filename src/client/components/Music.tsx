@@ -54,8 +54,8 @@ export function Music() {
 
   useEffect(() => {
     fetch(`/api/tabletopaudio`)
-      .then((res) => res.json())
-      .then((l: TabletopAudioResponse) =>
+      .then((res) => res.json() as Promise<TabletopAudioResponse>)
+      .then((l) =>
         setTabletopAudio(
           l.tracks.map((t) => ({
             // use a stable ID such that favoriting external tracks works

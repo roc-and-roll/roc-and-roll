@@ -45,7 +45,7 @@ export default function useLocalState<T extends JsonValue>(
     try {
       const localStorageValue = localStorage.getItem(key);
       if (localStorageValue !== null) {
-        return deserializer(localStorageValue);
+        return deserializer(localStorageValue) as T;
       } else {
         localStorage.setItem(key, serializer(initialValue));
         return initialValue;

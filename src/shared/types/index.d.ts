@@ -56,3 +56,27 @@ declare namespace NodeJS {
 interface Window {
   MODDING?: unknown;
 }
+
+// Make JSON and isArray checks return unknown instead of any.
+//
+// https://github.com/Microsoft/TypeScript/issues/26188#issuecomment-489659669
+interface JSON {
+  parse(
+    text: string,
+    reviver?: (this: unknown, key: string, value: unknown) => unknown
+  ): unknown;
+
+  stringify(
+    text: unknown,
+    replacer?: (this: unknown, key: string, value: unknown) => unknown,
+    space?: string | number
+  ): string;
+}
+
+interface ArrayConstructor {
+  isArray(a: unknown): a is unknown[];
+}
+
+interface Body {
+  json(): Promise<unknown>;
+}
