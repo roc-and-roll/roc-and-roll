@@ -286,7 +286,7 @@ export default function MapContainer() {
     );
 
   const handleKeyDown = useRecoilCallback(
-    ({ snapshot }) =>
+    ({ snapshot, set, reset }) =>
       (e: KeyboardEvent) => {
         if (isTriggeredByTextInput(e)) {
           return;
@@ -333,6 +333,10 @@ export default function MapContainer() {
                 }
               })
             );
+            selectedMapObjectIds.forEach((id) =>
+              reset(selectedMapObjectsFamily(id))
+            );
+            set(selectedMapObjectIdsAtom, []);
             break;
           }
           case "ArrowLeft":
