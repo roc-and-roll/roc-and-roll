@@ -13,7 +13,7 @@ import { tokenImageUrl } from "../../files";
 import { canControlToken, canViewTokenOnMap } from "../../permissions";
 import { RoughRectangle, RoughText } from "../rough";
 import tinycolor from "tinycolor2";
-import { assertNever, clamp } from "../../../shared/util";
+import { assertNever, clamp, isCharacterHurt } from "../../../shared/util";
 import { useMyself } from "../../myself";
 import ReactDOM from "react-dom";
 import { HPInlineEdit } from "./HPInlineEdit";
@@ -85,9 +85,7 @@ export const MapToken = React.memo<{
 
   const canControl = canStartMoving && canControlToken(token, myself);
   const tokenStyle = {
-    ...(token.maxHP > 0 && token.hp <= token.maxHP / 2
-      ? { filter: "url(#tokenHurtShadow)" }
-      : {}),
+    ...(isCharacterHurt(token) ? { filter: "url(#tokenHurtShadow)" } : {}),
     ...(canControl ? { cursor: "move" } : {}),
   };
 

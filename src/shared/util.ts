@@ -1,6 +1,6 @@
 import { nanoid } from "@reduxjs/toolkit";
 import { TOKEN_SIZES } from "./constants";
-import { RRID, RRTimestamp } from "./state";
+import { RRCharacter, RRID, RRTimestamp } from "./state";
 
 export async function randomName(pattern = "!<s|B|Bv|v><V|s|'|V><s|V|C>") {
   return new (await import("./namegen")).default(pattern).toString();
@@ -94,4 +94,8 @@ export function fittingTokenSize(requestedSize: number): number {
     TOKEN_SIZES.find((possibleSize) => possibleSize >= requestedSize) ??
     TOKEN_SIZES[TOKEN_SIZES.length - 1]!
   );
+}
+
+export function isCharacterHurt(character: RRCharacter) {
+  return character.maxHP > 0 && character.hp <= character.maxHP / 2;
 }

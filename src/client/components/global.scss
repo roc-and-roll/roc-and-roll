@@ -115,7 +115,20 @@ a {
   border-radius: $size;
   background-position: center center;
   background-size: cover;
+
+  &.hurt {
+    animation: hurt 1s;
+    animation-direction: alternate;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+
+    @keyframes hurt {
+      from { box-shadow: none; }
+      to { box-shadow: 0 0 4px 2px red; }
+    }
+  }
 }
+
 .token-preview {
   font-size: 0.8rem;
   margin: 0.25rem;

@@ -1,12 +1,14 @@
+import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import { RRCharacter } from "../../../shared/state";
-import { clamp } from "../../../shared/util";
+import { clamp, isCharacterHurt } from "../../../shared/util";
 import { tokenImageUrl } from "../../files";
 
 export function TokenPreview({ token }: { token: RRCharacter }) {
+  const hurt = isCharacterHurt(token);
   return (
     <div
-      className="token-image"
+      className={clsx("token-image", { hurt })}
       title={token.name}
       style={{
         backgroundImage: token.image
