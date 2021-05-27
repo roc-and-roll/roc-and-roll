@@ -1,5 +1,6 @@
 import React, { Suspense } from "react";
 import { useEffect, useRef, useState } from "react";
+import { isTriggeredByTextInput } from "../../util";
 
 const QuickReference = React.lazy(() => import("./QuickReference"));
 
@@ -9,6 +10,10 @@ export default function QuickReferenceWrapper() {
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
+      if (isTriggeredByTextInput(e)) {
+        return;
+      }
+
       if (e.key === "Shift") {
         if (lastShiftPressRef.current !== 0) {
           if (Date.now() - lastShiftPressRef.current < 200) {
@@ -18,8 +23,11 @@ export default function QuickReferenceWrapper() {
         lastShiftPressRef.current = Date.now();
       }
     };
-    window.addEventListener("keydown", listener);
-    return () => window.removeEventListener("keydown", listener);
+    window.addEventListener("keyup", listener, {
+      capture: true,
+      passive: true,
+    });
+    return () => window.removeEventListener("keyup", listener);
   }, []);
 
   return open ? (

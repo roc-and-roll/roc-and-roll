@@ -58,6 +58,7 @@ import {
 import { useMapToolHandler } from "./useMapToolHandler";
 import { atomFamily, atom, useRecoilCallback, RecoilState } from "recoil";
 import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";
+import { isTriggeredByTextInput } from "../../util";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -287,6 +288,9 @@ export default function MapContainer() {
   const handleKeyDown = useRecoilCallback(
     ({ snapshot }) =>
       (e: KeyboardEvent) => {
+        if (isTriggeredByTextInput(e)) {
+          return;
+        }
         const selectedMapObjectIds = snapshot
           .getLoadable(selectedMapObjectIdsAtom)
           .getValue();

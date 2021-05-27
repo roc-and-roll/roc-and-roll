@@ -26,6 +26,7 @@ import { Button } from "./ui/Button";
 import { ColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
 import Picker from "emoji-picker-react";
+import { isTriggeredByTextInput } from "../util";
 
 export const MapToolbar = React.memo<{
   map: RRMap;
@@ -62,11 +63,7 @@ export const MapToolbar = React.memo<{
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (
-        ["INPUT", "BUTTON", "TEXTAREA"].includes(
-          (event.target as HTMLElement | null)?.nodeName ?? ""
-        )
-      ) {
+      if (isTriggeredByTextInput(event)) {
         return;
       }
       switch (event.key) {
