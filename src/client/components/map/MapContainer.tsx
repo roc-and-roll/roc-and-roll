@@ -212,7 +212,6 @@ export default function MapContainer() {
           characterId = dispatch(
             characterAdd({
               ...copy,
-              visibility: "everyone",
               localToMap: map.id,
             })
           ).payload.id;
