@@ -367,6 +367,7 @@ export function useMapToolHandler(
           point: p,
           code: editState.reactionCode,
           id: rrid<RRMessage>(),
+          mapId: map.id,
         });
       },
       onMouseMove: (p: RRPoint) => {
@@ -375,6 +376,7 @@ export function useMapToolHandler(
           point: p,
           code: editState.reactionCode,
           id: rrid<RRMessage>(),
+          mapId: map.id,
         });
       },
       onMouseUp: (p: RRPoint) => {},

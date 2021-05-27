@@ -4,13 +4,18 @@ import React, {
   useLayoutEffect,
   useState,
 } from "react";
+import { RRMapID } from "../../../shared/state";
 import {
   RRMessage,
   RRMessageReaction,
   useServerMessages,
 } from "../../serverMessages";
 
-export function MapReactions() {
+export const MapReactions = React.memo(function MapReactions({
+  mapId,
+}: {
+  mapId: RRMapID;
+}) {
   const { subscribe, unsubscribe } = useServerMessages();
 
   const [reactions, setReactions] = useState<RRMessageReaction[]>([]);
@@ -21,7 +26,7 @@ export function MapReactions() {
 
   useEffect(() => {
     const onMessage = (message: RRMessage) => {
-      if (message.type === "reaction") {
+      if (message.type === "reaction" && message.mapId === mapId) {
         setReactions((r) => [...r, message]);
       }
     };
@@ -30,7 +35,7 @@ export function MapReactions() {
     return () => {
       unsubscribe(onMessage);
     };
-  }, [subscribe, unsubscribe]);
+  }, [mapId, subscribe, unsubscribe]);
 
   return (
     <>
@@ -39,9 +44,9 @@ export function MapReactions() {
       ))}
     </>
   );
-}
+});
 
-function MapReaction({
+const MapReaction = React.memo(function MapReaction({
   reaction,
   onExpired,
 }: {
@@ -67,4 +72,4 @@ function MapReaction({
       </g>
     </g>
   );
-}
+});

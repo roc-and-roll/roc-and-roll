@@ -934,6 +934,7 @@ button.color-picker-color {
 .map-reaction {
   animation: map-reaction 700ms forwards;
   transform-origin: 50% 50%;
+  user-select: none;
 }
 @keyframes map-reaction {
   0% {

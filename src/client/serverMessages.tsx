@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useRef } from "react";
 import { Opaque } from "type-fest";
-import { RRPoint } from "../shared/state";
+import { RRMapID, RRPoint } from "../shared/state";
 
 // TODO: reuse other as soon as you need a new message type, this is just to
 //       make the linter happy as the type is otherwise a constant
@@ -19,6 +19,7 @@ export interface RRMessageReaction extends RRMessageBase {
   type: "reaction";
   code: string;
   point: RRPoint;
+  mapId: RRMapID;
 }
 
 interface RRMessageOther extends RRMessageBase {
@@ -39,7 +40,7 @@ const ServerMessagesContext = React.createContext<{
 }>({
   subscribe: () => {},
   unsubscribe: () => {},
-  send: (_) => {},
+  send: () => {},
   socket: null,
 });
 ServerMessagesContext.displayName = "ServerMessagesContext";

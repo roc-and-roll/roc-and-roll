@@ -749,7 +749,7 @@ export const RRMapView = React.memo<{
             backgroundColor={backgroundColor}
             players={players}
           />
-          <MapReactions />
+          <MapReactions mapId={mapId} />
           <MouseCursors
             myId={myself.id}
             mapId={mapId}
