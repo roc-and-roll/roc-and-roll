@@ -395,6 +395,13 @@ export const RRMapView = React.memo<{
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
+      if (mouseActionRef.current !== MouseAction.NONE) {
+        // Ignore additional mouse downs while we are currently handling another
+        // mouse down action (e.g., ignore right clicks while drawing a
+        // rectangle)
+        return;
+      }
+
       (document.activeElement as HTMLElement | null)?.blur();
       e.preventDefault();
       e.stopPropagation();
