@@ -197,11 +197,10 @@ a {
 }
 
 .bottom-floats-wrapper {
-  // Set the height to 0, so that it does not (invisibly) overlap the map.
-  // Without explicitly setting the height to 0, the following problem arises:
+  // Without explicitly disabling pointer events, the following problem arises:
   // Open the chat, but close the log. Now it is impossible to interact with the
   // map to the right of the chat.
-  height: auto;
+  pointer-events: none;
 
   position: absolute;
   bottom: 0px;
@@ -218,6 +217,8 @@ a {
     padding: 0 4px;
 
     & > * {
+      pointer-events: auto;
+
       margin-left: 8px;
     }
   }
@@ -246,6 +247,8 @@ $dice-templates-height: 200px;
 }
 
 .dice-templates {
+  pointer-events: auto;
+
   $panel-background: rgb(59, 28, 6);
   $animation-duration: 200ms;
 
