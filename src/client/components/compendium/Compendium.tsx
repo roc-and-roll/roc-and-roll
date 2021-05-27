@@ -83,10 +83,7 @@ export function Compendium() {
               const jsons = await Promise.all(
                 files.map(
                   async (file) =>
-                    [
-                      file.name,
-                      JSON.parse(await file.text()) as unknown,
-                    ] as const
+                    [file.name, JSON.parse(await file.text())] as const
                 )
               );
 
