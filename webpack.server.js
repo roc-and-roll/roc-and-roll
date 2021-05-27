@@ -94,6 +94,8 @@ module.exports = (webpackEnv) => {
         // TODO: When enabling this, restarting due to code changes always
         // triggers an error that says that the debug port is already in use.
         // nodeArgs: ['--inspect'],
+
+        nodeArgs: ['--unhandled-rejections=strict']
       }),
     ].filter(Boolean),
     resolve: {

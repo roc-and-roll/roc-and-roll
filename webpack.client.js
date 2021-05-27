@@ -206,6 +206,7 @@ module.exports = (webpackEnv) => {
         context: "/api",
         target: "http://localhost:3000",
         ws: true,
+        logLevel: "silent",
       }
     } : undefined,
   };
