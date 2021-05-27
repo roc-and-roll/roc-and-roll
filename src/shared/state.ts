@@ -4,6 +4,7 @@ import type { Dispatch } from "redux";
 import type { IterableElement, Opaque } from "type-fest";
 import { assertNever, rrid } from "./util";
 import { isDamageType, isSyncedState } from "./validation";
+import { LAST_MIGRATION_VERSION } from "./constants";
 
 export type RRID = Opaque<string>;
 
@@ -380,6 +381,7 @@ export const defaultMap: RRMap = {
 };
 
 export const initialSyncedState: SyncedState = {
+  version: LAST_MIGRATION_VERSION,
   globalSettings: {
     musicIsGMOnly: false,
   },

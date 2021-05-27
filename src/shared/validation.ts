@@ -118,7 +118,13 @@ const isRRSong = t.isObject({
   ]),
 });
 
+export const isStateVersion = t.applyCascade(t.isNumber(), [
+  t.isInteger(),
+  t.isPositive(),
+]);
+
 export const isSyncedState = t.isObject({
+  version: isStateVersion,
   globalSettings: t.isObject({
     musicIsGMOnly: t.isBoolean(),
   }),

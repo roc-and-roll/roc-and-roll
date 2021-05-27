@@ -5,7 +5,7 @@ import { charactersReducer } from "./features/characters";
 import { mapsReducer } from "./features/maps";
 import { privateChatsReducer } from "./features/privateChats";
 import { logEntriesReducer } from "./features/logEntries";
-import { SyncedState } from "../shared/state";
+import { initialSyncedState, SyncedState } from "../shared/state";
 import {
   ephermalPlayersReducer,
   ephermalSongsReducer,
@@ -20,6 +20,7 @@ const options = {
     // Add new slices of state here.
     // You need to edit SyncedState and initialSyncedState in shared/state.ts
     // when adding a new slice.
+    version: (state: number = initialSyncedState.version) => state,
     globalSettings: globalSettingsReducer,
     initiativeTracker: initiativeTrackerReducer,
     players: playersReducer,
