@@ -111,8 +111,6 @@ module.exports = (webpackEnv) => {
         // during build time:
         // $ heroku config:set HEROKU=1
         '__VERSION__': JSON.stringify(process.env.HEROKU ? "master" : gitRevisionPlugin.version()),
-        // Used for GitHub Code Spaces
-        '__CODESPACE_NAME__': JSON.stringify(process.env.CODESPACE_NAME ?? null),
       }),
       isEnvDevelopment && new webpack.HotModuleReplacementPlugin(),
       isEnvDevelopment && new ReactRefreshWebpackPlugin({

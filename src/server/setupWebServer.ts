@@ -213,11 +213,13 @@ export async function setupWebServer(
       if (req.url.startsWith("/api")) {
         return next();
       }
-      console.log(__CODESPACE_NAME__);
+
       res.redirect(
-        __CODESPACE_NAME__
-          ? `${req.protocol}://${__CODESPACE_NAME__}-3001.githubpreview.dev${req.originalUrl}`
-          : `${req.protocol}://${req.hostname}:3001${req.originalUrl}`
+        `${req.protocol}://${
+          process.env["CODESPACES"]
+            ? req.header("x-forwarded-host")!.replace("3000", "3001")
+            : req.hostname
+        }:3001${req.originalUrl}`
       );
     });
   } else {
