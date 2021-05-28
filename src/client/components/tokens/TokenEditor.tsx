@@ -28,7 +28,7 @@ import frightened from "../../../third-party/icons/conditions/frightened.png";
 import grappled from "../../../third-party/icons/conditions/grappled.png";
 import incapacitated from "../../../third-party/icons/conditions/incapacitated.png";
 import invisible from "../../../third-party/icons/conditions/invisible.png";
-import paralysed from "../../../third-party/icons/conditions/paralysed.png";
+import paralyzed from "../../../third-party/icons/conditions/paralyzed.png";
 import petrified from "../../../third-party/icons/conditions/petrified.png";
 import poisoned from "../../../third-party/icons/conditions/poisoned.png";
 import prone from "../../../third-party/icons/conditions/prone.png";
@@ -64,7 +64,7 @@ export const conditionIcons: ConditionWithIcon[] = [
   { name: "grappled", icon: grappled },
   { name: "incapacitated", icon: incapacitated },
   { name: "invisible", icon: invisible },
-  { name: "paralysed", icon: paralysed },
+  { name: "paralyzed", icon: paralyzed },
   { name: "petrified", icon: petrified },
   { name: "poisoned", icon: poisoned },
   { name: "prone", icon: prone },

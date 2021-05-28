@@ -61,7 +61,7 @@ export const conditionNames = [
   "grappled",
   "incapacitated",
   "invisible",
-  "paralysed",
+  "paralyzed",
   "petrified",
   "poisoned",
   "prone",

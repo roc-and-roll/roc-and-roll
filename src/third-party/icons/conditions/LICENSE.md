@@ -7,5 +7,5 @@ based on previous work by
 sbed (obscured, prone),
 Skoll (blinded, deafened, disarmed, stunned),
 Delapouite (obscured, all cover, frightened, invisible, unconscious) and
-Lorc (charmed, concealed, exhaustion, grappled, half-cover, hidden, incapacitated, paralysed, petrified, poisoned, raging, restrained, surprised, three-quarters-cover)
+Lorc (charmed, concealed, exhaustion, grappled, half-cover, hidden, incapacitated, paralyzed, petrified, poisoned, raging, restrained, surprised, three-quarters-cover)
 published on https://game-icons.net and licensed under [CC-BY 3.0](https://creativecommons.org/licenses/by/3.0/)

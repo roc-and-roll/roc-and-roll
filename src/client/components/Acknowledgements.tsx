@@ -90,7 +90,7 @@ export function Acknowledgements() {
       based on previous work by sbed (obscured, prone), Skoll (blinded,
       deafened, disarmed, stunned), Delapouite (obscured, all cover, frightened,
       invisible, unconscious) and Lorc (charmed, concealed, exhaustion,
-      grappled, half-cover, hidden, incapacitated, paralysed, petrified,
+      grappled, half-cover, hidden, incapacitated, paralyzed, petrified,
       poisoned, raging, restrained, surprised, three-quarters-cover) published
       on <a href="https://game-icons.net/">game-icons.net</a>
       {". "}
