@@ -108,17 +108,17 @@ export const tokenFamily = atomFamily<RRCharacter | null, RRCharacterID>({
   default: null,
 });
 
+export const tokenIdsAtom = atom<ReadonlyArray<RRCharacterID>>({
+  key: "TokenIds",
+  default: [],
+});
+
 export const characterTemplateFamily = atomFamily<
   RRCharacter | null,
   RRCharacterID
 >({
   key: "CharacterTemplate",
   default: null,
-});
-
-export const tokenIdsAtom = atom<ReadonlyArray<RRCharacterID>>({
-  key: "TokenIds",
-  default: [],
 });
 
 export const characterTemplateIdsAtom = atom<ReadonlyArray<RRCharacterID>>({
@@ -705,7 +705,7 @@ function ReduxToRecoilBridge({
   useReduxToRecoilBridge(
     "characterTemplates",
     useServerState((s) => s.characterTemplates),
-    tokenIdsAtom,
+    characterTemplateIdsAtom,
     characterTemplateFamily
   );
   useReduxToRecoilBridge(
