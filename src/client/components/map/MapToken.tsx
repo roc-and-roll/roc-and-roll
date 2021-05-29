@@ -145,7 +145,7 @@ export const MapToken = React.memo<{
       {healthbarArea &&
         ReactDOM.createPortal(
           <>
-            {canControl && (
+            {canControl && token.maxHP > 0 && (
               <g transform={`translate(${x},${y - 16})`}>
                 <Healthbar
                   token={token}
@@ -166,7 +166,7 @@ export const MapToken = React.memo<{
                 className="token-condition-icon"
                 x={object.position.x + (index % 4) * 16}
                 y={object.position.y + Math.floor(index / 4) * 16}
-                href={conditionIcons.find((i) => i.name === condition)?.icon}
+                href={conditionIcons[condition]}
               >
                 <title>{condition}</title>
               </image>

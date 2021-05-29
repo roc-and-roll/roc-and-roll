@@ -8,6 +8,7 @@ import {
 import { randomColor } from "../../../shared/colors";
 import {
   byId,
+  conditionNames,
   linkedModifierNames,
   RRCharacter,
   RRCharacterCondition,
@@ -20,6 +21,7 @@ import {
 import { Button } from "../ui/Button";
 import { ColorInput } from "../ui/ColorInput";
 import { Select } from "../ui/Select";
+import clsx from "clsx";
 import blinded from "../../../third-party/icons/conditions/blinded.png";
 import charmed from "../../../third-party/icons/conditions/charmed.png";
 import deafened from "../../../third-party/icons/conditions/deafened.png";
@@ -48,43 +50,42 @@ import tortoise from "../../../third-party/game-icons.net/ffffff/transparent/1x1
 import snail from "../../../third-party/game-icons.net/ffffff/transparent/1x1/lorc/snail.svg";
 import voodooDoll from "../../../third-party/game-icons.net/ffffff/transparent/1x1/lorc/voodoo-doll.svg";
 import bullseye from "../../../third-party/game-icons.net/ffffff/transparent/1x1/skoll/bullseye.svg";
-import clsx from "clsx";
 
 export interface ConditionWithIcon {
   name: RRCharacterCondition;
   icon: string;
 }
 
-export const conditionIcons: ConditionWithIcon[] = [
-  { name: "blinded", icon: blinded },
-  { name: "charmed", icon: charmed },
-  { name: "deafened", icon: deafened },
-  { name: "exhaustion", icon: exhaustion },
-  { name: "frightened", icon: frightened },
-  { name: "grappled", icon: grappled },
-  { name: "incapacitated", icon: incapacitated },
-  { name: "invisible", icon: invisible },
-  { name: "paralyzed", icon: paralyzed },
-  { name: "petrified", icon: petrified },
-  { name: "poisoned", icon: poisoned },
-  { name: "prone", icon: prone },
-  { name: "restrained", icon: restrained },
-  { name: "stunned", icon: stunned },
-  { name: "unconscious", icon: unconscious },
-  { name: "concealed", icon: concealed },
-  { name: "disarmed", icon: disarmed },
-  { name: "half-cover", icon: halfCover },
-  { name: "hidden", icon: hidden },
-  { name: "raging", icon: raging },
-  { name: "surprised", icon: surprised },
-  { name: "total-cover", icon: totalCover },
-  { name: "three-quarters-cover", icon: threeQuarterCovers },
-  { name: "hasted", icon: speedometer },
-  { name: "cursed", icon: voodooDoll },
-  { name: "hunters mark", icon: bullseye },
-  { name: "polymorphed", icon: snail },
-  { name: "slowed", icon: tortoise },
-];
+export const conditionIcons = {
+  blinded: blinded,
+  charmed: charmed,
+  deafened: deafened,
+  exhaustion: exhaustion,
+  frightened: frightened,
+  grappled: grappled,
+  incapacitated: incapacitated,
+  invisible: invisible,
+  paralyzed: paralyzed,
+  petrified: petrified,
+  poisoned: poisoned,
+  prone: prone,
+  restrained: restrained,
+  stunned: stunned,
+  unconscious: unconscious,
+  concealed: concealed,
+  disarmed: disarmed,
+  "half-cover": halfCover,
+  hidden: hidden,
+  raging: raging,
+  surprised: surprised,
+  "total-cover": totalCover,
+  "three-quarters-cover": threeQuarterCovers,
+  hasted: speedometer,
+  cursed: voodooDoll,
+  "hunters mark": bullseye,
+  polymorphed: snail,
+  slowed: tortoise,
+} as const;
 
 export function TokenEditor({
   token,
@@ -457,29 +458,7 @@ export function TokenEditor({
           </button>
         </li>
       </ul>
-      <h3>Status</h3>
-      <div className="character-editor-condition-icons">
-        {conditionIcons.map((item) => (
-          <div
-            key={item.name}
-            className={clsx("character-editor-condition-icon", {
-              selected: conditions.includes(item.name),
-            })}
-          >
-            <img
-              title={item.name}
-              src={item.icon}
-              onClick={() =>
-                setConditions((oldConditions) =>
-                  oldConditions.includes(item.name)
-                    ? oldConditions.filter((each) => each !== item.name)
-                    : [...oldConditions, item.name]
-                )
-              }
-            />
-          </div>
-        ))}
-      </div>
+      <ConditionPicker conditions={conditions} setConditions={setConditions} />
       <hr />
       <div>
         <label>
@@ -504,6 +483,51 @@ export function TokenEditor({
       <hr />
       <Button onClick={remove}>delete token</Button>
     </div>
+  );
+}
+
+function ConditionPicker({
+  conditions,
+  setConditions,
+}: {
+  conditions: RRCharacterCondition[];
+  setConditions: React.Dispatch<React.SetStateAction<RRCharacterCondition[]>>;
+}) {
+  const [filter, setFilter] = useState("");
+  return (
+    <>
+      <h3>Status</h3>
+      <input
+        type="search"
+        placeholder="filter..."
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+      />
+      <div className="character-editor-condition-icons">
+        {conditionNames
+          .filter((name) => name.toLowerCase().includes(filter.toLowerCase()))
+          .map((name) => (
+            <div
+              key={name}
+              className={clsx("character-editor-condition-icon", {
+                selected: conditions.includes(name),
+              })}
+            >
+              <img
+                title={name}
+                src={conditionIcons[name]}
+                onClick={() =>
+                  setConditions((oldConditions) =>
+                    oldConditions.includes(name)
+                      ? oldConditions.filter((each) => each !== name)
+                      : [...oldConditions, name]
+                  )
+                }
+              />
+            </div>
+          ))}
+      </div>
+    </>
   );
 }
 

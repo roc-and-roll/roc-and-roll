@@ -2467,15 +2467,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/recoil@npm:^0.0.1":
-  version: 0.0.1
-  resolution: "@types/recoil@npm:0.0.1"
-  dependencies:
-    "@types/react": "*"
-  checksum: c8084febc0cba89abb8c53b6203a71077745e73fe2567d7c2f5add70a92c5854dd75bebb110a6106c5bf0ca6cc2c05c8941a63acecccc05446f70e4903fef4ae
-  languageName: node
-  linkType: hard
-
 "@types/responselike@npm:^1.0.0":
   version: 1.0.0
   resolution: "@types/responselike@npm:1.0.0"
@@ -11603,7 +11594,6 @@ resolve@^2.0.0-next.3:
     "@types/node-fetch": ^2.5.10
     "@types/react": ^17.0.5
     "@types/react-dom": ^17.0.5
-    "@types/recoil": ^0.0.1
     "@types/sharp": ^0.28.1
     "@types/socket.io": ^2.1.13
     "@types/socket.io-client": ^1.4.36
