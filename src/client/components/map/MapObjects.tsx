@@ -152,6 +152,7 @@ const MapObjectWrapper = React.memo<{
     case "token": {
       return ReactDOM.createPortal(
         <MapToken
+          mapId={mapId}
           object={mapObject}
           canStartMoving={canStartMoving}
           onStartMove={onStartMove}

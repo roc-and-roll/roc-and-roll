@@ -438,6 +438,7 @@ describe("applyStatePatch", () => {
       locked: false,
       playerId: rrid<RRPlayer>(),
       position: { x: 0, y: 0 },
+      rotation: 0,
       size: { x: 0, y: 0 },
       visibility: "everyone",
     };
@@ -486,6 +487,7 @@ describe("applyStatePatch", () => {
       locked: false,
       playerId: rrid<RRPlayer>(),
       position: { x: 0, y: 0 },
+      rotation: 0,
       size: { x: 0, y: 0 },
       visibility: "everyone",
     };

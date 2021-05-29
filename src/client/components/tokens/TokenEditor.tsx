@@ -481,7 +481,7 @@ export function TokenEditor({
         </label>
       </div>
       <hr />
-      <Button onClick={remove}>delete token</Button>
+      <Button onClick={remove}>delete character</Button>
     </div>
   );
 }

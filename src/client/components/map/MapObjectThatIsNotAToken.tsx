@@ -145,7 +145,16 @@ export const MapObjectThatIsNotAToken = React.memo<{
       interactive
       placement="right"
     >
-      {content()}
+      {object.rotation !== 0 ? (
+        <g
+          transform={`rotate(${object.rotation}, 0, 0)`}
+          style={{ transformBox: "fill-box", transformOrigin: "center" }}
+        >
+          {content()}
+        </g>
+      ) : (
+        content()
+      )}
     </Popover>
   );
 });
@@ -189,6 +198,28 @@ function ObjectEditOptions({
     100
   );
 
+  const [rotation, setRotation] = useOptimisticDebouncedServerUpdate(
+    (state) =>
+      withDo(
+        byId(state.maps.entities, mapId)?.objects.entities,
+        (objects) =>
+          (objects &&
+            withDo(byId(objects, object.id), (object) => object?.rotation)) ??
+          0
+      ).toString(),
+    (rotationString) => {
+      const rotation = parseFloat(rotationString);
+      if (isNaN(rotation)) {
+        return undefined;
+      }
+      return mapObjectUpdate(mapId, {
+        id: object.id,
+        changes: { rotation },
+      });
+    },
+    100
+  );
+
   return (
     <div onMouseDown={(e) => e.stopPropagation()}>
       <label>
@@ -197,6 +228,16 @@ function ObjectEditOptions({
           type="checkbox"
           checked={hidden}
           onChange={(e) => setHidden(e.target.checked)}
+        />
+      </label>
+      <label>
+        Rotation:{" "}
+        <input
+          type="number"
+          min={-359}
+          max={359}
+          value={rotation}
+          onChange={(e) => setRotation(e.target.value)}
         />
       </label>
       {extraPopupContent()}

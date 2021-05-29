@@ -4,7 +4,8 @@
         80
     ],
     "search.exclude": {
-        "/dist": true
+      "/.yarn": true,
+      "/dist": true
     },
 
     "typescript.tsdk": "./node_modules/typescript/lib",

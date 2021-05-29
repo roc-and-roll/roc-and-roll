@@ -188,6 +188,7 @@ export default function MapContainer() {
               id: rrid<RRMapObject>(),
               type: "mapLink",
               position: pointSubtract(point, { x: 10, y: 10 }),
+              rotation: 0,
               playerId: myself.id,
               mapId,
               locked: false,
@@ -223,6 +224,7 @@ export default function MapContainer() {
             id: rrid<RRMapObject>(),
             type: "token",
             position: snapPointToGrid(point),
+            rotation: 0,
             playerId: myself.id,
             characterId,
           })

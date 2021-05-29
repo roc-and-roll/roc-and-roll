@@ -100,6 +100,7 @@ export function useMapToolHandler(
       playerId: myself.id,
       color: editState.color,
       position: p,
+      rotation: 0,
       locked: false,
       visibility: editState.visibility,
     });

@@ -8,12 +8,19 @@ import {
   RRCharacterID,
   RRToken,
   RRPoint,
+  byId,
+  RRMapID,
 } from "../../../shared/state";
 import { tokenImageUrl } from "../../files";
 import { canControlToken, canViewTokenOnMap } from "../../permissions";
 import { RoughRectangle, RoughText } from "../rough";
 import tinycolor from "tinycolor2";
-import { assertNever, clamp, isCharacterHurt } from "../../../shared/util";
+import {
+  assertNever,
+  clamp,
+  isCharacterHurt,
+  withDo,
+} from "../../../shared/util";
 import { useMyself } from "../../myself";
 import ReactDOM from "react-dom";
 import { HPInlineEdit } from "./HPInlineEdit";
@@ -24,8 +31,11 @@ import { Popover } from "../Popover";
 import { TokenEditor, conditionIcons } from "../tokens/TokenEditor";
 import { makePoint, pointAdd, pointEquals } from "../../point";
 import { EmanationArea } from "./Areas";
+import { useOptimisticDebouncedServerUpdate } from "../../state";
+import { mapObjectUpdate } from "../../../shared/actions";
 
 export const MapToken = React.memo<{
+  mapId: RRMapID;
   object: RRToken;
   canStartMoving: boolean;
   onStartMove: (o: RRMapObject, e: React.MouseEvent) => void;
@@ -35,6 +45,7 @@ export const MapToken = React.memo<{
   contrastColor: string;
   setHP: (tokenId: RRCharacterID, hp: number) => void;
 }>(function MapToken({
+  mapId,
   object,
   canStartMoving,
   onStartMove,
@@ -177,13 +188,16 @@ export const MapToken = React.memo<{
 
       <Popover
         content={
-          <TokenEditor
-            isTemplate={false}
-            token={token}
-            wasJustCreated={false}
-            onNameFirstEdited={() => {}}
-            onClose={() => setEditorVisible(false)}
-          />
+          <div onMouseDown={(e) => e.stopPropagation()}>
+            <TokenEditor
+              isTemplate={false}
+              token={token}
+              wasJustCreated={false}
+              onNameFirstEdited={() => {}}
+              onClose={() => setEditorVisible(false)}
+            />
+            <MapTokenEditor mapId={mapId} token={object} />
+          </div>
         }
         visible={editorVisible}
         onClickOutside={() => setEditorVisible(false)}
@@ -191,7 +205,15 @@ export const MapToken = React.memo<{
         placement="right"
       >
         <g>
-          {tokenRepresentation}
+          {object.rotation === 0 ? (
+            tokenRepresentation
+          ) : (
+            <g
+              transform={`rotate(${object.rotation}, ${center.x}, ${center.y})`}
+            >
+              {tokenRepresentation}
+            </g>
+          )}
           {isSelectedOrHovered && (
             <circle
               // do not block pointer events
@@ -234,6 +256,47 @@ export const MapToken = React.memo<{
     </>
   );
 });
+
+function MapTokenEditor({ mapId, token }: { mapId: RRMapID; token: RRToken }) {
+  const [rotation, setRotation] = useOptimisticDebouncedServerUpdate(
+    (state) =>
+      withDo(
+        byId(state.maps.entities, mapId)?.objects.entities,
+        (objects) =>
+          (objects &&
+            withDo(byId(objects, token.id), (token) => token?.rotation)) ??
+          0
+      ).toString(),
+    (rotationString) => {
+      const rotation = parseFloat(rotationString);
+      if (isNaN(rotation)) {
+        return undefined;
+      }
+      return mapObjectUpdate(mapId, {
+        id: token.id,
+        changes: { rotation },
+      });
+    },
+    100
+  );
+
+  return (
+    <>
+      <hr />
+      <h3>Map Token Settings</h3>
+      <label>
+        Rotation:{" "}
+        <input
+          type="number"
+          min={-359}
+          max={359}
+          value={rotation}
+          onChange={(e) => setRotation(e.target.value)}
+        />
+      </label>
+    </>
+  );
+}
 
 function Aura({
   x,

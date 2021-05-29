@@ -225,6 +225,7 @@ export const isSyncedState = t.isObject({
           {
             id: isRRID<RRMapObjectID>(),
             position: isRRPoint,
+            rotation: t.isNumber(),
             playerId: isRRID<RRPlayerID>(),
             visibility: t.isEnum(["gmOnly", "everyone"] as const),
           },
