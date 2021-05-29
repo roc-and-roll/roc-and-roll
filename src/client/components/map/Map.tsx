@@ -62,6 +62,7 @@ import { useRRSettings } from "../../settings";
 import { assertNever } from "../../../shared/util";
 import { FogOfWar } from "./FogOfWar";
 import { MapReactions } from "./MapReactions";
+import useLocalState from "../../useLocalState";
 
 type Rectangle = [number, number, number, number];
 
@@ -183,9 +184,13 @@ export const RRMapView = React.memo<{
   );
   // We deliberately do not use useStateWithRef/useStateWithExistingRef here,
   // because we want transformRef to reflect the currently rendered transform,
-  // instead of the committed (using SetTransform), but potentially not yet
+  // instead of the committed (using setTransform), but potentially not yet
   // rendered transform.
-  const [transform, setTransform] = useState<Matrix>(identity());
+  const [transform, setTransform] = useLocalState<Matrix>(
+    `map/${mapId}/transform`,
+    identity(),
+    sessionStorage
+  );
   transformRef.current = transform;
 
   const contrastColor = useMemo(
@@ -251,7 +256,7 @@ export const RRMapView = React.memo<{
         )
       );
     },
-    [toolHandler]
+    [setTransform, toolHandler]
   );
 
   const addPointToPath = useCallback(
@@ -385,6 +390,7 @@ export const RRMapView = React.memo<{
         }
       },
     [
+      setTransform,
       transformRef,
       addPointToPath,
       onMoveMapObjects,

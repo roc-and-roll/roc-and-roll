@@ -12,27 +12,32 @@ const serializer = JSON.stringify;
 
 export default function useLocalState(
   key: string,
-  initialValue: number
+  initialValue: number,
+  storage?: Storage
 ): [number, Dispatch<SetStateAction<number>>, () => void];
 
 export default function useLocalState(
   key: string,
-  initialValue: boolean
+  initialValue: boolean,
+  storage?: Storage
 ): [boolean, Dispatch<SetStateAction<boolean>>, () => void];
 
 export default function useLocalState(
   key: string,
-  initialValue: string
+  initialValue: string,
+  storage?: Storage
 ): [string, Dispatch<SetStateAction<string>>, () => void];
 
 export default function useLocalState<T extends JsonValue>(
   key: string,
-  initialValue: T
+  initialValue: T,
+  storage?: Storage
 ): [T, Dispatch<SetStateAction<T>>, () => void];
 
 export default function useLocalState<T extends JsonValue>(
   key: string,
-  initialValue: T
+  initialValue: T,
+  storage: Storage = localStorage
 ): [T, Dispatch<SetStateAction<T>>, () => void] {
   if (!isBrowser) {
     return [initialValue, noop, noop];
@@ -43,11 +48,11 @@ export default function useLocalState<T extends JsonValue>(
 
   const [state, setState] = useState<T>(() => {
     try {
-      const localStorageValue = localStorage.getItem(key);
+      const localStorageValue = storage.getItem(key);
       if (localStorageValue !== null) {
         return deserializer(localStorageValue) as T;
       } else {
-        localStorage.setItem(key, serializer(initialValue));
+        storage.setItem(key, serializer(initialValue));
         return initialValue;
       }
     } catch {
@@ -62,12 +67,10 @@ export default function useLocalState<T extends JsonValue>(
     (valOrFunc) => {
       setState((prevState) => {
         const newState =
-          typeof valOrFunc === "function"
-            ? (valOrFunc as (prevState: T) => T)(prevState)
-            : valOrFunc;
+          typeof valOrFunc === "function" ? valOrFunc(prevState) : valOrFunc;
 
         try {
-          localStorage.setItem(key, serializer(newState));
+          storage.setItem(key, serializer(newState));
           return newState;
         } catch {
           // If user is in private mode or has storage restriction
@@ -76,18 +79,18 @@ export default function useLocalState<T extends JsonValue>(
         }
       });
     },
-    [key]
+    [key, storage]
   );
 
   const remove = useCallback(() => {
     try {
-      localStorage.removeItem(key);
+      storage.removeItem(key);
       setState(initialValue);
     } catch {
       // If user is in private mode or has storage restriction
       // localStorage can throw.
     }
-  }, [initialValue, key]);
+  }, [initialValue, key, storage]);
 
   return [state, set, remove];
 }
