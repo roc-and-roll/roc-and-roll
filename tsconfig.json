@@ -3,6 +3,7 @@
     "target": "esnext",
     "lib": ["esnext", "dom"],
     "noEmit": true,
+    "incremental": true,
 
     "module": "commonjs",
     "esModuleInterop": true,
