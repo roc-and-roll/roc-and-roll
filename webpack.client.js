@@ -94,7 +94,7 @@ module.exports = (webpackEnv) => {
               }
             : undefined
       }),
-      new HtmlWebpackTagsPlugin({ tags: ['fonts.css'], append: true }),
+      new HtmlWebpackTagsPlugin({ tags: ['fonts.css'], append: true, hash: true }),
       new GoogleFontsPlugin({
         path: "fonts",
         fonts: [
@@ -119,10 +119,12 @@ module.exports = (webpackEnv) => {
         },
       }),
       new ForkTsCheckerWebpackPlugin({
-        typescript: { configFile: "tsconfig.client.json" },
+        typescript: { configFile: "tsconfig.client.json", mode: "write-references" },
         async: isEnvDevelopment,
       }),
-      new MiniCssExtractPlugin(),
+      new MiniCssExtractPlugin({
+        filename: isEnvProduction ? "[name].[contenthash:8].css" : isEnvDevelopment && "[name].css",
+      }),
       isEnvProduction && new CleanWebpackPlugin(),
     ].filter(Boolean),
     module: {

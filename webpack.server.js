@@ -81,7 +81,7 @@ module.exports = (webpackEnv) => {
         }]
       }),
       isEnvDevelopment && new ForkTsCheckerWebpackPlugin({
-        typescript: {configFile: "tsconfig.server.json" },
+        typescript: {configFile: "tsconfig.server.json", mode: "write-tsbuildinfo" },
         async: isEnvDevelopment,
       }),
       isEnvDevelopment && new NodemonPlugin({
