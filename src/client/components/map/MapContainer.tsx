@@ -93,6 +93,11 @@ export const selectedMapObjectIdsAtom = atom<ReadonlyArray<RRMapObjectID>>({
   default: [],
 });
 
+export const highlightedCharactersFamily = atomFamily<boolean, RRCharacterID>({
+  key: "HighlightedCharacter",
+  default: false,
+});
+
 export const mapObjectsFamily = atomFamily<RRMapObject | null, RRMapObjectID>({
   key: "MapObject",
   default: null,

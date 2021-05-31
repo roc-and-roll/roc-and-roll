@@ -31,9 +31,12 @@ import { GMArea } from "./GMArea";
 import { TokenStack } from "./tokens/TokenPreview";
 import { Button } from "./ui/Button";
 import { Flipper, Flipped } from "react-flip-toolkit";
-import { useRecoilValue } from "recoil";
-import { selectedMapObjectIdsAtom } from "./map/MapContainer";
-import { assertNever, withDo } from "../../shared/util";
+import { useRecoilCallback, useRecoilValue } from "recoil";
+import {
+  highlightedCharactersFamily,
+  selectedMapObjectIdsAtom,
+} from "./map/MapContainer";
+import { assertNever, EMPTY_ARRAY, withDo } from "../../shared/util";
 import ReactDOM from "react-dom";
 import { NotificationTopAreaPortal } from "./Notifications";
 
@@ -135,13 +138,34 @@ const InitiativeEntry = React.memo<{
 
   const canEdit = canEditEntry(entry, myself, tokenCollection);
 
+  const characterIds =
+    entry.type === "character" ? entry.characterIds : EMPTY_ARRAY;
+  const onHover = useRecoilCallback(
+    ({ set, reset }) =>
+      (hovered: boolean) => {
+        characterIds.forEach((characterId) => {
+          if (hovered) {
+            set(highlightedCharactersFamily(characterId), true);
+          } else {
+            reset(highlightedCharactersFamily(characterId));
+          }
+        });
+      },
+    [characterIds]
+  );
+
   return (
     <Flipped
       flipId={entry.id}
       onStart={(element) => (element.style.zIndex = inverseIdx.toString())}
       onComplete={(element) => (element.style.zIndex = "")}
     >
-      <li key={entry.id} className={isCurrentEntry ? "current" : undefined}>
+      <li
+        key={entry.id}
+        className={isCurrentEntry ? "current" : undefined}
+        onMouseEnter={() => onHover(true)}
+        onMouseLeave={() => onHover(false)}
+      >
         {content}
         {(canEdit || myself.isGM) && (
           <Button

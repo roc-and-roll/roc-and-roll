@@ -26,7 +26,11 @@ import ReactDOM from "react-dom";
 import { HPInlineEdit } from "./HPInlineEdit";
 import { useRecoilValue } from "recoil";
 import { hoveredMapObjectsFamily } from "./Map";
-import { selectedMapObjectsFamily, tokenFamily } from "./MapContainer";
+import {
+  highlightedCharactersFamily,
+  selectedMapObjectsFamily,
+  tokenFamily,
+} from "./MapContainer";
 import { Popover } from "../Popover";
 import { TokenEditor, conditionIcons } from "../tokens/TokenEditor";
 import { makePoint, pointAdd, pointEquals } from "../../point";
@@ -60,6 +64,9 @@ export const MapToken = React.memo<{
 
   const isHovered = useRecoilValue(hoveredMapObjectsFamily(object.id));
   const isSelected = useRecoilValue(selectedMapObjectsFamily(object.id));
+  const isHighlighted = useRecoilValue(
+    highlightedCharactersFamily(object.characterId)
+  );
   const isSelectedOrHovered = isHovered || isSelected;
 
   const [editorVisible, setEditorVisible] = useState(false);
@@ -164,6 +171,16 @@ export const MapToken = React.memo<{
                   contrastColor={contrastColor}
                 />
               </g>
+            )}
+            {isHighlighted && (
+              <RoughRectangle
+                x={x}
+                y={y}
+                w={tokenSize}
+                h={tokenSize}
+                stroke="orange"
+                fill="none"
+              />
             )}
             {token.conditions.map((condition, index) => (
               <image
