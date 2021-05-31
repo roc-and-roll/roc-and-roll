@@ -59,7 +59,10 @@ const DrawablePrimitive = React.forwardRef<
     drawable: Drawable;
     generator: RoughGenerator;
   } & SVGProps<SVGGElement>
->(function DrawablePrimitive({ drawable, generator, x, y, ...props }, ref) {
+>(function DrawablePrimitive(
+  { drawable, generator, x, y, children, ...props },
+  ref
+) {
   const options = drawable.options;
 
   return (
@@ -113,6 +116,7 @@ const DrawablePrimitive = React.forwardRef<
           }
         }
       })}
+      {children}
     </g>
   );
 });
@@ -135,6 +139,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
       x: number;
       y: number;
       onClick?: (e: React.MouseEvent<SVGElement>) => void;
+      children?: React.ReactNode;
       onMouseDown?: (e: React.MouseEvent<SVGElement>) => void;
       onMouseUp?: (e: React.MouseEvent<SVGElement>) => void;
       onContextMenu?: (e: React.MouseEvent<SVGElement>) => void;
@@ -149,7 +154,12 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
         PassedThroughOptions &
         Pick<
           SVGProps<SVGElement>,
-          "onClick" | "onMouseDown" | "onMouseUp" | "onContextMenu" | "style"
+          | "onClick"
+          | "onMouseDown"
+          | "onMouseUp"
+          | "onContextMenu"
+          | "style"
+          | "children"
         > & {
           x: number;
           y: number;
@@ -162,6 +172,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
         const generator = useContext(RoughContext);
         const {
           style,
+          children,
           onClick,
           onMouseDown,
           onMouseUp,
@@ -222,13 +233,16 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
               onMouseUp={onMouseUp}
               onContextMenu={onContextMenu}
               style={style}
-            />
+            >
+              {children}
+            </DrawablePrimitive>
           );
         } else {
           return generateSimple(
             {
               x,
               y,
+              children,
               onClick,
               onMouseDown,
               onMouseUp,

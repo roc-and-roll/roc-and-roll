@@ -7,6 +7,8 @@ import { MapListEntry } from "../Maps";
 import { Popover } from "../Popover";
 import { RoughCircle, RoughText } from "../rough";
 
+export const MAP_LINK_SIZE = GRID_SIZE / 2;
+
 export function MapLink({
   link,
   canStartMoving,
@@ -58,6 +60,7 @@ export function MapLink({
         style={style}
         className="map-link"
         onMouseDown={canControl ? onMouseDown : undefined}
+        // TODO: rotate
         transform={`translate(${link.position.x}, ${link.position.y})`}
       >
         <RoughText x={0} y={-5} dominantBaseline="text-bottom">
@@ -66,7 +69,7 @@ export function MapLink({
         <RoughCircle
           x={0}
           y={0}
-          d={GRID_SIZE / 2}
+          d={MAP_LINK_SIZE}
           fill={link.color}
           fillStyle="solid"
           roughness={1}

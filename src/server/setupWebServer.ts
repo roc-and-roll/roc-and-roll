@@ -218,8 +218,8 @@ export async function setupWebServer(
         `${req.protocol}://${
           process.env["CODESPACES"]
             ? req.header("x-forwarded-host")!.replace("3000", "3001")
-            : req.hostname
-        }:3001${req.originalUrl}`
+            : `${req.hostname}:3001`
+        }${req.originalUrl}`
       );
     });
   } else {
