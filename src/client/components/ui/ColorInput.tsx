@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { colors } from "../../../shared/colors";
 import { Popover } from "../Popover";
 import { Button } from "./Button";
 
-export function ColorInput({
+export const ColorInput = React.memo(function ColorInput({
   value,
   onChange,
 }: {
@@ -11,6 +11,13 @@ export function ColorInput({
   onChange: (value: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+
+  const onColorButtonClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      onChange(e.currentTarget.dataset["color"]!);
+    },
+    [onChange]
+  );
 
   return (
     <div className="color-picker">
@@ -27,15 +34,7 @@ export function ColorInput({
               onChange={(e) => onChange(e.target.value)}
               title="select color"
             />
-            {colors.map((color) => (
-              <Button
-                key={color}
-                className="color-picker-color"
-                onClick={() => onChange(color)}
-              >
-                <div style={{ background: color }}></div>
-              </Button>
-            ))}
+            <ColorButtons onColorButtonClick={onColorButtonClick} />
           </div>
         }
       >
@@ -48,4 +47,25 @@ export function ColorInput({
       </Popover>
     </div>
   );
-}
+});
+
+const ColorButtons = React.memo<{
+  onColorButtonClick: (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => void;
+}>(function ColorButtons({ onColorButtonClick }) {
+  return (
+    <>
+      {colors.map((color) => (
+        <Button
+          key={color}
+          className="color-picker-color"
+          onClick={onColorButtonClick}
+          data-color={color}
+        >
+          <div style={{ background: color }} />
+        </Button>
+      ))}
+    </>
+  );
+});

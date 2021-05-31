@@ -120,6 +120,8 @@ export async function setupWebServer(
           );
 
           if (!existsSync(outputPath)) {
+            console.log("Generating token", { filename, size, borderColor });
+
             const CENTER = size / 2;
             const RADIUS = size / 2 - 1;
             const BORDER_WIDTH = 3 * (size / GRID_SIZE);
@@ -141,12 +143,11 @@ export async function setupWebServer(
                      fill="transparent"
                      stroke-width="${BORDER_WIDTH}"
                      stroke="${borderColor}" />
-              </svg>`,
+                 </svg>`,
                 "utf-8"
               )
             ).toBuffer();
 
-            console.log("Generating token", filename, size);
             await sharp(inputPath)
               .resize({
                 width: size,
@@ -160,7 +161,7 @@ export async function setupWebServer(
               ])
               .png()
               .toFile(outputPath);
-            console.log("Finished token", filename, size);
+            console.log("Finished token", { filename, size, borderColor });
           }
 
           res.sendFile(outputPath);
@@ -172,11 +173,10 @@ export async function setupWebServer(
   );
 
   // (5) Add end endpoint that generates a random image suitable for a token
-  const tmp = require.context("../third-party/game-icons.net", true, /\.svg$/);
-  const icons = tmp
+  const ctx = require.context("../third-party/game-icons.net", true, /\.svg$/);
+  const icons = ctx
     .keys()
-    .map((key) => tmp.resolve(key))
-    .map((id) => (__webpack_require__ as (str: string) => string)(id))
+    .map((key) => ctx(key))
     .map((each) => path.join(__dirname, each));
 
   app.post("/api/random-token", async (req, res, next) => {

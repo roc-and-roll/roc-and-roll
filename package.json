@@ -9,7 +9,7 @@
     "dev:client": "webpack serve   --config webpack.client.js --env development",
     "dev:server": "webpack --watch --config webpack.server.js --env development",
     "test": "jest",
-    "lint": "eslint --ext .ts,.tsx,.js,.jsx src",
+    "lint": "eslint --cache --ext .ts,.tsx,.js,.jsx src",
     "format": "yarn run lint --fix",
     "build": "concurrently --names client,server --prefix-colors blue,green yarn:build:client yarn:build:server",
     "build:client": "webpack --config webpack.client.js --env production",
@@ -182,7 +182,7 @@
   },
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx}": [
-      "eslint --fix"
+      "eslint --cache --fix"
     ]
   },
   "engines": {

@@ -41,12 +41,13 @@ export function useIsGM() {
 }
 
 export function MyselfProvider({ children }: { children: React.ReactNode }) {
-  const players = useServerState((state) => state.players);
   const [myPlayerId, setMyPlayerId, forgetMyPlayerId] =
     useLocalState<RRPlayerID | null>("myPlayerId", null);
 
   // Important: Use useMyself everywhere else!
-  const myself = myPlayerId ? byId(players.entities, myPlayerId) ?? null : null;
+  const myself = useServerState((state) =>
+    myPlayerId ? byId(state.players.entities, myPlayerId) ?? null : null
+  );
 
   const setId = useSetRecoilState(myIdAtom);
   useEffect(() => {

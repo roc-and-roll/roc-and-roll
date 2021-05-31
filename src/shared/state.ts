@@ -375,7 +375,7 @@ export const defaultMap: RRMap = {
   gmWorldPosition: { x: 0, y: 0 },
   gridEnabled: true,
   gridColor: "#808080",
-  name: "unnamed",
+  name: "Default Map",
   revealedAreas: null,
   id: rrid<RRMap>(),
 };

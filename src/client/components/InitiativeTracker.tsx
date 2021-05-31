@@ -163,7 +163,7 @@ const InitiativeEntry = React.memo<{
       <li
         key={entry.id}
         className={isCurrentEntry ? "current" : undefined}
-        onMouseEnter={() => onHover(true)}
+        onMouseOver={() => onHover(true)}
         onMouseLeave={() => onHover(false)}
       >
         {content}

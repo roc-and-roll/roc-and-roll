@@ -42,7 +42,7 @@ interface TabletopAudioResponse {
   tracks: TabletopAudio[];
 }
 
-export function Music() {
+export const Music = React.memo(function Music() {
   const [tabletopAudio, setTabletopAudio] = useState<RRSong[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -183,7 +183,7 @@ export function Music() {
       </div>
     </div>
   );
-}
+});
 
 function UploadAudio({ onUploaded }: { onUploaded: () => void }) {
   const [isUploading, upload] = useFileUpload();
