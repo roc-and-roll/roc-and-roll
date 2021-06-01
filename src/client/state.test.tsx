@@ -29,6 +29,11 @@ type OnEmitSubscriber = (name: string, payload: any) => void;
 class MockClientSocket {
   private subscribers = new Map<string, Set<Subscriber>>();
 
+  public io = {
+    on: () => {},
+    off: () => {},
+  };
+
   public on(name: string, subscriber: Subscriber) {
     if (!this.subscribers.has(name)) {
       this.subscribers.set(name, new Set());

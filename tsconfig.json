@@ -18,6 +18,7 @@
     "typeRoots": ["src/shared/types", "./node_modules/@types"],
   },
   "include": [
+    "./jest-setup.ts",
     "src/client/**/*",
     "src/server/**/*",
     "src/shared/**/*",

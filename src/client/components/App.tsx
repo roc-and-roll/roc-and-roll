@@ -9,6 +9,8 @@ import { Notifications, NotificationTopAreaPortal } from "./Notifications";
 import { SongPlayer } from "../sound";
 import QuickReferenceWrapper from "./quickReference/QuickReferenceWrapper";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { useServerConnection } from "../state";
+import { ConnectionLost } from "./ConnectionLost";
 
 // Load the map lazily to enable code splitting -> the sidebar will load faster.
 const MapContainer = React.lazy(() => import("./map/MapContainer"));
@@ -16,17 +18,22 @@ const MapContainer = React.lazy(() => import("./map/MapContainer"));
 export function App() {
   const { login, logout, loggedIn } = useLoginLogout();
   const notificationTopAreaPortal = useRef<HTMLDivElement>(null);
+  const { connected } = useServerConnection();
 
   return (
     <NotificationTopAreaPortal.Provider value={notificationTopAreaPortal}>
       <ErrorBoundary>
-        {loggedIn ? (
-          <Game
-            logout={logout}
-            notificationTopAreaPortal={notificationTopAreaPortal}
-          />
+        {connected ? (
+          loggedIn ? (
+            <Game
+              logout={logout}
+              notificationTopAreaPortal={notificationTopAreaPortal}
+            />
+          ) : (
+            <JoinGame login={login} />
+          )
         ) : (
-          <JoinGame login={login} />
+          <ConnectionLost />
         )}
       </ErrorBoundary>
     </NotificationTopAreaPortal.Provider>

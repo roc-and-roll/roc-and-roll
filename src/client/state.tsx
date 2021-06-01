@@ -19,6 +19,7 @@ import {
 } from "../shared/state";
 import { mergeDeep, rrid } from "../shared/util";
 import { Debouncer, debouncerTime, useDebounce } from "./debounce";
+import { useGuranteedMemo } from "./useGuranteedMemo";
 import useRafLoop from "./useRafLoop";
 import { useStateWithRef } from "./useRefState";
 
@@ -64,6 +65,77 @@ const ServerStateContext = React.createContext<{
   socket: null,
 });
 ServerStateContext.displayName = "ServerStateContext";
+
+type ReconnectionAttemptSubscriber = () => void;
+
+const ServerConnectionContext = React.createContext<{
+  connected: boolean;
+  subscribeToReconnectAttempts: (
+    subscriber: ReconnectionAttemptSubscriber
+  ) => void;
+  unsubscribeFromReconnectAttempts: (
+    subscriber: ReconnectionAttemptSubscriber
+  ) => void;
+}>({
+  connected: false,
+  subscribeToReconnectAttempts: () => {},
+  unsubscribeFromReconnectAttempts: () => {},
+});
+
+export function useServerConnection() {
+  return useContext(ServerConnectionContext);
+}
+
+function ServerConnectionProvider({
+  socket,
+  children,
+}: React.PropsWithChildren<{ socket: SocketIOClient.Socket }>) {
+  const [connected, setConnected] = useState(socket.connected);
+  const subscribers = useRef<Set<ReconnectionAttemptSubscriber>>(new Set());
+
+  useEffect(() => {
+    const onConnect = () => setConnected(true);
+    const onDisconnect = () => setConnected(false);
+    const onAttemptReconnect = () =>
+      subscribers.current.forEach((subscriber) => subscriber());
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+    socket.io.on("reconnect_attempt", onAttemptReconnect);
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+      socket.io.off("reconnect_attempt", onAttemptReconnect);
+    };
+  }, [socket]);
+
+  const subscribeToReconnectAttempts = useCallback(
+    (subscriber: ReconnectionAttemptSubscriber) =>
+      subscribers.current.add(subscriber),
+    []
+  );
+  const unsubscribeFromReconnectAttempts = useCallback(
+    (subscriber: ReconnectionAttemptSubscriber) =>
+      subscribers.current.delete(subscriber),
+    []
+  );
+
+  const ctx = useGuranteedMemo(
+    () => ({
+      connected,
+      subscribeToReconnectAttempts,
+      unsubscribeFromReconnectAttempts,
+    }),
+    [connected, subscribeToReconnectAttempts, unsubscribeFromReconnectAttempts]
+  );
+
+  return (
+    <ServerConnectionContext.Provider value={ctx}>
+      {children}
+    </ServerConnectionContext.Provider>
+  );
+}
 
 export function ServerStateProvider({
   socket,
@@ -210,7 +282,9 @@ export function ServerStateProvider({
         socket,
       }}
     >
-      {children}
+      <ServerConnectionProvider socket={socket}>
+        {children}
+      </ServerConnectionProvider>
     </ServerStateContext.Provider>
   );
 }

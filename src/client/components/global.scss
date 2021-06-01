@@ -979,3 +979,21 @@ aside.emoji-picker-react {
   margin: 0 2px;
   font-size: 0.85em;
 }
+
+.connection-lost {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  min-height: 100vh;
+  text-align: center;
+
+  h1 {
+    font-size: 5rem;
+
+    @media (max-width: 1000px) {
+      font-size: 3rem;
+    }
+
+    margin-bottom: 10vh;
+  }
+}

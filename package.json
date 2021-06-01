@@ -71,6 +71,7 @@
     "@beyonk/google-fonts-webpack-plugin": "patch:@beyonk/google-fonts-webpack-plugin@^1.7.0#./patches/@beyonk/google-fonts-webpack-plugin.patch",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.4.3",
     "@sinonjs/fake-timers": "^7.0.5",
+    "@testing-library/jest-dom": "^5.12.0",
     "@testing-library/react": "^11.2.7",
     "@testing-library/react-hooks": "^5.1.2",
     "@types/async-lock": "^1.1.2",
@@ -88,6 +89,7 @@
     "@types/socket.io": "^2.1.13",
     "@types/socket.io-client": "^1.4.36",
     "@types/source-map-support": "^0.5.3",
+    "@types/testing-library__jest-dom": "^5",
     "@types/three": "^0.127.1",
     "@types/tinycolor2": "^1.4.2",
     "@types/webpack-bundle-analyzer": "^4.4.0",
@@ -140,7 +142,9 @@
     "transform": {
       "^.+\\.tsx?$": "ts-jest"
     },
-    "setupFiles": [],
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest-setup.ts"
+    ],
     "globals": {
       "__VERSION__": "master",
       "ts-jest": {
