@@ -475,6 +475,8 @@ $gmAreaColor: #ab62c0;
 }
 
 .initiative-tracker {
+  position: relative;
+
   ul {
     margin: 0;
     padding: 0;
@@ -505,6 +507,27 @@ $gmAreaColor: #ab62c0;
       &.current {
         background: orange;
       }
+    }
+  }
+
+  .initiative-tracker-hidden {
+    position: absolute;
+    pointer-events: none;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 2rem);
+    background: rgba($gmAreaColor, 0.3);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    p {
+      font-size: 2rem;
+      transform: rotate(-10deg);
+      text-align: center;
+      text-shadow: 0px 0px 8px #000000;
     }
   }
 

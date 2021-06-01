@@ -52,9 +52,7 @@ export function Sidebar({ logout }: { logout: () => void }) {
       <div className="app-sidebar-scroll-container">
         <h1>Roc & Roll</h1>
 
-        <Collapsible title="Initiative">
-          <InitiativeTracker />
-        </Collapsible>
+        <InitiativeTracker />
         <Collapsible title="Tokens">
           <TokenManager />
         </Collapsible>
