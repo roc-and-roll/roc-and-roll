@@ -15,6 +15,7 @@ import { useServerState } from "../state";
 import tada from "../../third-party/freesound.org/60443__jobro__tada1.mp3";
 import { achievements } from "./achievementList";
 import { Flipper, Flipped } from "react-flip-toolkit";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 const DiceDisplay = React.lazy(
   () => import(/* webpackPrefetch: true */ "./diceRoller/DiceDisplay")
@@ -118,10 +119,15 @@ function Notification({
         "..."
       )}
       <Suspense fallback={null}>
-        <DiceDisplay
-          onAnimationFinished={() => setNotificationReady(true)}
-          diceRoll={notification}
-        />
+        <ErrorBoundary
+          errorContent={" dice cannot be rendered :/"}
+          onError={() => setNotificationReady(true)}
+        >
+          <DiceDisplay
+            onAnimationFinished={() => setNotificationReady(true)}
+            diceRoll={notification}
+          />
+        </ErrorBoundary>
       </Suspense>
     </>
   );
