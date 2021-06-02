@@ -511,8 +511,11 @@ $gmAreaColor: #ab62c0;
   }
 
   .initiative-tracker-hidden {
-    position: absolute;
+    z-index: 999;
     pointer-events: none;
+    user-select: none;
+
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
@@ -1018,5 +1021,80 @@ aside.emoji-picker-react {
     }
 
     margin-bottom: 10vh;
+  }
+}
+
+.map-music-indicator {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  max-width: 20vw;
+
+  padding: 0.5rem;
+  border: 2px solid;
+  border-radius: 0.25rem;
+
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+
+  transition: opacity 1s ease-in-out;
+
+  &.is-timeouted {
+    opacity: 0;
+  }
+}
+
+.map-music-icon {
+  // We deliberately use ems, not rems, here, so that the icon is scaled to the
+  // font size of its surrounding text.
+  $width: 1.2em;
+  $height: 1em;
+  $bars: 3;
+  $duration: 1.2s;
+
+  display: inline-block;
+  position: relative;
+  vertical-align: text-bottom;
+  width:$width;
+  height: $height;
+
+  & > span {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    display: inline-block;
+
+    height: $height;
+    width: calc(#{$width} / (#{$bars} + (#{$bars} - 1) / 2));
+    animation-name: map-music-bar;
+    animation-iteration-count: infinite;
+    animation-timing-function: cubic-bezier(0.785, 0.135, 0.15, 0.86);
+
+    transform-origin: bottom;
+  }
+
+  & > span:nth-child(1) {
+    left:0;
+    animation-duration: $duration;
+    animation-delay: 0;
+  }
+
+  & > span:nth-child(2) {
+    left: calc(#{$width} / (#{$bars} + (#{$bars} - 1) / 2) * 1.5);
+    animation-duration: $duration * 1.1;
+    animation-delay: $duration / 3;
+  }
+
+  & > span:nth-child(3) {
+    left: calc(#{$width} / (#{$bars} + (#{$bars} - 1) / 2) * 3);
+    animation-duration: $duration * 0.9;
+    animation-delay: $duration / 3 * 2;
+  }
+
+  @keyframes map-music-bar {
+    0%, 100% { transform: scaleY(0); }
+    50% { transform: scaleY(1); }
   }
 }

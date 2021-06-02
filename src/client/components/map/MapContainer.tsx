@@ -59,6 +59,7 @@ import { useMapToolHandler } from "./useMapToolHandler";
 import { atomFamily, atom, useRecoilCallback, RecoilState } from "recoil";
 import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";
 import { isTriggeredByTextInput } from "../../util";
+import { MapMusicIndicator } from "./MapMusicIndicator";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -614,6 +615,7 @@ export default function MapContainer() {
   return (
     <div ref={dropRef} className="map-container">
       <ReduxToRecoilBridge localMapObjects={localMapObjects} />
+      <MapMusicIndicator mapBackgroundColor={map.backgroundColor} />
       <MapToolbar map={map} myself={myself} setEditState={setEditState} />
       <RRMapView
         // map entity data
