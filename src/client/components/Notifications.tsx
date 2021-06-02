@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import {
   byId,
   entries,
@@ -12,10 +12,13 @@ import { assertNever } from "../../shared/util";
 import { DiceResultWithTypes } from "../roll";
 import { useRRSimpleSound } from "../sound";
 import { useServerState } from "../state";
-import DiceDisplay from "./diceRoller/DiceDisplay";
 import tada from "../../third-party/freesound.org/60443__jobro__tada1.mp3";
 import { achievements } from "./achievementList";
 import { Flipper, Flipped } from "react-flip-toolkit";
+
+const DiceDisplay = React.lazy(
+  () => import(/* webpackPrefetch: true */ "./diceRoller/DiceDisplay")
+);
 
 const NOTIFICATION_TIMEOUT = 6000;
 
@@ -114,10 +117,12 @@ function Notification({
       ) : (
         "..."
       )}
-      <DiceDisplay
-        onAnimationFinished={() => setNotificationReady(true)}
-        diceRoll={notification}
-      />
+      <Suspense fallback={null}>
+        <DiceDisplay
+          onAnimationFinished={() => setNotificationReady(true)}
+          diceRoll={notification}
+        />
+      </Suspense>
     </>
   );
 

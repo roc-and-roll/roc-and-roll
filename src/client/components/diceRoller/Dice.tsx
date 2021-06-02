@@ -131,6 +131,6 @@ export function Dice({
       />
     );
   } else {
-    return <></>;
+    return null;
   }
 }

@@ -516,6 +516,7 @@ function ConditionPicker({
               <img
                 title={name}
                 src={conditionIcons[name]}
+                alt={name}
                 onClick={() =>
                   setConditions((oldConditions) =>
                     oldConditions.includes(name)

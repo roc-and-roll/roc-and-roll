@@ -25,8 +25,11 @@ import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { ColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
-import Picker from "emoji-picker-react";
 import { isTriggeredByTextInput } from "../util";
+
+const EmojiPicker = React.lazy(
+  () => import(/* webpackPrefetch: true */ "emoji-picker-react")
+);
 
 export const MapToolbar = React.memo<{
   map: RRMap;
@@ -259,7 +262,7 @@ export const MapToolbar = React.memo<{
           <Popover
             className="popover-no-padding"
             content={
-              <Picker
+              <EmojiPicker
                 native={true}
                 onEmojiClick={(_, { emoji }) => {
                   setEmojiPickerVisible(false);

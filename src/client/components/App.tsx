@@ -13,7 +13,12 @@ import { useServerConnection } from "../state";
 import { ConnectionLost } from "./ConnectionLost";
 
 // Load the map lazily to enable code splitting -> the sidebar will load faster.
-const MapContainer = React.lazy(() => import("./map/MapContainer"));
+const MapContainer = React.lazy(
+  // TODO: We would really want to use webpackPreload here, but that's not
+  // currently supported by the html-webpack-plugin:
+  // https://github.com/jantimon/html-webpack-plugin/issues/1317
+  () => import(/* webpackPrefetch: true */ "./map/MapContainer")
+);
 
 export function App() {
   const { login, logout, loggedIn } = useLoginLogout();
