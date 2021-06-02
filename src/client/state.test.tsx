@@ -20,7 +20,6 @@ import {
   SyncedStateAction,
 } from "../shared/state";
 import ReactDOM from "react-dom";
-import FakeTimers from "@sinonjs/fake-timers";
 import { rrid } from "../shared/util";
 
 type Subscriber = (payload: any) => void;
@@ -148,16 +147,6 @@ describe("optimistic state updates", () => {
     );
   }
 
-  let clock: FakeTimers.Clock;
-
-  beforeEach(() => {
-    clock = FakeTimers.install();
-  });
-
-  afterEach(() => {
-    clock.uninstall();
-  });
-
   it("passes through server updates when there is no local update", async () => {
     const { mockSocket, result, rerender, unmount } =
       setupUseOptimisticDebouncedServerUpdate({
@@ -187,6 +176,8 @@ describe("optimistic state updates", () => {
   });
 
   it("ignores server updates when there is a local update", async () => {
+    const START_NOW = Date.now();
+
     function makeActionCreator() {
       return () => ({
         type: "an-action",
@@ -243,8 +234,8 @@ describe("optimistic state updates", () => {
 
     // wait -> now the updated local state should have been sent to the
     // server
-    await clock.runToLastAsync();
-    expect(clock.now).toBe(100);
+    jest.runAllTimers();
+    expect(Date.now() - START_NOW).toBe(100);
     expect(onEmit).toBeCalledTimes(1);
 
     // trigger a SET_STATE update, which also should not overwrite the local
@@ -357,6 +348,8 @@ describe("optimistic state updates", () => {
   });
 
   it("rerenders when the selector changes and returns a different result", async () => {
+    const START_NOW = Date.now();
+
     function makeActionCreator() {
       return () => ({ type: "an-action", payload: undefined });
     }
@@ -381,9 +374,9 @@ describe("optimistic state updates", () => {
     expect(result.all).toHaveLength(2);
 
     act(() => {
-      clock.runAll();
+      jest.runAllTimers();
     });
-    expect(clock.now).toBeGreaterThanOrEqual(100);
+    expect(Date.now() - START_NOW).toBe(16);
     expect(result.current[0]).toBe("bar");
     expect(result.all).toHaveLength(3);
   });

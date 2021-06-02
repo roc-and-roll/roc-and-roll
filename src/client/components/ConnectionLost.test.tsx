@@ -4,15 +4,6 @@ import { ConnectionLost } from "./ConnectionLost";
 import { ServerStateProvider } from "../state";
 
 describe("ConnectionLost", () => {
-  beforeEach(() => {
-    jest.useFakeTimers("modern");
-  });
-
-  afterEach(() => {
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
-  });
-
   it("works", async () => {
     const reconnectCallbacks = new Set<() => void>();
     const socket = {

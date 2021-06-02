@@ -4,24 +4,15 @@ import {
   useAggregatedDebounce,
   useDebounce,
 } from "./debounce";
-import FakeTimers from "@sinonjs/fake-timers";
 import { renderHook } from "@testing-library/react-hooks";
 import { act } from "@react-three/fiber";
 
 describe("synced debouncer", () => {
-  let clock: FakeTimers.Clock;
-
-  beforeEach(() => {
-    clock = FakeTimers.install();
-  });
-
-  afterEach(() => {
-    clock.uninstall();
-  });
-
   const TIME = 100;
 
   it("works", async () => {
+    const START_NOW = Date.now();
+
     const syncedDebouncer = new SyncedDebouncer(TIME);
 
     expect(syncedDebouncer.getTime()).toBe(TIME);
@@ -31,34 +22,34 @@ describe("synced debouncer", () => {
     const { debounced, dispose } = syncedDebouncer.makeDebouncer(fn);
     expect(fn).toBeCalledTimes(0);
 
-    await clock.nextAsync();
+    jest.advanceTimersToNextTimer();
     expect(fn).toBeCalledTimes(0);
 
     debounced(1);
     debounced(2);
     expect(fn).toBeCalledTimes(0);
 
-    await clock.nextAsync();
+    jest.advanceTimersToNextTimer();
     expect(fn).toBeCalledTimes(1);
     expect(fn).toHaveBeenLastCalledWith(2);
-    expect(clock.now).toBe(TIME);
+    expect(Date.now() - START_NOW).toBe(TIME);
 
     debounced(3);
     expect(fn).toBeCalledTimes(1);
 
-    await clock.nextAsync();
+    jest.advanceTimersToNextTimer();
     expect(fn).toBeCalledTimes(2);
     expect(fn).toHaveBeenLastCalledWith(3);
-    expect(clock.now).toBe(TIME * 2);
+    expect(Date.now() - START_NOW).toBe(TIME * 2);
 
     debounced(4);
     expect(fn).toBeCalledTimes(2);
     dispose(false);
     expect(fn).toBeCalledTimes(2);
 
-    await clock.runToLastAsync();
+    jest.runAllTimers();
     expect(fn).toBeCalledTimes(2);
-    expect(clock.now).toBe(TIME * 2);
+    expect(Date.now() - START_NOW).toBe(TIME * 2);
 
     expect(() => dispose(false)).toThrowErrorMatchingInlineSnapshot(
       `"Already disposed!"`
@@ -68,6 +59,7 @@ describe("synced debouncer", () => {
   });
 
   it("executes pending callbacks on dispose if instructed so", async () => {
+    const START_NOW = Date.now();
     const syncedDebouncer = new SyncedDebouncer(TIME);
 
     const fn = jest.fn();
@@ -83,23 +75,13 @@ describe("synced debouncer", () => {
     expect(fn).toBeCalledTimes(1);
     expect(fn).toHaveBeenLastCalledWith(3);
 
-    await clock.runToLastAsync();
+    jest.runAllTimers();
     expect(fn).toBeCalledTimes(1);
-    expect(clock.now).toBe(0);
+    expect(Date.now() - START_NOW).toBe(0);
   });
 });
 
 describe("useDebounce", () => {
-  let clock: FakeTimers.Clock;
-
-  beforeEach(() => {
-    clock = FakeTimers.install();
-  });
-
-  afterEach(() => {
-    clock.uninstall();
-  });
-
   type HookArgs<A extends unknown[]> = {
     callback: (...args: A) => unknown;
     debounce: Debouncer;
@@ -125,6 +107,7 @@ describe("useDebounce", () => {
     ${true}        | ${new SyncedDebouncer(TIME)}
     ${false}       | ${new SyncedDebouncer(TIME)}
   `("works", async ({ forceOnUnmount, debounce }) => {
+    const START_NOW = Date.now();
     const callback = jest.fn();
 
     const hook = setup({
@@ -135,8 +118,8 @@ describe("useDebounce", () => {
 
     expect(typeof hook.result.current).toBe("function");
 
-    await clock.runAllAsync();
-    expect(clock.now).toBe(0);
+    jest.runAllTimers();
+    expect(Date.now() - START_NOW).toBe(0);
     expect(callback).toBeCalledTimes(0);
 
     act(() => {
@@ -145,8 +128,8 @@ describe("useDebounce", () => {
     });
     expect(callback).toBeCalledTimes(0);
 
-    await clock.runAllAsync();
-    expect(clock.now).toBe(TIME);
+    jest.runAllTimers();
+    expect(Date.now() - START_NOW).toBe(TIME);
     expect(callback).toBeCalledTimes(1);
     expect(callback).toHaveBeenLastCalledWith(2, "b");
 
@@ -155,8 +138,8 @@ describe("useDebounce", () => {
     });
     expect(callback).toBeCalledTimes(1);
 
-    await clock.runAllAsync();
-    expect(clock.now).toBe(TIME * 2);
+    jest.runAllTimers();
+    expect(Date.now() - START_NOW).toBe(TIME * 2);
     expect(callback).toBeCalledTimes(2);
     expect(callback).toHaveBeenLastCalledWith(3, "c");
 
@@ -164,7 +147,7 @@ describe("useDebounce", () => {
       hook.result.current(4, "d");
     });
     expect(callback).toBeCalledTimes(2);
-    expect(clock.now).toBe(TIME * 2);
+    expect(Date.now() - START_NOW).toBe(TIME * 2);
 
     hook.unmount();
 
@@ -174,9 +157,9 @@ describe("useDebounce", () => {
     } else {
       expect(callback).toBeCalledTimes(2);
     }
-    expect(clock.now).toBe(TIME * 2);
+    expect(Date.now() - START_NOW).toBe(TIME * 2);
 
-    await clock.runToLastAsync();
+    jest.runAllTimers();
     if (forceOnUnmount) {
       expect(callback).toBeCalledTimes(3);
     } else {
@@ -191,16 +174,6 @@ describe("useDebounce", () => {
 });
 
 describe("useAggregatedDebounce", () => {
-  let clock: FakeTimers.Clock;
-
-  beforeEach(() => {
-    clock = FakeTimers.install();
-  });
-
-  afterEach(() => {
-    clock.uninstall();
-  });
-
   type HookArgs<A extends unknown[]> = {
     callback: (args: A[]) => unknown;
     debounce: Debouncer;
@@ -226,6 +199,7 @@ describe("useAggregatedDebounce", () => {
     ${true}        | ${new SyncedDebouncer(TIME)}
     ${false}       | ${new SyncedDebouncer(TIME)}
   `("works", async ({ forceOnUnmount, debounce }) => {
+    const START_NOW = Date.now();
     const callback = jest.fn();
 
     const hook = setup({
@@ -236,8 +210,8 @@ describe("useAggregatedDebounce", () => {
 
     expect(typeof hook.result.current).toBe("function");
 
-    await clock.runAllAsync();
-    expect(clock.now).toBe(0);
+    jest.runAllTimers();
+    expect(Date.now() - START_NOW).toBe(0);
     expect(callback).toBeCalledTimes(0);
 
     act(() => {
@@ -245,10 +219,10 @@ describe("useAggregatedDebounce", () => {
       hook.result.current(2, "b");
     });
     expect(callback).toBeCalledTimes(0);
-    expect(clock.now).toBe(0);
+    expect(Date.now() - START_NOW).toBe(0);
 
-    await clock.runAllAsync();
-    expect(clock.now).toBe(TIME);
+    jest.runAllTimers();
+    expect(Date.now() - START_NOW).toBe(TIME);
     expect(callback).toBeCalledTimes(1);
     expect(callback).toHaveBeenLastCalledWith([
       [1, "a"],
@@ -259,10 +233,10 @@ describe("useAggregatedDebounce", () => {
       hook.result.current(3, "c");
     });
     expect(callback).toBeCalledTimes(1);
-    expect(clock.now).toBe(TIME);
+    expect(Date.now() - START_NOW).toBe(TIME);
 
-    await clock.runAllAsync();
-    expect(clock.now).toBe(TIME * 2);
+    jest.runAllTimers();
+    expect(Date.now() - START_NOW).toBe(TIME * 2);
     expect(callback).toBeCalledTimes(2);
     expect(callback).toHaveBeenLastCalledWith([[3, "c"]]);
 
