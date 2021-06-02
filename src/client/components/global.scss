@@ -1028,21 +1028,30 @@ aside.emoji-picker-react {
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
-  max-width: 20vw;
 
   padding: 0.5rem;
-  border: 2px solid;
   border-radius: 0.25rem;
 
   font-size: 0.8rem;
-  white-space: nowrap;
-  overflow-x: hidden;
-  text-overflow: ellipsis;
+  user-select: none;
 
-  transition: opacity 1s ease-in-out;
+  .song-titles {
+    display: inline-block;
+    vertical-align: middle;
 
-  &.is-timeouted {
-    opacity: 0;
+    max-width: 20vw;
+    opacity: 1;
+
+    white-space: nowrap;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+
+    transition: opacity 1s ease-in-out, max-width 1s ease-in-out;
+
+    &.is-timeouted {
+      max-width: 0;
+      opacity: 0;
+    }
   }
 }
 

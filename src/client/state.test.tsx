@@ -12,6 +12,7 @@ import {
   defaultMap,
   EMPTY_ENTITY_COLLECTION,
   initialSyncedState,
+  OptimisticUpdateID,
   RRMap,
   RRMapObject,
   RRPlayer,
@@ -21,52 +22,14 @@ import {
 } from "../shared/state";
 import ReactDOM from "react-dom";
 import { rrid } from "../shared/util";
-
-type Subscriber = (payload: any) => void;
-type OnEmitSubscriber = (name: string, payload: any) => void;
-
-class MockClientSocket {
-  private subscribers = new Map<string, Set<Subscriber>>();
-
-  public io = {
-    on: () => {},
-    off: () => {},
-  };
-
-  public on(name: string, subscriber: Subscriber) {
-    if (!this.subscribers.has(name)) {
-      this.subscribers.set(name, new Set());
-    }
-    this.subscribers.get(name)!.add(subscriber);
-  }
-
-  public off(name: string, subscriber: Subscriber) {
-    if (!this.subscribers.has(name)) {
-      this.subscribers.set(name, new Set());
-    }
-    this.subscribers.get(name)!.delete(subscriber);
-  }
-
-  public emit(name: string, action: string) {
-    this.__onEmitSubscribers.forEach((subscriber) => subscriber(name, action));
-  }
-
-  public __receive(name: string, payload: any) {
-    this.subscribers.get(name)?.forEach((subscriber) => subscriber(payload));
-  }
-
-  private __onEmitSubscribers = new Set<OnEmitSubscriber>();
-  public __onEmit(subscriber: OnEmitSubscriber) {
-    this.__onEmitSubscribers.add(subscriber);
-  }
-}
+import { MockClientSocket } from "./test-utils";
 
 function setup<A extends Record<string, unknown>, H>(
   initialProps: A,
   hookCreator: (hookArgs: A) => H
 ) {
   const mockSocket = new MockClientSocket();
-  const socket = mockSocket as unknown as SocketIOClient.Socket;
+  const socket = mockSocket.__cast();
   const wrapper = ({
     children,
     socket,
@@ -165,10 +128,7 @@ describe("optimistic state updates", () => {
     expect(result.current[0]).toBe(42);
 
     act(() => {
-      mockSocket.__receive("SET_STATE", {
-        state: JSON.stringify("{}"),
-        finishedOptimisticUpdateIds: [],
-      });
+      mockSocket.__receiveSetState({});
     });
     expect(result.current[0]).toBe(42);
 
@@ -192,7 +152,7 @@ describe("optimistic state updates", () => {
         debounceTime: 100,
       });
 
-    let updateId: string;
+    let updateId: OptimisticUpdateID;
     const onEmit = jest.fn((name, actions) => {
       expect(actions).toHaveLength(1);
       const action = actions[0]!;
@@ -202,7 +162,7 @@ describe("optimistic state updates", () => {
       expect(typeof optimisticUpdateId).toBe("string");
       updateId = optimisticUpdateId;
     });
-    mockSocket.__onEmit(onEmit);
+    mockSocket.__onEmitToServerSubscriberAdd(onEmit);
 
     expect(result.current[0]).toBe(123);
 
@@ -224,10 +184,7 @@ describe("optimistic state updates", () => {
     // trigger a SET_STATE update, which also should not overwrite the local
     // state
     act(() => {
-      mockSocket.__receive("SET_STATE", {
-        state: JSON.stringify("{}"),
-        finishedOptimisticUpdateIds: [],
-      });
+      mockSocket.__receiveSetState({});
     });
     expect(result.current[0]).toBe(42);
     expect(onEmit).toBeCalledTimes(0);
@@ -241,10 +198,7 @@ describe("optimistic state updates", () => {
     // trigger a SET_STATE update, which also should not overwrite the local
     // state
     act(() => {
-      mockSocket.__receive("SET_STATE", {
-        state: JSON.stringify("{}"),
-        finishedOptimisticUpdateIds: [],
-      });
+      mockSocket.__receiveSetState({});
     });
     expect(result.current[0]).toBe(42);
 
@@ -252,10 +206,7 @@ describe("optimistic state updates", () => {
     // state has been incorporated into the server state -> start rendering
     // state from the server again.
     act(() => {
-      mockSocket.__receive("SET_STATE", {
-        state: JSON.stringify("{}"),
-        finishedOptimisticUpdateIds: [updateId],
-      });
+      mockSocket.__receiveSetState({}, [updateId]);
     });
     expect(result.current[0]).toBe(1337);
 
@@ -285,7 +236,7 @@ describe("optimistic state updates", () => {
       expect(name).toBe("REDUX_ACTION");
       expect(typeof optimisticUpdateId).toBe("string");
     });
-    mockSocket.__onEmit(onEmit);
+    mockSocket.__onEmitToServerSubscriberAdd(onEmit);
 
     expect(result.current[0]).toBe(123);
 
@@ -411,7 +362,6 @@ describe("applyStatePatch", () => {
           entities: {
             [newMap.id]: newMap,
           },
-          // @ts-expect-error TODO
           ids: [defaultMap.id, newMap.id],
         },
       },
@@ -550,17 +500,14 @@ describe("useServerState", () => {
     expect(result.current).toEqual(EMPTY_ENTITY_COLLECTION);
 
     act(() => {
-      mockSocket.__receive("PATCH_STATE", {
-        patch: JSON.stringify({
-          deletedKeys: [],
-          patch: {
-            players: {
-              entities: { a: { id: "a" }, b: { id: "b" } },
-              ids: ["a", "b"],
-            },
+      mockSocket.__receivePatchState({
+        deletedKeys: [],
+        patch: {
+          players: {
+            entities: { a: { id: "a" }, b: { id: "b" } },
+            ids: ["a" as RRPlayerID, "b" as RRPlayerID],
           },
-        }),
-        finishedOptimisticUpdateIds: [],
+        },
       });
     });
 

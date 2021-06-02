@@ -35,15 +35,23 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
       .setAlpha(0.7)
       .toRgbString();
 
+    const title = `Now playing: ${activeSongTitles}`;
+
     return (
       <span
-        className={clsx("map-music-indicator", {
-          "is-timeouted": isTimeouted,
-        })}
-        style={{ backgroundColor, color: textColor, borderColor: textColor }}
-        title={`Now playing: ${activeSongTitles}`}
+        className="map-music-indicator"
+        style={{ backgroundColor, color: textColor }}
+        title={title}
+        aria-label={`Music; ${title}`}
       >
-        <Icon color={textColor} /> {activeSongTitles}
+        <Icon color={textColor} />{" "}
+        <span
+          className={clsx("song-titles", {
+            "is-timeouted": isTimeouted,
+          })}
+        >
+          {activeSongTitles}
+        </span>
       </span>
     );
   }
@@ -51,10 +59,12 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
 
 const Icon = React.memo(function Icon({ color }: { color: RRColor }) {
   return (
-    <span className="map-music-icon">
-      <span style={{ background: color }}></span>
-      <span style={{ background: color }}></span>
-      <span style={{ background: color }}></span>
-    </span>
+    <>
+      <span className="map-music-icon" aria-hidden>
+        <span style={{ background: color }}></span>
+        <span style={{ background: color }}></span>
+        <span style={{ background: color }}></span>
+      </span>
+    </>
   );
 });

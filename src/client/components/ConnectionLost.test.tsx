@@ -2,35 +2,25 @@ import React from "react";
 import { render, screen, act } from "@testing-library/react";
 import { ConnectionLost } from "./ConnectionLost";
 import { ServerStateProvider } from "../state";
+import { MockClientSocket } from "../test-utils";
 
 describe("ConnectionLost", () => {
   it("works", async () => {
-    const reconnectCallbacks = new Set<() => void>();
-    const socket = {
-      on: jest.fn(),
-      off: jest.fn(),
-      io: {
-        on: jest.fn().mockImplementation((event, callback) => {
-          expect(event).toBe("reconnect_attempt");
-          reconnectCallbacks.add(callback);
-        }),
-        off: jest.fn(),
-      },
-    } as unknown as SocketIOClient.Socket;
+    const mockSocket = new MockClientSocket();
+
     const { unmount } = render(
-      <ServerStateProvider socket={socket}>
+      <ServerStateProvider socket={mockSocket.__cast()}>
         <ConnectionLost />
       </ServerStateProvider>
     );
 
-    expect(reconnectCallbacks.size).toBe(1);
     expect(screen.getByRole("heading")).toHaveTextContent("Looks like a TPK");
     expect(
       screen.queryByText("Last reconnection attempt", { exact: false })
     ).not.toBeInTheDocument();
 
     act(() => {
-      reconnectCallbacks.forEach((callback) => callback());
+      mockSocket.__receiveIOEvent("reconnect_attempt", undefined);
       jest.advanceTimersByTime(1000);
     });
 

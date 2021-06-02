@@ -98,10 +98,15 @@ export const Music = React.memo(function Music() {
   };
 
   const onReplace = (t: RRSong) => {
-    for (const song of activeSongs) {
-      onStop(song);
-    }
-    onStart(t);
+    dispatch([
+      ...activeSongs.map((activeSong) => ephermalSongRemove(activeSong.id)),
+      ephermalSongAdd({
+        startedAt: timestamp(),
+        id: rrid<RRActiveSong>(),
+        song: t,
+        volume: 1.0,
+      }),
+    ]);
   };
 
   const onStart = (t: RRSong) => {

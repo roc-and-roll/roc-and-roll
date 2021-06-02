@@ -11,6 +11,7 @@ import ReactDOM from "react-dom";
 import type { Primitive } from "type-fest";
 import { USE_CONCURRENT_MODE } from "../shared/constants";
 import {
+  EntityCollection,
   initialSyncedState,
   OptimisticUpdateID,
   RRPlayerID,
@@ -23,7 +24,24 @@ import { useGuranteedMemo } from "./useGuranteedMemo";
 import useRafLoop from "./useRafLoop";
 import { useStateWithRef } from "./useRefState";
 
-type StatePatch<D> = { patch: DeepPartial<D>; deletedKeys: string[] };
+// DeepPartial chokes on Records with opaque ids as key.
+type DeepPartialWithEntityCollectionFix<T> = {
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  [K in keyof T]?: T[K] extends object
+    ? T[K] extends EntityCollection<infer E>
+      ? {
+          entities?: Record<E["id"], E>;
+          ids?: E["id"][];
+          __trait?: E;
+        }
+      : DeepPartialWithEntityCollectionFix<T[K]>
+    : T[K];
+};
+
+export type StatePatch<D> = {
+  patch: DeepPartialWithEntityCollectionFix<D>;
+  deletedKeys: string[];
+};
 
 type StateUpdateSubscriber = (newState: SyncedState) => void;
 
