@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import {
   initiativeTrackerEntryLairActionAdd,
   initiativeTrackerEntryLairActionUpdate,
@@ -23,6 +23,7 @@ import { useMyMap, useMyself } from "../myself";
 import { canControlToken } from "../permissions";
 import { diceResult, rollInitiative } from "../roll";
 import {
+  useLatest,
   useOptimisticDebouncedServerUpdate,
   useServerDispatch,
   useServerState,
@@ -142,10 +143,12 @@ const InitiativeEntry = React.memo<{
 
   const characterIds =
     entry.type === "character" ? entry.characterIds : EMPTY_ARRAY;
+  const characterIdsRef = useLatest(characterIds);
+
   const onHover = useRecoilCallback(
     ({ set, reset }) =>
       (hovered: boolean) => {
-        characterIds.forEach((characterId) => {
+        characterIdsRef.current.forEach((characterId) => {
           if (hovered) {
             set(highlightedCharactersFamily(characterId), true);
           } else {
@@ -153,8 +156,17 @@ const InitiativeEntry = React.memo<{
           }
         });
       },
-    [characterIds]
+    // The useEffect below assumes that this callback never changes, therefore
+    // all dependencies must be refs.
+    [characterIdsRef]
   );
+
+  useEffect(() => {
+    // If the user clicks the "remove" button, we never get the onMouseLeave
+    // event. Therefore we additionally trigger the onMouseLeave handler when
+    // this component is unmounted.
+    return () => onHover(false);
+  }, [onHover]);
 
   return (
     <Flipped
