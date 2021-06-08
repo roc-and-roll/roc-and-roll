@@ -6,8 +6,8 @@ import {
   playerUpdateAddFavoritedAssetId,
   playerUpdateAddCharacterId,
   playerUpdateRemoveFavoritedAssetId,
-} from "../../shared/actions";
-import { byId, initialSyncedState, RRPlayer } from "../../shared/state";
+} from "../actions";
+import { byId, initialSyncedState, RRPlayer } from "../state";
 
 const playersAdapter = createEntityAdapter<RRPlayer>();
 

@@ -10,6 +10,7 @@ import {
 } from "../shared/state";
 import { ephermalPlayerAdd, ephermalPlayerRemove } from "../shared/actions";
 import { debounced } from "../shared/util";
+import { isRRID } from "../shared/validation";
 
 type AdditionalSocketData = {
   finishedOptimisticUpdateIds: OptimisticUpdateID[];
@@ -133,7 +134,7 @@ export const setupStateSync = (
     socket.on(
       "REDUX_ACTION",
       (
-        actionOrActions: SyncedStateAction | SyncedStateAction[],
+        actionOrActions: SyncedStateAction | ReadonlyArray<SyncedStateAction>,
         sendResponse: (r: string) => void
       ) => {
         // log("actions", actionOrActions);
@@ -142,15 +143,14 @@ export const setupStateSync = (
           : [actionOrActions];
 
         actions.forEach((action) => {
-          if (action.meta?.__optimisticUpdateId__) {
+          const optimisticUpdateID = action.meta?.["__optimisticUpdateId__"];
+          if (isRRID<OptimisticUpdateID>()(optimisticUpdateID)) {
             const data = additionalSocketData.get(socket.id);
             if (!data) {
               console.error("This should never happen.");
               console.trace();
             } else {
-              data.finishedOptimisticUpdateIds.push(
-                action.meta.__optimisticUpdateId__
-              );
+              data.finishedOptimisticUpdateIds.push(optimisticUpdateID);
             }
           }
           store.dispatch(action);

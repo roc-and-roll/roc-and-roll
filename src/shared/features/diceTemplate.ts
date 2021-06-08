@@ -5,8 +5,8 @@ import {
   diceTemplatePartUpdate,
   diceTemplateRemove,
   diceTemplateUpdate,
-} from "../../shared/actions";
-import { RRDiceTemplate, initialSyncedState, byId } from "../../shared/state";
+} from "../actions";
+import { RRDiceTemplate, initialSyncedState, byId } from "../state";
 
 const diceTemplatesAdapter = createEntityAdapter<RRDiceTemplate>();
 

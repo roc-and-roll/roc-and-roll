@@ -11,13 +11,8 @@ import {
   mapObjectAdd,
   mapObjectUpdate,
   mapObjectRemove,
-} from "../../shared/actions";
-import {
-  byId,
-  initialSyncedState,
-  RRMap,
-  RRMapObject,
-} from "../../shared/state";
+} from "../actions";
+import { byId, initialSyncedState, RRMap, RRMapObject } from "../state";
 
 const mapsAdapter = createEntityAdapter<RRMap>();
 const mapObjectsAdapter = createEntityAdapter<RRMapObject>();

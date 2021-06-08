@@ -7,14 +7,14 @@ import {
   initiativeTrackerEntryLairActionAdd,
   initiativeTrackerEntryCharacterUpdate,
   initiativeTrackerEntryLairActionUpdate,
-} from "../../shared/actions";
+} from "../actions";
 import {
   initialSyncedState,
   InitiativeTrackerSyncedState,
   RRInitiativeTrackerEntry,
   RRInitiativeTrackerEntryLairAction,
   RRInitiativeTrackerEntryCharacter,
-} from "../../shared/state";
+} from "../state";
 
 // Automatically sort all entries by their initiative
 const config = {

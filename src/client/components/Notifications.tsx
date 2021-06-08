@@ -120,7 +120,7 @@ function Notification({
       )}
       <Suspense fallback={null}>
         <ErrorBoundary
-          errorContent={" dice cannot be rendered :/"}
+          errorContent={<div>Error: Dice cannot be rendered :/</div>}
           onError={() => setNotificationReady(true)}
         >
           <DiceDisplay

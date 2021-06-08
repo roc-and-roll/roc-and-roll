@@ -4,8 +4,8 @@ import {
   characterUpdate,
   characterRemove,
   mapObjectRemove,
-} from "../../shared/actions";
-import { initialSyncedState, RRCharacter } from "../../shared/state";
+} from "../actions";
+import { initialSyncedState, RRCharacter } from "../state";
 
 const charactersAdapter = createEntityAdapter<RRCharacter>();
 

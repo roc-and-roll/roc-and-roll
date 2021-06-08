@@ -11,7 +11,7 @@ import { Acknowledgements } from "./Acknowledgements";
 import { Settings } from "./Settings";
 import { Players } from "./Players";
 import { About } from "./About";
-import { useMyself } from "../myself";
+import { useIsGM } from "../myself";
 import { Maps } from "./Maps";
 import { Achievements } from "./Achievements";
 import { Music } from "./Music";
@@ -23,7 +23,7 @@ import { Compendium } from "./compendium/Compendium";
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
-  const myself = useMyself();
+  const myselfIsGM = useIsGM();
   const musicIsGMOnly = useServerState(
     (state) => state.globalSettings.musicIsGMOnly
   );
@@ -62,7 +62,7 @@ export function Sidebar({ logout }: { logout: () => void }) {
           <DiceInput />
         </Collapsible>
 
-        {myself.isGM && (
+        {myselfIsGM && (
           <Collapsible title="Maps">
             <Maps />
           </Collapsible>
@@ -77,7 +77,7 @@ export function Sidebar({ logout }: { logout: () => void }) {
         </Collapsible>
 
         {musicIsGMOnly ? (
-          myself.isGM ? (
+          myselfIsGM ? (
             <Collapsible title="Music" defaultCollapsed>
               <GMArea>
                 <Music />

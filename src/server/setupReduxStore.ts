@@ -1,42 +1,10 @@
-import { combineReducers, configureStore } from "@reduxjs/toolkit";
-import { initiativeTrackerReducer } from "./features/initiativeTracker";
-import { playersReducer } from "./features/players";
-import { charactersReducer } from "./features/characters";
-import { mapsReducer } from "./features/maps";
-import { privateChatsReducer } from "./features/privateChats";
-import { logEntriesReducer } from "./features/logEntries";
-import { initialSyncedState, SyncedState } from "../shared/state";
-import {
-  ephermalPlayersReducer,
-  ephermalSongsReducer,
-} from "./features/ephermal";
-import { diceTemplatesReducer } from "./features/diceTemplate";
-import { assetsReducer } from "./features/assets";
-import { characterTemplatesReducer } from "./features/charactersTemplates";
-import { globalSettingsReducer } from "./features/globalSettings";
+import { configureStore } from "@reduxjs/toolkit";
+import { SyncedState } from "../shared/state";
+import { reducer } from "../shared/reducer";
 
 const options = {
-  reducer: {
-    // Add new slices of state here.
-    // You need to edit SyncedState and initialSyncedState in shared/state.ts
-    // when adding a new slice.
-    version: (state: number = initialSyncedState.version) => state,
-    globalSettings: globalSettingsReducer,
-    initiativeTracker: initiativeTrackerReducer,
-    players: playersReducer,
-    characters: charactersReducer,
-    characterTemplates: characterTemplatesReducer,
-    maps: mapsReducer,
-    privateChats: privateChatsReducer,
-    logEntries: logEntriesReducer,
-    diceTemplates: diceTemplatesReducer,
-    assets: assetsReducer,
-    ephermal: combineReducers({
-      players: ephermalPlayersReducer,
-      activeSongs: ephermalSongsReducer,
-    }),
-  },
-} as const;
+  reducer,
+};
 
 export function setupReduxStore(preloadedState: SyncedState | undefined) {
   const store = configureStore({

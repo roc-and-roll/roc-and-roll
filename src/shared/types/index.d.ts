@@ -72,10 +72,6 @@ interface JSON {
   ): string;
 }
 
-interface ArrayConstructor {
-  isArray(a: unknown): a is unknown[];
-}
-
 interface Body {
   json(): Promise<unknown>;
 }

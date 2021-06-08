@@ -1,4 +1,3 @@
-import type { DeepPartial } from "@reduxjs/toolkit";
 import React, {
   useCallback,
   useContext,
@@ -8,12 +7,14 @@ import React, {
   useState,
 } from "react";
 import ReactDOM from "react-dom";
-import type { Primitive } from "type-fest";
+import { Opaque, Primitive } from "type-fest";
 import { USE_CONCURRENT_MODE } from "../shared/constants";
+import { reducer } from "../shared/reducer";
 import {
   EntityCollection,
   initialSyncedState,
   OptimisticUpdateID,
+  RRID,
   RRPlayerID,
   SyncedState,
   SyncedStateAction,
@@ -23,6 +24,53 @@ import { Debouncer, debouncerTime, useDebounce } from "./debounce";
 import { useGuranteedMemo } from "./useGuranteedMemo";
 import useRafLoop from "./useRafLoop";
 import { useStateWithRef } from "./useRefState";
+
+type DeduplicationKey = Opaque<string, "optimisticDeduplicationKey">;
+
+class OptimisticActionAppliers {
+  private readonly byKey = new Map<DeduplicationKey, OptimisticActionApplier>();
+  private readonly byId = new Map<
+    OptimisticUpdateID,
+    OptimisticActionApplier
+  >();
+
+  public add(applier: OptimisticActionApplier) {
+    const key = OptimisticActionAppliers.getDeduplicationKey(applier);
+    {
+      const oldApplier = this.byKey.get(key);
+      if (oldApplier) {
+        this.byKey.delete(key);
+        this.byId.delete(oldApplier.optimisticUpdateId);
+      }
+    }
+    this.byKey.set(key, applier);
+    this.byId.set(applier.optimisticUpdateId, applier);
+  }
+
+  public deleteByOptimisticUpdateId(id: OptimisticUpdateID): boolean {
+    const applier = this.byId.get(id);
+    if (!applier) {
+      return false;
+    }
+
+    const key = OptimisticActionAppliers.getDeduplicationKey(applier);
+
+    this.byKey.delete(key);
+    this.byId.delete(id);
+
+    return true;
+  }
+
+  public appliers() {
+    return Array.from(this.byId.values());
+  }
+
+  public static getDeduplicationKey(
+    applier: OptimisticActionApplier
+  ): DeduplicationKey {
+    return `${applier.dispatcherKey}/${applier.key ?? ""}` as DeduplicationKey;
+  }
+}
 
 // DeepPartial chokes on Records with opaque ids as key.
 type DeepPartialWithEntityCollectionFix<T> = {
@@ -49,6 +97,13 @@ type OptimisticUpdateExecutedSubscriber = (
   optimisticUpdateIds: OptimisticUpdateID[]
 ) => void;
 
+type OptimisticActionApplier = {
+  readonly key?: string;
+  readonly optimisticUpdateId: OptimisticUpdateID;
+  readonly dispatcherKey: RRID;
+  readonly actions: ReadonlyArray<SyncedStateAction>;
+};
+
 const DEBUG = false as boolean;
 
 // This context is subscribed to using the useServerState and useServerDispatch
@@ -74,6 +129,7 @@ const ServerStateContext = React.createContext<{
   ) => void;
   stateRef: React.MutableRefObject<SyncedState>;
   socket: SocketIOClient.Socket | null;
+  addLocalOptimisticActionApplier: (applier: OptimisticActionApplier) => void;
 }>({
   subscribe: () => {},
   unsubscribe: () => {},
@@ -81,6 +137,7 @@ const ServerStateContext = React.createContext<{
   unsubscribeToOptimisticUpdateExecuted: () => {},
   stateRef: { current: initialSyncedState },
   socket: null,
+  addLocalOptimisticActionApplier: () => {},
 });
 ServerStateContext.displayName = "ServerStateContext";
 
@@ -155,6 +212,16 @@ function ServerConnectionProvider({
   );
 }
 
+const batchUpdatesIfNotConcurrentMode = (cb: () => void) => {
+  if (USE_CONCURRENT_MODE) {
+    return cb();
+  } else {
+    ReactDOM.unstable_batchedUpdates(() => {
+      cb();
+    });
+  }
+};
+
 export function ServerStateProvider({
   socket,
   children,
@@ -162,26 +229,20 @@ export function ServerStateProvider({
   // We must not useState in this component, because we do not want to cause
   // re-renders of this component and its children when the state changes.
   const internalStateRef = useRef<SyncedState>(initialSyncedState);
+  const internalServerStateRef = useRef<SyncedState>(internalStateRef.current);
   const externalStateRef = useRef<SyncedState>(internalStateRef.current);
   const finishedOptimisticUpdateIdsRef = useRef<OptimisticUpdateID[]>([]);
   const subscribers = useRef<Set<StateUpdateSubscriber>>(new Set());
   const subscribersToOptimisticUpdatesExecuted = useRef<
     Set<OptimisticUpdateExecutedSubscriber>
   >(new Set());
+  const optimisticActionAppliers = useRef<OptimisticActionAppliers>(
+    new OptimisticActionAppliers()
+  );
 
   const propagationAnimationFrameRef = useRef<number | null>(null);
 
-  const batchUpdatesIfNotConcurrentMode = (cb: () => void) => {
-    if (USE_CONCURRENT_MODE) {
-      return cb();
-    } else {
-      ReactDOM.unstable_batchedUpdates(() => {
-        cb();
-      });
-    }
-  };
-
-  const propagateStateChange = useCallback(() => {
+  const propagateStateChange = useCallback((forceSync: boolean) => {
     const update = () => {
       const state = (externalStateRef.current = internalStateRef.current);
       const finishedOptimisticUpdateIds =
@@ -197,25 +258,89 @@ export function ServerStateProvider({
         )
       );
     };
-    if (process.env.NODE_ENV === "test") {
+    if (process.env.NODE_ENV === "test" || forceSync) {
       update();
     } else {
       propagationAnimationFrameRef.current ??= requestAnimationFrame(() => {
         update();
         propagationAnimationFrameRef.current = null;
         if (externalStateRef.current !== internalStateRef.current) {
-          propagateStateChange();
+          propagateStateChange(forceSync);
         }
       });
     }
   }, []);
+
+  const addOptimisticUpdateIds = useCallback(
+    (finishedOptimisticUpdateIds: ReadonlyArray<OptimisticUpdateID>) => {
+      finishedOptimisticUpdateIdsRef.current = [
+        ...finishedOptimisticUpdateIdsRef.current,
+        ...finishedOptimisticUpdateIds,
+      ];
+    },
+    []
+  );
+
+  const removeFinishedOptimisticUpdateAppliers = useCallback(
+    (finishedOptimisticUpdateIds: ReadonlyArray<OptimisticUpdateID>) =>
+      finishedOptimisticUpdateIds.filter(
+        (id) => !optimisticActionAppliers.current.deleteByOptimisticUpdateId(id)
+      ),
+    []
+  );
+
+  const applyOptimisticUpdateAppliers = useCallback(
+    (state: SyncedState): SyncedState => {
+      // console.table(
+      //   optimisticActionAppliers.current.appliers().map((applier) => ({
+      //     deduplicationKey:
+      //       OptimisticActionAppliers.getDeduplicationKey(applier),
+      //     optimisticUpdateId: applier.optimisticUpdateId,
+      //     actions: applier.actions
+      //   }))
+      // );
+
+      return optimisticActionAppliers.current
+        .appliers()
+        .reduce(
+          (state, applier) =>
+            applier.actions.reduce(
+              (state, action) => reducer(state, action),
+              state
+            ),
+          state
+        );
+    },
+    []
+  );
+
+  const updateState = useCallback(
+    (finishedOptimisticUpdateIds: OptimisticUpdateID[], forceSync = false) => {
+      removeFinishedOptimisticUpdateAppliers(finishedOptimisticUpdateIds);
+
+      internalStateRef.current = applyOptimisticUpdateAppliers(
+        internalServerStateRef.current
+      );
+      addOptimisticUpdateIds(finishedOptimisticUpdateIds);
+      propagateStateChange(forceSync);
+    },
+    [
+      addOptimisticUpdateIds,
+      applyOptimisticUpdateAppliers,
+      propagateStateChange,
+      removeFinishedOptimisticUpdateAppliers,
+    ]
+  );
 
   useEffect(() => {
     const onSetState = (msg: {
       state: string;
       finishedOptimisticUpdateIds: OptimisticUpdateID[];
     }) => {
-      const state = JSON.parse(msg.state) as SyncedState;
+      const state = (internalServerStateRef.current = JSON.parse(
+        msg.state
+      ) as SyncedState);
+
       process.env.NODE_ENV === "development" &&
         DEBUG &&
         console.log(
@@ -225,12 +350,7 @@ export function ServerStateProvider({
           msg.finishedOptimisticUpdateIds
         );
 
-      internalStateRef.current = state;
-      finishedOptimisticUpdateIdsRef.current = [
-        ...finishedOptimisticUpdateIdsRef.current,
-        ...msg.finishedOptimisticUpdateIds,
-      ];
-      propagateStateChange();
+      updateState(msg.finishedOptimisticUpdateIds);
     };
 
     const onPatchState = (msg: {
@@ -247,15 +367,12 @@ export function ServerStateProvider({
           msg.finishedOptimisticUpdateIds
         );
 
-      internalStateRef.current = applyStatePatch(
-        internalStateRef.current,
+      internalServerStateRef.current = applyStatePatch(
+        internalServerStateRef.current,
         patch
       );
-      finishedOptimisticUpdateIdsRef.current = [
-        ...finishedOptimisticUpdateIdsRef.current,
-        ...msg.finishedOptimisticUpdateIds,
-      ];
-      propagateStateChange();
+
+      updateState(msg.finishedOptimisticUpdateIds);
     };
 
     socket.on("SET_STATE", onSetState);
@@ -265,7 +382,7 @@ export function ServerStateProvider({
       socket.off("SET_STATE", onSetState);
       socket.off("PATCH_STATE", onPatchState);
     };
-  }, [socket, propagateStateChange]);
+  }, [socket, updateState]);
 
   const subscribe = useCallback((subscriber: StateUpdateSubscriber) => {
     subscribers.current.add(subscriber);
@@ -289,6 +406,15 @@ export function ServerStateProvider({
     []
   );
 
+  const addLocalOptimisticActionApplier = useCallback(
+    (applier: OptimisticActionApplier) => {
+      optimisticActionAppliers.current.add(applier);
+
+      updateState([], true);
+    },
+    [updateState]
+  );
+
   return (
     <ServerStateContext.Provider
       value={{
@@ -298,6 +424,7 @@ export function ServerStateProvider({
         subscribeToOptimisticUpdateExecuted,
         unsubscribeToOptimisticUpdateExecuted,
         socket,
+        addLocalOptimisticActionApplier,
       }}
     >
       <ServerConnectionProvider socket={socket}>
@@ -387,6 +514,43 @@ export function useServerStateRef<T>(
   return selectedStateRef;
 }
 
+function addOptimisticUpdateIdToActions<
+  A extends SyncedStateAction,
+  R extends A | Array<A>
+>(optimisticUpdateId: OptimisticUpdateID, actionsOrAction: R): R {
+  if (!Array.isArray(actionsOrAction)) {
+    return addOptimisticUpdateIdToAction(
+      optimisticUpdateId,
+      actionsOrAction as A
+    ) as unknown as R;
+  }
+
+  const actions = actionsOrAction;
+  if (actions.length === 0) {
+    return [] as unknown as R;
+  }
+
+  const lastAction = actions[actions.length - 1]!;
+
+  return [
+    ...actions.slice(0, -1),
+    addOptimisticUpdateIdToAction(optimisticUpdateId, lastAction),
+  ] as unknown as R;
+}
+
+function addOptimisticUpdateIdToAction<A extends SyncedStateAction>(
+  optimisticUpdateId: OptimisticUpdateID,
+  action: A
+): A {
+  return {
+    ...action,
+    meta: {
+      ...(action.meta ?? {}),
+      __optimisticUpdateId__: optimisticUpdateId,
+    },
+  };
+}
+
 /**
  * Returns a dispatch function that can be used to dispatch an action to the
  * server.
@@ -394,23 +558,46 @@ export function useServerStateRef<T>(
  * @returns The dispatch function.
  */
 export function useServerDispatch() {
-  const { socket } = useContext(ServerStateContext);
+  const { socket, addLocalOptimisticActionApplier } =
+    useContext(ServerStateContext);
+  const dispatcherKey = useGuranteedMemo(() => rrid(), []);
 
   return useCallback(
-    <
-      P,
-      A extends SyncedStateAction<P, T, M> | SyncedStateAction<P, T, M>[],
-      T extends string = string,
-      M = never
-    >(
-      actionOrActions: A
-    ): A => {
-      if (!(Array.isArray(actionOrActions) && actionOrActions.length === 0)) {
-        socket?.emit("REDUX_ACTION", actionOrActions);
+    <A extends SyncedStateAction, R extends A | Array<A>>(
+      actionOrActions: R,
+      optimisticActionApplier?: { key: string } | true
+    ): R => {
+      if (Array.isArray(actionOrActions) && actionOrActions.length === 0) {
+        return actionOrActions;
       }
-      return actionOrActions;
+
+      let actions: R;
+
+      if (optimisticActionApplier !== undefined) {
+        const optimisticUpdateId = rrid<{ id: OptimisticUpdateID }>();
+        actions = addOptimisticUpdateIdToActions(
+          optimisticUpdateId,
+          actionOrActions
+        );
+        addLocalOptimisticActionApplier({
+          dispatcherKey,
+          optimisticUpdateId,
+          actions: Array.isArray(actionOrActions)
+            ? actionOrActions
+            : [actionOrActions as A],
+          key:
+            optimisticActionApplier === true
+              ? undefined
+              : optimisticActionApplier.key,
+        });
+      } else {
+        actions = actionOrActions;
+      }
+
+      socket?.emit("REDUX_ACTION", actions);
+      return actions;
     },
-    [socket]
+    [socket, dispatcherKey, addLocalOptimisticActionApplier]
   );
 }
 
@@ -439,8 +626,8 @@ export function useLatest<V>(value: V) {
 
 type ActionCreatorResult =
   | undefined
-  | SyncedStateAction<unknown, string, never>
-  | SyncedStateAction<unknown, string, never>[];
+  | SyncedStateAction
+  | Array<SyncedStateAction>;
 
 /**
  * Facility for updating a server value in a debounced fashion, while
@@ -657,21 +844,11 @@ function _useDebouncedServerUpdateInternal<
         actionCreatorResult = [actionCreatorResult];
       }
 
-      const actions = actionCreatorResult;
-      if (actions.length === 0) {
-        return;
-      }
-
       const optimisticUpdateId = rrid<{ id: OptimisticUpdateID }>();
-
-      const lastAction = actions[actions.length - 1]!;
-      actions[actions.length - 1] = {
-        ...lastAction,
-        meta: {
-          ...(lastAction.meta ?? {}),
-          __optimisticUpdateId__: optimisticUpdateId,
-        },
-      };
+      const actions = addOptimisticUpdateIdToActions(
+        optimisticUpdateId,
+        actionCreatorResult
+      );
 
       optimisticUpdatePhase.current = {
         type: "on-until",

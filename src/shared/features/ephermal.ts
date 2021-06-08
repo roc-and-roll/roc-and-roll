@@ -6,12 +6,8 @@ import {
   ephermalSongAdd,
   ephermalSongRemove,
   ephermalSongUpdate,
-} from "../../shared/actions";
-import {
-  EphermalPlayer,
-  initialSyncedState,
-  RRActiveSong,
-} from "../../shared/state";
+} from "../actions";
+import { EphermalPlayer, initialSyncedState, RRActiveSong } from "../state";
 
 const ephermalPlayersAdapter = createEntityAdapter<EphermalPlayer>();
 

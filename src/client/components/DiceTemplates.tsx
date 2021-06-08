@@ -894,9 +894,7 @@ const DiceTemplatePartMenuWrapper: React.FC<{
     return state.diceTemplates.entities;
   });
 
-  const deleteActions = (
-    part: RRDiceTemplatePart
-  ): SyncedStateAction<unknown, string, never>[] => {
+  const deleteActions = (part: RRDiceTemplatePart): SyncedStateAction[] => {
     return [
       diceTemplatePartRemove({
         id: part.id,

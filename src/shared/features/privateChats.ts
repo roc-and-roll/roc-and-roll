@@ -10,13 +10,13 @@ import {
   privateChatRemove,
   privateChatMessageAdd,
   privateChatMessageUpdate,
-} from "../../shared/actions";
+} from "../actions";
 import {
   byId,
   initialSyncedState,
   RRPrivateChat,
   RRPrivateChatMessage,
-} from "../../shared/state";
+} from "../state";
 
 const privateChatsAdapter = createEntityAdapter<RRPrivateChat>();
 const privateChatMessagesAdapter = createEntityAdapter<RRPrivateChatMessage>();

@@ -4,14 +4,14 @@ import {
   logEntryDiceRollAdd,
   logEntryMessageAdd,
   logEntryRemove,
-} from "../../shared/actions";
+} from "../actions";
 import {
   initialSyncedState,
   RRLogEntry,
   RRLogEntryAchievement,
   RRLogEntryDiceRoll,
   RRLogEntryMessage,
-} from "../../shared/state";
+} from "../state";
 
 const logEntryAdapter = createEntityAdapter<RRLogEntry>();
 const logEntryMessageAdapter = createEntityAdapter<RRLogEntryMessage>();

@@ -6,8 +6,8 @@ import {
   assetSongAdd,
   assetSongRemove,
   assetSongUpdate,
-} from "../../shared/actions";
-import { initialSyncedState, RRImage, RRSong } from "../../shared/state";
+} from "../actions";
+import { initialSyncedState, RRImage, RRSong } from "../state";
 
 const assetsImageAdapter = createEntityAdapter<RRImage>();
 const assetsSongAdapter = createEntityAdapter<RRSong>();

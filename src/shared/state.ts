@@ -1,5 +1,4 @@
 import * as t from "typanion";
-import type { PayloadAction } from "@reduxjs/toolkit";
 import type { Dispatch } from "redux";
 import type { IterableElement, Opaque } from "type-fest";
 import { assertNever, rrid } from "./util";
@@ -407,11 +406,18 @@ export const initialSyncedState: SyncedState = {
   },
 };
 
-export type SyncedStateAction<P = void, T extends string = string, M = never> =
-  PayloadAction<P, T, M, never> & {
-    meta?: {
-      __optimisticUpdateId__?: OptimisticUpdateID;
-    };
-  };
+export type SyncedStateAction<
+  P = unknown,
+  T extends string = string,
+  M extends Record<string, unknown> | undefined =
+    | undefined
+    | Record<string, unknown>,
+  E extends unknown | undefined = undefined
+> = {
+  readonly payload: P;
+  readonly type: T;
+  readonly meta?: M;
+  readonly error?: E;
+};
 
 export type SyncedStateDispatch = Dispatch<SyncedStateAction>;

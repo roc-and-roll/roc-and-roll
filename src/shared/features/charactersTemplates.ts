@@ -3,8 +3,8 @@ import {
   characterTemplateAdd,
   characterTemplateRemove,
   characterTemplateUpdate,
-} from "../../shared/actions";
-import { initialSyncedState, RRCharacter } from "../../shared/state";
+} from "../actions";
+import { initialSyncedState, RRCharacter } from "../state";
 
 export const characterTemplatesAdapter = createEntityAdapter<RRCharacter>();
 

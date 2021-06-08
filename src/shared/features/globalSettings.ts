@@ -1,6 +1,6 @@
 import { createReducer } from "@reduxjs/toolkit";
-import { globalSettingsUpdate } from "../../shared/actions";
-import { initialSyncedState } from "../../shared/state";
+import { globalSettingsUpdate } from "../actions";
+import { initialSyncedState } from "../state";
 
 export const globalSettingsReducer = createReducer(
   initialSyncedState.globalSettings,
