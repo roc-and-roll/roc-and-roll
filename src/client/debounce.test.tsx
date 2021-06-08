@@ -7,7 +7,8 @@ import {
   useIsolatedValue,
 } from "./debounce";
 import { renderHook } from "@testing-library/react-hooks";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { act } from "@testing-library/react-hooks";
 
 describe("synced debouncer", () => {
   const TIME = 100;

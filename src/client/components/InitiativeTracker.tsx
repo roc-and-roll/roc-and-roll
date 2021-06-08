@@ -257,11 +257,14 @@ function InitiativeTrackerInner({
   };
 
   const addLairAction = () => {
-    const description = prompt("Describe this lair action");
+    const description = prompt(
+      'How should we name this lair action in the initiative tracker ("Lair Action" works fine)?',
+      "Lair Action"
+    );
     if (!description) {
       return;
     }
-    const initiativeStr = prompt("Enter the initiative value");
+    const initiativeStr = prompt("Enter the initiative value", "20");
     if (!initiativeStr) {
       return;
     }

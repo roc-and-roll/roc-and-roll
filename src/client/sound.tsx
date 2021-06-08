@@ -234,7 +234,7 @@ export function SongPlayer() {
   );
 }
 
-export function ActiveSongPlayer({ song }: { song: RRActiveSong }) {
+function ActiveSongPlayer({ song }: { song: RRActiveSong }) {
   const [play] = useRRComplexSound(assetUrl(song.song), song.volume, {
     stream: true,
     loop: true,
