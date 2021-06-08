@@ -214,7 +214,10 @@ export const RRMapView = React.memo<{
     RRPoint[]
   >([]);
 
-  const syncMeasurePath = useDebounce(onUpdateMeasurePath, measurePathDebounce);
+  const [syncMeasurePath] = useDebounce(
+    onUpdateMeasurePath,
+    measurePathDebounce
+  );
 
   useEffect(() => {
     syncMeasurePath(measurePath);

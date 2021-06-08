@@ -51,10 +51,6 @@ describe("synced debouncer", () => {
     expect(fn).toBeCalledTimes(2);
     expect(Date.now() - START_NOW).toBe(TIME * 2);
 
-    expect(() => dispose(false)).toThrowErrorMatchingInlineSnapshot(
-      `"Already disposed!"`
-    );
-
     expect(() => debounced()).not.toThrow();
   });
 
@@ -116,15 +112,15 @@ describe("useDebounce", () => {
       forceOnUnmount,
     });
 
-    expect(typeof hook.result.current).toBe("function");
+    expect(typeof hook.result.current[0]).toBe("function");
 
     jest.runAllTimers();
     expect(Date.now() - START_NOW).toBe(0);
     expect(callback).toBeCalledTimes(0);
 
     act(() => {
-      hook.result.current(1, "a");
-      hook.result.current(2, "b");
+      hook.result.current[0](1, "a");
+      hook.result.current[0](2, "b");
     });
     expect(callback).toBeCalledTimes(0);
 
@@ -134,7 +130,7 @@ describe("useDebounce", () => {
     expect(callback).toHaveBeenLastCalledWith(2, "b");
 
     act(() => {
-      hook.result.current(3, "c");
+      hook.result.current[0](3, "c");
     });
     expect(callback).toBeCalledTimes(1);
 
@@ -144,7 +140,7 @@ describe("useDebounce", () => {
     expect(callback).toHaveBeenLastCalledWith(3, "c");
 
     act(() => {
-      hook.result.current(4, "d");
+      hook.result.current[0](4, "d");
     });
     expect(callback).toBeCalledTimes(2);
     expect(Date.now() - START_NOW).toBe(TIME * 2);

@@ -1,61 +1,81 @@
-import { nanoid } from "@reduxjs/toolkit";
 import { useCallback, useEffect, useRef } from "react";
 import { useLatest } from "./state";
 import { useGuranteedMemo } from "./useGuranteedMemo";
 
+class DebouncerImpl<A extends unknown[], R extends unknown> {
+  private lastArgs: null | A = null;
+
+  constructor(
+    private readonly debouncee: (...args: A) => R,
+    private readonly schedule: (debouncer: DebouncerImpl<A, R>) => void,
+    private readonly unschedule: (debouncer: DebouncerImpl<A, R>) => void
+  ) {}
+
+  public debounced = (...args: A): void => {
+    this.lastArgs = args;
+
+    this.schedule(this);
+  };
+
+  public active = () => this.lastArgs !== null;
+
+  public dispose = (executePending: boolean) => {
+    this.unschedule(this);
+    if (executePending) {
+      this.executePending();
+    }
+  };
+
+  public executePending = () => {
+    if (this.lastArgs !== null) {
+      this.unschedule(this);
+      const args = this.lastArgs;
+      this.lastArgs = null;
+      this.debouncee(...args);
+    }
+  };
+}
+
 export class SyncedDebouncer {
-  private readonly fns = new Map<
-    string,
-    { lastArgs: unknown[] | null; debouncee: (...args: unknown[]) => unknown }
-  >();
   private timeoutId: ReturnType<typeof setTimeout> | null = null;
+  private readonly pendingDebouncers: Set<DebouncerImpl<any, any>> = new Set();
 
   constructor(private readonly time: number) {}
 
   public makeDebouncer<A extends unknown[], R extends unknown>(
     debouncee: (...args: A) => R
   ) {
-    const id = nanoid();
+    const schedule = (debouncer: DebouncerImpl<A, R>) => {
+      if (this.pendingDebouncers.has(debouncer)) {
+        return;
+      }
+      this.pendingDebouncers.add(debouncer);
 
-    this.fns.set(id, {
-      lastArgs: null,
-      debouncee: debouncee as any,
-    });
+      this.timeoutId ??= setTimeout(() => {
+        const debouncers = Array.from(this.pendingDebouncers);
+        this.pendingDebouncers.clear();
+        this.timeoutId = null;
+        for (const debouncer of debouncers) {
+          debouncer.executePending();
+        }
+      }, this.time);
+    };
+
+    const unschedule = (debouncer: DebouncerImpl<A, R>) => {
+      this.pendingDebouncers.delete(debouncer);
+      if (this.pendingDebouncers.size === 0 && this.timeoutId !== null) {
+        clearTimeout(this.timeoutId);
+        this.timeoutId = null;
+      }
+    };
+
+    const debouncer = new DebouncerImpl(debouncee, schedule, unschedule);
 
     return {
-      debounced: (...args: A) => {
-        const data = this.fns.get(id);
-        if (!data) {
-          return;
-        }
-
-        data.lastArgs = args;
-
-        this.timeoutId ??= setTimeout(() => {
-          this.timeoutId = null;
-          for (const data of this.fns.values()) {
-            if (data.lastArgs !== null) {
-              const args = data.lastArgs;
-              data.lastArgs = null;
-              data.debouncee(...args);
-            }
-          }
-        }, this.time);
-      },
-      dispose: (executePending: boolean) => {
-        const fn = this.fns.get(id);
-        if (fn) {
-          this.fns.delete(id);
-          if (this.fns.size === 0 && this.timeoutId !== null) {
-            clearTimeout(this.timeoutId);
-          }
-          if (executePending && fn.lastArgs) {
-            fn.debouncee(...fn.lastArgs);
-          }
-        } else {
-          throw new Error("Already disposed!");
-        }
-      },
+      debounced: debouncer.debounced,
+      active: debouncer.active,
+      executePending: debouncer.executePending,
+      dispose: debouncer.dispose,
     };
   }
 
@@ -84,7 +104,7 @@ export function useDebounce<A extends unknown[]>(
   callback: (...args: A) => unknown,
   debounce: Debouncer,
   forceOnUnmount: boolean = false
-): (...args: A) => void {
+): [(...args: A) => void, () => boolean, () => void] {
   const forceOnUnmountRef = useLatest(forceOnUnmount);
 
   const syncedDebouncer = useGuranteedMemo(
@@ -104,7 +124,7 @@ export function useDebounce<A extends unknown[]>(
     };
   }, [debouncer, forceOnUnmountRef]);
 
-  return debouncer.debounced;
+  return [debouncer.debounced, debouncer.active, debouncer.executePending];
 }
 
 /**
@@ -122,7 +142,7 @@ export function useAggregatedDebounce<A extends unknown[]>(
 
   const callbackRef = useLatest(callback);
 
-  const serverCallback = useDebounce(
+  const [serverCallback] = useDebounce(
     useCallback(() => {
       const args = argHistory.current;
       argHistory.current = [];
@@ -166,5 +186,5 @@ export function useAggregatedDoubleDebounce<
     forceOnUnmount
   );
 
-  return useDebounce(firstDebounce, localDebounceTime, forceOnUnmount);
+  return useDebounce(firstDebounce, localDebounceTime, forceOnUnmount)[0];
 }

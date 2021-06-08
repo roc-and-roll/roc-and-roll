@@ -860,7 +860,7 @@ function _useDebouncedServerUpdateInternal<
     [dispatch, actionCreatorRef]
   );
 
-  const debouncedActionDispatch = useDebounce(actionDispatch, debounce, true);
+  const [debouncedActionDispatch] = useDebounce(actionDispatch, debounce, true);
 
   // Simple wrapper around _setLocalValue that sets optimisticUpdatePhase to
   // "on" if the state is changed locally.
