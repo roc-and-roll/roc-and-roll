@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { logEntryMessageAdd } from "../../shared/actions";
 import { byId, entries, RRLogEntry } from "../../shared/state";
+import { assertNever, withDo } from "../../shared/util";
 import { useMyself } from "../myself";
 import { diceResultString, DiceResultWithTypes } from "../roll";
 import { useServerDispatch, useServerState } from "../state";
@@ -10,39 +11,47 @@ import { achievements } from "./achievementList";
 import { CollapseButton } from "./CollapseButton";
 import { Button } from "./ui/Button";
 
-function LogEntry(props: { logEntry: RRLogEntry }) {
+function LogEntry({ logEntry }: { logEntry: RRLogEntry }) {
   const { entities: players } = useServerState((state) => state.players);
-  const { logEntry } = props;
   const player = logEntry.playerId ? byId(players, logEntry.playerId) : null;
+  const playerName = player?.name ?? "Unknown Player";
 
-  if (logEntry.type === "diceRoll") {
-    return (
-      <div title={formatTimestamp(logEntry.timestamp)}>
-        {player?.name ?? "system"}: {diceResultString(logEntry)} ={" "}
-        <u>
-          <DiceResultWithTypes logEntry={logEntry} />
-        </u>
-      </div>
-    );
+  let content;
+
+  switch (logEntry.type) {
+    case "diceRoll":
+      content = (
+        <>
+          {playerName}: {diceResultString(logEntry)} ={" "}
+          <u>
+            <DiceResultWithTypes logEntry={logEntry} />
+          </u>
+        </>
+      );
+      break;
+    case "achievement": {
+      const achievement = achievements.find(
+        (a) => a.id === logEntry.payload.achievementId
+      );
+      content = (
+        <>
+          {playerName} unlocked: {achievement?.name ?? "Unknown Achievement"}
+        </>
+      );
+      break;
+    }
+    case "message":
+      content = (
+        <>
+          {playerName}: {logEntry.payload.text}
+        </>
+      );
+      break;
+    default:
+      assertNever(logEntry);
   }
 
-  if (logEntry.type === "achievement") {
-    const achievement = achievements.find(
-      (a) => a.id === logEntry.payload.achievementId
-    );
-    return (
-      <div title={formatTimestamp(logEntry.timestamp)}>
-        {player?.name ?? "system"}
-        {` unlocked: ${achievement?.name ?? ""}`}
-      </div>
-    );
-  }
-
-  return (
-    <div title={formatTimestamp(logEntry.timestamp)}>
-      {player?.name ?? "system"}: {logEntry.payload.text}
-    </div>
-  );
+  return <div title={formatTimestamp(logEntry.timestamp)}>{content}</div>;
 }
 
 export function Log() {
@@ -67,11 +76,43 @@ export function Log() {
       {!collapsed ? (
         <>
           <ul ref={scrollRef} className="log-text">
-            {entries(logEntriesCollection).map((logEntry) => (
-              <li key={logEntry.id}>
-                <LogEntry logEntry={logEntry} />
-              </li>
-            ))}
+            {withDo(entries(logEntriesCollection), (logEntries) =>
+              logEntries.flatMap((logEntry, i) => {
+                const lastLogEntry = logEntries[i - 1] ?? null;
+                const diff =
+                  logEntry.timestamp - (lastLogEntry?.timestamp ?? 0);
+
+                const elements = [];
+
+                if (diff >= 1000 * 60 * 60 * 3) {
+                  // >=3 hours distance
+                  elements.push(
+                    <li
+                      key={`${logEntry.id} ${lastLogEntry?.id ?? "---"}`}
+                      className="log-divider-timestamp"
+                    >
+                      {formatTimestamp(logEntry.timestamp)}
+                    </li>
+                  );
+                } else if (diff >= 1000 * 90) {
+                  // >=90 seconds distance
+                  elements.push(
+                    <li
+                      key={`${logEntry.id} ${lastLogEntry?.id ?? "--"}`}
+                      className="log-divider-small"
+                    />
+                  );
+                }
+
+                elements.push(
+                  <li key={logEntry.id}>
+                    <LogEntry logEntry={logEntry} />
+                  </li>
+                );
+
+                return elements;
+              })
+            )}
           </ul>
           <Button
             onClick={() => {

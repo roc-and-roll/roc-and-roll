@@ -189,6 +189,25 @@ a {
   justify-content: space-between;
 }
 
+.log-divider-timestamp, .log-divider-small {
+  list-style: none;
+  text-align: center;
+  font-style: italic;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+.log-divider-timestamp {
+  margin-top: 2rem;
+  margin-bottom: 0.25rem;
+}
+
+.log-divider-small {
+  margin-top: 0.75rem;
+}
+
 .collapse-button {
   padding: 0px;
   border: none;
