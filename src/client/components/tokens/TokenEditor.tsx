@@ -19,8 +19,9 @@ import {
   useOptimisticDebouncedServerUpdate,
 } from "../../state";
 import { Button } from "../ui/Button";
-import { ColorInput } from "../ui/ColorInput";
+import { ColorInput, DebouncedColorInput } from "../ui/ColorInput";
 import { Select } from "../ui/Select";
+import { DebouncedTextInput } from "../ui/TextInput";
 import clsx from "clsx";
 import blinded from "../../../third-party/icons/conditions/blinded.png";
 import charmed from "../../../third-party/icons/conditions/charmed.png";
@@ -116,26 +117,6 @@ export function TokenEditor({
     fileInput.current!.value = "";
   };
 
-  const [name, setName] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      byId(
-        (isTemplate ? state.characterTemplates : state.characters).entities,
-        token.id
-      )?.name ?? "",
-    (name) => updateFunc({ id: token.id, changes: { name } }),
-    1000
-  );
-
-  const [visibility, setVisibility] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      byId(
-        (isTemplate ? state.characterTemplates : state.characters).entities,
-        token.id
-      )?.visibility ?? "everyone",
-    (visibility) => updateFunc({ id: token.id, changes: { visibility } }),
-    1000
-  );
-
   const [scale, setScale] = useOptimisticDebouncedServerUpdate(
     (state) =>
       byId(
@@ -214,18 +195,6 @@ export function TokenEditor({
     1000
   );
 
-  const [tokenBorderColor, setTokenBorderColor] =
-    useOptimisticDebouncedServerUpdate(
-      (state) =>
-        byId(
-          (isTemplate ? state.characterTemplates : state.characters).entities,
-          token.id
-        )?.tokenBorderColor ?? "",
-      (tokenBorderColor) =>
-        updateFunc({ id: token.id, changes: { tokenBorderColor } }),
-      1000
-    );
-
   useEffect(() => {
     fileInput.current!.value = "";
     nameInput.current!.focus();
@@ -234,7 +203,7 @@ export function TokenEditor({
 
   useEffect(() => {
     if (wasJustCreated) onNameFirstEdited();
-  }, [name, onNameFirstEdited, wasJustCreated]);
+  }, [token.name, onNameFirstEdited, wasJustCreated]);
 
   const remove = () => {
     dispatch(removeFunc(token.id));
@@ -249,10 +218,15 @@ export function TokenEditor({
       <div>
         <label>
           Name:{" "}
-          <input
+          <DebouncedTextInput
             ref={nameInput}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={token.name}
+            onChange={(name) =>
+              dispatch({
+                actions: [updateFunc({ id: token.id, changes: { name } })],
+                optimisticKey: "name",
+              })
+            }
             className="token-name"
           />
         </label>
@@ -262,9 +236,19 @@ export function TokenEditor({
           Visible to GM only:{" "}
           <input
             type="checkbox"
-            checked={visibility === "gmOnly"}
+            checked={token.visibility === "gmOnly"}
             onChange={(e) =>
-              setVisibility(e.target.checked ? "gmOnly" : "everyone")
+              dispatch({
+                actions: [
+                  updateFunc({
+                    id: token.id,
+                    changes: {
+                      visibility: e.target.checked ? "gmOnly" : "everyone",
+                    },
+                  }),
+                ],
+                optimisticKey: "visibility",
+              })
             }
             className="token-name"
           />
@@ -463,9 +447,16 @@ export function TokenEditor({
       <div>
         <label>
           Token border color:{" "}
-          <ColorInput
-            value={tokenBorderColor}
-            onChange={(color) => setTokenBorderColor(color)}
+          <DebouncedColorInput
+            value={token.tokenBorderColor}
+            onChange={(tokenBorderColor) =>
+              dispatch({
+                actions: [
+                  updateFunc({ id: token.id, changes: { tokenBorderColor } }),
+                ],
+                optimisticKey: "tokenBorderColor",
+              })
+            }
           />
         </label>
       </div>

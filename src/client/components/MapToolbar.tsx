@@ -3,17 +3,13 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import { mapObjectUpdate, mapUpdate } from "../../shared/actions";
 import {
-  byId,
   RRMap,
   RRMapObjectID,
   RRObjectVisibility,
   RRPlayer,
 } from "../../shared/state";
 import { assertNever } from "../../shared/util";
-import {
-  useOptimisticDebouncedServerUpdate,
-  useServerDispatch,
-} from "../state";
+import { useServerDispatch } from "../state";
 import useLocalState from "../useLocalState";
 import {
   MapEditState,
@@ -23,9 +19,10 @@ import {
 } from "./map/MapContainer";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
-import { ColorInput } from "./ui/ColorInput";
+import { DebouncedColorInput, ColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
 import { isTriggeredByTextInput } from "../util";
+import { DebouncedTextInput } from "./ui/TextInput";
 
 const EmojiPicker = React.lazy(
   () => import(/* webpackPrefetch: true */ "emoji-picker-react")
@@ -431,30 +428,8 @@ function MapObjectLockedObserver({
 }
 
 function MapSettings({ map }: { map: RRMap }) {
-  const [name, setName] = useOptimisticDebouncedServerUpdate(
-    (state) => byId(state.maps.entities, map.id)?.name ?? "",
-    (name) => mapUpdate({ id: map.id, changes: { name } }),
-    1000
-  );
-  const [backgroundColor, setBackgroundColor] =
-    useOptimisticDebouncedServerUpdate(
-      (state) => byId(state.maps.entities, map.id)?.backgroundColor ?? "",
-      (backgroundColor) =>
-        mapUpdate({ id: map.id, changes: { backgroundColor } }),
-      500
-    );
-  const [gridEnabled, setGridEnabled] = useOptimisticDebouncedServerUpdate(
-    (state) => byId(state.maps.entities, map.id)?.gridEnabled ?? false,
-    (gridEnabled) => mapUpdate({ id: map.id, changes: { gridEnabled } }),
-    100
-  );
-  const [gridColor, setGridColor] = useOptimisticDebouncedServerUpdate(
-    (state) => byId(state.maps.entities, map.id)?.gridColor ?? "",
-    (gridColor) => mapUpdate({ id: map.id, changes: { gridColor } }),
-    100
-  );
-
   const [visible, setVisible] = useState(false);
+  const dispatch = useServerDispatch();
 
   return (
     <Popover
@@ -462,29 +437,67 @@ function MapSettings({ map }: { map: RRMap }) {
         <>
           <label>
             Name{" "}
-            <input
+            <DebouncedTextInput
               type="text"
               placeholder="Name of the map"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={map.name}
+              onChange={(name) =>
+                dispatch({
+                  actions: [mapUpdate({ id: map.id, changes: { name } })],
+                  optimisticKey: "name",
+                })
+              }
             />
           </label>
           <label>
             Background color{" "}
-            <ColorInput value={backgroundColor} onChange={setBackgroundColor} />
+            <DebouncedColorInput
+              value={map.backgroundColor}
+              onChange={(backgroundColor) =>
+                dispatch({
+                  actions: [
+                    mapUpdate({
+                      id: map.id,
+                      changes: { backgroundColor },
+                    }),
+                  ],
+                  optimisticKey: "backgroundColor",
+                })
+              }
+            />
           </label>
           <label>
             Grid enabled{" "}
             <input
               type="checkbox"
-              checked={gridEnabled}
-              onChange={(e) => setGridEnabled(e.target.checked)}
+              checked={map.gridEnabled}
+              onChange={(e) =>
+                dispatch({
+                  actions: [
+                    mapUpdate({
+                      id: map.id,
+                      changes: { gridEnabled: e.target.checked },
+                    }),
+                  ],
+                  optimisticKey: "gridEnabled",
+                })
+              }
             />
           </label>
-          {gridEnabled && (
+          {map.gridEnabled && (
             <label>
               Grid color{" "}
-              <ColorInput value={gridColor} onChange={setGridColor} />
+              <DebouncedColorInput
+                value={map.gridColor}
+                onChange={(gridColor) =>
+                  dispatch({
+                    actions: [
+                      mapUpdate({ id: map.id, changes: { gridColor } }),
+                    ],
+                    optimisticKey: "gridColor",
+                  })
+                }
+              />
             </label>
           )}
         </>

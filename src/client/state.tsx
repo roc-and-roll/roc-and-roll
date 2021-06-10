@@ -28,41 +28,61 @@ import { useStateWithRef } from "./useRefState";
 type DeduplicationKey = Opaque<string, "optimisticDeduplicationKey">;
 
 class OptimisticActionAppliers {
-  private readonly byKey = new Map<DeduplicationKey, OptimisticActionApplier>();
+  private readonly byDeduplicationKey = new Map<
+    DeduplicationKey,
+    OptimisticActionApplier
+  >();
   private readonly byId = new Map<
     OptimisticUpdateID,
-    OptimisticActionApplier
+    Set<OptimisticActionApplier>
   >();
 
   public add(applier: OptimisticActionApplier) {
-    const key = OptimisticActionAppliers.getDeduplicationKey(applier);
+    const deduplicationKey =
+      OptimisticActionAppliers.getDeduplicationKey(applier);
     {
-      const oldApplier = this.byKey.get(key);
+      const oldApplier = this.byDeduplicationKey.get(deduplicationKey);
       if (oldApplier) {
-        this.byKey.delete(key);
-        this.byId.delete(oldApplier.optimisticUpdateId);
+        this.byDeduplicationKey.delete(deduplicationKey);
+        const oldAppliers = this.byId.get(oldApplier.optimisticUpdateId);
+        if (oldAppliers) {
+          oldAppliers.delete(oldApplier);
+          if (oldAppliers.size === 0) {
+            this.byId.delete(oldApplier.optimisticUpdateId);
+          }
+        }
       }
     }
-    this.byKey.set(key, applier);
-    this.byId.set(applier.optimisticUpdateId, applier);
+
+    this.byDeduplicationKey.set(deduplicationKey, applier);
+
+    const currentAppliers =
+      this.byId.get(applier.optimisticUpdateId) ?? new Set();
+    if (currentAppliers.size === 0) {
+      this.byId.set(applier.optimisticUpdateId, currentAppliers);
+    }
+    currentAppliers.add(applier);
   }
 
   public deleteByOptimisticUpdateId(id: OptimisticUpdateID): boolean {
-    const applier = this.byId.get(id);
-    if (!applier) {
+    const appliers = this.byId.get(id);
+    if (!appliers) {
       return false;
     }
 
-    const key = OptimisticActionAppliers.getDeduplicationKey(applier);
+    for (const applier of appliers.values()) {
+      const deduplicationKey =
+        OptimisticActionAppliers.getDeduplicationKey(applier);
+      this.byDeduplicationKey.delete(deduplicationKey);
+    }
 
-    this.byKey.delete(key);
     this.byId.delete(id);
 
     return true;
   }
 
-  public appliers() {
-    return Array.from(this.byId.values());
+  public appliers(): OptimisticActionApplier[] {
+    return Array.from(this.byDeduplicationKey.values());
   }
 
   public static getDeduplicationKey(
@@ -129,7 +149,9 @@ const ServerStateContext = React.createContext<{
   ) => void;
   stateRef: React.MutableRefObject<SyncedState>;
   socket: SocketIOClient.Socket | null;
-  addLocalOptimisticActionApplier: (applier: OptimisticActionApplier) => void;
+  addLocalOptimisticActionAppliers: (
+    appliers: OptimisticActionApplier[]
+  ) => void;
 }>({
   subscribe: () => {},
   unsubscribe: () => {},
@@ -137,7 +159,7 @@ const ServerStateContext = React.createContext<{
   unsubscribeToOptimisticUpdateExecuted: () => {},
   stateRef: { current: initialSyncedState },
   socket: null,
-  addLocalOptimisticActionApplier: () => {},
+  addLocalOptimisticActionAppliers: () => {},
 });
 ServerStateContext.displayName = "ServerStateContext";
 
@@ -296,7 +318,7 @@ export function ServerStateProvider({
       //     deduplicationKey:
       //       OptimisticActionAppliers.getDeduplicationKey(applier),
       //     optimisticUpdateId: applier.optimisticUpdateId,
-      //     actions: applier.actions
+      //     actions: applier.actions,
       //   }))
       // );
 
@@ -406,9 +428,15 @@ export function ServerStateProvider({
     []
   );
 
-  const addLocalOptimisticActionApplier = useCallback(
-    (applier: OptimisticActionApplier) => {
-      optimisticActionAppliers.current.add(applier);
+  const addLocalOptimisticActionAppliers = useCallback(
+    (appliers: OptimisticActionApplier[]) => {
+      if (appliers.length === 0) {
+        return;
+      }
+
+      appliers.forEach((applier) =>
+        optimisticActionAppliers.current.add(applier)
+      );
 
       updateState([], true);
     },
@@ -424,7 +452,7 @@ export function ServerStateProvider({
         subscribeToOptimisticUpdateExecuted,
         unsubscribeToOptimisticUpdateExecuted,
         socket,
-        addLocalOptimisticActionApplier,
+        addLocalOptimisticActionAppliers,
       }}
     >
       <ServerConnectionProvider socket={socket}>
@@ -461,11 +489,6 @@ export function applyStatePatch(
 // Hooks
 ////////////////////////////////////////////////////////////////////////////////
 
-function useRerender() {
-  const [_, setI] = useState(0);
-  return useCallback(() => setI((i) => i + 1), []);
-}
-
 /**
  * Get a piece of the server state. Will re-render the component whenever that
  * piece of state changes.
@@ -475,9 +498,22 @@ function useRerender() {
  * @returns The selected piece of server state.
  */
 export function useServerState<T>(selector: (state: SyncedState) => T): T {
-  const rerender = useRerender();
-  const selectedStateRef = useServerStateRef(selector, rerender);
-  return selectedStateRef.current;
+  const setSelectedStateRef = useRef<((state: T) => void) | null>(null);
+
+  const selectedStateRef = useServerStateRef(selector, (selectedState) => {
+    if (!setSelectedStateRef.current) {
+      // Should never happen.
+      throw new Error();
+    }
+    return setSelectedStateRef.current(selectedState);
+  });
+
+  const [selectedState, setSelectedState] = useState<T>(
+    selectedStateRef.current
+  );
+  setSelectedStateRef.current = setSelectedState;
+
+  return selectedState;
 }
 
 export function useServerStateRef<T>(
@@ -551,6 +587,31 @@ function addOptimisticUpdateIdToAction<A extends SyncedStateAction>(
   };
 }
 
+function isOptimisticAction(
+  action:
+    | SyncedStateAction
+    | {
+        actions: SyncedStateAction[];
+        optimisticKey: string;
+      }
+): action is {
+  actions: SyncedStateAction[];
+  optimisticKey: string;
+} {
+  return "actions" in action && "optimisticKey" in action;
+}
+
+function isAction(
+  action:
+    | SyncedStateAction
+    | {
+        actions: SyncedStateAction[];
+        optimisticKey: string;
+      }
+): action is SyncedStateAction {
+  return !isOptimisticAction(action);
+}
+
 /**
  * Returns a dispatch function that can be used to dispatch an action to the
  * server.
@@ -558,46 +619,66 @@ function addOptimisticUpdateIdToAction<A extends SyncedStateAction>(
  * @returns The dispatch function.
  */
 export function useServerDispatch() {
-  const { socket, addLocalOptimisticActionApplier } =
+  const { socket, addLocalOptimisticActionAppliers } =
     useContext(ServerStateContext);
   const dispatcherKey = useGuranteedMemo(() => rrid(), []);
 
   return useCallback(
-    <A extends SyncedStateAction, R extends A | Array<A>>(
-      actionOrActions: R,
-      optimisticActionApplier?: { key: string } | true
+    <
+      A extends
+        | SyncedStateAction
+        | {
+            actions: SyncedStateAction[];
+            optimisticKey: string;
+          },
+      R extends A | Array<A>
+    >(
+      actionOrActions: R
     ): R => {
-      if (Array.isArray(actionOrActions) && actionOrActions.length === 0) {
+      const actions = Array.isArray(actionOrActions)
+        ? (actionOrActions as A[])
+        : [actionOrActions as A];
+
+      if (actions.length === 0) {
         return actionOrActions;
       }
 
-      let actions: R;
+      const hasOptimisticActions = actions.some((action) =>
+        isOptimisticAction(action)
+      );
 
-      if (optimisticActionApplier !== undefined) {
-        const optimisticUpdateId = rrid<{ id: OptimisticUpdateID }>();
-        actions = addOptimisticUpdateIdToActions(
-          optimisticUpdateId,
-          actionOrActions
+      let optimisticUpdateId: OptimisticUpdateID | null = null;
+
+      if (hasOptimisticActions) {
+        optimisticUpdateId = rrid<{ id: OptimisticUpdateID }>();
+
+        addLocalOptimisticActionAppliers(
+          actions.flatMap((action) =>
+            isOptimisticAction(action)
+              ? {
+                  dispatcherKey,
+                  optimisticUpdateId: optimisticUpdateId!,
+                  actions: action.actions,
+                  key: action.optimisticKey,
+                }
+              : []
+          )
         );
-        addLocalOptimisticActionApplier({
-          dispatcherKey,
-          optimisticUpdateId,
-          actions: Array.isArray(actionOrActions)
-            ? actionOrActions
-            : [actionOrActions as A],
-          key:
-            optimisticActionApplier === true
-              ? undefined
-              : optimisticActionApplier.key,
-        });
-      } else {
-        actions = actionOrActions;
       }
 
-      socket?.emit("REDUX_ACTION", actions);
-      return actions;
+      socket?.emit("REDUX_ACTION", {
+        actions: actions.flatMap((action) =>
+          isOptimisticAction(action)
+            ? action.actions
+            : isAction(action)
+            ? action
+            : []
+        ),
+        optimisticUpdateId,
+      });
+      return actionOrActions;
     },
-    [socket, dispatcherKey, addLocalOptimisticActionApplier]
+    [socket, dispatcherKey, addLocalOptimisticActionAppliers]
   );
 }
 

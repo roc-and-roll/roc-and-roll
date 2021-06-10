@@ -44,6 +44,7 @@ import useLocalState from "../useLocalState";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { Select } from "./ui/Select";
+import { DebouncedTextInput } from "./ui/TextInput";
 
 type SelectionPair = { id: RRDiceTemplateID; modified: RRMultipleRoll };
 
@@ -506,12 +507,6 @@ function DiceTemplateInner({
   const myself = useMyself();
   const dispatch = useServerDispatch();
 
-  const [name, setName] = useOptimisticDebouncedServerUpdate(
-    (state) => byId(state.diceTemplates.entities, template.id)?.name ?? "",
-    (name) => diceTemplateUpdate({ id: template.id, changes: { name } }),
-    1000
-  );
-
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   const [, dropRef] = useDrop<
@@ -646,11 +641,21 @@ function DiceTemplateInner({
       {selectionCount > 1 && (
         <div className="dice-template-selection-count">{selectionCount}</div>
       )}
-      <input
+      <DebouncedTextInput
         ref={nameInputRef}
-        value={name}
+        value={template.name}
         onClick={(e) => e.stopPropagation()}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(name) =>
+          dispatch({
+            actions: [
+              diceTemplateUpdate({
+                id: template.id,
+                changes: { name },
+              }),
+            ],
+            optimisticKey: "name",
+          })
+        }
       />
       {template.parts.sort(sortTemplateParts).map((part, i) => (
         <DiceTemplatePartMenuWrapper template={template} key={i} part={part}>
@@ -864,12 +869,20 @@ function ModifierNumberEditor({
 function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
   const template = useServerState((state) =>
     byId(state.diceTemplates.entities, templateId)
-  )!;
+  );
+
   const [notes, setNotes] = useOptimisticDebouncedServerUpdate<string>(
-    (state) => byId(state.diceTemplates.entities, template.id)?.notes ?? "",
+    (state) =>
+      template
+        ? byId(state.diceTemplates.entities, template.id)?.notes ?? ""
+        : "",
     (notes) => diceTemplateUpdate({ id: templateId, changes: { notes } }),
     1000
   );
+
+  if (!template) {
+    return null;
+  }
 
   return (
     <label>

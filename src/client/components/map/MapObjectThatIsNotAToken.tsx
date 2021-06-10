@@ -17,7 +17,11 @@ import {
   RoughLinearPath,
   RoughPolygon,
 } from "../rough";
-import { useLatest, useOptimisticDebouncedServerUpdate } from "../../state";
+import {
+  useLatest,
+  useOptimisticDebouncedServerUpdate,
+  useServerDispatch,
+} from "../../state";
 import tinycolor from "tinycolor2";
 import { assertNever, withDo } from "../../../shared/util";
 import { useMyself } from "../../myself";
@@ -166,6 +170,8 @@ function ObjectEditOptions({
   object: Exclude<RRMapObject, RRToken>;
   mapId: RRMapID;
 }) {
+  const dispatch = useServerDispatch();
+
   const extraPopupContent = () => {
     switch (object.type) {
       case "image":
@@ -174,29 +180,6 @@ function ObjectEditOptions({
         return <></>;
     }
   };
-
-  const [hidden, setHidden] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      withDo(
-        byId(state.maps.entities, mapId)?.objects.entities,
-        (objects) =>
-          objects &&
-          withDo(
-            byId(objects, object.id),
-            (object) =>
-              object &&
-              object.type !== "token" &&
-              object.visibility === "gmOnly"
-          )
-      ),
-    (hidden) => {
-      return mapObjectUpdate(mapId, {
-        id: object.id,
-        changes: { visibility: hidden ? "gmOnly" : "everyone" },
-      });
-    },
-    100
-  );
 
   const [rotation, setRotation] = useOptimisticDebouncedServerUpdate(
     (state) =>
@@ -226,8 +209,20 @@ function ObjectEditOptions({
         Visible to GM only:
         <input
           type="checkbox"
-          checked={hidden}
-          onChange={(e) => setHidden(e.target.checked)}
+          checked={object.visibility === "gmOnly"}
+          onChange={(e) =>
+            dispatch({
+              actions: [
+                mapObjectUpdate(mapId, {
+                  id: object.id,
+                  changes: {
+                    visibility: e.target.checked ? "gmOnly" : "everyone",
+                  },
+                }),
+              ],
+              optimisticKey: "visibility",
+            })
+          }
         />
       </label>
       <label>

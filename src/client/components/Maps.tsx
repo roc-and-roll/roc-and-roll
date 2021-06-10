@@ -4,7 +4,6 @@ import { useDrag, useDrop } from "react-dnd";
 import { mapAdd, mapUpdate, playerUpdate } from "../../shared/actions";
 import { randomColor } from "../../shared/colors";
 import {
-  byId,
   EntityCollection,
   entries,
   RRMap,
@@ -14,13 +13,10 @@ import {
 } from "../../shared/state";
 import { EMPTY_ENTITY_COLLECTION } from "../../shared/state";
 import { useMyself } from "../myself";
-import {
-  useOptimisticDebouncedServerUpdate,
-  useServerDispatch,
-  useServerState,
-} from "../state";
+import { useServerDispatch, useServerState } from "../state";
 import { GMArea } from "./GMArea";
 import { Button } from "./ui/Button";
+import { DebouncedTextInput } from "./ui/TextInput";
 
 export function Maps() {
   const dispatch = useServerDispatch();
@@ -91,12 +87,6 @@ export function MapListEntry({
     item: { id: map.id },
   }));
 
-  const [name, setName] = useOptimisticDebouncedServerUpdate(
-    (state) => byId(state.maps.entities, map.id)?.name ?? "",
-    (name) => dispatch(mapUpdate({ id: map.id, changes: { name } })),
-    1000
-  );
-
   const [{ canDropAndHovered, canDrop }, dropRef] = useDrop<
     { id: RRPlayerID },
     void,
@@ -121,10 +111,15 @@ export function MapListEntry({
   return (
     <li>
       <h3 className="maps-map-title">
-        <input
+        <DebouncedTextInput
           className="maps-map-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={map.name}
+          onChange={(name) =>
+            dispatch({
+              actions: [mapUpdate({ id: map.id, changes: { name } })],
+              optimisticKey: "name",
+            })
+          }
         />
         {isMyCurrentMap && (
           <>

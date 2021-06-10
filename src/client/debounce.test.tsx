@@ -1,11 +1,13 @@
+import React, { useState } from "react";
 import {
   Debouncer,
   SyncedDebouncer,
   useAggregatedDebounce,
   useDebounce,
+  useIsolatedValue,
 } from "./debounce";
 import { renderHook } from "@testing-library/react-hooks";
-import { act } from "@react-three/fiber";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 
 describe("synced debouncer", () => {
   const TIME = 100;
@@ -242,5 +244,210 @@ describe("useAggregatedDebounce", () => {
     hook.result.all.forEach((r) => {
       expect(hook.result.current).toBe(r);
     });
+  });
+});
+
+describe("useIsolatedValue", () => {
+  function setup(initialValue: string) {
+    function TestComponent({
+      initialValue: initialExternalValue,
+    }: {
+      initialValue: string;
+    }) {
+      const [externalValue, externalOnChange] = useState(initialExternalValue);
+
+      const [
+        internalValue,
+        internalOnChange,
+        { takeValueRef, reportChangesRef },
+      ] = useIsolatedValue({
+        value: externalValue,
+        onChange: externalOnChange,
+      });
+
+      return (
+        <>
+          <input
+            type="checkbox"
+            defaultChecked={true}
+            onClick={(e) => {
+              takeValueRef.current = !takeValueRef.current;
+            }}
+            aria-label="ext - int"
+          />
+          <input
+            type="checkbox"
+            defaultChecked={true}
+            onClick={(e) => {
+              reportChangesRef.current = !reportChangesRef.current;
+            }}
+            aria-label="int - ext"
+          />
+          <input
+            value={internalValue}
+            onChange={(e) => internalOnChange(e.target.value)}
+            aria-label="internal-input"
+          />
+          <input
+            value={externalValue}
+            onChange={(e) => externalOnChange(e.target.value)}
+            aria-label="external-input"
+          />
+        </>
+      );
+    }
+
+    render(<TestComponent initialValue={initialValue} />);
+    const internalInput = screen.getByLabelText(
+      "internal-input"
+    ) as HTMLInputElement;
+    const externalInput = screen.getByLabelText(
+      "external-input"
+    ) as HTMLInputElement;
+
+    const extToIntCheckbox = screen.getByLabelText(
+      "ext - int"
+    ) as HTMLInputElement;
+    const intToExtCheckbox = screen.getByLabelText(
+      "int - ext"
+    ) as HTMLInputElement;
+
+    return { internalInput, externalInput, extToIntCheckbox, intToExtCheckbox };
+  }
+
+  it("passes through values by default", () => {
+    const { internalInput, externalInput, extToIntCheckbox, intToExtCheckbox } =
+      setup("123");
+
+    expect(internalInput.value).toBe("123");
+    expect(externalInput.value).toBe("123");
+    expect(extToIntCheckbox.checked).toBe(true);
+    expect(intToExtCheckbox.checked).toBe(true);
+
+    act(() => {
+      fireEvent.change(internalInput, {
+        target: { value: "foo" },
+      });
+    });
+    expect(internalInput.value).toBe("foo");
+    expect(externalInput.value).toBe("foo");
+
+    act(() => {
+      fireEvent.change(externalInput, {
+        target: { value: "bar" },
+      });
+    });
+    expect(internalInput.value).toBe("bar");
+    expect(externalInput.value).toBe("bar");
+  });
+
+  it("can ignore external value changes", () => {
+    const { internalInput, externalInput, extToIntCheckbox } = setup("start");
+
+    expect(internalInput.value).toBe("start");
+    expect(externalInput.value).toBe("start");
+
+    act(() => {
+      fireEvent.click(extToIntCheckbox, {
+        target: { checked: false },
+      });
+      fireEvent.change(externalInput, {
+        target: { value: "external" },
+      });
+    });
+
+    expect(internalInput.value).toBe("start");
+    expect(externalInput.value).toBe("external");
+
+    act(() => {
+      fireEvent.change(internalInput, {
+        target: { value: "internal" },
+      });
+    });
+
+    expect(internalInput.value).toBe("internal");
+    expect(externalInput.value).toBe("internal");
+
+    act(() => {
+      fireEvent.change(externalInput, {
+        target: { value: "external" },
+      });
+    });
+
+    expect(internalInput.value).toBe("internal");
+    expect(externalInput.value).toBe("external");
+
+    act(() => {
+      fireEvent.click(extToIntCheckbox, {
+        target: { checked: true },
+      });
+    });
+
+    expect(internalInput.value).toBe("internal");
+    expect(externalInput.value).toBe("external");
+
+    act(() => {
+      fireEvent.change(externalInput, {
+        target: { value: "external!" },
+      });
+    });
+
+    expect(internalInput.value).toBe("external!");
+    expect(externalInput.value).toBe("external!");
+  });
+
+  it("can ignore internal value changes", () => {
+    const { internalInput, externalInput, intToExtCheckbox } = setup("start");
+
+    expect(internalInput.value).toBe("start");
+    expect(externalInput.value).toBe("start");
+
+    act(() => {
+      fireEvent.click(intToExtCheckbox, {
+        target: { checked: false },
+      });
+      fireEvent.change(internalInput, {
+        target: { value: "internal" },
+      });
+    });
+
+    expect(internalInput.value).toBe("internal");
+    expect(externalInput.value).toBe("start");
+
+    act(() => {
+      fireEvent.change(externalInput, {
+        target: { value: "external" },
+      });
+    });
+
+    expect(internalInput.value).toBe("external");
+    expect(externalInput.value).toBe("external");
+
+    act(() => {
+      fireEvent.change(internalInput, {
+        target: { value: "internal" },
+      });
+    });
+
+    expect(internalInput.value).toBe("internal");
+    expect(externalInput.value).toBe("external");
+
+    act(() => {
+      fireEvent.click(intToExtCheckbox, {
+        target: { checked: true },
+      });
+    });
+
+    expect(internalInput.value).toBe("internal");
+    expect(externalInput.value).toBe("external");
+
+    act(() => {
+      fireEvent.change(internalInput, {
+        target: { value: "internal!" },
+      });
+    });
+
+    expect(internalInput.value).toBe("internal!");
+    expect(externalInput.value).toBe("internal!");
   });
 });

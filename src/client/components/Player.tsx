@@ -1,66 +1,70 @@
 import React from "react";
 import { playerUpdate } from "../../shared/actions";
-import { byId } from "../../shared/state";
 import { useMyself } from "../myself";
-import {
-  useOptimisticDebouncedServerUpdate,
-  useServerDispatch,
-} from "../state";
+import { useServerDispatch } from "../state";
 import { Button } from "./ui/Button";
-import { ColorInput } from "./ui/ColorInput";
+import { DebouncedColorInput } from "./ui/ColorInput";
+import { DebouncedTextInput } from "./ui/TextInput";
 
 export function Player({ logout }: { logout: () => void }) {
   const dispatch = useServerDispatch();
   const myself = useMyself();
 
-  const [name, setName] = useOptimisticDebouncedServerUpdate(
-    (state) => byId(state.players.entities, myself.id)?.name ?? "",
-    (name) =>
-      playerUpdate({
-        id: myself.id,
-        changes: { name },
-      }),
-    1000
-  );
-
-  const [color, setColor] = useOptimisticDebouncedServerUpdate(
-    (state) => byId(state.players.entities, myself.id)?.color ?? "",
-    (color) =>
-      playerUpdate({
-        id: myself.id,
-        changes: { color },
-      }),
-    1000
-  );
-
   return (
     <>
-      <p>
-        Name:{" "}
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+      <label>
+        Name
+        <DebouncedTextInput
+          value={myself.name}
+          onChange={(name) =>
+            dispatch({
+              actions: [
+                playerUpdate({
+                  id: myself.id,
+                  changes: { name },
+                }),
+              ],
+              optimisticKey: "name",
+            })
+          }
         />
-      </p>
-      <p>
+      </label>
+
+      <label>
         Is GM:{" "}
         <input
           type="checkbox"
           checked={myself.isGM}
           onChange={(e) =>
-            dispatch(
-              playerUpdate({
-                id: myself.id,
-                changes: { isGM: e.target.checked },
-              })
-            )
+            dispatch({
+              actions: [
+                playerUpdate({
+                  id: myself.id,
+                  changes: { isGM: e.target.checked },
+                }),
+              ],
+              optimisticKey: "isGM",
+            })
           }
         />
-      </p>
-      <div>
-        Color: <ColorInput value={color} onChange={setColor} />
-      </div>
+      </label>
+      <label>
+        Color:{" "}
+        <DebouncedColorInput
+          value={myself.color}
+          onChange={(color) =>
+            dispatch({
+              actions: [
+                playerUpdate({
+                  id: myself.id,
+                  changes: { color },
+                }),
+              ],
+              optimisticKey: "color",
+            })
+          }
+        />
+      </label>
       <Button onClick={logout}>logout</Button>
     </>
   );

@@ -153,14 +153,15 @@ describe("optimistic state updates", () => {
       });
 
     let updateId: OptimisticUpdateID;
-    const onEmit = jest.fn((name, actions) => {
+    const onEmit = jest.fn((name, { actions, optimisticUpdateId }) => {
       expect(actions).toHaveLength(1);
+      expect(optimisticUpdateId).toBeNull();
       const action = actions[0]!;
-      const optimisticUpdateId = action.meta.__optimisticUpdateId__;
+      const legacyOptimisticUpdateId = action.meta.__optimisticUpdateId__;
 
       expect(name).toBe("REDUX_ACTION");
-      expect(typeof optimisticUpdateId).toBe("string");
-      updateId = optimisticUpdateId;
+      expect(typeof legacyOptimisticUpdateId).toBe("string");
+      updateId = legacyOptimisticUpdateId;
     });
     mockSocket.__onEmitToServerSubscriberAdd(onEmit);
 

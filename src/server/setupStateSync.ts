@@ -6,10 +6,10 @@ import {
   OptimisticUpdateID,
   RRPlayerID,
   SyncedState,
-  SyncedStateAction,
 } from "../shared/state";
 import { ephermalPlayerAdd, ephermalPlayerRemove } from "../shared/actions";
 import { debounced } from "../shared/util";
+import * as t from "typanion";
 import { isRRID } from "../shared/validation";
 
 type AdditionalSocketData = {
@@ -17,6 +17,18 @@ type AdditionalSocketData = {
   playerId: RRPlayerID | null;
   lastState: SyncedState | null;
 };
+
+const isREDUX_ACTION = t.isObject({
+  actions: t.isArray(
+    t.isObject({
+      type: t.isString(),
+      payload: t.isUnknown(),
+      meta: t.isOptional(t.isUnknown()),
+      error: t.isOptional(t.isUnknown()),
+    })
+  ),
+  optimisticUpdateId: t.isNullable(isRRID<OptimisticUpdateID>()),
+});
 
 export const setupStateSync = (
   io: SocketIOServer,
@@ -64,7 +76,11 @@ export const setupStateSync = (
         patch = buildPatch(data.lastState, currentState);
         patchCache.set(data.lastState, { currentState, patch });
       }
-      if (!isEmptyObject(patch.patch) || patch.deletedKeys.length > 0) {
+      if (
+        !isEmptyObject(patch.patch) ||
+        patch.deletedKeys.length > 0 ||
+        data.finishedOptimisticUpdateIds.length > 0
+      ) {
         socket.emit("PATCH_STATE", {
           patch: JSON.stringify(patch),
           finishedOptimisticUpdateIds: data.finishedOptimisticUpdateIds,
@@ -133,28 +149,27 @@ export const setupStateSync = (
     });
     socket.on(
       "REDUX_ACTION",
-      (
-        actionOrActions: SyncedStateAction | ReadonlyArray<SyncedStateAction>,
-        sendResponse: (r: string) => void
-      ) => {
-        // log("actions", actionOrActions);
-        const actions = Array.isArray(actionOrActions)
-          ? actionOrActions
-          : [actionOrActions];
+      (msg: unknown, sendResponse: (r: string) => void) => {
+        if (!isREDUX_ACTION(msg)) {
+          console.warn("Received unsupported message from client.", msg);
+          return;
+        }
 
-        actions.forEach((action) => {
-          const optimisticUpdateID = action.meta?.["__optimisticUpdateId__"];
-          if (isRRID<OptimisticUpdateID>()(optimisticUpdateID)) {
-            const data = additionalSocketData.get(socket.id);
-            if (!data) {
-              console.error("This should never happen.");
-              console.trace();
-            } else {
-              data.finishedOptimisticUpdateIds.push(optimisticUpdateID);
-            }
+        const { optimisticUpdateId, actions } = msg;
+
+        // log("actions", actions);
+
+        if (optimisticUpdateId !== null) {
+          const data = additionalSocketData.get(socket.id);
+          if (!data) {
+            console.error("This should never happen.");
+            console.trace();
+          } else {
+            data.finishedOptimisticUpdateIds.push(optimisticUpdateId);
           }
-          store.dispatch(action);
-        });
+        }
+
+        actions.forEach((action) => store.dispatch(action));
       }
     );
     socket.on(

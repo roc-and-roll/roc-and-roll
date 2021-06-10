@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLatest } from "./state";
 import { useGuranteedMemo } from "./useGuranteedMemo";
 
@@ -187,4 +187,98 @@ export function useAggregatedDoubleDebounce<
   );
 
   return useDebounce(firstDebounce, localDebounceTime, forceOnUnmount)[0];
+}
+
+export function useIsolatedValue<V>({
+  value: externalValue,
+  onChange: setExternalValue,
+  takeValueDefault,
+  reportChangesDefault,
+}: {
+  value: V;
+  onChange: (v: V) => void;
+  takeValueDefault?: boolean;
+  reportChangesDefault?: boolean;
+}): [
+  V,
+  (v: V) => void,
+  {
+    takeValueRef: React.MutableRefObject<boolean>;
+    reportChangesRef: React.MutableRefObject<boolean>;
+  }
+] {
+  const takeValueRef = useRef(takeValueDefault ?? true);
+  const reportChangesRef = useRef(reportChangesDefault ?? true);
+
+  const [internalValue, setInternalValue] = useState(externalValue);
+
+  useEffect(() => {
+    if (takeValueRef.current) {
+      setInternalValue(externalValue);
+    }
+  }, [externalValue]);
+
+  useEffect(() => {
+    if (reportChangesRef.current) {
+      setExternalValue(internalValue);
+    }
+  }, [internalValue, setExternalValue]);
+
+  return [internalValue, setInternalValue, { takeValueRef, reportChangesRef }];
+}
+
+export function useDebouncedField<V, E extends HTMLElement>({
+  debounce,
+  value: externalValue,
+  onChange: externalOnChange,
+  onKeyPress,
+  onFocus,
+  onBlur,
+  ...props
+}: { debounce: number; value: V; onChange: (v: V) => void } & Omit<
+  React.HTMLAttributes<E>,
+  "value" | "onChange"
+>) {
+  const [value, setValue, { takeValueRef }] = useIsolatedValue({
+    value: externalValue,
+    onChange: externalOnChange,
+    // Never report changes to the outside. Instead, we call externalOnChange
+    // manually as part of a debounced callback.
+    reportChangesDefault: false,
+  });
+
+  const externalOnChangeRef = useLatest(externalOnChange);
+
+  const [propagateValueToOutside, _, executePending] = useDebounce(
+    useCallback(
+      (value: V) => externalOnChangeRef.current(value),
+      [externalOnChangeRef]
+    ),
+    debounce,
+    true
+  );
+
+  return {
+    value,
+    onChange: (value: V) => {
+      setValue(value);
+      propagateValueToOutside(value);
+    },
+    onKeyPress: (e: React.KeyboardEvent<E>) => {
+      if (e.key === "Enter") {
+        executePending();
+      }
+      onKeyPress?.(e);
+    },
+    onFocus: (e: React.FocusEvent<E>) => {
+      takeValueRef.current = false;
+      onFocus?.(e);
+    },
+    onBlur: (e: React.FocusEvent<E>) => {
+      takeValueRef.current = true;
+      executePending();
+      onBlur?.(e);
+    },
+    ...props,
+  };
 }
