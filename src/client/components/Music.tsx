@@ -1,3 +1,4 @@
+import { matchSorter } from "match-sorter";
 import React, { useEffect, useState } from "react";
 import {
   assetSongAdd,
@@ -121,26 +122,21 @@ export const Music = React.memo(function Music() {
   };
 
   const showSongList = (songs: RRSong[]) =>
-    songs
-      .filter(
-        (t) =>
-          t.name.toLowerCase().includes(filter.toLowerCase()) ||
-          t.tags.some((tag) =>
-            tag.toLocaleLowerCase().includes(filter.toLocaleLowerCase())
-          )
-      )
-      .map((t) => (
-        <Song
-          key={t.id}
-          active={activeSongs.find((s) => t.id === s.song.id)}
-          audio={t}
-          filterText={filter}
-          onAdd={() => onStart(t)}
-          onReplace={() => onReplace(t)}
-          onStop={onStop}
-          onFavorite={() => onFavorite(t)}
-        />
-      ));
+    matchSorter(songs, filter, {
+      keys: ["name", "tags.*"],
+      threshold: matchSorter.rankings.ACRONYM,
+    }).map((t) => (
+      <Song
+        key={t.id}
+        active={activeSongs.find((s) => t.id === s.song.id)}
+        audio={t}
+        filterText={filter}
+        onAdd={() => onStart(t)}
+        onReplace={() => onReplace(t)}
+        onStop={onStop}
+        onFavorite={() => onFavorite(t)}
+      />
+    ));
 
   const allSongs = [...ownSongs, ...(tabletopAudio ?? [])];
 

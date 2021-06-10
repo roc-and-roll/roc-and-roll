@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { matchSorter } from "match-sorter";
+import React, { useDeferredValue, useMemo, useState } from "react";
 import { useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import { IterableElement } from "type-fest";
@@ -11,13 +12,11 @@ export default function QuickReference({ onClose }: { onClose: () => void }) {
   const backdropRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
-
-  const { sources: compendiumSources } = useCompendium();
-  const spells = compendiumSources.flatMap((source) => source.data.spell);
 
   return ReactDOM.createPortal(
     <div
@@ -34,20 +33,43 @@ export default function QuickReference({ onClose }: { onClose: () => void }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <ul>
-          {spells
-            .filter((spell) =>
-              spell.name.toLowerCase().includes(search.toLowerCase())
-            )
-            .map((spell) => (
-              <li key={spell.name}>
-                <Spell spell={spell} />
-              </li>
-            ))}
-        </ul>
+        <Spells
+          search={deferredSearch}
+          searchIsStale={search !== deferredSearch}
+        />
       </div>
     </div>,
     document.body
+  );
+}
+
+function Spells({
+  search,
+  searchIsStale,
+}: {
+  search: string;
+  searchIsStale: boolean;
+}) {
+  const { sources: compendiumSources } = useCompendium();
+
+  const spells = useMemo(
+    () =>
+      matchSorter(
+        compendiumSources.flatMap((source) => source.data.spell),
+        search,
+        { keys: ["name"] }
+      ),
+    [compendiumSources, search]
+  );
+
+  return (
+    <ul style={searchIsStale ? { opacity: 0.7 } : {}}>
+      {spells.map((spell) => (
+        <li key={spell.name}>
+          <Spell spell={spell} />
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -140,7 +162,7 @@ function formatDuration(
   }
 }
 
-function Spell({ spell }: { spell: CompendiumSpell }) {
+const Spell = React.memo(function Spell({ spell }: { spell: CompendiumSpell }) {
   return (
     <>
       <h2>{spell.name}</h2>
@@ -184,7 +206,7 @@ function Spell({ spell }: { spell: CompendiumSpell }) {
       ))}
     </>
   );
-}
+});
 
 function pluralizeIfNeeded(value: number, unit: string) {
   if (value === 1) {

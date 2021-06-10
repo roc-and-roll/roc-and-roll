@@ -36,6 +36,11 @@ export const pointSign = (p: RRPoint) => ({
   y: Math.sign(p.y),
 });
 
+export const pointRound = (p: RRPoint) => ({
+  x: Math.round(p.x),
+  y: Math.round(p.y),
+});
+
 const snapToGrid = (num: number) => Math.floor(num / GRID_SIZE) * GRID_SIZE;
 
 export const snapPointToGrid = (p: RRPoint) => ({
