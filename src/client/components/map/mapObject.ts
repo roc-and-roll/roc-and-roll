@@ -5,7 +5,7 @@ import {
   RRMapObject,
   RRCharacter,
 } from "../../../shared/state";
-import { pointAdd, pointScale, makePoint } from "../../point";
+import { pointAdd, pointScale, makePoint } from "../../../shared/point";
 
 export const mapObjectCenter = (
   object: RRMapObject,

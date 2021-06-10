@@ -14,7 +14,7 @@ import {
   pointClamp,
   pointScale,
   pointSubtract,
-} from "../../point";
+} from "../../../shared/point";
 import useRafLoop from "../../useRafLoop";
 import { RoughSVGPath, RoughText } from "../rough";
 import { CURSOR_POSITION_SYNC_DEBOUNCE } from "./Map";

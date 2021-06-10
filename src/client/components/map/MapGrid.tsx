@@ -2,7 +2,7 @@ import React from "react";
 import { applyToPoint, inverse, Matrix } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
 import { RRColor } from "../../../shared/state";
-import { makePoint } from "../../point";
+import { makePoint } from "../../../shared/point";
 
 export const MapGrid = React.memo<{
   transform: Matrix;

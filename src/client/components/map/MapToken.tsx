@@ -33,7 +33,7 @@ import {
 } from "./MapContainer";
 import { Popover } from "../Popover";
 import { TokenEditor, conditionIcons } from "../tokens/TokenEditor";
-import { makePoint, pointAdd, pointEquals } from "../../point";
+import { makePoint, pointAdd, pointEquals } from "../../../shared/point";
 import { EmanationArea } from "./Areas";
 import { useOptimisticDebouncedServerUpdate } from "../../state";
 import { mapObjectUpdate } from "../../../shared/actions";

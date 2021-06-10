@@ -16,7 +16,12 @@ import { useServerDispatch } from "../../state";
 import { GRID_SIZE } from "../../../shared/constants";
 import { assertNever, rrid } from "../../../shared/util";
 import { askAndUploadImages } from "../../files";
-import { pointAdd, pointEquals, pointSubtract, toCap } from "../../point";
+import {
+  pointAdd,
+  pointEquals,
+  pointSubtract,
+  toCap,
+} from "../../../shared/point";
 import { MapEditState } from "./MapContainer";
 import { Matrix } from "transformation-matrix";
 import Shape from "@doodle3d/clipper-js";

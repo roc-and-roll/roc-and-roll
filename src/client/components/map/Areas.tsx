@@ -18,7 +18,7 @@ import {
   pointScale,
   pointSubtract,
   snapPointToGrid,
-} from "../../point";
+} from "../../../shared/point";
 import { RoughRectangle } from "../rough";
 
 function calculateSquaresForBurst(r: number): RRPoint[] {

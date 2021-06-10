@@ -4,7 +4,7 @@ import type { Drawable, Options } from "roughjs/bin/core";
 import { RoughGenerator } from "roughjs/bin/generator";
 import clsx from "clsx";
 import { RRPoint } from "../../shared/state";
-import { makePoint } from "../point";
+import { makePoint } from "../../shared/point";
 
 const DEFAULT_ROUGHNESS = 3;
 

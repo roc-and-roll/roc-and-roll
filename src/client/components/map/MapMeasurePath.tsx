@@ -3,7 +3,12 @@ import { useRecoilValue } from "recoil";
 import tinycolor from "tinycolor2";
 import { GRID_SIZE } from "../../../shared/constants";
 import { RRPlayerID, RRPoint } from "../../../shared/state";
-import { makePoint, pointAdd, pointScale, pointSubtract } from "../../point";
+import {
+  makePoint,
+  pointAdd,
+  pointScale,
+  pointSubtract,
+} from "../../../shared/point";
 import { RoughLine, RoughText } from "../rough";
 import { ephermalPlayersFamily } from "./MapContainer";
 

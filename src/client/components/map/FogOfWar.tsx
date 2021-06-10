@@ -4,7 +4,7 @@ import Shape from "@doodle3d/clipper-js";
 import { useMyself } from "../../myself";
 import { Matrix } from "transformation-matrix";
 import { globalToLocal } from "./Map";
-import { toCap } from "../../point";
+import { toCap } from "../../../shared/point";
 
 export function FogOfWar({
   revealedAreas,

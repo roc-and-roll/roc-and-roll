@@ -54,7 +54,7 @@ import {
   pointScale,
   pointSubtract,
   snapPointToGrid,
-} from "../../point";
+} from "../../../shared/point";
 import { useMapToolHandler } from "./useMapToolHandler";
 import { atomFamily, atom, useRecoilCallback, RecoilState } from "recoil";
 import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";

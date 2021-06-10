@@ -1,6 +1,6 @@
-import { GRID_SIZE } from "../shared/constants";
-import { RRCapPoint, RRPoint } from "../shared/state";
-import { clamp } from "../shared/util";
+import { GRID_SIZE } from "./constants";
+import { RRCapPoint, RRPoint } from "./state";
+import { clamp } from "./util";
 
 export const pointSubtract = (p1: RRPoint, p2: RRPoint) => ({
   x: p1.x - p2.x,

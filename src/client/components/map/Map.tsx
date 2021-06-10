@@ -49,7 +49,7 @@ import {
   pointSign,
   pointSubtract,
   snapPointToGrid,
-} from "../../point";
+} from "../../../shared/point";
 import { MouseCursor } from "./MouseCursor";
 import { MapMeasurePath } from "./MapMeasurePath";
 import { MapMouseHandler } from "./useMapToolHandler";
