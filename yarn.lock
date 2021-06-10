@@ -2434,12 +2434,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:^17.0.5":
-  version: 17.0.5
-  resolution: "@types/react-dom@npm:17.0.5"
+"@types/react-dom@npm:^17.0.7":
+  version: 17.0.7
+  resolution: "@types/react-dom@npm:17.0.7"
   dependencies:
     "@types/react": "*"
-  checksum: b3e23acb7be9405050abb4bcd443d14b16b2f3ded2d1853528199e4307b17b25186f905ddd236c27b6ef0297e6779b7fedd11fd24ee9170771be45a7e8e70f4b
+  checksum: 97df2088b5e1e1d3c6bf2ff6e4f8536bcd788cc7baeb49d912184923e4bee63d155d9821f15c4f36a6b89afe043f892d20015063a39a67aebf14dbc8998a1ccf
   languageName: node
   linkType: hard
 
@@ -2463,14 +2463,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^17.0.5":
-  version: 17.0.5
-  resolution: "@types/react@npm:17.0.5"
+"@types/react@npm:^17.0.10":
+  version: 17.0.10
+  resolution: "@types/react@npm:17.0.10"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: f9793e8113f14122d6ed20643b4fe27d30e10d7c80571a1d238c13f8171864f2a7b337194bf41310724498586ed4560fffd081a2d21e488afbb1aca33534189b
+  checksum: 94e55086fe11dc12f1363df1db98b893c4dcf6f862f3f736e52a1f5796fc7e42e530d0c5fe7ddea9ff55773ab312483f2ee4249540f289e9f5a84a14ad34b650
   languageName: node
   linkType: hard
 
@@ -10925,16 +10925,16 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"react-dom@npm:experimental":
-  version: 0.0.0-experimental-269dd6ec5
-  resolution: "react-dom@npm:0.0.0-experimental-269dd6ec5"
+"react-dom@npm:alpha":
+  version: 18.0.0-alpha-e6be2d531
+  resolution: "react-dom@npm:18.0.0-alpha-e6be2d531"
   dependencies:
     loose-envify: ^1.1.0
     object-assign: ^4.1.1
-    scheduler: 0.0.0-experimental-269dd6ec5
+    scheduler: 0.21.0-alpha-e6be2d531
   peerDependencies:
-    react: 0.0.0-experimental-269dd6ec5
-  checksum: 76ac5673ad078a7bf5a3fdd11a84ec58d6ff36b2eb96bda748ba771ef41dfe6fa61294b1a01b9f412e6ea920dc96a1fe73c7144199b77fd6d5fe9cadcf24984d
+    react: 18.0.0-alpha-e6be2d531
+  checksum: 9b875d91cef88b537abf9dee50784162c41ec62d39554fd1039a113792d6a5f8eaf203701ce0b4a566aa80d2b27f5b66577bed404229176ae003ec9f0b25ee05
   languageName: node
   linkType: hard
 
@@ -11046,13 +11046,13 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"react@npm:experimental":
-  version: 0.0.0-experimental-269dd6ec5
-  resolution: "react@npm:0.0.0-experimental-269dd6ec5"
+"react@npm:alpha":
+  version: 18.0.0-alpha-e6be2d531
+  resolution: "react@npm:18.0.0-alpha-e6be2d531"
   dependencies:
     loose-envify: ^1.1.0
     object-assign: ^4.1.1
-  checksum: f97ab94fe631cf6ece73e6a9927912feb22c9b9dd0ee05d09c134590076a9ec42305e1e4b9a743b6ed951a02ba93e95b0e7a175a55d59794e734e707b9f5a854
+  checksum: b59524f86855a502db4a39a6d8b6267c9cc7a4d9723fe789ce010da76a7bbfdfe77af6ce91763fa0cc19959df38aefffe0e26ea0b54f17a2617d9992577522ae
   languageName: node
   linkType: hard
 
@@ -11660,8 +11660,8 @@ resolve@^2.0.0-next.3:
     "@types/multer": ^1.4.5
     "@types/node": ^14.14.45
     "@types/node-fetch": ^2.5.10
-    "@types/react": ^17.0.5
-    "@types/react-dom": ^17.0.5
+    "@types/react": ^17.0.10
+    "@types/react-dom": ^17.0.7
     "@types/sharp": ^0.28.1
     "@types/socket.io": ^2.1.13
     "@types/socket.io-client": ^1.4.36
@@ -11713,10 +11713,10 @@ resolve@^2.0.0-next.3:
     prettier: ^2.3.0
     raw-loader: ^4.0.2
     re-resizable: ^6.9.0
-    react: experimental
+    react: alpha
     react-dnd: ^14.0.2
     react-dnd-html5-backend: ^14.0.0
-    react-dom: experimental
+    react-dom: alpha
     react-flip-toolkit: ^7.0.13
     react-markdown: ^6.0.2
     react-refresh: ^0.9.0
@@ -11879,13 +11879,13 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"scheduler@npm:0.0.0-experimental-269dd6ec5":
-  version: 0.0.0-experimental-269dd6ec5
-  resolution: "scheduler@npm:0.0.0-experimental-269dd6ec5"
+"scheduler@npm:0.21.0-alpha-e6be2d531":
+  version: 0.21.0-alpha-e6be2d531
+  resolution: "scheduler@npm:0.21.0-alpha-e6be2d531"
   dependencies:
     loose-envify: ^1.1.0
     object-assign: ^4.1.1
-  checksum: a83c8055f368fb860b582b0cfd0470b2b8f3dcde853fe4323b3736e8d3b0a35beef1a4b60159b453bc8322f50356c35941683244a172b150757a2e061cf486fb
+  checksum: 59f2cf475c4c29bcd6190d821b4e7f9d9c0c7b7973a3a714f3228016f87f10d5380a5a4c65760c3d7b774c6153e7a53d364777b92f66c41630dbad6d592ce0b7
   languageName: node
   linkType: hard
 

@@ -1,7 +1,7 @@
-// begin experimental react types
-import type {} from "react-dom/experimental";
-import type {} from "react/experimental";
-// end experimental react types
+// begin alpha react types
+import type {} from "react-dom/next";
+import type {} from "react/next";
+// end alpha react types
 import React, { StrictMode } from "react";
 import ReactDOM from "react-dom";
 import { App } from "./components/App";
@@ -24,7 +24,7 @@ export function render(socket: SocketIOClient.Socket) {
 
   const element = <Root socket={socket} />;
   if (USE_CONCURRENT_MODE) {
-    ReactDOM.unstable_createRoot(container).render(element);
+    ReactDOM.createRoot(container).render(element);
   } else {
     ReactDOM.render(element, container);
   }
