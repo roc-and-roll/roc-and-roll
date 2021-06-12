@@ -695,11 +695,28 @@ export const RRMapView = React.memo<{
     [imageArea, auraArea, defaultArea, tokenArea, healthbarArea]
   );
 
-  // TODO: Should this be observed using a ResizeObserver?
-  const viewPortSize = {
-    x: svgRef.current?.clientWidth ?? 0,
-    y: svgRef.current?.clientHeight ?? 0,
-  };
+  const [viewPortSize, setViewPortSize] = useState(() => makePoint(0));
+
+  useEffect(() => {
+    if (!svgRef.current) {
+      return;
+    }
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) {
+        throw new Error("This should never happen");
+      }
+
+      setViewPortSize({
+        x: entry.borderBoxSize[0]!.inlineSize,
+        y: entry.borderBoxSize[0]!.blockSize,
+      });
+    });
+    resizeObserver.observe(svgRef.current);
+
+    return () => resizeObserver.disconnect();
+  }, []);
 
   return (
     <RoughContextProvider enabled={roughEnabled}>
