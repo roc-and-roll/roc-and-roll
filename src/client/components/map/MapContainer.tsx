@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useDrop } from "react-dnd";
 import {
   ephermalPlayerUpdate,
@@ -22,14 +28,11 @@ import {
   RRPoint,
   RRCharacter,
   RRCharacterID,
-  setById,
   RRMapID,
   RRObjectVisibility,
-  EMPTY_ENTITY_COLLECTION,
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import {
-  useOptimisticDebouncedLerpedServerUpdate,
   useOptimisticDebouncedServerUpdate,
   useServerDispatch,
   useServerState,
@@ -44,14 +47,12 @@ import {
 import composeRefs from "@seznam/compose-react-refs";
 import { identity, Matrix } from "transformation-matrix";
 import { MapToolbar } from "../MapToolbar";
-import { GRID_SIZE } from "../../../shared/constants";
+import { GRID_SIZE, SYNC_MY_MOUSE_POSITION } from "../../../shared/constants";
 import { assertNever, rrid, timestamp, withDo } from "../../../shared/util";
 import { useRRSettings } from "../../settings";
-import produce, { Draft } from "immer";
 import {
   makePoint,
   pointAdd,
-  pointScale,
   pointSubtract,
   snapPointToGrid,
 } from "../../../shared/point";
@@ -148,6 +149,7 @@ export const ephermalPlayerIdsAtom = atom<ReadonlyArray<RRPlayerID>>({
 export default function MapContainer() {
   const myself = useMyself();
   const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
+  const mapId = map.id;
   const dispatch = useServerDispatch();
   const [settings] = useRRSettings();
   const syncedDebounce = useRef(
@@ -188,15 +190,14 @@ export default function MapContainer() {
         });
 
         if (monitor.getItemType() === "map") {
-          const mapId = id as RRMapID;
           dispatch(
-            mapObjectAdd(map.id, {
+            mapObjectAdd(mapId, {
               id: rrid<RRMapObject>(),
               type: "mapLink",
               position: pointSubtract(point, { x: 10, y: 10 }),
               rotation: 0,
               playerId: myself.id,
-              mapId,
+              mapId: id as RRMapID,
               locked: false,
               color: "#000",
               visibility: "everyone",
@@ -220,13 +221,13 @@ export default function MapContainer() {
           characterId = dispatch(
             characterAdd({
               ...copy,
-              localToMap: map.id,
+              localToMap: mapId,
             })
           ).payload.id;
         }
 
         dispatch(
-          mapObjectAdd(map.id, {
+          mapObjectAdd(mapId, {
             id: rrid<RRMapObject>(),
             type: "token",
             position: snapPointToGrid(point),
@@ -237,61 +238,9 @@ export default function MapContainer() {
         );
       },
     }),
-    [dispatch, getCharacter, getTemplateCharacter, map.id, myself.id]
+    [dispatch, getCharacter, getTemplateCharacter, mapId, myself.id]
   );
   const dropRef = composeRefs<HTMLDivElement>(dropRef2, dropRef1);
-
-  const [localMapObjects, setLocalObjectsOnMap] =
-    useOptimisticDebouncedLerpedServerUpdate(
-      (state) => {
-        return (
-          byId(state.maps.entities, myself.currentMap)?.objects ??
-          EMPTY_ENTITY_COLLECTION
-        );
-      },
-      useRecoilCallback(
-        ({ snapshot }) =>
-          (localMapObjects) =>
-            snapshot
-              .getLoadable(selectedMapObjectIdsAtom)
-              .getValue()
-              .flatMap((selectedMapObjectId) => {
-                const mapObject = byId(
-                  localMapObjects.entities,
-                  selectedMapObjectId
-                );
-                if (!mapObject) {
-                  return [];
-                }
-
-                return mapObjectUpdate(map.id, {
-                  id: mapObject.id,
-                  changes: {
-                    position: mapObject.position,
-                  },
-                });
-              })
-      ),
-      syncedDebounce.current,
-      (start, end, t) =>
-        produce(end, (draft) =>
-          entries<Draft<RRMapObject>>(end).forEach((e) => {
-            const s = byId(start.entities, e.id);
-            // Only lerp the position if
-            // 1. the object existed before (s)
-            // 2. it has changed (s !== e)
-            if (s && s !== e) {
-              // We deliberately only use the draft here, instead of iterating
-              // over it directly, so that less proxies need to be created.
-              const obj = byId<Draft<RRMapObject>>(draft.entities, e.id)!;
-              obj.position = pointAdd(
-                s.position,
-                pointScale(pointSubtract(e.position, s.position), t)
-              );
-            }
-          })
-        )
-    );
 
   const handleKeyDown = useRecoilCallback(
     ({ snapshot, set, reset }) =>
@@ -303,20 +252,29 @@ export default function MapContainer() {
           .getLoadable(selectedMapObjectIdsAtom)
           .getValue();
 
-        function move(positionUpdater: (position: RRPoint) => RRPoint) {
-          setLocalObjectsOnMap(
-            produce((draft) => {
-              selectedMapObjectIds.forEach((selectedMapObjectId) => {
-                const object = byId<Draft<RRMapObject>>(
-                  draft.entities,
-                  selectedMapObjectId
-                );
-                if (object) {
-                  object.position = positionUpdater(object.position);
-                }
-              });
-            })
-          );
+        function move(updater: (position: RRPoint) => RRPoint) {
+          dispatch((state) => {
+            const map = byId(state.maps.entities, mapId);
+            if (!map) {
+              return [];
+            }
+
+            return selectedMapObjectIds.flatMap((selectedMapObjectId) => {
+              const object = byId(map.objects.entities, selectedMapObjectId);
+              if (!object) {
+                return [];
+              }
+              return {
+                actions: [
+                  mapObjectUpdate(mapId, {
+                    id: object.id,
+                    changes: { position: updater(object.position) },
+                  }),
+                ],
+                optimisticKey: `${object.id}/position`,
+              };
+            });
+          });
         }
 
         let keyHandled = true;
@@ -332,12 +290,12 @@ export default function MapContainer() {
                     .getLoadable(tokenFamily(mapObject.characterId))
                     .getValue()!;
                   return mapObjectRemove({
-                    mapId: map.id,
+                    mapId,
                     mapObject,
                     relatedCharacter: character,
                   });
                 } else {
-                  return mapObjectRemove({ mapId: map.id, mapObjectId });
+                  return mapObjectRemove({ mapId, mapObjectId });
                 }
               })
             );
@@ -369,7 +327,7 @@ export default function MapContainer() {
           e.stopPropagation();
         }
       },
-    [dispatch, map.id, setLocalObjectsOnMap]
+    [dispatch, mapId]
   );
 
   const [editState, setEditState] = useState<MapEditState>({
@@ -391,7 +349,7 @@ export default function MapContainer() {
                   .getLoadable(mapObjectsFamily(selectedMapObjectId))
                   .getValue();
                 if (object && object.type !== "token" && !object.locked) {
-                  return mapObjectUpdate(map.id, {
+                  return mapObjectUpdate(mapId, {
                     id: selectedMapObjectId,
                     changes: { color },
                   });
@@ -400,7 +358,7 @@ export default function MapContainer() {
           );
         }
       },
-    [dispatch, map.id]
+    [dispatch, mapId]
   );
 
   useEffect(() => {
@@ -412,7 +370,7 @@ export default function MapContainer() {
   const sendMousePositionToServer = useAggregatedDoubleDebounce(
     useCallback(
       (argHistory: Array<[RRPoint]>) => {
-        if (argHistory.length === 0) {
+        if (argHistory.length === 0 || !SYNC_MY_MOUSE_POSITION) {
           return;
         }
 
@@ -474,9 +432,9 @@ export default function MapContainer() {
   const toolButtonState = convertToolButtonState();
 
   const [revealedAreas, setRevealedAreas] = useOptimisticDebouncedServerUpdate(
-    (state) => byId(state.maps.entities, map.id)?.revealedAreas ?? null,
+    (state) => byId(state.maps.entities, mapId)?.revealedAreas ?? null,
     (areas) =>
-      dispatch(mapUpdate({ changes: { revealedAreas: areas }, id: map.id })),
+      dispatch(mapUpdate({ changes: { revealedAreas: areas }, id: mapId })),
     1000
   );
 
@@ -497,124 +455,88 @@ export default function MapContainer() {
     [dispatch]
   );
 
-  const onMoveMapObjectsUpdater = useRecoilCallback(
+  const onMoveMapObjects = useRecoilCallback(
     ({ snapshot }) =>
-      (d: RRPoint, localObjectsOnMap: typeof localMapObjects) => {
-        const updatedLocalObjectsOnMap: Record<RRMapObjectID, RRMapObject> = {};
+      (d: RRPoint) => {
+        dispatch((state) => {
+          const map = byId(state.maps.entities, mapId);
+          if (!map) {
+            return [];
+          }
 
-        snapshot
-          .getLoadable(selectedMapObjectIdsAtom)
-          .getValue()
-          .forEach((selectedMapObjectId) => {
-            const object = byId<Draft<RRMapObject>>(
-              localObjectsOnMap.entities,
-              selectedMapObjectId
-            );
-            if (object && (object.type === "token" || !object.locked)) {
-              setById(updatedLocalObjectsOnMap, object.id, {
-                ...object,
-                position: pointAdd(object.position, d),
-              });
-            }
-          });
+          return snapshot
+            .getLoadable(selectedMapObjectIdsAtom)
+            .getValue()
+            .flatMap((selectedMapObjectId) => {
+              const object = byId(map.objects.entities, selectedMapObjectId);
+              if (object && (object.type === "token" || !object.locked)) {
+                return {
+                  actions: [
+                    mapObjectUpdate(mapId, {
+                      id: object.id,
+                      changes: { position: pointAdd(object.position, d) },
+                    }),
+                  ],
+                  optimisticKey: `${object.id}/position`,
+                };
+              }
 
-        return {
-          ...localObjectsOnMap,
-          entities: {
-            ...localObjectsOnMap.entities,
-            ...updatedLocalObjectsOnMap,
-          },
-        };
-      }
-    // We don't use the equivalent immmer producer here, because moving
-    // objects around the map is very performance critical.
-    //
-    // produce((draft) => {
-    //   snapshot
-    //     .getLoadable(selectedMapObjectIdsAtom)
-    //     .getValue()
-    //     .forEach((selectedMapObjectId) => {
-    //       const object = byId<Draft<RRMapObject>>(
-    //         draft.entities,
-    //         selectedMapObjectId
-    //       );
-    //       if (object) {
-    //         object.position = pointAdd(object.position, d);
-    //       }
-    //     });
-    // })
-  );
-
-  // This must not use useRecoilCallback, because the setLocalObjectsOnMap may
-  // be batched by React and executed at a later point. If we used
-  // useRecoilCallback here, we would still access the old snapshot when the
-  // setLocalObjectsOnMap is finally executed by React.
-  //
-  // To circumvent that problem, we use a separate useRecoilCallback that is
-  // executed right when React decides to schedule the state update.
-  const onMoveMapObjects = useCallback(
-    (d: RRPoint) =>
-      setLocalObjectsOnMap((localObjectsOnMap) =>
-        onMoveMapObjectsUpdater(d, localObjectsOnMap)
-      ),
-    [setLocalObjectsOnMap, onMoveMapObjectsUpdater]
-  );
-
-  const onStopMoveMapObjectsUpdater = useRecoilCallback(
-    ({ snapshot }) =>
-      (localObjectsOnMap: typeof localMapObjects) => {
-        const updatedLocalObjectsOnMap: Record<RRMapObjectID, RRMapObject> = {};
-
-        snapshot
-          .getLoadable(selectedMapObjectIdsAtom)
-          .getValue()
-          .forEach((selectedMapObjectId) => {
-            const object = byId<Draft<RRMapObject>>(
-              localObjectsOnMap.entities,
-              selectedMapObjectId
-            );
-            if (object && (object.type === "token" || !object.locked)) {
-              const position = withDo(object, (object) => {
-                // TODO: We have a "snapping" button in the toolbar, which we
-                // should probably respect somehow.
-                if (object.type === "token" || object.type === "image") {
-                  // TODO: Calculate center based on token / map object size
-                  const center = pointAdd(
-                    object.position,
-                    makePoint(GRID_SIZE / 2)
-                  );
-                  return snapPointToGrid(center);
-                }
-                return object.position;
-              });
-
-              setById(updatedLocalObjectsOnMap, object.id, {
-                ...object,
-                position,
-              });
-            }
-          });
-
-        return {
-          ...localObjectsOnMap,
-          entities: {
-            ...localObjectsOnMap.entities,
-            ...updatedLocalObjectsOnMap,
-          },
-        };
+              return [];
+            });
+        });
       },
-    []
+    [dispatch, mapId]
   );
 
-  // Refer to the comment on onMoveMapObjects
-  const onStopMoveMapObjects = useCallback(
-    () => setLocalObjectsOnMap(onStopMoveMapObjectsUpdater),
-    [onStopMoveMapObjectsUpdater, setLocalObjectsOnMap]
+  const onStopMoveMapObjects = useRecoilCallback(
+    ({ snapshot }) =>
+      () =>
+        dispatch((state) => {
+          const map = byId(state.maps.entities, mapId);
+          if (!map) {
+            return [];
+          }
+
+          return snapshot
+            .getLoadable(selectedMapObjectIdsAtom)
+            .getValue()
+            .flatMap((selectedMapObjectId) => {
+              const object = byId(map.objects.entities, selectedMapObjectId);
+              if (object && (object.type === "token" || !object.locked)) {
+                const position = withDo(object, (object) => {
+                  // TODO: We have a "snapping" button in the toolbar, which we
+                  // should probably respect somehow.
+                  if (object.type === "token" || object.type === "image") {
+                    // TODO: Calculate center based on token / map object size
+                    const center = pointAdd(
+                      object.position,
+                      makePoint(GRID_SIZE / 2)
+                    );
+                    return snapPointToGrid(center);
+                  }
+                  return object.position;
+                });
+
+                return {
+                  actions: [
+                    mapObjectUpdate(mapId, {
+                      id: object.id,
+                      changes: { position },
+                    }),
+                  ],
+                  optimisticKey: `${object.id}/position`,
+                };
+              }
+
+              return [];
+            });
+        }),
+    [dispatch, mapId]
   );
 
   return (
     <div ref={dropRef} className="map-container">
-      <ReduxToRecoilBridge localMapObjects={localMapObjects} />
+      <ReduxToRecoilBridge mapObjects={map.objects} />
       <MapMusicIndicator mapBackgroundColor={map.backgroundColor} />
       <MapToolbar map={map} myself={myself} setEditState={setEditState} />
       <RRMapView
@@ -647,7 +569,8 @@ export default function MapContainer() {
       {process.env.NODE_ENV === "development" &&
         settings.debug.mapTokenPositions && (
           <DebugMapContainerOverlay
-            localMapObjects={entries(localMapObjects)}
+            // TODO: This doesn't make sense any longer.
+            localMapObjects={entries(map.objects)}
             serverMapObjects={entries(map.objects)}
           />
         )}
@@ -693,13 +616,13 @@ function useReduxToRecoilBridge<E extends { id: RRID }>(
 }
 
 function ReduxToRecoilBridge({
-  localMapObjects,
+  mapObjects,
 }: {
-  localMapObjects: EntityCollection<RRMapObject>;
+  mapObjects: EntityCollection<RRMapObject>;
 }) {
   useReduxToRecoilBridge(
-    "local map objects",
-    localMapObjects,
+    "map objects",
+    mapObjects,
     mapObjectIdsAtom,
     mapObjectsFamily
   );

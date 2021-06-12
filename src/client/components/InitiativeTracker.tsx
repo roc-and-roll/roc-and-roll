@@ -18,6 +18,7 @@ import {
   EMPTY_ENTITY_COLLECTION,
   EntityCollection,
   RRCharacter,
+  InitiativeTrackerSyncedState,
 } from "../../shared/state";
 import { useMyMap, useMyself } from "../myself";
 import { canControlToken } from "../permissions";
@@ -206,20 +207,38 @@ const InitiativeEntry = React.memo<{
 });
 
 export function InitiativeTracker() {
-  const [modifier, setModifier, _] = useLocalState("initiative-modifier", "0");
-  const dispatch = useServerDispatch();
   const myself = useMyself();
   const initiativeTracker = useServerState((state) => state.initiativeTracker);
+
+  if (!initiativeTracker.visible && !myself.isGM) {
+    return null;
+  }
+
+  return (
+    <Collapsible title="Initiative">
+      <InitiativeTrackerInner
+        initiativeTracker={initiativeTracker}
+        myself={myself}
+      />
+    </Collapsible>
+  );
+}
+
+function InitiativeTrackerInner({
+  initiativeTracker,
+  myself,
+}: {
+  initiativeTracker: InitiativeTrackerSyncedState;
+  myself: RRPlayer;
+}) {
+  const [modifier, setModifier, _] = useLocalState("initiative-modifier", "0");
+  const dispatch = useServerDispatch();
   const tokenCollection = useServerState((state) => state.characters);
 
   const mapObjects = useMyMap((map) => map?.objects ?? EMPTY_ENTITY_COLLECTION);
   const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom).filter(
     Boolean
   );
-
-  if (!initiativeTracker.visible && !myself.isGM) {
-    return null;
-  }
 
   const selectedTokenIds = [
     ...new Set(
@@ -321,72 +340,68 @@ export function InitiativeTracker() {
   );
 
   return (
-    <Collapsible title="Initiative">
-      <div className="initiative-tracker">
-        <Flipper flipKey={sortedRows.map((row) => row.id).join("-")}>
-          <ul role="list">
-            {sortedRows.map((entry, idx) => (
-              <InitiativeEntry
-                key={entry.id}
-                inverseIdx={sortedRows.length - idx - 1}
-                entry={entry}
-                isCurrentEntry={entry.id === initiativeTracker.currentEntryId}
-                tokenCollection={tokenCollection}
-                myself={myself}
-              />
-            ))}
-          </ul>
-        </Flipper>
-        {endTurnButton}
-        <div className="initiative-tracker-roll">
-          <Button
-            disabled={selectionAlreadyInList || !hasSelection}
-            onClick={roll}
-          >
-            Roll Initiative
-          </Button>
-          <input
-            value={
-              allHaveSameInitiative ? allSelectedInitiatives[0]! : modifier
-            }
-            disabled={allHaveSameInitiative}
-            onChange={(e) => setModifier(e.target.value)}
-            placeholder="mod"
-            title={
-              allHaveSameInitiative
-                ? `Using configured Modifier ${allSelectedInitiatives[0] ?? ""}`
-                : "Modifier"
-            }
-          />
-        </div>
-        {myself.isGM && (
-          <GMArea>
-            <Button
-              onClick={addLairAction}
-              className="initiative-tracker-add-lair-action"
-            >
-              Add lair action
-            </Button>
-            <label>
-              <input
-                type="checkbox"
-                checked={initiativeTracker.visible}
-                onChange={(e) =>
-                  dispatch(initiativeTrackerSetVisible(e.target.checked))
-                }
-              />{" "}
-              show initiative to players
-            </label>
-          </GMArea>
-        )}
-        {!initiativeTracker.visible && (
-          <div className="initiative-tracker-hidden">
-            <p>not visible to players</p>
-          </div>
-        )}
-        {canEdit && <YourTurn endTurnButton={endTurnButton} />}
+    <div className="initiative-tracker">
+      <Flipper flipKey={sortedRows.map((row) => row.id).join("-")}>
+        <ul role="list">
+          {sortedRows.map((entry, idx) => (
+            <InitiativeEntry
+              key={entry.id}
+              inverseIdx={sortedRows.length - idx - 1}
+              entry={entry}
+              isCurrentEntry={entry.id === initiativeTracker.currentEntryId}
+              tokenCollection={tokenCollection}
+              myself={myself}
+            />
+          ))}
+        </ul>
+      </Flipper>
+      {endTurnButton}
+      <div className="initiative-tracker-roll">
+        <Button
+          disabled={selectionAlreadyInList || !hasSelection}
+          onClick={roll}
+        >
+          Roll Initiative
+        </Button>
+        <input
+          value={allHaveSameInitiative ? allSelectedInitiatives[0]! : modifier}
+          disabled={allHaveSameInitiative}
+          onChange={(e) => setModifier(e.target.value)}
+          placeholder="mod"
+          title={
+            allHaveSameInitiative
+              ? `Using configured Modifier ${allSelectedInitiatives[0] ?? ""}`
+              : "Modifier"
+          }
+        />
       </div>
-    </Collapsible>
+      {myself.isGM && (
+        <GMArea>
+          <Button
+            onClick={addLairAction}
+            className="initiative-tracker-add-lair-action"
+          >
+            Add lair action
+          </Button>
+          <label>
+            <input
+              type="checkbox"
+              checked={initiativeTracker.visible}
+              onChange={(e) =>
+                dispatch(initiativeTrackerSetVisible(e.target.checked))
+              }
+            />{" "}
+            show initiative to players
+          </label>
+        </GMArea>
+      )}
+      {!initiativeTracker.visible && (
+        <div className="initiative-tracker-hidden">
+          <p>not visible to players</p>
+        </div>
+      )}
+      {canEdit && <YourTurn endTurnButton={endTurnButton} />}
+    </div>
   );
 }
 

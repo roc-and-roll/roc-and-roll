@@ -619,7 +619,7 @@ function isAction(
  * @returns The dispatch function.
  */
 export function useServerDispatch() {
-  const { socket, addLocalOptimisticActionAppliers } =
+  const { socket, addLocalOptimisticActionAppliers, stateRef } =
     useContext(ServerStateContext);
   const dispatcherKey = useGuranteedMemo(() => rrid(), []);
 
@@ -633,8 +633,13 @@ export function useServerDispatch() {
           },
       R extends A | Array<A>
     >(
-      actionOrActions: R
+      actionOrActionsOrUpdater: R | ((currentState: SyncedState) => R)
     ): R => {
+      const actionOrActions =
+        typeof actionOrActionsOrUpdater === "function"
+          ? actionOrActionsOrUpdater(stateRef.current)
+          : actionOrActionsOrUpdater;
+
       const actions = Array.isArray(actionOrActions)
         ? (actionOrActions as A[])
         : [actionOrActions as A];
@@ -678,7 +683,7 @@ export function useServerDispatch() {
       });
       return actionOrActions;
     },
-    [socket, dispatcherKey, addLocalOptimisticActionAppliers]
+    [stateRef, socket, addLocalOptimisticActionAppliers, dispatcherKey]
   );
 }
 
