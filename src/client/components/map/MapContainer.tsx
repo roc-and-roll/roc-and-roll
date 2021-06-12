@@ -664,7 +664,7 @@ function useReduxToRecoilBridge<E extends { id: RRID }>(
   const updateRecoilObjects = useRecoilCallback(
     ({ snapshot, set, reset }) =>
       ({ ids: newIds, entities }: EntityCollection<E>) => {
-        const oldIds = snapshot.getLoadable(mapObjectIdsAtom).getValue();
+        const oldIds = snapshot.getLoadable(idsAtom).getValue();
         if (oldIds !== newIds) {
           set(idsAtom, newIds);
         }
