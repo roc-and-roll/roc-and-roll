@@ -1,4 +1,5 @@
 import React, { ErrorInfo } from "react";
+import { Button } from "./ui/Button";
 
 interface State {
   hasError: boolean;
@@ -36,9 +37,9 @@ export class ErrorBoundary extends React.Component<
       return (
         <>
           <h1>An error occurred.</h1>
-          <button onClick={() => this.setState({ hasError: false })}>
+          <Button onClick={() => this.setState({ hasError: false })}>
             retry
-          </button>
+          </Button>
         </>
       );
     }

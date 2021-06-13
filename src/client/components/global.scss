@@ -55,6 +55,45 @@ label {
   color: white;
 }
 
+.ui-text-input {
+  width: 100%;
+}
+
+.ui-button {
+  $color-button-border: black;
+  $color-button: #676767;
+  $color-button-font: white;
+
+  padding: 0.125em 0.5em;
+
+  border: 1px solid $color-button-border;
+  border-radius: 0.25em;
+
+  color: $color-button-font;
+  background: $color-button;
+  transition: background 0.05s ease-in-out;
+
+  &:hover {
+    background: lighten($color-button, 15%);
+  }
+
+  &.red {
+    background: red;
+
+    &:hover {
+      background: darken(red, 10%);
+    }
+  }
+
+  &.green {
+    background: green;
+
+    &:hover {
+      background: lighten(green, 10%);
+    }
+  }
+}
+
 .selection-area-highlight {
   stroke-width: 4px;
 }
@@ -215,11 +254,7 @@ a {
   height: 32px;
   border-radius: 32px;
   line-height: 32px;
-  background-color: #fff;
   cursor: pointer;
-  &:hover {
-    background-color: #ccc;
-  }
 }
 
 .collapsible-header {
@@ -491,6 +526,10 @@ $gmAreaColor: #ab62c0;
 .gm-button {
   background: $gmAreaColor;
   color: white;
+
+  &:hover {
+    background: darken($gmAreaColor, 15%);
+  }
 }
 
 .initiative-tracker {
@@ -836,7 +875,6 @@ button.color-picker-color {
 }
 .add-template-button {
   width: 100%;
-  font-size: 0.8rem;
 }
 
 .maps {
@@ -1125,8 +1163,4 @@ aside.emoji-picker-react {
     0%, 100% { transform: scaleY(0); }
     50% { transform: scaleY(1); }
   }
-}
-
-.ui-text-input {
-  width: 100%;
 }

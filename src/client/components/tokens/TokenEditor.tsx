@@ -414,17 +414,17 @@ export function TokenEditor({
               </label>
             </div>
             */}
-            <button
+            <Button
               onClick={() => {
                 setAuras([...auras.slice(0, i), ...auras.slice(i + 1)]);
               }}
             >
               delete aura
-            </button>
+            </Button>
           </li>
         ))}
         <li>
-          <button
+          <Button
             onClick={() => {
               setAuras((old) => [
                 ...old,
@@ -439,7 +439,7 @@ export function TokenEditor({
             }}
           >
             add aura
-          </button>
+          </Button>
         </li>
       </ul>
       <ConditionPicker conditions={conditions} setConditions={setConditions} />

@@ -2,6 +2,7 @@ import React, { useCallback, useContext } from "react";
 import { rrid } from "../../../shared/util";
 import { useGuranteedMemo } from "../../useGuranteedMemo";
 import useLocalState from "../../useLocalState";
+import { Button } from "../ui/Button";
 import {
   CompendiumSource,
   CompendiumSourceID,
@@ -108,7 +109,7 @@ export function Compendium() {
           <li key={i}>
             <p>{source.title}</p>
             <p>Spells: {source.data.spell.length}</p>
-            <button onClick={() => removeSource(source.id)}>remove</button>
+            <Button onClick={() => removeSource(source.id)}>remove</Button>
           </li>
         ))}
       </ul>

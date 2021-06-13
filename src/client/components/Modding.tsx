@@ -5,6 +5,7 @@ import { useLatest } from "../state";
 import useLocalState from "../useLocalState";
 import { useCompendium } from "./compendium/Compendium";
 import { CompendiumSource, isCompendiumSource } from "./compendium/types";
+import { Button } from "./ui/Button";
 
 export function Modding() {
   return (
@@ -44,9 +45,9 @@ function OneOffMod() {
         disabled={executing}
         rows={20}
       />
-      <button onClick={execute} disabled={executing}>
+      <Button onClick={execute} disabled={executing}>
         execute
-      </button>
+      </Button>
       {executing && "running..."}
     </>
   );

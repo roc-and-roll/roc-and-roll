@@ -158,32 +158,37 @@ export function DiceInterface() {
               <tr>
                 <th style={{ width: "33%" }}>Type</th>
                 <th style={{ width: "33%" }}>Bonus</th>
+                <th />
               </tr>
               <tr>
                 <td className="buttons-full-width">
-                  <Button onClick={() => addDiceType("d4")}>d4</Button>
-                  <Button onClick={() => addDiceType("d6")}>d6</Button>
-                  <Button onClick={() => addDiceType("d8")}>d8</Button>
-                  <Button onClick={() => addDiceType("d10")}>d10</Button>
-                  <Button onClick={() => addDiceType("d12")}>d12</Button>
-                  <Button
-                    style={{ width: "40%" }}
-                    onClick={() => addDiceType("d20")}
-                  >
-                    d20
-                  </Button>
-                  <Button
-                    style={{ width: "30%", color: "green" }}
-                    onClick={() => addDiceType("a20")}
-                  >
-                    Adv
-                  </Button>
-                  <Button
-                    style={{ width: "30%", color: "red" }}
-                    onClick={() => addDiceType("i20")}
-                  >
-                    Dis
-                  </Button>
+                  {[4, 6, 8, 10, 12].map((dice) => (
+                    <Button key={dice} onClick={() => addDiceType(`d${dice}`)}>
+                      d{dice}
+                    </Button>
+                  ))}
+                  <div style={{ display: "flex" }}>
+                    <Button
+                      style={{ width: "40%" }}
+                      onClick={() => addDiceType("d20")}
+                    >
+                      d20
+                    </Button>
+                    <Button
+                      style={{ width: "30%", fontSize: "0.7rem" }}
+                      className="green"
+                      onClick={() => addDiceType("a20")}
+                    >
+                      ADV
+                    </Button>
+                    <Button
+                      style={{ width: "30%", fontSize: "0.7rem" }}
+                      className="red"
+                      onClick={() => addDiceType("i20")}
+                    >
+                      DIS
+                    </Button>
+                  </div>
                 </td>
                 <td className="buttons-half-width">
                   <div>
@@ -195,11 +200,11 @@ export function DiceInterface() {
                     <Button onClick={() => addBonus(10)}>+10</Button>
                   </div>
                   <div>
-                    <Button onClick={() => addBonus(5)}>+5</Button>
-                    <Button onClick={() => addBonus(6)}>+6</Button>
-                    <Button onClick={() => addBonus(7)}>+7</Button>
-                    <Button onClick={() => addBonus(8)}>+8</Button>
-                    <Button onClick={() => addBonus(9)}>+9</Button>
+                    {[5, 6, 7, 8, 9].map((bonus) => (
+                      <Button key={bonus} onClick={() => addBonus(bonus)}>
+                        +{bonus}
+                      </Button>
+                    ))}
                     <Button onClick={() => clear()}>DEL</Button>
                   </div>
                 </td>

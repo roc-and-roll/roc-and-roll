@@ -37,3 +37,37 @@ export const DebouncedTextInput = React.forwardRef<
 
   return <TextInput ref={ref} {...fieldProps} />;
 });
+
+type TextareaInputProps = Omit<
+  React.InputHTMLAttributes<HTMLTextAreaElement>,
+  "value" | "onChange"
+> & {
+  value: string;
+  onChange: (e: string) => void;
+};
+
+export const TextareaInput = React.forwardRef<
+  HTMLTextAreaElement,
+  TextareaInputProps
+>(function TextareaInput({ className, type, onChange, ...props }, ref) {
+  return (
+    <textarea
+      ref={ref}
+      className={clsx(className, "ui-text-input")}
+      onChange={(e) => onChange(e.target.value)}
+      {...props}
+    />
+  );
+});
+
+export const DebouncedTextareaInput = React.forwardRef<
+  HTMLTextAreaElement,
+  TextareaInputProps & { debounce?: number }
+>(function DebouncedTextareaInput(props, ref) {
+  const fieldProps = useDebouncedField<string, HTMLTextAreaElement>({
+    debounce: DEFAULT_TEXT_INPUT_DEBOUNCE_TIME,
+    ...props,
+  });
+
+  return <TextareaInput ref={ref} {...fieldProps} />;
+});

@@ -44,7 +44,7 @@ import useLocalState from "../useLocalState";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { Select } from "./ui/Select";
-import { DebouncedTextInput } from "./ui/TextInput";
+import { DebouncedTextareaInput, DebouncedTextInput } from "./ui/TextInput";
 
 type SelectionPair = { id: RRDiceTemplateID; modified: RRMultipleRoll };
 
@@ -247,35 +247,35 @@ export function DiceTemplates({ open }: { open: boolean }) {
       {selectedTemplates.length > 0 &&
         ReactDOM.createPortal(
           <div className="dice-template-roll-hints">
-            <button
+            <Button
               onClick={() => {
                 doRoll();
                 setSelectedTemplates([]);
               }}
             >
               Roll the Dice!
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => {
                 doRoll(true);
                 setSelectedTemplates([]);
               }}
             >
               Roll a Crit!
-            </button>
+            </Button>
             <em>Or right-click the pane to roll</em>
           </div>,
           document.body
         )}
       {pickerShown && <DicePicker />}
       <div className="dice-templates-container" ref={dropRef}>
-        <button onClick={() => setPickerShown((b) => !b)}>
+        <Button onClick={() => setPickerShown((b) => !b)}>
           Show
           <br />
           Dice
           <br />
           Picker
-        </button>
+        </Button>
         {templates.map((t) => (
           <DiceTemplatePartMenuWrapper
             key={t.id}
@@ -657,7 +657,7 @@ function DiceTemplateInner({
           })
         }
       />
-      {template.parts.sort(sortTemplateParts).map((part, i) => (
+      {[...template.parts].sort(sortTemplateParts).map((part, i) => (
         <DiceTemplatePartMenuWrapper template={template} key={i} part={part}>
           <DiceTemplatePart
             selectedCharacter={selectedCharacter}
@@ -673,7 +673,7 @@ function DiceTemplateInner({
       {canMultipleRoll && (
         <>
           {defaultModified !== "advantage" && (
-            <button
+            <Button
               onClick={(e) => {
                 if (e.button === 0) {
                   e.stopPropagation();
@@ -682,10 +682,10 @@ function DiceTemplateInner({
               }}
             >
               ADV
-            </button>
+            </Button>
           )}
           {defaultModified !== "none" && (
-            <button
+            <Button
               onClick={(e) => {
                 if (e.button === 0) {
                   e.stopPropagation();
@@ -694,10 +694,10 @@ function DiceTemplateInner({
               }}
             >
               REG
-            </button>
+            </Button>
           )}
           {defaultModified !== "disadvantage" && (
-            <button
+            <Button
               onClick={(e) => {
                 if (e.button === 0) {
                   e.stopPropagation();
@@ -706,7 +706,7 @@ function DiceTemplateInner({
               }}
             >
               DIS
-            </button>
+            </Button>
           )}
         </>
       )}
@@ -867,17 +867,9 @@ function ModifierNumberEditor({
 }
 
 function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
+  const dispatch = useServerDispatch();
   const template = useServerState((state) =>
     byId(state.diceTemplates.entities, templateId)
-  );
-
-  const [notes, setNotes] = useOptimisticDebouncedServerUpdate<string>(
-    (state) =>
-      template
-        ? byId(state.diceTemplates.entities, template.id)?.notes ?? ""
-        : "",
-    (notes) => diceTemplateUpdate({ id: templateId, changes: { notes } }),
-    1000
   );
 
   if (!template) {
@@ -887,9 +879,16 @@ function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
   return (
     <label>
       Notes:
-      <textarea
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
+      <DebouncedTextareaInput
+        value={template.notes}
+        onChange={(notes) =>
+          dispatch({
+            actions: [
+              diceTemplateUpdate({ id: templateId, changes: { notes } }),
+            ],
+            optimisticKey: "notes",
+          })
+        }
         className="dice-template-notes"
       />
     </label>

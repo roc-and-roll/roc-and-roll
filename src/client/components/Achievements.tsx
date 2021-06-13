@@ -4,6 +4,7 @@ import { achievements, RRAchievement } from "./achievementList";
 import { useServerDispatch } from "../state";
 import { Players } from "./Players";
 import { RRPlayerID } from "../../shared/state";
+import { Button } from "./ui/Button";
 
 export function Achievements() {
   const dispatch = useServerDispatch();
@@ -39,7 +40,7 @@ export function Achievements() {
               setSelectedAchievement(null);
             }}
           />
-          <button onClick={() => setSelectedAchievement(null)}>Cancel</button>
+          <Button onClick={() => setSelectedAchievement(null)}>Cancel</Button>
         </div>
       )}
       <input
