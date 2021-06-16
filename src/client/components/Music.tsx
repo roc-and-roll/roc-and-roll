@@ -24,7 +24,7 @@ import {
   useServerDispatch,
   useServerState,
 } from "../state";
-import { VolumeSlider } from "./VolumeSlider";
+import { volumeLinear2Log, VolumeSlider } from "./VolumeSlider";
 
 interface TabletopAudio {
   key: number;
@@ -42,6 +42,8 @@ interface TabletopAudio {
 interface TabletopAudioResponse {
   tracks: TabletopAudio[];
 }
+
+const DEFAULT_VOLUME = 0.5;
 
 export const Music = React.memo(function Music() {
   const [tabletopAudio, setTabletopAudio] = useState<RRSong[] | null>(null);
@@ -105,7 +107,7 @@ export const Music = React.memo(function Music() {
         startedAt: timestamp(),
         id: rrid<RRActiveSong>(),
         song: t,
-        volume: 1.0,
+        volume: volumeLinear2Log(DEFAULT_VOLUME),
       }),
     ]);
   };
@@ -116,7 +118,7 @@ export const Music = React.memo(function Music() {
         startedAt: timestamp(),
         id: rrid<RRActiveSong>(),
         song: t,
-        volume: 1.0,
+        volume: volumeLinear2Log(DEFAULT_VOLUME),
       })
     );
   };

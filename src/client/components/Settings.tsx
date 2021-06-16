@@ -58,7 +58,7 @@ export function Settings() {
       {myself.isGM && (
         <GMArea>
           <label>
-            Music is GM-only{" "}
+            Only the GM can control music{" "}
             <input
               type="checkbox"
               checked={musicIsGMOnly}

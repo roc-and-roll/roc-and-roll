@@ -415,6 +415,7 @@ export function TokenEditor({
             </div>
             */}
             <Button
+              className="red"
               onClick={() => {
                 setAuras([...auras.slice(0, i), ...auras.slice(i + 1)]);
               }}
@@ -472,7 +473,9 @@ export function TokenEditor({
         </label>
       </div>
       <hr />
-      <Button onClick={remove}>delete character</Button>
+      <Button className="red" onClick={remove}>
+        delete character
+      </Button>
     </div>
   );
 }
@@ -490,7 +493,7 @@ function ConditionPicker({
       <h3>Status</h3>
       <input
         type="search"
-        placeholder="filter..."
+        placeholder="Filter status effects..."
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
       />

@@ -216,11 +216,16 @@ a {
   max-height: 40vh;
   font-size: 0.8rem;
   padding-left: 17px;
+
+  li {
+    overflow-wrap: anywhere;
+  }
 }
 
 .log-preview {
   margin: 0.5em 0;
-  max-height: 1em;
+  white-space: nowrap;
+  overflow-x: hidden;
 }
 
 .log-title {
@@ -1013,6 +1018,7 @@ button.color-picker-color {
 .character-editor-condition-icons {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .modding {

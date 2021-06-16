@@ -55,6 +55,8 @@ ul.private-chat-messages {
     margin-bottom: 8px;
     border-radius: 8px;
 
+    overflow-wrap: anywhere;
+
     &.sent {
       background: #111;
       margin-left: 64px;

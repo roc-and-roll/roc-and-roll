@@ -945,7 +945,9 @@ const DiceTemplatePartMenuWrapper: React.FC<{
           {part.type === "template" && (
             <TemplateNoteEditor templateId={part.templateId} />
           )}
-          {<Button onClick={() => applyDelete(part)}> Delete </Button>}
+          <Button className="red" onClick={() => applyDelete(part)}>
+            delete
+          </Button>
         </div>
       }
       visible={menuVisible}
