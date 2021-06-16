@@ -709,8 +709,14 @@ export const RRMapView = React.memo<{
       }
 
       setViewPortSize({
-        x: entry.borderBoxSize[0]!.inlineSize,
-        y: entry.borderBoxSize[0]!.blockSize,
+        x: (Array.isArray(entry.borderBoxSize)
+          ? entry.borderBoxSize[0]!
+          : entry.borderBoxSize
+        ).inlineSize,
+        y: (Array.isArray(entry.borderBoxSize)
+          ? entry.borderBoxSize[0]!
+          : entry.borderBoxSize
+        ).blockSize,
       });
     });
     resizeObserver.observe(svgRef.current);
