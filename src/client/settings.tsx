@@ -4,7 +4,7 @@ import { ReadonlyDeep } from "type-fest";
 import useLocalState from "./useLocalState";
 
 // increase this whenever the Settings type changes
-const CURRENT_SETTINGS_VERSION = 3;
+const CURRENT_SETTINGS_VERSION = 4;
 
 export type RRSettings = ReadonlyDeep<{
   version: number;
@@ -14,6 +14,7 @@ export type RRSettings = ReadonlyDeep<{
   debug: {
     mapTokenPositions: boolean;
   };
+  enableExperimental25D: boolean;
 }>;
 
 const initialSettings: RRSettings = {
@@ -24,6 +25,7 @@ const initialSettings: RRSettings = {
   debug: {
     mapTokenPositions: false,
   },
+  enableExperimental25D: false,
 };
 
 const RRSettingsContext = React.createContext<

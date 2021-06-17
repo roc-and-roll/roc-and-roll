@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -14,6 +15,7 @@ import {
   toSVG,
   inverse,
   identity,
+  rotateDEG,
 } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
 import {
@@ -139,6 +141,12 @@ const withSelectionAreaDo = <T extends any>(
   return cb(left, top, right - left, bottom - top);
 };
 
+const isometricMatrix = compose(scale(1, 0.5), rotateDEG(-45));
+
+function matrixRotationDEG(matrix: Matrix): number {
+  return (Math.atan2(-matrix.b, matrix.a) * 180) / Math.PI;
+}
+
 export const RRMapView = React.memo<{
   myself: RRPlayer;
   mapId: RRMapID;
@@ -192,6 +200,24 @@ export const RRMapView = React.memo<{
     sessionStorage
   );
   transformRef.current = transform;
+
+  useLayoutEffect(() => {
+    if (settings.enableExperimental25D) {
+      setTransform((old) => {
+        if (matrixRotationDEG(old) === matrixRotationDEG(isometricMatrix)) {
+          return old;
+        }
+        return compose(old, isometricMatrix);
+      });
+    } else {
+      setTransform((old) => {
+        if (matrixRotationDEG(old) === 0) {
+          return old;
+        }
+        return compose(old, inverse(isometricMatrix));
+      });
+    }
+  }, [settings.enableExperimental25D, setTransform]);
 
   const contrastColor = useMemo(
     () =>
