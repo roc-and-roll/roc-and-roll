@@ -1,14 +1,25 @@
 import React from "react";
 import { applyToPoint, inverse, Matrix } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
-import { RRColor } from "../../../shared/state";
+import { RRColor, RRPoint } from "../../../shared/state";
 import { makePoint } from "../../../shared/point";
 
 export const MapGrid = React.memo<{
   transform: Matrix;
+  viewPortSize: RRPoint;
   color: RRColor;
-}>(function MapGrid({ transform, color }) {
-  const topLeft = applyToPoint(inverse(transform), makePoint(0));
+}>(function MapGrid({ transform, viewPortSize, color }) {
+  const inverseTransform = inverse(transform);
+
+  const corners = [
+    makePoint(0),
+    makePoint(0, viewPortSize.y),
+    viewPortSize,
+    makePoint(viewPortSize.x, 0),
+  ]
+    .map((point) => applyToPoint(inverseTransform, point))
+    .map((point) => `${point.x},${point.y}`)
+    .join(" ");
 
   return (
     <>
@@ -28,14 +39,7 @@ export const MapGrid = React.memo<{
         </pattern>
       </defs>
 
-      <rect
-        x={topLeft.x}
-        y={topLeft.y}
-        width={`${100 / transform.a}%`}
-        height={`${100 / transform.a}%`}
-        className="map-grid"
-        fill="url(#grid)"
-      />
+      <polygon points={corners} className="map-grid" fill="url(#grid)" />
     </>
   );
 });

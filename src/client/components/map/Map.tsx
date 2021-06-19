@@ -764,7 +764,13 @@ export const RRMapView = React.memo<{
           <g ref={setImageArea} />
           <g ref={setAuraArea} />
           <g ref={setDefaultArea} />
-          {gridEnabled && <MapGrid transform={transform} color={gridColor} />}
+          {gridEnabled && (
+            <MapGrid
+              transform={transform}
+              viewPortSize={viewPortSize}
+              color={gridColor}
+            />
+          )}
           <g ref={setTokenArea} />
           <g ref={setHealthbarArea} />
 
