@@ -21,7 +21,11 @@ import {
 import { Button } from "../ui/Button";
 import { ColorInput, DebouncedColorInput } from "../ui/ColorInput";
 import { Select } from "../ui/Select";
-import { DebouncedTextInput } from "../ui/TextInput";
+import {
+  DebouncedIntegerInput,
+  DebouncedTextInput,
+  TextInput,
+} from "../ui/TextInput";
 import clsx from "clsx";
 import blinded from "../../../third-party/icons/conditions/blinded.png";
 import charmed from "../../../third-party/icons/conditions/charmed.png";
@@ -117,64 +121,6 @@ export function TokenEditor({
     fileInput.current!.value = "";
   };
 
-  const [scale, setScale] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      byId(
-        (isTemplate ? state.characterTemplates : state.characters).entities,
-        token.id
-      )?.scale.toString() ?? "",
-    (scaleString) => {
-      const scale = parseInt(scaleString);
-      if (isNaN(scale)) {
-        return;
-      }
-      return updateFunc({ id: token.id, changes: { scale } });
-    },
-    1000
-  );
-
-  const [hp, setHP] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      byId(
-        (isTemplate ? state.characterTemplates : state.characters).entities,
-        token.id
-      )?.hp.toString() ?? "",
-    (hpString) => {
-      const hp = parseInt(hpString);
-      if (isNaN(hp)) {
-        return;
-      }
-      return updateFunc({ id: token.id, changes: { hp } });
-    },
-    1000
-  );
-
-  const [maxHP, setMaxHP] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      byId(
-        (isTemplate ? state.characterTemplates : state.characters).entities,
-        token.id
-      )?.maxHP.toString() ?? "",
-    (maxHPString) => {
-      const maxHP = parseInt(maxHPString);
-      if (isNaN(maxHP)) {
-        return;
-      }
-      return updateFunc({ id: token.id, changes: { maxHP } });
-    },
-    1000
-  );
-
-  const [attributes, setAttributes] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      byId(
-        (isTemplate ? state.characterTemplates : state.characters).entities,
-        token.id
-      )?.attributes ?? {},
-    (attributes) => updateFunc({ id: token.id, changes: { attributes } }),
-    1000
-  );
-
   const [auras, setAuras] = useOptimisticDebouncedServerUpdate(
     (state) =>
       byId(
@@ -257,12 +203,16 @@ export function TokenEditor({
       <div>
         <label>
           HP:{" "}
-          <input
-            value={hp}
-            type="number"
+          <DebouncedIntegerInput
+            value={token.hp}
             min={0}
             placeholder="HP"
-            onChange={(e) => setHP(e.target.value)}
+            onChange={(hp) =>
+              dispatch({
+                actions: [updateFunc({ id: token.id, changes: { hp } })],
+                optimisticKey: "hp",
+              })
+            }
           />
         </label>
         <div>
@@ -275,26 +225,52 @@ export function TokenEditor({
       <div>
         <label>
           max HP:{" "}
-          <input
-            value={maxHP}
-            type="number"
+          <DebouncedIntegerInput
+            value={token.maxHP}
             min={1}
             placeholder="max HP"
-            onChange={(e) => setMaxHP(e.target.value)}
+            onChange={(maxHP) =>
+              dispatch({
+                actions: [updateFunc({ id: token.id, changes: { maxHP } })],
+                optimisticKey: "maxHP",
+              })
+            }
           />
         </label>
       </div>
       <div className="character-editor-attributes">
         {linkedModifierNames.map((modifier) => (
           <AttributeEditor
-            initValue={attributes[modifier] ?? null}
             key={modifier}
-            modifier={modifier}
+            value={token.attributes[modifier] ?? 0}
+            label={modifier}
             onChange={(newValue) =>
-              setAttributes((oldAttributes) => ({
-                ...oldAttributes,
-                [modifier]: newValue,
-              }))
+              dispatch((state) => {
+                const oldAttributes = byId(
+                  (isTemplate ? state.characterTemplates : state.characters)
+                    .entities,
+                  token.id
+                )?.attributes;
+
+                if (!oldAttributes) {
+                  return [];
+                }
+
+                return {
+                  actions: [
+                    updateFunc({
+                      id: token.id,
+                      changes: {
+                        attributes: {
+                          ...oldAttributes,
+                          [modifier]: newValue,
+                        },
+                      },
+                    }),
+                  ],
+                  optimisticKey: "attributes",
+                };
+              })
             }
           />
         ))}
@@ -302,12 +278,16 @@ export function TokenEditor({
       <div>
         <label>
           Size in #squares:{" "}
-          <input
-            value={scale}
-            type="number"
+          <DebouncedIntegerInput
+            value={token.scale}
             min={1}
             placeholder="scale"
-            onChange={(e) => setScale(e.target.value)}
+            onChange={(scale) =>
+              dispatch({
+                actions: [updateFunc({ id: token.id, changes: { scale } })],
+                optimisticKey: "scale",
+              })
+            }
           />
         </label>
       </div>
@@ -491,11 +471,11 @@ function ConditionPicker({
   return (
     <>
       <h3>Status</h3>
-      <input
+      <TextInput
         type="search"
         placeholder="Filter status effects..."
         value={filter}
-        onChange={(e) => setFilter(e.target.value)}
+        onChange={(filter) => setFilter(filter)}
       />
       <div className="character-editor-condition-icons">
         {conditionNames
@@ -527,38 +507,22 @@ function ConditionPicker({
 }
 
 function AttributeEditor({
-  modifier,
+  label,
+  value,
   onChange,
-  initValue,
 }: {
-  modifier: string;
+  label: string;
+  value: number;
   onChange: (newValue: number | null) => void;
-  initValue: number | null;
 }) {
-  const [value, setValue] = useState(
-    initValue === null ? "" : initValue.toString()
-  );
-
-  const handleChange = (val: string) => {
-    setValue(val);
-
-    const num = parseInt(val);
-    if (!isNaN(num)) {
-      onChange(num);
-    } else {
-      onChange(null);
-    }
-  };
-
   return (
     <div className="character-editor-attribute">
       <label>
-        <div className="character-editor-attribute-label">{modifier}</div>
-        <input
+        <div className="character-editor-attribute-label">{label}</div>
+        <DebouncedIntegerInput
           value={value}
-          type="number"
           placeholder="Mod ..."
-          onChange={(e) => handleChange(e.target.value)}
+          onChange={(value) => onChange(value)}
         />
       </label>
     </div>

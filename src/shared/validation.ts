@@ -391,43 +391,49 @@ export const isSyncedState = t.isObject({
       playerId: isRRID<RRPlayerID>(),
       name: t.isString(),
       notes: t.isString(),
-      parts: t.isArray(
-        t.isOneOf(
-          withDo({ id: isRRID<RRDiceTemplatePartID>() }, (sharedValidators) => [
-            t.isObject({
-              ...sharedValidators,
-              type: t.isLiteral("template"),
-              templateId: isRRID<RRDiceTemplateID>(),
-            }),
-            t.isObject({
-              ...sharedValidators,
-              type: t.isLiteral("modifier"),
-              number: t.applyCascade(t.isNumber(), [t.isInteger()]),
-              damage: isDamageType,
-            }),
-            t.isObject({
-              ...sharedValidators,
-              type: t.isLiteral("linkedModifier"),
-              name: t.isEnum(linkedModifierNames),
-              damage: isDamageType,
-            }),
-            t.isObject({
-              ...sharedValidators,
-              type: t.isLiteral("dice"),
-              count: t.applyCascade(t.isNumber(), [
-                t.isInteger(),
-                t.isPositive(),
-              ]),
-              faces: t.applyCascade(t.isNumber(), [
-                t.isInteger(),
-                t.isPositive(),
-              ]),
-              negated: t.isBoolean(),
-              damage: isDamageType,
-              modified: t.isEnum(multipleRollValues),
-            }),
-          ])
-        )
+      parts: t.applyCascade(
+        t.isArray(
+          t.isOneOf(
+            withDo(
+              { id: isRRID<RRDiceTemplatePartID>() },
+              (sharedValidators) => [
+                t.isObject({
+                  ...sharedValidators,
+                  type: t.isLiteral("template"),
+                  templateId: isRRID<RRDiceTemplateID>(),
+                }),
+                t.isObject({
+                  ...sharedValidators,
+                  type: t.isLiteral("modifier"),
+                  number: t.applyCascade(t.isNumber(), [t.isInteger()]),
+                  damage: isDamageType,
+                }),
+                t.isObject({
+                  ...sharedValidators,
+                  type: t.isLiteral("linkedModifier"),
+                  name: t.isEnum(linkedModifierNames),
+                  damage: isDamageType,
+                }),
+                t.isObject({
+                  ...sharedValidators,
+                  type: t.isLiteral("dice"),
+                  count: t.applyCascade(t.isNumber(), [
+                    t.isInteger(),
+                    t.isPositive(),
+                  ]),
+                  faces: t.applyCascade(t.isNumber(), [
+                    t.isInteger(),
+                    t.isPositive(),
+                  ]),
+                  negated: t.isBoolean(),
+                  damage: isDamageType,
+                  modified: t.isEnum(multipleRollValues),
+                }),
+              ]
+            )
+          )
+        ),
+        [t.hasUniqueItems({ map: (part) => part.id })]
       ),
       rollType: t.isEnum(["initiative", "hit", "attack", null] as const),
     })

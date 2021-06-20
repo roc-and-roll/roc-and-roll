@@ -19,7 +19,6 @@ import {
   linkedModifierNames,
   multipleRollValues,
   RRCharacter,
-  RRDamageType,
   RRDice,
   RRDiceTemplate,
   RRDiceTemplateID,
@@ -34,17 +33,16 @@ import {
 import { assertNever, rrid } from "../../shared/util";
 import { useMyself } from "../myself";
 import { roll } from "../roll";
-import {
-  useOptimisticDebouncedServerUpdate,
-  useServerDispatch,
-  useServerState,
-  useServerStateRef,
-} from "../state";
+import { useServerDispatch, useServerState, useServerStateRef } from "../state";
 import useLocalState from "../useLocalState";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { Select } from "./ui/Select";
-import { DebouncedTextareaInput, DebouncedTextInput } from "./ui/TextInput";
+import {
+  DebouncedIntegerInput,
+  DebouncedTextareaInput,
+  DebouncedTextInput,
+} from "./ui/TextInput";
 
 type SelectionPair = { id: RRDiceTemplateID; modified: RRMultipleRoll };
 
@@ -721,31 +719,31 @@ function DamageTypeEditor({
   part: RRDiceTemplatePartWithDamage;
   templateId: RRDiceTemplateID;
 }) {
-  const [damageType, setDamageType] = useOptimisticDebouncedServerUpdate<
-    RRDamageType["type"]
-  >(
-    (state) =>
-      (
-        byId(state.diceTemplates.entities, templateId)?.parts.find(
-          (each) => each.id === part.id
-        ) as RRDiceTemplatePartWithDamage | undefined
-      )?.damage.type ?? null,
-    (type) =>
-      diceTemplatePartUpdate({
-        id: part.id,
-        templateId,
-        changes: { damage: { type, modifiers: [] } },
-      }),
-    1000
-  );
+  const dispatch = useServerDispatch();
 
   return (
     <label>
       Damage Type:
       <Select
-        value={damageType ?? ""}
+        value={part.damage.type ?? ""}
         onChange={(damageType) =>
-          setDamageType(damageType === "" ? null : damageType)
+          dispatch({
+            actions: [
+              diceTemplatePartUpdate({
+                templateId,
+                id: part.id,
+                changes: {
+                  damage: {
+                    type: damageType === "" ? null : damageType,
+                    // FIXME: This currently overwrites the modifiers, but it is
+                    // fine because we don't use them yet.
+                    modifiers: [],
+                  },
+                },
+              }),
+            ],
+            optimisticKey: "damageType",
+          })
         }
         options={damageTypes.map((t) => ({ value: t ?? "", label: t ?? "" }))}
       />
@@ -760,29 +758,25 @@ function DiceMultipleRollEditor({
   part: RRDiceTemplatePartDice;
   templateId: RRDiceTemplateID;
 }) {
-  const [multiple, setMultiple] =
-    useOptimisticDebouncedServerUpdate<RRMultipleRoll>(
-      (state) =>
-        (
-          byId(state.diceTemplates.entities, templateId)?.parts.find(
-            (each) => each.id === part.id
-          ) as RRDiceTemplatePartDice | undefined
-        )?.modified ?? "none",
-      (multiple) =>
-        diceTemplatePartUpdate({
-          id: part.id,
-          templateId,
-          changes: { modified: multiple },
-        }),
-      1000
-    );
+  const dispatch = useServerDispatch();
 
   return (
     <label>
       Multiple:
       <Select
-        value={multiple}
-        onChange={setMultiple}
+        value={part.modified}
+        onChange={(modified) =>
+          dispatch({
+            actions: [
+              diceTemplatePartUpdate({
+                templateId,
+                id: part.id,
+                changes: { modified },
+              }),
+            ],
+            optimisticKey: "modified",
+          })
+        }
         options={multipleRollValues.map((t) => ({
           value: t,
           label: t,
@@ -799,32 +793,26 @@ function DiceCountEditor({
   part: RRDiceTemplatePartDice;
   templateId: RRDiceTemplateID;
 }) {
-  const [count, setCount] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      (
-        byId(state.diceTemplates.entities, templateId)?.parts.find(
-          (each) => each.id === part.id
-        ) as RRDiceTemplatePartDice | undefined
-      )?.count.toString() ?? "",
-    (countStr) => {
-      const count = parseInt(countStr);
-      if (isNaN(count)) {
-        return undefined;
-      }
-
-      return diceTemplatePartUpdate({
-        id: part.id,
-        templateId,
-        changes: { count },
-      });
-    },
-    1000
-  );
+  const dispatch = useServerDispatch();
 
   return (
     <label>
       Count:
-      <input value={count} onChange={(e) => setCount(e.target.value)} />
+      <DebouncedIntegerInput
+        value={part.count}
+        onChange={(count) =>
+          dispatch({
+            actions: [
+              diceTemplatePartUpdate({
+                templateId,
+                id: part.id,
+                changes: { count },
+              }),
+            ],
+            optimisticKey: "count",
+          })
+        }
+      />
     </label>
   );
 }
@@ -836,32 +824,26 @@ function ModifierNumberEditor({
   part: RRDiceTemplatePartModifier;
   templateId: RRDiceTemplateID;
 }) {
-  const [count, setCount] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      (
-        byId(state.diceTemplates.entities, templateId)?.parts.find(
-          (each) => each.id === part.id
-        ) as RRDiceTemplatePartModifier | undefined
-      )?.number.toString() ?? "",
-    (modifierStr) => {
-      const number = parseInt(modifierStr);
-      if (isNaN(number)) {
-        return undefined;
-      }
-
-      return diceTemplatePartUpdate({
-        id: part.id,
-        templateId,
-        changes: { number },
-      });
-    },
-    1000
-  );
+  const dispatch = useServerDispatch();
 
   return (
     <label>
       Modifier:
-      <input value={count} onChange={(e) => setCount(e.target.value)} />
+      <DebouncedIntegerInput
+        value={part.number}
+        onChange={(number) =>
+          dispatch({
+            actions: [
+              diceTemplatePartUpdate({
+                templateId,
+                id: part.id,
+                changes: { number },
+              }),
+            ],
+            optimisticKey: "count",
+          })
+        }
+      />
     </label>
   );
 }

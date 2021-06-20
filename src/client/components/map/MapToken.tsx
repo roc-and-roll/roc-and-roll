@@ -8,19 +8,13 @@ import {
   RRCharacterID,
   RRToken,
   RRPoint,
-  byId,
   RRMapID,
 } from "../../../shared/state";
 import { tokenImageUrl } from "../../files";
 import { canControlToken, canViewTokenOnMap } from "../../permissions";
 import { RoughRectangle, RoughText } from "../rough";
 import tinycolor from "tinycolor2";
-import {
-  assertNever,
-  clamp,
-  isCharacterHurt,
-  withDo,
-} from "../../../shared/util";
+import { assertNever, clamp, isCharacterHurt } from "../../../shared/util";
 import { useMyself } from "../../myself";
 import ReactDOM from "react-dom";
 import { HPInlineEdit } from "./HPInlineEdit";
@@ -35,8 +29,9 @@ import { Popover } from "../Popover";
 import { TokenEditor, conditionIcons } from "../tokens/TokenEditor";
 import { makePoint, pointAdd, pointEquals } from "../../../shared/point";
 import { EmanationArea } from "./Areas";
-import { useOptimisticDebouncedServerUpdate } from "../../state";
+import { useServerDispatch } from "../../state";
 import { mapObjectUpdate } from "../../../shared/actions";
+import { DebouncedIntegerInput } from "../ui/TextInput";
 
 export const MapToken = React.memo<{
   mapId: RRMapID;
@@ -275,27 +270,7 @@ export const MapToken = React.memo<{
 });
 
 function MapTokenEditor({ mapId, token }: { mapId: RRMapID; token: RRToken }) {
-  const [rotation, setRotation] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      withDo(
-        byId(state.maps.entities, mapId)?.objects.entities,
-        (objects) =>
-          (objects &&
-            withDo(byId(objects, token.id), (token) => token?.rotation)) ??
-          0
-      ).toString(),
-    (rotationString) => {
-      const rotation = parseFloat(rotationString);
-      if (isNaN(rotation)) {
-        return undefined;
-      }
-      return mapObjectUpdate(mapId, {
-        id: token.id,
-        changes: { rotation },
-      });
-    },
-    100
-  );
+  const dispatch = useServerDispatch();
 
   return (
     <>
@@ -303,12 +278,18 @@ function MapTokenEditor({ mapId, token }: { mapId: RRMapID; token: RRToken }) {
       <h3>Map Token Settings</h3>
       <label>
         Rotation:{" "}
-        <input
-          type="number"
-          min={-359}
-          max={359}
-          value={rotation}
-          onChange={(e) => setRotation(e.target.value)}
+        <DebouncedIntegerInput
+          min={-360}
+          max={360}
+          value={token.rotation}
+          onChange={(rotation) =>
+            dispatch({
+              actions: [
+                mapObjectUpdate(mapId, { id: token.id, changes: { rotation } }),
+              ],
+              optimisticKey: "rotation",
+            })
+          }
         />
       </label>
     </>

@@ -31,8 +31,8 @@ export function partition<E, A extends E = E, B extends E = E>(
 export const contrastColor = (color: string) =>
   tinycolor.mostReadable(color, ["#000", "#fff"]).toRgbString();
 
-export function isTriggeredByTextInput(e: KeyboardEvent) {
-  return ["INPUT", "BUTTON", "TEXTAREA"].includes(
+export function isTriggeredByFormElement(e: KeyboardEvent) {
+  return ["INPUT", "BUTTON", "TEXTAREA", "SELECT"].includes(
     (e.target as HTMLElement | null)?.nodeName ?? ""
   );
 }

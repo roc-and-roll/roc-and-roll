@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, act, fireEvent } from "@testing-library/react";
-import { DebouncedTextInput } from "./TextInput";
+import { DebouncedIntegerInput, DebouncedTextInput } from "./TextInput";
 import { assertNever } from "../../../shared/util";
 
 describe("TextInput", () => {
@@ -106,4 +106,56 @@ describe("TextInput", () => {
       expect(setValue).toHaveReturnedTimes(1);
     }
   );
+});
+
+describe("IntegerInput", () => {
+  test("it does not trigger onChange unnecessarily", () => {
+    const onChange = jest.fn();
+    const { rerender, getByPlaceholderText } = render(
+      <DebouncedIntegerInput
+        value={123}
+        onChange={onChange}
+        placeholder="number"
+      />
+    );
+
+    expect(onChange).not.toHaveBeenCalled();
+
+    act(() => {
+      rerender(
+        <DebouncedIntegerInput
+          value={123}
+          onChange={onChange}
+          placeholder="number"
+        />
+      );
+    });
+
+    expect(onChange).not.toHaveBeenCalled();
+
+    act(() => {
+      rerender(
+        <DebouncedIntegerInput
+          value={456}
+          onChange={onChange}
+          placeholder="number"
+        />
+      );
+    });
+
+    expect(onChange).not.toHaveBeenCalled();
+
+    act(() => {
+      fireEvent.change(getByPlaceholderText("number"), {
+        target: { value: "789" },
+      });
+    });
+
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith(789);
+  });
 });

@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import { useEffect, useRef, useState } from "react";
-import { isTriggeredByTextInput } from "../../util";
+import { isTriggeredByFormElement } from "../../util";
 
 const QuickReference = React.lazy(() => import("./QuickReference"));
 
@@ -10,7 +10,7 @@ export default function QuickReferenceWrapper() {
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
-      if (isTriggeredByTextInput(e)) {
+      if (isTriggeredByFormElement(e)) {
         return;
       }
 

@@ -30,13 +30,10 @@ import {
   RRCharacterID,
   RRMapID,
   RRObjectVisibility,
+  RRCapPoint,
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
-import {
-  useOptimisticDebouncedServerUpdate,
-  useServerDispatch,
-  useServerState,
-} from "../../state";
+import { useServerDispatch, useServerState } from "../../state";
 import { SyncedDebouncer, useAggregatedDoubleDebounce } from "../../debounce";
 import {
   CURSOR_POSITION_SYNC_DEBOUNCE,
@@ -59,7 +56,7 @@ import {
 import { useMapToolHandler } from "./useMapToolHandler";
 import { atomFamily, atom, useRecoilCallback, RecoilState } from "recoil";
 import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";
-import { isTriggeredByTextInput } from "../../util";
+import { isTriggeredByFormElement } from "../../util";
 import { MapMusicIndicator } from "./MapMusicIndicator";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
@@ -84,6 +81,8 @@ export type MapEditState =
       color: RRColor;
       visibility: RRObjectVisibility;
     };
+
+type RevealedAreas = RRCapPoint[][] | null;
 
 export const selectedMapObjectsFamily = atomFamily<boolean, RRMapObjectID>({
   key: "SelectedMapObject",
@@ -245,7 +244,7 @@ export default function MapContainer() {
   const handleKeyDown = useRecoilCallback(
     ({ snapshot, set, reset }) =>
       (e: KeyboardEvent) => {
-        if (isTriggeredByTextInput(e)) {
+        if (isTriggeredByFormElement(e)) {
           return;
         }
         const selectedMapObjectIds = snapshot
@@ -431,11 +430,28 @@ export default function MapContainer() {
 
   const toolButtonState = convertToolButtonState();
 
-  const [revealedAreas, setRevealedAreas] = useOptimisticDebouncedServerUpdate(
-    (state) => byId(state.maps.entities, mapId)?.revealedAreas ?? null,
-    (areas) =>
-      dispatch(mapUpdate({ changes: { revealedAreas: areas }, id: mapId })),
-    1000
+  const setRevealedAreas = useCallback(
+    (
+      areasOrUpdater: RevealedAreas | ((areas: RevealedAreas) => RevealedAreas)
+    ) => {
+      dispatch((state) => ({
+        actions: [
+          mapUpdate({
+            id: mapId,
+            changes: {
+              revealedAreas:
+                typeof areasOrUpdater === "function"
+                  ? areasOrUpdater(
+                      byId(state.maps.entities, mapId)?.revealedAreas ?? null
+                    )
+                  : areasOrUpdater,
+            },
+          }),
+        ],
+        optimisticKey: "revealedAreas",
+      }));
+    },
+    [dispatch, mapId]
   );
 
   const [toolHandler, toolOverlay] = useMapToolHandler(
@@ -563,7 +579,7 @@ export default function MapContainer() {
         onSetHP={onSetHP}
         // misc
         handleKeyDown={handleKeyDown}
-        revealedAreas={revealedAreas}
+        revealedAreas={map.revealedAreas}
         toolOverlay={toolOverlay}
       />
       {process.env.NODE_ENV === "development" &&

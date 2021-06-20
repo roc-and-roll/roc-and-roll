@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLatest } from "./state";
 import { useGuranteedMemo } from "./useGuranteedMemo";
 
+type PendingChangeSubscriber = (pending: boolean) => void;
+
 class DebouncerImpl<A extends unknown[], R extends unknown> {
   private lastArgs: null | A = null;
+  private pendingChangeSubscribers = new Set<PendingChangeSubscriber>();
 
   constructor(
     private readonly debouncee: (...args: A) => R,
@@ -13,6 +16,7 @@ class DebouncerImpl<A extends unknown[], R extends unknown> {
 
   public debounced = (...args: A): void => {
     this.lastArgs = args;
+    this.pendingChangeSubscribers.forEach((subscriber) => subscriber(true));
 
     this.schedule(this);
   };
@@ -28,11 +32,18 @@ class DebouncerImpl<A extends unknown[], R extends unknown> {
 
   public executePending = () => {
     if (this.lastArgs !== null) {
+      this.pendingChangeSubscribers.forEach((subscriber) => subscriber(false));
       this.unschedule(this);
       const args = this.lastArgs;
       this.lastArgs = null;
       this.debouncee(...args);
     }
+  };
+
+  public onPendingChanges = (subscriber: PendingChangeSubscriber) => {
+    this.pendingChangeSubscribers.add(subscriber);
+
+    return () => this.pendingChangeSubscribers.delete(subscriber);
   };
 }
 
@@ -76,6 +87,7 @@ export class SyncedDebouncer {
       active: debouncer.active,
       executePending: debouncer.executePending,
       dispose: debouncer.dispose,
+      onPendingChanges: debouncer.onPendingChanges,
     };
   }
 
@@ -104,7 +116,12 @@ export function useDebounce<A extends unknown[]>(
   callback: (...args: A) => unknown,
   debounce: Debouncer,
   forceOnUnmount: boolean = false
-): [(...args: A) => void, () => boolean, () => void] {
+): [
+  (...args: A) => void,
+  () => boolean,
+  () => void,
+  (s: (p: boolean) => void) => () => void
+] {
   const forceOnUnmountRef = useLatest(forceOnUnmount);
 
   const syncedDebouncer = useGuranteedMemo(
@@ -124,7 +141,12 @@ export function useDebounce<A extends unknown[]>(
     };
   }, [debouncer, forceOnUnmountRef]);
 
-  return [debouncer.debounced, debouncer.active, debouncer.executePending];
+  return [
+    debouncer.debounced,
+    debouncer.active,
+    debouncer.executePending,
+    debouncer.onPendingChanges,
+  ];
 }
 
 /**
@@ -212,6 +234,8 @@ export function useIsolatedValue<V>({
 
   const [internalValue, setInternalValue] = useState(externalValue);
 
+  const internalValueChangedRef = useRef(false);
+
   useEffect(() => {
     if (takeValueRef.current) {
       setInternalValue(externalValue);
@@ -219,12 +243,73 @@ export function useIsolatedValue<V>({
   }, [externalValue]);
 
   useEffect(() => {
-    if (reportChangesRef.current) {
+    if (reportChangesRef.current && internalValueChangedRef.current) {
       setExternalValue(internalValue);
+      internalValueChangedRef.current = false;
     }
   }, [internalValue, setExternalValue]);
 
-  return [internalValue, setInternalValue, { takeValueRef, reportChangesRef }];
+  return [
+    internalValue,
+    useCallback((value: V) => {
+      internalValueChangedRef.current = true;
+      setInternalValue(value);
+    }, []),
+    { takeValueRef, reportChangesRef },
+  ];
+}
+
+function useDebouncedOrTransition<V>(
+  onChange: (v: V) => void,
+  debounce: number
+) {
+  const onChangeRef = useLatest(onChange);
+
+  const [isPending, setIsPending] = useState(false);
+
+  const [propagateValueToOutside, _, executePending, onPendingChanges] =
+    useDebounce(
+      useCallback((value: V) => onChangeRef.current(value), [onChangeRef]),
+      debounce,
+      true
+    );
+
+  useEffect(() => {
+    const unsubscribe = onPendingChanges((pending) => setIsPending(pending));
+
+    return () => unsubscribe();
+  });
+
+  return [propagateValueToOutside, executePending, isPending] as const;
+
+  // FIXME: This code is not working correctly. When throttling the CPU 6x,
+  //        it fails to report the latest value to the server when repeatedly
+  //        making changes.
+  //
+  // const [isPending, startTransition] = useTransition();
+  // const valueRef = useRef<null | { value: V }>(null);
+
+  // return [
+  //   useCallback(
+  //     (value: V) => {
+  //       valueRef.current = { value };
+  //       startTransition(() => {
+  //         console.log("t", value);
+  //         onChangeRef.current(value);
+  //       });
+  //     },
+  //     [onChangeRef, startTransition]
+  //   ),
+  //   useCallback(() => {
+  //     if (valueRef.current !== null) {
+  //       const value = valueRef.current.value;
+  //       valueRef.current = null;
+  //       console.log("s", value);
+  //       onChangeRef.current(value);
+  //     }
+  //   }, [onChangeRef]),
+  //   isPending,
+  // ] as const;
 }
 
 export function useDebouncedField<V, E extends HTMLElement>({
@@ -247,38 +332,45 @@ export function useDebouncedField<V, E extends HTMLElement>({
     reportChangesDefault: false,
   });
 
-  const externalOnChangeRef = useLatest(externalOnChange);
+  const [propagateValueToOutside, executePending, isPending] =
+    useDebouncedOrTransition(externalOnChange, debounce);
 
-  const [propagateValueToOutside, _, executePending] = useDebounce(
-    useCallback(
-      (value: V) => externalOnChangeRef.current(value),
-      [externalOnChangeRef]
-    ),
-    debounce,
-    true
-  );
-
-  return {
-    value,
-    onChange: (value: V) => {
-      setValue(value);
-      propagateValueToOutside(value);
+  return [
+    {
+      value,
+      onChange: useCallback(
+        (value: V) => {
+          setValue(value);
+          propagateValueToOutside(value);
+        },
+        [setValue, propagateValueToOutside]
+      ),
+      onKeyPress: useCallback(
+        (e: React.KeyboardEvent<E>) => {
+          if (e.key === "Enter") {
+            executePending();
+          }
+          onKeyPress?.(e);
+        },
+        [onKeyPress, executePending]
+      ),
+      onFocus: useCallback(
+        (e: React.FocusEvent<E>) => {
+          takeValueRef.current = false;
+          onFocus?.(e);
+        },
+        [onFocus, takeValueRef]
+      ),
+      onBlur: useCallback(
+        (e: React.FocusEvent<E>) => {
+          takeValueRef.current = true;
+          executePending();
+          onBlur?.(e);
+        },
+        [onBlur, takeValueRef, executePending]
+      ),
+      ...props,
     },
-    onKeyPress: (e: React.KeyboardEvent<E>) => {
-      if (e.key === "Enter") {
-        executePending();
-      }
-      onKeyPress?.(e);
-    },
-    onFocus: (e: React.FocusEvent<E>) => {
-      takeValueRef.current = false;
-      onFocus?.(e);
-    },
-    onBlur: (e: React.FocusEvent<E>) => {
-      takeValueRef.current = true;
-      executePending();
-      onBlur?.(e);
-    },
-    ...props,
-  };
+    isPending,
+  ] as const;
 }

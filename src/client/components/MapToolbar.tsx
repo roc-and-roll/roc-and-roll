@@ -21,7 +21,7 @@ import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { DebouncedColorInput, ColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
-import { isTriggeredByTextInput } from "../util";
+import { isTriggeredByFormElement } from "../util";
 import { DebouncedTextInput } from "./ui/TextInput";
 
 const EmojiPicker = React.lazy(
@@ -63,7 +63,7 @@ export const MapToolbar = React.memo<{
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (isTriggeredByTextInput(event)) {
+      if (isTriggeredByFormElement(event)) {
         return;
       }
       switch (event.key) {

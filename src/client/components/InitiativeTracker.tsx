@@ -23,12 +23,7 @@ import {
 import { useMyMap, useMyself } from "../myself";
 import { canControlToken } from "../permissions";
 import { diceResult, rollInitiative } from "../roll";
-import {
-  useLatest,
-  useOptimisticDebouncedServerUpdate,
-  useServerDispatch,
-  useServerState,
-} from "../state";
+import { useLatest, useServerDispatch, useServerState } from "../state";
 import useLocalState from "../useLocalState";
 import { GMArea } from "./GMArea";
 import { TokenStack } from "./tokens/TokenPreview";
@@ -39,10 +34,11 @@ import {
   highlightedCharactersFamily,
   selectedMapObjectIdsAtom,
 } from "./map/MapContainer";
-import { assertNever, EMPTY_ARRAY, withDo } from "../../shared/util";
+import { EMPTY_ARRAY, withDo } from "../../shared/util";
 import ReactDOM from "react-dom";
 import { NotificationTopAreaPortal } from "./Notifications";
 import { Collapsible } from "./Collapsible";
+import { DebouncedIntegerInput } from "./ui/TextInput";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -106,40 +102,6 @@ const InitiativeEntry = React.memo<{
     );
   }
 
-  const [initiative, setInitiative] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      byId(
-        state.initiativeTracker.entries.entities,
-        entry.id
-      )?.initiative.toString() ?? "",
-    (initiativeStr) => {
-      const initiative = parseInt(initiativeStr);
-      if (isNaN(initiative)) {
-        return;
-      }
-
-      switch (entry.type) {
-        case "character":
-          return initiativeTrackerEntryCharacterUpdate({
-            id: entry.id,
-            changes: {
-              initiative,
-            },
-          });
-        case "lairAction":
-          return initiativeTrackerEntryLairActionUpdate({
-            id: entry.id,
-            changes: {
-              initiative,
-            },
-          });
-        default:
-          assertNever(entry);
-      }
-    },
-    1000
-  );
-
   const canEdit = canEditEntry(entry, myself, tokenCollection);
 
   const characterIds =
@@ -190,11 +152,19 @@ const InitiativeEntry = React.memo<{
             remove
           </Button>
         )}
-        <input
-          type="number"
-          value={initiative}
+        <DebouncedIntegerInput
+          value={entry.initiative}
           disabled={!(myself.isGM || canEdit)}
-          onChange={(e) => setInitiative(e.target.value)}
+          onChange={(initiative) =>
+            dispatch(
+              (entry.type === "character"
+                ? initiativeTrackerEntryCharacterUpdate
+                : initiativeTrackerEntryLairActionUpdate)({
+                id: entry.id,
+                changes: { initiative },
+              })
+            )
+          }
         />
         {myself.isGM && (
           <Button className="gm-button" onClick={() => onSetCurrentEntry()}>

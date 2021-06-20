@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { GRID_SIZE } from "../../../shared/constants";
 import {
-  byId,
   RRMapDrawingImage,
   RRMapID,
   RRMapLink,
@@ -17,19 +16,16 @@ import {
   RoughLinearPath,
   RoughPolygon,
 } from "../rough";
-import {
-  useLatest,
-  useOptimisticDebouncedServerUpdate,
-  useServerDispatch,
-} from "../../state";
+import { useLatest, useServerDispatch } from "../../state";
 import tinycolor from "tinycolor2";
-import { assertNever, withDo } from "../../../shared/util";
+import { assertNever } from "../../../shared/util";
 import { useMyself } from "../../myself";
 import { useRecoilValue } from "recoil";
 import { hoveredMapObjectsFamily } from "./Map";
 import { selectedMapObjectsFamily } from "./MapContainer";
 import { Popover } from "../Popover";
 import { mapObjectUpdate } from "../../../shared/actions";
+import { DebouncedIntegerInput } from "../ui/TextInput";
 
 export const MapObjectThatIsNotAToken = React.memo<{
   object: Exclude<RRMapObject, RRToken | RRMapLink>;
@@ -177,31 +173,9 @@ function ObjectEditOptions({
       case "image":
         return <ImageEditOptions object={object} mapId={mapId} />;
       default:
-        return <></>;
+        return null;
     }
   };
-
-  const [rotation, setRotation] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      withDo(
-        byId(state.maps.entities, mapId)?.objects.entities,
-        (objects) =>
-          (objects &&
-            withDo(byId(objects, object.id), (object) => object?.rotation)) ??
-          0
-      ).toString(),
-    (rotationString) => {
-      const rotation = parseFloat(rotationString);
-      if (isNaN(rotation)) {
-        return undefined;
-      }
-      return mapObjectUpdate(mapId, {
-        id: object.id,
-        changes: { rotation },
-      });
-    },
-    100
-  );
 
   return (
     <div onMouseDown={(e) => e.stopPropagation()}>
@@ -227,12 +201,21 @@ function ObjectEditOptions({
       </label>
       <label>
         Rotation:{" "}
-        <input
-          type="number"
-          min={-359}
-          max={359}
-          value={rotation}
-          onChange={(e) => setRotation(e.target.value)}
+        <DebouncedIntegerInput
+          min={-360}
+          max={360}
+          value={object.rotation}
+          onChange={(rotation) =>
+            dispatch({
+              actions: [
+                mapObjectUpdate(mapId, {
+                  id: object.id,
+                  changes: { rotation },
+                }),
+              ],
+              optimisticKey: "rotation",
+            })
+          }
         />
       </label>
       {extraPopupContent()}
@@ -247,39 +230,24 @@ function ImageEditOptions({
   object: RRMapDrawingImage;
   mapId: RRMapID;
 }) {
-  const [height, setHeight] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      withDo(
-        byId(state.maps.entities, mapId)?.objects.entities,
-        (objects) =>
-          objects &&
-          withDo(
-            byId(objects, object.id),
-            (object) =>
-              object &&
-              ((object as RRMapDrawingImage).height / GRID_SIZE).toString()
-          )
-      ),
-    (heightStr) => {
-      const height = parseInt(heightStr ?? "");
-      if (isNaN(height)) {
-        return;
-      }
-      return mapObjectUpdate(mapId, {
-        id: object.id,
-        changes: { height: height * GRID_SIZE },
-      });
-    },
-    100
-  );
+  const dispatch = useServerDispatch();
 
   return (
     <label>
       Height:
-      <input
-        type="number"
-        value={height}
-        onChange={(e) => setHeight(e.target.value)}
+      <DebouncedIntegerInput
+        value={object.height / GRID_SIZE}
+        onChange={(height) =>
+          dispatch({
+            actions: [
+              mapObjectUpdate(mapId, {
+                id: object.id,
+                changes: { height: height * GRID_SIZE },
+              }),
+            ],
+            optimisticKey: "height",
+          })
+        }
       />
     </label>
   );
