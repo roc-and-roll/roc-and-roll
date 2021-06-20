@@ -43,9 +43,9 @@ export function getViewportCorners(transform: Matrix, viewportSize: RRPoint) {
   const inverseTransform = inverse(transform);
 
   return [
-    makePoint(0),
-    makePoint(0, viewportSize.y),
-    viewportSize,
-    makePoint(viewportSize.x, 0),
-  ].map((point) => applyToPoint(inverseTransform, point));
+    applyToPoint(inverseTransform, makePoint(0)),
+    applyToPoint(inverseTransform, makePoint(0, viewportSize.y)),
+    applyToPoint(inverseTransform, viewportSize),
+    applyToPoint(inverseTransform, makePoint(viewportSize.x, 0)),
+  ] as const;
 }

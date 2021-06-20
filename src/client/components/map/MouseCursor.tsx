@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useRecoilValue } from "recoil";
-import { applyToPoint, inverse, Matrix } from "transformation-matrix";
+import { Matrix } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
 import {
   EphermalPlayer,
@@ -19,6 +19,7 @@ import useRafLoop from "../../useRafLoop";
 import { RoughSVGPath, RoughText } from "../rough";
 import { CURSOR_POSITION_SYNC_DEBOUNCE } from "./Map";
 import { ephermalPlayersFamily } from "./MapContainer";
+import { getViewportCorners } from "../../util";
 
 export const MouseCursor = React.memo<{
   playerId: RRPlayerID;
@@ -45,7 +46,7 @@ const MouseCursorInner = React.memo<{
   viewPortSize: RRPoint;
   contrastColor: RRColor;
   mapMouse: NonNullable<EphermalPlayer["mapMouse"]>;
-}>(function MouseCursorInner(props) {
+}>(function MouseCursorInner({ transform, viewPortSize, ...props }) {
   const [rafStart, rafStop] = useRafLoop();
 
   const prevPosition = useRef<RRPoint | null>(null);
@@ -88,21 +89,19 @@ const MouseCursorInner = React.memo<{
     };
   }, [prevPosition, props.mapMouse.position, props.mapMouse.positionHistory, rafStart, rafStop]);
 
-  const topLeft = applyToPoint(inverse(props.transform), makePoint(0));
-  const padding = pointScale(makePoint(GRID_SIZE / 4), 1 / props.transform.a);
+  // TODO: Clamping does not work correctly in 2.5D
+  const viewportCorners = getViewportCorners(transform, viewPortSize);
+  const padding = pointScale(makePoint(GRID_SIZE / 4), 1 / transform.a);
   const clampedPosition = pointClamp(
-    pointAdd(topLeft, padding),
+    pointAdd(viewportCorners[0], padding),
     position,
-    pointSubtract(
-      pointAdd(topLeft, pointScale(props.viewPortSize, 1 / props.transform.a)),
-      padding
-    )
+    pointSubtract(viewportCorners[2], padding)
   );
 
   return (
     <g
       transform={`translate(${clampedPosition.x},${clampedPosition.y}) scale(${
-        0.5 / props.transform.a
+        0.5 / transform.a
       })`}
     >
       <RoughSVGPath

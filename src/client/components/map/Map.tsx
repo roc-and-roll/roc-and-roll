@@ -745,7 +745,11 @@ export const RRMapView = React.memo<{
         ).blockSize,
       });
     });
-    resizeObserver.observe(svgRef.current);
+
+    // For some reason, we MUST NOT use svgRef.current here.
+    // This causes the ResizeObserver to constantly fire events (at least in
+    // Chrome).
+    resizeObserver.observe(svgRef.current.parentElement!);
 
     return () => resizeObserver.disconnect();
   }, []);
