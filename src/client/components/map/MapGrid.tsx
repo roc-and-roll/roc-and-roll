@@ -1,23 +1,15 @@
 import React from "react";
-import { applyToPoint, inverse, Matrix } from "transformation-matrix";
+import { Matrix } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
 import { RRColor, RRPoint } from "../../../shared/state";
-import { makePoint } from "../../../shared/point";
+import { getViewportCorners } from "../../util";
 
 export const MapGrid = React.memo<{
   transform: Matrix;
   viewPortSize: RRPoint;
   color: RRColor;
 }>(function MapGrid({ transform, viewPortSize, color }) {
-  const inverseTransform = inverse(transform);
-
-  const corners = [
-    makePoint(0),
-    makePoint(0, viewPortSize.y),
-    viewPortSize,
-    makePoint(viewPortSize.x, 0),
-  ]
-    .map((point) => applyToPoint(inverseTransform, point))
+  const corners = getViewportCorners(transform, viewPortSize)
     .map((point) => `${point.x},${point.y}`)
     .join(" ");
 

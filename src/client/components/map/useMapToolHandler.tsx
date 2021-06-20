@@ -314,7 +314,7 @@ export function useMapToolHandler(
             dispatch(
               mapObjectAdd(map.id, {
                 type: "image",
-                height: 200,
+                height: GRID_SIZE * 10,
                 originalSize: size,
                 image,
                 ...create(p),

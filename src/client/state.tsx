@@ -3,6 +3,7 @@ import React, {
   useContext,
   useDebugValue,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -706,7 +707,9 @@ export function useAutoDispatchPlayerIdOnChange(playerId: RRPlayerID | null) {
 
 export function useLatest<V>(value: V) {
   const ref = useRef(value);
-  ref.current = value;
+  useLayoutEffect(() => {
+    ref.current = value;
+  });
   return ref;
 }
 

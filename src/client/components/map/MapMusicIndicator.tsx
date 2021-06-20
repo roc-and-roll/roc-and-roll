@@ -59,12 +59,10 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
 
 const Icon = React.memo(function Icon({ color }: { color: RRColor }) {
   return (
-    <>
-      <span className="map-music-icon" aria-hidden>
-        <span style={{ background: color }}></span>
-        <span style={{ background: color }}></span>
-        <span style={{ background: color }}></span>
-      </span>
-    </>
+    <span className="map-music-icon" aria-hidden>
+      <span style={{ background: color }}></span>
+      <span style={{ background: color }}></span>
+      <span style={{ background: color }}></span>
+    </span>
   );
 });

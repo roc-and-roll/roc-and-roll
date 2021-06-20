@@ -35,7 +35,7 @@ export const setupStateSync = (
   store: MyStore,
   quiet: boolean
 ) => {
-  const log = (...params: any[]) => !quiet && console.log(...params);
+  const log = (...params: unknown[]) => !quiet && console.log(...params);
 
   const additionalSocketData = new Map<
     string /* socket id */,

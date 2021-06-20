@@ -1,5 +1,7 @@
 import tinycolor from "tinycolor2";
-import { RRTimestamp } from "../shared/state";
+import { applyToPoint, inverse, Matrix } from "transformation-matrix";
+import { makePoint } from "../shared/point";
+import { RRPoint, RRTimestamp } from "../shared/state";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export const noop = () => {};
@@ -35,4 +37,15 @@ export function isTriggeredByFormElement(e: KeyboardEvent) {
   return ["INPUT", "BUTTON", "TEXTAREA", "SELECT"].includes(
     (e.target as HTMLElement | null)?.nodeName ?? ""
   );
+}
+
+export function getViewportCorners(transform: Matrix, viewportSize: RRPoint) {
+  const inverseTransform = inverse(transform);
+
+  return [
+    makePoint(0),
+    makePoint(0, viewportSize.y),
+    viewportSize,
+    makePoint(viewportSize.x, 0),
+  ].map((point) => applyToPoint(inverseTransform, point));
 }

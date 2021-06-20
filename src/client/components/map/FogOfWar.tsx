@@ -3,8 +3,8 @@ import { RRCapPoint, RRPoint } from "../../../shared/state";
 import Shape from "@doodle3d/clipper-js";
 import { useMyself } from "../../myself";
 import { Matrix } from "transformation-matrix";
-import { globalToLocal } from "./Map";
 import { toCap } from "../../../shared/point";
+import { getViewportCorners } from "../../util";
 
 export function FogOfWar({
   revealedAreas,
@@ -37,16 +37,8 @@ export function FogOfWar({
   );
   const result = background.difference(remove);
 
-  // viewport
-  const topLeft = toCap(globalToLocal(transform, { x: 0, y: 0 }));
-  const bottomRight = toCap(globalToLocal(transform, viewportSize));
   const viewport = new Shape([
-    [
-      topLeft,
-      { X: bottomRight.X, Y: topLeft.Y },
-      bottomRight,
-      { X: topLeft.X, Y: bottomRight.Y },
-    ],
+    getViewportCorners(transform, viewportSize).map((point) => toCap(point)),
   ]);
   const outerFill = viewport.difference(background);
 

@@ -16,8 +16,6 @@ socket.connect();
 // console, which can become very slow when many messages accumulate over time.
 // https://github.com/webpack/webpack-dev-server/issues/565#issuecomment-449979431
 if (module.hot) {
-  module.hot.accept();
-
   module.hot.addStatusHandler((status) => {
     if (status === "prepare") {
       console.clear();
