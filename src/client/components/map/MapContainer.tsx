@@ -33,7 +33,11 @@ import {
   RRCapPoint,
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
-import { useServerDispatch, useServerState } from "../../state";
+import {
+  useServerDispatch,
+  useServerState,
+  useServerStateRef,
+} from "../../state";
 import { SyncedDebouncer, useAggregatedDoubleDebounce } from "../../debounce";
 import {
   CURSOR_POSITION_SYNC_DEBOUNCE,
@@ -175,6 +179,15 @@ export default function MapContainer() {
     []
   );
 
+  const stateRef = useServerStateRef((state) => state.players);
+  const getOwnerOfCharacter = useCallback(
+    (characterId: RRCharacterID) =>
+      entries(stateRef.current).find((player) =>
+        player.characterIds.includes(characterId)
+      ),
+    [stateRef]
+  );
+
   const [, dropRef1] = useDrop<{ id: RRCharacterID | RRMapID }, void, never>(
     () => ({
       accept: ["token", "tokenTemplate", "map"],
@@ -231,13 +244,23 @@ export default function MapContainer() {
             type: "token",
             position: snapPointToGrid(point),
             rotation: 0,
-            playerId: myself.id,
+            // Always pretend that the player the character belongs to has
+            // created the token on the map. Otherwise, characters dragged onto
+            // the map by the GM can not be controlled by the player.
+            playerId: (getOwnerOfCharacter(characterId) ?? myself).id,
             characterId,
           })
         );
       },
     }),
-    [dispatch, getCharacter, getTemplateCharacter, mapId, myself.id]
+    [
+      dispatch,
+      getCharacter,
+      getOwnerOfCharacter,
+      getTemplateCharacter,
+      mapId,
+      myself,
+    ]
   );
   const dropRef = composeRefs<HTMLDivElement>(dropRef2, dropRef1);
 
