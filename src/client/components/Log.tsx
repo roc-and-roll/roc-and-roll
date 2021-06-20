@@ -6,7 +6,7 @@ import { useMyself } from "../myself";
 import { diceResultString, DiceResultWithTypes } from "../roll";
 import { useServerDispatch, useServerState } from "../state";
 import { useScrollToBottom } from "../useScrollToBottom";
-import { formatTimestamp } from "../util";
+import { formatTimestamp, linkify } from "../util";
 import { achievements } from "./achievementList";
 import { CollapseButton } from "./CollapseButton";
 import { Button } from "./ui/Button";
@@ -43,7 +43,7 @@ function LogEntry({ logEntry }: { logEntry: RRLogEntry }) {
     case "message":
       content = (
         <>
-          {playerName}: {logEntry.payload.text}
+          {playerName}: {linkify(logEntry.payload.text)}
         </>
       );
       break;

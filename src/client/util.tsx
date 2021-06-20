@@ -1,3 +1,4 @@
+import React from "react";
 import tinycolor from "tinycolor2";
 import { applyToPoint, inverse, Matrix } from "transformation-matrix";
 import { makePoint } from "../shared/point";
@@ -48,4 +49,28 @@ export function getViewportCorners(transform: Matrix, viewportSize: RRPoint) {
     applyToPoint(inverseTransform, viewportSize),
     applyToPoint(inverseTransform, makePoint(viewportSize.x, 0)),
   ] as const;
+}
+
+export function linkify(text: string) {
+  const matches = text.matchAll(/(^| )(https?:\/\/.+?)\.?(?: |$)/gim);
+
+  const result = [];
+
+  let i = 0;
+  for (const match of matches) {
+    const start = match.index! + match[1]!.length;
+    const end = start + match[2]!.length;
+    result.push(text.substring(i, start));
+    const url = text.substring(start, end);
+    result.push(
+      <a href={url} target="_blank" rel="noreferrer">
+        {url}
+      </a>
+    );
+    i = end;
+  }
+
+  result.push(text.substring(i));
+
+  return result.filter((each) => each !== "");
 }
