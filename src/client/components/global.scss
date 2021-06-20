@@ -1092,6 +1092,11 @@ aside.emoji-picker-react {
   top: 0.5rem;
   left: 0.5rem;
 
+  display: flex;
+  align-items: center;
+  $gap: 0.5rem;
+  gap: $gap;
+
   padding: 0.5rem;
   border-radius: 0.25rem;
 
@@ -1099,9 +1104,6 @@ aside.emoji-picker-react {
   user-select: none;
 
   .song-titles {
-    display: inline-block;
-    vertical-align: middle;
-
     max-width: 20vw;
     opacity: 1;
 
@@ -1114,22 +1116,25 @@ aside.emoji-picker-react {
     &.is-timeouted {
       max-width: 0;
       opacity: 0;
+      margin-left: -$gap;
     }
+  }
+
+  *[role=button] {
+    cursor: pointer;
   }
 }
 
-.map-music-icon {
+.map-music-equalizer-icon {
   // We deliberately use ems, not rems, here, so that the icon is scaled to the
   // font size of its surrounding text.
-  $width: 1.2em;
+  $width: 1.25em;
   $height: 1em;
   $bars: 3;
   $duration: 1.2s;
 
-  display: inline-block;
   position: relative;
-  vertical-align: text-bottom;
-  width:$width;
+  width: $width;
   height: $height;
 
   & > span {

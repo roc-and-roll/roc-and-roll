@@ -1,12 +1,16 @@
+import { faCircle, faVolumeMute } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import tinycolor from "tinycolor2";
 import { entries, RRColor } from "../../../shared/state";
+import { useRRSettings } from "../../settings";
 import { useServerState } from "../../state";
 import { contrastColor } from "../../util";
 
 export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
   function MapMusicIndicator({ mapBackgroundColor }) {
+    const [{ mute: isMuted }, setSettings] = useRRSettings();
     const [isTimeouted, setIsTimeouted] = useState(false);
 
     const activeSongTitles = entries(
@@ -44,7 +48,36 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
         title={title}
         aria-label={`Music; ${title}`}
       >
-        <Icon color={textColor} />{" "}
+        {isMuted ? (
+          <span
+            className="fa-layers fa-fw"
+            onClick={() =>
+              setSettings((settings) => ({ ...settings, mute: false }))
+            }
+            role="button"
+            aria-label="Unmute sounds"
+          >
+            <FontAwesomeIcon
+              icon={faCircle}
+              color="#cc0000"
+              transform="grow-12"
+              fixedWidth
+            />
+            <FontAwesomeIcon
+              icon={faVolumeMute}
+              color="white"
+              transform="grow-2"
+              fixedWidth
+            />
+          </span>
+        ) : (
+          <EqualizerIcon
+            color={textColor}
+            onClick={() =>
+              setSettings((settings) => ({ ...settings, mute: true }))
+            }
+          />
+        )}
         <span
           className={clsx("song-titles", {
             "is-timeouted": isTimeouted,
@@ -57,9 +90,20 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
   }
 );
 
-const Icon = React.memo(function Icon({ color }: { color: RRColor }) {
+const EqualizerIcon = React.memo(function Icon({
+  color,
+  onClick,
+}: {
+  color: RRColor;
+  onClick: () => void;
+}) {
   return (
-    <span className="map-music-icon" aria-hidden>
+    <span
+      className="map-music-equalizer-icon"
+      role="button"
+      aria-label="Mute sounds"
+      onClick={onClick}
+    >
       <span style={{ background: color }}></span>
       <span style={{ background: color }}></span>
       <span style={{ background: color }}></span>
