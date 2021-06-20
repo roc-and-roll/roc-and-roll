@@ -23,10 +23,11 @@ import { DebouncedColorInput, ColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
 import { isTriggeredByFormElement } from "../util";
 import { DebouncedTextInput } from "./ui/TextInput";
-
-const EmojiPicker = React.lazy(
-  () => import(/* webpackPrefetch: true */ "emoji-picker-react")
-);
+import EmojiPicker from "emoji-picker-react";
+// TODO: Lazy loding the emoji picker does not play nicely with Tippy :/
+// const EmojiPicker = React.lazy(
+//   () => import(/* webpackPrefetch: true */ "emoji-picker-react")
+// );
 
 export const MapToolbar = React.memo<{
   map: RRMap;
@@ -272,7 +273,10 @@ export const MapToolbar = React.memo<{
             interactive
             placement="bottom"
           >
-            <Button onClick={() => setEmojiPickerVisible((t) => !t)}>
+            <Button
+              onClick={() => setEmojiPickerVisible((t) => !t)}
+              className={emojiPickerVisible ? "active" : undefined}
+            >
               select
             </Button>
           </Popover>
