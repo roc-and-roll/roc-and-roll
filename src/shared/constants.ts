@@ -15,3 +15,5 @@ export const DEFAULT_COLOR_INPUT_DEBOUNCE_TIME = 500;
 export const LAST_MIGRATION_VERSION = 3;
 
 export const SYNC_MY_MOUSE_POSITION = true as boolean;
+
+export const DEFAULT_BACKGROUND_IMAGE_HEIGHT = 10 * GRID_SIZE;

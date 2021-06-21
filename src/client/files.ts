@@ -78,21 +78,25 @@ export async function askAndUploadImages(
 
   const uploadedFiles = await uploadFiles(fileList);
   const sizes = await Promise.all(
-    fileListToArray(fileList).map(
-      (f) =>
-        new Promise<RRPoint>((resolve) => {
-          const url = URL.createObjectURL(f);
-          const i = new Image();
-          i.onload = () => {
-            resolve({ x: i.width, y: i.height });
-            URL.revokeObjectURL(url);
-          };
-          i.src = url;
-        })
-    )
+    fileListToArray(fileList).map((f) => getImageSize(f))
   );
 
   return uploadedFiles.map((f, i) => [f, sizes[i]!]);
+}
+
+export function getImageSize(image: File) {
+  return new Promise<RRPoint>((resolve, reject) => {
+    const url = URL.createObjectURL(image);
+    const i = new Image();
+    i.onload = () => {
+      resolve({ x: i.width, y: i.height });
+      URL.revokeObjectURL(url);
+    };
+    i.onerror = (err) => {
+      reject(err);
+    };
+    i.src = url;
+  });
 }
 
 const fileListToArray = (fileList: FileList) => {
@@ -111,8 +115,9 @@ const fileListToArray = (fileList: FileList) => {
   return files;
 };
 
-async function uploadFiles(fileList: FileList) {
-  const files = fileListToArray(fileList);
+export async function uploadFiles(fileList: FileList | File[]) {
+  const files =
+    fileList instanceof FileList ? fileListToArray(fileList) : fileList;
   const formData = new FormData();
   files.forEach((file) => formData.append("files", file));
 

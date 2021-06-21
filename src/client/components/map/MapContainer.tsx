@@ -34,6 +34,7 @@ import {
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import {
+  useLatest,
   useServerDispatch,
   useServerState,
   useServerStateRef,
@@ -48,12 +49,17 @@ import {
 import composeRefs from "@seznam/compose-react-refs";
 import { identity, Matrix } from "transformation-matrix";
 import { MapToolbar } from "../MapToolbar";
-import { GRID_SIZE, SYNC_MY_MOUSE_POSITION } from "../../../shared/constants";
+import {
+  DEFAULT_BACKGROUND_IMAGE_HEIGHT,
+  GRID_SIZE,
+  SYNC_MY_MOUSE_POSITION,
+} from "../../../shared/constants";
 import { assertNever, rrid, timestamp, withDo } from "../../../shared/util";
 import { useRRSettings } from "../../settings";
 import {
   makePoint,
   pointAdd,
+  pointScale,
   pointSubtract,
   snapPointToGrid,
 } from "../../../shared/point";
@@ -62,6 +68,9 @@ import { atomFamily, atom, useRecoilCallback, RecoilState } from "recoil";
 import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";
 import { isTriggeredByFormElement } from "../../util";
 import { MapMusicIndicator } from "./MapMusicIndicator";
+import clsx from "clsx";
+import { NativeTypes } from "react-dnd-html5-backend";
+import { getImageSize, uploadFiles } from "../../files";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -188,10 +197,46 @@ export default function MapContainer() {
     [stateRef]
   );
 
-  const [, dropRef1] = useDrop<{ id: RRCharacterID | RRMapID }, void, never>(
+  const addBackgroundImages = async (files: File[], point: RRPoint) => {
+    try {
+      const uploadedFiles = await uploadFiles(files);
+
+      dispatch(
+        await Promise.all(
+          uploadedFiles.map(async (uploadedFile, i) => {
+            const file = files[i]!;
+            return mapObjectAdd(mapId, {
+              id: rrid<RRMapObject>(),
+              playerId: myself.id,
+              color: "black",
+              position: pointAdd(point, pointScale(makePoint(GRID_SIZE), i)),
+              rotation: 0,
+              locked: false,
+              visibility: "everyone",
+
+              type: "image",
+              height: DEFAULT_BACKGROUND_IMAGE_HEIGHT,
+              originalSize: await getImageSize(file),
+              image: uploadedFile,
+            });
+          })
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      alert("File upload failed.");
+    }
+  };
+  const addBackgroundImagesRef = useLatest(addBackgroundImages);
+
+  const [dropProps, dropRef1] = useDrop<
+    { id: RRCharacterID | RRMapID } | { files: File[] },
+    void,
+    { nativeFileHovered: boolean }
+  >(
     () => ({
-      accept: ["token", "tokenTemplate", "map"],
-      drop: ({ id }, monitor) => {
+      accept: ["token", "tokenTemplate", "map", NativeTypes.FILE],
+      drop: (item, monitor) => {
         const topLeft = dropRef2.current!.getBoundingClientRect();
         const dropPosition = monitor.getClientOffset();
         const x = dropPosition!.x - topLeft.x;
@@ -201,6 +246,11 @@ export default function MapContainer() {
           y,
         });
 
+        if ("files" in item) {
+          void addBackgroundImagesRef.current(item.files, point);
+          return;
+        }
+
         if (monitor.getItemType() === "map") {
           dispatch(
             mapObjectAdd(mapId, {
@@ -209,7 +259,7 @@ export default function MapContainer() {
               position: pointSubtract(point, { x: 10, y: 10 }),
               rotation: 0,
               playerId: myself.id,
-              mapId: id as RRMapID,
+              mapId: item.id as RRMapID,
               locked: false,
               color: "#000",
               visibility: "everyone",
@@ -218,7 +268,7 @@ export default function MapContainer() {
           return;
         }
 
-        let characterId = id as RRCharacterID;
+        let characterId = item.id as RRCharacterID;
 
         const character =
           monitor.getItemType() === "tokenTemplate"
@@ -252,8 +302,15 @@ export default function MapContainer() {
           })
         );
       },
+      collect: (monitor) => ({
+        nativeFileHovered:
+          monitor.canDrop() &&
+          monitor.getItemType() === NativeTypes.FILE &&
+          monitor.isOver(),
+      }),
     }),
     [
+      addBackgroundImagesRef,
       dispatch,
       getCharacter,
       getOwnerOfCharacter,
@@ -605,6 +662,7 @@ export default function MapContainer() {
         revealedAreas={map.revealedAreas}
         toolOverlay={toolOverlay}
       />
+      {dropProps.nativeFileHovered && <ExternalFileDropIndicator />}
       {process.env.NODE_ENV === "development" &&
         settings.debug.mapTokenPositions && (
           <DebugMapContainerOverlay
@@ -616,6 +674,18 @@ export default function MapContainer() {
     </div>
   );
 }
+
+const ExternalFileDropIndicator = React.memo(
+  function ExternalFileDropIndicator() {
+    return (
+      <div className="drop-indicator">
+        <div>
+          <p>drop background images here</p>
+        </div>
+      </div>
+    );
+  }
+);
 
 function useReduxToRecoilBridge<E extends { id: RRID }>(
   debugIdentifier: string,

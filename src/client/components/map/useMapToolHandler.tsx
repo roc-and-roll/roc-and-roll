@@ -13,7 +13,10 @@ import {
   RRPoint,
 } from "../../../shared/state";
 import { useServerDispatch } from "../../state";
-import { GRID_SIZE } from "../../../shared/constants";
+import {
+  DEFAULT_BACKGROUND_IMAGE_HEIGHT,
+  GRID_SIZE,
+} from "../../../shared/constants";
 import { assertNever, rrid } from "../../../shared/util";
 import { askAndUploadImages } from "../../files";
 import {
@@ -314,7 +317,7 @@ export function useMapToolHandler(
             dispatch(
               mapObjectAdd(map.id, {
                 type: "image",
-                height: GRID_SIZE * 10,
+                height: DEFAULT_BACKGROUND_IMAGE_HEIGHT,
                 originalSize: size,
                 image,
                 ...create(p),
