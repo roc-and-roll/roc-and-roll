@@ -73,6 +73,7 @@ export function MapLink({
           fill={link.color}
           fillStyle="solid"
           roughness={1}
+          seed={link.id}
         />
       </g>
     </Popover>

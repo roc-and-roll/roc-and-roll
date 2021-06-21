@@ -24,7 +24,7 @@ const overlappingPairsSum = <T extends any>(
 };
 const overlappingPairsMap = <T extends any, U extends any>(
   a: T[],
-  f: (a: T, b: T, i?: number) => U
+  f: (a: T, b: T, i: number) => U
 ) => {
   const res: U[] = [];
   for (let i = 0; i < a.length - 1; i++) {
@@ -103,6 +103,7 @@ export const MapMeasurePath = React.memo<{
             w={pointSubtract(end, start).x}
             h={pointSubtract(end, start).y}
             stroke={color}
+            seed={i.toString()}
           />
         );
       })}

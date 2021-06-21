@@ -5,6 +5,8 @@ import { RoughGenerator } from "roughjs/bin/generator";
 import clsx from "clsx";
 import { RRPoint } from "../../shared/state";
 import { makePoint } from "../../shared/point";
+import { randomSeed } from "roughjs/bin/math";
+import { hashString } from "../../shared/util";
 
 const DEFAULT_ROUGHNESS = 3;
 
@@ -123,7 +125,7 @@ const DrawablePrimitive = React.forwardRef<
 
 type PassedThroughOptions = Pick<
   Options,
-  "fill" | "fillStyle" | "stroke" | "seed" | "strokeLineDash" | "roughness"
+  "fill" | "fillStyle" | "stroke" | "strokeLineDash" | "roughness"
 >;
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -132,7 +134,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
   generateRough: (
     rc: RoughGenerator,
     customProps: C,
-    options: PassedThroughOptions
+    options: PassedThroughOptions & { seed: number }
   ) => Drawable,
   generateSimple: (
     customProps: C & {
@@ -163,6 +165,8 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
         > & {
           x: number;
           y: number;
+        } & {
+          seed?: string;
         }
     >(
       (
@@ -181,12 +185,11 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
           y,
           ...generatorProps
         } = props;
+
         const realSeed = useMemo(
-          // seed must not be float for some reason.
           () =>
-            seed === undefined || seed === 0
-              ? Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
-              : seed,
+            // Watchout: seed should never be 0
+            seed === undefined ? randomSeed() + 1 : hashString(seed),
           [seed]
         );
         const drawable = useMemo(

@@ -86,6 +86,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
       : tinycolor(object.color).setAlpha(0.3).toRgbString(),
     stroke: object.color,
     strokeLineDash,
+    seed: object.id,
   };
 
   const content = () => {
@@ -111,6 +112,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
           fill: _1,
           stroke: _2,
           strokeLineDash: _3,
+          seed: _4,
           ...textProps
         } = sharedProps;
         return (
@@ -120,7 +122,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
         );
       }
       case "image": {
-        const { strokeLineDash: _, ...imageProps } = sharedProps;
+        const { strokeLineDash: _1, seed: _2, ...imageProps } = sharedProps;
         return (
           <image
             {...imageProps}
