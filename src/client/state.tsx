@@ -8,6 +8,7 @@ import React, {
   useState,
 } from "react";
 import ReactDOM from "react-dom";
+import { Socket } from "socket.io-client";
 import { Opaque, Primitive } from "type-fest";
 import { USE_CONCURRENT_MODE } from "../shared/constants";
 import { reducer } from "../shared/reducer";
@@ -149,7 +150,7 @@ const ServerStateContext = React.createContext<{
     subscriber: OptimisticUpdateExecutedSubscriber
   ) => void;
   stateRef: React.MutableRefObject<SyncedState>;
-  socket: SocketIOClient.Socket | null;
+  socket: Socket | null;
   addLocalOptimisticActionAppliers: (
     appliers: OptimisticActionApplier[]
   ) => void;
@@ -187,7 +188,7 @@ export function useServerConnection() {
 function ServerConnectionProvider({
   socket,
   children,
-}: React.PropsWithChildren<{ socket: SocketIOClient.Socket }>) {
+}: React.PropsWithChildren<{ socket: Socket }>) {
   const [connected, setConnected] = useState(socket.connected);
   const subscribers = useRef<Set<ReconnectionAttemptSubscriber>>(new Set());
 
@@ -248,7 +249,7 @@ const batchUpdatesIfNotConcurrentMode = (cb: () => void) => {
 export function ServerStateProvider({
   socket,
   children,
-}: React.PropsWithChildren<{ socket: SocketIOClient.Socket }>) {
+}: React.PropsWithChildren<{ socket: Socket }>) {
   // We must not useState in this component, because we do not want to cause
   // re-renders of this component and its children when the state changes.
   const internalStateRef = useRef<SyncedState>(initialSyncedState);
@@ -642,7 +643,7 @@ export function useServerDispatch() {
           : actionOrActionsOrUpdater;
 
       const actions = Array.isArray(actionOrActions)
-        ? (actionOrActions as A[])
+        ? actionOrActions
         : [actionOrActions as A];
 
       if (actions.length === 0) {

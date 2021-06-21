@@ -23,6 +23,7 @@ import {
 import ReactDOM from "react-dom";
 import { rrid } from "../shared/util";
 import { MockClientSocket } from "./test-utils";
+import { Socket } from "socket.io-client";
 
 function setup<A extends Record<string, unknown>, H>(
   initialProps: A,
@@ -33,7 +34,7 @@ function setup<A extends Record<string, unknown>, H>(
   const wrapper = ({
     children,
     socket,
-  }: React.PropsWithChildren<{ socket: SocketIOClient.Socket }>) => {
+  }: React.PropsWithChildren<{ socket: Socket }>) => {
     return (
       <ServerStateProvider socket={socket}>{children}</ServerStateProvider>
     );
@@ -48,7 +49,7 @@ function setup<A extends Record<string, unknown>, H>(
     waitForValueToChange,
   } = renderHook<
     A & {
-      socket: SocketIOClient.Socket;
+      socket: Socket;
     },
     H
   >((hookArgs) => hookCreator(hookArgs), {

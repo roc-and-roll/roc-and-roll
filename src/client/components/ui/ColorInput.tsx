@@ -66,7 +66,7 @@ export const DebouncedColorInput = React.forwardRef<
   HTMLInputElement,
   ColorInputProps & { debounce?: number }
 >(function DebouncedColorInput(props, ref) {
-  const [fieldProps, isPending] = useDebouncedField<string, HTMLInputElement>({
+  const [fieldProps, _isPending] = useDebouncedField<string, HTMLInputElement>({
     debounce: DEFAULT_COLOR_INPUT_DEBOUNCE_TIME,
     ...props,
   });

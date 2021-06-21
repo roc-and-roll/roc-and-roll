@@ -15,8 +15,9 @@ import { MyselfProvider } from "./myself";
 import { CompendiumProvider } from "./components/compendium/Compendium";
 import { ModApi } from "./components/Modding";
 import { ServerMessagesProvider } from "./serverMessages";
+import { Socket } from "socket.io-client";
 
-export function render(socket: SocketIOClient.Socket) {
+export function render(socket: Socket) {
   // Create a new div element, add it to the DOM, and render our app into it.
   const container = document.createElement("div");
   container.className = "root";
@@ -30,7 +31,7 @@ export function render(socket: SocketIOClient.Socket) {
   }
 }
 
-function Root({ socket }: { socket: SocketIOClient.Socket }) {
+function Root({ socket }: { socket: Socket }) {
   // https://reactjs.org/docs/strict-mode.html
   return (
     <StrictMode>

@@ -418,22 +418,22 @@ export const RoughPolygon = makeRoughComponent<
 
 // Rough.JS does not support text. We simply use a handwritten font to "fake"
 // that look.
-export const RoughText = React.memo(
-  React.forwardRef<SVGTextElement, SVGProps<SVGTextElement>>(function RoughText(
-    { children, x, y, ...props },
-    ref
-  ) {
-    return (
-      <text
-        ref={ref}
-        x={x}
-        y={y}
-        dominantBaseline="text-before-edge"
-        {...props}
-        className={clsx("rough-text", props.className)}
-      >
-        {children}
-      </text>
-    );
-  })
-);
+const RoughTextNonMemoized = React.forwardRef<
+  SVGTextElement,
+  SVGProps<SVGTextElement>
+>(function RoughText({ children, x, y, ...props }, ref) {
+  return (
+    <text
+      ref={ref}
+      x={x}
+      y={y}
+      dominantBaseline="text-before-edge"
+      {...props}
+      className={clsx("rough-text", props.className)}
+    >
+      {children}
+    </text>
+  );
+});
+
+export const RoughText = React.memo(RoughTextNonMemoized);

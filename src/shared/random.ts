@@ -38,6 +38,7 @@ function randomUint32() {
   if ("randomFillSync" in nodeCrypto) {
     nodeCrypto.randomFillSync(array);
   } else {
+    // @ts-ignore This is a type error on Node.js
     window.crypto.getRandomValues(array);
   }
 

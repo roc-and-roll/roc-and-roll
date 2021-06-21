@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useEffect, useRef } from "react";
+import { Socket } from "socket.io-client";
 import { Opaque } from "type-fest";
 import { RRMapID, RRPoint } from "../shared/state";
 
@@ -36,7 +37,7 @@ const ServerMessagesContext = React.createContext<{
   subscribe: (subscriber: MessageSubscriber) => void;
   unsubscribe: (subscriber: MessageSubscriber) => void;
   send: (message: RRMessage) => void;
-  socket: SocketIOClient.Socket | null;
+  socket: Socket | null;
 }>({
   subscribe: () => {},
   unsubscribe: () => {},
@@ -48,7 +49,7 @@ ServerMessagesContext.displayName = "ServerMessagesContext";
 export function ServerMessagesProvider({
   socket,
   children,
-}: React.PropsWithChildren<{ socket: SocketIOClient.Socket }>) {
+}: React.PropsWithChildren<{ socket: Socket }>) {
   const subscribers = useRef<Set<MessageSubscriber>>(new Set());
 
   const subscribe = useCallback((subscriber: MessageSubscriber) => {

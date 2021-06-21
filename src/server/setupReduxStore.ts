@@ -9,7 +9,6 @@ const options = {
 export function setupReduxStore(preloadedState: SyncedState | undefined) {
   const store = configureStore({
     ...options,
-    // @ts-expect-error Fix this error
     preloadedState,
   });
 

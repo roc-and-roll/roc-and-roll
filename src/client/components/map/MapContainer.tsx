@@ -68,7 +68,6 @@ import { atomFamily, atom, useRecoilCallback, RecoilState } from "recoil";
 import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";
 import { isTriggeredByFormElement } from "../../util";
 import { MapMusicIndicator } from "./MapMusicIndicator";
-import clsx from "clsx";
 import { NativeTypes } from "react-dnd-html5-backend";
 import { getImageSize, uploadFiles } from "../../files";
 

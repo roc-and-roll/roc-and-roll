@@ -1,3 +1,4 @@
+import { Socket } from "socket.io-client";
 import { OptimisticUpdateID, SyncedState } from "../shared/state";
 import { StatePatch } from "./state";
 
@@ -86,7 +87,7 @@ export class MockClientSocket {
   // Misc
   //////
 
-  public __cast(): SocketIOClient.Socket {
-    return this as unknown as SocketIOClient.Socket;
+  public __cast(): Socket {
+    return this as unknown as Socket;
   }
 }

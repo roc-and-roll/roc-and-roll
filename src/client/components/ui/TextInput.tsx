@@ -31,7 +31,7 @@ export const DebouncedTextInput = React.forwardRef<
   HTMLInputElement,
   TextInputProps & { debounce?: number }
 >(function DebouncedTextInput(props, ref) {
-  const [fieldProps, isPending] = useDebouncedField<string, HTMLInputElement>({
+  const [fieldProps, _isPending] = useDebouncedField<string, HTMLInputElement>({
     debounce: DEFAULT_TEXT_INPUT_DEBOUNCE_TIME,
     ...props,
   });
@@ -96,7 +96,7 @@ export const DebouncedTextareaInput = React.forwardRef<
   HTMLTextAreaElement,
   TextareaInputProps & { debounce?: number }
 >(function DebouncedTextareaInput(props, ref) {
-  const [fieldProps, isPending] = useDebouncedField<
+  const [fieldProps, _isPending] = useDebouncedField<
     string,
     HTMLTextAreaElement
   >({

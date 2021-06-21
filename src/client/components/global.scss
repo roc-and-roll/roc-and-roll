@@ -1,3 +1,5 @@
+@use "sass:math";
+
 // Use the native sans serif fonts on every platform.
 //
 // Taken from:
@@ -337,7 +339,7 @@ $dice-templates-height: 200px;
   position: fixed;
   left: 50%;
   width: $width;
-  margin-left: $width / -2;
+  margin-left: math.div($width, -2);
   color: #fff;
 
   button {
@@ -406,8 +408,8 @@ $dice-templates-height: 200px;
     .dice-template-selection-count {
       $size: 16px;
       position: absolute;
-      left: $size / -2;
-      top: $size / -2;
+      left: math.div($size, -2);
+      top: math.div($size, -2);
       height: $size;
       width: $size;
       background: #fff;
@@ -711,7 +713,7 @@ $gmAreaColor: #ab62c0;
   position: fixed;
   width: $width;
   left: 50%;
-  margin-left: $width / -2;
+  margin-left: math.div($width, -2);
 
   .notification {
     padding: 1rem;
@@ -1189,13 +1191,13 @@ aside.emoji-picker-react {
   & > span:nth-child(2) {
     left: calc(#{$width} / (#{$bars} + (#{$bars} - 1) / 2) * 1.5);
     animation-duration: $duration * 1.1;
-    animation-delay: $duration / 3;
+    animation-delay: math.div($duration, 3);
   }
 
   & > span:nth-child(3) {
     left: calc(#{$width} / (#{$bars} + (#{$bars} - 1) / 2) * 3);
     animation-duration: $duration * 0.9;
-    animation-delay: $duration / 3 * 2;
+    animation-delay: math.div($duration, 3) * 2;
   }
 
   @keyframes map-music-bar {
