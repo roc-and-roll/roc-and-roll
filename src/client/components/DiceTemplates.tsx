@@ -1016,7 +1016,7 @@ const DiceTemplatePart = React.forwardRef<
           onRoll={(templates, modified, event) =>
             onRoll(templates, modified, event)
           }
-          selectedCharacter={null}
+          selectedCharacter={selectedCharacter}
           templateId={part.templateId}
           newIds={newIds}
           selectedTemplateIds={selectedTemplateIds}

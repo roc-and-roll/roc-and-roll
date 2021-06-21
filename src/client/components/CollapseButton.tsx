@@ -1,3 +1,5 @@
+import { faCaretDown, faCaretLeft } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React from "react";
 import { Button } from "./ui/Button";
@@ -14,7 +16,15 @@ export function CollapseButton(props: {
         props.setCollapsed((collapsed) => !collapsed);
       }}
     >
-      {props.collapsed ? "◀" : "▼"}
+      {props.collapsed ? (
+        <FontAwesomeIcon
+          icon={faCaretLeft}
+          fixedWidth
+          transform="left-2 grow-10"
+        />
+      ) : (
+        <FontAwesomeIcon icon={faCaretDown} fixedWidth transform="grow-10" />
+      )}
     </Button>
   );
 }

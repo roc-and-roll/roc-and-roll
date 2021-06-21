@@ -649,7 +649,7 @@ function useReduxToRecoilBridge<E extends { id: RRID }>(
     [familyAtom, idsAtom]
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     updateRecoilObjects(entities);
   }, [entities, updateRecoilObjects]);
 }
