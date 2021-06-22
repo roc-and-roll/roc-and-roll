@@ -119,6 +119,11 @@ export const mapUpdate = createAction<Update<RRMap>>("map/update");
 
 export const mapRemove = createAction<RRMap["id"]>("map/remove");
 
+export const mapSettingsUpdate = createAction<{
+  id: RRMapID;
+  changes: Partial<RRMap["settings"]>;
+}>("map/settings/update");
+
 export const mapObjectAdd = createAction(
   "map/object/add",
   (

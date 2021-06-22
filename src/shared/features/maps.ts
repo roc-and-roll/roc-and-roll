@@ -11,6 +11,7 @@ import {
   mapObjectAdd,
   mapObjectUpdate,
   mapObjectRemove,
+  mapSettingsUpdate,
 } from "../actions";
 import { byId, initialSyncedState, RRMap, RRMapObject } from "../state";
 
@@ -28,7 +29,7 @@ export const mapsReducer = createReducer(initialSyncedState.maps, (builder) => {
         const { mapId } = action.payload;
         const map = byId<Draft<RRMap>>(state.entities, mapId);
         if (!map) {
-          console.error("Trying to update map token of unknown map.");
+          console.error("Trying to update map object of unknown map.");
           return state;
         }
 
@@ -39,8 +40,19 @@ export const mapsReducer = createReducer(initialSyncedState.maps, (builder) => {
         } else if (mapObjectRemove.match(action)) {
           mapObjectsAdapter.removeOne(map.objects, action.payload.mapObjectId);
         }
-
+      }
+    )
+    .addMatcher(isAnyOf(mapSettingsUpdate), (state, action) => {
+      const { id: mapId } = action.payload;
+      const map = byId<Draft<RRMap>>(state.entities, mapId);
+      if (!map) {
+        console.error("Trying to update map settings of unknown map.");
         return state;
       }
-    );
+
+      map.settings = {
+        ...map.settings,
+        ...action.payload.changes,
+      };
+    });
 });

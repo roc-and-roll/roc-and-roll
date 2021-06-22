@@ -369,14 +369,16 @@ export type RRGlobalSettings = SyncedState["globalSettings"];
 export type SyncedState = t.InferType<typeof isSyncedState>;
 
 export const defaultMap: RRMap = {
-  backgroundColor: "#000",
-  objects: EMPTY_ENTITY_COLLECTION,
-  gmWorldPosition: { x: 0, y: 0 },
-  gridEnabled: true,
-  gridColor: "#808080",
-  name: "Default Map",
-  revealedAreas: null,
   id: rrid<RRMap>(),
+  objects: EMPTY_ENTITY_COLLECTION,
+  settings: {
+    backgroundColor: "#000",
+    gmWorldPosition: { x: 0, y: 0 },
+    gridEnabled: true,
+    gridColor: "#808080",
+    name: "Default Map",
+    revealedAreas: null,
+  },
 };
 
 export const initialSyncedState: SyncedState = {

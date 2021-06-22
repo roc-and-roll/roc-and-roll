@@ -7,6 +7,7 @@ import {
 import {
   RRCapPoint,
   RRMap,
+  RRMapID,
   RRMapObject,
   RRMapObjectID,
   RRPlayer,
@@ -64,7 +65,13 @@ export function thin(points: ReadonlyArray<RRPoint>, squareSize: number) {
 // note: this is not actually a component but we're just tricking the linter >:)
 export function useMapToolHandler(
   myself: RRPlayer,
-  map: RRMap,
+  {
+    mapId,
+    mapBackgroundColor,
+  }: {
+    mapId: RRMapID;
+    mapBackgroundColor: RRMap["settings"]["backgroundColor"];
+  },
   editState: MapEditState,
   transform: React.MutableRefObject<Matrix>,
   {
@@ -94,10 +101,10 @@ export function useMapToolHandler(
   const contrastColor = useMemo(
     () =>
       tinycolor
-        .mostReadable(map.backgroundColor, ["#fff", "#000"])
+        .mostReadable(mapBackgroundColor, ["#fff", "#000"])
         .setAlpha(0.3)
         .toRgbString(),
-    [map.backgroundColor]
+    [mapBackgroundColor]
   );
 
   const { send } = useServerMessages();
@@ -119,7 +126,7 @@ export function useMapToolHandler(
           onMouseDown: (p: RRPoint) => {
             startMousePositionRef.current = p;
             currentId.current = dispatch(
-              mapObjectAdd(map.id, {
+              mapObjectAdd(mapId, {
                 type: "rectangle",
                 size: { x: 0, y: 0 },
                 ...create(p),
@@ -129,7 +136,7 @@ export function useMapToolHandler(
           onMouseMove: (p: RRPoint) => {
             if (currentId.current) {
               dispatch(
-                mapObjectUpdate(map.id, {
+                mapObjectUpdate(mapId, {
                   id: currentId.current,
                   changes: {
                     size: pointSubtract(p, startMousePositionRef.current),
@@ -145,7 +152,7 @@ export function useMapToolHandler(
             ) {
               dispatch(
                 mapObjectRemove({
-                  mapId: map.id,
+                  mapId: mapId,
                   mapObjectId: currentId.current,
                 })
               );
@@ -159,7 +166,7 @@ export function useMapToolHandler(
           onMouseDown: (p: RRPoint) => {
             startMousePositionRef.current = p;
             currentId.current = dispatch(
-              mapObjectAdd(map.id, {
+              mapObjectAdd(mapId, {
                 type: "ellipse",
                 size: { x: 0, y: 0 },
                 ...create(p),
@@ -169,7 +176,7 @@ export function useMapToolHandler(
           onMouseMove: (p: RRPoint) => {
             if (currentId.current) {
               dispatch(
-                mapObjectUpdate(map.id, {
+                mapObjectUpdate(mapId, {
                   id: currentId.current,
                   changes: {
                     size: pointSubtract(p, startMousePositionRef.current),
@@ -185,7 +192,7 @@ export function useMapToolHandler(
             ) {
               dispatch(
                 mapObjectRemove({
-                  mapId: map.id,
+                  mapId: mapId,
                   mapObjectId: currentId.current,
                 })
               );
@@ -199,7 +206,7 @@ export function useMapToolHandler(
           onMouseDown: (p: RRPoint) => {
             startMousePositionRef.current = p;
             currentId.current = dispatch(
-              mapObjectAdd(map.id, {
+              mapObjectAdd(mapId, {
                 type: "freehand",
                 points: [{ x: 0, y: 0 }],
                 ...create(p),
@@ -209,7 +216,7 @@ export function useMapToolHandler(
           onMouseMove: (p: RRPoint) => {
             if (currentId.current) {
               dispatch(
-                mapObjectUpdate(map.id, {
+                mapObjectUpdate(mapId, {
                   id: currentId.current,
                   changes: {
                     points: [pointSubtract(p, startMousePositionRef.current)],
@@ -225,7 +232,7 @@ export function useMapToolHandler(
             ) {
               dispatch(
                 mapObjectRemove({
-                  mapId: map.id,
+                  mapId: mapId,
                   mapObjectId: currentId.current,
                 })
               );
@@ -244,7 +251,7 @@ export function useMapToolHandler(
               return;
             }
             currentId.current = dispatch(
-              mapObjectAdd(map.id, {
+              mapObjectAdd(mapId, {
                 type: "text",
                 text,
                 ...create(p),
@@ -260,7 +267,7 @@ export function useMapToolHandler(
             startMousePositionRef.current = p;
             pointsRef.current = [];
             currentId.current = dispatch(
-              mapObjectAdd(map.id, {
+              mapObjectAdd(mapId, {
                 type: editState.type === "freehand" ? "freehand" : "polygon",
                 points: [],
                 ...create(p),
@@ -280,7 +287,7 @@ export function useMapToolHandler(
 
               if (oldNumPoints !== pointsRef.current.length) {
                 dispatch(
-                  mapObjectUpdate(map.id, {
+                  mapObjectUpdate(mapId, {
                     id: currentId.current,
                     changes: {
                       points: [...pointsRef.current],
@@ -294,7 +301,7 @@ export function useMapToolHandler(
             if (currentId.current && pointsRef.current.length === 0) {
               dispatch(
                 mapObjectRemove({
-                  mapId: map.id,
+                  mapId: mapId,
                   mapObjectId: currentId.current,
                 })
               );
@@ -315,7 +322,7 @@ export function useMapToolHandler(
             const [image, size] = files[0]!;
 
             dispatch(
-              mapObjectAdd(map.id, {
+              mapObjectAdd(mapId, {
                 type: "image",
                 height: DEFAULT_BACKGROUND_IMAGE_HEIGHT,
                 originalSize: size,
@@ -376,7 +383,7 @@ export function useMapToolHandler(
           point: p,
           code: editState.reactionCode,
           id: rrid<RRMessage>(),
-          mapId: map.id,
+          mapId: mapId,
         });
       },
       onMouseMove: (p: RRPoint) => {
@@ -385,7 +392,7 @@ export function useMapToolHandler(
           point: p,
           code: editState.reactionCode,
           id: rrid<RRMessage>(),
-          mapId: map.id,
+          mapId: mapId,
         });
       },
       onMouseUp: (p: RRPoint) => {},

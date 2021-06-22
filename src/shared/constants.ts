@@ -12,7 +12,7 @@ export const DEFAULT_TEXT_INPUT_DEBOUNCE_TIME = 500;
 
 export const DEFAULT_COLOR_INPUT_DEBOUNCE_TIME = 500;
 
-export const LAST_MIGRATION_VERSION = 3;
+export const LAST_MIGRATION_VERSION = 4;
 
 export const SYNC_MY_MOUSE_POSITION = true as boolean;
 

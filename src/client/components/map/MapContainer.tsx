@@ -13,7 +13,7 @@ import {
   mapObjectUpdate,
   characterUpdate,
   characterAdd,
-  mapUpdate,
+  mapSettingsUpdate,
 } from "../../../shared/actions";
 import {
   byId,
@@ -70,6 +70,7 @@ import { isTriggeredByFormElement } from "../../util";
 import { MapMusicIndicator } from "./MapMusicIndicator";
 import { NativeTypes } from "react-dnd-html5-backend";
 import { getImageSize, uploadFiles } from "../../files";
+import { MAP_LINK_SIZE } from "./MapLink";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -255,7 +256,10 @@ export default function MapContainer() {
             mapObjectAdd(mapId, {
               id: rrid<RRMapObject>(),
               type: "mapLink",
-              position: pointSubtract(point, { x: 10, y: 10 }),
+              position: pointSubtract(
+                point,
+                pointScale(makePoint(MAP_LINK_SIZE), 0.5)
+              ),
               rotation: 0,
               playerId: myself.id,
               mapId: item.id as RRMapID,
@@ -515,13 +519,14 @@ export default function MapContainer() {
     ) => {
       dispatch((state) => ({
         actions: [
-          mapUpdate({
+          mapSettingsUpdate({
             id: mapId,
             changes: {
               revealedAreas:
                 typeof areasOrUpdater === "function"
                   ? areasOrUpdater(
-                      byId(state.maps.entities, mapId)?.revealedAreas ?? null
+                      byId(state.maps.entities, mapId)?.settings
+                        .revealedAreas ?? null
                     )
                   : areasOrUpdater,
             },
@@ -535,7 +540,7 @@ export default function MapContainer() {
 
   const [toolHandler, toolOverlay] = useMapToolHandler(
     myself,
-    map,
+    { mapId: map.id, mapBackgroundColor: map.settings.backgroundColor },
     editState,
     transformRef,
     {
@@ -632,14 +637,19 @@ export default function MapContainer() {
   return (
     <div ref={dropRef} className="map-container">
       <ReduxToRecoilBridge mapObjects={map.objects} />
-      <MapMusicIndicator mapBackgroundColor={map.backgroundColor} />
-      <MapToolbar map={map} myself={myself} setEditState={setEditState} />
+      <MapMusicIndicator mapBackgroundColor={map.settings.backgroundColor} />
+      <MapToolbar
+        mapId={map.id}
+        mapSettings={map.settings}
+        myself={myself}
+        setEditState={setEditState}
+      />
       <RRMapView
         // map entity data
         mapId={map.id}
-        gridEnabled={map.gridEnabled}
-        gridColor={map.gridColor}
-        backgroundColor={map.backgroundColor}
+        gridEnabled={map.settings.gridEnabled}
+        gridColor={map.settings.gridColor}
+        backgroundColor={map.settings.backgroundColor}
         // other entities
         myself={myself}
         // toolbar / tool
@@ -658,7 +668,7 @@ export default function MapContainer() {
         onSetHP={onSetHP}
         // misc
         handleKeyDown={handleKeyDown}
-        revealedAreas={map.revealedAreas}
+        revealedAreas={map.settings.revealedAreas}
         toolOverlay={toolOverlay}
       />
       {dropProps.nativeFileHovered && <ExternalFileDropIndicator />}

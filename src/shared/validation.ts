@@ -217,7 +217,6 @@ export const isSyncedState = t.isObject({
   maps: isEntityCollection(
     t.isObject({
       id: isRRID<RRMapID>(),
-      name: t.isString(),
 
       objects: isEntityCollection(
         withDo(
@@ -292,14 +291,17 @@ export const isSyncedState = t.isObject({
         )
       ),
 
-      backgroundColor: isColor(),
-      gridEnabled: t.isBoolean(),
-      gridColor: isColor(),
-      revealedAreas: t.isNullable(
-        t.isArray(t.isArray(t.isObject({ X: t.isNumber(), Y: t.isNumber() })))
-      ),
+      settings: t.isObject({
+        name: t.isString(),
+        backgroundColor: isColor(),
+        gridEnabled: t.isBoolean(),
+        gridColor: isColor(),
+        revealedAreas: t.isNullable(
+          t.isArray(t.isArray(t.isObject({ X: t.isNumber(), Y: t.isNumber() })))
+        ),
 
-      gmWorldPosition: isRRPoint,
+        gmWorldPosition: isRRPoint,
+      }),
     })
   ),
   privateChats: isEntityCollection(

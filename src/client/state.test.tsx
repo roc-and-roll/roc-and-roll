@@ -349,12 +349,14 @@ describe("applyStatePatch", () => {
     };
     const newMap: RRMap = {
       id: rrid<RRMap>(),
-      name: "map",
-      backgroundColor: "#eee",
-      gmWorldPosition: { x: 0, y: 0 },
-      gridEnabled: true,
-      gridColor: "#808080",
-      revealedAreas: null,
+      settings: {
+        name: "map",
+        backgroundColor: "#eee",
+        gmWorldPosition: { x: 0, y: 0 },
+        gridEnabled: true,
+        gridColor: "#808080",
+        revealedAreas: null,
+      },
       objects: EMPTY_ENTITY_COLLECTION,
     };
     let nextState = applyStatePatch(prevState, {

@@ -1,9 +1,10 @@
 import clsx from "clsx";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRecoilCallback, useRecoilValue } from "recoil";
-import { mapObjectUpdate, mapUpdate } from "../../shared/actions";
+import { mapObjectUpdate, mapSettingsUpdate } from "../../shared/actions";
 import {
   RRMap,
+  RRMapID,
   RRMapObjectID,
   RRObjectVisibility,
   RRPlayer,
@@ -30,10 +31,11 @@ import EmojiPicker from "emoji-picker-react";
 // );
 
 export const MapToolbar = React.memo<{
-  map: RRMap;
+  mapId: RRMapID;
+  mapSettings: RRMap["settings"];
   myself: RRPlayer;
   setEditState: React.Dispatch<React.SetStateAction<MapEditState>>;
-}>(function MapToolbar({ map, myself, setEditState }) {
+}>(function MapToolbar({ mapId, mapSettings, myself, setEditState }) {
   const [tool, setTool] = useState<MapEditState["tool"]>("move");
 
   const [drawType, setDrawType] = useLocalState<
@@ -136,7 +138,7 @@ export const MapToolbar = React.memo<{
               .getValue()?.type === "token"
           )
             return [];
-          return mapObjectUpdate(map.id, {
+          return mapObjectUpdate(mapId, {
             id: selectedMapObjectId,
             changes: { locked },
           });
@@ -183,11 +185,13 @@ export const MapToolbar = React.memo<{
   );
 
   const hideAll = () => {
-    dispatch(mapUpdate({ id: map.id, changes: { revealedAreas: [] } }));
+    dispatch(mapSettingsUpdate({ id: mapId, changes: { revealedAreas: [] } }));
   };
 
   const revealAll = () => {
-    dispatch(mapUpdate({ id: map.id, changes: { revealedAreas: null } }));
+    dispatch(
+      mapSettingsUpdate({ id: mapId, changes: { revealedAreas: null } })
+    );
   };
 
   return (
@@ -396,7 +400,7 @@ export const MapToolbar = React.memo<{
           </>
         </>
       )}
-      {myself.isGM && <MapSettings map={map} />}
+      {myself.isGM && <MapSettings mapId={mapId} mapSettings={mapSettings} />}
     </div>
   );
 });
@@ -431,7 +435,13 @@ function MapObjectLockedObserver({
   return null;
 }
 
-function MapSettings({ map }: { map: RRMap }) {
+function MapSettings({
+  mapId,
+  mapSettings,
+}: {
+  mapId: RRMapID;
+  mapSettings: RRMap["settings"];
+}) {
   const [visible, setVisible] = useState(false);
   const dispatch = useServerDispatch();
 
@@ -444,10 +454,12 @@ function MapSettings({ map }: { map: RRMap }) {
             <DebouncedTextInput
               type="text"
               placeholder="Name of the map"
-              value={map.name}
+              value={mapSettings.name}
               onChange={(name) =>
                 dispatch({
-                  actions: [mapUpdate({ id: map.id, changes: { name } })],
+                  actions: [
+                    mapSettingsUpdate({ id: mapId, changes: { name } }),
+                  ],
                   optimisticKey: "name",
                 })
               }
@@ -456,12 +468,12 @@ function MapSettings({ map }: { map: RRMap }) {
           <label>
             Background color{" "}
             <DebouncedColorInput
-              value={map.backgroundColor}
+              value={mapSettings.backgroundColor}
               onChange={(backgroundColor) =>
                 dispatch({
                   actions: [
-                    mapUpdate({
-                      id: map.id,
+                    mapSettingsUpdate({
+                      id: mapId,
                       changes: { backgroundColor },
                     }),
                   ],
@@ -474,12 +486,12 @@ function MapSettings({ map }: { map: RRMap }) {
             Grid enabled{" "}
             <input
               type="checkbox"
-              checked={map.gridEnabled}
+              checked={mapSettings.gridEnabled}
               onChange={(e) =>
                 dispatch({
                   actions: [
-                    mapUpdate({
-                      id: map.id,
+                    mapSettingsUpdate({
+                      id: mapId,
                       changes: { gridEnabled: e.target.checked },
                     }),
                   ],
@@ -488,15 +500,18 @@ function MapSettings({ map }: { map: RRMap }) {
               }
             />
           </label>
-          {map.gridEnabled && (
+          {mapSettings.gridEnabled && (
             <label>
               Grid color{" "}
               <DebouncedColorInput
-                value={map.gridColor}
+                value={mapSettings.gridColor}
                 onChange={(gridColor) =>
                   dispatch({
                     actions: [
-                      mapUpdate({ id: map.id, changes: { gridColor } }),
+                      mapSettingsUpdate({
+                        id: mapId,
+                        changes: { gridColor },
+                      }),
                     ],
                     optimisticKey: "gridColor",
                   })

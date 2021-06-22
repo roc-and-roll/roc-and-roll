@@ -25,7 +25,9 @@ export function MapLink({
     () => (canControl ? { cursor: "move" } : {}),
     [canControl]
   );
-  const map = useServerState((state) => byId(state.maps.entities, link.mapId));
+  const mapName = useServerState(
+    (state) => byId(state.maps.entities, link.mapId)?.settings.name
+  );
   const players = useServerState((state) => state.players);
   const [menuVisible, setMenuVisible] = useState(false);
 
@@ -42,14 +44,16 @@ export function MapLink({
     [ref]
   );
 
+  if (!mapName) {
+    return null;
+  }
+
   return (
     <Popover
       content={
-        map && (
-          <div onMouseDown={(e) => e.stopPropagation()}>
-            <MapListEntry players={players} map={map} myself={myself} />
-          </div>
-        )
+        <div onMouseDown={(e) => e.stopPropagation()}>
+          <MapListEntry players={players} mapId={link.mapId} myself={myself} />
+        </div>
       }
       visible={menuVisible}
       onClickOutside={() => setMenuVisible(false)}
@@ -64,7 +68,7 @@ export function MapLink({
         transform={`translate(${link.position.x}, ${link.position.y})`}
       >
         <RoughText x={0} y={-5} dominantBaseline="text-bottom">
-          {map?.name}
+          {mapName}
         </RoughText>
         <RoughCircle
           x={0}

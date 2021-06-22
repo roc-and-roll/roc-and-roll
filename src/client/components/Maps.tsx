@@ -1,12 +1,12 @@
 import clsx from "clsx";
 import React from "react";
 import { useDrag, useDrop } from "react-dnd";
-import { mapAdd, mapUpdate, playerUpdate } from "../../shared/actions";
+import { mapAdd, mapSettingsUpdate, playerUpdate } from "../../shared/actions";
 import { randomColor } from "../../shared/colors";
 import {
+  byId,
   EntityCollection,
   entries,
-  RRMap,
   RRMapID,
   RRPlayer,
   RRPlayerID,
@@ -21,16 +21,16 @@ import { DebouncedTextInput } from "./ui/TextInput";
 export function Maps() {
   const dispatch = useServerDispatch();
   const myself = useMyself();
-  const maps = useServerState((state) => state.maps);
+  const mapIds = useServerState((state) => state.maps.ids);
   const players = useServerState((state) => state.players);
 
   return (
     <GMArea>
       <ul role="list" className="maps">
-        {entries(maps).map((map) => (
+        {mapIds.map((mapId) => (
           <MapListEntry
-            key={map.id}
-            map={map}
+            key={mapId}
+            mapId={mapId}
             myself={myself}
             players={players}
             showDragHandle
@@ -46,13 +46,15 @@ export function Maps() {
 
               dispatch(
                 mapAdd({
-                  backgroundColor: randomColor(),
-                  gridEnabled: true,
-                  gridColor: "#808080",
-                  name,
+                  settings: {
+                    backgroundColor: randomColor(),
+                    gridEnabled: true,
+                    gridColor: "#808080",
+                    name,
+                    revealedAreas: null,
+                    gmWorldPosition: { x: 0, y: 0 },
+                  },
                   objects: EMPTY_ENTITY_COLLECTION,
-                  revealedAreas: null,
-                  gmWorldPosition: { x: 0, y: 0 },
                 })
               );
             }}
@@ -66,25 +68,28 @@ export function Maps() {
 }
 
 export function MapListEntry({
-  map,
+  mapId,
   myself,
   players: allPlayers,
   showDragHandle,
 }: {
-  map: RRMap;
+  mapId: RRMapID;
   myself: RRPlayer;
   players: EntityCollection<RRPlayer>;
   showDragHandle?: boolean;
 }) {
   const dispatch = useServerDispatch();
   const players = entries(allPlayers).filter(
-    (player) => player.currentMap === map.id
+    (player) => player.currentMap === mapId
   );
-  const isMyCurrentMap = myself.currentMap === map.id;
+  const mapSettings = useServerState(
+    (state) => byId(state.maps.entities, mapId)?.settings
+  );
+  const isMyCurrentMap = myself.currentMap === mapId;
 
   const [, dragRef] = useDrag<{ id: RRMapID }, void, null>(() => ({
     type: "map",
-    item: { id: map.id },
+    item: { id: mapId },
   }));
 
   const [{ canDropAndHovered, canDrop }, dropRef] = useDrop<
@@ -95,9 +100,7 @@ export function MapListEntry({
     () => ({
       accept: "maps-player",
       drop: (item) => {
-        dispatch(
-          playerUpdate({ id: item.id, changes: { currentMap: map.id } })
-        );
+        dispatch(playerUpdate({ id: item.id, changes: { currentMap: mapId } }));
       },
       collect: (monitor) => ({
         canDropAndHovered: monitor.isOver() && monitor.canDrop(),
@@ -105,18 +108,22 @@ export function MapListEntry({
       }),
       canDrop: (item) => players.every((player) => player.id !== item.id),
     }),
-    [dispatch, map.id, players]
+    [dispatch, mapId, players]
   );
+
+  if (!mapSettings) {
+    return null;
+  }
 
   return (
     <li>
       <h3 className="maps-map-title">
         <DebouncedTextInput
           className="maps-map-name"
-          value={map.name}
+          value={mapSettings.name}
           onChange={(name) =>
             dispatch({
-              actions: [mapUpdate({ id: map.id, changes: { name } })],
+              actions: [mapSettingsUpdate({ id: mapId, changes: { name } })],
               optimisticKey: "name",
             })
           }
@@ -156,7 +163,7 @@ export function MapListEntry({
             onClick={() =>
               dispatch(
                 allPlayers.ids.map((id) =>
-                  playerUpdate({ id, changes: { currentMap: map.id } })
+                  playerUpdate({ id, changes: { currentMap: mapId } })
                 )
               )
             }
@@ -170,7 +177,7 @@ export function MapListEntry({
               dispatch(
                 playerUpdate({
                   id: myself.id,
-                  changes: { currentMap: map.id },
+                  changes: { currentMap: mapId },
                 })
               )
             }
