@@ -8,30 +8,38 @@ export function Players({
   onClickPlayer?: (player: RRPlayer) => void;
 }) {
   const players = useServerState((state) => state.players);
-  const ephermalPlayers = useServerState((state) => state.ephermal.players);
 
   return (
     <ul>
-      {entries(players).map((player) => {
-        const ephermalPlayer = byId(ephermalPlayers.entities, player.id);
-
-        return (
-          <li
-            key={player.id}
-            onClick={() => onClickPlayer?.(player)}
-            style={{
-              cursor: onClickPlayer ? "pointer" : "auto",
-              textDecorationColor: player.color,
-              textDecorationLine: "underline",
-            }}
-          >
-            {player.name}{" "}
-            {ephermalPlayer && (
-              <em>{ephermalPlayer.isOnline ? "online" : "offline"}</em>
-            )}
-          </li>
-        );
-      })}
+      {entries(players).map((player) => (
+        <Player key={player.id} player={player} onClickPlayer={onClickPlayer} />
+      ))}
     </ul>
   );
 }
+
+const Player = React.memo(function Player({
+  player,
+  onClickPlayer,
+}: {
+  player: RRPlayer;
+  onClickPlayer?: (player: RRPlayer) => void;
+}) {
+  const isOnline = useServerState(
+    (state) =>
+      byId(state.ephermal.players.entities, player.id)?.isOnline ?? false
+  );
+
+  return (
+    <li
+      onClick={() => onClickPlayer?.(player)}
+      style={{
+        cursor: onClickPlayer ? "pointer" : "auto",
+        textDecorationColor: player.color,
+        textDecorationLine: "underline",
+      }}
+    >
+      {player.name} <em>{isOnline ? "online" : "offline"}</em>
+    </li>
+  );
+});
