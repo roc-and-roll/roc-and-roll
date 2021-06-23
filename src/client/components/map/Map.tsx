@@ -33,7 +33,7 @@ import {
 } from "../../../shared/state";
 import { canControlMapObject } from "../../permissions";
 import {
-  ephermalPlayerIdsAtom,
+  ephemeralPlayerIdsAtom,
   mapObjectIdsAtom,
   mapObjectsFamily,
   selectedMapObjectIdsAtom,
@@ -845,23 +845,23 @@ function MeasurePaths({
   backgroundColor: string;
   players: EntityCollection<RRPlayer>;
 }) {
-  const ephermalPlayerIds = useRecoilValue(ephermalPlayerIdsAtom);
+  const ephemeralPlayerIds = useRecoilValue(ephemeralPlayerIdsAtom);
   return (
     <>
-      {ephermalPlayerIds.map((ephermalPlayerId) => {
-        const player = byId(players.entities, ephermalPlayerId);
+      {ephemeralPlayerIds.map((ephemeralPlayerId) => {
+        const player = byId(players.entities, ephemeralPlayerId);
         if (!player || player.currentMap !== mapId) {
           return null;
         }
         return (
           <MapMeasurePath
-            key={ephermalPlayerId}
-            ephermalPlayerId={ephermalPlayerId}
+            key={ephemeralPlayerId}
+            ephemeralPlayerId={ephemeralPlayerId}
             zoom={zoom}
             color={player.color}
             mapBackgroundColor={backgroundColor}
             overwritePath={
-              ephermalPlayerId === myId ? myMeasurePath : undefined
+              ephemeralPlayerId === myId ? myMeasurePath : undefined
             }
           />
         );
@@ -885,22 +885,22 @@ function MouseCursors({
   contrastColor: string;
   players: EntityCollection<RRPlayer>;
 }) {
-  const ephermalPlayerIds = useRecoilValue(ephermalPlayerIdsAtom);
+  const ephemeralPlayerIds = useRecoilValue(ephemeralPlayerIdsAtom);
   return (
     <>
-      {ephermalPlayerIds.map((ephermalPlayerId) => {
-        if (ephermalPlayerId === myId) {
+      {ephemeralPlayerIds.map((ephemeralPlayerId) => {
+        if (ephemeralPlayerId === myId) {
           return null;
         }
 
-        const player = byId(players.entities, ephermalPlayerId);
+        const player = byId(players.entities, ephemeralPlayerId);
         if (!player || player.currentMap !== mapId) {
           return null;
         }
 
         return (
           <MouseCursor
-            key={ephermalPlayerId}
+            key={ephemeralPlayerId}
             playerId={player.id}
             playerColor={player.color}
             playerName={player.name}

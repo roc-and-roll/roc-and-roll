@@ -5,7 +5,7 @@ import path from "path";
 import fs from "fs";
 import { setupStatePersistence } from "./setupStatePersistence";
 import { entries } from "../shared/state";
-import { ephermalPlayerUpdate } from "../shared/actions";
+import { ephemeralPlayerUpdate } from "../shared/actions";
 import { setupArgs } from "./setupArgs";
 import { isSyncedState } from "../shared/validation";
 import { setupInitialState } from "./setupInitialState";
@@ -59,7 +59,7 @@ This should not have happened!
   setInterval(() => {
     const now = Date.now();
     const state = store.getState();
-    entries(state.ephermal.players)
+    entries(state.ephemeral.players)
       .filter(
         (each) =>
           each.mapMouse &&
@@ -67,7 +67,7 @@ This should not have happened!
       )
       .forEach((each) => {
         store.dispatch(
-          ephermalPlayerUpdate({ id: each.id, changes: { mapMouse: null } })
+          ephemeralPlayerUpdate({ id: each.id, changes: { mapMouse: null } })
         );
       });
   }, 2000);

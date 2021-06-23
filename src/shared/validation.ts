@@ -453,7 +453,7 @@ export const isSyncedState = t.isObject({
       { exclusive: true }
     )
   ),
-  ephermal: t.isObject({
+  ephemeral: t.isObject({
     players: isEntityCollection(
       t.isObject({
         id: isRRID<RRPlayerID>(),

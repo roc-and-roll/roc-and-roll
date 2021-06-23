@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { useDrop } from "react-dnd";
 import {
-  ephermalPlayerUpdate,
+  ephemeralPlayerUpdate,
   mapObjectAdd,
   mapObjectRemove,
   mapObjectUpdate,
@@ -145,7 +145,7 @@ export const characterTemplateIdsAtom = atom<ReadonlyArray<RRCharacterID>>({
   default: [],
 });
 
-export const ephermalPlayersFamily = atomFamily<
+export const ephemeralPlayersFamily = atomFamily<
   EphermalPlayer | null,
   RRPlayerID
 >({
@@ -153,7 +153,7 @@ export const ephermalPlayersFamily = atomFamily<
   default: null,
 });
 
-export const ephermalPlayerIdsAtom = atom<ReadonlyArray<RRPlayerID>>({
+export const ephemeralPlayerIdsAtom = atom<ReadonlyArray<RRPlayerID>>({
   key: "EphermalPlayerIds",
   default: [],
 });
@@ -460,7 +460,7 @@ export default function MapContainer() {
         const history = positions.slice(0, positions.length - 1);
 
         dispatch(
-          ephermalPlayerUpdate({
+          ephemeralPlayerUpdate({
             id: myself.id,
             changes: {
               mapMouse: {
@@ -482,7 +482,7 @@ export default function MapContainer() {
   const updateMeasurePath = useCallback(
     (measurePath: RRPoint[]) =>
       dispatch(
-        ephermalPlayerUpdate({
+        ephemeralPlayerUpdate({
           id: myself.id,
           changes: {
             measurePath,
@@ -755,10 +755,10 @@ function ReduxToRecoilBridge({
     characterTemplateFamily
   );
   useReduxToRecoilBridge(
-    "ephermal players",
-    useServerState((s) => s.ephermal.players),
-    ephermalPlayerIdsAtom,
-    ephermalPlayersFamily
+    "ephemeral players",
+    useServerState((s) => s.ephemeral.players),
+    ephemeralPlayerIdsAtom,
+    ephemeralPlayersFamily
   );
 
   return null;

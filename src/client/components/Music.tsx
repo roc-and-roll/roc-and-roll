@@ -2,9 +2,9 @@ import { matchSorter } from "match-sorter";
 import React, { useEffect, useState } from "react";
 import {
   assetSongAdd,
-  ephermalSongAdd,
-  ephermalSongRemove,
-  ephermalSongUpdate,
+  ephemeralSongAdd,
+  ephemeralSongRemove,
+  ephemeralSongUpdate,
   playerUpdateAddFavoritedAssetId,
   playerUpdateRemoveFavoritedAssetId,
 } from "../../shared/actions";
@@ -52,7 +52,7 @@ export const Music = React.memo(function Music() {
   const myself = useMyself();
   const dispatch = useServerDispatch();
   const activeSongs = useServerState((state) =>
-    entries(state.ephermal.activeSongs)
+    entries(state.ephemeral.activeSongs)
   );
 
   useEffect(() => {
@@ -84,7 +84,7 @@ export const Music = React.memo(function Music() {
   );
 
   const onStop = (s: RRActiveSong) => {
-    dispatch(ephermalSongRemove(s.id));
+    dispatch(ephemeralSongRemove(s.id));
   };
 
   // FIXME: can be a race condition if the user clicks the button quickly
@@ -102,8 +102,8 @@ export const Music = React.memo(function Music() {
 
   const onReplace = (t: RRSong) => {
     dispatch([
-      ...activeSongs.map((activeSong) => ephermalSongRemove(activeSong.id)),
-      ephermalSongAdd({
+      ...activeSongs.map((activeSong) => ephemeralSongRemove(activeSong.id)),
+      ephemeralSongAdd({
         startedAt: timestamp(),
         id: rrid<RRActiveSong>(),
         song: t,
@@ -115,7 +115,7 @@ export const Music = React.memo(function Music() {
 
   const onStart = (t: RRSong) => {
     dispatch(
-      ephermalSongAdd({
+      ephemeralSongAdd({
         startedAt: timestamp(),
         id: rrid<RRActiveSong>(),
         song: t,
@@ -266,10 +266,12 @@ function Song({
 }) {
   const [volume, setVolume] = useOptimisticDebouncedServerUpdate(
     (state) =>
-      active ? byId(state.ephermal.activeSongs.entities, active.id)?.volume : 0,
+      active
+        ? byId(state.ephemeral.activeSongs.entities, active.id)?.volume
+        : 0,
     (volume) =>
       active
-        ? ephermalSongUpdate({ id: active.id, changes: { volume: volume } })
+        ? ephemeralSongUpdate({ id: active.id, changes: { volume: volume } })
         : undefined,
     1000
   );

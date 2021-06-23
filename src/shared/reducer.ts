@@ -7,9 +7,9 @@ import { privateChatsReducer } from "../shared/features/privateChats";
 import { logEntriesReducer } from "../shared/features/logEntries";
 import { initialSyncedState } from "../shared/state";
 import {
-  ephermalPlayersReducer,
-  ephermalSongsReducer,
-} from "../shared/features/ephermal";
+  ephemeralPlayersReducer,
+  ephemeralSongsReducer,
+} from "../shared/features/ephemeral";
 import { diceTemplatesReducer } from "../shared/features/diceTemplate";
 import { assetsReducer } from "../shared/features/assets";
 import { characterTemplatesReducer } from "../shared/features/charactersTemplates";
@@ -30,8 +30,8 @@ export const reducer = combineReducers({
   logEntries: logEntriesReducer,
   diceTemplates: diceTemplatesReducer,
   assets: assetsReducer,
-  ephermal: combineReducers({
-    players: ephermalPlayersReducer,
-    activeSongs: ephermalSongsReducer,
+  ephemeral: combineReducers({
+    players: ephemeralPlayersReducer,
+    activeSongs: ephemeralSongsReducer,
   }),
 });

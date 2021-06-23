@@ -372,26 +372,27 @@ export const initiativeTrackerEntryRemove = createAction<
 // Ephermal state
 ////////////////////////////////////////////////////////////////////////////////
 
-export const ephermalPlayerAdd = createAction<EphermalPlayer>(
-  "ephermal/player/add"
+export const ephemeralPlayerAdd = createAction<EphermalPlayer>(
+  "ephemeral/player/add"
 );
 
-export const ephermalPlayerUpdate = createAction<Update<EphermalPlayer>>(
-  "ephermal/player/update"
+export const ephemeralPlayerUpdate = createAction<Update<EphermalPlayer>>(
+  "ephemeral/player/update"
 );
 
-export const ephermalPlayerRemove = createAction<EphermalPlayer["id"]>(
-  "ephermal/player/remove"
+export const ephemeralPlayerRemove = createAction<EphermalPlayer["id"]>(
+  "ephemeral/player/remove"
 );
 
-export const ephermalSongAdd = createAction<RRActiveSong>("ephermal/song/add");
+export const ephemeralSongAdd =
+  createAction<RRActiveSong>("ephemeral/song/add");
 
-export const ephermalSongUpdate = createAction<Update<RRActiveSong>>(
-  "ephermal/song/update"
+export const ephemeralSongUpdate = createAction<Update<RRActiveSong>>(
+  "ephemeral/song/update"
 );
 
-export const ephermalSongRemove = createAction<RRActiveSong["id"]>(
-  "ephermal/song/remove"
+export const ephemeralSongRemove = createAction<RRActiveSong["id"]>(
+  "ephemeral/song/remove"
 );
 
 ////////////////////////////////////////////////////////////////////////////////

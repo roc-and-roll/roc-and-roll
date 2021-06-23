@@ -18,7 +18,7 @@ import {
 import useRafLoop from "../../useRafLoop";
 import { RoughSVGPath, RoughText } from "../rough";
 import { CURSOR_POSITION_SYNC_DEBOUNCE } from "./Map";
-import { ephermalPlayersFamily } from "./MapContainer";
+import { ephemeralPlayersFamily } from "./MapContainer";
 import { getViewportCorners } from "../../util";
 
 export const MouseCursor = React.memo<{
@@ -29,13 +29,15 @@ export const MouseCursor = React.memo<{
   viewPortSize: RRPoint;
   contrastColor: RRColor;
 }>(function MouseCursor(props) {
-  const ephermalPlayer = useRecoilValue(ephermalPlayersFamily(props.playerId));
+  const ephemeralPlayer = useRecoilValue(
+    ephemeralPlayersFamily(props.playerId)
+  );
 
-  if (ephermalPlayer === null || ephermalPlayer.mapMouse === null) {
+  if (ephemeralPlayer === null || ephemeralPlayer.mapMouse === null) {
     return null;
   }
 
-  return <MouseCursorInner {...props} mapMouse={ephermalPlayer.mapMouse} />;
+  return <MouseCursorInner {...props} mapMouse={ephemeralPlayer.mapMouse} />;
 });
 
 const MouseCursorInner = React.memo<{

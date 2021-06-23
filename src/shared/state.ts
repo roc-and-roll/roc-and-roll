@@ -358,11 +358,11 @@ export const EMPTY_ENTITY_COLLECTION = makeEntityCollection<never>({
 
 export type InitiativeTrackerSyncedState = SyncedState["initiativeTracker"];
 
-export type EphermalPlayer = SyncedState["ephermal"]["players"]["__trait"];
+export type EphermalPlayer = SyncedState["ephemeral"]["players"]["__trait"];
 
-export type RRActiveSong = SyncedState["ephermal"]["activeSongs"]["__trait"];
+export type RRActiveSong = SyncedState["ephemeral"]["activeSongs"]["__trait"];
 
-export type EphermalSyncedState = SyncedState["ephermal"];
+export type EphermalSyncedState = SyncedState["ephemeral"];
 
 export type RRGlobalSettings = SyncedState["globalSettings"];
 
@@ -402,7 +402,7 @@ export const initialSyncedState: SyncedState = {
   privateChats: EMPTY_ENTITY_COLLECTION,
   logEntries: EMPTY_ENTITY_COLLECTION,
   assets: EMPTY_ENTITY_COLLECTION,
-  ephermal: {
+  ephemeral: {
     players: EMPTY_ENTITY_COLLECTION,
     activeSongs: EMPTY_ENTITY_COLLECTION,
   },

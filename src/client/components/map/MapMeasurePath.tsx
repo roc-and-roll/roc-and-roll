@@ -9,7 +9,7 @@ import {
   pointSubtract,
 } from "../../../shared/point";
 import { RoughLine, RoughText } from "../rough";
-import { ephermalPlayersFamily } from "./MapContainer";
+import { ephemeralPlayersFamily } from "./MapContainer";
 import { useContrastColor } from "../../util";
 
 const overlappingPairsSum = <T extends any>(
@@ -39,14 +39,14 @@ const centered = (p: RRPoint) =>
   pointScale(pointAdd(p, makePoint(0.5)), GRID_SIZE);
 
 export const MapMeasurePath = React.memo<{
-  ephermalPlayerId: RRPlayerID;
+  ephemeralPlayerId: RRPlayerID;
   overwritePath?: RRPoint[];
   color: string;
   mapBackgroundColor: string;
   zoom: number;
 }>(function MapMeasurePath({
   overwritePath,
-  ephermalPlayerId,
+  ephemeralPlayerId,
   color,
   mapBackgroundColor,
   zoom,
@@ -54,11 +54,11 @@ export const MapMeasurePath = React.memo<{
   const pathContrastColor = useContrastColor(color);
   const mapContrastColor = useContrastColor(mapBackgroundColor);
 
-  const ephermalPlayer = useRecoilValue(
-    ephermalPlayersFamily(ephermalPlayerId)
+  const ephemeralPlayer = useRecoilValue(
+    ephemeralPlayersFamily(ephemeralPlayerId)
   );
 
-  const path = overwritePath ?? ephermalPlayer?.measurePath ?? [];
+  const path = overwritePath ?? ephemeralPlayer?.measurePath ?? [];
   if (path.length === 0) {
     return null;
   }

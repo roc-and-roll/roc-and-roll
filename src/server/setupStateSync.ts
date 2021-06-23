@@ -7,7 +7,7 @@ import {
   RRPlayerID,
   SyncedState,
 } from "../shared/state";
-import { ephermalPlayerAdd, ephermalPlayerRemove } from "../shared/actions";
+import { ephemeralPlayerAdd, ephemeralPlayerRemove } from "../shared/actions";
 import { debounced } from "../shared/util";
 import * as t from "typanion";
 import { isRRID } from "../shared/validation";
@@ -102,8 +102,8 @@ export const setupStateSync = (
         )
       ) {
         // If the player is not connected to any other socket, remove them
-        // from ephermal state.
-        store.dispatch(ephermalPlayerRemove(playerId));
+        // from ephemeral state.
+        store.dispatch(ephemeralPlayerRemove(playerId));
       }
     }
   }
@@ -111,12 +111,12 @@ export const setupStateSync = (
   function setPlayerId(data: AdditionalSocketData, playerId: RRPlayerID) {
     data.playerId = playerId;
     const existingEphermalPlayer = byId(
-      store.getState().ephermal.players.entities,
+      store.getState().ephemeral.players.entities,
       playerId
     );
     if (!existingEphermalPlayer) {
       store.dispatch(
-        ephermalPlayerAdd({
+        ephemeralPlayerAdd({
           id: playerId,
           isOnline: true,
           mapMouse: null,

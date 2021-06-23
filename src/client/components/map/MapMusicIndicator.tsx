@@ -14,7 +14,7 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
     const [isTimeouted, setIsTimeouted] = useState(false);
 
     const players = useServerState((state) => state.players.entities);
-    const activeSongs = useServerState((state) => state.ephermal.activeSongs);
+    const activeSongs = useServerState((state) => state.ephemeral.activeSongs);
 
     const activeSongTitles = entries(activeSongs)
       .map(

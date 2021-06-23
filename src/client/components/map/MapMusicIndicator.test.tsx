@@ -28,7 +28,7 @@ describe("MapMusicIndicator", () => {
 
     act(() => {
       mockSocket.__receiveSetState({
-        ephermal: {
+        ephemeral: {
           players: EMPTY_ENTITY_COLLECTION,
           activeSongs: makeEntityCollection({
             entities: {
@@ -63,7 +63,7 @@ describe("MapMusicIndicator", () => {
       const id2 = rrid<RRActiveSong>();
 
       mockSocket.__receiveSetState({
-        ephermal: {
+        ephemeral: {
           players: EMPTY_ENTITY_COLLECTION,
           activeSongs: makeEntityCollection({
             entities: {

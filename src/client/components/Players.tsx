@@ -27,7 +27,7 @@ const Player = React.memo(function Player({
 }) {
   const isOnline = useServerState(
     (state) =>
-      byId(state.ephermal.players.entities, player.id)?.isOnline ?? false
+      byId(state.ephemeral.players.entities, player.id)?.isOnline ?? false
   );
 
   return (
