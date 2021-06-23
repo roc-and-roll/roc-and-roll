@@ -108,6 +108,7 @@ export const Music = React.memo(function Music() {
         id: rrid<RRActiveSong>(),
         song: t,
         volume: volumeLinear2Log(DEFAULT_VOLUME),
+        addedBy: myself.id,
       }),
     ]);
   };
@@ -119,6 +120,7 @@ export const Music = React.memo(function Music() {
         id: rrid<RRActiveSong>(),
         song: t,
         volume: volumeLinear2Log(DEFAULT_VOLUME),
+        addedBy: myself.id,
       })
     );
   };

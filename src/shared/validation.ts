@@ -474,6 +474,7 @@ export const isSyncedState = t.isObject({
         song: isRRSong,
         startedAt: isTimestamp,
         volume: t.applyCascade(t.isNumber(), [t.isInInclusiveRange(0, 1)]),
+        addedBy: isRRID<RRPlayerID>(),
       })
     ),
   }),

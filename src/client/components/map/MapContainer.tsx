@@ -307,9 +307,7 @@ export default function MapContainer() {
       },
       collect: (monitor) => ({
         nativeFileHovered:
-          monitor.canDrop() &&
-          monitor.getItemType() === NativeTypes.FILE &&
-          monitor.isOver(),
+          monitor.canDrop() && monitor.getItemType() === NativeTypes.FILE,
       }),
     }),
     [
