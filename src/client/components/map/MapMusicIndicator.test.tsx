@@ -8,6 +8,7 @@ import {
   EMPTY_ENTITY_COLLECTION,
   makeEntityCollection,
   RRActiveSong,
+  RRPlayer,
 } from "../../../shared/state";
 
 describe("MapMusicIndicator", () => {
@@ -26,8 +27,18 @@ describe("MapMusicIndicator", () => {
 
     const id1 = rrid<RRActiveSong>();
 
+    const playerId = rrid<RRPlayer>();
+
     act(() => {
       mockSocket.__receiveSetState({
+        players: makeEntityCollection({
+          entities: {
+            [playerId]: {
+              name: "Ron",
+            },
+          },
+          ids: [playerId],
+        }),
         ephemeral: {
           players: EMPTY_ENTITY_COLLECTION,
           activeSongs: makeEntityCollection({
@@ -37,6 +48,7 @@ describe("MapMusicIndicator", () => {
                 song: {
                   name: "test song",
                 },
+                addedBy: playerId,
               },
             },
             ids: [id1],
@@ -48,7 +60,7 @@ describe("MapMusicIndicator", () => {
     expect(
       screen.queryByTitle("Now playing:", { exact: false })
     ).toBeInTheDocument();
-    expect(screen.queryByText("test song")).toBeInTheDocument();
+    expect(screen.queryByText("test song [Ron]")).toBeInTheDocument();
 
     act(() => {
       jest.runAllTimers();
@@ -63,6 +75,14 @@ describe("MapMusicIndicator", () => {
       const id2 = rrid<RRActiveSong>();
 
       mockSocket.__receiveSetState({
+        players: makeEntityCollection({
+          entities: {
+            [playerId]: {
+              name: "Ron",
+            },
+          },
+          ids: [playerId],
+        }),
         ephemeral: {
           players: EMPTY_ENTITY_COLLECTION,
           activeSongs: makeEntityCollection({
@@ -72,12 +92,14 @@ describe("MapMusicIndicator", () => {
                 song: {
                   name: "test song",
                 },
+                addedBy: playerId,
               },
               [id2]: {
                 id: id2,
                 song: {
                   name: "another song",
                 },
+                addedBy: "does-not-exist",
               },
             },
             ids: [id1, id2],
@@ -86,7 +108,9 @@ describe("MapMusicIndicator", () => {
       });
     });
 
-    expect(screen.queryByText("test song, another song")).toBeInTheDocument();
+    expect(
+      screen.queryByText("test song [Ron], another song [Unknown Player]")
+    ).toBeInTheDocument();
 
     act(() => {
       jest.runAllTimers();
