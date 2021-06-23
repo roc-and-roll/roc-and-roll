@@ -8,7 +8,7 @@ import {
 } from "../../../shared/state";
 import { Dice } from "./Dice";
 import clsx from "clsx";
-import tinycolor from "tinycolor2";
+import { contrastColor } from "../../util";
 
 const SLOT_SIZE = 50;
 const COLUMNS = 7;
@@ -106,9 +106,7 @@ function ModifierContainer({ slots }: { slots: RollSlots }) {
       top: y * SLOT_SIZE + SPACING,
       width: SLOT_SIZE - SPACING * 2,
       height: SLOT_SIZE - SPACING * 2,
-      color: tinycolor
-        .mostReadable(tinycolor(color), ["#000", "#fff"])
-        .toRgbString(),
+      color: contrastColor(color),
       borderRadius: "5px",
       backgroundColor: color,
     };

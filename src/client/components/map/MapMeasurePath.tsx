@@ -1,6 +1,5 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { useRecoilValue } from "recoil";
-import tinycolor from "tinycolor2";
 import { GRID_SIZE } from "../../../shared/constants";
 import { RRPlayerID, RRPoint } from "../../../shared/state";
 import {
@@ -11,6 +10,7 @@ import {
 } from "../../../shared/point";
 import { RoughLine, RoughText } from "../rough";
 import { ephermalPlayersFamily } from "./MapContainer";
+import { useContrastColor } from "../../util";
 
 const overlappingPairsSum = <T extends any>(
   a: T[],
@@ -37,13 +37,6 @@ const dotSize = 10;
 
 const centered = (p: RRPoint) =>
   pointScale(pointAdd(p, makePoint(0.5)), GRID_SIZE);
-
-function useContrastColor(color: string) {
-  return useMemo(
-    () => tinycolor.mostReadable(color, ["#fff", "#000"]).toRgbString(),
-    [color]
-  );
-}
 
 export const MapMeasurePath = React.memo<{
   ephermalPlayerId: RRPlayerID;

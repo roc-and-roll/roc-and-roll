@@ -2,7 +2,6 @@ import clsx from "clsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import ReactDOM from "react-dom";
-import tinycolor from "tinycolor2";
 import {
   diceTemplateAdd,
   diceTemplatePartRemove,
@@ -35,6 +34,7 @@ import { useMyself } from "../myself";
 import { roll } from "../roll";
 import { useServerDispatch, useServerState, useServerStateRef } from "../state";
 import useLocalState from "../useLocalState";
+import { contrastColor } from "../util";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { Select } from "./ui/Select";
@@ -974,12 +974,7 @@ const DiceTemplatePart = React.forwardRef<
 
   const styleFor = (part: RRDiceTemplatePartWithDamage) => ({
     background: colorForDamageType(part.damage.type),
-    color: tinycolor
-      .mostReadable(tinycolor(colorForDamageType(part.damage.type)), [
-        "#000",
-        "#fff",
-      ])
-      .toHexString(),
+    color: contrastColor(colorForDamageType(part.damage.type)),
   });
 
   switch (part.type) {

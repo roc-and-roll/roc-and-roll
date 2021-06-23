@@ -65,6 +65,7 @@ import { assertNever } from "../../../shared/util";
 import { FogOfWar } from "./FogOfWar";
 import { MapReactions } from "./MapReactions";
 import useLocalState from "../../useLocalState";
+import { useContrastColor } from "../../util";
 
 type Rectangle = [number, number, number, number];
 
@@ -219,11 +220,7 @@ export const RRMapView = React.memo<{
     }
   }, [settings.enableExperimental25D, setTransform]);
 
-  const contrastColor = useMemo(
-    () =>
-      tinycolor.mostReadable(backgroundColor, ["#fff", "#000"]).toHexString(),
-    [backgroundColor]
-  );
+  const contrastColor = useContrastColor(backgroundColor);
 
   // TODO can't handle overlapping clicks
   const mouseActionRef = useRef<MouseAction>(MouseAction.NONE);

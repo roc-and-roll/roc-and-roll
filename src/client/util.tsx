@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import tinycolor from "tinycolor2";
 import { applyToPoint, inverse, Matrix } from "transformation-matrix";
 import { makePoint } from "../shared/point";
@@ -33,6 +33,10 @@ export function partition<E, A extends E = E, B extends E = E>(
 
 export const contrastColor = (color: string) =>
   tinycolor.mostReadable(color, ["#000", "#fff"]).toRgbString();
+
+export function useContrastColor(color: string) {
+  return useMemo(() => contrastColor(color), [color]);
+}
 
 export function isTriggeredByFormElement(e: KeyboardEvent) {
   return ["INPUT", "BUTTON", "TEXTAREA", "SELECT"].includes(
