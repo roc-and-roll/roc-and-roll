@@ -1,4 +1,4 @@
-import { linkify } from "./util";
+import { changeHPSmartly, linkify } from "./util";
 
 describe("linkify", () => {
   it("works", () => {
@@ -54,5 +54,17 @@ describe("linkify", () => {
         ".",
       ]
     `);
+  });
+});
+
+describe("changeHPSmartly", () => {
+  it.each([
+    [{ hp: 100, temporaryHP: 0 }, 20, { hp: 20, temporaryHP: 0 }],
+    [{ hp: 20, temporaryHP: 5 }, 25, { hp: 20, temporaryHP: 5 }],
+    [{ hp: 20, temporaryHP: 5 }, 15, { hp: 15, temporaryHP: 0 }],
+    [{ hp: 10, temporaryHP: 5 }, 30, { hp: 25, temporaryHP: 5 }],
+    [{ hp: 90, temporaryHP: 20 }, 95, { hp: 90, temporaryHP: 5 }],
+  ])("works", (character, newTotalHP, expectedCharacter) => {
+    expect(changeHPSmartly(character, newTotalHP)).toEqual(expectedCharacter);
   });
 });

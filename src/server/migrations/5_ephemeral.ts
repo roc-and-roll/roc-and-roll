@@ -1,6 +1,6 @@
 import { AbstractMigration } from "../migrations";
 
-export default class MapObjectRotationMigration extends AbstractMigration {
+export default class extends AbstractMigration {
   version = 5;
   migrate = (state: any) => {
     delete state.ephermal;

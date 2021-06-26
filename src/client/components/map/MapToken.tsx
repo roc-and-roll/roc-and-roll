@@ -42,7 +42,7 @@ export const MapToken = React.memo<{
   healthbarArea: SVGGElement | null;
   zoom: number;
   contrastColor: string;
-  setHP: (tokenId: RRCharacterID, hp: number) => void;
+  smartSetTotalHP: (tokenId: RRCharacterID, hp: number) => void;
 }>(function MapToken({
   mapId,
   object,
@@ -52,7 +52,7 @@ export const MapToken = React.memo<{
   healthbarArea,
   zoom,
   contrastColor,
-  setHP: _setHP,
+  smartSetTotalHP,
 }) {
   const myself = useMyself();
   const token = useRecoilValue(tokenFamily(object.characterId));
@@ -69,9 +69,9 @@ export const MapToken = React.memo<{
 
   const setHP = useCallback(
     (hp: number) => {
-      token?.id && _setHP(token.id, hp);
+      token?.id && smartSetTotalHP(token.id, hp);
     },
-    [_setHP, token?.id]
+    [smartSetTotalHP, token?.id]
   );
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -369,6 +369,19 @@ function Healthbar({
 }) {
   const tokenSize = GRID_SIZE * token.scale;
 
+  const adjustedMaxHP = token.maxHP + token.maxHPAdjustment;
+  const totalMaxHP = adjustedMaxHP + token.temporaryHP;
+
+  const hpColor = "#c5d87c";
+  const temporaryHPColor = "#67ac19";
+
+  const hpBarWidth =
+    tokenSize *
+    clamp(0, token.hp / adjustedMaxHP, 1) *
+    (adjustedMaxHP / totalMaxHP);
+
+  const temporaryHPBarWidth = tokenSize * (token.temporaryHP / totalMaxHP);
+
   return (
     <>
       <RoughRectangle
@@ -382,16 +395,30 @@ function Healthbar({
         roughness={1}
       />
       {token.maxHP > 0 && (
-        <RoughRectangle
-          x={0}
-          y={0}
-          w={tokenSize * clamp(0, token.hp / token.maxHP, 1)}
-          h={16}
-          stroke="transparent"
-          fill="#c5d87c"
-          fillStyle="solid"
-          roughness={1}
-        />
+        <>
+          <RoughRectangle
+            x={0}
+            y={0}
+            w={hpBarWidth}
+            h={16}
+            stroke="transparent"
+            fill={hpColor}
+            fillStyle="solid"
+            roughness={0}
+          />
+          {token.temporaryHP > 0 && temporaryHPBarWidth > 0 && (
+            <RoughRectangle
+              x={hpBarWidth}
+              y={0}
+              w={temporaryHPBarWidth}
+              h={16}
+              stroke="transparent"
+              fill={temporaryHPColor}
+              fillStyle="solid"
+              roughness={0}
+            />
+          )}
+        </>
       )}
       <RoughRectangle
         x={0}
@@ -418,7 +445,7 @@ function Healthbar({
           </RoughText>
         */}
       <foreignObject x={0} y={2} width={tokenSize / 2 - 4} height={14}>
-        <HPInlineEdit hp={token.hp} setHP={setHP} />
+        <HPInlineEdit hp={token.hp + token.temporaryHP} setHP={setHP} />
       </foreignObject>
       <RoughText
         x={tokenSize / 2 - 3}
@@ -428,7 +455,7 @@ function Healthbar({
         fontSize={14}
         style={{ cursor: "default" }}
       >
-        /&thinsp;{token.maxHP}
+        /&thinsp;{totalMaxHP}
       </RoughText>
     </>
   );

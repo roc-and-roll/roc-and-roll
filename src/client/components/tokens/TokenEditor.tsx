@@ -12,6 +12,7 @@ import {
   linkedModifierNames,
   RRCharacter,
   RRCharacterCondition,
+  RRCharacterTemplate,
 } from "../../../shared/state";
 import { useFileUpload } from "../../files";
 import {
@@ -99,7 +100,7 @@ export function TokenEditor({
   onNameFirstEdited,
   isTemplate,
 }: {
-  token: RRCharacter;
+  token: RRCharacter | RRCharacterTemplate;
   onClose: () => void;
   wasJustCreated: boolean;
   onNameFirstEdited: () => void;
@@ -173,7 +174,6 @@ export function TokenEditor({
                 optimisticKey: "name",
               })
             }
-            className="token-name"
           />
         </label>
       </div>
@@ -196,48 +196,10 @@ export function TokenEditor({
                 optimisticKey: "visibility",
               })
             }
-            className="token-name"
           />
         </label>
       </div>
-      <div>
-        <label>
-          HP:{" "}
-          <DebouncedIntegerInput
-            value={token.hp}
-            min={0}
-            placeholder="HP"
-            onChange={(hp) =>
-              dispatch({
-                actions: [updateFunc({ id: token.id, changes: { hp } })],
-                optimisticKey: "hp",
-              })
-            }
-          />
-        </label>
-        <div>
-          <small>
-            you can also edit hp by clicking on the hp in the healthbar of your
-            token on the map
-          </small>
-        </div>
-      </div>
-      <div>
-        <label>
-          max HP:{" "}
-          <DebouncedIntegerInput
-            value={token.maxHP}
-            min={1}
-            placeholder="max HP"
-            onChange={(maxHP) =>
-              dispatch({
-                actions: [updateFunc({ id: token.id, changes: { maxHP } })],
-                optimisticKey: "maxHP",
-              })
-            }
-          />
-        </label>
-      </div>
+      <HPEditor character={token} updateFunc={updateFunc} />
       <div className="character-editor-attributes">
         {linkedModifierNames.map((modifier) => (
           <AttributeEditor
@@ -454,8 +416,95 @@ export function TokenEditor({
       </div>
       <hr />
       <Button className="red" onClick={remove}>
-        delete character
+        delete character {isTemplate && "template"}
       </Button>
+    </div>
+  );
+}
+
+function HPEditor({
+  character: token,
+  updateFunc,
+}: {
+  character: RRCharacter | RRCharacterTemplate;
+  updateFunc: typeof characterTemplateUpdate | typeof characterUpdate;
+}) {
+  const dispatch = useServerDispatch();
+
+  return (
+    <div className="token-hp-editor">
+      <div className="top-row">
+        <label>
+          HP
+          <DebouncedIntegerInput
+            value={token.hp}
+            min={0}
+            placeholder="HP"
+            onChange={(hp) =>
+              dispatch({
+                actions: [updateFunc({ id: token.id, changes: { hp } })],
+                optimisticKey: "hp",
+              })
+            }
+          />
+        </label>
+        <label>
+          Max HP
+          <DebouncedIntegerInput
+            value={token.maxHP}
+            min={0}
+            placeholder="Max HP"
+            onChange={(maxHP) =>
+              dispatch({
+                actions: [updateFunc({ id: token.id, changes: { maxHP } })],
+                optimisticKey: "maxHP",
+              })
+            }
+          />
+        </label>
+        <label>
+          Temp HP
+          <DebouncedIntegerInput
+            value={token.temporaryHP}
+            min={0}
+            placeholder="Temp HP"
+            onChange={(temporaryHP) =>
+              dispatch({
+                actions: [
+                  updateFunc({ id: token.id, changes: { temporaryHP } }),
+                ],
+                optimisticKey: "temporaryHP",
+              })
+            }
+          />
+        </label>
+      </div>
+      <div>
+        <small>
+          you can also edit hp by clicking on the hp in the healthbar of your
+          token on the map
+        </small>
+      </div>
+      <div>
+        <label>
+          Max HP Adjustment
+          <DebouncedIntegerInput
+            value={token.maxHPAdjustment}
+            placeholder="max HP adjustment"
+            onChange={(maxHPAdjustment) =>
+              dispatch({
+                actions: [
+                  updateFunc({ id: token.id, changes: { maxHPAdjustment } }),
+                ],
+                optimisticKey: "maxHPAdjustment",
+              })
+            }
+          />
+        </label>
+        <small>
+          Adjust your max HP temporarily, e.g., due to the effect of a spell.
+        </small>
+      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import tinycolor from "tinycolor2";
 import { applyToPoint, inverse, Matrix } from "transformation-matrix";
 import { makePoint } from "../shared/point";
-import { RRPoint, RRTimestamp } from "../shared/state";
+import { RRCharacter, RRPoint, RRTimestamp } from "../shared/state";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export const noop = () => {};
@@ -77,4 +77,25 @@ export function linkify(text: string) {
   result.push(text.substring(i));
 
   return result.filter((each) => each !== "");
+}
+
+export function changeHPSmartly(
+  character: Pick<RRCharacter, "hp" | "temporaryHP">,
+  newTotalHP: number
+) {
+  const oldTotalHP = character.hp + character.temporaryHP;
+
+  let newTemporaryHP = character.temporaryHP;
+  let newHP = character.hp;
+
+  if (newTotalHP < oldTotalHP) {
+    const hpToLose = oldTotalHP - newTotalHP;
+
+    newTemporaryHP = Math.max(0, character.temporaryHP - hpToLose);
+    newHP = character.hp - Math.max(0, hpToLose - character.temporaryHP);
+  } else {
+    newHP = newTotalHP - character.temporaryHP;
+  }
+
+  return { hp: newHP, temporaryHP: newTemporaryHP };
 }

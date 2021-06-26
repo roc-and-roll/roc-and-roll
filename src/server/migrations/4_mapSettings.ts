@@ -1,6 +1,6 @@
 import { AbstractMigration } from "../migrations";
 
-export default class MapObjectRotationMigration extends AbstractMigration {
+export default class extends AbstractMigration {
   version = 4;
   migrate = (state: any) => {
     Object.entries(state.maps.entities).forEach(

@@ -197,7 +197,14 @@ export const isSyncedState = t.isObject({
             })
           ),
           hp: t.applyCascade(t.isNumber(), [t.isInteger()]),
+          temporaryHP: t.applyCascade(t.isNumber(), [
+            t.isInteger(),
+            t.isPositive(),
+          ]),
           maxHP: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
+          // Like from the Hero's Feast, which increases your hit point maximum.
+          // Can also be used to decrease the hit point maximum temporarily.
+          maxHPAdjustment: t.applyCascade(t.isNumber(), [t.isInteger()]),
           attributes: t.isDict(
             // TODO: This should have explicit keys
             t.isNullable(t.applyCascade(t.isNumber(), [t.isInteger()])),

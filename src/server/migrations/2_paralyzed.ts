@@ -1,6 +1,6 @@
 import { AbstractMigration } from "../migrations";
 
-export default class ParalzedMigration extends AbstractMigration {
+export default class extends AbstractMigration {
   version = 2;
   migrate = (state: any) => {
     ["characters", "characterTemplates"].forEach((key) =>

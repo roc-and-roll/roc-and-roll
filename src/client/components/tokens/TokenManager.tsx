@@ -23,6 +23,8 @@ async function makeNewToken(): Promise<Parameters<typeof characterAdd>[0]> {
     conditions: [],
     hp: 0,
     maxHP: 0,
+    temporaryHP: 0,
+    maxHPAdjustment: 0,
     scale: 1,
     visibility: "everyone",
     attributes: {},

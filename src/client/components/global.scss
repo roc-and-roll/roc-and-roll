@@ -233,6 +233,16 @@ a {
   }
 }
 
+.token-hp-editor {
+  border: 1px solid #757575;
+  padding: 0.25rem 0.5rem;
+  margin: 1rem 0;
+
+  .top-row {
+    display: flex;
+  }
+}
+
 // log
 .log {
   padding: 5px;

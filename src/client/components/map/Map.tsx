@@ -157,7 +157,7 @@ export const RRMapView = React.memo<{
   transformRef: React.MutableRefObject<Matrix>;
   onMoveMapObjects: (d: RRPoint) => void;
   onStopMoveMapObjects: () => void;
-  onSetHP: (tokenId: RRCharacterID, hp: number) => void;
+  onSmartSetTotalHP: (tokenId: RRCharacterID, hp: number) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
   players: EntityCollection<RRPlayer>;
   measurePathDebounce: Debouncer;
@@ -173,7 +173,7 @@ export const RRMapView = React.memo<{
   gridEnabled,
   gridColor,
   backgroundColor,
-  onSetHP,
+  onSmartSetTotalHP,
   handleKeyDown,
   onMoveMapObjects,
   onStopMoveMapObjects,
@@ -780,7 +780,7 @@ export const RRMapView = React.memo<{
               mapId={mapId}
               areas={areas}
               contrastColor={contrastColor}
-              setHP={onSetHP}
+              smartSetTotalHP={onSmartSetTotalHP}
               toolButtonState={toolButtonState}
               handleStartMoveMapObject={handleStartMoveMapObject}
               zoom={transform.a}

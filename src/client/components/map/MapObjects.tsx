@@ -31,7 +31,7 @@ export const MapObjects = React.memo<{
   toolButtonState: ToolButtonState;
   zoom: number;
   mapId: RRMapID;
-  setHP: (tokenId: RRCharacterID, hp: number) => void;
+  smartSetTotalHP: (tokenId: RRCharacterID, hp: number) => void;
   handleStartMoveMapObject: (
     object: RRMapObject,
     event: React.MouseEvent
@@ -42,7 +42,7 @@ export const MapObjects = React.memo<{
   toolButtonState,
   zoom,
   mapId,
-  setHP,
+  smartSetTotalHP,
   handleStartMoveMapObject,
 }) {
   const mapObjectIds = useRecoilValue(mapObjectIdsAtom);
@@ -80,7 +80,7 @@ export const MapObjects = React.memo<{
           areas={areas}
           // additional parameters for tokens
           zoom={zoom}
-          setHP={setHP}
+          smartSetTotalHP={smartSetTotalHP}
           contrastColor={contrastColor}
         />
       ))}
@@ -97,7 +97,7 @@ const MapObjectWrapper = React.memo<{
   zoom: number;
   contrastColor: string;
   mapId: RRMapID;
-  setHP: (tokenId: RRCharacterID, hp: number) => void;
+  smartSetTotalHP: (tokenId: RRCharacterID, hp: number) => void;
 }>(function MapObjectWrapper({
   mapObjectId,
   canStartMoving,
@@ -106,7 +106,7 @@ const MapObjectWrapper = React.memo<{
   zoom,
   mapId,
   contrastColor,
-  setHP,
+  smartSetTotalHP,
 }) {
   const mapObject = useRecoilValue(mapObjectsFamily(mapObjectId));
   const myId = useMyId();
@@ -161,7 +161,7 @@ const MapObjectWrapper = React.memo<{
           healthbarArea={areas.healthbarArea}
           zoom={zoom}
           contrastColor={contrastColor}
-          setHP={setHP}
+          smartSetTotalHP={smartSetTotalHP}
         />,
         areas.tokenArea
       );

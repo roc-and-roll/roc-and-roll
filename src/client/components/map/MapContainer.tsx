@@ -66,7 +66,7 @@ import {
 import { useMapToolHandler } from "./useMapToolHandler";
 import { atomFamily, atom, useRecoilCallback, RecoilState } from "recoil";
 import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";
-import { isTriggeredByFormElement } from "../../util";
+import { changeHPSmartly, isTriggeredByFormElement } from "../../util";
 import { MapMusicIndicator } from "./MapMusicIndicator";
 import { NativeTypes } from "react-dnd-html5-backend";
 import { getImageSize, uploadFiles } from "../../files";
@@ -546,10 +546,24 @@ export default function MapContainer() {
     }
   );
 
-  const onSetHP = useCallback(
-    (tokenId: RRCharacterID, hp: number) => {
-      dispatch(characterUpdate({ id: tokenId, changes: { hp } }));
-    },
+  const onSmartSetTotalHP = useCallback(
+    (tokenId: RRCharacterID, newTotalHP: number) =>
+      dispatch((state) => {
+        const character = byId(state.characters.entities, tokenId);
+        if (!character) {
+          return [];
+        }
+
+        return {
+          actions: [
+            characterUpdate({
+              id: tokenId,
+              changes: changeHPSmartly(character, newTotalHP),
+            }),
+          ],
+          optimisticKey: `${tokenId}/hp`,
+        };
+      }),
     [dispatch]
   );
 
@@ -663,7 +677,7 @@ export default function MapContainer() {
         // map objects
         onMoveMapObjects={onMoveMapObjects}
         onStopMoveMapObjects={onStopMoveMapObjects}
-        onSetHP={onSetHP}
+        onSmartSetTotalHP={onSmartSetTotalHP}
         // misc
         handleKeyDown={handleKeyDown}
         revealedAreas={map.settings.revealedAreas}

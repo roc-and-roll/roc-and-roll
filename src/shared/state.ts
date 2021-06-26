@@ -103,6 +103,8 @@ export type RRObjectVisibility = "gmOnly" | "everyone";
 
 export type RRCharacter = SyncedState["characters"]["__trait"];
 
+export type RRCharacterTemplate = SyncedState["characterTemplates"]["__trait"];
+
 export type RRToken = Extract<
   SyncedState["maps"]["__trait"]["objects"]["__trait"],
   { type: "token" }

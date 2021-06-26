@@ -97,7 +97,11 @@ export function fittingTokenSize(requestedSize: number): number {
 }
 
 export function isCharacterHurt(character: RRCharacter) {
-  return character.maxHP > 0 && character.hp <= character.maxHP / 2;
+  return (
+    character.maxHP > 0 &&
+    character.hp + character.temporaryHP <=
+      (character.maxHP + character.maxHPAdjustment + character.temporaryHP) / 2
+  );
 }
 
 export const EMPTY_ARRAY = [];

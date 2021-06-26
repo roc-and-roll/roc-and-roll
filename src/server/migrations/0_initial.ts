@@ -1,6 +1,6 @@
 import { AbstractMigration } from "../migrations";
 
-export default class InitialMigration extends AbstractMigration {
+export default class extends AbstractMigration {
   version = 0;
   migrate = (state: any) => state;
 }

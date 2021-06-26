@@ -1,7 +1,7 @@
 import { randomColor } from "../../shared/colors";
 import { AbstractMigration } from "../migrations";
 
-export default class TokenBorderColorMigration extends AbstractMigration {
+export default class extends AbstractMigration {
   version = 1;
   migrate = (state: any) => {
     ["characters", "characterTemplates"].forEach((key) =>
