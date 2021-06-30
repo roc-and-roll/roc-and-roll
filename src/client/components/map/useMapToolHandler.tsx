@@ -96,7 +96,7 @@ export function useMapToolHandler(
 
   const [mouseDown, setMouseDown] = useState(false);
   const [mousePosition, setMousePosition] = useState<RRPoint>({ x: 0, y: 0 });
-  const [revealToolSize, setRevealToolSize] = useState(30);
+  const [revealToolSize, setRevealToolSize] = useState(140);
 
   const contrastColor = useMemo(
     () =>
@@ -345,7 +345,7 @@ export function useMapToolHandler(
       onMouseMove: (p: RRPoint) => {
         if (mouseDown) {
           setMousePosition(p);
-          const size = revealToolSize / transform.current.a;
+          const size = revealToolSize / 2 / transform.current.a;
           const stamp = [
             toCap(pointAdd(p, { x: -size, y: -size })),
             toCap(pointAdd(p, { x: -size, y: size })),
@@ -373,7 +373,11 @@ export function useMapToolHandler(
         setMouseDown(false);
       },
       onMouseWheel: (delta: number) => {
-        setRevealToolSize((s) => s + delta * 5);
+        if (mouseDown) {
+          setRevealToolSize((s) =>
+            Math.max(s + (delta * 10) / transform.current.a, 35)
+          );
+        }
       },
     };
   } else if (editState.tool === "react") {
@@ -406,6 +410,7 @@ export function useMapToolHandler(
     };
   }
 
+  const scaledRevealSize = revealToolSize / transform.current.a;
   return [
     useRef({
       onMouseDown: (p: RRPoint) => {
@@ -423,10 +428,10 @@ export function useMapToolHandler(
     }).current,
     editState.tool === "reveal" && mouseDown ? (
       <rect
-        x={mousePosition.x - revealToolSize / transform.current.a}
-        y={mousePosition.y - revealToolSize / transform.current.a}
-        width={(revealToolSize * 2) / transform.current.a}
-        height={(revealToolSize * 2) / transform.current.a}
+        x={mousePosition.x - scaledRevealSize / 2}
+        y={mousePosition.y - scaledRevealSize / 2}
+        width={scaledRevealSize}
+        height={scaledRevealSize}
         fill={contrastColor}
       />
     ) : null,
