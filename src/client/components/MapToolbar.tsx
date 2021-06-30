@@ -184,6 +184,71 @@ export const MapToolbar = React.memo<{
     []
   );
 
+  const updateHidden = useRecoilCallback(
+    ({ snapshot }) =>
+      (visibility: "gmOnly" | "everyone") => {
+        dispatch(
+          snapshot
+            .getLoadable(selectedMapObjectIdsAtom)
+            .getValue()
+            .flatMap((selectedMapObjectId) => {
+              if (
+                snapshot
+                  .getLoadable(mapObjectsFamily(selectedMapObjectId))
+                  .getValue()?.type === "token"
+              )
+                return [];
+              return mapObjectUpdate(mapId, {
+                id: selectedMapObjectId,
+                changes: { visibility },
+              });
+            })
+        );
+      }
+  );
+
+  const [hiddenStates, setHiddenStates] = useState(
+    new Map<RRMapObjectID, "everyone" | "gmOnly">()
+  );
+
+  const hiddenCheckboxRef = useRef<HTMLInputElement | null>(null);
+
+  const isHiddenToggleChecked = Array.from(hiddenStates.values()).every(
+    (visibility) => visibility === "gmOnly"
+  );
+  const isHiddenToggleIndeterminate =
+    Array.from(hiddenStates.values()).some(
+      (visibility) => visibility === "gmOnly"
+    ) && !isHiddenToggleChecked;
+
+  useEffect(() => {
+    if (hiddenCheckboxRef.current) {
+      hiddenCheckboxRef.current.indeterminate = isHiddenToggleIndeterminate;
+    }
+  }, [isHiddenToggleIndeterminate]);
+
+  const onHiddenStateChanged = useCallback(
+    (
+      selectedMapObjectId: RRMapObjectID,
+      isHidden: "everyone" | "gmOnly" | "remove"
+    ) => {
+      setHiddenStates((oldMap) => {
+        if (isHidden === "remove") {
+          const newMap = new Map(oldMap);
+          newMap.delete(selectedMapObjectId);
+          return newMap.size === oldMap.size ? oldMap : newMap;
+        }
+        if (oldMap.get(selectedMapObjectId) === isHidden) {
+          return oldMap;
+        }
+        const newMap = new Map(oldMap);
+        newMap.set(selectedMapObjectId, isHidden);
+        return newMap;
+      });
+    },
+    []
+  );
+
   const hideAll = () => {
     dispatch(mapSettingsUpdate({ id: mapId, changes: { revealedAreas: [] } }));
   };
@@ -250,12 +315,34 @@ export const MapToolbar = React.memo<{
               />
             </label>
           )}
+          {hiddenStates.size > 0 && (
+            <label className="locked-toggle">
+              hidden
+              <input
+                type="checkbox"
+                checked={isHiddenToggleChecked}
+                ref={hiddenCheckboxRef}
+                onChange={(e) =>
+                  updateHidden(
+                    isHiddenToggleIndeterminate || e.target.checked
+                      ? "gmOnly"
+                      : "everyone"
+                  )
+                }
+              />
+            </label>
+          )}
           {selectedMapObjectIds.map((selectedMapObjectId) => (
-            <MapObjectLockedObserver
-              key={selectedMapObjectId}
-              id={selectedMapObjectId}
-              onLockedStateChanged={onLockedStateChanged}
-            />
+            <React.Fragment key={selectedMapObjectId}>
+              <MapObjectLockedObserver
+                id={selectedMapObjectId}
+                onLockedStateChanged={onLockedStateChanged}
+              />
+              <MapObjectHiddenObserver
+                id={selectedMapObjectId}
+                onHiddenStateChanged={onHiddenStateChanged}
+              />
+            </React.Fragment>
           ))}
         </>
       )}
@@ -431,6 +518,39 @@ function MapObjectLockedObserver({
     // the map.
     return () => onLockedStateChanged(id, "remove");
   }, [id, onLockedStateChanged]);
+
+  return null;
+}
+
+function MapObjectHiddenObserver({
+  id,
+  onHiddenStateChanged,
+}: {
+  id: RRMapObjectID;
+  onHiddenStateChanged: (
+    id: RRMapObjectID,
+    visibility: "gmOnly" | "everyone" | "remove"
+  ) => void;
+}) {
+  const mapObject = useRecoilValue(mapObjectsFamily(id));
+
+  const mapObjectVisibility = mapObject
+    ? mapObject.type === "token"
+      ? "ignore"
+      : mapObject.visibility
+    : "ignore";
+
+  useEffect(() => {
+    if (mapObjectVisibility !== "ignore") {
+      onHiddenStateChanged(id, mapObjectVisibility);
+    }
+  }, [id, mapObjectVisibility, onHiddenStateChanged]);
+
+  useEffect(() => {
+    // When this map object is no longer selected, remove its hiddenState from
+    // the map.
+    return () => onHiddenStateChanged(id, "remove");
+  }, [id, onHiddenStateChanged]);
 
   return null;
 }
