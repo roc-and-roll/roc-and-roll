@@ -134,6 +134,55 @@ export const MapToken = React.memo<{
 
   const center = pointAdd(object.position, makePoint(tokenSize / 2));
 
+  const fullTokenRepresenation = (
+    <>
+      {object.rotation === 0 ? (
+        tokenRepresentation
+      ) : (
+        <g transform={`rotate(${object.rotation}, ${center.x}, ${center.y})`}>
+          {tokenRepresentation}
+        </g>
+      )}
+      {isSelectedOrHovered && (
+        <circle
+          // do not block pointer events
+          pointerEvents="none"
+          cx={center.x}
+          cy={center.y}
+          r={tokenSize / 2 - 2}
+          fill="transparent"
+          stroke={contrastColor}
+          className="selection-area-highlight"
+        />
+      )}
+      {token.visibility !== "everyone" && (
+        <>
+          <title>only visible to GMs</title>
+          <RoughText
+            // do not block pointer events
+            pointerEvents="none"
+            x={center.x}
+            y={center.y}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="red"
+            stroke="black"
+            strokeWidth={5}
+            paintOrder="stroke"
+            fontSize={`calc(1.2rem * ${tokenSize / GRID_SIZE})`}
+            fontWeight="bold"
+            transform={`rotate(-30, ${center.x}, ${center.y})`}
+            style={{
+              letterSpacing: ".3rem",
+            }}
+          >
+            HIDDEN
+          </RoughText>
+        </>
+      )}
+    </>
+  );
+
   return (
     <>
       {auraArea &&
@@ -197,74 +246,30 @@ export const MapToken = React.memo<{
           </>,
           healthbarArea
         )}
-
-      <Popover
-        content={
-          <div onMouseDown={(e) => e.stopPropagation()}>
-            <TokenEditor
-              isTemplate={false}
-              token={token}
-              wasJustCreated={false}
-              onNameFirstEdited={() => {}}
-              onClose={() => setEditorVisible(false)}
-            />
-            <MapTokenEditor mapId={mapId} token={object} />
-          </div>
-        }
-        visible={editorVisible}
-        onClickOutside={() => setEditorVisible(false)}
-        interactive
-        placement="right"
-      >
-        <g>
-          {object.rotation === 0 ? (
-            tokenRepresentation
-          ) : (
-            <g
-              transform={`rotate(${object.rotation}, ${center.x}, ${center.y})`}
-            >
-              {tokenRepresentation}
-            </g>
-          )}
-          {isSelectedOrHovered && (
-            <circle
-              // do not block pointer events
-              pointerEvents="none"
-              cx={center.x}
-              cy={center.y}
-              r={tokenSize / 2 - 2}
-              fill="transparent"
-              stroke={contrastColor}
-              className="selection-area-highlight"
-            />
-          )}
-          {token.visibility !== "everyone" && (
-            <>
-              <title>only visible to GMs</title>
-              <RoughText
-                // do not block pointer events
-                pointerEvents="none"
-                x={center.x}
-                y={center.y}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="red"
-                stroke="black"
-                strokeWidth={5}
-                paintOrder="stroke"
-                fontSize={`calc(1.2rem * ${tokenSize / GRID_SIZE})`}
-                fontWeight="bold"
-                transform={`rotate(-30, ${center.x}, ${center.y})`}
-                style={{
-                  letterSpacing: ".3rem",
-                }}
-              >
-                HIDDEN
-              </RoughText>
-            </>
-          )}
-        </g>
-      </Popover>
+      {canControl ? (
+        <Popover
+          content={
+            <div onMouseDown={(e) => e.stopPropagation()}>
+              <TokenEditor
+                isTemplate={false}
+                token={token}
+                wasJustCreated={false}
+                onNameFirstEdited={() => {}}
+                onClose={() => setEditorVisible(false)}
+              />
+              <MapTokenEditor mapId={mapId} token={object} />
+            </div>
+          }
+          visible={editorVisible}
+          onClickOutside={() => setEditorVisible(false)}
+          interactive
+          placement="right"
+        >
+          <g> {fullTokenRepresenation}</g>
+        </Popover>
+      ) : (
+        fullTokenRepresenation
+      )}
     </>
   );
 });

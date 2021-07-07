@@ -48,6 +48,7 @@ export function Sidebar({ logout }: { logout: () => void }) {
         topLeft: false,
       }}
       className="app-sidebar"
+      handleClasses={{ right: "resize-handle" }}
     >
       <div className="app-sidebar-scroll-container">
         <h1>Roc & Roll</h1>
@@ -63,16 +64,16 @@ export function Sidebar({ logout }: { logout: () => void }) {
         </Collapsible>
 
         {myselfIsGM && (
-          <Collapsible title="Maps">
+          <Collapsible title="Maps" defaultCollapsed>
             <Maps />
           </Collapsible>
         )}
 
-        <Collapsible title="Player">
+        <Collapsible title="Player" defaultCollapsed>
           <Player logout={logout} />
         </Collapsible>
 
-        <Collapsible title="Players">
+        <Collapsible title="Players" defaultCollapsed>
           <Players />
         </Collapsible>
 
@@ -100,7 +101,7 @@ export function Sidebar({ logout }: { logout: () => void }) {
           <Compendium />
         </Collapsible>
 
-        <Collapsible title="Settings">
+        <Collapsible title="Settings" defaultCollapsed>
           <Settings />
         </Collapsible>
 

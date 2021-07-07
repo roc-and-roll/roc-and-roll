@@ -1,5 +1,7 @@
 @use "sass:math";
 
+@import "./variables";
+
 // Use the native sans serif fonts on every platform.
 //
 // Taken from:
@@ -55,6 +57,13 @@ label {
 .root {
   background: #111;
   color: white;
+}
+
+.resize-handle {
+  transition: background 200ms ease-in-out;
+  &:hover, &:active {
+    background: orange;
+  }
 }
 
 .ui-text-input {
@@ -248,7 +257,7 @@ a {
   padding: 5px;
   width: 30vw;
   min-width: 300px;
-  background-color: rgba(51, 51, 51, 0.6);
+  background-color: $bottom-float-background;
 }
 
 .log-text {
@@ -338,7 +347,7 @@ a {
 
 .dice-template-opener {
   padding: 0.5rem;
-  background-color: rgba(51, 51, 51, 0.6);
+  background-color: $bottom-float-background;
   cursor: pointer;
 }
 
@@ -530,7 +539,7 @@ $dice-templates-height: 200px;
 // The rest of the CSS is located in PrivateChats.scss and only loaded if the
 // chat is opened.
 .private-chats-wrapper {
-  background-color: #333;
+  background-color: $bottom-float-background;
   min-width: 200px;
   max-width: 400px;
 
@@ -1192,22 +1201,12 @@ aside.emoji-picker-react {
     transform-origin: bottom;
   }
 
-  & > span:nth-child(1) {
-    left:0;
-    animation-duration: $duration;
-    animation-delay: 0;
-  }
-
-  & > span:nth-child(2) {
-    left: calc(#{$width} / (#{$bars} + (#{$bars} - 1) / 2) * 1.5);
-    animation-duration: $duration * 1.1;
-    animation-delay: math.div($duration, 3);
-  }
-
-  & > span:nth-child(3) {
-    left: calc(#{$width} / (#{$bars} + (#{$bars} - 1) / 2) * 3);
-    animation-duration: $duration * 0.9;
-    animation-delay: math.div($duration, 3) * 2;
+  @for $i from 1 through $bars {
+    & > span:nth-child(#{$i}) {
+      left: calc(#{$width} / (#{$bars} + (#{$bars} - 1) / 2) * (#{$i} - 1) * 1.5);
+      animation-duration: $duration - $i * 0.1s;
+      animation-delay: math.div($duration, $bars) * ($i - 1);
+    }
   }
 
   @keyframes map-music-bar {
