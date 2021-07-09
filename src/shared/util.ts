@@ -96,11 +96,26 @@ export function fittingTokenSize(requestedSize: number): number {
   );
 }
 
+export function isCharacterUnconscious(character: RRCharacter) {
+  return (
+    (character.maxHP > 0 && character.hp + character.temporaryHP === 0) ||
+    character.conditions.includes("unconscious")
+  );
+}
+
 export function isCharacterHurt(character: RRCharacter) {
   return (
     character.maxHP > 0 &&
     character.hp + character.temporaryHP <=
       (character.maxHP + character.maxHPAdjustment + character.temporaryHP) / 2
+  );
+}
+
+export function isCharacterOverhealed(character: RRCharacter) {
+  return (
+    !isCharacterUnconscious(character) &&
+    character.maxHP > 0 &&
+    character.hp + character.temporaryHP > character.maxHP
   );
 }
 

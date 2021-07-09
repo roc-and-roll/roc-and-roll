@@ -1,14 +1,25 @@
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import { RRCharacter } from "../../../shared/state";
-import { clamp, isCharacterHurt } from "../../../shared/util";
+import {
+  clamp,
+  isCharacterHurt,
+  isCharacterUnconscious,
+  isCharacterOverhealed,
+} from "../../../shared/util";
 import { tokenImageUrl } from "../../files";
 
 export function TokenPreview({ token }: { token: RRCharacter }) {
   const hurt = isCharacterHurt(token);
+  const unconscious = isCharacterUnconscious(token);
+  const overhealed = isCharacterOverhealed(token);
   return (
     <div
-      className={clsx("token-image", { hurt })}
+      className={clsx("token-image", {
+        hurt,
+        unconscious,
+        overhealed,
+      })}
       title={token.name}
       style={{
         backgroundImage: token.tokenImage

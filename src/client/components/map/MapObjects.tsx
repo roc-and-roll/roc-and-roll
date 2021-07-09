@@ -25,6 +25,33 @@ const HURT_SHADOW_BLUR_SIZE = 8;
 // If this is too low, then the shadow is cut off inside a too small square.
 const HURT_SHADOW_CLIPPING_PERCENTAGE = 25;
 
+function makeBlinkingCharacterFilter(
+  name: string,
+  duration: string,
+  color: RRColor
+) {
+  return (
+    <filter
+      id={name}
+      x={`-${HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
+      y={`-${HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
+      width={`${100 + 2 * HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
+      height={`${100 + 2 * HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
+    >
+      <feDropShadow dx="0" dy="0" floodColor={color}>
+        <animate
+          attributeName="stdDeviation"
+          calcMode="paced"
+          begin="0s"
+          dur={duration}
+          values={`0;${HURT_SHADOW_BLUR_SIZE};0`}
+          repeatCount="indefinite"
+        />
+      </feDropShadow>
+    </filter>
+  );
+}
+
 export const MapObjects = React.memo<{
   areas: MapAreas;
   contrastColor: RRColor;
@@ -51,24 +78,9 @@ export const MapObjects = React.memo<{
   return (
     <>
       <defs>
-        <filter
-          id="tokenHurtShadow"
-          x={`-${HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
-          y={`-${HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
-          width={`${100 + 2 * HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
-          height={`${100 + 2 * HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
-        >
-          <feDropShadow dx="0" dy="0" floodColor="red">
-            <animate
-              attributeName="stdDeviation"
-              calcMode="paced"
-              begin="0s"
-              dur="4s"
-              values={`0;${HURT_SHADOW_BLUR_SIZE};0`}
-              repeatCount="indefinite"
-            />
-          </feDropShadow>
-        </filter>
+        {makeBlinkingCharacterFilter("tokenHurtShadow", "4s", "red")}
+        {makeBlinkingCharacterFilter("tokenUnconsciousShadow", "0.4s", "red")}
+        {makeBlinkingCharacterFilter("tokenOverhealedShadow", "4s", "green")}
       </defs>
       {mapObjectIds.map((mapObjectId) => (
         <MapObjectWrapper

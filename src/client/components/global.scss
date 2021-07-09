@@ -195,15 +195,34 @@ a {
   background-size: cover;
 
   &.hurt {
-    animation: hurt 1s;
+    animation-name: hurt;
+    animation-duration: 2s;
+  }
+
+  &.unconscious {
+    animation-name: hurt;
+    animation-duration: 0.2s;
+  }
+
+  &.overhealed {
+    animation-name: overhealed;
+    animation-duration: 2s;
+  }
+
+  &.hurt, &.unconscious, &.overhealed {
     animation-direction: alternate;
     animation-iteration-count: infinite;
     animation-timing-function: ease-in-out;
+  }
 
-    @keyframes hurt {
-      from { box-shadow: none; }
-      to { box-shadow: 0 0 4px 2px red; }
-    }
+  @keyframes hurt {
+    from { box-shadow: none; }
+    to { box-shadow: 0 0 4px 2px red; }
+  }
+
+  @keyframes overhealed {
+    from { box-shadow: none; }
+    to { box-shadow: 0 0 4px 2px green; }
   }
 }
 
