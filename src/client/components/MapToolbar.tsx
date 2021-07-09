@@ -5,6 +5,7 @@ import { mapObjectUpdate, mapSettingsUpdate } from "../../shared/actions";
 import {
   RRMap,
   RRMapID,
+  RRMapObject,
   RRMapObjectID,
   RRObjectVisibility,
   RRPlayer,
@@ -29,6 +30,110 @@ import EmojiPicker from "emoji-picker-react";
 // const EmojiPicker = React.lazy(
 //   () => import(/* webpackPrefetch: true */ "emoji-picker-react")
 // );
+
+type NonTokenMapObject = Exclude<RRMapObject, { type: "token" }>;
+
+function useIndeterminateBoolean<K extends keyof NonTokenMapObject>({
+  mapId,
+  property,
+  label,
+  toBoolean,
+  fromBoolean,
+}: {
+  mapId: RRMapID;
+  property: K;
+  label: string;
+  toBoolean: (value: NonTokenMapObject[K]) => boolean;
+  fromBoolean: (value: boolean) => NonTokenMapObject[K];
+}) {
+  const dispatch = useServerDispatch();
+
+  const updateValue = useRecoilCallback(({ snapshot }) => (value: boolean) => {
+    dispatch(
+      snapshot
+        .getLoadable(selectedMapObjectIdsAtom)
+        .getValue()
+        .flatMap((selectedMapObjectId) => {
+          if (
+            snapshot
+              .getLoadable(mapObjectsFamily(selectedMapObjectId))
+              .getValue()?.type === "token"
+          ) {
+            return [];
+          }
+          return mapObjectUpdate(mapId, {
+            id: selectedMapObjectId,
+            changes: { [property]: fromBoolean(value) },
+          });
+        })
+    );
+  });
+
+  const [states, setStates] = useState(new Map<RRMapObjectID, boolean>());
+
+  const checkboxRef = useRef<HTMLInputElement | null>(null);
+
+  const isToggleChecked = Array.from(states.values()).every((value) => value);
+  const isToggleIndeterminate =
+    !isToggleChecked && Array.from(states.values()).some((value) => value);
+
+  useEffect(() => {
+    if (checkboxRef.current) {
+      checkboxRef.current.indeterminate = isToggleIndeterminate;
+    }
+  }, [isToggleIndeterminate]);
+
+  const onStateChanged = useCallback(
+    (selectedMapObjectId: RRMapObjectID, value: boolean | "remove") => {
+      setStates((oldMap) => {
+        if (value === "remove") {
+          const newMap = new Map(oldMap);
+          newMap.delete(selectedMapObjectId);
+          return newMap.size === oldMap.size ? oldMap : newMap;
+        }
+        if (oldMap.get(selectedMapObjectId) === value) {
+          return oldMap;
+        }
+        const newMap = new Map(oldMap);
+        newMap.set(selectedMapObjectId, value);
+        return newMap;
+      });
+    },
+    []
+  );
+
+  const widget = (selectedMapObjectIds: ReadonlyArray<RRMapObjectID>) => (
+    <>
+      {states.size > 0 && (
+        // states.size can be 0 if only tokens are selected
+        <label>
+          {label}
+          <input
+            type="checkbox"
+            checked={isToggleChecked}
+            ref={checkboxRef}
+            onChange={(e) =>
+              updateValue(isToggleIndeterminate ? true : e.target.checked)
+            }
+          />
+        </label>
+      )}
+      {selectedMapObjectIds.map((selectedMapObjectId) => (
+        <MapObjectObserverIndeterminateBoolean<K>
+          key={selectedMapObjectId}
+          id={selectedMapObjectId}
+          property={property}
+          toBoolean={toBoolean}
+          onStateChanged={onStateChanged}
+        />
+      ))}
+    </>
+  );
+
+  return {
+    widget,
+  };
+}
 
 export const MapToolbar = React.memo<{
   mapId: RRMapID;
@@ -126,128 +231,21 @@ export const MapToolbar = React.memo<{
     });
   }, [tool, drawColor, drawType, snap, setEditState, revealType, defaultVisibility, reactionCode]);
 
-  const updateLock = useRecoilCallback(({ snapshot }) => (locked: boolean) => {
-    dispatch(
-      snapshot
-        .getLoadable(selectedMapObjectIdsAtom)
-        .getValue()
-        .flatMap((selectedMapObjectId) => {
-          if (
-            snapshot
-              .getLoadable(mapObjectsFamily(selectedMapObjectId))
-              .getValue()?.type === "token"
-          )
-            return [];
-          return mapObjectUpdate(mapId, {
-            id: selectedMapObjectId,
-            changes: { locked },
-          });
-        })
-    );
+  const locked = useIndeterminateBoolean({
+    mapId,
+    label: "lock",
+    property: "locked",
+    toBoolean: (locked) => locked,
+    fromBoolean: (locked) => locked,
   });
 
-  const [lockedStates, setLockedStates] = useState(
-    new Map<RRMapObjectID, boolean>()
-  );
-
-  const lockedCheckboxRef = useRef<HTMLInputElement | null>(null);
-
-  const isLockedToggleChecked = Array.from(lockedStates.values()).every(
-    (locked) => locked
-  );
-  const isLockedToggleIndeterminate =
-    Array.from(lockedStates.values()).some((locked) => locked) &&
-    !isLockedToggleChecked;
-
-  useEffect(() => {
-    if (lockedCheckboxRef.current) {
-      lockedCheckboxRef.current.indeterminate = isLockedToggleIndeterminate;
-    }
-  }, [isLockedToggleIndeterminate]);
-
-  const onLockedStateChanged = useCallback(
-    (selectedMapObjectId: RRMapObjectID, isLocked: boolean | "remove") => {
-      setLockedStates((oldMap) => {
-        if (isLocked === "remove") {
-          const newMap = new Map(oldMap);
-          newMap.delete(selectedMapObjectId);
-          return newMap.size === oldMap.size ? oldMap : newMap;
-        }
-        if (oldMap.get(selectedMapObjectId) === isLocked) {
-          return oldMap;
-        }
-        const newMap = new Map(oldMap);
-        newMap.set(selectedMapObjectId, isLocked);
-        return newMap;
-      });
-    },
-    []
-  );
-
-  const updateHidden = useRecoilCallback(
-    ({ snapshot }) =>
-      (visibility: "gmOnly" | "everyone") => {
-        dispatch(
-          snapshot
-            .getLoadable(selectedMapObjectIdsAtom)
-            .getValue()
-            .flatMap((selectedMapObjectId) => {
-              if (
-                snapshot
-                  .getLoadable(mapObjectsFamily(selectedMapObjectId))
-                  .getValue()?.type === "token"
-              )
-                return [];
-              return mapObjectUpdate(mapId, {
-                id: selectedMapObjectId,
-                changes: { visibility },
-              });
-            })
-        );
-      }
-  );
-
-  const [hiddenStates, setHiddenStates] = useState(
-    new Map<RRMapObjectID, "everyone" | "gmOnly">()
-  );
-
-  const hiddenCheckboxRef = useRef<HTMLInputElement | null>(null);
-
-  const isHiddenToggleChecked = Array.from(hiddenStates.values()).every(
-    (visibility) => visibility === "gmOnly"
-  );
-  const isHiddenToggleIndeterminate =
-    Array.from(hiddenStates.values()).some(
-      (visibility) => visibility === "gmOnly"
-    ) && !isHiddenToggleChecked;
-
-  useEffect(() => {
-    if (hiddenCheckboxRef.current) {
-      hiddenCheckboxRef.current.indeterminate = isHiddenToggleIndeterminate;
-    }
-  }, [isHiddenToggleIndeterminate]);
-
-  const onHiddenStateChanged = useCallback(
-    (
-      selectedMapObjectId: RRMapObjectID,
-      isHidden: "everyone" | "gmOnly" | "remove"
-    ) => {
-      setHiddenStates((oldMap) => {
-        if (isHidden === "remove") {
-          const newMap = new Map(oldMap);
-          newMap.delete(selectedMapObjectId);
-          return newMap.size === oldMap.size ? oldMap : newMap;
-        }
-        if (oldMap.get(selectedMapObjectId) === isHidden) {
-          return oldMap;
-        }
-        const newMap = new Map(oldMap);
-        newMap.set(selectedMapObjectId, isHidden);
-        return newMap;
-      });
-    },
-    []
-  );
+  const hidden = useIndeterminateBoolean({
+    mapId,
+    label: "hide",
+    property: "visibility",
+    toBoolean: (visibility) => visibility === "gmOnly",
+    fromBoolean: (hidden) => (hidden ? "gmOnly" : "everyone"),
+  });
 
   const hideAll = () => {
     dispatch(mapSettingsUpdate({ id: mapId, changes: { revealedAreas: [] } }));
@@ -299,51 +297,8 @@ export const MapToolbar = React.memo<{
       {tool === "move" && selectedMapObjectIds.length > 0 && (
         <>
           <ColorInput value={drawColor} onChange={setDrawColor} />
-          {lockedStates.size > 0 && (
-            // lockedStates.size can be 0 if only tokens are selected
-            <label className="locked-toggle">
-              lock
-              <input
-                type="checkbox"
-                checked={isLockedToggleChecked}
-                ref={lockedCheckboxRef}
-                onChange={(e) =>
-                  updateLock(
-                    isLockedToggleIndeterminate ? true : e.target.checked
-                  )
-                }
-              />
-            </label>
-          )}
-          {hiddenStates.size > 0 && (
-            <label className="locked-toggle">
-              hidden
-              <input
-                type="checkbox"
-                checked={isHiddenToggleChecked}
-                ref={hiddenCheckboxRef}
-                onChange={(e) =>
-                  updateHidden(
-                    isHiddenToggleIndeterminate || e.target.checked
-                      ? "gmOnly"
-                      : "everyone"
-                  )
-                }
-              />
-            </label>
-          )}
-          {selectedMapObjectIds.map((selectedMapObjectId) => (
-            <React.Fragment key={selectedMapObjectId}>
-              <MapObjectLockedObserver
-                id={selectedMapObjectId}
-                onLockedStateChanged={onLockedStateChanged}
-              />
-              <MapObjectHiddenObserver
-                id={selectedMapObjectId}
-                onHiddenStateChanged={onHiddenStateChanged}
-              />
-            </React.Fragment>
-          ))}
+          {locked.widget(selectedMapObjectIds)}
+          {hidden.widget(selectedMapObjectIds)}
         </>
       )}
       {tool === "react" && (
@@ -492,65 +447,37 @@ export const MapToolbar = React.memo<{
   );
 });
 
-function MapObjectLockedObserver({
+function MapObjectObserverIndeterminateBoolean<
+  K extends keyof NonTokenMapObject
+>({
   id,
-  onLockedStateChanged,
+  onStateChanged,
+  property: property,
+  toBoolean,
 }: {
   id: RRMapObjectID;
-  onLockedStateChanged: (id: RRMapObjectID, locked: boolean | "remove") => void;
+  property: K;
+  toBoolean: (value: NonTokenMapObject[K]) => boolean;
+  onStateChanged: (id: RRMapObjectID, value: boolean | "remove") => void;
 }) {
   const mapObject = useRecoilValue(mapObjectsFamily(id));
 
-  const mapObjectLocked = mapObject
-    ? mapObject.type === "token"
+  const value =
+    !mapObject || mapObject.type === "token"
       ? "ignore"
-      : mapObject.locked
-    : "ignore";
+      : toBoolean(mapObject[property]);
 
   useEffect(() => {
-    if (mapObjectLocked !== "ignore") {
-      onLockedStateChanged(id, mapObjectLocked);
+    if (value !== "ignore") {
+      onStateChanged(id, value);
     }
-  }, [id, mapObjectLocked, onLockedStateChanged]);
+  }, [id, value, onStateChanged]);
 
   useEffect(() => {
-    // When this map object is no longer selected, remove its lockedState from
-    // the map.
-    return () => onLockedStateChanged(id, "remove");
-  }, [id, onLockedStateChanged]);
-
-  return null;
-}
-
-function MapObjectHiddenObserver({
-  id,
-  onHiddenStateChanged,
-}: {
-  id: RRMapObjectID;
-  onHiddenStateChanged: (
-    id: RRMapObjectID,
-    visibility: "gmOnly" | "everyone" | "remove"
-  ) => void;
-}) {
-  const mapObject = useRecoilValue(mapObjectsFamily(id));
-
-  const mapObjectVisibility = mapObject
-    ? mapObject.type === "token"
-      ? "ignore"
-      : mapObject.visibility
-    : "ignore";
-
-  useEffect(() => {
-    if (mapObjectVisibility !== "ignore") {
-      onHiddenStateChanged(id, mapObjectVisibility);
-    }
-  }, [id, mapObjectVisibility, onHiddenStateChanged]);
-
-  useEffect(() => {
-    // When this map object is no longer selected, remove its hiddenState from
-    // the map.
-    return () => onHiddenStateChanged(id, "remove");
-  }, [id, onHiddenStateChanged]);
+    // When this map object is no longer selected, remove its state from the
+    // map.
+    return () => onStateChanged(id, "remove");
+  }, [id, onStateChanged]);
 
   return null;
 }
