@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useEffect, useRef } from "react";
 import { Socket } from "socket.io-client";
 import { Opaque } from "type-fest";
+import { SOCKET_BROADCAST_MSG } from "../shared/constants";
 import { RRMapID, RRPoint } from "../shared/state";
 
 // TODO: reuse other as soon as you need a new message type, this is just to
@@ -62,16 +63,16 @@ export function ServerMessagesProvider({
 
   const send = (message: RRMessage) => {
     subscribers.current.forEach((subscriber) => subscriber(message));
-    socket.emit("MESSAGE", message);
+    socket.emit(SOCKET_BROADCAST_MSG, message);
   };
 
   useEffect(() => {
     const onMessage = (message: RRMessage) => {
       subscribers.current.forEach((subscriber) => subscriber(message));
     };
-    socket.on("MESSAGE", onMessage);
+    socket.on(SOCKET_BROADCAST_MSG, onMessage);
     return () => {
-      socket.off("MESSAGE", onMessage);
+      socket.off(SOCKET_BROADCAST_MSG, onMessage);
     };
   }, [socket]);
 

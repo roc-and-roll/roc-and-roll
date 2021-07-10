@@ -10,7 +10,13 @@ import React, {
 import ReactDOM from "react-dom";
 import { Socket } from "socket.io-client";
 import { Opaque, Primitive } from "type-fest";
-import { USE_CONCURRENT_MODE } from "../shared/constants";
+import {
+  SOCKET_PATCH_STATE,
+  SOCKET_SET_PLAYER_ID,
+  SOCKET_SET_STATE,
+  SOCKET_DISPATCH_ACTION,
+  USE_CONCURRENT_MODE,
+} from "../shared/constants";
 import { reducer } from "../shared/reducer";
 import {
   EntityCollection,
@@ -399,12 +405,12 @@ export function ServerStateProvider({
       updateState(msg.finishedOptimisticUpdateIds);
     };
 
-    socket.on("SET_STATE", onSetState);
-    socket.on("PATCH_STATE", onPatchState);
+    socket.on(SOCKET_SET_STATE, onSetState);
+    socket.on(SOCKET_PATCH_STATE, onPatchState);
 
     return () => {
-      socket.off("SET_STATE", onSetState);
-      socket.off("PATCH_STATE", onPatchState);
+      socket.off(SOCKET_SET_STATE, onSetState);
+      socket.off(SOCKET_PATCH_STATE, onPatchState);
     };
   }, [socket, updateState]);
 
@@ -673,7 +679,7 @@ export function useServerDispatch() {
         );
       }
 
-      socket?.emit("REDUX_ACTION", {
+      socket?.emit(SOCKET_DISPATCH_ACTION, {
         actions: actions.flatMap((action) =>
           isOptimisticAction(action)
             ? action.actions
@@ -693,10 +699,10 @@ export function useAutoDispatchPlayerIdOnChange(playerId: RRPlayerID | null) {
   const { socket } = useContext(ServerStateContext);
 
   useEffect(() => {
-    socket?.emit("SET_PLAYER_ID", playerId);
+    socket?.emit(SOCKET_SET_PLAYER_ID, playerId);
 
     const onReconnect = () => {
-      socket?.emit("SET_PLAYER_ID", playerId);
+      socket?.emit(SOCKET_SET_PLAYER_ID, playerId);
     };
 
     socket?.io.on("reconnect", onReconnect);

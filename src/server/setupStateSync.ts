@@ -11,6 +11,13 @@ import { ephemeralPlayerAdd, ephemeralPlayerRemove } from "../shared/actions";
 import { debounced } from "../shared/util";
 import * as t from "typanion";
 import { isRRID } from "../shared/validation";
+import {
+  SOCKET_PATCH_STATE,
+  SOCKET_SET_PLAYER_ID,
+  SOCKET_SET_STATE,
+  SOCKET_DISPATCH_ACTION,
+  SOCKET_BROADCAST_MSG,
+} from "../shared/constants";
 
 type AdditionalSocketData = {
   finishedOptimisticUpdateIds: OptimisticUpdateID[];
@@ -62,7 +69,7 @@ export const setupStateSync = (
     }
 
     if (data.lastState === null) {
-      socket.emit("SET_STATE", {
+      socket.emit(SOCKET_SET_STATE, {
         state: JSON.stringify(currentState),
         version: __VERSION__,
         finishedOptimisticUpdateIds: data.finishedOptimisticUpdateIds,
@@ -81,7 +88,7 @@ export const setupStateSync = (
         patch.deletedKeys.length > 0 ||
         data.finishedOptimisticUpdateIds.length > 0
       ) {
-        socket.emit("PATCH_STATE", {
+        socket.emit(SOCKET_PATCH_STATE, {
           patch: JSON.stringify(patch),
           finishedOptimisticUpdateIds: data.finishedOptimisticUpdateIds,
         });
@@ -148,7 +155,7 @@ export const setupStateSync = (
       additionalSocketData.delete(socket.id);
     });
     socket.on(
-      "REDUX_ACTION",
+      SOCKET_DISPATCH_ACTION,
       (msg: unknown, sendResponse: (r: string) => void) => {
         if (!isREDUX_ACTION(msg)) {
           console.warn("Received unsupported message from client.", msg);
@@ -173,7 +180,7 @@ export const setupStateSync = (
       }
     );
     socket.on(
-      "SET_PLAYER_ID",
+      SOCKET_SET_PLAYER_ID,
       async (
         playerId: RRPlayerID | null,
         sendResponse: (r: string) => void
@@ -194,8 +201,8 @@ export const setupStateSync = (
         }
       }
     );
-    socket.on("MESSAGE", (message) => {
-      socket.broadcast.emit("MESSAGE", message);
+    socket.on(SOCKET_BROADCAST_MSG, (message) => {
+      socket.broadcast.emit(SOCKET_BROADCAST_MSG, message);
     });
   };
 

@@ -17,3 +17,13 @@ export const LAST_MIGRATION_VERSION = 6;
 export const SYNC_MY_MOUSE_POSITION = true as boolean;
 
 export const DEFAULT_BACKGROUND_IMAGE_HEIGHT = 10 * GRID_SIZE;
+
+export const SOCKET_SET_PLAYER_ID = "SET_PLAYER_ID";
+
+export const SOCKET_SET_STATE = "SET_STATE";
+
+export const SOCKET_PATCH_STATE = "PATCH_STATE";
+
+export const SOCKET_DISPATCH_ACTION = "REDUX_ACTION";
+
+export const SOCKET_BROADCAST_MSG = "MESSAGE";

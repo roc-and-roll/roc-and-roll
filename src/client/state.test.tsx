@@ -24,6 +24,7 @@ import ReactDOM from "react-dom";
 import { rrid } from "../shared/util";
 import { MockClientSocket } from "./test-utils";
 import { Socket } from "socket.io-client";
+import { SOCKET_DISPATCH_ACTION } from "../shared/constants";
 
 function setup<A extends Record<string, unknown>, H>(
   initialProps: A,
@@ -160,7 +161,7 @@ describe("optimistic state updates", () => {
       const action = actions[0]!;
       const legacyOptimisticUpdateId = action.meta.__optimisticUpdateId__;
 
-      expect(name).toBe("REDUX_ACTION");
+      expect(name).toBe(SOCKET_DISPATCH_ACTION);
       expect(typeof legacyOptimisticUpdateId).toBe("string");
       updateId = legacyOptimisticUpdateId;
     });
@@ -235,7 +236,7 @@ describe("optimistic state updates", () => {
     const onEmit = jest.fn((name, action) => {
       const optimisticUpdateId = action.meta.__optimisticUpdateId__;
 
-      expect(name).toBe("REDUX_ACTION");
+      expect(name).toBe(SOCKET_DISPATCH_ACTION);
       expect(typeof optimisticUpdateId).toBe("string");
     });
     mockSocket.__onEmitToServerSubscriberAdd(onEmit);

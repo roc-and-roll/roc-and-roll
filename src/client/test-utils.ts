@@ -1,4 +1,5 @@
 import { Socket } from "socket.io-client";
+import { SOCKET_PATCH_STATE, SOCKET_SET_STATE } from "../shared/constants";
 import { OptimisticUpdateID, SyncedState } from "../shared/state";
 import { StatePatch } from "./state";
 
@@ -45,7 +46,7 @@ export class MockClientSocket {
     state: Partial<SyncedState>,
     finishedOptimisticUpdateIds: OptimisticUpdateID[] = []
   ) {
-    this.__receiveFromServer("SET_STATE", {
+    this.__receiveFromServer(SOCKET_SET_STATE, {
       state: JSON.stringify(state),
       finishedOptimisticUpdateIds,
     });
@@ -55,7 +56,7 @@ export class MockClientSocket {
     patch: StatePatch<SyncedState>,
     finishedOptimisticUpdateIds: OptimisticUpdateID[] = []
   ) {
-    this.__receiveFromServer("PATCH_STATE", {
+    this.__receiveFromServer(SOCKET_PATCH_STATE, {
       patch: JSON.stringify(patch),
       finishedOptimisticUpdateIds,
     });
