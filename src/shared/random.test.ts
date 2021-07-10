@@ -6,6 +6,11 @@ describe("randomBetweenInclusive", () => {
     [1, 20],
     [-5, -1],
   ] as const)("works for numbers between %s and %s", (min, max) => {
+    if (!process.env["CI"]) {
+      // This test is rather slow, so we skip it when not running in CI.
+      return;
+    }
+
     const results = new Map<number, number>();
 
     for (let i = 0; i < 10000; i++) {

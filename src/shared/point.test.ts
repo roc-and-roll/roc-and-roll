@@ -1,4 +1,4 @@
-import { makePoint, pointRotate } from "./point";
+import { makePoint, pointRotate, pointScale } from "./point";
 
 describe("RRPoint", () => {
   it.each([
@@ -14,5 +14,9 @@ describe("RRPoint", () => {
     const expectedResult = makePoint(output[0], output[1]);
     expect(result.x).toBeCloseTo(expectedResult.x);
     expect(result.y).toBeCloseTo(expectedResult.y);
+  });
+
+  it("scales points", () => {
+    expect(pointScale(makePoint(3, 5.2), 2)).toEqual(makePoint(6, 10.4));
   });
 });

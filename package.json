@@ -74,6 +74,7 @@
     "@babel/preset-typescript": "^7.14.5",
     "@beyonk/google-fonts-webpack-plugin": "patch:@beyonk/google-fonts-webpack-plugin@^1.7.0#./patches/@beyonk/google-fonts-webpack-plugin.patch",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.4.3",
+    "@swc/jest": "^0.1.2",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",
     "@testing-library/react-hooks": "^5.1.3",
@@ -115,6 +116,7 @@
     "git-revision-webpack-plugin": "^5.0.0",
     "html-webpack-plugin": "^5.3.1",
     "html-webpack-tags-plugin": "^3.0.1",
+    "identity-obj-proxy": "^3.0.0",
     "jest": "^27.0.4",
     "lint-staged": "^11.0.0",
     "mini-css-extract-plugin": "^1.6.0",
@@ -127,7 +129,6 @@
     "sass": "^1.35.1",
     "sass-loader": "^12.1.0",
     "style-loader": "^2.0.0",
-    "ts-jest": "^27.0.3",
     "ts-loader": "^9.2.3",
     "ts-node": "^10.0.0",
     "type-fest": "^1.2.1",
@@ -143,32 +144,13 @@
   "jest": {
     "testEnvironment": "jest-environment-jsdom",
     "transform": {
-      "^.+\\.tsx?$": "ts-jest"
+      "^.+\\.[jt]sx?$": "@swc/jest"
     },
     "setupFilesAfterEnv": [
       "<rootDir>/jest-setup.ts"
     ],
     "globals": {
-      "__VERSION__": "master",
-      "ts-jest": {
-        "tsconfig": "tsconfig.json",
-        "babelConfig": {
-          "presets": [
-            [
-              "@babel/preset-env",
-              {
-                "useBuiltIns": "entry",
-                "corejs": 3,
-                "targets": {
-                  "node": 14
-                }
-              }
-            ],
-            "@babel/preset-react",
-            "@babel/preset-typescript"
-          ]
-        }
-      }
+      "__VERSION__": "master"
     },
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
     "moduleFileExtensions": [
@@ -181,7 +163,7 @@
     ],
     "moduleNameMapper": {
       "src/(.*)": "<rootDir>/src/$1",
-      "^.+\\.(css|less|scss)$": "babel-jest"
+      "^.+\\.(css|less|scss)$": "identity-obj-proxy"
     },
     "roots": [
       "<rootDir>/src"
