@@ -50,6 +50,8 @@ import snail from "../../../third-party/game-icons.net/ffffff/transparent/1x1/lo
 import voodooDoll from "../../../third-party/game-icons.net/ffffff/transparent/1x1/lorc/voodoo-doll.svg";
 import bullseye from "../../../third-party/game-icons.net/ffffff/transparent/1x1/skoll/bullseye.svg";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
+import { faSkullCrossbones } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export interface ConditionWithIcon {
   name: RRCharacterCondition;
@@ -85,6 +87,7 @@ export const conditionIcons = {
   "hunters mark": bullseye,
   polymorphed: snail,
   slowed: tortoise,
+  dead: faSkullCrossbones,
 } as const;
 
 export function TokenEditor({
@@ -563,27 +566,52 @@ function ConditionPicker({
       <div className="character-editor-condition-icons">
         {conditionNames
           .filter((name) => name.toLowerCase().includes(filter.toLowerCase()))
-          .map((name) => (
-            <div
-              key={name}
-              className={clsx("character-editor-condition-icon", {
-                selected: conditions.includes(name),
-              })}
-            >
-              <img
-                title={name}
-                src={conditionIcons[name]}
-                alt={name}
-                onClick={() =>
-                  setConditions((oldConditions) =>
-                    oldConditions.includes(name)
-                      ? oldConditions.filter((each) => each !== name)
-                      : [...oldConditions, name]
-                  )
-                }
-              />
-            </div>
-          ))}
+          .map((name) => {
+            const icon = conditionIcons[name];
+
+            const iconProps = {
+              title: name,
+              alt: name,
+              onClick: () =>
+                setConditions((oldConditions) =>
+                  oldConditions.includes(name)
+                    ? oldConditions.filter((each) => each !== name)
+                    : [...oldConditions, name]
+                ),
+            };
+
+            return (
+              <div
+                key={name}
+                className={clsx("character-editor-condition-icon", {
+                  selected: conditions.includes(name),
+                })}
+              >
+                {typeof icon === "string" ? (
+                  <img src={icon} {...iconProps} />
+                ) : (
+                  <div
+                    style={{
+                      height: 32,
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={icon}
+                      color="black"
+                      fixedWidth
+                      style={{
+                        stroke: "white",
+                        strokeWidth: 24,
+                      }}
+                      {...iconProps}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
       </div>
     </>
   );

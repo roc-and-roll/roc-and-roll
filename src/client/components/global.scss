@@ -1072,9 +1072,18 @@ button.color-picker-color {
   margin: 0.1rem;
   padding: 0.1rem;
 
+  $size: 32px;
+
   img {
-    width: 32px;
-    height: 32px;
+    width: $size;
+    height: $size;
+  }
+
+  svg {
+    // By default, FontAwesome icons with fixedWidth are 1.25em wide.
+    // Therefore, the font-size must be set to 32 / 1.25 when we want the icon
+    // to be 32px wide.
+    font-size: math.div($size, 1.25);
   }
 
   &.selected {

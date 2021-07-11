@@ -80,6 +80,7 @@ export const conditionNames = [
   "surprised",
   "three-quarters-cover",
   "total-cover",
+  "dead",
 ] as const;
 
 export type RRCharacterCondition = IterableElement<typeof conditionNames>;

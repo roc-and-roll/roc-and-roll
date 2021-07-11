@@ -48,6 +48,7 @@ import { useServerDispatch } from "../../state";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import useRafLoop from "../../useRafLoop";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export const MapToken = React.memo<{
   mapId: RRMapID;
@@ -261,6 +262,9 @@ export const MapToken = React.memo<{
       {healthbarArea &&
         ReactDOM.createPortal(
           <>
+            {token.conditions.includes("dead") && (
+              <DeadMarker x={x} y={y} scale={token.scale} />
+            )}
             {canControl && token.maxHP > 0 && (
               <g transform={`translate(${x},${y - 16})`}>
                 <Healthbar
@@ -280,23 +284,47 @@ export const MapToken = React.memo<{
                 fill="none"
               />
             )}
-            {token.conditions.map((condition, index) => (
-              <image
-                key={condition}
-                // TODO: Normally, we'd want to disable pointer events on
-                // condition icons, so that clicking on them will still allow
-                // you to select and move your token. However, this causes the
-                // <title> not to show when hovering the condition icon.
-                //
-                // pointerEvents="none"
-                className="token-condition-icon"
-                x={x + (index % 4) * 16}
-                y={y + Math.floor(index / 4) * 16}
-                href={conditionIcons[condition]}
-              >
-                <title>{condition}</title>
-              </image>
-            ))}
+            {token.conditions.map((condition, index) => {
+              const icon = conditionIcons[condition];
+              const props = {
+                className: "token-condition-icon",
+                x: x + (index % 4) * 16,
+                y: y + Math.floor(index / 4) * 16,
+              };
+
+              // TODO: Normally, we'd want to disable pointer events on
+              // condition icons, so that clicking on them will still allow
+              // you to select and move your token. However, this causes the
+              // <title> not to show when hovering the condition icon.
+              //
+              // pointerEvents="none"
+
+              return typeof icon === "string" ? (
+                <image key={condition} href={icon} {...props}>
+                  <title>{condition}</title>
+                </image>
+              ) : (
+                <React.Fragment key={condition}>
+                  <FontAwesomeIcon
+                    icon={icon}
+                    symbol={`${token.id}/condition-icon/${condition}`}
+                  />
+                  <use
+                    xlinkHref={`#${token.id}/condition-icon/${condition}`}
+                    {...props}
+                    width={16}
+                    height={16}
+                    color="black"
+                    style={{
+                      stroke: "white",
+                      strokeWidth: 18,
+                    }}
+                  >
+                    <title>{condition}</title>
+                  </use>
+                </React.Fragment>
+              );
+            })}
           </>,
           healthbarArea
         )}
@@ -327,6 +355,39 @@ export const MapToken = React.memo<{
     </>
   );
 });
+
+function DeadMarker({ x, y, scale }: { x: number; y: number; scale: number }) {
+  const COLOR = "red";
+  const barSize = 8 + 8 * Math.max(0, Math.log(scale));
+  const tokenSize = GRID_SIZE * scale;
+
+  return (
+    <>
+      <g transform={`rotate(45, ${x}, ${y})`} pointerEvents="none">
+        <RoughRectangle
+          x={x}
+          y={y - barSize / 2}
+          w={tokenSize * Math.SQRT2}
+          h={barSize}
+          fill={COLOR}
+          fillStyle="solid"
+          roughness={0}
+        />
+      </g>
+      <g transform={`rotate(-45, ${x}, ${y + tokenSize})`} pointerEvents="none">
+        <RoughRectangle
+          x={x}
+          y={y + tokenSize - barSize / 2}
+          w={tokenSize * Math.SQRT2}
+          h={barSize}
+          fill={COLOR}
+          fillStyle="solid"
+          roughness={0}
+        />
+      </g>
+    </>
+  );
+}
 
 function MapTokenEditor({ mapId, token }: { mapId: RRMapID; token: RRToken }) {
   const dispatch = useServerDispatch();
