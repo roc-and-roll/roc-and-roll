@@ -1,6 +1,7 @@
+import composeRefs from "@seznam/compose-react-refs";
 import React, { useCallback, useState } from "react";
 import { colors } from "../../../shared/colors";
-import { DEFAULT_COLOR_INPUT_DEBOUNCE_TIME } from "../../../shared/constants";
+import { FORCE_COMMIT_FIELD_VALUE_AFTER } from "../../../shared/constants";
 import { useDebouncedField } from "../../debounce";
 import { Popover } from "../Popover";
 import { Button } from "./Button";
@@ -62,16 +63,19 @@ export const ColorInput = React.memo(
   })
 );
 
-export const DebouncedColorInput = React.forwardRef<
+export const SmartColorInput = React.forwardRef<
   HTMLInputElement,
   ColorInputProps & { debounce?: number }
 >(function DebouncedColorInput(props, ref) {
-  const [fieldProps, _isPending] = useDebouncedField<string, HTMLInputElement>({
-    debounce: DEFAULT_COLOR_INPUT_DEBOUNCE_TIME,
+  const [fieldProps, debouncedRef, _isPending] = useDebouncedField<
+    string,
+    HTMLInputElement
+  >({
+    debounce: FORCE_COMMIT_FIELD_VALUE_AFTER,
     ...props,
   });
 
-  return <ColorInput ref={ref} {...fieldProps} />;
+  return <ColorInput ref={composeRefs(ref, debouncedRef)} {...fieldProps} />;
 });
 
 const ColorButtons = React.memo<{

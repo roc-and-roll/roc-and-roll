@@ -38,7 +38,7 @@ import { EMPTY_ARRAY, withDo } from "../../shared/util";
 import ReactDOM from "react-dom";
 import { NotificationTopAreaPortal } from "./Notifications";
 import { Collapsible } from "./Collapsible";
-import { DebouncedIntegerInput } from "./ui/TextInput";
+import { SmartIntegerInput } from "./ui/TextInput";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -152,7 +152,7 @@ const InitiativeEntry = React.memo<{
             remove
           </Button>
         )}
-        <DebouncedIntegerInput
+        <SmartIntegerInput
           value={entry.initiative}
           disabled={!(myself.isGM || canEdit)}
           onChange={(initiative) =>

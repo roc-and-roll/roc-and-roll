@@ -94,7 +94,7 @@ class OptimisticActionAppliers {
   }
 
   public static getDeduplicationKey(
-    applier: OptimisticActionApplier
+    applier: Pick<OptimisticActionApplier, "dispatcherKey" | "key">
   ): DeduplicationKey {
     return `${applier.dispatcherKey}/${applier.key ?? ""}` as DeduplicationKey;
   }
@@ -595,27 +595,20 @@ function addOptimisticUpdateIdToAction<A extends SyncedStateAction>(
   };
 }
 
-function isOptimisticAction(
-  action:
-    | SyncedStateAction
-    | {
-        actions: SyncedStateAction[];
-        optimisticKey: string;
-      }
-): action is {
+type OptimisticAction = {
   actions: SyncedStateAction[];
   optimisticKey: string;
-} {
+  syncToServerThrottle: number;
+};
+
+function isOptimisticAction(
+  action: SyncedStateAction | OptimisticAction
+): action is OptimisticAction {
   return "actions" in action && "optimisticKey" in action;
 }
 
 function isAction(
-  action:
-    | SyncedStateAction
-    | {
-        actions: SyncedStateAction[];
-        optimisticKey: string;
-      }
+  action: SyncedStateAction | OptimisticAction
 ): action is SyncedStateAction {
   return !isOptimisticAction(action);
 }
@@ -630,17 +623,30 @@ export function useServerDispatch() {
   const { socket, addLocalOptimisticActionAppliers, stateRef } =
     useContext(ServerStateContext);
   const dispatcherKey = useGuranteedMemo(() => rrid(), []);
+  const throttledSyncToServer = useRef<
+    Map<
+      string,
+      {
+        timeoutId: ReturnType<typeof setTimeout>;
+        actions: SyncedStateAction[];
+        optimisticUpdateId: OptimisticUpdateID;
+      }
+    >
+  >(new Map());
+
+  useEffect(() => {
+    return () => {
+      for (const {
+        timeoutId,
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      } of throttledSyncToServer.current.values()) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, []);
 
   return useCallback(
-    <
-      A extends
-        | SyncedStateAction
-        | {
-            actions: SyncedStateAction[];
-            optimisticKey: string;
-          },
-      R extends A | Array<A>
-    >(
+    <A extends SyncedStateAction | OptimisticAction, R extends A | Array<A>>(
       actionOrActionsOrUpdater: R | ((currentState: SyncedState) => R)
     ): R => {
       const actionOrActions =
@@ -656,39 +662,86 @@ export function useServerDispatch() {
         return actionOrActions;
       }
 
-      const hasOptimisticActions = actions.some((action) =>
-        isOptimisticAction(action)
-      );
+      const optimisticUpdateId = rrid<{ id: OptimisticUpdateID }>();
+      const throttledOptimisticUpdateIds: Map<string, OptimisticUpdateID> =
+        new Map();
 
-      let optimisticUpdateId: OptimisticUpdateID | null = null;
+      const actionsToSyncToServerImmediately: SyncedStateAction[] = [];
 
-      if (hasOptimisticActions) {
-        optimisticUpdateId = rrid<{ id: OptimisticUpdateID }>();
+      let hasImmediateOptimisticActions = false;
 
-        addLocalOptimisticActionAppliers(
-          actions.flatMap((action) =>
-            isOptimisticAction(action)
-              ? {
-                  dispatcherKey,
-                  optimisticUpdateId: optimisticUpdateId!,
-                  actions: action.actions,
-                  key: action.optimisticKey,
-                }
-              : []
-          )
-        );
+      for (const action of actions) {
+        if (isOptimisticAction(action)) {
+          if (action.syncToServerThrottle === 0) {
+            actionsToSyncToServerImmediately.push(...action.actions);
+            hasImmediateOptimisticActions = true;
+
+            addLocalOptimisticActionAppliers([
+              {
+                dispatcherKey,
+                optimisticUpdateId: optimisticUpdateId,
+                actions: action.actions,
+                key: action.optimisticKey,
+              },
+            ]);
+          } else {
+            if (!throttledOptimisticUpdateIds.has(action.optimisticKey)) {
+              throttledOptimisticUpdateIds.set(
+                action.optimisticKey,
+                rrid<{ id: OptimisticUpdateID }>()
+              );
+            }
+            const throttledOptimisticUpdateId =
+              throttledOptimisticUpdateIds.get(action.optimisticKey)!;
+
+            const activeThrottle = throttledSyncToServer.current.get(
+              action.optimisticKey
+            );
+
+            addLocalOptimisticActionAppliers([
+              {
+                dispatcherKey,
+                optimisticUpdateId: throttledOptimisticUpdateId,
+                actions: action.actions,
+                key: action.optimisticKey,
+              },
+            ]);
+
+            if (activeThrottle) {
+              activeThrottle.actions = action.actions;
+              activeThrottle.optimisticUpdateId = throttledOptimisticUpdateId;
+            } else {
+              throttledSyncToServer.current.set(action.optimisticKey, {
+                actions: action.actions,
+                optimisticUpdateId: throttledOptimisticUpdateId,
+                timeoutId: setTimeout(() => {
+                  const { actions, optimisticUpdateId } =
+                    throttledSyncToServer.current.get(action.optimisticKey)!;
+                  throttledSyncToServer.current.delete(action.optimisticKey);
+                  socket?.emit(SOCKET_DISPATCH_ACTION, {
+                    actions: actions,
+                    optimisticUpdateId,
+                  });
+                }, action.syncToServerThrottle),
+              });
+            }
+          }
+        } else if (isAction(action)) {
+          actionsToSyncToServerImmediately.push(action);
+        } else {
+          throw new Error("This should never happen.");
+        }
       }
 
-      socket?.emit(SOCKET_DISPATCH_ACTION, {
-        actions: actions.flatMap((action) =>
-          isOptimisticAction(action)
-            ? action.actions
-            : isAction(action)
-            ? action
-            : []
-        ),
-        optimisticUpdateId,
-      });
+      if (actionsToSyncToServerImmediately.length > 0) {
+        socket?.emit(SOCKET_DISPATCH_ACTION, {
+          actions: actionsToSyncToServerImmediately,
+          optimisticUpdateId: hasImmediateOptimisticActions
+            ? optimisticUpdateId
+            : null,
+        });
+      }
+
       return actionOrActions;
     },
     [stateRef, socket, addLocalOptimisticActionAppliers, dispatcherKey]

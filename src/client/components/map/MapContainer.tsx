@@ -51,6 +51,7 @@ import { identity, Matrix } from "transformation-matrix";
 import { MapToolbar } from "../MapToolbar";
 import {
   DEFAULT_BACKGROUND_IMAGE_HEIGHT,
+  DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
   GRID_SIZE,
   SYNC_MY_MOUSE_POSITION,
 } from "../../../shared/constants";
@@ -352,6 +353,7 @@ export default function MapContainer() {
                   }),
                 ],
                 optimisticKey: `${object.id}/position`,
+                syncToServerThrottle: 0,
               };
             });
           });
@@ -531,6 +533,7 @@ export default function MapContainer() {
           }),
         ],
         optimisticKey: "revealedAreas",
+        syncToServerThrottle: CURSOR_POSITION_SYNC_DEBOUNCE,
       }));
     },
     [dispatch, mapId]
@@ -562,6 +565,7 @@ export default function MapContainer() {
             }),
           ],
           optimisticKey: `${tokenId}/hp`,
+          syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
         };
       }),
     [dispatch]
@@ -590,6 +594,7 @@ export default function MapContainer() {
                     }),
                   ],
                   optimisticKey: `${object.id}/position`,
+                  syncToServerThrottle: CURSOR_POSITION_SYNC_DEBOUNCE,
                 };
               }
 
@@ -637,6 +642,7 @@ export default function MapContainer() {
                     }),
                   ],
                   optimisticKey: `${object.id}/position`,
+                  syncToServerThrottle: CURSOR_POSITION_SYNC_DEBOUNCE,
                 };
               }
 

@@ -10,6 +10,7 @@ import {
   diceTemplateUpdate,
   logEntryDiceRollAdd,
 } from "../../shared/actions";
+import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import {
   byId,
   colorForDamageType,
@@ -39,9 +40,9 @@ import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { Select } from "./ui/Select";
 import {
-  DebouncedIntegerInput,
-  DebouncedTextareaInput,
-  DebouncedTextInput,
+  SmartIntegerInput,
+  SmartTextareaInput,
+  SmartTextInput,
 } from "./ui/TextInput";
 
 type SelectionPair = { id: RRDiceTemplateID; modified: RRMultipleRoll };
@@ -639,7 +640,7 @@ function DiceTemplateInner({
       {selectionCount > 1 && (
         <div className="dice-template-selection-count">{selectionCount}</div>
       )}
-      <DebouncedTextInput
+      <SmartTextInput
         ref={nameInputRef}
         value={template.name}
         onClick={(e) => e.stopPropagation()}
@@ -652,6 +653,7 @@ function DiceTemplateInner({
               }),
             ],
             optimisticKey: "name",
+            syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
           })
         }
       />
@@ -743,6 +745,7 @@ function DamageTypeEditor({
               }),
             ],
             optimisticKey: "damageType",
+            syncToServerThrottle: 0,
           })
         }
         options={damageTypes.map((t) => ({ value: t ?? "", label: t ?? "" }))}
@@ -775,6 +778,7 @@ function DiceMultipleRollEditor({
               }),
             ],
             optimisticKey: "modified",
+            syncToServerThrottle: 0,
           })
         }
         options={multipleRollValues.map((t) => ({
@@ -798,7 +802,7 @@ function DiceCountEditor({
   return (
     <label>
       Count:
-      <DebouncedIntegerInput
+      <SmartIntegerInput
         value={part.count}
         onChange={(count) =>
           dispatch({
@@ -810,6 +814,7 @@ function DiceCountEditor({
               }),
             ],
             optimisticKey: "count",
+            syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
           })
         }
       />
@@ -829,7 +834,7 @@ function ModifierNumberEditor({
   return (
     <label>
       Modifier:
-      <DebouncedIntegerInput
+      <SmartIntegerInput
         value={part.number}
         onChange={(number) =>
           dispatch({
@@ -841,6 +846,7 @@ function ModifierNumberEditor({
               }),
             ],
             optimisticKey: "count",
+            syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
           })
         }
       />
@@ -861,7 +867,7 @@ function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
   return (
     <label>
       Notes:
-      <DebouncedTextareaInput
+      <SmartTextareaInput
         value={template.notes}
         onChange={(notes) =>
           dispatch({
@@ -869,6 +875,7 @@ function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
               diceTemplateUpdate({ id: templateId, changes: { notes } }),
             ],
             optimisticKey: "notes",
+            syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
           })
         }
         className="dice-template-notes"

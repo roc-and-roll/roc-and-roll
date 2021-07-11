@@ -1,10 +1,10 @@
 import { MyStore } from "./setupReduxStore";
 import fs from "fs";
-import { debounced } from "../shared/util";
+import { throttled } from "../shared/util";
 
 export function setupStatePersistence(store: MyStore, statePath: string) {
   store.subscribe(
-    debounced(() => {
+    throttled(() => {
       const state = store.getState();
       const json = JSON.stringify(state);
 

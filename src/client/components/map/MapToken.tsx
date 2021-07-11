@@ -1,5 +1,8 @@
-import React, { useCallback, useRef, useState } from "react";
-import { GRID_SIZE } from "../../../shared/constants";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+  GRID_SIZE,
+} from "../../../shared/constants";
 import {
   RRAura,
   RRMapObject,
@@ -25,7 +28,7 @@ import { useMyself } from "../../myself";
 import ReactDOM from "react-dom";
 import { HPInlineEdit } from "./HPInlineEdit";
 import { useRecoilValue } from "recoil";
-import { hoveredMapObjectsFamily } from "./Map";
+import { CURSOR_POSITION_SYNC_DEBOUNCE, hoveredMapObjectsFamily } from "./Map";
 import {
   highlightedCharactersFamily,
   selectedMapObjectsFamily,
@@ -33,11 +36,18 @@ import {
 } from "./MapContainer";
 import { Popover } from "../Popover";
 import { TokenEditor, conditionIcons } from "../tokens/TokenEditor";
-import { makePoint, pointAdd, pointEquals } from "../../../shared/point";
+import {
+  makePoint,
+  pointAdd,
+  pointEquals,
+  pointScale,
+  pointSubtract,
+} from "../../../shared/point";
 import { EmanationArea } from "./Areas";
 import { useServerDispatch } from "../../state";
 import { mapObjectUpdate } from "../../../shared/actions";
-import { DebouncedIntegerInput } from "../ui/TextInput";
+import { SmartIntegerInput } from "../ui/TextInput";
+import useRafLoop from "../../useRafLoop";
 
 export const MapToken = React.memo<{
   mapId: RRMapID;
@@ -94,13 +104,48 @@ export const MapToken = React.memo<{
     }
   };
 
+  const [lerpedPosition, setLerpedPosition] = useState(object.position);
+  const prevPositionRef = useRef(object.position);
+  const [rafStart, rafStop] = useRafLoop();
+
+  useEffect(() => {
+    if (isSelected) {
+      setLerpedPosition(object.position);
+      prevPositionRef.current = object.position;
+    } else {
+      rafStart((amount) => {
+        if (amount === 1) {
+          setLerpedPosition(object.position);
+          prevPositionRef.current = object.position;
+          return;
+        }
+        setLerpedPosition(
+          pointAdd(
+            prevPositionRef.current,
+            pointScale(
+              pointSubtract(object.position, prevPositionRef.current),
+              amount
+            )
+          )
+        );
+      }, CURSOR_POSITION_SYNC_DEBOUNCE);
+
+      return () => {
+        setLerpedPosition(object.position);
+        prevPositionRef.current = object.position;
+        rafStop();
+      };
+    }
+  }, [isSelected, object.position, rafStart, rafStop]);
+
   if (!token || !canViewTokenOnMap(token, myself)) {
     return null;
   }
 
-  const {
-    position: { x, y },
-  } = object;
+  const tokenSize = GRID_SIZE * token.scale;
+
+  const { x, y } = lerpedPosition;
+  const center = pointAdd(lerpedPosition, makePoint(tokenSize / 2));
 
   const canControl = canStartMoving && canControlToken(token, myself);
   const tokenStyle = {
@@ -114,7 +159,6 @@ export const MapToken = React.memo<{
     ...(canControl ? { cursor: "move" } : {}),
   };
 
-  const tokenSize = GRID_SIZE * token.scale;
   const tokenRepresentation = token.tokenImage ? (
     <image
       onMouseDown={handleMouseDown}
@@ -143,8 +187,6 @@ export const MapToken = React.memo<{
       style={tokenStyle}
     />
   );
-
-  const center = pointAdd(object.position, makePoint(tokenSize / 2));
 
   const fullTokenRepresenation = (
     <>
@@ -248,8 +290,8 @@ export const MapToken = React.memo<{
                 //
                 // pointerEvents="none"
                 className="token-condition-icon"
-                x={object.position.x + (index % 4) * 16}
-                y={object.position.y + Math.floor(index / 4) * 16}
+                x={x + (index % 4) * 16}
+                y={y + Math.floor(index / 4) * 16}
                 href={conditionIcons[condition]}
               >
                 <title>{condition}</title>
@@ -295,7 +337,7 @@ function MapTokenEditor({ mapId, token }: { mapId: RRMapID; token: RRToken }) {
       <h3>Map Token Settings</h3>
       <label>
         Rotation:{" "}
-        <DebouncedIntegerInput
+        <SmartIntegerInput
           min={-360}
           max={360}
           value={token.rotation}
@@ -305,6 +347,7 @@ function MapTokenEditor({ mapId, token }: { mapId: RRMapID; token: RRToken }) {
                 mapObjectUpdate(mapId, { id: token.id, changes: { rotation } }),
               ],
               optimisticKey: "rotation",
+              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
             })
           }
         />

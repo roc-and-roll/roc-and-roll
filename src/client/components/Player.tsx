@@ -1,10 +1,11 @@
 import React from "react";
 import { playerUpdate } from "../../shared/actions";
+import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import { useMyself } from "../myself";
 import { useServerDispatch } from "../state";
 import { Button } from "./ui/Button";
-import { DebouncedColorInput } from "./ui/ColorInput";
-import { DebouncedTextInput } from "./ui/TextInput";
+import { SmartColorInput } from "./ui/ColorInput";
+import { SmartTextInput } from "./ui/TextInput";
 
 export function Player({ logout }: { logout: () => void }) {
   const dispatch = useServerDispatch();
@@ -14,7 +15,7 @@ export function Player({ logout }: { logout: () => void }) {
     <>
       <label>
         Name
-        <DebouncedTextInput
+        <SmartTextInput
           value={myself.name}
           onChange={(name) =>
             dispatch({
@@ -25,6 +26,7 @@ export function Player({ logout }: { logout: () => void }) {
                 }),
               ],
               optimisticKey: "name",
+              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
             })
           }
         />
@@ -44,13 +46,14 @@ export function Player({ logout }: { logout: () => void }) {
                 }),
               ],
               optimisticKey: "isGM",
+              syncToServerThrottle: 0,
             })
           }
         />
       </label>
       <label>
         Color:{" "}
-        <DebouncedColorInput
+        <SmartColorInput
           value={myself.color}
           onChange={(color) =>
             dispatch({
@@ -61,6 +64,7 @@ export function Player({ logout }: { logout: () => void }) {
                 }),
               ],
               optimisticKey: "color",
+              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
             })
           }
         />

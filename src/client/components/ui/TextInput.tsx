@@ -1,6 +1,7 @@
+import composeRefs from "@seznam/compose-react-refs";
 import clsx from "clsx";
 import React from "react";
-import { DEFAULT_TEXT_INPUT_DEBOUNCE_TIME } from "../../../shared/constants";
+import { FORCE_COMMIT_FIELD_VALUE_AFTER } from "../../../shared/constants";
 import { useDebouncedField, useIsolatedValue } from "../../debounce";
 
 type TextInputProps<T = string> = Omit<
@@ -27,21 +28,24 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
   }
 );
 
-export const DebouncedTextInput = React.forwardRef<
+export const SmartTextInput = React.forwardRef<
   HTMLInputElement,
-  TextInputProps & { debounce?: number }
+  TextInputProps
 >(function DebouncedTextInput(props, ref) {
-  const [fieldProps, _isPending] = useDebouncedField<string, HTMLInputElement>({
-    debounce: DEFAULT_TEXT_INPUT_DEBOUNCE_TIME,
+  const [fieldProps, debouncedRef, _isPending] = useDebouncedField<
+    string,
+    HTMLInputElement
+  >({
+    debounce: FORCE_COMMIT_FIELD_VALUE_AFTER,
     ...props,
   });
 
-  return <TextInput ref={ref} {...fieldProps} />;
+  return <TextInput ref={composeRefs(ref, debouncedRef)} {...fieldProps} />;
 });
 
 type IntegerInputProps = Omit<TextInputProps<number>, "type">;
 
-export const DebouncedIntegerInput = React.forwardRef<
+export const SmartIntegerInput = React.forwardRef<
   HTMLInputElement,
   IntegerInputProps
 >(function DebouncedIntegerInput(
@@ -56,7 +60,7 @@ export const DebouncedIntegerInput = React.forwardRef<
   });
 
   return (
-    <DebouncedTextInput
+    <SmartTextInput
       ref={ref}
       value={value}
       onChange={(value) => {
@@ -92,17 +96,17 @@ export const TextareaInput = React.forwardRef<
   );
 });
 
-export const DebouncedTextareaInput = React.forwardRef<
+export const SmartTextareaInput = React.forwardRef<
   HTMLTextAreaElement,
-  TextareaInputProps & { debounce?: number }
+  TextareaInputProps
 >(function DebouncedTextareaInput(props, ref) {
-  const [fieldProps, _isPending] = useDebouncedField<
+  const [fieldProps, debouncedRef, _isPending] = useDebouncedField<
     string,
     HTMLTextAreaElement
   >({
-    debounce: DEFAULT_TEXT_INPUT_DEBOUNCE_TIME,
+    debounce: FORCE_COMMIT_FIELD_VALUE_AFTER,
     ...props,
   });
 
-  return <TextareaInput ref={ref} {...fieldProps} />;
+  return <TextareaInput ref={composeRefs(ref, debouncedRef)} {...fieldProps} />;
 });

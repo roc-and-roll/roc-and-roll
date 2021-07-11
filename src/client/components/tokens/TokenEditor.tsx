@@ -15,18 +15,11 @@ import {
   RRCharacterTemplate,
 } from "../../../shared/state";
 import { useFileUpload } from "../../files";
-import {
-  useServerDispatch,
-  useOptimisticDebouncedServerUpdate,
-} from "../../state";
+import { useServerDispatch } from "../../state";
 import { Button } from "../ui/Button";
-import { ColorInput, DebouncedColorInput } from "../ui/ColorInput";
+import { ColorInput, SmartColorInput } from "../ui/ColorInput";
 import { Select } from "../ui/Select";
-import {
-  DebouncedIntegerInput,
-  DebouncedTextInput,
-  TextInput,
-} from "../ui/TextInput";
+import { SmartIntegerInput, SmartTextInput, TextInput } from "../ui/TextInput";
 import clsx from "clsx";
 import blinded from "../../../third-party/icons/conditions/blinded.png";
 import charmed from "../../../third-party/icons/conditions/charmed.png";
@@ -56,6 +49,7 @@ import tortoise from "../../../third-party/game-icons.net/ffffff/transparent/1x1
 import snail from "../../../third-party/game-icons.net/ffffff/transparent/1x1/lorc/snail.svg";
 import voodooDoll from "../../../third-party/game-icons.net/ffffff/transparent/1x1/lorc/voodoo-doll.svg";
 import bullseye from "../../../third-party/game-icons.net/ffffff/transparent/1x1/skoll/bullseye.svg";
+import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 
 export interface ConditionWithIcon {
   name: RRCharacterCondition;
@@ -122,25 +116,50 @@ export function TokenEditor({
     fileInput.current!.value = "";
   };
 
-  const [auras, setAuras] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      byId(
-        (isTemplate ? state.characterTemplates : state.characters).entities,
+  const setAuras = (updater: React.SetStateAction<RRCharacter["auras"]>) =>
+    dispatch((state) => {
+      const oldAuras = byId(
+        state[isTemplate ? "characterTemplates" : "characters"].entities,
         token.id
-      )?.auras ?? [],
-    (auras) => updateFunc({ id: token.id, changes: { auras } }),
-    1000
-  );
+      )?.auras;
 
-  const [conditions, setConditions] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      byId(
-        (isTemplate ? state.characterTemplates : state.characters).entities,
+      if (oldAuras === undefined) {
+        return [];
+      }
+      const newAuras =
+        typeof updater === "function" ? updater(oldAuras) : updater;
+
+      return {
+        actions: [updateFunc({ id: token.id, changes: { auras: newAuras } })],
+        optimisticKey: "auras",
+        syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+      };
+    });
+
+  const setConditions = (
+    updater: React.SetStateAction<RRCharacter["conditions"]>
+  ) =>
+    dispatch((state) => {
+      const oldConditions = byId(
+        state[isTemplate ? "characterTemplates" : "characters"].entities,
         token.id
-      )?.conditions ?? [],
-    (conditions) => updateFunc({ id: token.id, changes: { conditions } }),
-    1000
-  );
+      )?.conditions;
+
+      if (oldConditions === undefined) {
+        return [];
+      }
+
+      const newConditions =
+        typeof updater === "function" ? updater(oldConditions) : updater;
+
+      return {
+        actions: [
+          updateFunc({ id: token.id, changes: { conditions: newConditions } }),
+        ],
+        optimisticKey: "conditions",
+        syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+      };
+    });
 
   useEffect(() => {
     fileInput.current!.value = "";
@@ -165,13 +184,14 @@ export function TokenEditor({
       <div>
         <label>
           Name:{" "}
-          <DebouncedTextInput
+          <SmartTextInput
             ref={nameInput}
             value={token.name}
             onChange={(name) =>
               dispatch({
                 actions: [updateFunc({ id: token.id, changes: { name } })],
                 optimisticKey: "name",
+                syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
               })
             }
           />
@@ -194,6 +214,7 @@ export function TokenEditor({
                   }),
                 ],
                 optimisticKey: "visibility",
+                syncToServerThrottle: 0,
               })
             }
           />
@@ -231,6 +252,7 @@ export function TokenEditor({
                     }),
                   ],
                   optimisticKey: "attributes",
+                  syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
                 };
               })
             }
@@ -240,7 +262,7 @@ export function TokenEditor({
       <div>
         <label>
           Size in #squares:{" "}
-          <DebouncedIntegerInput
+          <SmartIntegerInput
             value={token.scale}
             min={1}
             placeholder="scale"
@@ -248,6 +270,7 @@ export function TokenEditor({
               dispatch({
                 actions: [updateFunc({ id: token.id, changes: { scale } })],
                 optimisticKey: "scale",
+                syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
               })
             }
           />
@@ -255,7 +278,7 @@ export function TokenEditor({
       </div>
       <h3>Auras</h3>
       <ul>
-        {auras.map((aura, i) => (
+        {token.auras.map((aura, i) => (
           <li key={i}>
             <div>
               <label>
@@ -266,9 +289,9 @@ export function TokenEditor({
                   value={aura.size}
                   onChange={(e) => {
                     setAuras([
-                      ...auras.slice(0, i),
+                      ...token.auras.slice(0, i),
                       { ...aura, size: e.target.valueAsNumber },
-                      ...auras.slice(i + 1),
+                      ...token.auras.slice(i + 1),
                     ]);
                   }}
                 />
@@ -281,9 +304,9 @@ export function TokenEditor({
                   value={aura.color}
                   onChange={(color) => {
                     setAuras([
-                      ...auras.slice(0, i),
+                      ...token.auras.slice(0, i),
                       { ...aura, color },
-                      ...auras.slice(i + 1),
+                      ...token.auras.slice(i + 1),
                     ]);
                   }}
                 />
@@ -296,9 +319,9 @@ export function TokenEditor({
                   value={aura.shape}
                   onChange={(shape) => {
                     setAuras([
-                      ...auras.slice(0, i),
+                      ...token.auras.slice(0, i),
                       { ...aura, shape },
-                      ...auras.slice(i + 1),
+                      ...token.auras.slice(i + 1),
                     ]);
                   }}
                   options={[
@@ -320,12 +343,12 @@ export function TokenEditor({
                   ]}
                   onChange={(visibility) => {
                     setAuras([
-                      ...auras.slice(0, i),
+                      ...token.auras.slice(0, i),
                       {
                         ...aura,
                         visibility,
                       },
-                      ...auras.slice(i + 1),
+                      ...token.auras.slice(i + 1),
                     ]);
                   }}
                 />
@@ -339,12 +362,12 @@ export function TokenEditor({
                   value={aura.visibileWhen}
                   onChange={(visibileWhen) => {
                     setAuras([
-                      ...auras.slice(0, i),
+                      ...token.auras.slice(0, i),
                       {
                         ...aura,
                         visibileWhen,
                       },
-                      ...auras.slice(i + 1),
+                      ...token.auras.slice(i + 1),
                     ]);
                   }}
                   options={[
@@ -359,7 +382,10 @@ export function TokenEditor({
             <Button
               className="red"
               onClick={() => {
-                setAuras([...auras.slice(0, i), ...auras.slice(i + 1)]);
+                setAuras([
+                  ...token.auras.slice(0, i),
+                  ...token.auras.slice(i + 1),
+                ]);
               }}
             >
               delete aura
@@ -385,12 +411,15 @@ export function TokenEditor({
           </Button>
         </li>
       </ul>
-      <ConditionPicker conditions={conditions} setConditions={setConditions} />
+      <ConditionPicker
+        conditions={token.conditions}
+        setConditions={setConditions}
+      />
       <hr />
       <div>
         <label>
           Token border color:{" "}
-          <DebouncedColorInput
+          <SmartColorInput
             value={token.tokenBorderColor}
             onChange={(tokenBorderColor) =>
               dispatch({
@@ -398,6 +427,7 @@ export function TokenEditor({
                   updateFunc({ id: token.id, changes: { tokenBorderColor } }),
                 ],
                 optimisticKey: "tokenBorderColor",
+                syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
               })
             }
           />
@@ -436,7 +466,7 @@ function HPEditor({
       <div className="top-row">
         <label>
           HP
-          <DebouncedIntegerInput
+          <SmartIntegerInput
             value={token.hp}
             min={0}
             placeholder="HP"
@@ -444,13 +474,14 @@ function HPEditor({
               dispatch({
                 actions: [updateFunc({ id: token.id, changes: { hp } })],
                 optimisticKey: "hp",
+                syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
               })
             }
           />
         </label>
         <label>
           Max HP
-          <DebouncedIntegerInput
+          <SmartIntegerInput
             value={token.maxHP}
             min={0}
             placeholder="Max HP"
@@ -458,13 +489,14 @@ function HPEditor({
               dispatch({
                 actions: [updateFunc({ id: token.id, changes: { maxHP } })],
                 optimisticKey: "maxHP",
+                syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
               })
             }
           />
         </label>
         <label>
           Temp HP
-          <DebouncedIntegerInput
+          <SmartIntegerInput
             value={token.temporaryHP}
             min={0}
             placeholder="Temp HP"
@@ -474,6 +506,7 @@ function HPEditor({
                   updateFunc({ id: token.id, changes: { temporaryHP } }),
                 ],
                 optimisticKey: "temporaryHP",
+                syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
               })
             }
           />
@@ -488,7 +521,7 @@ function HPEditor({
       <div>
         <label>
           Max HP Adjustment
-          <DebouncedIntegerInput
+          <SmartIntegerInput
             value={token.maxHPAdjustment}
             placeholder="max HP adjustment"
             onChange={(maxHPAdjustment) =>
@@ -497,6 +530,7 @@ function HPEditor({
                   updateFunc({ id: token.id, changes: { maxHPAdjustment } }),
                 ],
                 optimisticKey: "maxHPAdjustment",
+                syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
               })
             }
           />
@@ -568,7 +602,7 @@ function AttributeEditor({
     <div className="character-editor-attribute">
       <label>
         <div className="character-editor-attribute-label">{label}</div>
-        <DebouncedIntegerInput
+        <SmartIntegerInput
           value={value}
           placeholder="Mod ..."
           onChange={(value) => onChange(value)}

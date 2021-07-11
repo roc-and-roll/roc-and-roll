@@ -39,7 +39,7 @@ export function timestamp(): RRTimestamp {
   return Date.now();
 }
 
-export function debounced<A extends unknown[], R extends unknown>(
+export function throttled<A extends unknown[], R extends unknown>(
   fn: (...args: A) => R,
   time: number
 ): (...args: A) => void {

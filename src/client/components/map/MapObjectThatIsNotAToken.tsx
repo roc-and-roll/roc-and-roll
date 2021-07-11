@@ -1,5 +1,8 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { GRID_SIZE } from "../../../shared/constants";
+import {
+  DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+  GRID_SIZE,
+} from "../../../shared/constants";
 import {
   RRMapDrawingImage,
   RRMapID,
@@ -25,7 +28,7 @@ import { hoveredMapObjectsFamily } from "./Map";
 import { selectedMapObjectsFamily } from "./MapContainer";
 import { Popover } from "../Popover";
 import { mapObjectUpdate } from "../../../shared/actions";
-import { DebouncedIntegerInput } from "../ui/TextInput";
+import { SmartIntegerInput } from "../ui/TextInput";
 
 export const MapObjectThatIsNotAToken = React.memo<{
   object: Exclude<RRMapObject, RRToken | RRMapLink>;
@@ -197,13 +200,14 @@ function ObjectEditOptions({
                 }),
               ],
               optimisticKey: "visibility",
+              syncToServerThrottle: 0,
             })
           }
         />
       </label>
       <label>
         Rotation:{" "}
-        <DebouncedIntegerInput
+        <SmartIntegerInput
           min={-360}
           max={360}
           value={object.rotation}
@@ -216,6 +220,7 @@ function ObjectEditOptions({
                 }),
               ],
               optimisticKey: "rotation",
+              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
             })
           }
         />
@@ -237,7 +242,7 @@ function ImageEditOptions({
   return (
     <label>
       Height:
-      <DebouncedIntegerInput
+      <SmartIntegerInput
         value={object.height / GRID_SIZE}
         onChange={(height) =>
           dispatch({
@@ -248,6 +253,7 @@ function ImageEditOptions({
               }),
             ],
             optimisticKey: "height",
+            syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
           })
         }
       />

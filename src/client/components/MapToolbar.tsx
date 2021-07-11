@@ -21,11 +21,12 @@ import {
 } from "./map/MapContainer";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
-import { DebouncedColorInput, ColorInput } from "./ui/ColorInput";
+import { SmartColorInput, ColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
 import { isTriggeredByFormElement } from "../util";
-import { DebouncedTextInput } from "./ui/TextInput";
+import { SmartTextInput } from "./ui/TextInput";
 import EmojiPicker from "emoji-picker-react";
+import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 // TODO: Lazy loding the emoji picker does not play nicely with Tippy :/
 // const EmojiPicker = React.lazy(
 //   () => import(/* webpackPrefetch: true */ "emoji-picker-react")
@@ -498,7 +499,7 @@ function MapSettings({
         <>
           <label>
             Name{" "}
-            <DebouncedTextInput
+            <SmartTextInput
               type="text"
               placeholder="Name of the map"
               value={mapSettings.name}
@@ -508,13 +509,14 @@ function MapSettings({
                     mapSettingsUpdate({ id: mapId, changes: { name } }),
                   ],
                   optimisticKey: "name",
+                  syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
                 })
               }
             />
           </label>
           <label>
             Background color{" "}
-            <DebouncedColorInput
+            <SmartColorInput
               value={mapSettings.backgroundColor}
               onChange={(backgroundColor) =>
                 dispatch({
@@ -525,6 +527,7 @@ function MapSettings({
                     }),
                   ],
                   optimisticKey: "backgroundColor",
+                  syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
                 })
               }
             />
@@ -543,6 +546,7 @@ function MapSettings({
                     }),
                   ],
                   optimisticKey: "gridEnabled",
+                  syncToServerThrottle: 0,
                 })
               }
             />
@@ -550,7 +554,7 @@ function MapSettings({
           {mapSettings.gridEnabled && (
             <label>
               Grid color{" "}
-              <DebouncedColorInput
+              <SmartColorInput
                 value={mapSettings.gridColor}
                 onChange={(gridColor) =>
                   dispatch({
@@ -561,6 +565,7 @@ function MapSettings({
                       }),
                     ],
                     optimisticKey: "gridColor",
+                    syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
                   })
                 }
               />

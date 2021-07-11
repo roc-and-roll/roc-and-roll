@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useLatest } from "./state";
 import { useGuranteedMemo } from "./useGuranteedMemo";
 
@@ -117,10 +123,10 @@ export function useDebounce<A extends unknown[]>(
   debounce: Debouncer,
   forceOnUnmount: boolean = false
 ): [
-  (...args: A) => void,
-  () => boolean,
-  () => void,
-  (s: (p: boolean) => void) => () => void
+  debounce: (...args: A) => void,
+  isDebouncing: () => boolean,
+  executePending: () => void,
+  onPendingChanges: (s: (p: boolean) => void) => () => void
 ] {
   const forceOnUnmountRef = useLatest(forceOnUnmount);
 
@@ -332,8 +338,12 @@ export function useDebouncedField<V, E extends HTMLElement>({
     reportChangesDefault: false,
   });
 
-  const [propagateValueToOutside, executePending, isPending] =
+  const ref = useRef<E>(null);
+
+  const [propagateValueToOutside, executePending, isDebouncePending] =
     useDebouncedOrTransition(externalOnChange, debounce);
+
+  const [isTransitionPending, startTransition] = useTransition();
 
   return [
     {
@@ -342,8 +352,21 @@ export function useDebouncedField<V, E extends HTMLElement>({
         (value: V) => {
           setValue(value);
           propagateValueToOutside(value);
+          // Immediately propagate the change to the outside as part of a
+          // transition.
+          // TODO: I'm not 100% certain that this does what we want it to.
+          startTransition(() => executePending());
+
+          // No idea if this would even make sense:
+          // ReactDOM.unstable_scheduleHydration(ref.current);
         },
-        [setValue, propagateValueToOutside]
+        [
+          setValue,
+          propagateValueToOutside,
+          executePending,
+          startTransition,
+          /* ref, */
+        ]
       ),
       onKeyPress: useCallback(
         (e: React.KeyboardEvent<E>) => {
@@ -371,6 +394,7 @@ export function useDebouncedField<V, E extends HTMLElement>({
       ),
       ...props,
     },
-    isPending,
+    ref,
+    isDebouncePending || isTransitionPending,
   ] as const;
 }

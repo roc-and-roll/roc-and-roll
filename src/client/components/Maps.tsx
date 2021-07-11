@@ -3,6 +3,7 @@ import React from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { mapAdd, mapSettingsUpdate, playerUpdate } from "../../shared/actions";
 import { randomColor } from "../../shared/colors";
+import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import {
   byId,
   EntityCollection,
@@ -16,7 +17,7 @@ import { useMyself } from "../myself";
 import { useServerDispatch, useServerState } from "../state";
 import { GMArea } from "./GMArea";
 import { Button } from "./ui/Button";
-import { DebouncedTextInput } from "./ui/TextInput";
+import { SmartTextInput } from "./ui/TextInput";
 
 export function Maps() {
   const dispatch = useServerDispatch();
@@ -118,13 +119,14 @@ export function MapListEntry({
   return (
     <li>
       <h3 className="maps-map-title">
-        <DebouncedTextInput
+        <SmartTextInput
           className="maps-map-name"
           value={mapSettings.name}
           onChange={(name) =>
             dispatch({
               actions: [mapSettingsUpdate({ id: mapId, changes: { name } })],
               optimisticKey: "name",
+              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
             })
           }
         />

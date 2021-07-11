@@ -1,5 +1,5 @@
 import { matchSorter } from "match-sorter";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   assetSongAdd,
   ephemeralSongAdd,
@@ -8,8 +8,8 @@ import {
   playerUpdateAddFavoritedAssetId,
   playerUpdateRemoveFavoritedAssetId,
 } from "../../shared/actions";
+import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import {
-  byId,
   entries,
   RRActiveSong,
   RRAsset,
@@ -19,11 +19,7 @@ import {
 import { rrid, timestamp } from "../../shared/util";
 import { useFileUpload } from "../files";
 import { useMyself } from "../myself";
-import {
-  useOptimisticDebouncedServerUpdate,
-  useServerDispatch,
-  useServerState,
-} from "../state";
+import { useServerDispatch, useServerState } from "../state";
 import { volumeLinear2Log, VolumeSlider } from "./VolumeSlider";
 
 interface TabletopAudio {
@@ -51,8 +47,8 @@ export const Music = React.memo(function Music() {
 
   const myself = useMyself();
   const dispatch = useServerDispatch();
-  const activeSongs = useServerState((state) =>
-    entries(state.ephemeral.activeSongs)
+  const activeSongs = entries(
+    useServerState((state) => state.ephemeral.activeSongs)
   );
 
   useEffect(() => {
@@ -83,47 +79,82 @@ export const Music = React.memo(function Music() {
     (a) => (a.type === "song" ? a : [])
   );
 
-  const onStop = (s: RRActiveSong) => {
-    dispatch(ephemeralSongRemove(s.id));
-  };
+  const onStop = useCallback(
+    (s: RRActiveSong) => {
+      dispatch(ephemeralSongRemove(s.id));
+    },
+    [dispatch]
+  );
 
   // FIXME: can be a race condition if the user clicks the button quickly
-  const onFavorite = (s: RRSong) => {
-    if (myself.favoritedAssetIds.includes(s.id)) {
-      dispatch(
-        playerUpdateRemoveFavoritedAssetId({ id: myself.id, assetId: s.id })
-      );
-    } else {
-      dispatch(
-        playerUpdateAddFavoritedAssetId({ id: myself.id, assetId: s.id })
-      );
-    }
-  };
+  const onFavorite = useCallback(
+    (s: RRSong) => {
+      if (myself.favoritedAssetIds.includes(s.id)) {
+        dispatch({
+          actions: [
+            playerUpdateRemoveFavoritedAssetId({
+              id: myself.id,
+              assetId: s.id,
+            }),
+          ],
+          optimisticKey: `favourite/${myself.id}/${s.id}`,
+          syncToServerThrottle: 0,
+        });
+      } else {
+        dispatch({
+          actions: [
+            playerUpdateAddFavoritedAssetId({ id: myself.id, assetId: s.id }),
+          ],
+          optimisticKey: `favourite/${myself.id}/${s.id}`,
+          syncToServerThrottle: 0,
+        });
+      }
+    },
+    [dispatch, myself.id, myself.favoritedAssetIds]
+  );
 
-  const onReplace = (t: RRSong) => {
-    dispatch([
-      ...activeSongs.map((activeSong) => ephemeralSongRemove(activeSong.id)),
-      ephemeralSongAdd({
-        startedAt: timestamp(),
-        id: rrid<RRActiveSong>(),
-        song: t,
-        volume: volumeLinear2Log(DEFAULT_VOLUME),
-        addedBy: myself.id,
+  const onReplace = useCallback(
+    (t: RRSong) => {
+      dispatch((state) => [
+        ...entries(state.ephemeral.activeSongs).map((activeSong) =>
+          ephemeralSongRemove(activeSong.id)
+        ),
+        ephemeralSongAdd({
+          startedAt: timestamp(),
+          id: rrid<RRActiveSong>(),
+          song: t,
+          volume: volumeLinear2Log(DEFAULT_VOLUME),
+          addedBy: myself.id,
+        }),
+      ]);
+    },
+    [dispatch, myself.id]
+  );
+
+  const onAdd = useCallback(
+    (t: RRSong) => {
+      dispatch(
+        ephemeralSongAdd({
+          startedAt: timestamp(),
+          id: rrid<RRActiveSong>(),
+          song: t,
+          volume: volumeLinear2Log(DEFAULT_VOLUME),
+          addedBy: myself.id,
+        })
+      );
+    },
+    [dispatch, myself.id]
+  );
+
+  const onSetVolume = useCallback(
+    (t: RRActiveSong, volume: number) =>
+      dispatch({
+        actions: [ephemeralSongUpdate({ id: t.id, changes: { volume } })],
+        optimisticKey: `volume/${t.id}/${t.song.id}`,
+        syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
       }),
-    ]);
-  };
-
-  const onStart = (t: RRSong) => {
-    dispatch(
-      ephemeralSongAdd({
-        startedAt: timestamp(),
-        id: rrid<RRActiveSong>(),
-        song: t,
-        volume: volumeLinear2Log(DEFAULT_VOLUME),
-        addedBy: myself.id,
-      })
-    );
-  };
+    [dispatch]
+  );
 
   const showSongList = (songs: RRSong[]) =>
     matchSorter(songs, filter, {
@@ -135,10 +166,11 @@ export const Music = React.memo(function Music() {
         active={activeSongs.find((s) => t.id === s.song.id)}
         audio={t}
         filterText={filter}
-        onAdd={() => onStart(t)}
-        onReplace={() => onReplace(t)}
+        onAdd={onAdd}
+        onReplace={onReplace}
         onStop={onStop}
-        onFavorite={() => onFavorite(t)}
+        onFavorite={onFavorite}
+        onSetVolume={onSetVolume}
       />
     ));
 
@@ -156,19 +188,19 @@ export const Music = React.memo(function Music() {
       {error}
       <div>
         <strong>- Playing -</strong>
-        {tabletopAudio &&
-          activeSongs.map((activeSong) => (
-            <Song
-              filterText={""}
-              key={activeSong.id}
-              active={activeSong}
-              audio={activeSong.song}
-              onAdd={() => onStart(activeSong.song)}
-              onReplace={() => onReplace(activeSong.song)}
-              onStop={() => onStop(activeSong)}
-              onFavorite={() => onFavorite(activeSong.song)}
-            />
-          ))}
+        {activeSongs.map((activeSong) => (
+          <Song
+            filterText={""}
+            key={activeSong.id}
+            active={activeSong}
+            audio={activeSong.song}
+            onAdd={onAdd}
+            onReplace={onReplace}
+            onStop={onStop}
+            onFavorite={onFavorite}
+            onSetVolume={onSetVolume}
+          />
+        ))}
       </div>
       <div>
         <strong>- Favorites -</strong>
@@ -247,34 +279,25 @@ const highlightMatching = (text: string, search: string) => {
   return text;
 };
 
-function Song({
+const Song = React.memo(function Song({
   audio,
   active,
   onAdd,
   onReplace,
   onStop,
   onFavorite,
+  onSetVolume,
   filterText,
 }: {
   audio: RRSong;
   active?: RRActiveSong;
   filterText: string;
-  onAdd: () => void;
-  onReplace: () => void;
-  onStop: (a: RRActiveSong) => void;
-  onFavorite: () => void;
+  onAdd: (audio: RRSong) => void;
+  onReplace: (audio: RRSong) => void;
+  onStop: (audio: RRActiveSong) => void;
+  onFavorite: (audio: RRSong) => void;
+  onSetVolume: (audio: RRActiveSong, volume: number) => void;
 }) {
-  const [volume, setVolume] = useOptimisticDebouncedServerUpdate(
-    (state) =>
-      active
-        ? byId(state.ephemeral.activeSongs.entities, active.id)?.volume
-        : 0,
-    (volume) =>
-      active
-        ? ephemeralSongUpdate({ id: active.id, changes: { volume: volume } })
-        : undefined,
-    1000
-  );
   const showTags = filterText.length > 0;
 
   return (
@@ -288,10 +311,8 @@ function Song({
       {active ? (
         <>
           <VolumeSlider
-            volume={volume ?? 0}
-            onChange={(volume) => {
-              setVolume(volume);
-            }}
+            volume={active.volume}
+            onChange={(volume) => onSetVolume(active, volume)}
           />
           <div className="tabletopaudio-button" onClick={() => onStop(active)}>
             STOP
@@ -299,17 +320,23 @@ function Song({
         </>
       ) : (
         <>
-          <div className="tabletopaudio-button" onClick={onFavorite}>
+          <div
+            className="tabletopaudio-button"
+            onClick={() => onFavorite(audio)}
+          >
             FAV
           </div>
-          <div className="tabletopaudio-button" onClick={onAdd}>
+          <div className="tabletopaudio-button" onClick={() => onAdd(audio)}>
             ADD
           </div>
-          <div className="tabletopaudio-button" onClick={onReplace}>
+          <div
+            className="tabletopaudio-button"
+            onClick={() => onReplace(audio)}
+          >
             PLAY
           </div>
         </>
       )}
     </div>
   );
-}
+});

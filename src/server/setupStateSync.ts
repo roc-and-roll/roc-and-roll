@@ -8,7 +8,7 @@ import {
   SyncedState,
 } from "../shared/state";
 import { ephemeralPlayerAdd, ephemeralPlayerRemove } from "../shared/actions";
-import { debounced } from "../shared/util";
+import { throttled } from "../shared/util";
 import * as t from "typanion";
 import { isRRID } from "../shared/validation";
 import {
@@ -211,7 +211,7 @@ export const setupStateSync = (
   io.on("connection", setupSocket);
 
   store.subscribe(
-    debounced(() => {
+    throttled(() => {
       const state = store.getState();
       io.sockets.sockets.forEach((socket) => {
         const data = additionalSocketData.get(socket.id);
