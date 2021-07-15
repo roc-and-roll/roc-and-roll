@@ -268,7 +268,7 @@ export const RRMapView = React.memo<{
           : // weird page mode
             3;
 
-      toolHandler.onMouseWheel?.(delta);
+      toolHandler.onMouseWheel(delta);
 
       if (mouseActionRef.current !== MouseAction.NONE) return;
 

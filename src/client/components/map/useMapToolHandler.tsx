@@ -32,11 +32,13 @@ import Shape from "@doodle3d/clipper-js";
 import tinycolor from "tinycolor2";
 import { RRMessage, useServerMessages } from "../../serverMessages";
 
+const SERVER_SYNC_THROTTLE_TIME = 100;
+
 export interface MapMouseHandler {
   onMouseDown: (p: RRPoint) => void;
   onMouseMove: (p: RRPoint) => void;
   onMouseUp: (p: RRPoint) => void;
-  onMouseWheel?: (delta: number) => void;
+  onMouseWheel: (delta: number) => void;
 }
 
 // Thin points using the idea described here
@@ -92,7 +94,7 @@ export function useMapToolHandler(
   });
   const pointsRef = useRef<RRPoint[]>([]);
 
-  const toolHandlerRef = useRef<MapMouseHandler>();
+  const toolHandlerRef = useRef<Partial<MapMouseHandler>>({});
 
   const [mouseDown, setMouseDown] = useState(false);
   const [mousePosition, setMousePosition] = useState<RRPoint>({ x: 0, y: 0 });
@@ -130,19 +132,27 @@ export function useMapToolHandler(
               size: { x: 0, y: 0 },
               ...create(p),
             });
-            dispatch(action);
             currentId.current = action.payload.mapObject.id;
+            dispatch({
+              actions: [action],
+              optimisticKey: `MapToolHandler/add/${currentId.current}`,
+              syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
+            });
           },
           onMouseMove: (p: RRPoint) => {
             if (currentId.current) {
-              dispatch(
-                mapObjectUpdate(mapId, {
-                  id: currentId.current,
-                  changes: {
-                    size: pointSubtract(p, startMousePositionRef.current),
-                  },
-                })
-              );
+              dispatch({
+                actions: [
+                  mapObjectUpdate(mapId, {
+                    id: currentId.current,
+                    changes: {
+                      size: pointSubtract(p, startMousePositionRef.current),
+                    },
+                  }),
+                ],
+                optimisticKey: `MapToolHandler/add/${currentId.current}/edit`,
+                syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
+              });
             }
           },
           onMouseUp: (p: RRPoint) => {
@@ -150,12 +160,16 @@ export function useMapToolHandler(
               currentId.current &&
               pointEquals(startMousePositionRef.current, p)
             ) {
-              dispatch(
-                mapObjectRemove({
-                  mapId: mapId,
-                  mapObjectId: currentId.current,
-                })
-              );
+              dispatch({
+                actions: [
+                  mapObjectRemove({
+                    mapId: mapId,
+                    mapObjectId: currentId.current,
+                  }),
+                ],
+                optimisticKey: `MapToolHandler/add/${currentId.current}/edit`,
+                syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
+              });
             }
             currentId.current = null;
           },
@@ -170,19 +184,27 @@ export function useMapToolHandler(
               size: { x: 0, y: 0 },
               ...create(p),
             });
-            dispatch(action);
             currentId.current = action.payload.mapObject.id;
+            dispatch({
+              actions: [action],
+              optimisticKey: `MapToolHandler/add/${currentId.current}`,
+              syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
+            });
           },
           onMouseMove: (p: RRPoint) => {
             if (currentId.current) {
-              dispatch(
-                mapObjectUpdate(mapId, {
-                  id: currentId.current,
-                  changes: {
-                    size: pointSubtract(p, startMousePositionRef.current),
-                  },
-                })
-              );
+              dispatch({
+                actions: [
+                  mapObjectUpdate(mapId, {
+                    id: currentId.current,
+                    changes: {
+                      size: pointSubtract(p, startMousePositionRef.current),
+                    },
+                  }),
+                ],
+                optimisticKey: `MapToolHandler/add/${currentId.current}/edit`,
+                syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
+              });
             }
           },
           onMouseUp: (p: RRPoint) => {
@@ -190,12 +212,16 @@ export function useMapToolHandler(
               currentId.current &&
               pointEquals(startMousePositionRef.current, p)
             ) {
-              dispatch(
-                mapObjectRemove({
-                  mapId: mapId,
-                  mapObjectId: currentId.current,
-                })
-              );
+              dispatch({
+                actions: [
+                  mapObjectRemove({
+                    mapId: mapId,
+                    mapObjectId: currentId.current,
+                  }),
+                ],
+                optimisticKey: `MapToolHandler/add/${currentId.current}/edit`,
+                syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
+              });
             }
             currentId.current = null;
           },
@@ -210,19 +236,27 @@ export function useMapToolHandler(
               points: [{ x: 0, y: 0 }],
               ...create(p),
             });
-            dispatch(action);
             currentId.current = action.payload.mapObject.id;
+            dispatch({
+              actions: [action],
+              optimisticKey: `MapToolHandler/add/${currentId.current}`,
+              syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
+            });
           },
           onMouseMove: (p: RRPoint) => {
             if (currentId.current) {
-              dispatch(
-                mapObjectUpdate(mapId, {
-                  id: currentId.current,
-                  changes: {
-                    points: [pointSubtract(p, startMousePositionRef.current)],
-                  },
-                })
-              );
+              dispatch({
+                actions: [
+                  mapObjectUpdate(mapId, {
+                    id: currentId.current,
+                    changes: {
+                      points: [pointSubtract(p, startMousePositionRef.current)],
+                    },
+                  }),
+                ],
+                optimisticKey: `MapToolHandler/add/${currentId.current}/edit`,
+                syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
+              });
             }
           },
           onMouseUp: (p: RRPoint) => {
@@ -230,12 +264,16 @@ export function useMapToolHandler(
               currentId.current &&
               pointEquals(startMousePositionRef.current, p)
             ) {
-              dispatch(
-                mapObjectRemove({
-                  mapId: mapId,
-                  mapObjectId: currentId.current,
-                })
-              );
+              dispatch({
+                actions: [
+                  mapObjectRemove({
+                    mapId: mapId,
+                    mapObjectId: currentId.current,
+                  }),
+                ],
+                optimisticKey: `MapToolHandler/add/${currentId.current}/edit`,
+                syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
+              });
             }
             currentId.current = null;
           },
@@ -243,8 +281,6 @@ export function useMapToolHandler(
         break;
       case "text":
         toolHandlerRef.current = {
-          onMouseDown: (p: RRPoint) => {},
-          onMouseMove: (p: RRPoint) => {},
           onMouseUp: (p: RRPoint) => {
             const text = prompt("enter text")?.trim();
             if (text === undefined || text.length === 0) {
@@ -255,8 +291,12 @@ export function useMapToolHandler(
               text,
               ...create(p),
             });
-            dispatch(action);
             currentId.current = action.payload.mapObject.id;
+            dispatch({
+              actions: [action],
+              optimisticKey: `MapToolHandler/add/${currentId.current}`,
+              syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
+            });
           },
         };
         break;
@@ -271,8 +311,12 @@ export function useMapToolHandler(
               points: [],
               ...create(p),
             });
-            dispatch(action);
             currentId.current = action.payload.mapObject.id;
+            dispatch({
+              actions: [action],
+              optimisticKey: `MapToolHandler/add/${currentId.current}`,
+              syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
+            });
           },
           onMouseMove: (p: RRPoint) => {
             if (currentId.current) {
@@ -286,25 +330,33 @@ export function useMapToolHandler(
               );
 
               if (oldNumPoints !== pointsRef.current.length) {
-                dispatch(
-                  mapObjectUpdate(mapId, {
-                    id: currentId.current,
-                    changes: {
-                      points: [...pointsRef.current],
-                    },
-                  })
-                );
+                dispatch({
+                  actions: [
+                    mapObjectUpdate(mapId, {
+                      id: currentId.current,
+                      changes: {
+                        points: [...pointsRef.current],
+                      },
+                    }),
+                  ],
+                  optimisticKey: `MapToolHandler/add/${currentId.current}/edit`,
+                  syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
+                });
               }
             }
           },
           onMouseUp: (p: RRPoint) => {
             if (currentId.current && pointsRef.current.length === 0) {
-              dispatch(
-                mapObjectRemove({
-                  mapId: mapId,
-                  mapObjectId: currentId.current,
-                })
-              );
+              dispatch({
+                actions: [
+                  mapObjectRemove({
+                    mapId: mapId,
+                    mapObjectId: currentId.current,
+                  }),
+                ],
+                optimisticKey: `MapToolHandler/add/${currentId.current}/edit`,
+                syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
+              });
             }
             currentId.current = null;
           },
@@ -312,8 +364,6 @@ export function useMapToolHandler(
         break;
       case "image":
         toolHandlerRef.current = {
-          onMouseDown: (p: RRPoint) => {},
-          onMouseMove: (p: RRPoint) => {},
           onMouseUp: async (p: RRPoint) => {
             const files = await askAndUploadImages();
             if (files === null) {
@@ -321,15 +371,19 @@ export function useMapToolHandler(
             }
             const [image, size] = files[0]!;
 
-            dispatch(
-              mapObjectAdd(mapId, {
-                type: "image",
-                height: DEFAULT_BACKGROUND_IMAGE_HEIGHT,
-                originalSize: size,
-                image,
-                ...create(p),
-              })
-            );
+            const action = mapObjectAdd(mapId, {
+              type: "image",
+              height: DEFAULT_BACKGROUND_IMAGE_HEIGHT,
+              originalSize: size,
+              image,
+              ...create(p),
+            });
+
+            dispatch({
+              actions: [action],
+              optimisticKey: `MapToolHandler/add/${action.payload.mapObject.id}`,
+              syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
+            });
           },
         };
         break;
@@ -400,30 +454,25 @@ export function useMapToolHandler(
           mapId: mapId,
         });
       },
-      onMouseUp: (p: RRPoint) => {},
     };
   } else {
-    toolHandlerRef.current = {
-      onMouseDown: (p: RRPoint) => {},
-      onMouseMove: (p: RRPoint) => {},
-      onMouseUp: (p: RRPoint) => {},
-    };
+    toolHandlerRef.current = {};
   }
 
   const scaledRevealSize = revealToolSize / transform.current.a;
   return [
     useRef({
       onMouseDown: (p: RRPoint) => {
-        toolHandlerRef.current!.onMouseDown(p);
+        toolHandlerRef.current.onMouseDown?.(p);
       },
       onMouseMove: (p: RRPoint) => {
-        toolHandlerRef.current!.onMouseMove(p);
+        toolHandlerRef.current.onMouseMove?.(p);
       },
       onMouseUp: (p: RRPoint) => {
-        toolHandlerRef.current!.onMouseUp(p);
+        toolHandlerRef.current.onMouseUp?.(p);
       },
       onMouseWheel: (delta: number) => {
-        toolHandlerRef.current!.onMouseWheel?.(delta);
+        toolHandlerRef.current.onMouseWheel?.(delta);
       },
     }).current,
     editState.tool === "reveal" && mouseDown ? (
