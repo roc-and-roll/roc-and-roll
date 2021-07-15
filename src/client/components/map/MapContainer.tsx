@@ -284,12 +284,12 @@ export default function MapContainer() {
         // first create copy
         if (monitor.getItemType() === "tokenTemplate") {
           const { id: _, ...copy } = character;
-          characterId = dispatch(
-            characterAdd({
-              ...copy,
-              localToMap: mapId,
-            })
-          ).payload.id;
+          const action = characterAdd({
+            ...copy,
+            localToMap: mapId,
+          });
+          dispatch(action);
+          characterId = action.payload.id;
         }
 
         dispatch(

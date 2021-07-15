@@ -19,16 +19,15 @@ export const JoinGame = React.memo(function JoinGame({
     if (name === undefined || name.length === 0) {
       return;
     }
-    const action = dispatch(
-      playerAdd({
-        name,
-        color: randomColor(),
-        currentMap: maps.ids[0]!,
-        isGM: false,
-        characterIds: [],
-        favoritedAssetIds: [],
-      })
-    );
+    const action = playerAdd({
+      name,
+      color: randomColor(),
+      currentMap: maps.ids[0]!,
+      isGM: false,
+      characterIds: [],
+      favoritedAssetIds: [],
+    });
+    dispatch(action);
     login(action.payload.id);
   };
 

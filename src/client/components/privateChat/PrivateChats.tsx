@@ -167,9 +167,9 @@ function ContactList({
               if (chat) {
                 setSelectedChatId(chat.id);
               } else {
-                const id = dispatch(privateChatAdd(myself.id, player.id))
-                  .payload.id;
-                setSelectedChatId(id);
+                const action = privateChatAdd(myself.id, player.id);
+                dispatch(action);
+                setSelectedChatId(action.payload.id);
               }
             }}
             className={clsx("is-link", {

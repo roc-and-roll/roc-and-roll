@@ -517,22 +517,24 @@ function DiceTemplateInner({
       accept: ["diceTemplatePart", "diceTemplateNested", "diceTemplate"],
       drop: (item, monitor) => {
         switch (monitor.getItemType()) {
-          case "diceTemplateNested":
+          case "diceTemplateNested": {
+            const action = diceTemplateAdd({
+              playerId: myself.id,
+              name: "",
+              notes: "",
+              parts: [],
+              rollType: "attack",
+              id: rrid<RRDiceTemplate>(),
+            });
+            dispatch(action);
+
             item = {
               id: rrid<RRDiceTemplatePart>(),
               type: "template",
-              templateId: dispatch(
-                diceTemplateAdd({
-                  playerId: myself.id,
-                  name: "",
-                  notes: "",
-                  parts: [],
-                  rollType: "attack",
-                  id: rrid<RRDiceTemplate>(),
-                })
-              ).payload.id,
+              templateId: action.payload.id,
             };
             break;
+          }
           case "diceTemplatePart":
             item = {
               ...item,

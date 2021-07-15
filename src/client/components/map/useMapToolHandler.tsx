@@ -125,13 +125,13 @@ export function useMapToolHandler(
         toolHandlerRef.current = {
           onMouseDown: (p: RRPoint) => {
             startMousePositionRef.current = p;
-            currentId.current = dispatch(
-              mapObjectAdd(mapId, {
-                type: "rectangle",
-                size: { x: 0, y: 0 },
-                ...create(p),
-              })
-            ).payload.mapObject.id;
+            const action = mapObjectAdd(mapId, {
+              type: "rectangle",
+              size: { x: 0, y: 0 },
+              ...create(p),
+            });
+            dispatch(action);
+            currentId.current = action.payload.mapObject.id;
           },
           onMouseMove: (p: RRPoint) => {
             if (currentId.current) {
@@ -165,13 +165,13 @@ export function useMapToolHandler(
         toolHandlerRef.current = {
           onMouseDown: (p: RRPoint) => {
             startMousePositionRef.current = p;
-            currentId.current = dispatch(
-              mapObjectAdd(mapId, {
-                type: "ellipse",
-                size: { x: 0, y: 0 },
-                ...create(p),
-              })
-            ).payload.mapObject.id;
+            const action = mapObjectAdd(mapId, {
+              type: "ellipse",
+              size: { x: 0, y: 0 },
+              ...create(p),
+            });
+            dispatch(action);
+            currentId.current = action.payload.mapObject.id;
           },
           onMouseMove: (p: RRPoint) => {
             if (currentId.current) {
@@ -205,13 +205,13 @@ export function useMapToolHandler(
         toolHandlerRef.current = {
           onMouseDown: (p: RRPoint) => {
             startMousePositionRef.current = p;
-            currentId.current = dispatch(
-              mapObjectAdd(mapId, {
-                type: "freehand",
-                points: [{ x: 0, y: 0 }],
-                ...create(p),
-              })
-            ).payload.mapObject.id;
+            const action = mapObjectAdd(mapId, {
+              type: "freehand",
+              points: [{ x: 0, y: 0 }],
+              ...create(p),
+            });
+            dispatch(action);
+            currentId.current = action.payload.mapObject.id;
           },
           onMouseMove: (p: RRPoint) => {
             if (currentId.current) {
@@ -250,13 +250,13 @@ export function useMapToolHandler(
             if (text === undefined || text.length === 0) {
               return;
             }
-            currentId.current = dispatch(
-              mapObjectAdd(mapId, {
-                type: "text",
-                text,
-                ...create(p),
-              })
-            ).payload.mapObject.id;
+            const action = mapObjectAdd(mapId, {
+              type: "text",
+              text,
+              ...create(p),
+            });
+            dispatch(action);
+            currentId.current = action.payload.mapObject.id;
           },
         };
         break;
@@ -266,13 +266,13 @@ export function useMapToolHandler(
           onMouseDown: (p: RRPoint) => {
             startMousePositionRef.current = p;
             pointsRef.current = [];
-            currentId.current = dispatch(
-              mapObjectAdd(mapId, {
-                type: editState.type === "freehand" ? "freehand" : "polygon",
-                points: [],
-                ...create(p),
-              })
-            ).payload.mapObject.id;
+            const action = mapObjectAdd(mapId, {
+              type: editState.type === "freehand" ? "freehand" : "polygon",
+              points: [],
+              ...create(p),
+            });
+            dispatch(action);
+            currentId.current = action.payload.mapObject.id;
           },
           onMouseMove: (p: RRPoint) => {
             if (currentId.current) {
