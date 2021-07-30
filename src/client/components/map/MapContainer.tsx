@@ -65,7 +65,13 @@ import {
   snapPointToGrid,
 } from "../../../shared/point";
 import { useMapToolHandler } from "./useMapToolHandler";
-import { atomFamily, atom, useRecoilCallback, RecoilState } from "recoil";
+import {
+  atomFamily,
+  atom,
+  useRecoilCallback,
+  RecoilState,
+  useRecoilTransaction_UNSTABLE,
+} from "recoil";
 import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";
 import { changeHPSmartly, isTriggeredByFormElement } from "../../util";
 import { MapMusicIndicator } from "./MapMusicIndicator";
@@ -720,28 +726,27 @@ function useReduxToRecoilBridge<E extends { id: RRID }>(
   idsAtom: RecoilState<ReadonlyArray<E["id"]>>,
   familyAtom: (id: E["id"]) => RecoilState<E | null>
 ) {
-  const updateRecoilObjects = useRecoilCallback(
-    ({ snapshot, set, reset }) =>
-      ({ ids: newIds, entities }: EntityCollection<E>) => {
-        const oldIds = snapshot.getLoadable(idsAtom).getValue();
+  const updateRecoilObjects = useRecoilTransaction_UNSTABLE(
+    ({ get, set, reset }) =>
+      ({ ids: newIds, entities: newEntities }: EntityCollection<E>) => {
+        const oldIds = get(idsAtom);
         if (oldIds !== newIds) {
           set(idsAtom, newIds);
         }
 
-        newIds.forEach((id) => {
-          const atom = familyAtom(id);
-          const newEntity = byId(entities, id)!;
-          const oldEntity = snapshot.getLoadable(atom).getValue();
+        newIds.forEach((newId) => {
+          const atom = familyAtom(newId);
+          const newEntity = byId(newEntities, newId)!;
+          const oldEntity = get(atom);
           if (!Object.is(newEntity, oldEntity)) {
             set(atom, newEntity);
           }
         });
 
+        const newIdsSet = new Set(newIds);
         oldIds
-          .filter((oldId) => !newIds.includes(oldId))
-          .forEach((removedId) => {
-            reset(familyAtom(removedId));
-          });
+          .filter((oldId) => !newIdsSet.has(oldId))
+          .forEach((removedId) => reset(familyAtom(removedId)));
       },
     [familyAtom, idsAtom]
   );

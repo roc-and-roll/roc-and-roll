@@ -50,7 +50,7 @@
     "react-dom": "alpha",
     "react-flip-toolkit": "^7.0.13",
     "react-markdown": "^6.0.2",
-    "recoil": "^0.3.1",
+    "recoil": "^0.4.0",
     "redux": "^4.1.0",
     "remark-breaks": "^2.0.2",
     "remark-gfm": "^1.0.0",
