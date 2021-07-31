@@ -4,20 +4,20 @@ import { RRCharacter } from "../../../shared/state";
 import {
   clamp,
   isCharacterHurt,
-  isCharacterUnconscious,
+  isCharacterUnconsciousOrDead,
   isCharacterOverhealed,
 } from "../../../shared/util";
 import { tokenImageUrl } from "../../files";
 
 export function TokenPreview({ token }: { token: RRCharacter }) {
   const hurt = isCharacterHurt(token);
-  const unconscious = isCharacterUnconscious(token);
+  const unconsciousOrDead = isCharacterUnconsciousOrDead(token);
   const overhealed = isCharacterOverhealed(token);
   return (
     <div
       className={clsx("token-image", {
         hurt,
-        unconscious,
+        unconsciousOrDead,
         overhealed,
       })}
       title={token.name}

@@ -22,7 +22,7 @@ import {
   clamp,
   isCharacterHurt,
   isCharacterOverhealed,
-  isCharacterUnconscious,
+  isCharacterUnconsciousOrDead,
 } from "../../../shared/util";
 import { useMyself } from "../../myself";
 import ReactDOM from "react-dom";
@@ -150,8 +150,8 @@ export const MapToken = React.memo<{
 
   const canControl = canStartMoving && canControlToken(token, myself);
   const tokenStyle = {
-    ...(isCharacterUnconscious(token)
-      ? { filter: "url(#tokenUnconsciousShadow)" }
+    ...(isCharacterUnconsciousOrDead(token)
+      ? { filter: "url(#tokenUnconsciousOrDeadShadow)" }
       : isCharacterHurt(token)
       ? { filter: "url(#tokenHurtShadow)" }
       : isCharacterOverhealed(token)
@@ -361,28 +361,24 @@ function DeadMarker({ x, y, scale }: { x: number; y: number; scale: number }) {
   const barSize = 8 + 8 * Math.max(0, Math.log(scale));
   const tokenSize = GRID_SIZE * scale;
 
+  const sharedProps = {
+    w: tokenSize * Math.SQRT2,
+    h: barSize,
+    fill: COLOR,
+    fillStyle: "solid",
+    roughness: 0,
+  };
+
   return (
     <>
       <g transform={`rotate(45, ${x}, ${y})`} pointerEvents="none">
-        <RoughRectangle
-          x={x}
-          y={y - barSize / 2}
-          w={tokenSize * Math.SQRT2}
-          h={barSize}
-          fill={COLOR}
-          fillStyle="solid"
-          roughness={0}
-        />
+        <RoughRectangle x={x} y={y - barSize / 2} {...sharedProps} />
       </g>
       <g transform={`rotate(-45, ${x}, ${y + tokenSize})`} pointerEvents="none">
         <RoughRectangle
           x={x}
           y={y + tokenSize - barSize / 2}
-          w={tokenSize * Math.SQRT2}
-          h={barSize}
-          fill={COLOR}
-          fillStyle="solid"
-          roughness={0}
+          {...sharedProps}
         />
       </g>
     </>

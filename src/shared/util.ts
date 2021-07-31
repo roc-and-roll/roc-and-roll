@@ -96,10 +96,11 @@ export function fittingTokenSize(requestedSize: number): number {
   );
 }
 
-export function isCharacterUnconscious(character: RRCharacter) {
+export function isCharacterUnconsciousOrDead(character: RRCharacter) {
   return (
     (character.maxHP > 0 && character.hp + character.temporaryHP === 0) ||
-    character.conditions.includes("unconscious")
+    character.conditions.includes("unconscious") ||
+    character.conditions.includes("dead")
   );
 }
 
@@ -113,7 +114,7 @@ export function isCharacterHurt(character: RRCharacter) {
 
 export function isCharacterOverhealed(character: RRCharacter) {
   return (
-    !isCharacterUnconscious(character) &&
+    !isCharacterUnconsciousOrDead(character) &&
     character.maxHP > 0 &&
     character.hp + character.temporaryHP > character.maxHP
   );
