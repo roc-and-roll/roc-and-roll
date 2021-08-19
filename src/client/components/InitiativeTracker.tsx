@@ -62,12 +62,14 @@ function canEditEntry(
 const InitiativeEntry = React.memo<{
   entry: RRInitiativeTrackerEntry;
   tokenCollection: EntityCollection<RRCharacter>;
+  playerCollection: EntityCollection<RRPlayer>;
   isCurrentEntry: boolean;
   myself: RRPlayer;
   inverseIdx: number;
 }>(function InitiativeEntry({
   entry,
   tokenCollection,
+  playerCollection,
   isCurrentEntry,
   myself,
   inverseIdx,
@@ -78,6 +80,7 @@ const InitiativeEntry = React.memo<{
 
   const onRemoveEntry = () => dispatch(initiativeTrackerEntryRemove(entry.id));
 
+  let entryContainsPlayerCharacter = false;
   let content = null;
   if (entry.type === "lairAction") {
     content = (
@@ -99,6 +102,14 @@ const InitiativeEntry = React.memo<{
         <TokenStack tokens={tokens.flatMap((token) => token ?? [])} />
         <p>{[...names].join(", ")}</p>
       </>
+    );
+
+    entryContainsPlayerCharacter = entries(playerCollection).some(
+      (player) =>
+        !player.isGM &&
+        tokens.some(
+          (character) => character && player.characterIds.includes(character.id)
+        )
     );
   }
 
@@ -139,7 +150,10 @@ const InitiativeEntry = React.memo<{
     >
       <li
         key={entry.id}
-        className={isCurrentEntry ? "current" : undefined}
+        className={clsx({
+          current: isCurrentEntry,
+          "player-character": entryContainsPlayerCharacter,
+        })}
         onMouseOver={() => onHover(true)}
         onMouseLeave={() => onHover(false)}
       >
@@ -204,6 +218,7 @@ function InitiativeTrackerInner({
   const [modifier, setModifier, _] = useLocalState("initiative-modifier", "0");
   const dispatch = useServerDispatch();
   const tokenCollection = useServerState((state) => state.characters);
+  const playerCollection = useServerState((state) => state.players);
 
   const mapObjects = useMyMap((map) => map?.objects ?? EMPTY_ENTITY_COLLECTION);
   const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom).filter(
@@ -323,6 +338,7 @@ function InitiativeTrackerInner({
               entry={entry}
               isCurrentEntry={entry.id === initiativeTracker.currentEntryId}
               tokenCollection={tokenCollection}
+              playerCollection={playerCollection}
               myself={myself}
             />
           ))}
