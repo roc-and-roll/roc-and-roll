@@ -286,10 +286,12 @@ export const MapToken = React.memo<{
             )}
             {token.conditions.map((condition, index) => {
               const icon = conditionIcons[condition];
+              const iconSize = 16 * token.scale;
               const props = {
-                className: "token-condition-icon",
-                x: x + (index % 4) * 16,
-                y: y + Math.floor(index / 4) * 16,
+                x: x + (index % 4) * iconSize,
+                y: y + Math.floor(index / 4) * iconSize,
+                width: iconSize,
+                height: iconSize,
               };
 
               // TODO: Normally, we'd want to disable pointer events on
@@ -310,10 +312,8 @@ export const MapToken = React.memo<{
                     symbol={`${token.id}/condition-icon/${condition}`}
                   />
                   <use
-                    xlinkHref={`#${token.id}/condition-icon/${condition}`}
                     {...props}
-                    width={16}
-                    height={16}
+                    xlinkHref={`#${token.id}/condition-icon/${condition}`}
                     color="black"
                     style={{
                       stroke: "white",
