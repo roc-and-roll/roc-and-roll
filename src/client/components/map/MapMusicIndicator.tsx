@@ -52,17 +52,14 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
         className="map-music-indicator"
         style={{ backgroundColor, color: textColor }}
         title={title}
-        aria-label={`Music; ${title}`}
+        role="button"
+        aria-label={isMuted ? "Unmute music" : "Mute music"}
+        onClick={() =>
+          setSettings((settings) => ({ ...settings, mute: !settings.mute }))
+        }
       >
         {isMuted ? (
-          <span
-            className="fa-layers fa-fw"
-            onClick={() =>
-              setSettings((settings) => ({ ...settings, mute: false }))
-            }
-            role="button"
-            aria-label="Unmute sounds"
-          >
+          <span className="fa-layers fa-fw">
             <FontAwesomeIcon
               icon={faCircle}
               color="#cc0000"
@@ -77,12 +74,7 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
             />
           </span>
         ) : (
-          <EqualizerIcon
-            color={textColor}
-            onClick={() =>
-              setSettings((settings) => ({ ...settings, mute: true }))
-            }
-          />
+          <EqualizerIcon color={textColor} />
         )}
         <span
           className={clsx("song-titles", {
@@ -96,20 +88,9 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
   }
 );
 
-const EqualizerIcon = React.memo(function Icon({
-  color,
-  onClick,
-}: {
-  color: RRColor;
-  onClick: () => void;
-}) {
+const EqualizerIcon = React.memo(function Icon({ color }: { color: RRColor }) {
   return (
-    <span
-      className="map-music-equalizer-icon"
-      role="button"
-      aria-label="Mute sounds"
-      onClick={onClick}
-    >
+    <span className="map-music-equalizer-icon">
       <span style={{ background: color }}></span>
       <span style={{ background: color }}></span>
       <span style={{ background: color }}></span>
