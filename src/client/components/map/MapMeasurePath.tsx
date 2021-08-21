@@ -40,12 +40,10 @@ const centered = (p: RRPoint) =>
 
 export const MapMeasurePath = React.memo<{
   ephemeralPlayerId: RRPlayerID;
-  overwritePath?: RRPoint[];
   color: string;
   mapBackgroundColor: string;
   zoom: number;
 }>(function MapMeasurePath({
-  overwritePath,
   ephemeralPlayerId,
   color,
   mapBackgroundColor,
@@ -58,7 +56,7 @@ export const MapMeasurePath = React.memo<{
     ephemeralPlayersFamily(ephemeralPlayerId)
   );
 
-  const path = overwritePath ?? ephemeralPlayer?.measurePath ?? [];
+  const path = ephemeralPlayer?.measurePath ?? [];
   if (path.length === 0) {
     return null;
   }

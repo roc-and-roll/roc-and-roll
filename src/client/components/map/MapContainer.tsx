@@ -488,15 +488,32 @@ export default function MapContainer() {
   );
 
   const updateMeasurePath = useCallback(
-    (measurePath: RRPoint[]) =>
-      dispatch(
-        ephemeralPlayerUpdate({
-          id: myself.id,
-          changes: {
-            measurePath,
-          },
-        })
-      ),
+    (updater: React.SetStateAction<RRPoint[]>) =>
+      dispatch((state) => {
+        const oldMeasurePath =
+          byId(state.ephemeral.players.entities, myself.id)?.measurePath ?? [];
+        const newMeasurePath =
+          typeof updater === "function" ? updater(oldMeasurePath) : updater;
+
+        if (oldMeasurePath === newMeasurePath) {
+          return [];
+        }
+
+        return {
+          actions: [
+            ephemeralPlayerUpdate({
+              id: myself.id,
+              changes: {
+                measurePath: newMeasurePath,
+              },
+            }),
+          ],
+          optimisticKey: "measurePath",
+          // TODO: This should support the SyncedDebouncer. Currently the entire
+          // purpose of the SyncedDebouncer is defeated by calling getTime().
+          syncToServerThrottle: syncedDebounce.current.getTime(),
+        };
+      }),
     [dispatch, myself.id]
   );
 
@@ -680,7 +697,6 @@ export default function MapContainer() {
         toolButtonState={toolButtonState}
         toolHandler={toolHandler}
         // mouse position and token path sync
-        measurePathDebounce={syncedDebounce.current}
         onMousePositionChanged={sendMousePositionToServer}
         players={players}
         onUpdateMeasurePath={updateMeasurePath}

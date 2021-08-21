@@ -58,8 +58,6 @@ import { MapMouseHandler } from "./useMapToolHandler";
 import { MapGrid } from "./MapGrid";
 import { MapObjects } from "./MapObjects";
 import { atom, atomFamily, useRecoilCallback, useRecoilValue } from "recoil";
-import { useStateWithRef } from "../../useRefState";
-import { Debouncer, useDebounce } from "../../debounce";
 import { useRRSettings } from "../../settings";
 import { assertNever } from "../../../shared/util";
 import { FogOfWar } from "./FogOfWar";
@@ -160,8 +158,7 @@ export const RRMapView = React.memo<{
   onSmartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
   players: EntityCollection<RRPlayer>;
-  measurePathDebounce: Debouncer;
-  onUpdateMeasurePath: (path: RRPoint[]) => void;
+  onUpdateMeasurePath: React.Dispatch<React.SetStateAction<RRPoint[]>>;
   onMousePositionChanged: (position: RRPoint) => void;
   toolHandler: MapMouseHandler;
   toolButtonState: ToolButtonState;
@@ -179,7 +176,6 @@ export const RRMapView = React.memo<{
   onStopMoveMapObjects,
   transformRef,
   players,
-  measurePathDebounce,
   onUpdateMeasurePath,
   onMousePositionChanged,
   toolButtonState,
@@ -233,19 +229,6 @@ export const RRMapView = React.memo<{
 
   const [selectionArea, setSelectionArea] = useState<Rectangle | null>(null);
 
-  const [measurePath, measurePathRef, setMeasurePath] = useStateWithRef<
-    RRPoint[]
-  >([]);
-
-  const [syncMeasurePath] = useDebounce(
-    onUpdateMeasurePath,
-    measurePathDebounce
-  );
-
-  useEffect(() => {
-    syncMeasurePath(measurePath);
-  }, [measurePath, syncMeasurePath]);
-
   const svgRef = useRef<SVGSVGElement>(null);
 
   const localCoords = (e: MouseEvent | React.MouseEvent) => {
@@ -287,48 +270,52 @@ export const RRMapView = React.memo<{
 
   const addPointToPath = useCallback(
     (p: RRPoint) => {
-      const path = measurePathRef.current;
-      const gridPosition = pointScale(snapPointToGrid(p), 1 / GRID_SIZE);
-      if (path.length < 1) return setMeasurePath([gridPosition]);
+      onUpdateMeasurePath((path) => {
+        const gridPosition = pointScale(snapPointToGrid(p), 1 / GRID_SIZE);
+        if (path.length < 1) return [gridPosition];
 
-      // to make moving along a diagonal easier, we only count hits that are not on the corners
-      const radius = (GRID_SIZE * 0.8) / 2;
-      const isInCenter =
-        pointDistance(
-          pointScale(pointAdd(gridPosition, makePoint(0.5)), GRID_SIZE),
-          p
-        ) < radius;
+        // to make moving along a diagonal easier, we only count hits that are not on the corners
+        const radius = (GRID_SIZE * 0.8) / 2;
+        const isInCenter =
+          pointDistance(
+            pointScale(pointAdd(gridPosition, makePoint(0.5)), GRID_SIZE),
+            p
+          ) < radius;
 
-      const pointsToReach = (from: RRPoint, to: RRPoint) => {
-        const points: RRPoint[] = [];
-        while (!pointEquals(from, to)) {
-          const step = pointSign(pointSubtract(to, from));
-          from = pointAdd(from, step);
-          points.push(from);
-        }
-        return points;
-      };
+        const pointsToReach = (from: RRPoint, to: RRPoint) => {
+          const points: RRPoint[] = [];
+          while (!pointEquals(from, to)) {
+            const step = pointSign(pointSubtract(to, from));
+            from = pointAdd(from, step);
+            points.push(from);
+          }
+          return points;
+        };
 
-      if (
-        isInCenter &&
-        (path.length < 1 || !pointEquals(path[path.length - 1]!, gridPosition))
-      ) {
         if (
-          path.length > 1 &&
-          path.slice(1).some((p) => pointEquals(p, gridPosition))
+          isInCenter &&
+          (path.length < 1 ||
+            !pointEquals(path[path.length - 1]!, gridPosition))
         ) {
-          setMeasurePath(
-            path.slice(0, path.findIndex((p) => pointEquals(p, gridPosition))!)
-          );
-        } else {
-          setMeasurePath([
-            ...path,
-            ...pointsToReach(path[path.length - 1]!, gridPosition),
-          ]);
+          if (
+            path.length > 1 &&
+            path.slice(1).some((p) => pointEquals(p, gridPosition))
+          ) {
+            return path.slice(
+              0,
+              path.findIndex((p) => pointEquals(p, gridPosition))!
+            );
+          } else {
+            return [
+              ...path,
+              ...pointsToReach(path[path.length - 1]!, gridPosition),
+            ];
+          }
         }
-      }
+        return path;
+      });
     },
-    [setMeasurePath, measurePathRef]
+    [onUpdateMeasurePath]
   );
 
   const handleMouseMove = useRecoilCallback(
@@ -390,7 +377,7 @@ export const RRMapView = React.memo<{
               }
               return points;
             };
-            setMeasurePath((measurePath) => {
+            onUpdateMeasurePath((measurePath) => {
               if (measurePath.length === 0) return measurePath;
               return pointsInPath(
                 measurePath[0]!,
@@ -420,7 +407,7 @@ export const RRMapView = React.memo<{
       transformRef,
       addPointToPath,
       onMoveMapObjects,
-      setMeasurePath,
+      onUpdateMeasurePath,
       toolHandler,
     ]
   );
@@ -471,13 +458,13 @@ export const RRMapView = React.memo<{
       } else if (newMouseAction === MouseAction.USE_TOOL) {
         toolHandler.onMouseDown(innerLocal);
       } else if (newMouseAction === MouseAction.MEASURE) {
-        setMeasurePath([
+        onUpdateMeasurePath([
           pointScale(snapPointToGrid(innerLocal), 1 / GRID_SIZE),
         ]);
       }
     },
     [
-      setMeasurePath,
+      onUpdateMeasurePath,
       settings.renderMode,
       toolButtonState,
       toolHandler,
@@ -557,7 +544,7 @@ export const RRMapView = React.memo<{
         switch (mouseActionRef.current) {
           case MouseAction.MOVE_MAP_OBJECT:
             onStopMoveMapObjects();
-            setMeasurePath([]);
+            onUpdateMeasurePath([]);
             dragStartIdRef.current = null;
             break;
           case MouseAction.SELECTION_AREA: {
@@ -575,7 +562,7 @@ export const RRMapView = React.memo<{
             );
             break;
           case MouseAction.MEASURE:
-            setMeasurePath([]);
+            onUpdateMeasurePath([]);
             break;
           case MouseAction.PAN:
             if (settings.renderMode === "mostly-fancy") {
@@ -592,7 +579,7 @@ export const RRMapView = React.memo<{
       },
     [
       settings.renderMode,
-      setMeasurePath,
+      onUpdateMeasurePath,
       setSelectedMapObjectIds,
       toolHandler,
       transformRef,
@@ -807,8 +794,6 @@ export const RRMapView = React.memo<{
             null
           )}
           <MeasurePaths
-            myId={myself.id}
-            myMeasurePath={measurePath}
             mapId={mapId}
             zoom={transform.a}
             backgroundColor={backgroundColor}
@@ -831,15 +816,11 @@ export const RRMapView = React.memo<{
 });
 
 function MeasurePaths({
-  myId,
-  myMeasurePath,
   mapId,
   zoom,
   backgroundColor,
   players,
 }: {
-  myId: RRPlayerID;
-  myMeasurePath: RRPoint[];
   mapId: RRMapID;
   zoom: number;
   backgroundColor: string;
@@ -860,9 +841,6 @@ function MeasurePaths({
             zoom={zoom}
             color={player.color}
             mapBackgroundColor={backgroundColor}
-            overwritePath={
-              ephemeralPlayerId === myId ? myMeasurePath : undefined
-            }
           />
         );
       })}
