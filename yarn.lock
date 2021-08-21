@@ -10786,15 +10786,15 @@ fsevents@^1.2.7:
   linkType: hard
 
 "react-dom@npm:alpha":
-  version: 18.0.0-alpha-e6be2d531
-  resolution: "react-dom@npm:18.0.0-alpha-e6be2d531"
+  version: 18.0.0-alpha-b6ff9ad16-20210820
+  resolution: "react-dom@npm:18.0.0-alpha-b6ff9ad16-20210820"
   dependencies:
     loose-envify: ^1.1.0
     object-assign: ^4.1.1
-    scheduler: 0.21.0-alpha-e6be2d531
+    scheduler: 0.21.0-alpha-b6ff9ad16-20210820
   peerDependencies:
-    react: 18.0.0-alpha-e6be2d531
-  checksum: 9b875d91cef88b537abf9dee50784162c41ec62d39554fd1039a113792d6a5f8eaf203701ce0b4a566aa80d2b27f5b66577bed404229176ae003ec9f0b25ee05
+    react: 18.0.0-alpha-b6ff9ad16-20210820
+  checksum: 63d4f27e0f6577df4fcb866738ce7db3827fc70e1fc94d685ab4596cd550c2594d095bb95c3a6b3b9073a370b9ae353ec0a93d9c9889f6ca9beb61c19ec74336
   languageName: node
   linkType: hard
 
@@ -10907,12 +10907,12 @@ fsevents@^1.2.7:
   linkType: hard
 
 "react@npm:alpha":
-  version: 18.0.0-alpha-e6be2d531
-  resolution: "react@npm:18.0.0-alpha-e6be2d531"
+  version: 18.0.0-alpha-b6ff9ad16-20210820
+  resolution: "react@npm:18.0.0-alpha-b6ff9ad16-20210820"
   dependencies:
     loose-envify: ^1.1.0
     object-assign: ^4.1.1
-  checksum: b59524f86855a502db4a39a6d8b6267c9cc7a4d9723fe789ce010da76a7bbfdfe77af6ce91763fa0cc19959df38aefffe0e26ea0b54f17a2617d9992577522ae
+  checksum: 8cf5505794f953808e6d4210219db91ef78c2f344cd0bb792e491dcf4f171f936339ad960f4782743f6f0f2f7bd2a0bb0b2a556074d5e7f674f93958a652730f
   languageName: node
   linkType: hard
 
@@ -11654,13 +11654,13 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"scheduler@npm:0.21.0-alpha-e6be2d531":
-  version: 0.21.0-alpha-e6be2d531
-  resolution: "scheduler@npm:0.21.0-alpha-e6be2d531"
+"scheduler@npm:0.21.0-alpha-b6ff9ad16-20210820":
+  version: 0.21.0-alpha-b6ff9ad16-20210820
+  resolution: "scheduler@npm:0.21.0-alpha-b6ff9ad16-20210820"
   dependencies:
     loose-envify: ^1.1.0
     object-assign: ^4.1.1
-  checksum: 59f2cf475c4c29bcd6190d821b4e7f9d9c0c7b7973a3a714f3228016f87f10d5380a5a4c65760c3d7b774c6153e7a53d364777b92f66c41630dbad6d592ce0b7
+  checksum: 0dad58e0a4bd5d967799f78897528d08cce51e762104a04736e412e83a5fe8386d511692a749beda89a76a1cf74d5b7d53e485b3b74a15604b7a730ca46436f9
   languageName: node
   linkType: hard
 
@@ -13041,14 +13041,7 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.0.3":
-  version: 2.2.0
-  resolution: "tslib@npm:2.2.0"
-  checksum: 2d35468c470410871c5246e43f12dcb6d0fc363b617c176f26443b9530e5c5ee8448966892a42956168d8f495da7865bda33dfe82c26c91991e28999974a618f
-  languageName: node
-  linkType: hard
-
-"tslib@npm:^2.2.0":
+"tslib@npm:^2.0.3, tslib@npm:^2.2.0":
   version: 2.3.0
   resolution: "tslib@npm:2.3.0"
   checksum: 7b4fc9feff0f704743c3760f5d8d708f6417fac6458159e63df3a6b1100f0736e3b99edb9fe370f274ad15160a1f49ff05cb49402534c818ff552c48e38c3e6e
