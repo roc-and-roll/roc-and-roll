@@ -26,7 +26,7 @@ import { diceResult, rollInitiative } from "../roll";
 import { useLatest, useServerDispatch, useServerState } from "../state";
 import useLocalState from "../useLocalState";
 import { GMArea } from "./GMArea";
-import { TokenStack } from "./tokens/TokenPreview";
+import { CharacterStack } from "./characters/CharacterPreview";
 import { Button } from "./ui/Button";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { useRecoilCallback, useRecoilValue } from "recoil";
@@ -43,32 +43,32 @@ import { SmartIntegerInput } from "./ui/TextInput";
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
   myself: RRPlayer,
-  tokenCollection: EntityCollection<RRCharacter>
+  characterCollection: EntityCollection<RRCharacter>
 ) {
   if (entry.type === "lairAction") {
     return myself.isGM;
   }
 
-  return entry.characterIds.some((tokenId) => {
-    const token = byId(tokenCollection.entities, tokenId);
+  return entry.characterIds.some((characterId) => {
+    const character = byId(characterCollection.entities, characterId);
     return (
-      token &&
-      (canControlToken(token, { ...myself, isGM: false }) ||
-        (myself.isGM && token.localToMap))
+      character &&
+      (canControlToken(character, { ...myself, isGM: false }) ||
+        (myself.isGM && character.localToMap))
     );
   });
 }
 
 const InitiativeEntry = React.memo<{
   entry: RRInitiativeTrackerEntry;
-  tokenCollection: EntityCollection<RRCharacter>;
+  characterCollection: EntityCollection<RRCharacter>;
   playerCollection: EntityCollection<RRPlayer>;
   isCurrentEntry: boolean;
   myself: RRPlayer;
   inverseIdx: number;
 }>(function InitiativeEntry({
   entry,
-  tokenCollection,
+  characterCollection,
   playerCollection,
   isCurrentEntry,
   myself,
@@ -86,20 +86,22 @@ const InitiativeEntry = React.memo<{
     content = (
       <>
         {/* Add an empty TokenStack for correct padding */}
-        <TokenStack tokens={[]} />
+        <CharacterStack characters={[]} />
         <p>{entry.description}</p>
       </>
     );
   } else {
-    const tokens = entry.characterIds.map((id) =>
-      byId(tokenCollection.entities, id)
+    const characters = entry.characterIds.map((id) =>
+      byId(characterCollection.entities, id)
     );
     const names = new Set(
-      tokens.map((token) => token?.name ?? "unknown token")
+      characters.map((character) => character?.name ?? "Unknown Token")
     );
     content = (
       <>
-        <TokenStack tokens={tokens.flatMap((token) => token ?? [])} />
+        <CharacterStack
+          characters={characters.flatMap((character) => character ?? [])}
+        />
         <p>{[...names].join(", ")}</p>
       </>
     );
@@ -107,13 +109,13 @@ const InitiativeEntry = React.memo<{
     entryContainsPlayerCharacter = entries(playerCollection).some(
       (player) =>
         !player.isGM &&
-        tokens.some(
+        characters.some(
           (character) => character && player.characterIds.includes(character.id)
         )
     );
   }
 
-  const canEdit = canEditEntry(entry, myself, tokenCollection);
+  const canEdit = canEditEntry(entry, myself, characterCollection);
 
   const characterIds =
     entry.type === "character" ? entry.characterIds : EMPTY_ARRAY;
@@ -217,7 +219,7 @@ function InitiativeTrackerInner({
 }) {
   const [modifier, setModifier, _] = useLocalState("initiative-modifier", "0");
   const dispatch = useServerDispatch();
-  const tokenCollection = useServerState((state) => state.characters);
+  const characterCollection = useServerState((state) => state.characters);
   const playerCollection = useServerState((state) => state.players);
 
   const mapObjects = useMyMap((map) => map?.objects ?? EMPTY_ENTITY_COLLECTION);
@@ -245,7 +247,7 @@ function InitiativeTrackerInner({
   const characters = selectedMapObjectIds.flatMap((id) =>
     withDo(byId(mapObjects.entities, id), (obj) =>
       obj?.type === "token"
-        ? byId(tokenCollection.entities, obj.characterId)
+        ? byId(characterCollection.entities, obj.characterId)
         : []
     )
   );
@@ -312,7 +314,7 @@ function InitiativeTrackerInner({
       : rows;
 
   const canEdit =
-    !!currentRow && canEditEntry(currentRow, myself, tokenCollection);
+    !!currentRow && canEditEntry(currentRow, myself, characterCollection);
 
   const endTurnButton = currentRow && (
     <EndTurnButton
@@ -337,7 +339,7 @@ function InitiativeTrackerInner({
               inverseIdx={sortedRows.length - idx - 1}
               entry={entry}
               isCurrentEntry={entry.id === initiativeTracker.currentEntryId}
-              tokenCollection={tokenCollection}
+              characterCollection={characterCollection}
               playerCollection={playerCollection}
               myself={myself}
             />

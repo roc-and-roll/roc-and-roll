@@ -157,7 +157,7 @@ export const RRMapView = React.memo<{
   transformRef: React.MutableRefObject<Matrix>;
   onMoveMapObjects: (d: RRPoint) => void;
   onStopMoveMapObjects: () => void;
-  onSmartSetTotalHP: (tokenId: RRCharacterID, hp: number) => void;
+  onSmartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
   handleKeyDown: (event: KeyboardEvent) => void;
   players: EntityCollection<RRPlayer>;
   measurePathDebounce: Debouncer;
@@ -708,11 +708,11 @@ export const RRMapView = React.memo<{
     () =>
       imageArea && auraArea && defaultArea && tokenArea && healthbarArea
         ? {
-            imageArea: imageArea,
-            auraArea: auraArea,
-            defaultArea: defaultArea,
-            tokenArea: tokenArea,
-            healthbarArea: healthbarArea,
+            imageArea,
+            auraArea,
+            defaultArea,
+            tokenArea,
+            healthbarArea,
           }
         : null,
     [imageArea, auraArea, defaultArea, tokenArea, healthbarArea]

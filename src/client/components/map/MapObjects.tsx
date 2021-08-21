@@ -58,7 +58,7 @@ export const MapObjects = React.memo<{
   toolButtonState: ToolButtonState;
   zoom: number;
   mapId: RRMapID;
-  smartSetTotalHP: (tokenId: RRCharacterID, hp: number) => void;
+  smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
   handleStartMoveMapObject: (
     object: RRMapObject,
     event: React.MouseEvent
@@ -113,7 +113,7 @@ const MapObjectWrapper = React.memo<{
   zoom: number;
   contrastColor: string;
   mapId: RRMapID;
-  smartSetTotalHP: (tokenId: RRCharacterID, hp: number) => void;
+  smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
 }>(function MapObjectWrapper({
   mapObjectId,
   canStartMoving,

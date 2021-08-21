@@ -32,10 +32,10 @@ import { CURSOR_POSITION_SYNC_DEBOUNCE, hoveredMapObjectsFamily } from "./Map";
 import {
   highlightedCharactersFamily,
   selectedMapObjectsFamily,
-  tokenFamily,
+  characterFamily,
 } from "./MapContainer";
 import { Popover } from "../Popover";
-import { TokenEditor, conditionIcons } from "../tokens/TokenEditor";
+import { CharacterEditor, conditionIcons } from "../characters/CharacterEditor";
 import {
   makePoint,
   pointAdd,
@@ -59,7 +59,7 @@ export const MapToken = React.memo<{
   healthbarArea: SVGGElement | null;
   zoom: number;
   contrastColor: string;
-  smartSetTotalHP: (tokenId: RRCharacterID, hp: number) => void;
+  smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
 }>(function MapToken({
   mapId,
   object,
@@ -72,7 +72,7 @@ export const MapToken = React.memo<{
   smartSetTotalHP,
 }) {
   const myself = useMyself();
-  const token = useRecoilValue(tokenFamily(object.characterId));
+  const character = useRecoilValue(characterFamily(object.characterId));
 
   const isHovered = useRecoilValue(hoveredMapObjectsFamily(object.id));
   const isSelected = useRecoilValue(selectedMapObjectsFamily(object.id));
@@ -86,9 +86,9 @@ export const MapToken = React.memo<{
 
   const setHP = useCallback(
     (hp: number) => {
-      token?.id && smartSetTotalHP(token.id, hp);
+      character?.id && smartSetTotalHP(character.id, hp);
     },
-    [smartSetTotalHP, token?.id]
+    [smartSetTotalHP, character?.id]
   );
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -139,28 +139,28 @@ export const MapToken = React.memo<{
     }
   }, [isSelected, object.position, rafStart, rafStop]);
 
-  if (!token || !canViewTokenOnMap(token, myself)) {
+  if (!character || !canViewTokenOnMap(character, myself)) {
     return null;
   }
 
-  const tokenSize = GRID_SIZE * token.scale;
+  const tokenSize = GRID_SIZE * character.scale;
 
   const { x, y } = lerpedPosition;
   const center = pointAdd(lerpedPosition, makePoint(tokenSize / 2));
 
-  const canControl = canStartMoving && canControlToken(token, myself);
+  const canControl = canStartMoving && canControlToken(character, myself);
   const tokenStyle = {
-    ...(isCharacterUnconsciousOrDead(token)
+    ...(isCharacterUnconsciousOrDead(character)
       ? { filter: "url(#tokenUnconsciousOrDeadShadow)" }
-      : isCharacterHurt(token)
+      : isCharacterHurt(character)
       ? { filter: "url(#tokenHurtShadow)" }
-      : isCharacterOverhealed(token)
+      : isCharacterOverhealed(character)
       ? { filter: "url(#tokenOverhealedShadow)" }
       : {}),
     ...(canControl ? { cursor: "move" } : {}),
   };
 
-  const tokenRepresentation = token.tokenImage ? (
+  const tokenRepresentation = character.tokenImage ? (
     <image
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
@@ -171,8 +171,8 @@ export const MapToken = React.memo<{
       height={tokenSize}
       href={tokenImageUrl(
         {
-          tokenImage: token.tokenImage,
-          tokenBorderColor: token.tokenBorderColor,
+          tokenImage: character.tokenImage,
+          tokenBorderColor: character.tokenBorderColor,
         },
         tokenSize * zoom
       )}
@@ -210,7 +210,7 @@ export const MapToken = React.memo<{
           className="selection-area-highlight"
         />
       )}
-      {token.visibility !== "everyone" && (
+      {character.visibility !== "everyone" && (
         <>
           <title>only visible to GMs</title>
           <RoughText
@@ -245,11 +245,11 @@ export const MapToken = React.memo<{
         // that they are located in the background and still allow users to
         // interact with objects that would otherwise be beneath the auras
         ReactDOM.createPortal(
-          token.auras.map((aura, i) => {
+          character.auras.map((aura, i) => {
             return (
               <Aura
                 key={i}
-                token={token}
+                character={character}
                 aura={aura}
                 myself={myself}
                 x={x}
@@ -262,13 +262,13 @@ export const MapToken = React.memo<{
       {healthbarArea &&
         ReactDOM.createPortal(
           <>
-            {token.conditions.includes("dead") && (
-              <DeadMarker x={x} y={y} scale={token.scale} />
+            {character.conditions.includes("dead") && (
+              <DeadMarker x={x} y={y} scale={character.scale} />
             )}
-            {canControl && token.maxHP > 0 && (
+            {canControl && character.maxHP > 0 && (
               <g transform={`translate(${x},${y - 16})`}>
                 <Healthbar
-                  token={token}
+                  character={character}
                   setHP={setHP}
                   contrastColor={contrastColor}
                 />
@@ -284,9 +284,9 @@ export const MapToken = React.memo<{
                 fill="none"
               />
             )}
-            {token.conditions.map((condition, index) => {
+            {character.conditions.map((condition, index) => {
               const icon = conditionIcons[condition];
-              const iconSize = 16 * token.scale;
+              const iconSize = 16 * character.scale;
               const props = {
                 x: x + (index % 4) * iconSize,
                 y: y + Math.floor(index / 4) * iconSize,
@@ -309,11 +309,11 @@ export const MapToken = React.memo<{
                 <React.Fragment key={condition}>
                   <FontAwesomeIcon
                     icon={icon}
-                    symbol={`${token.id}/condition-icon/${condition}`}
+                    symbol={`${character.id}/condition-icon/${condition}`}
                   />
                   <use
                     {...props}
-                    xlinkHref={`#${token.id}/condition-icon/${condition}`}
+                    xlinkHref={`#${character.id}/condition-icon/${condition}`}
                     color="black"
                     style={{
                       stroke: "white",
@@ -332,9 +332,9 @@ export const MapToken = React.memo<{
         <Popover
           content={
             <div onMouseDown={(e) => e.stopPropagation()}>
-              <TokenEditor
+              <CharacterEditor
                 isTemplate={false}
-                token={token}
+                character={character}
                 wasJustCreated={false}
                 onNameFirstEdited={() => {}}
                 onClose={() => setEditorVisible(false)}
@@ -416,27 +416,27 @@ function MapTokenEditor({ mapId, token }: { mapId: RRMapID; token: RRToken }) {
 function Aura({
   x,
   y,
-  token,
+  character,
   aura,
   myself,
 }: {
   x: number;
   y: number;
-  token: RRCharacter;
+  character: RRCharacter;
   aura: RRAura;
   myself: RRPlayer;
 }) {
   if (
     (aura.visibility === "playerOnly" &&
-      !myself.characterIds.includes(token.id)) ||
+      !myself.characterIds.includes(character.id)) ||
     (aura.visibility === "playerAndGM" &&
       !myself.isGM &&
-      !myself.characterIds.includes(token.id))
+      !myself.characterIds.includes(character.id))
   ) {
     return null;
   }
 
-  const tokenSize = GRID_SIZE * token.scale;
+  const tokenSize = GRID_SIZE * character.scale;
 
   const size = (aura.size * GRID_SIZE) / 5 + tokenSize / 2;
   const fill = tinycolor(aura.color).setAlpha(0.3).toRgbString();
@@ -454,8 +454,8 @@ function Aura({
             r={Math.round(aura.size / 5)}
             creatureX={x / GRID_SIZE}
             creatureY={y / GRID_SIZE}
-            creatureW={token.scale}
-            creatureH={token.scale}
+            creatureW={character.scale}
+            creatureH={character.scale}
             fill={fill}
           />
         </>
@@ -476,28 +476,28 @@ function Aura({
 }
 
 function Healthbar({
-  token,
+  character,
   contrastColor,
   setHP,
 }: {
-  token: RRCharacter;
+  character: RRCharacter;
   contrastColor: string;
   setHP: (hp: number) => void;
 }) {
-  const tokenSize = GRID_SIZE * token.scale;
+  const tokenSize = GRID_SIZE * character.scale;
 
-  const adjustedMaxHP = token.maxHP + token.maxHPAdjustment;
-  const totalMaxHP = adjustedMaxHP + token.temporaryHP;
+  const adjustedMaxHP = character.maxHP + character.maxHPAdjustment;
+  const totalMaxHP = adjustedMaxHP + character.temporaryHP;
 
   const hpColor = "#c5d87c";
   const temporaryHPColor = "#67ac19";
 
   const hpBarWidth =
     tokenSize *
-    clamp(0, token.hp / adjustedMaxHP, 1) *
+    clamp(0, character.hp / adjustedMaxHP, 1) *
     (adjustedMaxHP / totalMaxHP);
 
-  const temporaryHPBarWidth = tokenSize * (token.temporaryHP / totalMaxHP);
+  const temporaryHPBarWidth = tokenSize * (character.temporaryHP / totalMaxHP);
 
   return (
     <>
@@ -511,7 +511,7 @@ function Healthbar({
         fillStyle="solid"
         roughness={1}
       />
-      {token.maxHP > 0 && (
+      {character.maxHP > 0 && (
         <>
           <RoughRectangle
             x={0}
@@ -523,7 +523,7 @@ function Healthbar({
             fillStyle="solid"
             roughness={0}
           />
-          {token.temporaryHP > 0 && temporaryHPBarWidth > 0 && (
+          {character.temporaryHP > 0 && temporaryHPBarWidth > 0 && (
             <RoughRectangle
               x={hpBarWidth}
               y={0}
@@ -562,7 +562,7 @@ function Healthbar({
           </RoughText>
         */}
       <foreignObject x={0} y={2} width={tokenSize / 2 - 4} height={14}>
-        <HPInlineEdit hp={token.hp + token.temporaryHP} setHP={setHP} />
+        <HPInlineEdit hp={character.hp + character.temporaryHP} setHP={setHP} />
       </foreignObject>
       <RoughText
         x={tokenSize / 2 - 3}

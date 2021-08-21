@@ -4,7 +4,12 @@ import {
   characterAdd,
   characterTemplateAdd,
 } from "../../../shared/actions";
-import { entries, RRCharacter, RRCharacterID } from "../../../shared/state";
+import {
+  entries,
+  RRCharacter,
+  RRCharacterID,
+  RRCharacterTemplate,
+} from "../../../shared/state";
 import { generateRandomToken } from "../../files";
 import { useServerDispatch, useServerState } from "../../state";
 import { useDrag } from "react-dnd";
@@ -13,11 +18,11 @@ import { GMArea } from "../GMArea";
 import { Popover } from "../Popover";
 import { Button } from "../ui/Button";
 import { randomName } from "../../../shared/util";
-import { TokenEditor } from "./TokenEditor";
-import { TokenPreview } from "./TokenPreview";
+import { CharacterEditor } from "./CharacterEditor";
+import { CharacterPreview } from "./CharacterPreview";
 import { randomColor } from "../../../shared/colors";
 
-async function makeNewToken(): Promise<Parameters<typeof characterAdd>[0]> {
+async function makeNewCharacter(): Promise<Parameters<typeof characterAdd>[0]> {
   return {
     auras: [],
     conditions: [],
@@ -35,10 +40,10 @@ async function makeNewToken(): Promise<Parameters<typeof characterAdd>[0]> {
   };
 }
 
-export function TokenManager() {
+export function CharacterManager() {
   const myself = useMyself();
-  const tokens = useServerState((s) => s.characters);
-  const [newTokenIds, setNewTokenIds] = useState<RRCharacterID[]>([]);
+  const characters = useServerState((s) => s.characters);
+  const [newCharacterIds, setNewCharacterIds] = useState<RRCharacterID[]>([]);
 
   const dispatch = useServerDispatch();
 
@@ -47,16 +52,16 @@ export function TokenManager() {
   const addToken = () => {
     setIsAddingToken(true);
     (async () => {
-      const tokenAddAction = characterAdd(await makeNewToken());
-      const newToken = tokenAddAction.payload;
+      const characterAddAction = characterAdd(await makeNewCharacter());
+      const newCharacter = characterAddAction.payload;
       dispatch([
-        tokenAddAction,
+        characterAddAction,
         playerUpdateAddCharacterId({
           id: myself.id,
-          characterId: newToken.id,
+          characterId: newCharacter.id,
         }),
       ]);
-      setNewTokenIds((l) => [...l, newToken.id]);
+      setNewCharacterIds((l) => [...l, newCharacter.id]);
     })().finally(() => setIsAddingToken(false));
   };
 
@@ -66,9 +71,9 @@ export function TokenManager() {
         Add Character
       </Button>
       <TokenList
-        newTokenIds={newTokenIds}
-        setNewTokenIds={setNewTokenIds}
-        tokens={entries(tokens).filter((t) =>
+        newCharacterIds={newCharacterIds}
+        setNewCharacterIds={setNewCharacterIds}
+        characters={entries(characters).filter((t) =>
           myself.characterIds.includes(t.id)
         )}
       />
@@ -77,12 +82,12 @@ export function TokenManager() {
 
       {myself.isGM && (
         <GMArea>
-          <h4>Tokens of other players</h4>
+          <h4>Other {"players'"} characters</h4>
           <div className="token-list">
             <TokenList
-              newTokenIds={newTokenIds}
-              setNewTokenIds={setNewTokenIds}
-              tokens={entries(tokens).filter(
+              newCharacterIds={newCharacterIds}
+              setNewCharacterIds={setNewCharacterIds}
+              characters={entries(characters).filter(
                 (t) => !myself.characterIds.includes(t.id) && !t.localToMap
               )}
             />
@@ -94,7 +99,7 @@ export function TokenManager() {
 }
 
 function TemplateEditor() {
-  const [newTokenIds, setNewTokenIds] = useState<RRCharacterID[]>([]);
+  const [newCharacterIds, setNewCharacterIds] = useState<RRCharacterID[]>([]);
 
   const dispatch = useServerDispatch();
 
@@ -103,14 +108,14 @@ function TemplateEditor() {
   const addTemplate = () => {
     setIsAddingToken(true);
     (async () => {
-      const tokenAddAction = characterTemplateAdd(await makeNewToken());
-      const newToken = tokenAddAction.payload;
-      dispatch(tokenAddAction);
-      setNewTokenIds((l) => [...l, newToken.id]);
+      const characterAddAction = characterTemplateAdd(await makeNewCharacter());
+      const newCharacter = characterAddAction.payload;
+      dispatch(characterAddAction);
+      setNewCharacterIds((l) => [...l, newCharacter.id]);
     })().finally(() => setIsAddingToken(false));
   };
 
-  const templates = entries(
+  const characterTemplates = entries(
     useServerState((state) => state.characterTemplates)
   );
 
@@ -127,9 +132,9 @@ function TemplateEditor() {
         <h4>Character Templates</h4>
         <TokenList
           isTemplate={true}
-          newTokenIds={newTokenIds}
-          setNewTokenIds={setNewTokenIds}
-          tokens={templates}
+          newCharacterIds={newCharacterIds}
+          setNewCharacterIds={setNewCharacterIds}
+          characters={characterTemplates}
         />
       </div>
     </GMArea>
@@ -137,45 +142,47 @@ function TemplateEditor() {
 }
 
 function TokenList({
-  tokens,
-  newTokenIds,
-  setNewTokenIds,
+  characters,
+  newCharacterIds,
+  setNewCharacterIds,
   isTemplate,
 }: {
-  tokens: RRCharacter[];
-  newTokenIds: RRCharacterID[];
-  setNewTokenIds: React.Dispatch<React.SetStateAction<RRCharacterID[]>>;
+  characters: RRCharacter[] | RRCharacterTemplate[];
+  newCharacterIds: RRCharacterID[];
+  setNewCharacterIds: React.Dispatch<React.SetStateAction<RRCharacterID[]>>;
   isTemplate?: boolean;
 }) {
-  const tokenPreview = (t: RRCharacter) => (
-    <EditableTokenPreview
-      token={t}
-      key={t.id}
-      isTemplate={isTemplate}
-      wasJustCreated={newTokenIds.includes(t.id)}
-      onNameFirstEdited={() =>
-        setNewTokenIds((l) => l.filter((id) => id !== t.id))
-      }
-    />
+  return (
+    <div className="token-list">
+      {characters.map((character) => (
+        <EditableCharacterPreview
+          key={character.id}
+          character={character}
+          isTemplate={isTemplate}
+          wasJustCreated={newCharacterIds.includes(character.id)}
+          onNameFirstEdited={() =>
+            setNewCharacterIds((l) => l.filter((id) => id !== character.id))
+          }
+        />
+      ))}
+    </div>
   );
-
-  return <div className="token-list">{tokens.map(tokenPreview)}</div>;
 }
 
-function EditableTokenPreview({
-  token,
+function EditableCharacterPreview({
+  character,
   onNameFirstEdited,
   wasJustCreated,
   isTemplate,
 }: {
-  token: RRCharacter;
+  character: RRCharacter;
   onNameFirstEdited: () => void;
   wasJustCreated: boolean;
   isTemplate?: boolean;
 }) {
   const [, dragRef] = useDrag<{ id: RRCharacterID }, void, null>(() => ({
     type: isTemplate ? "tokenTemplate" : "token",
-    item: { id: token.id },
+    item: { id: character.id },
   }));
 
   const [selected, setSelected] = useState(wasJustCreated);
@@ -183,9 +190,9 @@ function EditableTokenPreview({
   return (
     <Popover
       content={
-        <TokenEditor
+        <CharacterEditor
           isTemplate={isTemplate}
-          token={token}
+          character={character}
           wasJustCreated={wasJustCreated}
           onNameFirstEdited={onNameFirstEdited}
           onClose={() => setSelected(false)}
@@ -201,8 +208,8 @@ function EditableTokenPreview({
         className="token-preview"
         onClick={() => setSelected(true)}
       >
-        <p>{token.name}</p>
-        <TokenPreview token={token} />
+        <p>{character.name}</p>
+        <CharacterPreview character={character} />
       </div>
     </Popover>
   );

@@ -1,6 +1,6 @@
 import React from "react";
 import { DiceInterface } from "./DiceInterface";
-import { TokenManager } from "./tokens/TokenManager";
+import { CharacterManager } from "./characters/CharacterManager";
 import { Collapsible } from "./Collapsible";
 import { Playground } from "./Playground";
 import { Resizable } from "re-resizable";
@@ -54,8 +54,8 @@ export function Sidebar({ logout }: { logout: () => void }) {
         <h1>Roc & Roll</h1>
 
         <InitiativeTracker />
-        <Collapsible title="Tokens">
-          <TokenManager />
+        <Collapsible title="Characters">
+          <CharacterManager />
         </Collapsible>
 
         <Collapsible title="Dice">

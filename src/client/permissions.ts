@@ -5,8 +5,8 @@ import {
   RRPlayerID,
 } from "../shared/state";
 
-export const canControlToken = (token: RRCharacter, player: RRPlayer) => {
-  return player.isGM || player.characterIds.includes(token.id);
+export const canControlToken = (character: RRCharacter, player: RRPlayer) => {
+  return player.isGM || player.characterIds.includes(character.id);
 };
 
 export const canControlMapObject = (object: RRMapObject, player: RRPlayer) => {

@@ -9,20 +9,20 @@ import { pointAdd, pointScale, makePoint } from "../../../shared/point";
 
 export const mapObjectCenter = (
   object: RRMapObject,
-  tokens: EntityCollection<RRCharacter>
+  characters: EntityCollection<RRCharacter>
 ) => {
-  const size = mapObjectSize(object, tokens);
+  const size = mapObjectSize(object, characters);
   return pointAdd(object.position, pointScale(size, 0.5));
 };
 
 export const mapObjectSize = (
   object: RRMapObject,
-  tokens: EntityCollection<RRCharacter>
+  characters: EntityCollection<RRCharacter>
 ) => {
   let size = makePoint(GRID_SIZE);
   if (object.type === "token") {
-    const token = byId(tokens.entities, object.characterId)!;
-    size = pointScale(size, token.scale);
+    const character = byId(characters.entities, object.characterId)!;
+    size = pointScale(size, character.scale);
   }
   return size;
 };

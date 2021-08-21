@@ -129,13 +129,13 @@ export const mapObjectIdsAtom = atom<ReadonlyArray<RRMapObjectID>>({
   default: [],
 });
 
-export const tokenFamily = atomFamily<RRCharacter | null, RRCharacterID>({
-  key: "Token",
+export const characterFamily = atomFamily<RRCharacter | null, RRCharacterID>({
+  key: "Character",
   default: null,
 });
 
-export const tokenIdsAtom = atom<ReadonlyArray<RRCharacterID>>({
-  key: "TokenIds",
+export const characterIdsAtom = atom<ReadonlyArray<RRCharacterID>>({
+  key: "CharacterIds",
   default: [],
 });
 
@@ -182,7 +182,7 @@ export default function MapContainer() {
   const getCharacter = useRecoilCallback(
     ({ snapshot }) =>
       (id: RRCharacterID) => {
-        return snapshot.getLoadable(tokenFamily(id)).getValue();
+        return snapshot.getLoadable(characterFamily(id)).getValue();
       },
     []
   );
@@ -375,7 +375,7 @@ export default function MapContainer() {
                   .getValue()!;
                 if (mapObject.type === "token") {
                   const character = snapshot
-                    .getLoadable(tokenFamily(mapObject.characterId))
+                    .getLoadable(characterFamily(mapObject.characterId))
                     .getValue()!;
                   return mapObjectRemove({
                     mapId,
@@ -556,9 +556,9 @@ export default function MapContainer() {
   );
 
   const onSmartSetTotalHP = useCallback(
-    (tokenId: RRCharacterID, newTotalHP: number) =>
+    (characterId: RRCharacterID, newTotalHP: number) =>
       dispatch((state) => {
-        const character = byId(state.characters.entities, tokenId);
+        const character = byId(state.characters.entities, characterId);
         if (!character) {
           return [];
         }
@@ -566,11 +566,11 @@ export default function MapContainer() {
         return {
           actions: [
             characterUpdate({
-              id: tokenId,
+              id: characterId,
               changes: changeHPSmartly(character, newTotalHP),
             }),
           ],
-          optimisticKey: `${tokenId}/hp`,
+          optimisticKey: `${characterId}/hp`,
           syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
         };
       }),
@@ -768,10 +768,10 @@ function ReduxToRecoilBridge({
     mapObjectsFamily
   );
   useReduxToRecoilBridge(
-    "tokens",
+    "characters",
     useServerState((s) => s.characters),
-    tokenIdsAtom,
-    tokenFamily
+    characterIdsAtom,
+    characterFamily
   );
   useReduxToRecoilBridge(
     "characterTemplates",

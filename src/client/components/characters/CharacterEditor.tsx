@@ -90,14 +90,14 @@ export const conditionIcons = {
   dead: faSkullCrossbones,
 } as const;
 
-export function TokenEditor({
-  token,
+export function CharacterEditor({
+  character,
   wasJustCreated,
   onClose,
   onNameFirstEdited,
   isTemplate,
 }: {
-  token: RRCharacter | RRCharacterTemplate;
+  character: RRCharacter | RRCharacterTemplate;
   onClose: () => void;
   wasJustCreated: boolean;
   onNameFirstEdited: () => void;
@@ -114,7 +114,10 @@ export function TokenEditor({
   const updateImage = async () => {
     const uploadedFiles = await upload(fileInput.current!.files);
     dispatch(
-      updateFunc({ id: token.id, changes: { tokenImage: uploadedFiles[0]! } })
+      updateFunc({
+        id: character.id,
+        changes: { tokenImage: uploadedFiles[0]! },
+      })
     );
     fileInput.current!.value = "";
   };
@@ -123,7 +126,7 @@ export function TokenEditor({
     dispatch((state) => {
       const oldAuras = byId(
         state[isTemplate ? "characterTemplates" : "characters"].entities,
-        token.id
+        character.id
       )?.auras;
 
       if (oldAuras === undefined) {
@@ -133,7 +136,9 @@ export function TokenEditor({
         typeof updater === "function" ? updater(oldAuras) : updater;
 
       return {
-        actions: [updateFunc({ id: token.id, changes: { auras: newAuras } })],
+        actions: [
+          updateFunc({ id: character.id, changes: { auras: newAuras } }),
+        ],
         optimisticKey: "auras",
         syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
       };
@@ -145,7 +150,7 @@ export function TokenEditor({
     dispatch((state) => {
       const oldConditions = byId(
         state[isTemplate ? "characterTemplates" : "characters"].entities,
-        token.id
+        character.id
       )?.conditions;
 
       if (oldConditions === undefined) {
@@ -157,7 +162,10 @@ export function TokenEditor({
 
       return {
         actions: [
-          updateFunc({ id: token.id, changes: { conditions: newConditions } }),
+          updateFunc({
+            id: character.id,
+            changes: { conditions: newConditions },
+          }),
         ],
         optimisticKey: "conditions",
         syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
@@ -168,14 +176,14 @@ export function TokenEditor({
     fileInput.current!.value = "";
     nameInput.current!.focus();
     if (wasJustCreated) nameInput.current!.select();
-  }, [token.id, wasJustCreated]);
+  }, [character.id, wasJustCreated]);
 
   useEffect(() => {
     if (wasJustCreated) onNameFirstEdited();
-  }, [token.name, onNameFirstEdited, wasJustCreated]);
+  }, [character.name, onNameFirstEdited, wasJustCreated]);
 
   const remove = () => {
-    dispatch(removeFunc(token.id));
+    dispatch(removeFunc(character.id));
     onClose();
   };
 
@@ -189,10 +197,10 @@ export function TokenEditor({
           Name:{" "}
           <SmartTextInput
             ref={nameInput}
-            value={token.name}
+            value={character.name}
             onChange={(name) =>
               dispatch({
-                actions: [updateFunc({ id: token.id, changes: { name } })],
+                actions: [updateFunc({ id: character.id, changes: { name } })],
                 optimisticKey: "name",
                 syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
               })
@@ -205,12 +213,12 @@ export function TokenEditor({
           Visible to GM only:{" "}
           <input
             type="checkbox"
-            checked={token.visibility === "gmOnly"}
+            checked={character.visibility === "gmOnly"}
             onChange={(e) =>
               dispatch({
                 actions: [
                   updateFunc({
-                    id: token.id,
+                    id: character.id,
                     changes: {
                       visibility: e.target.checked ? "gmOnly" : "everyone",
                     },
@@ -223,19 +231,19 @@ export function TokenEditor({
           />
         </label>
       </div>
-      <HPEditor character={token} updateFunc={updateFunc} />
+      <HPEditor character={character} updateFunc={updateFunc} />
       <div className="character-editor-attributes">
         {linkedModifierNames.map((modifier) => (
           <AttributeEditor
             key={modifier}
-            value={token.attributes[modifier] ?? 0}
+            value={character.attributes[modifier] ?? 0}
             label={modifier}
             onChange={(newValue) =>
               dispatch((state) => {
                 const oldAttributes = byId(
                   (isTemplate ? state.characterTemplates : state.characters)
                     .entities,
-                  token.id
+                  character.id
                 )?.attributes;
 
                 if (!oldAttributes) {
@@ -245,7 +253,7 @@ export function TokenEditor({
                 return {
                   actions: [
                     updateFunc({
-                      id: token.id,
+                      id: character.id,
                       changes: {
                         attributes: {
                           ...oldAttributes,
@@ -266,12 +274,12 @@ export function TokenEditor({
         <label>
           Size in #squares:{" "}
           <SmartIntegerInput
-            value={token.scale}
+            value={character.scale}
             min={1}
             placeholder="scale"
             onChange={(scale) =>
               dispatch({
-                actions: [updateFunc({ id: token.id, changes: { scale } })],
+                actions: [updateFunc({ id: character.id, changes: { scale } })],
                 optimisticKey: "scale",
                 syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
               })
@@ -281,7 +289,7 @@ export function TokenEditor({
       </div>
       <h3>Auras</h3>
       <ul>
-        {token.auras.map((aura, i) => (
+        {character.auras.map((aura, i) => (
           <li key={i}>
             <div>
               <label>
@@ -292,9 +300,9 @@ export function TokenEditor({
                   value={aura.size}
                   onChange={(e) => {
                     setAuras([
-                      ...token.auras.slice(0, i),
+                      ...character.auras.slice(0, i),
                       { ...aura, size: e.target.valueAsNumber },
-                      ...token.auras.slice(i + 1),
+                      ...character.auras.slice(i + 1),
                     ]);
                   }}
                 />
@@ -307,9 +315,9 @@ export function TokenEditor({
                   value={aura.color}
                   onChange={(color) => {
                     setAuras([
-                      ...token.auras.slice(0, i),
+                      ...character.auras.slice(0, i),
                       { ...aura, color },
-                      ...token.auras.slice(i + 1),
+                      ...character.auras.slice(i + 1),
                     ]);
                   }}
                 />
@@ -322,9 +330,9 @@ export function TokenEditor({
                   value={aura.shape}
                   onChange={(shape) => {
                     setAuras([
-                      ...token.auras.slice(0, i),
+                      ...character.auras.slice(0, i),
                       { ...aura, shape },
-                      ...token.auras.slice(i + 1),
+                      ...character.auras.slice(i + 1),
                     ]);
                   }}
                   options={[
@@ -346,12 +354,12 @@ export function TokenEditor({
                   ]}
                   onChange={(visibility) => {
                     setAuras([
-                      ...token.auras.slice(0, i),
+                      ...character.auras.slice(0, i),
                       {
                         ...aura,
                         visibility,
                       },
-                      ...token.auras.slice(i + 1),
+                      ...character.auras.slice(i + 1),
                     ]);
                   }}
                 />
@@ -365,12 +373,12 @@ export function TokenEditor({
                   value={aura.visibileWhen}
                   onChange={(visibileWhen) => {
                     setAuras([
-                      ...token.auras.slice(0, i),
+                      ...character.auras.slice(0, i),
                       {
                         ...aura,
                         visibileWhen,
                       },
-                      ...token.auras.slice(i + 1),
+                      ...character.auras.slice(i + 1),
                     ]);
                   }}
                   options={[
@@ -386,8 +394,8 @@ export function TokenEditor({
               className="red"
               onClick={() => {
                 setAuras([
-                  ...token.auras.slice(0, i),
-                  ...token.auras.slice(i + 1),
+                  ...character.auras.slice(0, i),
+                  ...character.auras.slice(i + 1),
                 ]);
               }}
             >
@@ -415,7 +423,7 @@ export function TokenEditor({
         </li>
       </ul>
       <ConditionPicker
-        conditions={token.conditions}
+        conditions={character.conditions}
         setConditions={setConditions}
       />
       <hr />
@@ -423,11 +431,14 @@ export function TokenEditor({
         <label>
           Token border color:{" "}
           <SmartColorInput
-            value={token.tokenBorderColor}
+            value={character.tokenBorderColor}
             onChange={(tokenBorderColor) =>
               dispatch({
                 actions: [
-                  updateFunc({ id: token.id, changes: { tokenBorderColor } }),
+                  updateFunc({
+                    id: character.id,
+                    changes: { tokenBorderColor },
+                  }),
                 ],
                 optimisticKey: "tokenBorderColor",
                 syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
@@ -456,7 +467,7 @@ export function TokenEditor({
 }
 
 function HPEditor({
-  character: token,
+  character,
   updateFunc,
 }: {
   character: RRCharacter | RRCharacterTemplate;
@@ -470,12 +481,12 @@ function HPEditor({
         <label>
           HP
           <SmartIntegerInput
-            value={token.hp}
+            value={character.hp}
             min={0}
             placeholder="HP"
             onChange={(hp) =>
               dispatch({
-                actions: [updateFunc({ id: token.id, changes: { hp } })],
+                actions: [updateFunc({ id: character.id, changes: { hp } })],
                 optimisticKey: "hp",
                 syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
               })
@@ -485,12 +496,12 @@ function HPEditor({
         <label>
           Max HP
           <SmartIntegerInput
-            value={token.maxHP}
+            value={character.maxHP}
             min={0}
             placeholder="Max HP"
             onChange={(maxHP) =>
               dispatch({
-                actions: [updateFunc({ id: token.id, changes: { maxHP } })],
+                actions: [updateFunc({ id: character.id, changes: { maxHP } })],
                 optimisticKey: "maxHP",
                 syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
               })
@@ -500,13 +511,13 @@ function HPEditor({
         <label>
           Temp HP
           <SmartIntegerInput
-            value={token.temporaryHP}
+            value={character.temporaryHP}
             min={0}
             placeholder="Temp HP"
             onChange={(temporaryHP) =>
               dispatch({
                 actions: [
-                  updateFunc({ id: token.id, changes: { temporaryHP } }),
+                  updateFunc({ id: character.id, changes: { temporaryHP } }),
                 ],
                 optimisticKey: "temporaryHP",
                 syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
@@ -525,12 +536,15 @@ function HPEditor({
         <label>
           Max HP Adjustment
           <SmartIntegerInput
-            value={token.maxHPAdjustment}
+            value={character.maxHPAdjustment}
             placeholder="max HP adjustment"
             onChange={(maxHPAdjustment) =>
               dispatch({
                 actions: [
-                  updateFunc({ id: token.id, changes: { maxHPAdjustment } }),
+                  updateFunc({
+                    id: character.id,
+                    changes: { maxHPAdjustment },
+                  }),
                 ],
                 optimisticKey: "maxHPAdjustment",
                 syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
