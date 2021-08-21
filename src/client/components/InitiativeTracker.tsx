@@ -19,6 +19,7 @@ import {
   EntityCollection,
   RRCharacter,
   InitiativeTrackerSyncedState,
+  RRPlayerID,
 } from "../../shared/state";
 import { useMyMap, useMyself } from "../myself";
 import { canControlToken } from "../permissions";
@@ -217,61 +218,9 @@ function InitiativeTrackerInner({
   initiativeTracker: InitiativeTrackerSyncedState;
   myself: RRPlayer;
 }) {
-  const [modifier, setModifier, _] = useLocalState("initiative-modifier", "0");
   const dispatch = useServerDispatch();
   const characterCollection = useServerState((state) => state.characters);
   const playerCollection = useServerState((state) => state.players);
-
-  const mapObjects = useMyMap((map) => map?.objects ?? EMPTY_ENTITY_COLLECTION);
-  const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom).filter(
-    Boolean
-  );
-
-  const selectedTokenIds = [
-    ...new Set(
-      selectedMapObjectIds.flatMap((mapObjectId) => {
-        const mapObject = byId(mapObjects.entities, mapObjectId);
-        return mapObject?.type === "token" ? mapObject.characterId : [];
-      })
-    ),
-  ];
-
-  const characterIdsInTracker = entries(initiativeTracker.entries).flatMap(
-    (entry) => (entry.type === "character" ? entry.characterIds : [])
-  );
-  const selectionAlreadyInList = characterIdsInTracker.some((id) =>
-    selectedTokenIds.includes(id)
-  );
-  const hasSelection = selectedTokenIds.length !== 0;
-
-  const characters = selectedMapObjectIds.flatMap((id) =>
-    withDo(byId(mapObjects.entities, id), (obj) =>
-      obj?.type === "token"
-        ? byId(characterCollection.entities, obj.characterId)
-        : []
-    )
-  );
-  const allSelectedInitiatives = [
-    ...new Set(characters.map((c) => c?.attributes["initiative"] ?? null)),
-  ];
-  const allHaveSameInitiative =
-    allSelectedInitiatives.length === 1 && allSelectedInitiatives[0] !== null;
-
-  const roll = () => {
-    const mod = allHaveSameInitiative
-      ? allSelectedInitiatives[0]!
-      : parseInt(modifier);
-    const action = logEntryDiceRollAdd(
-      rollInitiative(isNaN(mod) ? 0 : mod, "none", myself.id)
-    );
-    dispatch([
-      action,
-      initiativeTrackerEntryCharacterAdd({
-        initiative: diceResult(action.payload),
-        characterIds: selectedTokenIds,
-      }),
-    ]);
-  };
 
   const addLairAction = () => {
     const description = prompt(
@@ -347,25 +296,11 @@ function InitiativeTrackerInner({
         </ul>
       </Flipper>
       {endTurnButton}
-      <div className="initiative-tracker-roll">
-        <Button
-          disabled={selectionAlreadyInList || !hasSelection}
-          onClick={roll}
-        >
-          Roll Initiative
-        </Button>
-        <input
-          value={allHaveSameInitiative ? allSelectedInitiatives[0]! : modifier}
-          disabled={allHaveSameInitiative}
-          onChange={(e) => setModifier(e.target.value)}
-          placeholder="mod"
-          title={
-            allHaveSameInitiative
-              ? `Using configured Modifier ${allSelectedInitiatives[0] ?? ""}`
-              : "Modifier"
-          }
-        />
-      </div>
+      <RollInitiative
+        initiativeTracker={initiativeTracker}
+        characterCollection={characterCollection}
+        myselfId={myself.id}
+      />
       {myself.isGM && (
         <GMArea>
           <Button
@@ -395,6 +330,94 @@ function InitiativeTrackerInner({
     </div>
   );
 }
+
+const RollInitiative = React.memo(function RollInitiative({
+  initiativeTracker,
+  characterCollection,
+  myselfId,
+}: {
+  initiativeTracker: InitiativeTrackerSyncedState;
+  characterCollection: EntityCollection<RRCharacter>;
+  myselfId: RRPlayerID;
+}) {
+  const dispatch = useServerDispatch();
+
+  const [modifier, setModifier, _] = useLocalState("initiative-modifier", "0");
+
+  const mapObjects = useMyMap((map) => map?.objects ?? EMPTY_ENTITY_COLLECTION);
+  const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom).filter(
+    Boolean
+  );
+
+  const selectedTokenIds = [
+    ...new Set(
+      selectedMapObjectIds.flatMap((mapObjectId) => {
+        const mapObject = byId(mapObjects.entities, mapObjectId);
+        return mapObject?.type === "token" ? mapObject.characterId : [];
+      })
+    ),
+  ];
+
+  const characterIdsInTracker = entries(initiativeTracker.entries).flatMap(
+    (entry) => (entry.type === "character" ? entry.characterIds : [])
+  );
+
+  const selectionAlreadyInList = characterIdsInTracker.some((id) =>
+    selectedTokenIds.includes(id)
+  );
+
+  const hasSelection = selectedTokenIds.length !== 0;
+
+  const characters = selectedMapObjectIds.flatMap((id) =>
+    withDo(byId(mapObjects.entities, id), (obj) =>
+      obj?.type === "token"
+        ? byId(characterCollection.entities, obj.characterId)
+        : []
+    )
+  );
+
+  const allSelectedInitiatives = [
+    ...new Set(characters.map((c) => c?.attributes["initiative"] ?? null)),
+  ];
+
+  const allHaveSameInitiative =
+    allSelectedInitiatives.length === 1 && allSelectedInitiatives[0] !== null;
+
+  const roll = () => {
+    const mod = allHaveSameInitiative
+      ? allSelectedInitiatives[0]!
+      : parseInt(modifier);
+    const action = logEntryDiceRollAdd(
+      rollInitiative(isNaN(mod) ? 0 : mod, "none", myselfId)
+    );
+    dispatch([
+      action,
+      initiativeTrackerEntryCharacterAdd({
+        initiative: diceResult(action.payload),
+        characterIds: selectedTokenIds,
+      }),
+    ]);
+  };
+
+  return (
+    <div className="initiative-tracker-roll">
+      <Button disabled={selectionAlreadyInList || !hasSelection} onClick={roll}>
+        Roll Initiative
+      </Button>
+      <input
+        value={allHaveSameInitiative ? allSelectedInitiatives[0]! : modifier}
+        disabled={allHaveSameInitiative}
+        onChange={(e) => setModifier(e.target.value)}
+        placeholder="mod"
+        title={
+          allHaveSameInitiative
+            ? `Using configured Modifier ${allSelectedInitiatives[0] ?? ""}`
+            : "Modifier"
+        }
+      />
+    </div>
+  );
+});
 
 function EndTurnButton({
   canEdit,

@@ -49,9 +49,6 @@ export const MapMeasurePath = React.memo<{
   mapBackgroundColor,
   zoom,
 }) {
-  const pathContrastColor = useContrastColor(color);
-  const mapContrastColor = useContrastColor(mapBackgroundColor);
-
   const ephemeralPlayer = useRecoilValue(
     ephemeralPlayersFamily(ephemeralPlayerId)
   );
@@ -60,6 +57,27 @@ export const MapMeasurePath = React.memo<{
   if (path.length === 0) {
     return null;
   }
+
+  // Split this off into a separate component so that we avoid re-rendering if
+  // something other than the path of the ephemeral player changes.
+  return (
+    <MapMeasurePathInner
+      path={path}
+      color={color}
+      mapBackgroundColor={mapBackgroundColor}
+      zoom={zoom}
+    />
+  );
+});
+
+const MapMeasurePathInner = React.memo<{
+  path: RRPoint[];
+  color: string;
+  mapBackgroundColor: string;
+  zoom: number;
+}>(function MapMeasurePath({ path, color, mapBackgroundColor, zoom }) {
+  const pathContrastColor = useContrastColor(color);
+  const mapContrastColor = useContrastColor(mapBackgroundColor);
 
   const last = pointAdd(pointScale(path[path.length - 1]!, GRID_SIZE), {
     x: GRID_SIZE * 1.5,

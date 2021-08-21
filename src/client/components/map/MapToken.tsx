@@ -475,7 +475,7 @@ function Aura({
   }
 }
 
-function Healthbar({
+const Healthbar = React.memo(function Healthbar({
   character,
   contrastColor,
   setHP,
@@ -576,4 +576,4 @@ function Healthbar({
       </RoughText>
     </>
   );
-}
+});
