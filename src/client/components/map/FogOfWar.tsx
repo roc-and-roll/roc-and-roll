@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { RRCapPoint, RRPoint } from "../../../shared/state";
 import Shape from "@doodle3d/clipper-js";
 import { useMyself } from "../../myself";
@@ -6,7 +6,7 @@ import { Matrix } from "transformation-matrix";
 import { toCap } from "../../../shared/point";
 import { getViewportCorners } from "../../util";
 
-export function FogOfWar({
+export const FogOfWar = React.memo(function FogOfWar({
   revealedAreas,
   transform,
   viewportSize,
@@ -15,51 +15,86 @@ export function FogOfWar({
   transform: Matrix;
   viewportSize: RRPoint;
 }) {
-  const myself = useMyself();
+  const { isGM } = useMyself();
 
-  if (!revealedAreas) {
-    return <></>;
+  if (revealedAreas === null) {
+    return null;
   }
 
-  const remove = new Shape(revealedAreas, true);
-  const b = remove.shapeBounds();
-
-  const background = new Shape(
-    [
-      [
-        { X: b.left, Y: b.top },
-        { X: b.right, Y: b.top },
-        { X: b.right, Y: b.bottom },
-        { X: b.left, Y: b.bottom },
-      ],
-    ],
-    true
+  return (
+    <FogOfWarInner
+      revealedAreas={revealedAreas}
+      transform={transform}
+      viewportSize={viewportSize}
+      isGM={isGM}
+    />
   );
-  const result = background.difference(remove);
+});
 
-  const viewport = new Shape([
-    getViewportCorners(transform, viewportSize).map((point) => toCap(point)),
-  ]);
-  const outerFill = viewport.difference(background);
-
-  const shapeToSVGPath = (shape: Shape) => {
+const useShapeToSVGPath = (shape: Shape, isGM: boolean) => {
+  return useMemo(() => {
     const points = shape.paths.flatMap((p) =>
       p.map((p, i) => (i === 0 ? "M " : "L ") + `${p.X},${p.Y} `)
     );
     return points.length === 0 ? null : (
       <path
         className="map-reveal-areas"
-        fill={`rgba(0, 0, 0, ${myself.isGM ? 0.3 : 1})`}
+        fill={`rgba(0, 0, 0, ${isGM ? 0.3 : 1})`}
         fillRule="evenodd"
         d={points.join(" ") + "Z"}
       />
     );
-  };
+  }, [isGM, shape]);
+};
+
+const FogOfWarInner = ({
+  revealedAreas,
+  transform,
+  viewportSize,
+  isGM,
+}: {
+  revealedAreas: RRCapPoint[][];
+  transform: Matrix;
+  viewportSize: RRPoint;
+  isGM: boolean;
+}) => {
+  const remove = useMemo(() => new Shape(revealedAreas, true), [revealedAreas]);
+
+  const background = useMemo(() => {
+    const b = remove.shapeBounds();
+
+    return new Shape(
+      [
+        [
+          { X: b.left, Y: b.top },
+          { X: b.right, Y: b.top },
+          { X: b.right, Y: b.bottom },
+          { X: b.left, Y: b.bottom },
+        ],
+      ],
+      true
+    );
+  }, [remove]);
+
+  const result = useMemo(() => {
+    return background.difference(remove);
+  }, [background, remove]);
+
+  const corners = useMemo(
+    () =>
+      getViewportCorners(transform, viewportSize).map((point) => toCap(point)),
+    [transform, viewportSize]
+  );
+
+  const outerFill = useMemo(() => {
+    const viewport = new Shape([corners]);
+    return viewport.difference(background);
+  }, [background, corners]);
 
   return (
     <>
-      {shapeToSVGPath(result)}
-      {shapeToSVGPath(outerFill)}
+      {useShapeToSVGPath(result, isGM)}
+      {useShapeToSVGPath(outerFill, isGM)}
     </>
   );
-}
+};
