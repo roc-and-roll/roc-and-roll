@@ -75,7 +75,7 @@ const MapMeasurePathInner = React.memo<{
   color: string;
   mapBackgroundColor: string;
   zoom: number;
-}>(function MapMeasurePath({ path, color, mapBackgroundColor, zoom }) {
+}>(function MapMeasurePathInner({ path, color, mapBackgroundColor, zoom }) {
   const pathContrastColor = useContrastColor(color);
   const mapContrastColor = useContrastColor(mapBackgroundColor);
 

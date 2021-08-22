@@ -39,7 +39,15 @@ export function useContrastColor(color: string) {
 }
 
 export function isTriggeredByFormElement(e: KeyboardEvent) {
-  return ["INPUT", "BUTTON", "TEXTAREA", "SELECT"].includes(
+  return (
+    ["BUTTON", "SELECT"].includes(
+      (e.target as HTMLElement | null)?.nodeName ?? ""
+    ) || isTriggeredByTextInput(e)
+  );
+}
+
+export function isTriggeredByTextInput(e: KeyboardEvent) {
+  return ["INPUT", "TEXTAREA"].includes(
     (e.target as HTMLElement | null)?.nodeName ?? ""
   );
 }

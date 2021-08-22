@@ -84,9 +84,12 @@ function useIndeterminateBoolean<K extends keyof NonTokenMapObject>({
     (selectedMapObjectId: RRMapObjectID, value: boolean | "remove") => {
       setStates((oldMap) => {
         if (value === "remove") {
+          if (!oldMap.has(selectedMapObjectId)) {
+            return oldMap;
+          }
           const newMap = new Map(oldMap);
           newMap.delete(selectedMapObjectId);
-          return newMap.size === oldMap.size ? oldMap : newMap;
+          return newMap;
         }
         if (oldMap.get(selectedMapObjectId) === value) {
           return oldMap;
@@ -449,7 +452,7 @@ function MapObjectObserverIndeterminateBoolean<
 >({
   id,
   onStateChanged,
-  property: property,
+  property,
   toBoolean,
 }: {
   id: RRMapObjectID;

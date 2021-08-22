@@ -1,23 +1,24 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useTransition } from "react";
 import { useEffect, useRef, useState } from "react";
-import { isTriggeredByFormElement } from "../../util";
+import { isTriggeredByTextInput } from "../../util";
 
 const QuickReference = React.lazy(() => import("./QuickReference"));
 
 export default function QuickReferenceWrapper() {
   const [open, setOpen] = useState(false);
   const lastShiftPressRef = useRef(0);
+  const [_, startTransition] = useTransition();
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
-      if (isTriggeredByFormElement(e)) {
+      if (isTriggeredByTextInput(e)) {
         return;
       }
 
       if (e.key === "Shift") {
         if (lastShiftPressRef.current !== 0) {
           if (Date.now() - lastShiftPressRef.current < 200) {
-            setOpen((open) => !open);
+            startTransition(() => setOpen((open) => !open));
           }
         }
         lastShiftPressRef.current = Date.now();
@@ -28,7 +29,7 @@ export default function QuickReferenceWrapper() {
       passive: true,
     });
     return () => window.removeEventListener("keyup", listener);
-  }, []);
+  }, [startTransition]);
 
   return open ? (
     <Suspense fallback={null}>

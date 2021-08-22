@@ -40,7 +40,7 @@ async function makeNewCharacter(): Promise<Parameters<typeof characterAdd>[0]> {
   };
 }
 
-export function CharacterManager() {
+export const CharacterManager = React.memo(function CharacterManager() {
   const myself = useMyself();
   const characters = useServerState((s) => s.characters);
   const [newCharacterIds, setNewCharacterIds] = useState<RRCharacterID[]>([]);
@@ -96,9 +96,9 @@ export function CharacterManager() {
       )}
     </>
   );
-}
+});
 
-function TemplateEditor() {
+const TemplateEditor = React.memo(function TemplateEditor() {
   const [newCharacterIds, setNewCharacterIds] = useState<RRCharacterID[]>([]);
 
   const dispatch = useServerDispatch();
@@ -139,7 +139,7 @@ function TemplateEditor() {
       </div>
     </GMArea>
   );
-}
+});
 
 function TokenList({
   characters,
@@ -169,7 +169,7 @@ function TokenList({
   );
 }
 
-function EditableCharacterPreview({
+const EditableCharacterPreview = React.memo(function EditableCharacterPreview({
   character,
   onNameFirstEdited,
   wasJustCreated,
@@ -213,4 +213,4 @@ function EditableCharacterPreview({
       </div>
     </Popover>
   );
-}
+});

@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
   GRID_SIZE,
@@ -12,6 +18,7 @@ import {
   RRToken,
   RRPoint,
   RRMapID,
+  RRColor,
 } from "../../../shared/state";
 import { tokenImageUrl } from "../../files";
 import { canControlToken, canViewTokenOnMap } from "../../permissions";
@@ -37,14 +44,13 @@ import {
 import { Popover } from "../Popover";
 import { CharacterEditor, conditionIcons } from "../characters/CharacterEditor";
 import {
-  makePoint,
   pointAdd,
   pointEquals,
   pointScale,
   pointSubtract,
 } from "../../../shared/point";
 import { EmanationArea } from "./Areas";
-import { useServerDispatch } from "../../state";
+import { useLatest, useServerDispatch } from "../../state";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import useRafLoop from "../../useRafLoop";
@@ -74,6 +80,53 @@ export const MapToken = React.memo<{
   const myself = useMyself();
   const character = useRecoilValue(characterFamily(object.characterId));
 
+  if (!character || !canViewTokenOnMap(character, myself)) {
+    return null;
+  }
+
+  return (
+    <MapTokenInner
+      mapId={mapId}
+      character={character}
+      myself={myself}
+      object={object}
+      canStartMoving={canStartMoving}
+      onStartMove={onStartMove}
+      auraArea={auraArea}
+      healthbarArea={healthbarArea}
+      zoom={zoom}
+      contrastColor={contrastColor}
+      smartSetTotalHP={smartSetTotalHP}
+    />
+  );
+});
+
+function MapTokenInner({
+  mapId,
+  character,
+  myself,
+  object,
+  canStartMoving,
+  onStartMove,
+  auraArea,
+  healthbarArea,
+  zoom,
+  contrastColor,
+  smartSetTotalHP,
+}: {
+  mapId: RRMapID;
+  character: RRCharacter;
+  myself: RRPlayer;
+  object: RRToken;
+  canStartMoving: boolean;
+  onStartMove: (o: RRMapObject, e: React.MouseEvent) => void;
+  auraArea: SVGGElement | null;
+  healthbarArea: SVGGElement | null;
+  zoom: number;
+  contrastColor: string;
+  smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
+}) {
+  const objectRef = useLatest(object);
   const isHovered = useRecoilValue(hoveredMapObjectsFamily(object.id));
   const isSelected = useRecoilValue(selectedMapObjectsFamily(object.id));
   const isHighlighted = useRecoilValue(
@@ -85,17 +138,18 @@ export const MapToken = React.memo<{
   const firstMouseDownPos = useRef<RRPoint>();
 
   const setHP = useCallback(
-    (hp: number) => {
-      character?.id && smartSetTotalHP(character.id, hp);
-    },
-    [smartSetTotalHP, character?.id]
+    (hp: number) => smartSetTotalHP(character.id, hp),
+    [smartSetTotalHP, character.id]
   );
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    onStartMove(object, e);
-    firstMouseDownPos.current = { x: e.clientX, y: e.clientY };
-  };
-  const handleMouseUp = (e: React.MouseEvent) => {
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      onStartMove(objectRef.current, e);
+      firstMouseDownPos.current = { x: e.clientX, y: e.clientY };
+    },
+    [onStartMove, objectRef]
+  );
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
     if (
       e.button === 2 &&
       firstMouseDownPos.current &&
@@ -103,7 +157,7 @@ export const MapToken = React.memo<{
     ) {
       setEditorVisible(true);
     }
-  };
+  }, []);
 
   const [lerpedPosition, setLerpedPosition] = useState(object.position);
   const prevPositionRef = useRef(object.position);
@@ -139,103 +193,28 @@ export const MapToken = React.memo<{
     }
   }, [isSelected, object.position, rafStart, rafStop]);
 
-  if (!character || !canViewTokenOnMap(character, myself)) {
-    return null;
-  }
-
   const tokenSize = GRID_SIZE * character.scale;
 
   const { x, y } = lerpedPosition;
-  const center = pointAdd(lerpedPosition, makePoint(tokenSize / 2));
 
   const canControl = canStartMoving && canControlToken(character, myself);
-  const tokenStyle = {
-    ...(isCharacterUnconsciousOrDead(character)
-      ? { filter: "url(#tokenUnconsciousOrDeadShadow)" }
-      : isCharacterHurt(character)
-      ? { filter: "url(#tokenHurtShadow)" }
-      : isCharacterOverhealed(character)
-      ? { filter: "url(#tokenOverhealedShadow)" }
-      : {}),
-    ...(canControl ? { cursor: "move" } : {}),
-  };
-
-  const tokenRepresentation = character.tokenImage ? (
-    <image
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      x={x}
-      y={y}
-      style={tokenStyle}
-      width={tokenSize}
-      height={tokenSize}
-      href={tokenImageUrl(
-        {
-          tokenImage: character.tokenImage,
-          tokenBorderColor: character.tokenBorderColor,
-        },
-        tokenSize * zoom
-      )}
-    />
-  ) : (
-    <circle
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      cx={x + tokenSize / 2}
-      cy={y + tokenSize / 2}
-      r={tokenSize / 2}
-      fill="red"
-      style={tokenStyle}
-    />
-  );
 
   const fullTokenRepresenation = (
-    <>
-      {object.rotation === 0 ? (
-        tokenRepresentation
-      ) : (
-        <g transform={`rotate(${object.rotation}, ${center.x}, ${center.y})`}>
-          {tokenRepresentation}
-        </g>
-      )}
-      {isSelectedOrHovered && (
-        <circle
-          // do not block pointer events
-          pointerEvents="none"
-          cx={center.x}
-          cy={center.y}
-          r={tokenSize / 2 - 2}
-          fill="transparent"
-          stroke={contrastColor}
-          className="selection-area-highlight"
-        />
-      )}
-      {character.visibility !== "everyone" && (
-        <>
-          <title>only visible to GMs</title>
-          <RoughText
-            // do not block pointer events
-            pointerEvents="none"
-            x={center.x}
-            y={center.y}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="red"
-            stroke="black"
-            strokeWidth={5}
-            paintOrder="stroke"
-            fontSize={`calc(1.2rem * ${tokenSize / GRID_SIZE})`}
-            fontWeight="bold"
-            transform={`rotate(-30, ${center.x}, ${center.y})`}
-            style={{
-              letterSpacing: ".3rem",
-            }}
-          >
-            HIDDEN
-          </RoughText>
-        </>
-      )}
-    </>
+    <g
+      transform={`translate(${x}, ${y}), rotate(${object.rotation}, ${
+        tokenSize / 2
+      }, ${tokenSize / 2})`}
+    >
+      <TokenImageOrPlaceholder
+        zoom={zoom}
+        contrastColor={contrastColor}
+        character={character}
+        canControl={canControl}
+        isSelectedOrHovered={isSelectedOrHovered}
+        handleMouseDown={handleMouseDown}
+        handleMouseUp={handleMouseUp}
+      />
+    </g>
   );
 
   return (
@@ -245,18 +224,16 @@ export const MapToken = React.memo<{
         // that they are located in the background and still allow users to
         // interact with objects that would otherwise be beneath the auras
         ReactDOM.createPortal(
-          character.auras.map((aura, i) => {
-            return (
-              <Aura
-                key={i}
-                character={character}
-                aura={aura}
-                myself={myself}
-                x={x}
-                y={y}
-              />
-            );
-          }),
+          character.auras.map((aura, i) => (
+            <Aura
+              key={i}
+              character={character}
+              aura={aura}
+              myself={myself}
+              x={x}
+              y={y}
+            />
+          )),
           auraArea
         )}
       {healthbarArea &&
@@ -284,47 +261,9 @@ export const MapToken = React.memo<{
                 fill="none"
               />
             )}
-            {character.conditions.map((condition, index) => {
-              const icon = conditionIcons[condition];
-              const iconSize = 16 * character.scale;
-              const props = {
-                x: x + (index % 4) * iconSize,
-                y: y + Math.floor(index / 4) * iconSize,
-                width: iconSize,
-                height: iconSize,
-              };
-
-              // TODO: Normally, we'd want to disable pointer events on
-              // condition icons, so that clicking on them will still allow
-              // you to select and move your token. However, this causes the
-              // <title> not to show when hovering the condition icon.
-              //
-              // pointerEvents="none"
-
-              return typeof icon === "string" ? (
-                <image key={condition} href={icon} {...props}>
-                  <title>{condition}</title>
-                </image>
-              ) : (
-                <React.Fragment key={condition}>
-                  <FontAwesomeIcon
-                    icon={icon}
-                    symbol={`${character.id}/condition-icon/${condition}`}
-                  />
-                  <use
-                    {...props}
-                    xlinkHref={`#${character.id}/condition-icon/${condition}`}
-                    color="black"
-                    style={{
-                      stroke: "white",
-                      strokeWidth: 18,
-                    }}
-                  >
-                    <title>{condition}</title>
-                  </use>
-                </React.Fragment>
-              );
-            })}
+            <g transform={`translate(${x},${y})`}>
+              <ConditionIcons character={character} />
+            </g>
           </>,
           healthbarArea
         )}
@@ -347,11 +286,169 @@ export const MapToken = React.memo<{
           interactive
           placement="right"
         >
-          <g> {fullTokenRepresenation}</g>
+          <g>{fullTokenRepresenation}</g>
         </Popover>
       ) : (
         fullTokenRepresenation
       )}
+    </>
+  );
+}
+
+const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
+  zoom,
+  contrastColor,
+  character,
+  canControl,
+  isSelectedOrHovered,
+  handleMouseDown,
+  handleMouseUp,
+}: {
+  zoom: number;
+  contrastColor: RRColor;
+  character: RRCharacter;
+  canControl: boolean;
+  isSelectedOrHovered: boolean;
+  handleMouseDown: (e: React.MouseEvent) => void;
+  handleMouseUp: (e: React.MouseEvent) => void;
+}) {
+  const tokenSize = GRID_SIZE * character.scale;
+
+  const tokenStyle = useMemo(
+    () => ({
+      ...(isCharacterUnconsciousOrDead(character)
+        ? { filter: "url(#tokenUnconsciousOrDeadShadow)" }
+        : isCharacterHurt(character)
+        ? { filter: "url(#tokenHurtShadow)" }
+        : isCharacterOverhealed(character)
+        ? { filter: "url(#tokenOverhealedShadow)" }
+        : {}),
+      ...(canControl ? { cursor: "move" } : {}),
+    }),
+    [character, canControl]
+  );
+
+  return (
+    <>
+      {character.tokenImage ? (
+        <image
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          x={0}
+          y={0}
+          style={tokenStyle}
+          width={tokenSize}
+          height={tokenSize}
+          href={tokenImageUrl(
+            {
+              tokenImage: character.tokenImage,
+              tokenBorderColor: character.tokenBorderColor,
+            },
+            tokenSize * zoom
+          )}
+        />
+      ) : (
+        <circle
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          cx={tokenSize / 2}
+          cy={tokenSize / 2}
+          r={tokenSize / 2}
+          fill="red"
+          style={tokenStyle}
+        />
+      )}
+
+      {isSelectedOrHovered && (
+        <circle
+          // do not block pointer events
+          pointerEvents="none"
+          cx={tokenSize / 2}
+          cy={tokenSize / 2}
+          r={tokenSize / 2 - 2}
+          fill="transparent"
+          stroke={contrastColor}
+          className="selection-area-highlight"
+        />
+      )}
+
+      {character.visibility !== "everyone" && (
+        <>
+          <title>only visible to GMs</title>
+          <RoughText
+            // do not block pointer events
+            pointerEvents="none"
+            x={tokenSize / 2}
+            y={tokenSize / 2}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="red"
+            stroke="black"
+            strokeWidth={5}
+            paintOrder="stroke"
+            fontSize={`calc(1.2rem * ${tokenSize / GRID_SIZE})`}
+            fontWeight="bold"
+            transform={`rotate(-30, ${tokenSize / 2}, ${tokenSize / 2})`}
+            style={{
+              letterSpacing: ".3rem",
+            }}
+          >
+            HIDDEN
+          </RoughText>
+        </>
+      )}
+    </>
+  );
+});
+
+const ConditionIcons = React.memo(function ConditionIcons({
+  character,
+}: {
+  character: RRCharacter;
+}) {
+  return (
+    <>
+      {character.conditions.map((condition, index) => {
+        const icon = conditionIcons[condition];
+        const iconSize = 16 * character.scale;
+        const props = {
+          x: (index % 4) * iconSize,
+          y: Math.floor(index / 4) * iconSize,
+          width: iconSize,
+          height: iconSize,
+        };
+
+        // TODO: Normally, we'd want to disable pointer events on
+        // condition icons, so that clicking on them will still allow
+        // you to select and move your token. However, this causes the
+        // <title> not to show when hovering the condition icon.
+        //
+        // pointerEvents="none"
+
+        return typeof icon === "string" ? (
+          <image key={condition} href={icon} {...props}>
+            <title>{condition}</title>
+          </image>
+        ) : (
+          <React.Fragment key={condition}>
+            <FontAwesomeIcon
+              icon={icon}
+              symbol={`${character.id}/condition-icon/${condition}`}
+            />
+            <use
+              {...props}
+              xlinkHref={`#${character.id}/condition-icon/${condition}`}
+              color="black"
+              style={{
+                stroke: "white",
+                strokeWidth: 18,
+              }}
+            >
+              <title>{condition}</title>
+            </use>
+          </React.Fragment>
+        );
+      })}
     </>
   );
 });

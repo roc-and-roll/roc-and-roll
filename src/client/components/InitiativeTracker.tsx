@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState, useTransition } from "react";
 import {
   initiativeTrackerEntryLairActionAdd,
   initiativeTrackerEntryLairActionUpdate,
@@ -20,6 +20,7 @@ import {
   RRCharacter,
   InitiativeTrackerSyncedState,
   RRPlayerID,
+  RRMapObject,
 } from "../../shared/state";
 import { useMyMap, useMyself } from "../myself";
 import { canControlToken } from "../permissions";
@@ -331,7 +332,20 @@ function InitiativeTrackerInner({
   );
 }
 
-const RollInitiative = React.memo(function RollInitiative({
+function useDeferredValueWithPending<T>(
+  upToDateValue: T
+): readonly [boolean, T] {
+  const [deferredValue, setDeferredValue] = useState<T>(upToDateValue);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    startTransition(() => setDeferredValue(upToDateValue));
+  }, [startTransition, upToDateValue]);
+
+  return [isPending, deferredValue] as const;
+}
+
+function RollInitiative({
   initiativeTracker,
   characterCollection,
   myselfId,
@@ -340,11 +354,40 @@ const RollInitiative = React.memo(function RollInitiative({
   characterCollection: EntityCollection<RRCharacter>;
   myselfId: RRPlayerID;
 }) {
+  // Avoid re-rendering the RollInitiative component repeatedly when people are
+  // moving map objects around the map.
+  const [mapObjectsOutdated, mapObjects] = useDeferredValueWithPending(
+    useMyMap((map) => map?.objects ?? EMPTY_ENTITY_COLLECTION)
+  );
+
+  return (
+    <RollInitiativeDeferredImpl
+      initiativeTracker={initiativeTracker}
+      characterCollection={characterCollection}
+      myselfId={myselfId}
+      mapObjects={mapObjects}
+      mapObjectsOutdated={mapObjectsOutdated}
+    />
+  );
+}
+
+const RollInitiativeDeferredImpl = React.memo<{
+  initiativeTracker: InitiativeTrackerSyncedState;
+  characterCollection: EntityCollection<RRCharacter>;
+  myselfId: RRPlayerID;
+  mapObjects: EntityCollection<RRMapObject>;
+  mapObjectsOutdated: boolean;
+}>(function RollInitiativeDeferredImpl({
+  initiativeTracker,
+  characterCollection,
+  myselfId,
+  mapObjects,
+  mapObjectsOutdated,
+}) {
   const dispatch = useServerDispatch();
 
   const [modifier, setModifier, _] = useLocalState("initiative-modifier", "0");
 
-  const mapObjects = useMyMap((map) => map?.objects ?? EMPTY_ENTITY_COLLECTION);
   const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom).filter(
     Boolean
   );
@@ -401,12 +444,15 @@ const RollInitiative = React.memo(function RollInitiative({
 
   return (
     <div className="initiative-tracker-roll">
-      <Button disabled={selectionAlreadyInList || !hasSelection} onClick={roll}>
+      <Button
+        disabled={selectionAlreadyInList || !hasSelection || mapObjectsOutdated}
+        onClick={roll}
+      >
         Roll Initiative
       </Button>
       <input
         value={allHaveSameInitiative ? allSelectedInitiatives[0]! : modifier}
-        disabled={allHaveSameInitiative}
+        disabled={allHaveSameInitiative || mapObjectsOutdated}
         onChange={(e) => setModifier(e.target.value)}
         placeholder="mod"
         title={
