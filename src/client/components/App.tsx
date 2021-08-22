@@ -3,7 +3,7 @@ import "./global.scss";
 import React, { Suspense, useRef } from "react";
 import { Sidebar } from "./Sidebar";
 import { useLoginLogout } from "../myself";
-import { JoinGame } from "./JoinGame";
+import { JoinGame as PlayerList } from "./JoinGame";
 import { BottomFloats } from "./BottomFloats";
 import { Notifications, NotificationTopAreaPortal } from "./Notifications";
 import { ActiveMusicPlayer } from "../sound";
@@ -11,6 +11,9 @@ import QuickReferenceWrapper from "./quickReference/QuickReferenceWrapper";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { useServerConnection } from "../state";
 import { ConnectionLost } from "./ConnectionLost";
+import { CampaignEntity } from "../../shared/campaign";
+import { CampaignList } from "./CampaignList";
+import { useCampaign, useChangeCampaign } from "../campaign";
 
 // Load the map lazily to enable code splitting -> the sidebar will load faster.
 const MapContainer = React.lazy(
@@ -28,24 +31,19 @@ if (process.env.NODE_ENV === "development") {
 }
 
 export function App() {
-  const { login, logout, loggedIn } = useLoginLogout();
   const notificationTopAreaPortal = useRef<HTMLDivElement>(null);
-  const { connected } = useServerConnection();
+  const campaign = useCampaign();
 
   return (
     <NotificationTopAreaPortal.Provider value={notificationTopAreaPortal}>
       <ErrorBoundary>
-        {connected ? (
-          loggedIn ? (
-            <Game
-              logout={logout}
-              notificationTopAreaPortal={notificationTopAreaPortal}
-            />
-          ) : (
-            <JoinGame login={login} />
-          )
+        {campaign ? (
+          <Campaign
+            notificationTopAreaPortal={notificationTopAreaPortal}
+            campaign={campaign}
+          />
         ) : (
-          <ConnectionLost />
+          <CampaignList />
         )}
       </ErrorBoundary>
       {process.env.NODE_ENV === "development" && (
@@ -57,10 +55,39 @@ export function App() {
   );
 }
 
-const Game = React.memo<{
+const Campaign = React.memo<{
+  notificationTopAreaPortal: React.RefObject<HTMLDivElement>;
+  campaign: CampaignEntity;
+}>(function Campaign({ notificationTopAreaPortal, campaign }) {
+  const { login, logout, loggedIn } = useLoginLogout();
+  const changeCampaign = useChangeCampaign();
+  const { connected } = useServerConnection();
+
+  return connected ? (
+    loggedIn ? (
+      <CampaignContent
+        logout={logout}
+        notificationTopAreaPortal={notificationTopAreaPortal}
+      />
+    ) : (
+      <PlayerList
+        login={login}
+        switchCampaign={() => changeCampaign(null)}
+        campaign={campaign}
+      />
+    )
+  ) : (
+    <ConnectionLost />
+  );
+});
+
+function CampaignContent({
+  logout,
+  notificationTopAreaPortal,
+}: {
   logout: () => void;
   notificationTopAreaPortal: React.RefObject<HTMLDivElement>;
-}>(function Game({ logout, notificationTopAreaPortal }) {
+}) {
   return (
     <div className="app-wrapper">
       <ActiveMusicPlayer />
@@ -81,4 +108,4 @@ const Game = React.memo<{
       <Notifications topAreaPortal={notificationTopAreaPortal} />
     </div>
   );
-});
+}

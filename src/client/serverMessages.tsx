@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useEffect, useRef } from "react";
 import { Socket } from "socket.io-client";
 import { SOCKET_BROADCAST_MSG } from "../shared/constants";
 import { MakeRRID, RRMapID, RRPoint } from "../shared/state";
+import { useCampaignSocket } from "./campaign";
 
 // TODO: reuse other as soon as you need a new message type, this is just to
 //       make the linter happy as the type is otherwise a constant
@@ -47,9 +48,11 @@ const ServerMessagesContext = React.createContext<{
 ServerMessagesContext.displayName = "ServerMessagesContext";
 
 export function ServerMessagesProvider({
-  socket,
   children,
-}: React.PropsWithChildren<{ socket: Socket }>) {
+}: {
+  children?: React.ReactNode;
+}) {
+  const socket = useCampaignSocket();
   const subscribers = useRef<Set<MessageSubscriber>>(new Set());
 
   const subscribe = useCallback((subscriber: MessageSubscriber) => {
@@ -62,16 +65,16 @@ export function ServerMessagesProvider({
 
   const send = (message: RRMessage) => {
     subscribers.current.forEach((subscriber) => subscriber(message));
-    socket.emit(SOCKET_BROADCAST_MSG, message);
+    socket?.emit(SOCKET_BROADCAST_MSG, message);
   };
 
   useEffect(() => {
     const onMessage = (message: RRMessage) => {
       subscribers.current.forEach((subscriber) => subscriber(message));
     };
-    socket.on(SOCKET_BROADCAST_MSG, onMessage);
+    socket?.on(SOCKET_BROADCAST_MSG, onMessage);
     return () => {
-      socket.off(SOCKET_BROADCAST_MSG, onMessage);
+      socket?.off(SOCKET_BROADCAST_MSG, onMessage);
     };
   }, [socket]);
 

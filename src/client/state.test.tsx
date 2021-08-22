@@ -1,6 +1,6 @@
 import React from "react";
 import { act, renderHook } from "@testing-library/react-hooks";
-import { ServerStateProvider, applyStatePatch, useServerState } from "./state";
+import { applyStatePatch, useServerState } from "./state";
 import {
   defaultMap,
   EMPTY_ENTITY_COLLECTION,
@@ -13,6 +13,8 @@ import {
 import { rrid } from "../shared/util";
 import { MockClientSocket } from "./test-utils";
 import { Socket } from "socket.io-client";
+import { CampaignAndServerStateProvider } from "./campaign";
+import { CampaignEntity } from "../shared/campaign";
 
 function setup<A extends Record<string, unknown>, H>(
   initialProps: A,
@@ -25,7 +27,14 @@ function setup<A extends Record<string, unknown>, H>(
     socket,
   }: React.PropsWithChildren<{ socket: Socket }>) => {
     return (
-      <ServerStateProvider socket={socket}>{children}</ServerStateProvider>
+      <CampaignAndServerStateProvider
+        forTestingInitialState={{
+          campaign: { id: rrid<CampaignEntity>(), name: "Campaign" },
+          socket,
+        }}
+      >
+        {children}
+      </CampaignAndServerStateProvider>
     );
   };
 

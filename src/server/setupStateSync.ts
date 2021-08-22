@@ -3,7 +3,7 @@ import { MyStore } from "./setupReduxStore";
 import { Server as SocketIOServer, Socket as SocketIOSocket } from "socket.io";
 import { OptimisticUpdateID, RRPlayerID, SyncedState } from "../shared/state";
 import { ephemeralPlayerAdd, ephemeralPlayerRemove } from "../shared/actions";
-import { throttled } from "../shared/util";
+import { socketIONamespaceForCampaign, throttled } from "../shared/util";
 import * as t from "typanion";
 import { isRRID } from "../shared/validation";
 import {
@@ -14,6 +14,7 @@ import {
   SOCKET_BROADCAST_MSG,
 } from "../shared/constants";
 import { batchActions } from "redux-batched-actions";
+import { CampaignId } from "../shared/campaign";
 
 type AdditionalSocketData = {
   finishedOptimisticUpdateIds: OptimisticUpdateID[];
@@ -34,10 +35,12 @@ const isREDUX_ACTION = t.isObject({
 });
 
 export const setupStateSync = (
+  campaignId: CampaignId,
   io: SocketIOServer,
   store: MyStore,
   quiet: boolean
 ) => {
+  const ns = socketIONamespaceForCampaign(campaignId);
   const log = (...params: unknown[]) => !quiet && console.log(...params);
 
   const additionalSocketData = new Map<
@@ -201,13 +204,13 @@ export const setupStateSync = (
   };
 
   // Setup new clients
-  io.sockets.sockets.forEach(setupSocket);
-  io.on("connection", setupSocket);
+  io.of(ns).sockets.forEach(setupSocket);
+  io.of(ns).on("connection", setupSocket);
 
   store.subscribe(
     throttled(() => {
       const state = store.getState();
-      io.sockets.sockets.forEach((socket) => {
+      io.of(ns).sockets.forEach((socket) => {
         const data = additionalSocketData.get(socket.id);
         const player = data?.playerId
           ? state.players.entities[data.playerId] ?? null

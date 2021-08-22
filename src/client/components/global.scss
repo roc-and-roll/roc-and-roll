@@ -1363,3 +1363,23 @@ aside.emoji-picker-react {
     }
   }
 }
+
+.join-wrapper {
+  padding: 16px;
+  text-align: center;
+
+  ul {
+    padding: 0;
+    font-size: 1.5rem;
+  }
+
+  li {
+    border-top: 1px solid #333;
+    padding: 16px 8px;
+    cursor: pointer;
+
+    &:hover {
+      background: #333;
+    }
+  }
+}

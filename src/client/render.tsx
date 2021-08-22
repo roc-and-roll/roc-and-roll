@@ -5,7 +5,6 @@ import type {} from "react/next";
 import React, { StrictMode } from "react";
 import ReactDOM from "react-dom";
 import { App } from "./components/App";
-import { ServerStateProvider } from "./state";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { SettingsProvider } from "./settings";
@@ -15,16 +14,16 @@ import { MyselfProvider } from "./myself";
 import { CompendiumProvider } from "./components/compendium/Compendium";
 import { ModApi } from "./components/Modding";
 import { ServerMessagesProvider } from "./serverMessages";
-import { Socket } from "socket.io-client";
 import { PopupBoxes } from "./popup-boxes";
+import { CampaignAndServerStateProvider } from "./campaign";
 
-export function render(socket: Socket) {
+export function render() {
   // Create a new div element, add it to the DOM, and render our app into it.
   const container = document.createElement("div");
   container.className = "root";
   document.body.appendChild(container);
 
-  const element = <Root socket={socket} />;
+  const element = <Root />;
   if (USE_CONCURRENT_MODE) {
     ReactDOM.createRoot(container).render(element);
   } else {
@@ -32,14 +31,14 @@ export function render(socket: Socket) {
   }
 }
 
-function Root({ socket }: { socket: Socket }) {
+function Root() {
   // https://reactjs.org/docs/strict-mode.html
   return (
     <StrictMode>
       <RecoilRoot>
-        <SettingsProvider>
-          <ServerStateProvider socket={socket}>
-            <ServerMessagesProvider socket={socket}>
+        <CampaignAndServerStateProvider>
+          <SettingsProvider>
+            <ServerMessagesProvider>
               <MyselfProvider>
                 <CompendiumProvider>
                   <DndProvider backend={HTML5Backend}>
@@ -50,8 +49,8 @@ function Root({ socket }: { socket: Socket }) {
                 </CompendiumProvider>
               </MyselfProvider>
             </ServerMessagesProvider>
-          </ServerStateProvider>
-        </SettingsProvider>
+          </SettingsProvider>
+        </CampaignAndServerStateProvider>
       </RecoilRoot>
     </StrictMode>
   );

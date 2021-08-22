@@ -1,17 +1,24 @@
 import React from "react";
 import { render, screen, act } from "@testing-library/react";
 import { ConnectionLost } from "./ConnectionLost";
-import { ServerStateProvider } from "../state";
 import { MockClientSocket } from "../test-utils";
+import { CampaignAndServerStateProvider } from "../campaign";
+import { CampaignEntity } from "../../shared/campaign";
+import { rrid } from "../../shared/util";
 
 describe("ConnectionLost", () => {
   it("works", async () => {
     const mockSocket = new MockClientSocket();
 
     const { unmount } = render(
-      <ServerStateProvider socket={mockSocket.__cast()}>
+      <CampaignAndServerStateProvider
+        forTestingInitialState={{
+          campaign: { id: rrid<CampaignEntity>(), name: "Campaign" },
+          socket: mockSocket.__cast(),
+        }}
+      >
         <ConnectionLost />
-      </ServerStateProvider>
+      </CampaignAndServerStateProvider>
     );
 
     expect(screen.getByRole("heading")).toHaveTextContent("Looks like a TPK");

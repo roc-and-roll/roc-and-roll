@@ -5,11 +5,16 @@ import { randomColor } from "../../shared/colors";
 import { useServerDispatch, useServerState } from "../state";
 import "./JoinGame.scss";
 import { usePrompt } from "../popup-boxes";
+import { CampaignEntity } from "../../shared/campaign";
 
 export const JoinGame = React.memo(function JoinGame({
   login,
+  campaign,
+  switchCampaign,
 }: {
   login: (id: RRPlayerID) => void;
+  campaign: CampaignEntity;
+  switchCampaign: () => void;
 }) {
   const dispatch = useServerDispatch();
   const players = useServerState((state) => state.players);
@@ -34,8 +39,10 @@ export const JoinGame = React.memo(function JoinGame({
   };
 
   return (
-    <div className="join-game-wrapper">
-      <h1>Join Game</h1>
+    <div className="join-wrapper">
+      <h1>
+        Join <em>{campaign.name}</em>
+      </h1>
       <ul role="list">
         {entries(players).map((player) => (
           <li
@@ -51,6 +58,9 @@ export const JoinGame = React.memo(function JoinGame({
         ))}
         <li onClick={joinAsNewPlayer}>
           <em>join as new player</em>
+        </li>
+        <li onClick={switchCampaign}>
+          <em>switch campaign</em>
         </li>
       </ul>
     </div>
