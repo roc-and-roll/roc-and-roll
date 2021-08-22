@@ -33,9 +33,10 @@ import {
   CURSOR_POSITION_SYNC_HISTORY_STEPS,
   globalToLocal,
   RRMapView,
+  RRMapViewRef,
 } from "./Map";
 import composeRefs from "@seznam/compose-react-refs";
-import { identity, Matrix } from "transformation-matrix";
+import { identity } from "transformation-matrix";
 import { MapToolbar } from "../MapToolbar";
 import {
   DEFAULT_BACKGROUND_IMAGE_HEIGHT,
@@ -102,7 +103,7 @@ export default function MapContainer() {
     new SyncedDebouncer(CURSOR_POSITION_SYNC_DEBOUNCE)
   );
 
-  const transformRef = useRef<Matrix>(identity());
+  const mapViewRef = useRef<RRMapViewRef>(null);
 
   const dropRef2 = useRef<HTMLDivElement>(null);
 
@@ -175,10 +176,13 @@ export default function MapContainer() {
         const dropPosition = monitor.getClientOffset();
         const x = dropPosition!.x - topLeft.x;
         const y = dropPosition!.y - topLeft.y;
-        const point = globalToLocal(transformRef.current, {
-          x,
-          y,
-        });
+        const point = globalToLocal(
+          mapViewRef.current?.transform ?? identity(),
+          {
+            x,
+            y,
+          }
+        );
 
         if ("files" in item) {
           void addBackgroundImagesRef.current(item.files, point);
@@ -493,7 +497,7 @@ export default function MapContainer() {
     myself,
     { mapId: map.id, mapBackgroundColor: map.settings.backgroundColor },
     editState,
-    transformRef,
+    mapViewRef,
     {
       setRevealedAreas,
     }
@@ -615,6 +619,7 @@ export default function MapContainer() {
         setEditState={setEditState}
       />
       <RRMapView
+        ref={mapViewRef}
         // map settings
         mapId={map.id}
         gridEnabled={map.settings.gridEnabled}
@@ -630,8 +635,6 @@ export default function MapContainer() {
         onMousePositionChanged={sendMousePositionToServer}
         players={players}
         onUpdateMeasurePath={updateMeasurePath}
-        // zoom and position
-        transformRef={transformRef}
         // map objects
         onMoveMapObjects={onMoveMapObjects}
         onStopMoveMapObjects={onStopMoveMapObjects}

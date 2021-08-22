@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useEffect,
+  useImperativeHandle,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -61,6 +62,7 @@ import useLocalState from "../../useLocalState";
 import { useContrastColor } from "../../util";
 import { MeasurePaths } from "./MeasurePaths";
 import { MouseCursors } from "./MouseCursors";
+import { useLatest } from "../../state";
 
 type Rectangle = [number, number, number, number];
 
@@ -143,43 +145,49 @@ function matrixRotationDEG(matrix: Matrix): number {
   return (Math.atan2(-matrix.b, matrix.a) * 180) / Math.PI;
 }
 
-export const RRMapView = React.memo<{
-  myself: RRPlayer;
-  mapId: RRMapID;
-  gridEnabled: boolean;
-  gridColor: RRColor;
-  backgroundColor: RRColor;
-  revealedAreas: RRMapRevealedAreas;
-  transformRef: React.MutableRefObject<Matrix>;
-  onMoveMapObjects: (d: RRPoint) => void;
-  onStopMoveMapObjects: () => void;
-  onSmartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
-  handleKeyDown: (event: KeyboardEvent) => void;
-  players: EntityCollection<RRPlayer>;
-  onUpdateMeasurePath: React.Dispatch<React.SetStateAction<RRPoint[]>>;
-  onMousePositionChanged: (position: RRPoint) => void;
-  toolHandler: MapMouseHandler;
-  toolButtonState: ToolButtonState;
-  toolOverlay: JSX.Element | null;
-}>(function RRMapView({
-  myself,
-  mapId,
-  gridEnabled,
-  gridColor,
-  backgroundColor,
-  revealedAreas,
-  onSmartSetTotalHP,
-  handleKeyDown,
-  onMoveMapObjects,
-  onStopMoveMapObjects,
-  transformRef,
-  players,
-  onUpdateMeasurePath,
-  onMousePositionChanged,
-  toolButtonState,
-  toolHandler,
-  toolOverlay,
-}) {
+export type RRMapViewRef = { transform: Matrix };
+
+const RRMapViewWithRef = React.forwardRef<
+  RRMapViewRef,
+  {
+    myself: RRPlayer;
+    mapId: RRMapID;
+    gridEnabled: boolean;
+    gridColor: RRColor;
+    backgroundColor: RRColor;
+    revealedAreas: RRMapRevealedAreas;
+    onMoveMapObjects: (d: RRPoint) => void;
+    onStopMoveMapObjects: () => void;
+    onSmartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
+    handleKeyDown: (event: KeyboardEvent) => void;
+    players: EntityCollection<RRPlayer>;
+    onUpdateMeasurePath: React.Dispatch<React.SetStateAction<RRPoint[]>>;
+    onMousePositionChanged: (position: RRPoint) => void;
+    toolHandler: MapMouseHandler;
+    toolButtonState: ToolButtonState;
+    toolOverlay: JSX.Element | null;
+  }
+>(function RRMapViewWithRef(
+  {
+    myself,
+    mapId,
+    gridEnabled,
+    gridColor,
+    backgroundColor,
+    revealedAreas,
+    onSmartSetTotalHP,
+    handleKeyDown,
+    onMoveMapObjects,
+    onStopMoveMapObjects,
+    players,
+    onUpdateMeasurePath,
+    onMousePositionChanged,
+    toolButtonState,
+    toolHandler,
+    toolOverlay,
+  },
+  ref
+) {
   const [settings] = useRRSettings();
   const [roughEnabled, setRoughEnabled] = useState(
     settings.renderMode !== "fast"
@@ -193,7 +201,15 @@ export const RRMapView = React.memo<{
     identity(),
     sessionStorage
   );
-  transformRef.current = transform;
+  const transformRef = useLatest(transform);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      transform,
+    }),
+    [transform]
+  );
 
   useLayoutEffect(() => {
     if (settings.enableExperimental25D) {
@@ -637,29 +653,29 @@ export const RRMapView = React.memo<{
   );
 
   /* FIXME: doesn't actually feel that good. might have to do it only after we really
-            drag and not just select.
-  // we snap tokens to the cursor to make it easier for the user to aim diagonals
-  useEffect(() => {
-    if (dragStartId.current != null) {
-      const object = mapObjects.find((o) => o.id === dragStartId.current)!;
-      if (object.type === "token") {
-        const innerLocal = globalToLocal(transform, dragLastMouseRef.current);
-        const delta = pointSubtract(
-          innerLocal,
-          mapObjectCenter(object, tokens)
-        );
-        onMoveMapObjects(delta.x, delta.y);
-      }
-    }
-  }, [
-    dragLastMouseRef,
-    mapObjects,
-    mapObjects.entries,
-    onMoveMapObjects,
-    tokens,
-    transform,
-  ]);
-  */
+        drag and not just select.
+// we snap tokens to the cursor to make it easier for the user to aim diagonals
+useEffect(() => {
+if (dragStartId.current != null) {
+  const object = mapObjects.find((o) => o.id === dragStartId.current)!;
+  if (object.type === "token") {
+    const innerLocal = globalToLocal(transform, dragLastMouseRef.current);
+    const delta = pointSubtract(
+      innerLocal,
+      mapObjectCenter(object, tokens)
+    );
+    onMoveMapObjects(delta.x, delta.y);
+  }
+}
+}, [
+dragLastMouseRef,
+mapObjects,
+mapObjects.entries,
+onMoveMapObjects,
+tokens,
+transform,
+]);
+*/
 
   const mapStyle = {
     backgroundColor,
@@ -811,3 +827,5 @@ export const RRMapView = React.memo<{
     </RoughContextProvider>
   );
 });
+
+export const RRMapView = React.memo(RRMapViewWithRef);

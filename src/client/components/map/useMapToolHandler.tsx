@@ -28,10 +28,10 @@ import {
   toCap,
 } from "../../../shared/point";
 import { MapEditState } from "./MapContainer";
-import { Matrix } from "transformation-matrix";
 import Shape from "@doodle3d/clipper-js";
 import tinycolor from "tinycolor2";
 import { RRMessage, useServerMessages } from "../../serverMessages";
+import { RRMapViewRef } from "./Map";
 
 const SERVER_SYNC_THROTTLE_TIME = 100;
 
@@ -76,7 +76,7 @@ export function useMapToolHandler(
     mapBackgroundColor: RRMap["settings"]["backgroundColor"];
   },
   editState: MapEditState,
-  transform: React.MutableRefObject<Matrix>,
+  mapViewRef: React.RefObject<RRMapViewRef>,
   {
     setRevealedAreas,
   }: {
@@ -325,7 +325,7 @@ export function useMapToolHandler(
                   ...pointsRef.current,
                   pointSubtract(p, startMousePositionRef.current),
                 ],
-                GRID_SIZE / 4 / transform.current.a
+                GRID_SIZE / 4 / (mapViewRef.current?.transform.a ?? 1)
               );
 
               if (oldNumPoints !== pointsRef.current.length) {
@@ -398,7 +398,8 @@ export function useMapToolHandler(
       onMouseMove: (p: RRPoint) => {
         if (mouseDown) {
           setMousePosition(p);
-          const size = revealToolSize / 2 / transform.current.a;
+          const size =
+            revealToolSize / 2 / (mapViewRef.current?.transform.a ?? 1);
           const stamp = [
             toCap(pointAdd(p, { x: -size, y: -size })),
             toCap(pointAdd(p, { x: -size, y: size })),
@@ -428,7 +429,10 @@ export function useMapToolHandler(
       onMouseWheel: (delta: number) => {
         if (mouseDown) {
           setRevealToolSize((s) =>
-            Math.max(s + (delta * 10) / transform.current.a, 35)
+            Math.max(
+              s + (delta * 10) / (mapViewRef.current?.transform.a ?? 1),
+              35
+            )
           );
         }
       },
@@ -458,7 +462,8 @@ export function useMapToolHandler(
     toolHandlerRef.current = {};
   }
 
-  const scaledRevealSize = revealToolSize / transform.current.a;
+  const scaledRevealSize =
+    revealToolSize / (mapViewRef.current?.transform.a ?? 1);
   return [
     useRef({
       onMouseDown: (p: RRPoint) => {
