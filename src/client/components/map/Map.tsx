@@ -19,27 +19,24 @@ import {
 } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
 import {
-  byId,
   EntityCollection,
   RRColor,
   RRMapID,
   RRMapObject,
   RRMapObjectID,
   RRPlayer,
-  RRPlayerID,
   RRPoint,
   RRCharacterID,
-  RRCapPoint,
+  RRMapRevealedAreas,
 } from "../../../shared/state";
 import { canControlMapObject } from "../../permissions";
+import { ToolButtonState } from "./MapContainer";
 import {
-  ephemeralPlayerIdsAtom,
   mapObjectIdsAtom,
   mapObjectsFamily,
   selectedMapObjectIdsAtom,
   selectedMapObjectsFamily,
-  ToolButtonState,
-} from "./MapContainer";
+} from "./recoil";
 import { RoughContextProvider } from "../rough";
 import tinycolor from "tinycolor2";
 import {
@@ -52,18 +49,18 @@ import {
   pointSubtract,
   snapPointToGrid,
 } from "../../../shared/point";
-import { MouseCursor } from "./MouseCursor";
-import { MapMeasurePath } from "./MapMeasurePath";
 import { MapMouseHandler } from "./useMapToolHandler";
 import { MapGrid } from "./MapGrid";
 import { MapObjects } from "./MapObjects";
-import { atom, atomFamily, useRecoilCallback, useRecoilValue } from "recoil";
+import { atom, atomFamily, useRecoilCallback } from "recoil";
 import { useRRSettings } from "../../settings";
 import { assertNever } from "../../../shared/util";
 import { FogOfWar } from "./FogOfWar";
 import { MapReactions } from "./MapReactions";
 import useLocalState from "../../useLocalState";
 import { useContrastColor } from "../../util";
+import { MeasurePaths } from "./MeasurePaths";
+import { MouseCursors } from "./MouseCursors";
 
 type Rectangle = [number, number, number, number];
 
@@ -152,6 +149,7 @@ export const RRMapView = React.memo<{
   gridEnabled: boolean;
   gridColor: RRColor;
   backgroundColor: RRColor;
+  revealedAreas: RRMapRevealedAreas;
   transformRef: React.MutableRefObject<Matrix>;
   onMoveMapObjects: (d: RRPoint) => void;
   onStopMoveMapObjects: () => void;
@@ -162,7 +160,6 @@ export const RRMapView = React.memo<{
   onMousePositionChanged: (position: RRPoint) => void;
   toolHandler: MapMouseHandler;
   toolButtonState: ToolButtonState;
-  revealedAreas: RRCapPoint[][] | null;
   toolOverlay: JSX.Element | null;
 }>(function RRMapView({
   myself,
@@ -170,6 +167,7 @@ export const RRMapView = React.memo<{
   gridEnabled,
   gridColor,
   backgroundColor,
+  revealedAreas,
   onSmartSetTotalHP,
   handleKeyDown,
   onMoveMapObjects,
@@ -180,7 +178,6 @@ export const RRMapView = React.memo<{
   onMousePositionChanged,
   toolButtonState,
   toolHandler,
-  revealedAreas,
   toolOverlay,
 }) {
   const [settings] = useRRSettings();
@@ -814,80 +811,3 @@ export const RRMapView = React.memo<{
     </RoughContextProvider>
   );
 });
-
-function MeasurePaths({
-  mapId,
-  zoom,
-  backgroundColor,
-  players,
-}: {
-  mapId: RRMapID;
-  zoom: number;
-  backgroundColor: string;
-  players: EntityCollection<RRPlayer>;
-}) {
-  const ephemeralPlayerIds = useRecoilValue(ephemeralPlayerIdsAtom);
-  return (
-    <>
-      {ephemeralPlayerIds.map((ephemeralPlayerId) => {
-        const player = byId(players.entities, ephemeralPlayerId);
-        if (!player || player.currentMap !== mapId) {
-          return null;
-        }
-        return (
-          <MapMeasurePath
-            key={ephemeralPlayerId}
-            ephemeralPlayerId={ephemeralPlayerId}
-            zoom={zoom}
-            color={player.color}
-            mapBackgroundColor={backgroundColor}
-          />
-        );
-      })}
-    </>
-  );
-}
-
-function MouseCursors({
-  myId,
-  mapId,
-  transform,
-  viewPortSize,
-  contrastColor,
-  players,
-}: {
-  myId: RRPlayerID;
-  mapId: RRMapID;
-  transform: Matrix;
-  viewPortSize: RRPoint;
-  contrastColor: string;
-  players: EntityCollection<RRPlayer>;
-}) {
-  const ephemeralPlayerIds = useRecoilValue(ephemeralPlayerIdsAtom);
-  return (
-    <>
-      {ephemeralPlayerIds.map((ephemeralPlayerId) => {
-        if (ephemeralPlayerId === myId) {
-          return null;
-        }
-
-        const player = byId(players.entities, ephemeralPlayerId);
-        if (!player || player.currentMap !== mapId) {
-          return null;
-        }
-
-        return (
-          <MouseCursor
-            key={ephemeralPlayerId}
-            playerId={player.id}
-            playerColor={player.color}
-            playerName={player.name}
-            transform={transform}
-            viewPortSize={viewPortSize}
-            contrastColor={contrastColor}
-          />
-        );
-      })}
-    </>
-  );
-}

@@ -25,7 +25,7 @@ import { assertNever } from "../../../shared/util";
 import { useMyself } from "../../myself";
 import { useRecoilValue } from "recoil";
 import { hoveredMapObjectsFamily } from "./Map";
-import { selectedMapObjectsFamily } from "./MapContainer";
+import { selectedMapObjectsFamily } from "./recoil";
 import { Popover } from "../Popover";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";

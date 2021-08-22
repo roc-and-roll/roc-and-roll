@@ -10,6 +10,7 @@ import {
   RRMapID,
   RRMapObject,
   RRMapObjectID,
+  RRMapRevealedAreas,
   RRPlayer,
   RRPoint,
 } from "../../../shared/state";
@@ -79,9 +80,7 @@ export function useMapToolHandler(
   {
     setRevealedAreas,
   }: {
-    setRevealedAreas: React.Dispatch<
-      React.SetStateAction<RRCapPoint[][] | null>
-    >;
+    setRevealedAreas: React.Dispatch<React.SetStateAction<RRMapRevealedAreas>>;
   }
 ): [MapMouseHandler, JSX.Element | null] {
   const dispatch = useServerDispatch();

@@ -18,7 +18,7 @@ import {
 import useRafLoop from "../../useRafLoop";
 import { RoughSVGPath, RoughText } from "../rough";
 import { CURSOR_POSITION_SYNC_DEBOUNCE } from "./Map";
-import { ephemeralPlayersFamily } from "./MapContainer";
+import { ephemeralPlayersFamily } from "./recoil";
 import { getViewportCorners } from "../../util";
 
 export const MouseCursor = React.memo<{

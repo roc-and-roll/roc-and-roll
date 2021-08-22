@@ -13,12 +13,8 @@ import {
 import { assertNever } from "../../shared/util";
 import { useServerDispatch } from "../state";
 import useLocalState from "../useLocalState";
-import {
-  MapEditState,
-  mapObjectsFamily,
-  MapSnap,
-  selectedMapObjectIdsAtom,
-} from "./map/MapContainer";
+import { MapEditState, MapSnap } from "./map/MapContainer";
+import { mapObjectsFamily, selectedMapObjectIdsAtom } from "./map/recoil";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { SmartColorInput, ColorInput } from "./ui/ColorInput";

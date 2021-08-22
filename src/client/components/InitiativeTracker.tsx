@@ -34,7 +34,7 @@ import { useRecoilCallback, useRecoilValue } from "recoil";
 import {
   highlightedCharactersFamily,
   selectedMapObjectIdsAtom,
-} from "./map/MapContainer";
+} from "./map/recoil";
 import { EMPTY_ARRAY, withDo } from "../../shared/util";
 import ReactDOM from "react-dom";
 import { NotificationTopAreaPortal } from "./Notifications";

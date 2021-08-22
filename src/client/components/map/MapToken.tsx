@@ -33,7 +33,7 @@ import {
   highlightedCharactersFamily,
   selectedMapObjectsFamily,
   characterFamily,
-} from "./MapContainer";
+} from "./recoil";
 import { Popover } from "../Popover";
 import { CharacterEditor, conditionIcons } from "../characters/CharacterEditor";
 import {

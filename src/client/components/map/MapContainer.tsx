@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import {
   ephemeralPlayerUpdate,
@@ -17,20 +11,14 @@ import {
 } from "../../../shared/actions";
 import {
   byId,
-  EntityCollection,
   entries,
-  EphermalPlayer,
   RRColor,
-  RRID,
   RRMapObject,
-  RRMapObjectID,
-  RRPlayerID,
   RRPoint,
-  RRCharacter,
   RRCharacterID,
   RRMapID,
   RRObjectVisibility,
-  RRCapPoint,
+  RRMapRevealedAreas,
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import {
@@ -65,19 +53,21 @@ import {
   snapPointToGrid,
 } from "../../../shared/point";
 import { useMapToolHandler } from "./useMapToolHandler";
-import {
-  atomFamily,
-  atom,
-  useRecoilCallback,
-  RecoilState,
-  useRecoilTransaction_UNSTABLE,
-} from "recoil";
+import { useRecoilCallback } from "recoil";
 import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";
 import { changeHPSmartly, isTriggeredByFormElement } from "../../util";
 import { MapMusicIndicator } from "./MapMusicIndicator";
 import { NativeTypes } from "react-dnd-html5-backend";
 import { getImageSize, uploadFiles } from "../../files";
 import { MAP_LINK_SIZE } from "./MapLink";
+import {
+  characterFamily,
+  characterTemplateFamily,
+  selectedMapObjectIdsAtom,
+  mapObjectsFamily,
+  selectedMapObjectsFamily,
+  ReduxToRecoilBridge,
+} from "./recoil";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -101,69 +91,6 @@ export type MapEditState =
       color: RRColor;
       visibility: RRObjectVisibility;
     };
-
-type RevealedAreas = RRCapPoint[][] | null;
-
-export const selectedMapObjectsFamily = atomFamily<boolean, RRMapObjectID>({
-  key: "SelectedMapObject",
-  default: false,
-});
-
-export const selectedMapObjectIdsAtom = atom<ReadonlyArray<RRMapObjectID>>({
-  key: "SelectedMapObjectIds",
-  default: [],
-});
-
-export const highlightedCharactersFamily = atomFamily<boolean, RRCharacterID>({
-  key: "HighlightedCharacter",
-  default: false,
-});
-
-export const mapObjectsFamily = atomFamily<RRMapObject | null, RRMapObjectID>({
-  key: "MapObject",
-  default: null,
-});
-
-export const mapObjectIdsAtom = atom<ReadonlyArray<RRMapObjectID>>({
-  key: "MapObjectIds",
-  default: [],
-});
-
-export const characterFamily = atomFamily<RRCharacter | null, RRCharacterID>({
-  key: "Character",
-  default: null,
-});
-
-export const characterIdsAtom = atom<ReadonlyArray<RRCharacterID>>({
-  key: "CharacterIds",
-  default: [],
-});
-
-export const characterTemplateFamily = atomFamily<
-  RRCharacter | null,
-  RRCharacterID
->({
-  key: "CharacterTemplate",
-  default: null,
-});
-
-export const characterTemplateIdsAtom = atom<ReadonlyArray<RRCharacterID>>({
-  key: "CharacterTemplateIds",
-  default: [],
-});
-
-export const ephemeralPlayersFamily = atomFamily<
-  EphermalPlayer | null,
-  RRPlayerID
->({
-  key: "EphermalPlayer",
-  default: null,
-});
-
-export const ephemeralPlayerIdsAtom = atom<ReadonlyArray<RRPlayerID>>({
-  key: "EphermalPlayerIds",
-  default: [],
-});
 
 export default function MapContainer() {
   const myself = useMyself();
@@ -517,8 +444,6 @@ export default function MapContainer() {
     [dispatch, myself.id]
   );
 
-  const players = useServerState((state) => state.players);
-
   const convertToolButtonState = (): ToolButtonState => {
     switch (editState.tool) {
       case "move":
@@ -538,7 +463,9 @@ export default function MapContainer() {
 
   const setRevealedAreas = useCallback(
     (
-      areasOrUpdater: RevealedAreas | ((areas: RevealedAreas) => RevealedAreas)
+      areasOrUpdater:
+        | RRMapRevealedAreas
+        | ((areas: RRMapRevealedAreas) => RRMapRevealedAreas)
     ) => {
       dispatch((state) => ({
         actions: [
@@ -675,6 +602,8 @@ export default function MapContainer() {
     [dispatch, mapId]
   );
 
+  const players = useServerState((state) => state.players);
+
   return (
     <div ref={dropRef} className="map-container">
       <ReduxToRecoilBridge mapObjects={map.objects} />
@@ -686,11 +615,12 @@ export default function MapContainer() {
         setEditState={setEditState}
       />
       <RRMapView
-        // map entity data
+        // map settings
         mapId={map.id}
         gridEnabled={map.settings.gridEnabled}
         gridColor={map.settings.gridColor}
         backgroundColor={map.settings.backgroundColor}
+        revealedAreas={map.settings.revealedAreas}
         // other entities
         myself={myself}
         // toolbar / tool
@@ -708,7 +638,6 @@ export default function MapContainer() {
         onSmartSetTotalHP={onSmartSetTotalHP}
         // misc
         handleKeyDown={handleKeyDown}
-        revealedAreas={map.settings.revealedAreas}
         toolOverlay={toolOverlay}
       />
       {dropProps.nativeFileHovered && <ExternalFileDropIndicator />}
@@ -735,72 +664,3 @@ const ExternalFileDropIndicator = React.memo(
     );
   }
 );
-
-function useReduxToRecoilBridge<E extends { id: RRID }>(
-  debugIdentifier: string,
-  entities: EntityCollection<E>,
-  idsAtom: RecoilState<ReadonlyArray<E["id"]>>,
-  familyAtom: (id: E["id"]) => RecoilState<E | null>
-) {
-  const updateRecoilObjects = useRecoilTransaction_UNSTABLE(
-    ({ get, set, reset }) =>
-      ({ ids: newIds, entities: newEntities }: EntityCollection<E>) => {
-        const oldIds = get(idsAtom);
-        if (oldIds !== newIds) {
-          set(idsAtom, newIds);
-        }
-
-        newIds.forEach((newId) => {
-          const atom = familyAtom(newId);
-          const newEntity = byId(newEntities, newId)!;
-          const oldEntity = get(atom);
-          if (!Object.is(newEntity, oldEntity)) {
-            set(atom, newEntity);
-          }
-        });
-
-        const newIdsSet = new Set(newIds);
-        oldIds
-          .filter((oldId) => !newIdsSet.has(oldId))
-          .forEach((removedId) => reset(familyAtom(removedId)));
-      },
-    [familyAtom, idsAtom]
-  );
-
-  useLayoutEffect(() => {
-    updateRecoilObjects(entities);
-  }, [entities, updateRecoilObjects]);
-}
-
-function ReduxToRecoilBridge({
-  mapObjects,
-}: {
-  mapObjects: EntityCollection<RRMapObject>;
-}) {
-  useReduxToRecoilBridge(
-    "map objects",
-    mapObjects,
-    mapObjectIdsAtom,
-    mapObjectsFamily
-  );
-  useReduxToRecoilBridge(
-    "characters",
-    useServerState((s) => s.characters),
-    characterIdsAtom,
-    characterFamily
-  );
-  useReduxToRecoilBridge(
-    "characterTemplates",
-    useServerState((s) => s.characterTemplates),
-    characterTemplateIdsAtom,
-    characterTemplateFamily
-  );
-  useReduxToRecoilBridge(
-    "ephemeral players",
-    useServerState((s) => s.ephemeral.players),
-    ephemeralPlayerIdsAtom,
-    ephemeralPlayersFamily
-  );
-
-  return null;
-}

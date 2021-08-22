@@ -150,6 +150,8 @@ export type RRMapObject = SyncedState["maps"]["__trait"]["objects"]["__trait"];
 
 export type RRMap = SyncedState["maps"]["__trait"];
 
+export type RRMapRevealedAreas = RRMap["settings"]["revealedAreas"];
+
 export type RRPrivateChatMessage =
   SyncedState["privateChats"]["__trait"]["messages"]["__trait"];
 

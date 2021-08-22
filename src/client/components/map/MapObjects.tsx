@@ -12,11 +12,8 @@ import { assertNever } from "../../../shared/util";
 import { useIsGM, useMyId } from "../../myself";
 import { canViewObjectOnMap } from "../../permissions";
 import { MapAreas } from "./Map";
-import {
-  mapObjectIdsAtom,
-  mapObjectsFamily,
-  ToolButtonState,
-} from "./MapContainer";
+import { ToolButtonState } from "./MapContainer";
+import { mapObjectIdsAtom, mapObjectsFamily } from "./recoil";
 import { MapLink } from "./MapLink";
 import { MapObjectThatIsNotAToken } from "./MapObjectThatIsNotAToken";
 import { MapToken } from "./MapToken";

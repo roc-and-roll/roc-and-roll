@@ -9,7 +9,7 @@ import {
   pointSubtract,
 } from "../../../shared/point";
 import { RoughLine, RoughText } from "../rough";
-import { ephemeralPlayersFamily } from "./MapContainer";
+import { ephemeralPlayersFamily } from "./recoil";
 import { useContrastColor } from "../../util";
 
 const overlappingPairsSum = <T extends any>(

@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { RRCapPoint, RRPoint } from "../../../shared/state";
+import { RRMapRevealedAreas, RRPoint } from "../../../shared/state";
 import Shape from "@doodle3d/clipper-js";
 import { useMyself } from "../../myself";
 import { Matrix } from "transformation-matrix";
@@ -11,7 +11,7 @@ export const FogOfWar = React.memo(function FogOfWar({
   transform,
   viewportSize,
 }: {
-  revealedAreas: RRCapPoint[][] | null;
+  revealedAreas: RRMapRevealedAreas;
   transform: Matrix;
   viewportSize: RRPoint;
 }) {
@@ -53,7 +53,7 @@ const FogOfWarInner = ({
   viewportSize,
   isGM,
 }: {
-  revealedAreas: RRCapPoint[][];
+  revealedAreas: NonNullable<RRMapRevealedAreas>;
   transform: Matrix;
   viewportSize: RRPoint;
   isGM: boolean;
