@@ -25,7 +25,7 @@ import {
   SyncedState,
   SyncedStateAction,
 } from "../shared/state";
-import { mergeDeep, rrid } from "../shared/util";
+import { mapGetAndSetIfMissing, mergeDeep, rrid } from "../shared/util";
 import { useGuranteedMemo } from "./useGuranteedMemo";
 import { useLatest } from "./useLatest";
 import sjson from "secure-json-parse";
@@ -33,62 +33,153 @@ import { measureTime } from "./debug";
 
 type DeduplicationKey = Opaque<string, "optimisticDeduplicationKey">;
 
-class OptimisticActionAppliers {
+type OptimisticActionApplierAndCallback = {
+  applier: OptimisticActionApplier;
+  whenDoneOrDiscarded: () => void;
+};
+
+/**
+ * This class holds a sorted list of optimistic action appliers. Each applier
+ * can contain multiple optimistic actions. Appliers are added to the internal
+ * list via the add() method and stored in insertion order. Before a new applier
+ * is added, its "deduplication key" is calculated using the static
+ * getDeduplicationKey() function. If an applier with the same deduplication key
+ * is already in the list, it is removed from the list and the new applier is
+ * added to the end of the list. This optimization helps to avoid having
+ * unnecessary appliers in the list that would be overwritten by a later applier
+ * with the same deduplication key.
+ *
+ * To iterate the list of appliers in insertion order, use the appliers()
+ * method.
+ *
+ * To remove optimistic action appliers that are no longer needed (likely
+ * because the optimistic actions have been applied on the server and that state
+ * has been synced back to the client), use the deleteByOptimisticUpdateId()
+ * method. This will remove all appliers with the given OptimisticUpdateID from
+ * the list while leaving other appliers in the list untouched.
+ *
+ * Note: The list of appliers is internally stored as two Maps for fast lookup.
+ */
+export class OptimisticActionAppliers {
   private readonly byDeduplicationKey = new Map<
     DeduplicationKey,
-    OptimisticActionApplier
+    OptimisticActionApplierAndCallback
   >();
-  private readonly byId = new Map<
+  private readonly byOptimisticUpdateId = new Map<
     OptimisticUpdateID,
-    Set<OptimisticActionApplier>
+    Set<OptimisticActionApplierAndCallback>
   >();
 
-  public add(applier: OptimisticActionApplier) {
+  /**
+   * Adds a new optimistic action applier to the end of the list. If an applier
+   * with the same deduplication key is already in the list, it is removed from
+   * the list.
+   * The second argument is a callback function that is executed when the
+   * applier is removed from the list, either because another applier with the
+   * same deduplication key is added to the list or because the applier has been
+   * explicitly removed with the deleteByOptimisticUpdateId() method.
+   */
+  public add(
+    applier: OptimisticActionApplier,
+    whenDoneOrDiscarded: () => void
+  ) {
     const deduplicationKey =
       OptimisticActionAppliers.getDeduplicationKey(applier);
+
+    let cb;
     {
-      const oldApplier = this.byDeduplicationKey.get(deduplicationKey);
-      if (oldApplier) {
+      const oldApplierAndCb = this.byDeduplicationKey.get(deduplicationKey);
+      if (oldApplierAndCb) {
+        cb = oldApplierAndCb.whenDoneOrDiscarded;
         this.byDeduplicationKey.delete(deduplicationKey);
-        const oldAppliers = this.byId.get(oldApplier.optimisticUpdateId);
-        if (oldAppliers) {
-          oldAppliers.delete(oldApplier);
-          if (oldAppliers.size === 0) {
-            this.byId.delete(oldApplier.optimisticUpdateId);
+        const oldApplierAndCbs = this.byOptimisticUpdateId.get(
+          oldApplierAndCb.applier.optimisticUpdateId
+        );
+        if (oldApplierAndCbs) {
+          oldApplierAndCbs.delete(oldApplierAndCb);
+          if (oldApplierAndCbs.size === 0) {
+            this.byOptimisticUpdateId.delete(
+              oldApplierAndCb.applier.optimisticUpdateId
+            );
           }
         }
       }
     }
 
-    this.byDeduplicationKey.set(deduplicationKey, applier);
+    const applierAndCb = { applier, whenDoneOrDiscarded };
+    this.byDeduplicationKey.set(deduplicationKey, applierAndCb);
 
-    const currentAppliers =
-      this.byId.get(applier.optimisticUpdateId) ?? new Set();
-    if (currentAppliers.size === 0) {
-      this.byId.set(applier.optimisticUpdateId, currentAppliers);
-    }
-    currentAppliers.add(applier);
+    const currentAppliers = mapGetAndSetIfMissing(
+      this.byOptimisticUpdateId,
+      applier.optimisticUpdateId,
+      () => new Set()
+    );
+    currentAppliers.add(applierAndCb);
+
+    cb?.();
   }
 
+  /**
+   * Deletes all appliers with the given OptimisticUpdateID from the list.
+   * Returns true if at least one applier was deleted.
+   */
   public deleteByOptimisticUpdateId(id: OptimisticUpdateID): boolean {
-    const appliers = this.byId.get(id);
+    const appliers = this.byOptimisticUpdateId.get(id);
     if (!appliers) {
       return false;
     }
 
+    const cbs = [];
+
     for (const applier of appliers.values()) {
-      const deduplicationKey =
-        OptimisticActionAppliers.getDeduplicationKey(applier);
+      const deduplicationKey = OptimisticActionAppliers.getDeduplicationKey(
+        applier.applier
+      );
       this.byDeduplicationKey.delete(deduplicationKey);
+      cbs.push(applier.whenDoneOrDiscarded);
     }
 
-    this.byId.delete(id);
+    this.byOptimisticUpdateId.delete(id);
+
+    cbs.forEach((cb) => cb());
 
     return true;
   }
 
+  /**
+   * Deletes the specified applier from the list (checked by identity).
+   */
+  public deleteApplier(applier: OptimisticActionApplier) {
+    const deduplicationKey =
+      OptimisticActionAppliers.getDeduplicationKey(applier);
+
+    let cb;
+
+    const applierAndCb = this.byDeduplicationKey.get(deduplicationKey);
+    if (applierAndCb?.applier === applier) {
+      this.byDeduplicationKey.delete(deduplicationKey);
+      cb = applierAndCb.whenDoneOrDiscarded;
+
+      const appliersWithOptimisticUpdateId = this.byOptimisticUpdateId.get(
+        applier.optimisticUpdateId
+      );
+      if (appliersWithOptimisticUpdateId) {
+        appliersWithOptimisticUpdateId.delete(applierAndCb);
+        if (appliersWithOptimisticUpdateId.size === 0) {
+          this.byOptimisticUpdateId.delete(applier.optimisticUpdateId);
+        }
+      }
+    }
+
+    cb?.();
+  }
+
   public appliers(): OptimisticActionApplier[] {
-    return Array.from(this.byDeduplicationKey.values());
+    // We use the fact that Map iterators return elements in insertion order
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/values
+    return Array.from(this.byDeduplicationKey.values()).map(
+      ({ applier }) => applier
+    );
   }
 
   public static getDeduplicationKey(
@@ -109,10 +200,10 @@ type OptimisticUpdateExecutedSubscriber = (
   optimisticUpdateIds: OptimisticUpdateID[]
 ) => void;
 
-type OptimisticActionApplierDispatcherKey =
+export type OptimisticActionApplierDispatcherKey =
   MakeRRID<"optimistic-dispatcher-key">;
 
-type OptimisticActionApplier = {
+export type OptimisticActionApplier = {
   readonly key?: string;
   readonly optimisticUpdateId: OptimisticUpdateID;
   readonly dispatcherKey: OptimisticActionApplierDispatcherKey;
@@ -146,9 +237,10 @@ const ServerStateContext = React.createContext<{
   __DEBUG__serverStateRefWithoutOptimisticActionsApplied: React.MutableRefObject<SyncedState>;
   __DEBUG__optimisticActionAppliersRef: React.MutableRefObject<OptimisticActionAppliers>;
   socket: Socket | null;
-  addLocalOptimisticActionAppliers: (
-    appliers: OptimisticActionApplier[]
-  ) => void;
+  addLocalOptimisticActionAppliers: (appliers: OptimisticActionApplier[]) => {
+    doneOrDiscarded: Promise<void>;
+    discard: () => void;
+  };
 }>({
   subscribe: () => {},
   unsubscribe: () => {},
@@ -162,7 +254,10 @@ const ServerStateContext = React.createContext<{
     current: new OptimisticActionAppliers(),
   },
   socket: null,
-  addLocalOptimisticActionAppliers: () => {},
+  addLocalOptimisticActionAppliers: () => ({
+    doneOrDiscarded: Promise.resolve(),
+    discard: () => {},
+  }),
 });
 ServerStateContext.displayName = "ServerStateContext";
 
@@ -439,16 +534,32 @@ export function ServerStateProvider({
   );
 
   const addLocalOptimisticActionAppliers = useCallback(
-    (appliers: OptimisticActionApplier[]) => {
+    (
+      appliers: OptimisticActionApplier[]
+    ): { doneOrDiscarded: Promise<void>; discard: () => void } => {
       if (appliers.length === 0) {
-        return;
+        return { doneOrDiscarded: Promise.resolve(), discard: () => {} };
       }
 
-      appliers.forEach((applier) =>
-        optimisticActionAppliers.current.add(applier)
+      const doneOrDiscardedPromise = Promise.all(
+        appliers.map(
+          (applier) =>
+            new Promise<void>((resolve) => {
+              optimisticActionAppliers.current.add(applier, () => resolve());
+            })
+        )
       );
-
       updateState([], true);
+
+      return {
+        doneOrDiscarded: doneOrDiscardedPromise.then(() => {}),
+        discard: () => {
+          appliers.forEach((applier) =>
+            optimisticActionAppliers.current.deleteApplier(applier)
+          );
+          updateState([], true);
+        },
+      };
     },
     [updateState]
   );
@@ -576,23 +687,29 @@ export function useDEBUG__serverState() {
   };
 }
 
-type OptimisticAction = {
+type OptimisticActionsConfig = {
   actions: SyncedStateAction[];
   optimisticKey: string;
   syncToServerThrottle: number;
 };
 
 function isOptimisticAction(
-  action: SyncedStateAction | OptimisticAction
-): action is OptimisticAction {
+  action: SyncedStateAction | OptimisticActionsConfig
+): action is OptimisticActionsConfig {
   return "actions" in action && "optimisticKey" in action;
 }
 
 function isAction(
-  action: SyncedStateAction | OptimisticAction
+  action: SyncedStateAction | OptimisticActionsConfig
 ): action is SyncedStateAction {
-  return !isOptimisticAction(action);
+  return "payload" in action && !isOptimisticAction(action);
 }
+
+type DispatchActionResult = {
+  doneOrDiscarded: Promise<void>;
+  discardPendingActions: () => void;
+  commitPendingActionsNow: () => void;
+};
 
 /**
  * Returns a dispatch function that can be used to dispatch an action to the
@@ -613,9 +730,10 @@ export function useServerDispatch() {
     Map<
       string,
       {
-        timeoutId: ReturnType<typeof setTimeout>;
+        timeoutId: ReturnType<typeof setTimeout> | null;
         actions: SyncedStateAction[];
         optimisticUpdateId: OptimisticUpdateID;
+        discardLocalOptimisticActionAppliers: () => void;
       }
     >
   >(new Map());
@@ -630,98 +748,164 @@ export function useServerDispatch() {
         actions,
         optimisticUpdateId,
       } of throttledSyncToServer.values()) {
-        clearTimeout(timeoutId);
+        if (timeoutId !== null) {
+          clearTimeout(timeoutId);
 
-        socket?.emit(SOCKET_DISPATCH_ACTION, {
-          actions: actions,
-          optimisticUpdateId,
-        });
+          socket?.emit(SOCKET_DISPATCH_ACTION, {
+            actions: actions,
+            optimisticUpdateId,
+          });
+        }
       }
     };
   }, [socketRef]);
 
   return useCallback(
-    <A extends SyncedStateAction | OptimisticAction, R extends A | Array<A>>(
+    <
+      A extends SyncedStateAction | OptimisticActionsConfig,
+      R extends A | Array<A>
+    >(
       actionOrActionsOrUpdater: R | ((currentState: SyncedState) => R)
-    ): R => {
+    ): DispatchActionResult => {
       const actionOrActions =
         typeof actionOrActionsOrUpdater === "function"
           ? actionOrActionsOrUpdater(stateRef.current)
           : actionOrActionsOrUpdater;
 
-      const actions = Array.isArray(actionOrActions)
+      const allActions = Array.isArray(actionOrActions)
         ? actionOrActions
         : [actionOrActions as A];
 
-      if (actions.length === 0) {
-        return actionOrActions;
+      if (allActions.length === 0) {
+        return {
+          doneOrDiscarded: Promise.resolve(),
+          discardPendingActions: () => {},
+          commitPendingActionsNow: () => {},
+        };
       }
 
-      const optimisticUpdateId = rrid<{ id: OptimisticUpdateID }>();
-      const throttledOptimisticUpdateIds: Map<string, OptimisticUpdateID> =
+      let immediateOptimisticUpdateId = null;
+      const optimisticUpdateIdCache: Map<string, OptimisticUpdateID> =
         new Map();
 
       const actionsToSyncToServerImmediately: SyncedStateAction[] = [];
 
-      let hasImmediateOptimisticActions = false;
+      const optimisticApplierDoneOrDiscardedPromises: Promise<void>[] = [];
 
-      for (const action of actions) {
+      const throttledOptimisticKeys = new Set<string>();
+
+      for (const action of allActions) {
         if (isOptimisticAction(action)) {
-          if (action.syncToServerThrottle === 0) {
-            actionsToSyncToServerImmediately.push(...action.actions);
-            hasImmediateOptimisticActions = true;
+          // An array of actions associated with an optimisticKey (used for
+          // deduplication) as well as a number that is used to throttle sending
+          // these actions to the server.
+          const { actions, optimisticKey, syncToServerThrottle } = action;
 
-            addLocalOptimisticActionAppliers([
-              {
-                dispatcherKey,
-                optimisticUpdateId: optimisticUpdateId,
-                actions: action.actions,
-                key: action.optimisticKey,
-              },
-            ]);
+          if (syncToServerThrottle === 0) {
+            // These actions are sent to the server immediately and therefore
+            // cannot be discarded or force committed.
+            actionsToSyncToServerImmediately.push(...actions);
+            immediateOptimisticUpdateId ??= rrid<{ id: OptimisticUpdateID }>();
+
+            optimisticApplierDoneOrDiscardedPromises.push(
+              addLocalOptimisticActionAppliers([
+                {
+                  dispatcherKey,
+                  optimisticUpdateId: immediateOptimisticUpdateId,
+                  actions,
+                  key: optimisticKey,
+                },
+              ]).doneOrDiscarded
+            );
           } else {
-            if (!throttledOptimisticUpdateIds.has(action.optimisticKey)) {
-              throttledOptimisticUpdateIds.set(
-                action.optimisticKey,
-                rrid<{ id: OptimisticUpdateID }>()
-              );
-            }
-            const throttledOptimisticUpdateId =
-              throttledOptimisticUpdateIds.get(action.optimisticKey)!;
+            // These actions are sent to the server at some point in the future
+            // based on the value of syncToServerThrottle. If the value is
+            // Infinity, then the actions are never sent to the server (and
+            // need to be sent manually by calling discardPendingActions or
+            // commitPendingActionsNow returned by this function).
 
-            const activeThrottle = throttledSyncToServerRef.current.get(
-              action.optimisticKey
+            throttledOptimisticKeys.add(optimisticKey);
+
+            // Generate a new OptimisticUpdateID to associate with this
+            // optimisticKey, if one doesn't already exist. An
+            // OptimisticUpdateID may already exist if other actions with the
+            // same optimisticKey have already been processed _in the same call
+            // to dispatch()_.
+            const throttledOptimisticUpdateId = mapGetAndSetIfMissing(
+              optimisticUpdateIdCache,
+              optimisticKey,
+              () => rrid<{ id: OptimisticUpdateID }>()
             );
 
-            addLocalOptimisticActionAppliers([
+            // Register the optimistic action applier so that optimistic
+            // actions are run locally.
+            // TODO: IMHO, ideally, this should only be called once per
+            // dispatch call.
+            const {
+              doneOrDiscarded,
+              discard: discardLocalOptimisticActionAppliers,
+            } = addLocalOptimisticActionAppliers([
               {
                 dispatcherKey,
                 optimisticUpdateId: throttledOptimisticUpdateId,
-                actions: action.actions,
-                key: action.optimisticKey,
+                actions,
+                key: optimisticKey,
               },
             ]);
+            optimisticApplierDoneOrDiscardedPromises.push(doneOrDiscarded);
 
+            // Check if a previous call to dispatch already dispatched actions
+            // with optimisticKey that have not yet been sent to the server and
+            // get the corresponding throttle information.
+            const activeThrottle =
+              throttledSyncToServerRef.current.get(optimisticKey);
             if (activeThrottle) {
-              activeThrottle.actions = action.actions;
+              // There are already actions with this optimisticKey that have not
+              // yet been sent to the server. Overwrite the previously scheduled
+              // actions with the new actions and also update the
+              // OptimisticUpdateID.
+              activeThrottle.actions = actions;
               activeThrottle.optimisticUpdateId = throttledOptimisticUpdateId;
+              activeThrottle.discardLocalOptimisticActionAppliers =
+                discardLocalOptimisticActionAppliers;
+              if (syncToServerThrottle === Infinity) {
+                // It looks like the new optimistic action applier has set the
+                // throttle to Infinity. This means that the actions should
+                // never be sent to the server. Clear a possibly already running
+                // timeout.
+                if (activeThrottle.timeoutId !== null) {
+                  clearTimeout(activeThrottle.timeoutId);
+                }
+                activeThrottle.timeoutId = null;
+              }
             } else {
-              throttledSyncToServerRef.current.set(action.optimisticKey, {
-                actions: action.actions,
-                optimisticUpdateId: throttledOptimisticUpdateId,
-                timeoutId: setTimeout(() => {
+              // There are no actions with this optimisticKey that have not yet
+              // been sent to the server. Schedule the actions to be sent to the
+              // server iff syncToServerThrottle is not Infinity.
+              let timeoutId = null;
+              if (syncToServerThrottle !== Infinity) {
+                timeoutId = setTimeout(() => {
                   const { actions, optimisticUpdateId } =
-                    throttledSyncToServerRef.current.get(action.optimisticKey)!;
-                  throttledSyncToServerRef.current.delete(action.optimisticKey);
+                    throttledSyncToServerRef.current.get(optimisticKey)!;
+                  throttledSyncToServerRef.current.delete(optimisticKey);
                   socketRef.current?.emit(SOCKET_DISPATCH_ACTION, {
-                    actions: actions,
+                    actions,
                     optimisticUpdateId,
                   });
-                }, action.syncToServerThrottle),
+                }, syncToServerThrottle);
+              }
+
+              throttledSyncToServerRef.current.set(optimisticKey, {
+                actions,
+                optimisticUpdateId: throttledOptimisticUpdateId,
+                timeoutId,
+                discardLocalOptimisticActionAppliers,
               });
             }
           }
         } else if (isAction(action)) {
+          // This is a good old action without any optimistic updating attached.
+          // Simply send it to the server and forget about it.
           actionsToSyncToServerImmediately.push(action);
         } else {
           throw new Error("This should never happen.");
@@ -740,13 +924,41 @@ export function useServerDispatch() {
         }
         socketRef.current?.emit(SOCKET_DISPATCH_ACTION, {
           actions: actionsToSyncToServerImmediately,
-          optimisticUpdateId: hasImmediateOptimisticActions
-            ? optimisticUpdateId
-            : null,
+          optimisticUpdateId: immediateOptimisticUpdateId,
         });
       }
 
-      return actionOrActions;
+      return {
+        doneOrDiscarded: Promise.all(
+          optimisticApplierDoneOrDiscardedPromises
+        ).then(() => {}),
+        discardPendingActions: () => {
+          for (const throttledOptimisticKey of throttledOptimisticKeys) {
+            const { timeoutId, discardLocalOptimisticActionAppliers } =
+              throttledSyncToServerRef.current.get(throttledOptimisticKey)!;
+            if (timeoutId !== null) {
+              clearTimeout(timeoutId);
+            }
+            throttledSyncToServerRef.current.delete(throttledOptimisticKey);
+            discardLocalOptimisticActionAppliers();
+          }
+        },
+        commitPendingActionsNow: () => {
+          for (const throttledOptimisticKey of throttledOptimisticKeys) {
+            const { actions, optimisticUpdateId, timeoutId } =
+              throttledSyncToServerRef.current.get(throttledOptimisticKey)!;
+            if (timeoutId !== null) {
+              clearTimeout(timeoutId);
+            }
+            throttledSyncToServerRef.current.delete(throttledOptimisticKey);
+
+            socketRef.current?.emit(SOCKET_DISPATCH_ACTION, {
+              actions,
+              optimisticUpdateId,
+            });
+          }
+        },
+      };
     },
     [stateRef, socketRef, addLocalOptimisticActionAppliers, dispatcherKey]
   );

@@ -1,10 +1,18 @@
 import React from "react";
 import { act, renderHook } from "@testing-library/react-hooks";
-import { ServerStateProvider, applyStatePatch, useServerState } from "./state";
+import {
+  ServerStateProvider,
+  applyStatePatch,
+  useServerState,
+  OptimisticActionAppliers,
+  OptimisticActionApplier,
+  OptimisticActionApplierDispatcherKey,
+} from "./state";
 import {
   defaultMap,
   EMPTY_ENTITY_COLLECTION,
   initialSyncedState,
+  OptimisticUpdateID,
   RRMap,
   RRMapObject,
   RRPlayer,
@@ -251,5 +259,121 @@ describe("useServerState", () => {
     });
 
     expect(result.current).toEqual({ id: B });
+  });
+});
+
+describe("OptimisticActionAppliers", () => {
+  it("calculates deduplication keys correctly", () => {
+    const applier: OptimisticActionApplier = {
+      dispatcherKey: "dkey" as OptimisticActionApplierDispatcherKey,
+      key: "key",
+      optimisticUpdateId: "oui" as OptimisticUpdateID,
+      actions: [],
+    };
+    expect(OptimisticActionAppliers.getDeduplicationKey(applier)).toBe(
+      `dkey/key`
+    );
+  });
+
+  it("works", () => {
+    const oAA = new OptimisticActionAppliers();
+
+    expect(oAA.appliers()).toHaveLength(0);
+
+    expect(
+      oAA.deleteByOptimisticUpdateId(rrid<{ id: OptimisticUpdateID }>())
+    ).toBe(false);
+
+    const applier1: OptimisticActionApplier = {
+      dispatcherKey: rrid<{ id: OptimisticActionApplierDispatcherKey }>(),
+      key: "key",
+      optimisticUpdateId: rrid<{ id: OptimisticUpdateID }>(),
+      actions: [],
+    };
+    const whenDoneOrDiscarded1 = jest.fn();
+    oAA.add(applier1, whenDoneOrDiscarded1);
+
+    {
+      const appliers = oAA.appliers();
+      expect(appliers).toHaveLength(1);
+      expect(appliers[0]).toBe(applier1);
+    }
+
+    const applier2: OptimisticActionApplier = {
+      dispatcherKey: rrid<{ id: OptimisticActionApplierDispatcherKey }>(),
+      key: "key",
+      optimisticUpdateId: rrid<{ id: OptimisticUpdateID }>(),
+      actions: [],
+    };
+    const whenDoneOrDiscarded2 = jest.fn();
+    oAA.add(applier2, whenDoneOrDiscarded2);
+
+    {
+      const appliers = oAA.appliers();
+      expect(appliers).toHaveLength(2);
+      expect(appliers[0]).toBe(applier1);
+      expect(appliers[1]).toBe(applier2);
+    }
+
+    const applier3: OptimisticActionApplier = {
+      dispatcherKey: rrid<{ id: OptimisticActionApplierDispatcherKey }>(),
+      key: "key",
+      optimisticUpdateId: rrid<{ id: OptimisticUpdateID }>(),
+      actions: [],
+    };
+    const whenDoneOrDiscarded3 = jest.fn();
+    oAA.add(applier3, whenDoneOrDiscarded3);
+
+    {
+      const appliers = oAA.appliers();
+      expect(appliers).toHaveLength(3);
+      expect(appliers[0]).toBe(applier1);
+      expect(appliers[1]).toBe(applier2);
+      expect(appliers[2]).toBe(applier3);
+    }
+
+    // Add another applier that has the same deduplication key as applier2.
+    const applier4 = { ...applier2 };
+    const whenDoneOrDiscarded4 = jest.fn();
+    oAA.add(applier4, whenDoneOrDiscarded4);
+
+    {
+      const appliers = oAA.appliers();
+      expect(appliers).toHaveLength(3);
+      expect(appliers[0]).toBe(applier1);
+      expect(appliers[1]).toBe(applier3);
+      expect(appliers[2]).toBe(applier4);
+    }
+
+    expect(whenDoneOrDiscarded1).not.toHaveBeenCalled();
+    expect(whenDoneOrDiscarded2).toHaveBeenCalledTimes(1);
+    expect(whenDoneOrDiscarded3).not.toHaveBeenCalled();
+    expect(whenDoneOrDiscarded4).not.toHaveBeenCalled();
+
+    // Delete all appliers with the optimistic update id of applier3.
+    oAA.deleteByOptimisticUpdateId(applier3.optimisticUpdateId);
+    {
+      const appliers = oAA.appliers();
+      expect(appliers).toHaveLength(2);
+      expect(appliers[0]).toBe(applier1);
+      expect(appliers[1]).toBe(applier4);
+    }
+
+    expect(whenDoneOrDiscarded1).not.toHaveBeenCalled();
+    expect(whenDoneOrDiscarded2).toHaveBeenCalledTimes(1);
+    expect(whenDoneOrDiscarded3).toHaveBeenCalledTimes(1);
+    expect(whenDoneOrDiscarded4).not.toHaveBeenCalled();
+
+    oAA.deleteApplier(applier1);
+    {
+      const appliers = oAA.appliers();
+      expect(appliers).toHaveLength(1);
+      expect(appliers[0]).toBe(applier4);
+    }
+
+    expect(whenDoneOrDiscarded1).toHaveBeenCalledTimes(1);
+    expect(whenDoneOrDiscarded2).toHaveBeenCalledTimes(1);
+    expect(whenDoneOrDiscarded3).toHaveBeenCalledTimes(1);
+    expect(whenDoneOrDiscarded4).not.toHaveBeenCalled();
   });
 });

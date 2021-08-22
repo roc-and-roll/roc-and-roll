@@ -173,3 +173,15 @@ export function partition<E, A extends E = E, B extends E = E>(
 
   return [a, b] as const;
 }
+
+export function mapGetAndSetIfMissing<K, V>(
+  map: Map<K, V>,
+  key: K,
+  fn: () => V
+): V {
+  if (!map.has(key)) {
+    map.set(key, fn());
+  }
+
+  return map.get(key)!;
+}
