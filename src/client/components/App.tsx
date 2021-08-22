@@ -20,6 +20,13 @@ const MapContainer = React.lazy(
   () => import(/* webpackPrefetch: true */ "./map/MapContainer")
 );
 
+let LagRadar: React.ComponentType;
+if (process.env.NODE_ENV === "development") {
+  // Load the LagRadar component lazily and only in development.
+  // We don't want it to load in production.
+  LagRadar = React.lazy(() => import("./LagRadar"));
+}
+
 export function App() {
   const { login, logout, loggedIn } = useLoginLogout();
   const notificationTopAreaPortal = useRef<HTMLDivElement>(null);
@@ -41,6 +48,11 @@ export function App() {
           <ConnectionLost />
         )}
       </ErrorBoundary>
+      {process.env.NODE_ENV === "development" && (
+        <Suspense fallback={null}>
+          <LagRadar />
+        </Suspense>
+      )}
     </NotificationTopAreaPortal.Provider>
   );
 }

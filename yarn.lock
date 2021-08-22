@@ -1473,6 +1473,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@gaearon/lag-radar@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "@gaearon/lag-radar@npm:0.1.0"
+  checksum: bc65a480eca0f5328412a0d9754566a8a20f1b4a58779459bd84eb796bd0be9abd60a6e60d391bf212740432eab1b2e6311961ea2579db805eb85139daf9914a
+  languageName: node
+  linkType: hard
+
 "@istanbuljs/load-nyc-config@npm:^1.0.0":
   version: 1.1.0
   resolution: "@istanbuljs/load-nyc-config@npm:1.1.0"
@@ -10836,6 +10843,17 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"react-lag-radar@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "react-lag-radar@npm:1.0.0"
+  dependencies:
+    "@gaearon/lag-radar": ^0.1.0
+  peerDependencies:
+    react: "*"
+  checksum: 8c1a671f279c93c1086f4ac426505baebfa32f5653f51d180eacdd187ee961b7da3e82d05a8509131bd08f547fd06937cd66c9435dfaa8298c9b242f67abf84d
+  languageName: node
+  linkType: hard
+
 "react-markdown@npm:^6.0.2":
   version: 6.0.2
   resolution: "react-markdown@npm:6.0.2"
@@ -11520,6 +11538,7 @@ resolve@^2.0.0-next.3:
     react-dnd-html5-backend: ^14.0.0
     react-dom: alpha
     react-flip-toolkit: ^7.0.13
+    react-lag-radar: ^1.0.0
     react-markdown: ^6.0.2
     react-refresh: ^0.9.0
     recoil: ^0.4.0

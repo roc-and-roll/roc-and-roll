@@ -75,3 +75,14 @@ interface JSON {
 interface Body {
   json(): Promise<unknown>;
 }
+
+declare module "react-lag-radar" {
+  const component: React.ComponentType<{
+    frames?: number;
+    speed?: number;
+    size?: number;
+    inset?: number;
+  }>;
+
+  export = component;
+}

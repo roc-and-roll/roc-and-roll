@@ -124,6 +124,7 @@
     "nodemon-webpack-plugin": "^4.5.2",
     "prettier": "^2.3.1",
     "raw-loader": "^4.0.2",
+    "react-lag-radar": "^1.0.0",
     "react-refresh": "^0.9.0",
     "regenerator-runtime": "^0.13.8",
     "sass": "^1.35.1",
