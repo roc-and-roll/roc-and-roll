@@ -116,5 +116,6 @@ export async function uploadFiles<T extends AllowedFileTypes>(
   if (result.status === 200) {
     return (await result.json()) as Array<AllowedFileTypesToObject<T>>;
   }
+  console.error(result);
   throw new Error("something went wrong");
 }

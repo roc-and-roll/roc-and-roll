@@ -26,6 +26,7 @@ import { isTabletopAudioAsset } from "../../shared/tabletopaudio";
 import { partition, rrid, timestamp } from "../../shared/util";
 import { useFileUpload } from "../files";
 import { useMyself } from "../myself";
+import { useAlert } from "../popup-boxes";
 import { useServerDispatch, useServerState } from "../state";
 import { formatDuration, highlightMatching } from "../util";
 import { ActiveSoundSet, SoundSets as SoundSets } from "./SoundSets";
@@ -227,41 +228,41 @@ function UploadAudio({ onUploaded }: { onUploaded: () => void }) {
   const [isUploading, upload] = useFileUpload();
   const dispatch = useServerDispatch();
   const myself = useMyself();
+  const alert = useAlert();
 
-  const doUpload = async (files: FileList | null) => {
-    const uploadedFiles = await upload(files, "audio");
-    if (uploadedFiles.length > 0) {
-      dispatch(
-        uploadedFiles.map((f) =>
-          assetSongAdd({
-            id: rrid<RRAsset>(),
-            name: f.originalFilename,
-            description: null,
-            filenameOrUrl: f.filename,
-            external: false,
-            type: "song",
-            playerId: myself.id,
-            tags: [],
-            duration: f.duration,
-            extra: {},
-          })
-        )
-      );
-      onUploaded();
+  const doUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    try {
+      const uploadedFiles = await upload(files, "audio");
+      if (uploadedFiles.length > 0) {
+        dispatch(
+          uploadedFiles.map((f) =>
+            assetSongAdd({
+              id: rrid<RRAsset>(),
+              name: f.originalFilename,
+              description: null,
+              filenameOrUrl: f.filename,
+              external: false,
+              type: "song",
+              playerId: myself.id,
+              tags: [],
+              duration: f.duration,
+              extra: {},
+            })
+          )
+        );
+        onUploaded();
+      }
+    } catch (err) {
+      await alert(String(err));
+    } finally {
+      e.target.value = "";
     }
   };
 
   return (
     <>
-      <input
-        type="file"
-        multiple
-        onChange={async (e) => {
-          await doUpload(e.target.files);
-          e.target.value = "";
-        }}
-        disabled={isUploading}
-      />
+      <input type="file" multiple onChange={doUpload} disabled={isUploading} />
       {isUploading && (
         <span>
           <FontAwesomeIcon icon={faSpinner} spin /> uploading...
