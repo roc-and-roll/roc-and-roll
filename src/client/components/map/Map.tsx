@@ -62,7 +62,7 @@ import useLocalState from "../../useLocalState";
 import { useContrastColor } from "../../util";
 import { MeasurePaths } from "./MeasurePaths";
 import { MouseCursors } from "./MouseCursors";
-import { useLatest } from "../../state";
+import { useLatest } from "../../useLatest";
 
 type Rectangle = [number, number, number, number];
 

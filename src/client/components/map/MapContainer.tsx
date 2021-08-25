@@ -22,11 +22,11 @@ import {
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import {
-  useLatest,
   useServerDispatch,
   useServerState,
   useServerStateRef,
 } from "../../state";
+import { useLatest } from "../../useLatest";
 import { SyncedDebouncer, useAggregatedDoubleDebounce } from "../../debounce";
 import {
   CURSOR_POSITION_SYNC_DEBOUNCE,

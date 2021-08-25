@@ -50,7 +50,8 @@ import {
   pointSubtract,
 } from "../../../shared/point";
 import { EmanationArea } from "./Areas";
-import { useLatest, useServerDispatch } from "../../state";
+import { useServerDispatch } from "../../state";
+import { useLatest } from "../../useLatest";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import useRafLoop from "../../useRafLoop";

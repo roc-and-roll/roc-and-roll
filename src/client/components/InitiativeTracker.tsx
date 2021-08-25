@@ -25,7 +25,8 @@ import {
 import { useMyMap, useMyself } from "../myself";
 import { canControlToken } from "../permissions";
 import { diceResult, rollInitiative } from "../roll";
-import { useLatest, useServerDispatch, useServerState } from "../state";
+import { useServerDispatch, useServerState } from "../state";
+import { useLatest } from "../useLatest";
 import useLocalState from "../useLocalState";
 import { GMArea } from "./GMArea";
 import { CharacterStack } from "./characters/CharacterPreview";

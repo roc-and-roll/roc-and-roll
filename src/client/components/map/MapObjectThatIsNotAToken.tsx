@@ -19,7 +19,8 @@ import {
   RoughLinearPath,
   RoughPolygon,
 } from "../rough";
-import { useLatest, useServerDispatch } from "../../state";
+import { useServerDispatch } from "../../state";
+import { useLatest } from "../../useLatest";
 import tinycolor from "tinycolor2";
 import { assertNever } from "../../../shared/util";
 import { useMyself } from "../../myself";

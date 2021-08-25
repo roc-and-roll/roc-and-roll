@@ -5,7 +5,7 @@ import React, {
   useState,
   useTransition,
 } from "react";
-import { useLatest } from "./state";
+import { useLatest } from "./useLatest";
 import { useGuranteedMemo } from "./useGuranteedMemo";
 
 type PendingChangeSubscriber = (pending: boolean) => void;

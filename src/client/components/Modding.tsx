@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { RRID } from "../../shared/state";
 import { rrid } from "../../shared/util";
-import { useLatest } from "../state";
+import { useLatest } from "../useLatest";
 import useLocalState from "../useLocalState";
 import { useCompendium } from "./compendium/Compendium";
 import { CompendiumSource, isCompendiumSource } from "./compendium/types";
