@@ -9,6 +9,7 @@ import {
 import { Dice } from "./Dice";
 import clsx from "clsx";
 import { contrastColor } from "../../util";
+import { USE_CONCURRENT_MODE } from "../../../shared/constants";
 
 const SLOT_SIZE = 50;
 const COLUMNS = 7;
@@ -199,6 +200,8 @@ export default function DiceDisplay({
           position: new THREE.Vector3(0, 2, 6 * numRows),
           far: 50,
         }}
+        frameloop="demand"
+        mode={USE_CONCURRENT_MODE ? "concurrent" : "blocking"}
       >
         <ambientLight intensity={0.2} />
         <pointLight position={[4, 4, 10]} intensity={1} />

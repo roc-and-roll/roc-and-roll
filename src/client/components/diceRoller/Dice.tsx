@@ -9,7 +9,7 @@ import d8Glb from "./dice/d8.glb";
 import d10Glb from "./dice/d10.glb";
 import d12Glb from "./dice/d12.glb";
 import d20Glb from "./dice/d20.glb";
-import { useFrame, useLoader } from "@react-three/fiber";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { descriptorMap } from "./dice/diceDescriptors";
 import { DICE_DISPLAY_COLUMNS } from "./DiceDisplay";
 import { contrastColor } from "../../util";
@@ -50,6 +50,8 @@ export const DiceGeometry: React.FC<
     []
   );
 
+  const invalidate = useThree((state) => state.invalidate);
+
   useFrame((_, delta) => {
     if (animationFinished.current) return;
 
@@ -66,6 +68,8 @@ export const DiceGeometry: React.FC<
         onAnimationFinished?.();
       }
     }
+    // Since we specified frameLoop="demand" on the canvas element, we need to notify ThreeJS every time it needs to re-render.
+    invalidate();
   });
 
   const [image] = useLoader(THREE.TextureLoader, [diceFaces]);
