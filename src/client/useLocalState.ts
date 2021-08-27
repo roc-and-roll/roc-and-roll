@@ -4,43 +4,48 @@
 // Licensed under the Unlicense.
 import { useState, useCallback, Dispatch, SetStateAction } from "react";
 import { JsonValue } from "type-fest";
+import { useLatest } from "./useLatest";
 import { isBrowser, noop } from "./util";
 
 const deserializer = JSON.parse;
 
 const serializer = JSON.stringify;
 
+function getInitialValue<T extends JsonValue>(initializer: T | (() => T)): T {
+  return typeof initializer === "function" ? initializer() : initializer;
+}
+
 export default function useLocalState(
   key: string,
-  initialValue: number,
+  initializer: number | (() => number),
   storage?: Storage
 ): [number, Dispatch<SetStateAction<number>>, () => void];
 
 export default function useLocalState(
   key: string,
-  initialValue: boolean,
+  initializer: boolean | (() => boolean),
   storage?: Storage
 ): [boolean, Dispatch<SetStateAction<boolean>>, () => void];
 
 export default function useLocalState(
   key: string,
-  initialValue: string,
+  initializer: string | (() => string),
   storage?: Storage
 ): [string, Dispatch<SetStateAction<string>>, () => void];
 
 export default function useLocalState<T extends JsonValue>(
   key: string,
-  initialValue: T,
+  initializer: T | (() => T),
   storage?: Storage
 ): [T, Dispatch<SetStateAction<T>>, () => void];
 
 export default function useLocalState<T extends JsonValue>(
   key: string,
-  initialValue: T,
+  initializer: T | (() => T),
   storage: Storage = localStorage
 ): [T, Dispatch<SetStateAction<T>>, () => void] {
   if (!isBrowser) {
-    return [initialValue, noop, noop];
+    return [getInitialValue(initializer), noop, noop];
   }
   if (!key) {
     throw new Error("useLocalStorage key may not be falsy");
@@ -52,19 +57,20 @@ export default function useLocalState<T extends JsonValue>(
       if (localStorageValue !== null) {
         return deserializer(localStorageValue) as T;
       } else {
+        const initialValue = getInitialValue(initializer);
         storage.setItem(key, serializer(initialValue));
         return initialValue;
       }
     } catch {
-      // If user is in private mode or has storage restriction
+      // If the user is in private mode or has storage restriction
       // localStorage can throw. JSON.parse and JSON.stringify
       // can throw, too.
-      return initialValue;
+      return getInitialValue(initializer);
     }
   });
 
-  const set: Dispatch<SetStateAction<T>> = useCallback(
-    (valOrFunc) => {
+  const set = useCallback(
+    (valOrFunc: SetStateAction<T>) => {
       setState((prevState) => {
         const newState =
           typeof valOrFunc === "function" ? valOrFunc(prevState) : valOrFunc;
@@ -73,7 +79,7 @@ export default function useLocalState<T extends JsonValue>(
           storage.setItem(key, serializer(newState));
           return newState;
         } catch {
-          // If user is in private mode or has storage restriction
+          // If the user is in private mode or has storage restriction
           // localStorage can throw. Also JSON.stringify can throw.
           return prevState;
         }
@@ -82,15 +88,17 @@ export default function useLocalState<T extends JsonValue>(
     [key, storage]
   );
 
+  const initializerRef = useLatest(initializer);
+
   const remove = useCallback(() => {
     try {
       storage.removeItem(key);
-      setState(initialValue);
+      setState(getInitialValue(initializerRef.current));
     } catch {
-      // If user is in private mode or has storage restriction
+      // If the user is in private mode or has storage restriction
       // localStorage can throw.
     }
-  }, [initialValue, key, storage]);
+  }, [initializerRef, key, storage]);
 
   return [state, set, remove];
 }

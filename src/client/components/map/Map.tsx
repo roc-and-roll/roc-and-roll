@@ -145,6 +145,15 @@ function matrixRotationDEG(matrix: Matrix): number {
   return (Math.atan2(-matrix.b, matrix.a) * 180) / Math.PI;
 }
 
+const localCoords = (
+  svg: SVGSVGElement | null,
+  e: MouseEvent | React.MouseEvent
+) => {
+  if (!svg) return { x: 0, y: 0 };
+  const rect = svg.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+};
+
 export type RRMapViewRef = { transform: Matrix };
 
 const RRMapViewWithRef = React.forwardRef<
@@ -198,7 +207,7 @@ const RRMapViewWithRef = React.forwardRef<
   // rendered transform.
   const [transform, setTransform] = useLocalState<Matrix>(
     `map/${mapId}/transform`,
-    identity(),
+    () => identity(),
     sessionStorage
   );
   const transformRef = useLatest(transform);
@@ -244,12 +253,6 @@ const RRMapViewWithRef = React.forwardRef<
 
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const localCoords = (e: MouseEvent | React.MouseEvent) => {
-    if (!svgRef.current) return { x: 0, y: 0 };
-    const rect = svgRef.current.getBoundingClientRect();
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  };
-
   const handleWheel = useCallback(
     (e: WheelEvent) => {
       e.preventDefault();
@@ -268,7 +271,7 @@ const RRMapViewWithRef = React.forwardRef<
 
       if (mouseActionRef.current !== MouseAction.NONE) return;
 
-      const { x, y } = localCoords(e);
+      const { x, y } = localCoords(svgRef.current, e);
       setTransform((t) =>
         compose(
           translate(x, y),
@@ -334,7 +337,13 @@ const RRMapViewWithRef = React.forwardRef<
   const handleMouseMove = useRecoilCallback(
     ({ snapshot }) =>
       (e: MouseEvent) => {
-        const { x, y } = localCoords(e);
+        const mouseAction = mouseActionRef.current;
+
+        if (mouseAction === MouseAction.NONE) {
+          return;
+        }
+
+        const { x, y } = localCoords(svgRef.current, e);
         const frameDelta = {
           // we must not use dragLastMouse here, because it might not have
           // updated to reflect the value set during the last frame (since React
@@ -345,7 +354,7 @@ const RRMapViewWithRef = React.forwardRef<
           y: y - dragLastMouseRef.current.y,
         };
 
-        switch (mouseActionRef.current) {
+        switch (mouseAction) {
           case MouseAction.PAN: {
             setTransform((t) =>
               compose(translate(frameDelta.x, frameDelta.y), t)
@@ -405,15 +414,11 @@ const RRMapViewWithRef = React.forwardRef<
             );
             break;
           }
-          case MouseAction.NONE:
-            break;
           default:
-            assertNever(mouseActionRef.current);
+            assertNever(mouseAction);
         }
 
-        if (mouseActionRef.current !== MouseAction.NONE) {
-          dragLastMouseRef.current = { x, y };
-        }
+        dragLastMouseRef.current = { x, y };
       },
     [
       setTransform,
@@ -457,7 +462,7 @@ const RRMapViewWithRef = React.forwardRef<
         setRoughEnabled(false);
       }
 
-      const local = localCoords(e);
+      const local = localCoords(svgRef.current, e);
       dragLastMouseRef.current = local;
 
       const innerLocal = globalToLocal(transformRef.current, local);
@@ -571,7 +576,10 @@ const RRMapViewWithRef = React.forwardRef<
           }
           case MouseAction.USE_TOOL:
             toolHandler.onMouseUp(
-              globalToLocal(transformRef.current, localCoords(e))
+              globalToLocal(
+                transformRef.current,
+                localCoords(svgRef.current, e)
+              )
             );
             break;
           case MouseAction.MEASURE:
@@ -617,7 +625,7 @@ const RRMapViewWithRef = React.forwardRef<
   const handleMapMouseMove = useCallback(
     (e: React.MouseEvent<SVGSVGElement>) => {
       onMousePositionChanged(
-        globalToLocal(transformRef.current, localCoords(e))
+        globalToLocal(transformRef.current, localCoords(svgRef.current, e))
       );
     },
     [onMousePositionChanged, transformRef]
@@ -631,7 +639,7 @@ const RRMapViewWithRef = React.forwardRef<
           toolButtonState === "select" &&
           canControlMapObject(object, myself)
         ) {
-          const local = localCoords(event);
+          const local = localCoords(svgRef.current, event);
 
           (document.activeElement as HTMLElement | null)?.blur();
           event.preventDefault();
@@ -676,11 +684,6 @@ tokens,
 transform,
 ]);
 */
-
-  const mapStyle = {
-    backgroundColor,
-    cursor: toolButtonState === "tool" ? "crosshair" : "inherit",
-  };
 
   useEffect(() => {
     switch (settings.renderMode) {
@@ -758,7 +761,10 @@ transform,
         className="map-svg"
         onContextMenu={(e) => e.preventDefault()}
         onMouseDown={handleMouseDown}
-        style={mapStyle}
+        style={{
+          backgroundColor,
+          cursor: toolButtonState === "tool" ? "crosshair" : "inherit",
+        }}
         onMouseMove={handleMapMouseMove}
       >
         <g transform={toSVG(transform)}>

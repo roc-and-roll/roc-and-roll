@@ -611,13 +611,6 @@ export default function MapContainer() {
   return (
     <div ref={dropRef} className="map-container">
       <ReduxToRecoilBridge mapObjects={map.objects} />
-      <MapMusicIndicator mapBackgroundColor={map.settings.backgroundColor} />
-      <MapToolbar
-        mapId={map.id}
-        mapSettings={map.settings}
-        myself={myself}
-        setEditState={setEditState}
-      />
       <RRMapView
         ref={mapViewRef}
         // map settings
@@ -642,6 +635,13 @@ export default function MapContainer() {
         // misc
         handleKeyDown={handleKeyDown}
         toolOverlay={toolOverlay}
+      />
+      <MapMusicIndicator mapBackgroundColor={map.settings.backgroundColor} />
+      <MapToolbar
+        mapId={map.id}
+        mapSettings={map.settings}
+        myself={myself}
+        setEditState={setEditState}
       />
       {dropProps.nativeFileHovered && <ExternalFileDropIndicator />}
       {process.env.NODE_ENV === "development" &&

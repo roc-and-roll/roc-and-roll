@@ -1,8 +1,8 @@
-import React, { useContext, useEffect, useMemo } from "react";
+import React, { useContext, useLayoutEffect, useMemo } from "react";
 import { useRecoilValue } from "recoil";
 import { useSetRecoilState } from "recoil";
 import { atom } from "recoil";
-import { byId, RRMap, RRPlayer, RRPlayerID } from "../shared/state";
+import { byId, RRPlayer, RRPlayerID } from "../shared/state";
 import { useAutoDispatchPlayerIdOnChange, useServerState } from "./state";
 import useLocalState from "./useLocalState";
 
@@ -45,17 +45,17 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
     useLocalState<RRPlayerID | null>("myPlayerId", null);
 
   // Important: Use useMyself everywhere else!
-  const myself = useServerState((state) =>
-    myPlayerId ? byId(state.players.entities, myPlayerId) ?? null : null
+  const myself = useServerState(
+    (state) => (myPlayerId && byId(state.players.entities, myPlayerId)) ?? null
   );
 
   const setId = useSetRecoilState(myIdAtom);
-  useEffect(() => {
-    if (myPlayerId !== null) setId(myPlayerId);
+  useLayoutEffect(() => {
+    setId(myPlayerId);
   }, [myPlayerId, setId]);
 
   const setIsGM = useSetRecoilState(isGMAtom);
-  useEffect(() => {
+  useLayoutEffect(() => {
     setIsGM(myself?.isGM ?? false);
   }, [myself?.isGM, setIsGM]);
 
@@ -85,15 +85,6 @@ export function useMyself(allowNull = false): RRPlayer | null {
   }
 
   return myself;
-}
-
-export function useMyMap<T>(selector: (map: RRMap | undefined) => T) {
-  const myself = useMyself();
-  const currentMap = useServerState((state) =>
-    selector(byId(state.maps.entities, myself.currentMap))
-  );
-
-  return currentMap;
 }
 
 export function useLoginLogout() {

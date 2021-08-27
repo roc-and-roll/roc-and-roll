@@ -22,7 +22,7 @@ import {
   RRPlayerID,
   RRMapObject,
 } from "../../shared/state";
-import { useMyMap, useMyself } from "../myself";
+import { useMyself } from "../myself";
 import { canControlToken } from "../permissions";
 import { diceResult, rollInitiative } from "../roll";
 import { useServerDispatch, useServerState } from "../state";
@@ -355,10 +355,15 @@ function RollInitiative({
   characterCollection: EntityCollection<RRCharacter>;
   myselfId: RRPlayerID;
 }) {
+  const myself = useMyself();
   // Avoid re-rendering the RollInitiative component repeatedly when people are
   // moving map objects around the map.
   const [mapObjectsOutdated, mapObjects] = useDeferredValueWithPending(
-    useMyMap((map) => map?.objects ?? EMPTY_ENTITY_COLLECTION)
+    useServerState(
+      (state) =>
+        byId(state.maps.entities, myself.currentMap)?.objects ??
+        EMPTY_ENTITY_COLLECTION
+    )
   );
 
   return (

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import LagRadar from "react-lag-radar";
 
 if (process.env.NODE_ENV !== "development") {
@@ -6,6 +6,12 @@ if (process.env.NODE_ENV !== "development") {
 }
 
 export default function MyLagRadar() {
+  const [hidden, setHidden] = useState(false);
+
+  if (hidden) {
+    return null;
+  }
+
   return (
     <div
       style={{
@@ -15,6 +21,7 @@ export default function MyLagRadar() {
         left: 4,
         bottom: 4,
       }}
+      onClick={() => setHidden(true)}
     >
       <LagRadar size={120} />
     </div>
