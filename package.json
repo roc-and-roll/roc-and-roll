@@ -146,11 +146,14 @@
   "jest": {
     "testEnvironment": "jest-environment-jsdom",
     "transform": {
-      "^.+\\.[jt]sx?$": ["@swc/jest", {
-        "module": {
-          "type": "commonjs"
+      "^.+\\.[jt]sx?$": [
+        "@swc/jest",
+        {
+          "module": {
+            "type": "commonjs"
+          }
         }
-      }]
+      ]
     },
     "setupFilesAfterEnv": [
       "<rootDir>/jest-setup.ts"
@@ -185,7 +188,7 @@
     "yarn": ">=2"
   },
   "resolutions": {
-    "@reduxjs/toolkit@1.6.1": "patch:@reduxjs/toolkit@npm:1.6.1#.yarn/patches/@reduxjs-toolkit-npm-1.6.1-a0999c8262",
-    "@beyonk/google-fonts-webpack-plugin@1.7.0": "patch:@beyonk/google-fonts-webpack-plugin@npm:1.7.0#.yarn/patches/@beyonk-google-fonts-webpack-plugin-npm-1.7.0-59283e9daf"
+    "@reduxjs/toolkit": "patch:@reduxjs/toolkit@npm:1.6.1#.yarn/patches/@reduxjs-toolkit-npm-1.6.1-a0999c8262",
+    "@beyonk/google-fonts-webpack-plugin": "patch:@beyonk/google-fonts-webpack-plugin@npm:1.7.0#.yarn/patches/@beyonk-google-fonts-webpack-plugin-npm-1.7.0-59283e9daf"
   }
 }

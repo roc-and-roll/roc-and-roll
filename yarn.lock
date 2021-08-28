@@ -1366,7 +1366,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@beyonk/google-fonts-webpack-plugin@npm:^1.7.0":
+"@beyonk/google-fonts-webpack-plugin@npm:1.7.0":
   version: 1.7.0
   resolution: "@beyonk/google-fonts-webpack-plugin@npm:1.7.0"
   dependencies:
@@ -1378,6 +1378,21 @@ __metadata:
   peerDependencies:
     webpack: ">=4.14.0"
   checksum: 8b5dca28ce0a7f4d8831e7ca866bfea62b328e951194c1f04c7a549596f9f47d0647553b4e9cb77bd47e7dec5ce7adbdc1a2f7e65cc95121256544807b9de7d8
+  languageName: node
+  linkType: hard
+
+"@beyonk/google-fonts-webpack-plugin@patch:@beyonk/google-fonts-webpack-plugin@npm:1.7.0#.yarn/patches/@beyonk-google-fonts-webpack-plugin-npm-1.7.0-59283e9daf::locator=roc-and-roll%40workspace%3A.":
+  version: 1.7.0
+  resolution: "@beyonk/google-fonts-webpack-plugin@patch:@beyonk/google-fonts-webpack-plugin@npm%3A1.7.0#.yarn/patches/@beyonk-google-fonts-webpack-plugin-npm-1.7.0-59283e9daf::version=1.7.0&hash=ca8b4c&locator=roc-and-roll%40workspace%3A."
+  dependencies:
+    lodash: ^4.17.4
+    md5: ^2.2.1
+    node-fetch: ^2.1.2
+    webpack-sources: ^1.1.0
+    yauzl: ^2.8.0
+  peerDependencies:
+    webpack: ">=4.14.0"
+  checksum: c8434ffd64cd3bf7e5953a26e0949e266aaccf34db34f31cba7c767260d40a6462597aa9598247d31d6ac1afde81a501aa3d256a2a6fd1d7e533033f827623d1
   languageName: node
   linkType: hard
 
@@ -1883,7 +1898,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@reduxjs/toolkit@npm:^1.6.1":
+"@reduxjs/toolkit@npm:1.6.1":
   version: 1.6.1
   resolution: "@reduxjs/toolkit@npm:1.6.1"
   dependencies:
@@ -1900,6 +1915,26 @@ __metadata:
     react-redux:
       optional: true
   checksum: 487e34003671b4bf3fbb983dd4d6e23ddeea0170aaefee765e38a7942b317895c8fae91a82dd698489a072c4ca8be9d317749a329ad9fb0129c3ed96f6142c18
+  languageName: node
+  linkType: hard
+
+"@reduxjs/toolkit@patch:@reduxjs/toolkit@npm:1.6.1#.yarn/patches/@reduxjs-toolkit-npm-1.6.1-a0999c8262::locator=roc-and-roll%40workspace%3A.":
+  version: 1.6.1
+  resolution: "@reduxjs/toolkit@patch:@reduxjs/toolkit@npm%3A1.6.1#.yarn/patches/@reduxjs-toolkit-npm-1.6.1-a0999c8262::version=1.6.1&hash=9c7111&locator=roc-and-roll%40workspace%3A."
+  dependencies:
+    immer: ^9.0.1
+    redux: ^4.1.0
+    redux-thunk: ^2.3.0
+    reselect: ^4.0.0
+  peerDependencies:
+    react: ^16.14.0 || ^17.0.0
+    react-redux: ^7.2.1
+  peerDependenciesMeta:
+    react:
+      optional: true
+    react-redux:
+      optional: true
+  checksum: 04f0ee6d1147ce9aa8199b14fd786461541f51619b3b63730f7a9e92bc247d47669b85df74c462b0a42725414f6ba6ad2a58e79f90ecd60e2299d564c640a95a
   languageName: node
   linkType: hard
 
