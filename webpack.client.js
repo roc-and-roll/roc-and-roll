@@ -6,7 +6,6 @@ const HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-const webpackDevServerWaitpage = require("webpack-dev-server-waitpage");
 const GoogleFontsPlugin = require("@beyonk/google-fonts-webpack-plugin")
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
@@ -69,7 +68,10 @@ module.exports = (webpackEnv) => {
     },
     resolve: {
       extensions: [".tsx", ".ts", ".js", ".jsx"],
-      fallback: { "crypto": false }
+      fallback: {
+        "crypto": false,
+        "assert": require.resolve('assert'),
+      }
     },
     plugins: [
       new HtmlWebpackPlugin({
@@ -112,7 +114,6 @@ module.exports = (webpackEnv) => {
         // $ heroku config:set HEROKU=1
         '__VERSION__': JSON.stringify(process.env.HEROKU ? "master" : gitRevisionPlugin.version()),
       }),
-      isEnvDevelopment && new webpack.HotModuleReplacementPlugin(),
       isEnvDevelopment && new ReactRefreshWebpackPlugin({
         overlay: {
           sockPort: DEV_SERVER_SOCK_PORT
@@ -176,31 +177,28 @@ module.exports = (webpackEnv) => {
       ],
     },
     devServer: isEnvDevelopment ? {
-      // Enable gzip compression of generated files.
-      compress: true,
-      // Silence WebpackDevServer's own logs since they're generally not useful.
-      // It will still show compile warnings and errors with this setting.
-      clientLogLevel: 'none',
-      contentBase: [path.join(__dirname, "src", "public")],
-      watchContentBase: true,
       hot: true,
       host: '0.0.0.0',
       port: 3001,
-      sockPort: DEV_SERVER_SOCK_PORT,
+      allowedHosts: "all",
       historyApiFallback: {
         // Paths with dots should still use the history fallback.
         // See https://github.com/facebook/create-react-app/issues/387.
         disableDotRule: true,
       },
-      overlay: {
-        warnings: true,
-        errors: true
-      },
-      disableHostCheck: true,
-      before: (app, server) => {
-        if (!process.env.CI) {
-          app.use(webpackDevServerWaitpage(server, { theme: "material" }));
+      client: {
+        // Silence WebpackDevServer's own logs since they're generally not useful.
+        // It will still show compile warnings and errors with this setting.
+        logging: "none",
+        overlay: true,
+        progress: true,
+        webSocketURL: {
+          port: DEV_SERVER_SOCK_PORT,
         }
+      },
+      static: {
+        directory: path.join(__dirname, "src", "public"),
+        watch: true,
       },
       proxy: {
         context: "/api",

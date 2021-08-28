@@ -25,9 +25,5 @@ export function setupArgs() {
     .option("-q, --quiet", "print less to the console", false)
     .version(version)
     .parse(process.argv)
-    .opts() as {
-    workspace: string;
-    port: number;
-    quiet: boolean;
-  };
+    .opts<{ workspace: string; port: number; quiet: boolean }>();
 }
