@@ -1,10 +1,10 @@
 import * as t from "typanion";
 import { assert, IsExact } from "conditional-type-checks";
-import { Opaque } from "type-fest";
 import { isRRID } from "../../../shared/validation";
 import {
   conditionNames,
   damageTypes,
+  MakeRRID,
   RRCharacterCondition,
   RRDamageType,
 } from "../../../shared/state";
@@ -446,7 +446,7 @@ export type CompendiumData = {
 // Make sure that the schema really matches the CompendiumData type.
 assert<IsExact<t.InferType<typeof isCompendiumData>, CompendiumData>>(true);
 
-export type CompendiumSourceID = Opaque<string, "compendiumSource">;
+export type CompendiumSourceID = MakeRRID<"compendiumSource">;
 
 export type CompendiumSource = {
   id: CompendiumSourceID;

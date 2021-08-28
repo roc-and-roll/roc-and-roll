@@ -2,14 +2,12 @@ import React from "react";
 import { act, renderHook } from "@testing-library/react-hooks";
 import { ServerStateProvider, applyStatePatch, useServerState } from "./state";
 import {
-  byId,
   defaultMap,
   EMPTY_ENTITY_COLLECTION,
   initialSyncedState,
   RRMap,
   RRMapObject,
   RRPlayer,
-  RRPlayerID,
   SyncedState,
 } from "../shared/state";
 import { rrid } from "../shared/util";
@@ -102,9 +100,9 @@ describe("applyStatePatch", () => {
     expect(nextState).not.toStrictEqual(prevState);
     expect(nextState.maps).not.toStrictEqual(prevState.maps);
     expect(nextState.maps.entities).not.toStrictEqual(prevState.maps.entities);
-    expect(byId(nextState.maps.entities, newMap.id)).toStrictEqual(newMap);
-    expect(byId(nextState.maps.entities, defaultMap.id)).toStrictEqual(
-      byId(prevState.maps.entities, defaultMap.id)
+    expect(nextState.maps.entities[newMap.id]).toStrictEqual(newMap);
+    expect(nextState.maps.entities[defaultMap.id]).toStrictEqual(
+      prevState.maps.entities[defaultMap.id]
     );
     expect(nextState.maps.ids).not.toStrictEqual(prevState.maps.ids);
     expect(nextState.maps.ids).toEqual([defaultMap.id, newMap.id]);
@@ -144,18 +142,15 @@ describe("applyStatePatch", () => {
     expect(nextState).not.toStrictEqual(prevState);
     expect(nextState.maps).not.toStrictEqual(prevState.maps);
     expect(nextState.maps.entities).not.toStrictEqual(prevState.maps.entities);
-    expect(byId(nextState.maps.entities, newMap.id)).not.toStrictEqual(newMap);
-    expect(byId(nextState.maps.entities, newMap.id)!.objects).not.toStrictEqual(
+    expect(nextState.maps.entities[newMap.id]).not.toStrictEqual(newMap);
+    expect(nextState.maps.entities[newMap.id]!.objects).not.toStrictEqual(
       newMap.objects
     );
     expect(
-      byId(
-        byId(nextState.maps.entities, newMap.id)!.objects.entities,
-        newMapObject1.id
-      )
+      nextState.maps.entities[newMap.id]!.objects.entities[newMapObject1.id]
     ).toStrictEqual(newMapObject1);
-    expect(byId(nextState.maps.entities, defaultMap.id)).toStrictEqual(
-      byId(prevState.maps.entities, defaultMap.id)
+    expect(nextState.maps.entities[defaultMap.id]).toStrictEqual(
+      prevState.maps.entities[defaultMap.id]
     );
 
     expect(nextState.players).toStrictEqual(prevState.players);
@@ -193,24 +188,18 @@ describe("applyStatePatch", () => {
     expect(nextState).not.toStrictEqual(prevState);
     expect(nextState.maps).not.toStrictEqual(prevState.maps);
     expect(nextState.maps.entities).not.toStrictEqual(prevState.maps.entities);
-    expect(byId(nextState.maps.entities, newMap.id)).not.toStrictEqual(newMap);
-    expect(byId(nextState.maps.entities, newMap.id)!.objects).not.toStrictEqual(
+    expect(nextState.maps.entities[newMap.id]).not.toStrictEqual(newMap);
+    expect(nextState.maps.entities[newMap.id]!.objects).not.toStrictEqual(
       newMap.objects
     );
     expect(
-      byId(
-        byId(nextState.maps.entities, newMap.id)!.objects.entities,
-        newMapObject1.id
-      )
+      nextState.maps.entities[newMap.id]!.objects.entities[newMapObject1.id]
     ).toStrictEqual(newMapObject1);
     expect(
-      byId(
-        byId(nextState.maps.entities, newMap.id)!.objects.entities,
-        newMapObject2.id
-      )
+      nextState.maps.entities[newMap.id]!.objects.entities[newMapObject2.id]
     ).toStrictEqual(newMapObject2);
-    expect(byId(nextState.maps.entities, defaultMap.id)).toStrictEqual(
-      byId(prevState.maps.entities, defaultMap.id)
+    expect(nextState.maps.entities[defaultMap.id]).toStrictEqual(
+      prevState.maps.entities[defaultMap.id]
     );
 
     expect(nextState.players).toStrictEqual(prevState.players);
@@ -231,33 +220,36 @@ describe("useServerState", () => {
 
     expect(result.current).toEqual(EMPTY_ENTITY_COLLECTION);
 
+    const A = rrid<RRPlayer>();
+    const B = rrid<RRPlayer>();
+
     act(() => {
       mockSocket.__receivePatchState({
         deletedKeys: [],
         patch: {
           players: {
-            entities: { a: { id: "a" }, b: { id: "b" } },
-            ids: ["a" as RRPlayerID, "b" as RRPlayerID],
+            entities: { [A]: { id: A }, [B]: { id: B } },
+            ids: [A, B],
           },
         },
       });
     });
 
     expect(result.current).toEqual({
-      entities: { a: { id: "a" }, b: { id: "b" } },
-      ids: ["a", "b"],
+      entities: { [A]: { id: A }, [B]: { id: B } },
+      ids: [A, B],
     });
 
     rerender({
-      selector: (state) => byId(state.players.entities, "a" as RRPlayerID),
+      selector: (state) => state.players.entities[A],
     });
 
-    expect(result.current).toEqual({ id: "a" });
+    expect(result.current).toEqual({ id: A });
 
     rerender({
-      selector: (state) => byId(state.players.entities, "b" as RRPlayerID),
+      selector: (state) => state.players.entities[B],
     });
 
-    expect(result.current).toEqual({ id: "b" });
+    expect(result.current).toEqual({ id: B });
   });
 });

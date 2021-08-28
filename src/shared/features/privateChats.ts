@@ -1,9 +1,4 @@
-import {
-  createEntityAdapter,
-  createReducer,
-  Draft,
-  isAnyOf,
-} from "@reduxjs/toolkit";
+import { createEntityAdapter, createReducer, isAnyOf } from "@reduxjs/toolkit";
 import {
   privateChatAdd,
   privateChatUpdate,
@@ -12,7 +7,6 @@ import {
   privateChatMessageUpdate,
 } from "../actions";
 import {
-  byId,
   initialSyncedState,
   RRPrivateChat,
   RRPrivateChatMessage,
@@ -32,7 +26,7 @@ export const privateChatsReducer = createReducer(
         isAnyOf(privateChatMessageAdd, privateChatMessageUpdate),
         (state, action) => {
           const { chatId } = action.payload;
-          const chat = byId<Draft<RRPrivateChat>>(state.entities, chatId);
+          const chat = state.entities[chatId];
           if (!chat) {
             console.error("Trying to update chat message of unknown chat.");
             return state;

@@ -1,6 +1,5 @@
 import { GRID_SIZE } from "../../../shared/constants";
 import {
-  byId,
   EntityCollection,
   RRMapObject,
   RRCharacter,
@@ -21,8 +20,10 @@ export const mapObjectSize = (
 ) => {
   let size = makePoint(GRID_SIZE);
   if (object.type === "token") {
-    const character = byId(characters.entities, object.characterId)!;
-    size = pointScale(size, character.scale);
+    const character = characters.entities[object.characterId];
+    if (character) {
+      size = pointScale(size, character.scale);
+    }
   }
   return size;
 };

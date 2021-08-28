@@ -46,10 +46,7 @@ const isDictByRRID: <T extends t.StrictValidator<any, { id: RRID }>>(
 ) => t.StrictValidator<unknown, Record<t.InferType<T>["id"], t.InferType<T>>> =
   t.isDict;
 
-function isEntityCollection<
-  O extends { id: RRID },
-  V extends t.StrictValidator<any, O>
->(
+function isEntityCollection<V extends t.StrictValidator<any, { id: RRID }>>(
   entityValidator: V
 ): t.StrictValidator<unknown, EntityCollection<V["__trait"]>> {
   // @ts-expect-error This should be fine.
@@ -63,16 +60,14 @@ function isEntityCollection<
   });
 }
 
-function _isColor() {
-  return t.makeValidator({
-    test: (value: string, state) => {
-      return tinycolor(value).isValid();
-    },
-  });
-}
-
 function isColor() {
-  return t.applyCascade(t.isString(), [_isColor()]);
+  return t.applyCascade(t.isString(), [
+    t.makeValidator({
+      test: (value: string) => {
+        return tinycolor(value).isValid();
+      },
+    }),
+  ]);
 }
 
 const isRRFile = t.isObject({
@@ -489,9 +484,5 @@ export const isSyncedState = t.isObject({
 
 type SchemaType = t.InferType<typeof isSyncedState>;
 
-// Make sure that the schema really matches the TextEntry type.
+// Make sure that the schema really matches the type.
 assert<IsExact<SchemaType, SyncedState>>(true);
-// {
-//   const c: SchemaType["diceTemplates"]["__trait"] = (null as unknown) as RRDiceTemplate;
-//   const cc: RRDiceTemplate = (null as unknown) as SchemaType["diceTemplates"]["__trait"];
-// }

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { logEntryMessageAdd } from "../../shared/actions";
-import { byId, entries, RRLogEntry } from "../../shared/state";
+import { entries, RRLogEntry } from "../../shared/state";
 import { assertNever, withDo } from "../../shared/util";
 import { useMyself } from "../myself";
 import { diceResultString, DiceResultWithTypes } from "../roll";
@@ -13,7 +13,7 @@ import { Button } from "./ui/Button";
 
 function LogEntry({ logEntry }: { logEntry: RRLogEntry }) {
   const { entities: players } = useServerState((state) => state.players);
-  const player = logEntry.playerId ? byId(players, logEntry.playerId) : null;
+  const player = logEntry.playerId ? players[logEntry.playerId] : null;
   const playerName = player?.name ?? "Unknown Player";
 
   let content;
@@ -60,10 +60,9 @@ export function Log() {
   const dispatch = useServerDispatch();
   const [collapsed, setCollapsed] = useState(true);
   const lastLogEntry = logEntriesCollection.ids.length
-    ? byId(
-        logEntriesCollection.entities,
+    ? logEntriesCollection.entities[
         logEntriesCollection.ids[logEntriesCollection.ids.length - 1]!
-      )
+      ]
     : null;
   const [scrollRef] = useScrollToBottom<HTMLUListElement>([collapsed]);
 

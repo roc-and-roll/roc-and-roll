@@ -5,26 +5,17 @@ import {
   logEntryMessageAdd,
   logEntryRemove,
 } from "../actions";
-import {
-  initialSyncedState,
-  RRLogEntry,
-  RRLogEntryAchievement,
-  RRLogEntryDiceRoll,
-  RRLogEntryMessage,
-} from "../state";
+import { initialSyncedState, RRLogEntry } from "../state";
 
 const logEntryAdapter = createEntityAdapter<RRLogEntry>();
-const logEntryMessageAdapter = createEntityAdapter<RRLogEntryMessage>();
-const logEntryDiceRollAdapter = createEntityAdapter<RRLogEntryDiceRoll>();
-const logEntryAchievemenAdapter = createEntityAdapter<RRLogEntryAchievement>();
 
 export const logEntriesReducer = createReducer(
   initialSyncedState.logEntries,
   (builder) => {
     builder
-      .addCase(logEntryMessageAdd, logEntryMessageAdapter.addOne)
-      .addCase(logEntryDiceRollAdd, logEntryDiceRollAdapter.addOne)
-      .addCase(logEntryAchievementAdd, logEntryAchievemenAdapter.addOne)
+      .addCase(logEntryMessageAdd, logEntryAdapter.addOne)
+      .addCase(logEntryDiceRollAdd, logEntryAdapter.addOne)
+      .addCase(logEntryAchievementAdd, logEntryAdapter.addOne)
       .addCase(logEntryRemove, logEntryAdapter.removeOne);
   }
 );

@@ -6,7 +6,6 @@ import { MockClientSocket } from "../../test-utils";
 import { rrid } from "../../../shared/util";
 import {
   EMPTY_ENTITY_COLLECTION,
-  makeEntityCollection,
   RRActiveSong,
   RRPlayer,
 } from "../../../shared/state";
@@ -31,17 +30,17 @@ describe("MapMusicIndicator", () => {
 
     act(() => {
       mockSocket.__receiveSetState({
-        players: makeEntityCollection({
+        players: {
           entities: {
             [playerId]: {
               name: "Ron",
             },
           },
           ids: [playerId],
-        }),
+        },
         ephemeral: {
           players: EMPTY_ENTITY_COLLECTION,
-          activeSongs: makeEntityCollection({
+          activeSongs: {
             entities: {
               [id1]: {
                 id: id1,
@@ -52,7 +51,7 @@ describe("MapMusicIndicator", () => {
               },
             },
             ids: [id1],
-          }),
+          },
         },
       });
     });
@@ -74,18 +73,20 @@ describe("MapMusicIndicator", () => {
     act(() => {
       const id2 = rrid<RRActiveSong>();
 
+      const doesNotExistPlayerId = rrid<RRPlayer>();
+
       mockSocket.__receiveSetState({
-        players: makeEntityCollection({
+        players: {
           entities: {
             [playerId]: {
               name: "Ron",
             },
           },
           ids: [playerId],
-        }),
+        },
         ephemeral: {
           players: EMPTY_ENTITY_COLLECTION,
-          activeSongs: makeEntityCollection({
+          activeSongs: {
             entities: {
               [id1]: {
                 id: id1,
@@ -99,11 +100,11 @@ describe("MapMusicIndicator", () => {
                 song: {
                   name: "another song",
                 },
-                addedBy: "does-not-exist",
+                addedBy: doesNotExistPlayerId,
               },
             },
             ids: [id1, id2],
-          }),
+          },
         },
       });
     });

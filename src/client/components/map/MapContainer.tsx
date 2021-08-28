@@ -10,7 +10,6 @@ import {
   mapSettingsUpdate,
 } from "../../../shared/actions";
 import {
-  byId,
   entries,
   RRColor,
   RRMapObject,
@@ -95,7 +94,7 @@ export type MapEditState =
 
 export default function MapContainer() {
   const myself = useMyself();
-  const map = useServerState((s) => byId(s.maps.entities, myself.currentMap)!);
+  const map = useServerState((s) => s.maps.entities[myself.currentMap]!);
   const mapId = map.id;
   const dispatch = useServerDispatch();
   const [settings] = useRRSettings();
@@ -272,13 +271,13 @@ export default function MapContainer() {
 
         function move(updater: (position: RRPoint) => RRPoint) {
           dispatch((state) => {
-            const map = byId(state.maps.entities, mapId);
+            const map = state.maps.entities[mapId];
             if (!map) {
               return [];
             }
 
             return selectedMapObjectIds.flatMap((selectedMapObjectId) => {
-              const object = byId(map.objects.entities, selectedMapObjectId);
+              const object = map.objects.entities[selectedMapObjectId];
               if (!object) {
                 return [];
               }
@@ -422,7 +421,7 @@ export default function MapContainer() {
     (updater: React.SetStateAction<RRPoint[]>) =>
       dispatch((state) => {
         const oldMeasurePath =
-          byId(state.ephemeral.players.entities, myself.id)?.measurePath ?? [];
+          state.ephemeral.players.entities[myself.id]?.measurePath ?? [];
         const newMeasurePath =
           typeof updater === "function" ? updater(oldMeasurePath) : updater;
 
@@ -479,8 +478,7 @@ export default function MapContainer() {
               revealedAreas:
                 typeof areasOrUpdater === "function"
                   ? areasOrUpdater(
-                      byId(state.maps.entities, mapId)?.settings
-                        .revealedAreas ?? null
+                      state.maps.entities[mapId]?.settings.revealedAreas ?? null
                     )
                   : areasOrUpdater,
             },
@@ -506,7 +504,7 @@ export default function MapContainer() {
   const onSmartSetTotalHP = useCallback(
     (characterId: RRCharacterID, newTotalHP: number) =>
       dispatch((state) => {
-        const character = byId(state.characters.entities, characterId);
+        const character = state.characters.entities[characterId];
         if (!character) {
           return [];
         }
@@ -529,7 +527,7 @@ export default function MapContainer() {
     ({ snapshot }) =>
       (d: RRPoint) => {
         dispatch((state) => {
-          const map = byId(state.maps.entities, mapId);
+          const map = state.maps.entities[mapId];
           if (!map) {
             return [];
           }
@@ -538,7 +536,7 @@ export default function MapContainer() {
             .getLoadable(selectedMapObjectIdsAtom)
             .getValue()
             .flatMap((selectedMapObjectId) => {
-              const object = byId(map.objects.entities, selectedMapObjectId);
+              const object = map.objects.entities[selectedMapObjectId];
               if (object && (object.type === "token" || !object.locked)) {
                 return {
                   actions: [
@@ -563,7 +561,7 @@ export default function MapContainer() {
     ({ snapshot }) =>
       () =>
         dispatch((state) => {
-          const map = byId(state.maps.entities, mapId);
+          const map = state.maps.entities[mapId];
           if (!map) {
             return [];
           }
@@ -572,7 +570,7 @@ export default function MapContainer() {
             .getLoadable(selectedMapObjectIdsAtom)
             .getValue()
             .flatMap((selectedMapObjectId) => {
-              const object = byId(map.objects.entities, selectedMapObjectId);
+              const object = map.objects.entities[selectedMapObjectId];
               if (object && (object.type === "token" || !object.locked)) {
                 const position = withDo(object, (object) => {
                   // TODO: We have a "snapping" button in the toolbar, which we

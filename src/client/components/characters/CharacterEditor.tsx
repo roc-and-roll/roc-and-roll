@@ -7,7 +7,6 @@ import {
 } from "../../../shared/actions";
 import { randomColor } from "../../../shared/colors";
 import {
-  byId,
   conditionNames,
   linkedModifierNames,
   RRCharacter,
@@ -124,10 +123,10 @@ export function CharacterEditor({
 
   const setAuras = (updater: React.SetStateAction<RRCharacter["auras"]>) =>
     dispatch((state) => {
-      const oldAuras = byId(
-        state[isTemplate ? "characterTemplates" : "characters"].entities,
-        character.id
-      )?.auras;
+      const oldAuras =
+        state[isTemplate ? "characterTemplates" : "characters"].entities[
+          character.id
+        ]?.auras;
 
       if (oldAuras === undefined) {
         return [];
@@ -148,10 +147,10 @@ export function CharacterEditor({
     updater: React.SetStateAction<RRCharacter["conditions"]>
   ) =>
     dispatch((state) => {
-      const oldConditions = byId(
-        state[isTemplate ? "characterTemplates" : "characters"].entities,
-        character.id
-      )?.conditions;
+      const oldConditions =
+        state[isTemplate ? "characterTemplates" : "characters"].entities[
+          character.id
+        ]?.conditions;
 
       if (oldConditions === undefined) {
         return [];
@@ -240,11 +239,9 @@ export function CharacterEditor({
             label={modifier}
             onChange={(newValue) =>
               dispatch((state) => {
-                const oldAttributes = byId(
-                  (isTemplate ? state.characterTemplates : state.characters)
-                    .entities,
-                  character.id
-                )?.attributes;
+                const oldAttributes = (
+                  isTemplate ? state.characterTemplates : state.characters
+                ).entities[character.id]?.attributes;
 
                 if (!oldAttributes) {
                   return [];

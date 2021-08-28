@@ -1,3 +1,4 @@
+import { DeepPartial } from "@reduxjs/toolkit";
 import React, {
   useCallback,
   useContext,
@@ -17,7 +18,6 @@ import {
 } from "../shared/constants";
 import { reducer } from "../shared/reducer";
 import {
-  EntityCollection,
   initialSyncedState,
   OptimisticUpdateID,
   RRID,
@@ -96,22 +96,8 @@ class OptimisticActionAppliers {
   }
 }
 
-// DeepPartial chokes on Records with opaque ids as key.
-type DeepPartialWithEntityCollectionFix<T> = {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  [K in keyof T]?: T[K] extends object
-    ? T[K] extends EntityCollection<infer E>
-      ? {
-          entities?: Record<E["id"], E>;
-          ids?: E["id"][];
-          __trait?: E;
-        }
-      : DeepPartialWithEntityCollectionFix<T[K]>
-    : T[K];
-};
-
 export type StatePatch<D> = {
-  patch: DeepPartialWithEntityCollectionFix<D>;
+  patch: DeepPartial<D>;
   deletedKeys: string[];
 };
 

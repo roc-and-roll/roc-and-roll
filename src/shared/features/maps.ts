@@ -1,9 +1,4 @@
-import {
-  createEntityAdapter,
-  createReducer,
-  Draft,
-  isAnyOf,
-} from "@reduxjs/toolkit";
+import { createEntityAdapter, createReducer, isAnyOf } from "@reduxjs/toolkit";
 import {
   mapAdd,
   mapUpdate,
@@ -13,7 +8,7 @@ import {
   mapObjectRemove,
   mapSettingsUpdate,
 } from "../actions";
-import { byId, initialSyncedState, RRMap, RRMapObject } from "../state";
+import { initialSyncedState, RRMap, RRMapObject } from "../state";
 
 const mapsAdapter = createEntityAdapter<RRMap>();
 const mapObjectsAdapter = createEntityAdapter<RRMapObject>();
@@ -27,7 +22,7 @@ export const mapsReducer = createReducer(initialSyncedState.maps, (builder) => {
       isAnyOf(mapObjectAdd, mapObjectUpdate, mapObjectRemove),
       (state, action) => {
         const { mapId } = action.payload;
-        const map = byId<Draft<RRMap>>(state.entities, mapId);
+        const map = state.entities[mapId];
         if (!map) {
           console.error("Trying to update map object of unknown map.");
           return state;
@@ -44,7 +39,7 @@ export const mapsReducer = createReducer(initialSyncedState.maps, (builder) => {
     )
     .addMatcher(isAnyOf(mapSettingsUpdate), (state, action) => {
       const { id: mapId } = action.payload;
-      const map = byId<Draft<RRMap>>(state.entities, mapId);
+      const map = state.entities[mapId];
       if (!map) {
         console.error("Trying to update map settings of unknown map.");
         return state;

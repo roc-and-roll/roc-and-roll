@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { GRID_SIZE } from "../../../shared/constants";
-import { byId, RRMapLink, RRMapObject } from "../../../shared/state";
+import { RRMapLink, RRMapObject } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import { useServerState } from "../../state";
 import { useLatest } from "../../useLatest";
@@ -27,7 +27,7 @@ export function MapLink({
     [canControl]
   );
   const mapName = useServerState(
-    (state) => byId(state.maps.entities, link.mapId)?.settings.name
+    (state) => state.maps.entities[link.mapId]?.settings.name
   );
   const players = useServerState((state) => state.players);
   const [menuVisible, setMenuVisible] = useState(false);

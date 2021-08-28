@@ -1,0 +1,215 @@
+diff --git a/dist/entities/create_adapter.d.ts b/dist/entities/create_adapter.d.ts
+index b7775d64ef40e9b140de86ce90f7af6b2f336fbd..080fb71568ed5d7f87a1c2a7f615a14120316b1d 100644
+--- a/dist/entities/create_adapter.d.ts
++++ b/dist/entities/create_adapter.d.ts
+@@ -5,7 +5,7 @@ import type { Comparer, IdSelector, EntityAdapter } from './models';
+  *
+  * @public
+  */
+-export declare function createEntityAdapter<T>(options?: {
+-    selectId?: IdSelector<T>;
++export declare function createEntityAdapter<T extends { id: string }>(options?: {
++    selectId?: IdSelector<T, T["id"]>;
+     sortComparer?: false | Comparer<T>;
+-}): EntityAdapter<T>;
++}): EntityAdapter<T, T["id"]>;
+diff --git a/dist/entities/entity_state.d.ts b/dist/entities/entity_state.d.ts
+index eabaecfc92f54ff373156f438be06db75baacf96..32abc211a617b0a7dee32be29f37be7e2a7df0e9 100644
+--- a/dist/entities/entity_state.d.ts
++++ b/dist/entities/entity_state.d.ts
+@@ -1,8 +1,8 @@
+ import type { EntityState } from './models';
+-export declare function getInitialEntityState<V>(): EntityState<V>;
+-export declare function createInitialStateFactory<V>(): {
++export declare function getInitialEntityState<V, I extends keyof any>(): EntityState<V, I>;
++export declare function createInitialStateFactory<V, I extends keyof any>(): {
+     getInitialState: {
+-        (): EntityState<V>;
+-        <S extends object>(additionalState: S): EntityState<V> & S;
++        (): EntityState<V, I>;
++        <S extends object>(additionalState: S): EntityState<V, I> & S;
+     };
+ };
+diff --git a/dist/entities/models.d.ts b/dist/entities/models.d.ts
+index 1b746f8adbd2d960b59caaedfdcd0c1f376a11cd..61211a88fddf25beebfb040a8c28063679d49ab5 100644
+--- a/dist/entities/models.d.ts
++++ b/dist/entities/models.d.ts
+@@ -11,7 +11,7 @@ export declare type Comparer<T> = (a: T, b: T) => number;
+ /**
+  * @public
+  */
+-export declare type IdSelector<T> = (model: T) => EntityId;
++export declare type IdSelector<T, I> = (model: T) => I;
+ /**
+  * @public
+  */
+@@ -27,71 +27,71 @@ export interface Dictionary<T> extends DictionaryNum<T> {
+ /**
+  * @public
+  */
+-export declare type Update<T> = {
+-    id: EntityId;
++export declare type Update<T, I extends keyof any> = {
++    id: I;
+     changes: Partial<T>;
+ };
+ /**
+  * @public
+  */
+-export interface EntityState<T> {
+-    ids: EntityId[];
+-    entities: Dictionary<T>;
++export interface EntityState<T, I extends keyof any> {
++    ids: I[];
++    entities: Record<I, T>;
+ }
+ /**
+  * @public
+  */
+-export interface EntityDefinition<T> {
+-    selectId: IdSelector<T>;
++export interface EntityDefinition<T, I extends keyof any> {
++    selectId: IdSelector<T, I>;
+     sortComparer: false | Comparer<T>;
+ }
+-export declare type PreventAny<S, T> = IsAny<S, EntityState<T>, S>;
++export declare type PreventAny<S, T, I extends keyof any> = IsAny<S, EntityState<T, I>, S>;
+ /**
+  * @public
+  */
+-export interface EntityStateAdapter<T> {
+-    addOne<S extends EntityState<T>>(state: PreventAny<S, T>, entity: T): S;
+-    addOne<S extends EntityState<T>>(state: PreventAny<S, T>, action: PayloadAction<T>): S;
+-    addMany<S extends EntityState<T>>(state: PreventAny<S, T>, entities: readonly T[] | Record<EntityId, T>): S;
+-    addMany<S extends EntityState<T>>(state: PreventAny<S, T>, entities: PayloadAction<readonly T[] | Record<EntityId, T>>): S;
+-    setOne<S extends EntityState<T>>(state: PreventAny<S, T>, entity: T): S;
+-    setOne<S extends EntityState<T>>(state: PreventAny<S, T>, action: PayloadAction<T>): S;
+-    setMany<S extends EntityState<T>>(state: PreventAny<S, T>, entities: readonly T[] | Record<EntityId, T>): S;
+-    setMany<S extends EntityState<T>>(state: PreventAny<S, T>, entities: PayloadAction<readonly T[] | Record<EntityId, T>>): S;
+-    setAll<S extends EntityState<T>>(state: PreventAny<S, T>, entities: readonly T[] | Record<EntityId, T>): S;
+-    setAll<S extends EntityState<T>>(state: PreventAny<S, T>, entities: PayloadAction<readonly T[] | Record<EntityId, T>>): S;
+-    removeOne<S extends EntityState<T>>(state: PreventAny<S, T>, key: EntityId): S;
+-    removeOne<S extends EntityState<T>>(state: PreventAny<S, T>, key: PayloadAction<EntityId>): S;
+-    removeMany<S extends EntityState<T>>(state: PreventAny<S, T>, keys: readonly EntityId[]): S;
+-    removeMany<S extends EntityState<T>>(state: PreventAny<S, T>, keys: PayloadAction<readonly EntityId[]>): S;
+-    removeAll<S extends EntityState<T>>(state: PreventAny<S, T>): S;
+-    updateOne<S extends EntityState<T>>(state: PreventAny<S, T>, update: Update<T>): S;
+-    updateOne<S extends EntityState<T>>(state: PreventAny<S, T>, update: PayloadAction<Update<T>>): S;
+-    updateMany<S extends EntityState<T>>(state: PreventAny<S, T>, updates: ReadonlyArray<Update<T>>): S;
+-    updateMany<S extends EntityState<T>>(state: PreventAny<S, T>, updates: PayloadAction<ReadonlyArray<Update<T>>>): S;
+-    upsertOne<S extends EntityState<T>>(state: PreventAny<S, T>, entity: T): S;
+-    upsertOne<S extends EntityState<T>>(state: PreventAny<S, T>, entity: PayloadAction<T>): S;
+-    upsertMany<S extends EntityState<T>>(state: PreventAny<S, T>, entities: readonly T[] | Record<EntityId, T>): S;
+-    upsertMany<S extends EntityState<T>>(state: PreventAny<S, T>, entities: PayloadAction<readonly T[] | Record<EntityId, T>>): S;
++export interface EntityStateAdapter<T, I extends keyof any> {
++    addOne<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, entity: T): S;
++    addOne<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, action: PayloadAction<T>): S;
++    addMany<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, entities: readonly T[] | Record<I, T>): S;
++    addMany<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, entities: PayloadAction<readonly T[] | Record<I, T>>): S;
++    setOne<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, entity: T): S;
++    setOne<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, action: PayloadAction<T>): S;
++    setMany<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, entities: readonly T[] | Record<I, T>): S;
++    setMany<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, entities: PayloadAction<readonly T[] | Record<I, T>>): S;
++    setAll<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, entities: readonly T[] | Record<I, T>): S;
++    setAll<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, entities: PayloadAction<readonly T[] | Record<I, T>>): S;
++    removeOne<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, key: I): S;
++    removeOne<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, key: PayloadAction<I>): S;
++    removeMany<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, keys: readonly I[]): S;
++    removeMany<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, keys: PayloadAction<readonly I[]>): S;
++    removeAll<S extends EntityState<T, I>>(state: PreventAny<S, T, I>): S;
++    updateOne<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, update: Update<T, I>): S;
++    updateOne<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, update: PayloadAction<Update<T, I>>): S;
++    updateMany<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, updates: ReadonlyArray<Update<T, I>>): S;
++    updateMany<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, updates: PayloadAction<ReadonlyArray<Update<T, I>>>): S;
++    upsertOne<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, entity: T): S;
++    upsertOne<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, entity: PayloadAction<T>): S;
++    upsertMany<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, entities: readonly T[] | Record<I, T>): S;
++    upsertMany<S extends EntityState<T, I>>(state: PreventAny<S, T, I>, entities: PayloadAction<readonly T[] | Record<I, T>>): S;
+ }
+ /**
+  * @public
+  */
+-export interface EntitySelectors<T, V> {
+-    selectIds: (state: V) => EntityId[];
+-    selectEntities: (state: V) => Dictionary<T>;
++export interface EntitySelectors<T, V, I extends keyof any> {
++    selectIds: (state: V) => I[];
++    selectEntities: (state: V) => Record<I, T>;
+     selectAll: (state: V) => T[];
+     selectTotal: (state: V) => number;
+-    selectById: (state: V, id: EntityId) => T | undefined;
++    selectById: (state: V, id: I) => T | undefined;
+ }
+ /**
+  * @public
+  */
+-export interface EntityAdapter<T> extends EntityStateAdapter<T> {
+-    selectId: IdSelector<T>;
++export interface EntityAdapter<T, I extends keyof any> extends EntityStateAdapter<T, I> {
++    selectId: IdSelector<T, I>;
+     sortComparer: false | Comparer<T>;
+-    getInitialState(): EntityState<T>;
+-    getInitialState<S extends object>(state: S): EntityState<T> & S;
+-    getSelectors(): EntitySelectors<T, EntityState<T>>;
+-    getSelectors<V>(selectState: (state: V) => EntityState<T>): EntitySelectors<T, V>;
++    getInitialState(): EntityState<T, I>;
++    getInitialState<S extends object>(state: S): EntityState<T, I> & S;
++    getSelectors(): EntitySelectors<T, EntityState<T, I>, I>;
++    getSelectors<V>(selectState: (state: V) => EntityState<T, I>): EntitySelectors<T, V, I>;
+ }
+diff --git a/dist/entities/sorted_state_adapter.d.ts b/dist/entities/sorted_state_adapter.d.ts
+index f9a36805e2c8b71f4526e881e7658a93533be41f..13dc1b8eb7f817aec5efb425f7fafd89f75ed9c7 100644
+--- a/dist/entities/sorted_state_adapter.d.ts
++++ b/dist/entities/sorted_state_adapter.d.ts
+@@ -1,2 +1,2 @@
+ import type { IdSelector, Comparer, EntityStateAdapter } from './models';
+-export declare function createSortedStateAdapter<T>(selectId: IdSelector<T>, sort: Comparer<T>): EntityStateAdapter<T>;
++export declare function createSortedStateAdapter<T, I extends keyof any>(selectId: IdSelector<T, I>, sort: Comparer<T>): EntityStateAdapter<T, I>;
+diff --git a/dist/entities/state_adapter.d.ts b/dist/entities/state_adapter.d.ts
+index 09f55ce1604d65bc9e24c8d6e9f9211857a1fcbd..4abf13ac061fd222903c7419b595c7bba9aa4347 100644
+--- a/dist/entities/state_adapter.d.ts
++++ b/dist/entities/state_adapter.d.ts
+@@ -1,5 +1,5 @@
+ import type { EntityState, PreventAny } from './models';
+ import type { PayloadAction } from '../createAction';
+ import { IsAny } from '../tsHelpers';
+-export declare function createSingleArgumentStateOperator<V>(mutator: (state: EntityState<V>) => void): <S extends EntityState<V>>(state: IsAny<S, EntityState<V>, S>) => S;
+-export declare function createStateOperator<V, R>(mutator: (arg: R, state: EntityState<V>) => void): <S extends EntityState<V>>(state: S, arg: R | PayloadAction<R>) => S;
++export declare function createSingleArgumentStateOperator<V, I extends keyof any>(mutator: (state: EntityState<V, I>) => void): <S extends EntityState<V, I>>(state: IsAny<S, EntityState<V, I>, S>) => S;
++export declare function createStateOperator<V, R, I extends keyof any>(mutator: (arg: R, state: EntityState<V, I>) => void): <S extends EntityState<V, I>>(state: S, arg: R | PayloadAction<R>) => S;
+diff --git a/dist/entities/state_selectors.d.ts b/dist/entities/state_selectors.d.ts
+index 2acb64ee8b3f8aba1b6f437648f627d9f6d8131f..409e6701694f74e80970819882b170bc1cf78d12 100644
+--- a/dist/entities/state_selectors.d.ts
++++ b/dist/entities/state_selectors.d.ts
+@@ -1,7 +1,7 @@
+ import type { EntityState, EntitySelectors } from './models';
+-export declare function createSelectorsFactory<T>(): {
++export declare function createSelectorsFactory<T, I extends keyof any>(): {
+     getSelectors: {
+-        (): EntitySelectors<T, EntityState<T>>;
+-        <V>(selectState: (state: V) => EntityState<T>): EntitySelectors<T, V>;
++        (): EntitySelectors<T, EntityState<T, I>, I>;
++        <V>(selectState: (state: V) => EntityState<T, I>): EntitySelectors<T, V, I>;
+     };
+ };
+diff --git a/dist/entities/unsorted_state_adapter.d.ts b/dist/entities/unsorted_state_adapter.d.ts
+index 3824c6a805edfa38377a7c2dbdf57d32999870ca..445f6b8d85ea42194f9a52c60554446977837c8c 100644
+--- a/dist/entities/unsorted_state_adapter.d.ts
++++ b/dist/entities/unsorted_state_adapter.d.ts
+@@ -1,2 +1,2 @@
+ import type { EntityStateAdapter, IdSelector } from './models';
+-export declare function createUnsortedStateAdapter<T>(selectId: IdSelector<T>): EntityStateAdapter<T>;
++export declare function createUnsortedStateAdapter<T, I extends keyof any>(selectId: IdSelector<T, I>): EntityStateAdapter<T, I>;
+diff --git a/dist/entities/utils.d.ts b/dist/entities/utils.d.ts
+index 8735dc3fed77d11437e008367eddb16e1d350806..db26d7287794a13768a6127c51a7ee52b9bdedf2 100644
+--- a/dist/entities/utils.d.ts
++++ b/dist/entities/utils.d.ts
+@@ -1,4 +1,4 @@
+-import type { EntityState, IdSelector, Update, EntityId } from './models';
+-export declare function selectIdValue<T>(entity: T, selectId: IdSelector<T>): EntityId;
+-export declare function ensureEntitiesArray<T>(entities: readonly T[] | Record<EntityId, T>): readonly T[];
+-export declare function splitAddedUpdatedEntities<T>(newEntities: readonly T[] | Record<EntityId, T>, selectId: IdSelector<T>, state: EntityState<T>): [T[], Update<T>[]];
++import type { EntityState, IdSelector, Update } from './models';
++export declare function selectIdValue<T, I extends keyof any>(entity: T, selectId: IdSelector<T, I>): I;
++export declare function ensureEntitiesArray<T, I extends keyof any>(entities: readonly T[] | Record<I, T>): readonly T[];
++export declare function splitAddedUpdatedEntities<T, I extends keyof any>(newEntities: readonly T[] | Record<I, T>, selectId: IdSelector<T, I>, state: EntityState<T, I>): [T[], Update<T, I>[]];

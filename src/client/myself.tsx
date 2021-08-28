@@ -2,7 +2,7 @@ import React, { useContext, useLayoutEffect, useMemo } from "react";
 import { useRecoilValue } from "recoil";
 import { useSetRecoilState } from "recoil";
 import { atom } from "recoil";
-import { byId, RRPlayer, RRPlayerID } from "../shared/state";
+import { RRPlayer, RRPlayerID } from "../shared/state";
 import { useAutoDispatchPlayerIdOnChange, useServerState } from "./state";
 import useLocalState from "./useLocalState";
 
@@ -46,7 +46,7 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
 
   // Important: Use useMyself everywhere else!
   const myself = useServerState(
-    (state) => (myPlayerId && byId(state.players.entities, myPlayerId)) ?? null
+    (state) => (myPlayerId && state.players.entities[myPlayerId]) ?? null
   );
 
   const setId = useSetRecoilState(myIdAtom);

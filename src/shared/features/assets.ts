@@ -7,20 +7,19 @@ import {
   assetSongRemove,
   assetSongUpdate,
 } from "../actions";
-import { initialSyncedState, RRImage, RRSong } from "../state";
+import { initialSyncedState, RRAsset } from "../state";
 
-const assetsImageAdapter = createEntityAdapter<RRImage>();
-const assetsSongAdapter = createEntityAdapter<RRSong>();
+const assetAdapter = createEntityAdapter<RRAsset>();
 
 export const assetsReducer = createReducer(
   initialSyncedState.assets,
   (builder) => {
     builder
-      .addCase(assetImageAdd, assetsImageAdapter.addOne)
-      .addCase(assetSongAdd, assetsSongAdapter.addOne)
-      .addCase(assetImageUpdate, assetsImageAdapter.updateOne)
-      .addCase(assetSongUpdate, assetsSongAdapter.updateOne)
-      .addCase(assetImageRemove, assetsImageAdapter.removeOne)
-      .addCase(assetSongRemove, assetsSongAdapter.removeOne);
+      .addCase(assetImageAdd, assetAdapter.addOne)
+      .addCase(assetSongAdd, assetAdapter.addOne)
+      .addCase(assetImageUpdate, assetAdapter.updateOne)
+      .addCase(assetSongUpdate, assetAdapter.updateOne)
+      .addCase(assetImageRemove, assetAdapter.removeOne)
+      .addCase(assetSongRemove, assetAdapter.removeOne);
   }
 );

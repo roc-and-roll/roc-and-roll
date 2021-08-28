@@ -22,7 +22,7 @@ async function ask(question: string): Promise<string> {
 }
 
 class StateInvalidError extends Error {
-  constructor(message: string, public readonly wrappedError?: Error) {
+  constructor(message: string, public readonly wrappedError?: unknown) {
     super(message);
   }
 }

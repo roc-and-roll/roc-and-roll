@@ -5,7 +5,6 @@ import {
   RRPlayerID,
   RRCharacter,
   RRCharacterID,
-  byId,
   EntityCollection,
   RRID,
 } from "../../../shared/state";
@@ -96,7 +95,7 @@ function useReduxToRecoilBridge<E extends { id: RRID }>(
 
         newIds.forEach((newId) => {
           const atom = familyAtom(newId);
-          const newEntity = byId(newEntities, newId)!;
+          const newEntity = newEntities[newId]!;
           const oldEntity = get(atom);
           if (!Object.is(newEntity, oldEntity)) {
             set(atom, newEntity);

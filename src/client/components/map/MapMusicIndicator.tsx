@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import tinycolor from "tinycolor2";
-import { byId, entries, RRColor } from "../../../shared/state";
+import { entries, RRColor } from "../../../shared/state";
 import { useRRSettings } from "../../settings";
 import { useServerState } from "../../state";
 import { contrastColor } from "../../util";
@@ -20,7 +20,7 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
       .map(
         (activeSong) =>
           `${activeSong.song.name} [${
-            byId(players, activeSong.addedBy)?.name ?? "Unknown Player"
+            players[activeSong.addedBy]?.name ?? "Unknown Player"
           }]`
       )
       .join(", ");

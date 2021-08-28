@@ -1,7 +1,6 @@
 import React from "react";
 import { Matrix } from "transformation-matrix";
 import {
-  byId,
   EntityCollection,
   RRMapID,
   RRPlayer,
@@ -35,7 +34,7 @@ export function MouseCursors({
           return null;
         }
 
-        const player = byId(players.entities, ephemeralPlayerId);
+        const player = players.entities[ephemeralPlayerId];
         if (!player || player.currentMap !== mapId) {
           return null;
         }

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  byId,
   entries,
   RRPrivateChatID,
   RRPrivateChatMessage,
@@ -38,11 +37,11 @@ export default function PrivateChats() {
 
 function Chat({ id, close }: { id: RRPrivateChatID; close: () => void }) {
   const dispatch = useServerDispatch();
-  const chat = useServerState((state) => byId(state.privateChats.entities, id));
+  const chat = useServerState((state) => state.privateChats.entities[id]);
   const myself = useMyself();
   const otherId = chat ? chatRecipient(chat, myself.id) : null;
   const otherPlayer = useServerState((state) =>
-    otherId ? byId(state.players.entities, otherId) : null
+    otherId ? state.players.entities[otherId] : null
   );
   const [scrollRef, scrollDownNow] = useScrollToBottom<HTMLUListElement>([
     !!chat,
@@ -145,7 +144,7 @@ function ContactList({
   );
 
   const myChats = chatIds
-    .map((id) => byId(chats, id)!)
+    .map((id) => chats[id]!)
     .filter((chat) => chat.idA === myself.id || chat.idB === myself.id);
 
   return (

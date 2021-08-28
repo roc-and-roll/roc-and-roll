@@ -1366,7 +1366,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@beyonk/google-fonts-webpack-plugin@^1.7.0":
+"@beyonk/google-fonts-webpack-plugin@npm:^1.7.0":
   version: 1.7.0
   resolution: "@beyonk/google-fonts-webpack-plugin@npm:1.7.0"
   dependencies:
@@ -1381,18 +1381,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@beyonk/google-fonts-webpack-plugin@patch:@beyonk/google-fonts-webpack-plugin@^1.7.0#./patches/@beyonk/google-fonts-webpack-plugin.patch::locator=roc-and-roll%40workspace%3A.":
-  version: 1.7.0
-  resolution: "@beyonk/google-fonts-webpack-plugin@patch:@beyonk/google-fonts-webpack-plugin@npm%3A1.7.0#./patches/@beyonk/google-fonts-webpack-plugin.patch::version=1.7.0&hash=08f77e&locator=roc-and-roll%40workspace%3A."
+"@cspotcode/source-map-consumer@npm:0.8.0":
+  version: 0.8.0
+  resolution: "@cspotcode/source-map-consumer@npm:0.8.0"
+  checksum: c0c16ca3d2f58898f1bd74c4f41a189dbcc202e642e60e489cbcc2e52419c4e89bdead02c886a12fb13ea37798ede9e562b2321df997ebc210ae9bd881561b4e
+  languageName: node
+  linkType: hard
+
+"@cspotcode/source-map-support@npm:0.6.1":
+  version: 0.6.1
+  resolution: "@cspotcode/source-map-support@npm:0.6.1"
   dependencies:
-    lodash: ^4.17.4
-    md5: ^2.2.1
-    node-fetch: ^2.1.2
-    webpack-sources: ^1.1.0
-    yauzl: ^2.8.0
-  peerDependencies:
-    webpack: ">=4.14.0"
-  checksum: c8434ffd64cd3bf7e5953a26e0949e266aaccf34db34f31cba7c767260d40a6462597aa9598247d31d6ac1afde81a501aa3d256a2a6fd1d7e533033f827623d1
+    "@cspotcode/source-map-consumer": 0.8.0
+  checksum: da9fb4f6404ebd210537bfa8b2821a747407bf422d2d3d46f29bf85c7c3a68a126de1a9ec41398d57ca116c3bef56d58c2fb4def0800630b1ec82533ad2447c2
   languageName: node
   linkType: hard
 
@@ -1864,9 +1865,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@reduxjs/toolkit@npm:^1.6.0":
-  version: 1.6.0
-  resolution: "@reduxjs/toolkit@npm:1.6.0"
+"@reduxjs/toolkit@npm:^1.6.1":
+  version: 1.6.1
+  resolution: "@reduxjs/toolkit@npm:1.6.1"
   dependencies:
     immer: ^9.0.1
     redux: ^4.1.0
@@ -1880,7 +1881,7 @@ __metadata:
       optional: true
     react-redux:
       optional: true
-  checksum: 042cbba9af85dd7efc1fd16c4e23791564f955a77cb84bd60c66d0d00224552dc0092b48aa7a30bb811160f94917f708ada7a58b2b7a1c3e36f03fefe29ffd8f
+  checksum: 487e34003671b4bf3fbb983dd4d6e23ddeea0170aaefee765e38a7942b317895c8fae91a82dd698489a072c4ca8be9d317749a329ad9fb0129c3ed96f6142c18
   languageName: node
   linkType: hard
 
@@ -2173,10 +2174,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node16@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "@tsconfig/node16@npm:1.0.1"
-  checksum: 5fdfd91e48dc1f406cb59d19fd450a594ea6279f3be54a50bd6fd6b8d189a53bb930f2e7d496cbc3bb45fbb23f0ce5c69086f90c796ce8441cbd2a26fb738fd5
+"@tsconfig/node16@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "@tsconfig/node16@npm:1.0.2"
+  checksum: ca94d3639714672bbfd55f03521d3f56bb6a25479bd425da81faf21f13e1e9d15f40f97377dedbbf477a5841c5b0c8f4cd1b391f33553d750b9202c54c2c07aa
   languageName: node
   linkType: hard
 
@@ -3063,6 +3064,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"acorn-walk@npm:^8.1.1":
+  version: 8.1.1
+  resolution: "acorn-walk@npm:8.1.1"
+  checksum: 5e4dafbcec14fbfac96e1f13726273e969a30fdf607ed4eb6ca335292f85b8c896393fee15837a8f2b27afd7ede0f1c6edb5b5e6d0123a8821fee1a834318e62
+  languageName: node
+  linkType: hard
+
 "acorn@npm:^7.1.1, acorn@npm:^7.4.0":
   version: 7.4.1
   resolution: "acorn@npm:7.4.1"
@@ -3078,6 +3086,15 @@ __metadata:
   bin:
     acorn: bin/acorn
   checksum: 9ccc11b2b3e3bdb8801ac23a0da38c0f2996445f63aacde0f5022effa550f18fdf9fea77e85c33f00386a277cce4dfdbcb2f3dbb8af29a6d3a707c78af1d5e90
+  languageName: node
+  linkType: hard
+
+"acorn@npm:^8.4.1":
+  version: 8.4.1
+  resolution: "acorn@npm:8.4.1"
+  bin:
+    acorn: bin/acorn
+  checksum: 0a8fd264349285aa36194b26a5a9d70c3641e78ad459ec44b9a9a5738e0ce6d86ec120ca2c0f04477165cee912fdeb158f62d6582697185c82278bdbf71187f8
   languageName: node
   linkType: hard
 
@@ -6216,9 +6233,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fork-ts-checker-webpack-plugin@npm:^6.2.12":
-  version: 6.2.12
-  resolution: "fork-ts-checker-webpack-plugin@npm:6.2.12"
+"fork-ts-checker-webpack-plugin@npm:^6.3.2":
+  version: 6.3.2
+  resolution: "fork-ts-checker-webpack-plugin@npm:6.3.2"
   dependencies:
     "@babel/code-frame": ^7.8.3
     "@types/json-schema": ^7.0.5
@@ -6233,7 +6250,7 @@ __metadata:
     schema-utils: 2.7.0
     semver: ^7.3.2
     tapable: ^1.0.0
-  checksum: 0ba28ccafe28fffcca4fda7d68a31561785de2731f8d9b536fb2f5a76ea16c04751b091548a7b2d7dbc9a0a3184e88b41ef2718f6082e329ad1e1f2ab4ccc6d6
+  checksum: bd3e4745bbb629cf9d01c658eb4aabe9dbb5c6a959c416ec6a4bb9a4c092120f91622d8cd85a2c0af56adfbc8cf39e8815322f115dc524671cb802d1dc13c6e6
   languageName: node
   linkType: hard
 
@@ -11013,9 +11030,9 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"recoil@npm:^0.4.0":
-  version: 0.4.0
-  resolution: "recoil@npm:0.4.0"
+"recoil@npm:^0.4.1":
+  version: 0.4.1
+  resolution: "recoil@npm:0.4.1"
   dependencies:
     hamt_plus: 1.0.2
   peerDependencies:
@@ -11025,7 +11042,7 @@ fsevents@^1.2.7:
       optional: true
     react-native:
       optional: true
-  checksum: e0bd5fdab82616a1b73eb337fe0c964bb6f324030bc56bd5cba337cb00445a32050bcd4d33f2259cf87bbed8bd33e4bc42be789f98464b7c04d39cebd6b8b9de
+  checksum: a11a93e5168d22500b8b981b0ae9c31a81987f5d7213f8be9531c3938d1b2c192ee664d94c9a70302248a292cb21ec430b0e8113f751d0ff46185ebf32c58c95
   languageName: node
   linkType: hard
 
@@ -11052,6 +11069,15 @@ fsevents@^1.2.7:
   dependencies:
     "@babel/runtime": ^7.9.2
   checksum: 322d5f4b49cbbdb3f64f04e9279cabbdea9a698024b530dc98563eb598b6bd55ff8a715208e3ee09db9802a2f426c991c78906b1c6491ebb52e7310e55ee5cdf
+  languageName: node
+  linkType: hard
+
+"redux@npm:^4.1.1":
+  version: 4.1.1
+  resolution: "redux@npm:4.1.1"
+  dependencies:
+    "@babel/runtime": ^7.9.2
+  checksum: 99519438a5d20b69404ad3816307ccc189f16df04b64c50d82c415ec488ea68b656d7a2fc81b6345e8d90f095344dfea68246500f72613d76464986660bc0485
   languageName: node
   linkType: hard
 
@@ -11456,14 +11482,14 @@ resolve@^2.0.0-next.3:
     "@babel/preset-env": ^7.14.5
     "@babel/preset-react": ^7.14.5
     "@babel/preset-typescript": ^7.14.5
-    "@beyonk/google-fonts-webpack-plugin": "patch:@beyonk/google-fonts-webpack-plugin@^1.7.0#./patches/@beyonk/google-fonts-webpack-plugin.patch"
+    "@beyonk/google-fonts-webpack-plugin": ^1.7.0
     "@doodle3d/clipper-js": ^1.0.11
     "@fortawesome/fontawesome-svg-core": ^1.2.35
     "@fortawesome/free-solid-svg-icons": ^5.15.3
     "@fortawesome/react-fontawesome": ^0.1.14
     "@pmmmwh/react-refresh-webpack-plugin": ^0.4.3
     "@react-three/fiber": ^6.0.18
-    "@reduxjs/toolkit": ^1.6.0
+    "@reduxjs/toolkit": ^1.6.1
     "@seznam/compose-react-refs": ^1.0.6
     "@swc/jest": ^0.1.2
     "@testing-library/jest-dom": ^5.14.1
@@ -11513,7 +11539,7 @@ resolve@^2.0.0-next.3:
     eslint-plugin-react-hooks: ^4.2.0
     express: ^4.17.1
     file-loader: ^6.2.0
-    fork-ts-checker-webpack-plugin: ^6.2.12
+    fork-ts-checker-webpack-plugin: ^6.3.2
     git-revision-webpack-plugin: ^5.0.0
     howler: ^2.2.1
     html-webpack-plugin: ^5.3.1
@@ -11541,8 +11567,8 @@ resolve@^2.0.0-next.3:
     react-lag-radar: ^1.0.0
     react-markdown: ^6.0.2
     react-refresh: ^0.9.0
-    recoil: ^0.4.0
-    redux: ^4.1.0
+    recoil: ^0.4.1
+    redux: ^4.1.1
     regenerator-runtime: ^0.13.8
     remark-breaks: ^2.0.2
     remark-gfm: ^1.0.0
@@ -11557,11 +11583,11 @@ resolve@^2.0.0-next.3:
     three: ^0.127.0
     tinycolor2: ^1.4.2
     transformation-matrix: ^2.8.0
-    ts-loader: ^9.2.3
-    ts-node: ^10.0.0
-    typanion: "patch:typanion@^3.3.1#./patches/typanion.patch"
-    type-fest: ^1.2.1
-    typescript: ^4.3.4
+    ts-loader: ^9.2.5
+    ts-node: ^10.2.1
+    typanion: ^3.3.2
+    type-fest: ^1.4.0
+    typescript: ^4.4.2
     utf-8-validate: ^5.0.5
     webpack: ^5.40.0
     webpack-bundle-analyzer: ^4.4.2
@@ -12223,7 +12249,7 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"source-map-support@npm:^0.5.17, source-map-support@npm:^0.5.19, source-map-support@npm:^0.5.6, source-map-support@npm:~0.5.12, source-map-support@npm:~0.5.19":
+"source-map-support@npm:^0.5.19, source-map-support@npm:^0.5.6, source-map-support@npm:~0.5.12, source-map-support@npm:~0.5.19":
   version: 0.5.19
   resolution: "source-map-support@npm:0.5.19"
   dependencies:
@@ -13004,9 +13030,9 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"ts-loader@npm:^9.2.3":
-  version: 9.2.3
-  resolution: "ts-loader@npm:9.2.3"
+"ts-loader@npm:^9.2.5":
+  version: 9.2.5
+  resolution: "ts-loader@npm:9.2.5"
   dependencies:
     chalk: ^4.1.0
     enhanced-resolve: ^5.0.0
@@ -13015,27 +13041,29 @@ resolve@^2.0.0-next.3:
   peerDependencies:
     typescript: "*"
     webpack: ^5.0.0
-  checksum: 6f44795ae464aa464eb3311adfc202ad0908f620c7fd4053311c8aa35708aede39682fa2f957ddf4a6075d7a0e88086b6e42eee5a87e944883aa189e2cf014a8
+  checksum: e39fab0caac55dc3c57789ea690aca687d033f0d202e2a27cc37aa0f57f987e7a70d033750d4079253e549fdd5c4379e3b5049c17dd1665ab89263dee06f2d1c
   languageName: node
   linkType: hard
 
-"ts-node@npm:^10.0.0":
-  version: 10.0.0
-  resolution: "ts-node@npm:10.0.0"
+"ts-node@npm:^10.2.1":
+  version: 10.2.1
+  resolution: "ts-node@npm:10.2.1"
   dependencies:
+    "@cspotcode/source-map-support": 0.6.1
     "@tsconfig/node10": ^1.0.7
     "@tsconfig/node12": ^1.0.7
     "@tsconfig/node14": ^1.0.0
-    "@tsconfig/node16": ^1.0.1
+    "@tsconfig/node16": ^1.0.2
+    acorn: ^8.4.1
+    acorn-walk: ^8.1.1
     arg: ^4.1.0
     create-require: ^1.1.0
     diff: ^4.0.1
     make-error: ^1.1.1
-    source-map-support: ^0.5.17
     yn: 3.1.1
   peerDependencies:
-    "@swc/core": ">=1.2.45"
-    "@swc/wasm": ">=1.2.45"
+    "@swc/core": ">=1.2.50"
+    "@swc/wasm": ">=1.2.50"
     "@types/node": "*"
     typescript: ">=2.7"
   peerDependenciesMeta:
@@ -13049,7 +13077,7 @@ resolve@^2.0.0-next.3:
     ts-node-script: dist/bin-script.js
     ts-node-transpile-only: dist/bin-transpile.js
     ts-script: dist/bin-script-deprecated.js
-  checksum: 96d633774e13eb90ad49d644f397e99f5da72818e36040bf5b6bd66d0ab369dbb4348e499193c0fa45071f8e9559bb7724174139389e56bb562db36a3842484e
+  checksum: f37d2827a583c51d012cdd3d9b96629fba7a5b5dfad2c26ca48c7c89f904118924689ca56f4b9b2136217194870a76f26aae06e3490ee613b0e960f02dc96bbe
   languageName: node
   linkType: hard
 
@@ -13087,17 +13115,10 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-typanion@^3.3.1:
-  version: 3.3.1
-  resolution: "typanion@npm:3.3.1"
-  checksum: 212d2beb5502028f7879c90508cd7695d83a32b95d9323870d2a2c8b21f68e4cdf2bafbfdd6a2c8f3a37329355e3d5ec6e99c97eecd422adcd8e07011ee7668b
-  languageName: node
-  linkType: hard
-
-"typanion@patch:typanion@^3.3.1#./patches/typanion.patch::locator=roc-and-roll%40workspace%3A.":
-  version: 3.3.1
-  resolution: "typanion@patch:typanion@npm%3A3.3.1#./patches/typanion.patch::version=3.3.1&hash=c85339&locator=roc-and-roll%40workspace%3A."
-  checksum: c24c0ac323c14a12ed0201a51e60e45c4fb7bdf8961d99d0fd5638141da26993687a7425fedf067e928843cc16b911a50fbb392faa96ad5a7eb91a4484c0c2bf
+"typanion@npm:^3.3.2":
+  version: 3.3.2
+  resolution: "typanion@npm:3.3.2"
+  checksum: e7621409eb56cac3145ba3955702682627d4018a8f31b1c8355d354a93b86f7cea339583b211a4dbf7576847dd04aacad4af6912f3c42542e573b9c325e6093c
   languageName: node
   linkType: hard
 
@@ -13154,10 +13175,10 @@ typanion@^3.3.1:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "type-fest@npm:1.2.1"
-  checksum: 8a177c228267a6d50267fe7b21f1ea41d057556795df7a34ee9022088dd4fc8bddf6616790f5cf99ca73ba0ec161bae8f229b7888aaf7082d7e909bea36efd11
+"type-fest@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "type-fest@npm:1.4.0"
+  checksum: b011c3388665b097ae6a109a437a04d6f61d81b7357f74cbcb02246f2f5bd72b888ae33631b99871388122ba0a87f4ff1c94078e7119ff22c70e52c0ff828201
   languageName: node
   linkType: hard
 
@@ -13187,23 +13208,23 @@ typanion@^3.3.1:
   languageName: node
   linkType: hard
 
-typescript@^4.3.4:
-  version: 4.3.4
-  resolution: "typescript@npm:4.3.4"
+typescript@^4.4.2:
+  version: 4.4.2
+  resolution: "typescript@npm:4.4.2"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 75e1f2769c7ff38c718523d05eaf1c2611dbf92c0ab0f85f603ead9bb23416af2009a5dac46e76ef6a207a8508fa53f51b43a41f2a91b1241b53cd744c16128c
+  checksum: 194e08e9d1971d667d6fd1a0554616b7022312a2319d70e81a64e502a265992061ee7817ed9a69b52bbabe7a9b85e7938cb8c11c433e40a516b277f8c4dacd51
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^4.3.4#~builtin<compat/typescript>":
-  version: 4.3.4
-  resolution: "typescript@patch:typescript@npm%3A4.3.4#~builtin<compat/typescript>::version=4.3.4&hash=ddd1e8"
+"typescript@patch:typescript@^4.4.2#~builtin<compat/typescript>":
+  version: 4.4.2
+  resolution: "typescript@patch:typescript@npm%3A4.4.2#~builtin<compat/typescript>::version=4.4.2&hash=ddd1e8"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 49f3e6734d6f27c1931d3a665439350d9015b28eee87ba26ebcae0ba35fc609962ad8eb0b09f0324366497d65260c4222b8735098325bba46d508b5cab7b4640
+  checksum: 1f30617046271a94d6821fe9da9c4705111e0a2f5479269c82f65aa76b2421ff90def8838dd35b1aa464d015248b06c89ff867bd282f4822b5ee18b7f92f95ee
   languageName: node
   linkType: hard
 

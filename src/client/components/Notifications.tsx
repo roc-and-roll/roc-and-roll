@@ -1,6 +1,5 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import {
-  byId,
   entries,
   RRLogEntry,
   RRLogEntryAchievement,
@@ -102,7 +101,7 @@ function Notification({
 
   const players = useServerState((state) => state.players);
   const player = notification.playerId
-    ? byId(players.entities, notification.playerId)
+    ? players.entities[notification.playerId]
     : null;
 
   const viewDiceRoll = (notification: RRLogEntryDiceRoll) => (

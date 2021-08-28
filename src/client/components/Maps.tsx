@@ -5,7 +5,6 @@ import { mapAdd, mapSettingsUpdate, playerUpdate } from "../../shared/actions";
 import { randomColor } from "../../shared/colors";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import {
-  byId,
   EntityCollection,
   entries,
   RRMapID,
@@ -84,7 +83,7 @@ export function MapListEntry({
     (player) => player.currentMap === mapId
   );
   const mapSettings = useServerState(
-    (state) => byId(state.maps.entities, mapId)?.settings
+    (state) => state.maps.entities[mapId]?.settings
   );
   const isMyCurrentMap = myself.currentMap === mapId;
 

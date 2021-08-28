@@ -1,3 +1,4 @@
+import { DeepPartial } from "redux";
 import { Socket } from "socket.io-client";
 import { SOCKET_PATCH_STATE, SOCKET_SET_STATE } from "../shared/constants";
 import { OptimisticUpdateID, SyncedState } from "../shared/state";
@@ -43,7 +44,7 @@ export class MockClientSocket {
   // Helpers for SET_STATE / PATCH_STATE
 
   public __receiveSetState(
-    state: Partial<SyncedState>,
+    state: DeepPartial<SyncedState>,
     finishedOptimisticUpdateIds: OptimisticUpdateID[] = []
   ) {
     this.__receiveFromServer(SOCKET_SET_STATE, {

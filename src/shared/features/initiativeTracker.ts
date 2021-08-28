@@ -12,8 +12,6 @@ import {
   initialSyncedState,
   InitiativeTrackerSyncedState,
   RRInitiativeTrackerEntry,
-  RRInitiativeTrackerEntryLairAction,
-  RRInitiativeTrackerEntryCharacter,
 } from "../state";
 
 // Automatically sort all entries by their initiative
@@ -29,10 +27,6 @@ const config = {
 
 const initiativeTrackerEntryAdapter =
   createEntityAdapter<RRInitiativeTrackerEntry>(config);
-const initiativeTrackerEntryCharacterAdapter =
-  createEntityAdapter<RRInitiativeTrackerEntryCharacter>(config);
-const initiativeTrackerEntryLairActionAdapter =
-  createEntityAdapter<RRInitiativeTrackerEntryLairAction>(config);
 
 const initiativeTrackerEntriesReducer = createReducer(
   initialSyncedState.initiativeTracker.entries,
@@ -40,19 +34,19 @@ const initiativeTrackerEntriesReducer = createReducer(
     builder
       .addCase(
         initiativeTrackerEntryCharacterAdd,
-        initiativeTrackerEntryCharacterAdapter.addOne
+        initiativeTrackerEntryAdapter.addOne
       )
       .addCase(
         initiativeTrackerEntryLairActionAdd,
-        initiativeTrackerEntryLairActionAdapter.addOne
+        initiativeTrackerEntryAdapter.addOne
       )
       .addCase(
         initiativeTrackerEntryCharacterUpdate,
-        initiativeTrackerEntryCharacterAdapter.updateOne
+        initiativeTrackerEntryAdapter.updateOne
       )
       .addCase(
         initiativeTrackerEntryLairActionUpdate,
-        initiativeTrackerEntryLairActionAdapter.updateOne
+        initiativeTrackerEntryAdapter.updateOne
       )
       .addCase(
         initiativeTrackerEntryRemove,

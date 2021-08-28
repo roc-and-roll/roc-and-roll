@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  byId,
-  EntityCollection,
-  RRMapID,
-  RRPlayer,
-} from "../../../shared/state";
+import { EntityCollection, RRMapID, RRPlayer } from "../../../shared/state";
 import { ephemeralPlayerIdsAtom } from "./recoil";
 import { MapMeasurePath } from "./MapMeasurePath";
 import { useRecoilValue } from "recoil";
@@ -24,7 +19,7 @@ export function MeasurePaths({
   return (
     <>
       {ephemeralPlayerIds.map((ephemeralPlayerId) => {
-        const player = byId(players.entities, ephemeralPlayerId);
+        const player = players.entities[ephemeralPlayerId];
         if (!player || player.currentMap !== mapId) {
           return null;
         }

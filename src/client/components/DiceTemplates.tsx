@@ -12,7 +12,6 @@ import {
 } from "../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import {
-  byId,
   colorForDamageType,
   damageTypes,
   entries,
@@ -467,8 +466,8 @@ const DiceTemplate = React.memo(function DiceTemplate({
   ) => void;
   selectedTemplateIds: SelectionPair[];
 }) {
-  const template = useServerState((state) =>
-    byId(state.diceTemplates.entities, templateId)
+  const template = useServerState(
+    (state) => state.diceTemplates.entities[templateId]
   );
 
   if (!template) {
@@ -858,8 +857,8 @@ function ModifierNumberEditor({
 
 function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
   const dispatch = useServerDispatch();
-  const template = useServerState((state) =>
-    byId(state.diceTemplates.entities, templateId)
+  const template = useServerState(
+    (state) => state.diceTemplates.entities[templateId]
   );
 
   if (!template) {
@@ -905,7 +904,7 @@ const DiceTemplatePartMenuWrapper: React.FC<{
       }),
       part.type === "template" && diceTemplateRemove(part.templateId),
       part.type === "template" &&
-        byId(templateParts.current, part.templateId)?.parts.flatMap((p) =>
+        templateParts.current[part.templateId]?.parts.flatMap((p) =>
           deleteActions(p)
         ),
     ].flatMap((a) => (a ? a : []));

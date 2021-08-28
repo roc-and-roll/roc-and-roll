@@ -35,11 +35,7 @@ import {
 } from "./state";
 import { rrid, timestamp } from "./util";
 
-// TODO sadness :(
-// interface Update<T extends { id: RRID }> extends OriginalUpdate<Omit<T, "id">> {
-interface Update<T extends { id: RRID }> extends OriginalUpdate<T> {
-  id: T["id"]; // tighten the type of id to the opaque RRID
-}
+type Update<T extends { id: RRID }> = OriginalUpdate<T, T["id"]>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Players

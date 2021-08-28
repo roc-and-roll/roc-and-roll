@@ -1,4 +1,4 @@
-import { createEntityAdapter, createReducer, Draft } from "@reduxjs/toolkit";
+import { createEntityAdapter, createReducer } from "@reduxjs/toolkit";
 import {
   diceTemplateAdd,
   diceTemplatePartRemove,
@@ -6,7 +6,7 @@ import {
   diceTemplateRemove,
   diceTemplateUpdate,
 } from "../actions";
-import { RRDiceTemplate, initialSyncedState, byId } from "../state";
+import { RRDiceTemplate, initialSyncedState } from "../state";
 
 const diceTemplatesAdapter = createEntityAdapter<RRDiceTemplate>();
 
@@ -20,10 +20,7 @@ export const diceTemplatesReducer = createReducer(
       .addCase(
         diceTemplatePartUpdate,
         (state, { payload: { templateId, id, changes } }) => {
-          const template = byId<Draft<RRDiceTemplate>>(
-            state.entities,
-            templateId
-          );
+          const template = state.entities[templateId];
           const part = template?.parts.find((each) => each.id === id);
           if (part) {
             Object.assign(part, changes);
@@ -33,10 +30,7 @@ export const diceTemplatesReducer = createReducer(
       .addCase(
         diceTemplatePartRemove,
         (state, { payload: { templateId, id } }) => {
-          const template = byId<Draft<RRDiceTemplate>>(
-            state.entities,
-            templateId
-          );
+          const template = state.entities[templateId];
           if (!template) {
             return;
           }

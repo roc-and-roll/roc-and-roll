@@ -1,7 +1,7 @@
 import { faPowerOff, faSignal } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
-import { byId, entries, RRPlayer } from "../../shared/state";
+import { entries, RRPlayer } from "../../shared/state";
 import { useServerState } from "../state";
 
 export function Players({
@@ -28,8 +28,7 @@ const Player = React.memo(function Player({
   onClickPlayer?: (player: RRPlayer) => void;
 }) {
   const isOnline = useServerState(
-    (state) =>
-      byId(state.ephemeral.players.entities, player.id)?.isOnline ?? false
+    (state) => state.ephemeral.players.entities[player.id]?.isOnline ?? false
   );
 
   return (

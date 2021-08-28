@@ -1,30 +1,32 @@
 import * as t from "typanion";
 import type { Dispatch } from "redux";
-import type { IterableElement, Opaque } from "type-fest";
+import type { IterableElement, ValueOf } from "type-fest";
 import { assertNever, rrid } from "./util";
 import { isDamageType, isSyncedState } from "./validation";
 import { LAST_MIGRATION_VERSION } from "./constants";
 
-export type RRID = Opaque<string>;
+export type MakeRRID<K extends string> = `RRID/${K}/${string}`;
 
-export type RRPlayerID = Opaque<string, "player">;
+export type RRID = MakeRRID<string>;
 
-export type RRCharacterID = Opaque<string, "character">;
+export type RRPlayerID = MakeRRID<"player">;
 
-export type RRMapID = Opaque<string, "map">;
+export type RRCharacterID = MakeRRID<"character">;
 
-export type RRMapObjectID = Opaque<string, "mapObject">;
+export type RRMapID = MakeRRID<"map">;
 
-export type RRPrivateChatID = Opaque<string, "privateChat">;
+export type RRMapObjectID = MakeRRID<"mapObject">;
 
-export type RRPrivateChatMessageID = Opaque<string, "privateChatMessage">;
+export type RRPrivateChatID = MakeRRID<"privateChat">;
 
-export type RRLogEntryID = Opaque<string, "logEntry">;
+export type RRPrivateChatMessageID = MakeRRID<"privateChatMessage">;
 
-export type RRInitiativeTrackerEntryID = Opaque<string, "initiativeEntry">;
+export type RRLogEntryID = MakeRRID<"logEntry">;
+
+export type RRInitiativeTrackerEntryID = MakeRRID<"initiativeEntry">;
 
 // not used as part of the state, but as part of optimistic update handling
-export type OptimisticUpdateID = Opaque<string, "optimisticUpdate">;
+export type OptimisticUpdateID = MakeRRID<"optimisticUpdate">;
 
 export type RRColor = string;
 
@@ -34,22 +36,23 @@ export type RRPoint = { readonly x: number; readonly y: number };
 
 export type RRCapPoint = { readonly X: number; readonly Y: number };
 
-export type RRDiceTemplateID = Opaque<string, "diceTemplate">;
+export type RRDiceTemplateID = MakeRRID<"diceTemplate">;
 
-export type RRDiceTemplatePartID = Opaque<string, "diceTemplatePart">;
+export type RRDiceTemplatePartID = MakeRRID<"diceTemplatePart">;
 
-export type RRActiveSongID = Opaque<string, "activeSong">;
+export type RRActiveSongID = MakeRRID<"activeSong">;
 
-export type RRAssetID = Opaque<string, "asset">;
+export type RRAssetID = MakeRRID<"asset">;
 
 export type RRFile = {
   originalFilename: string;
   filename: string;
 };
 
-export type RRAura = IterableElement<
-  SyncedState["characters"]["__trait"]["auras"]
->;
+// Extracts the entity type from an entity collection
+type ECE<E extends EntityCollection<{ id: RRID }>> = ValueOf<E["entities"]>;
+
+export type RRAura = IterableElement<ECE<SyncedState["characters"]>["auras"]>;
 
 export const conditionNames = [
   "blinded",
@@ -86,88 +89,90 @@ export const conditionNames = [
 export type RRCharacterCondition = IterableElement<typeof conditionNames>;
 
 export type RRInitiativeTrackerEntryCharacter = Extract<
-  SyncedState["initiativeTracker"]["entries"]["__trait"],
+  ECE<SyncedState["initiativeTracker"]["entries"]>,
   { type: "character" }
 >;
 
 export type RRInitiativeTrackerEntryLairAction = Extract<
-  SyncedState["initiativeTracker"]["entries"]["__trait"],
+  ECE<SyncedState["initiativeTracker"]["entries"]>,
   { type: "lairAction" }
 >;
 
-export type RRInitiativeTrackerEntry =
-  SyncedState["initiativeTracker"]["entries"]["__trait"];
+export type RRInitiativeTrackerEntry = ECE<
+  SyncedState["initiativeTracker"]["entries"]
+>;
 
-export type RRPlayer = SyncedState["players"]["__trait"];
+export type RRPlayer = ECE<SyncedState["players"]>;
 
 export type RRObjectVisibility = "gmOnly" | "everyone";
 
-export type RRCharacter = SyncedState["characters"]["__trait"];
+export type RRCharacter = ECE<SyncedState["characters"]>;
 
-export type RRCharacterTemplate = SyncedState["characterTemplates"]["__trait"];
+export type RRCharacterTemplate = ECE<SyncedState["characterTemplates"]>;
 
 export type RRToken = Extract<
-  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  ECE<ECE<SyncedState["maps"]>["objects"]>,
   { type: "token" }
 >;
 
 export type RRMapLink = Extract<
-  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  ECE<ECE<SyncedState["maps"]>["objects"]>,
   { type: "mapLink" }
 >;
 
 export type RRMapDrawingImage = Extract<
-  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  ECE<ECE<SyncedState["maps"]>["objects"]>,
   { type: "image" }
 >;
 
 export type RRMapDrawingRectangle = Extract<
-  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  ECE<ECE<SyncedState["maps"]>["objects"]>,
   { type: "rectangle" }
 >;
 
 export type RRMapDrawingEllipse = Extract<
-  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  ECE<ECE<SyncedState["maps"]>["objects"]>,
   { type: "ellipse" }
 >;
 
 export type RRMapDrawingPolygon = Extract<
-  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  ECE<ECE<SyncedState["maps"]>["objects"]>,
   { type: "polygon" }
 >;
 
 export type RRMapDrawingFreehand = Extract<
-  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  ECE<ECE<SyncedState["maps"]>["objects"]>,
   { type: "freehand" }
 >;
 
 export type RRMapDrawingText = Extract<
-  SyncedState["maps"]["__trait"]["objects"]["__trait"],
+  ECE<ECE<SyncedState["maps"]>["objects"]>,
   { type: "text" }
 >;
 
-export type RRMapObject = SyncedState["maps"]["__trait"]["objects"]["__trait"];
+export type RRMapObject = ECE<ECE<SyncedState["maps"]>["objects"]>;
 
-export type RRMap = SyncedState["maps"]["__trait"];
+export type RRMap = ECE<SyncedState["maps"]>;
 
 export type RRMapRevealedAreas = RRMap["settings"]["revealedAreas"];
 
-export type RRPrivateChatMessage =
-  SyncedState["privateChats"]["__trait"]["messages"]["__trait"];
+export type RRPrivateChatMessage = ECE<
+  ECE<SyncedState["privateChats"]>["messages"]
+>;
 
-export type RRPrivateChat = SyncedState["privateChats"]["__trait"];
+export type RRPrivateChat = ECE<SyncedState["privateChats"]>;
 
 export type RRLogEntryMessage = Extract<
-  SyncedState["logEntries"]["__trait"],
+  ECE<SyncedState["logEntries"]>,
   { type: "message" }
 >;
 
 export type RRLogEntryAchievement = Extract<
-  SyncedState["logEntries"]["__trait"],
+  ECE<SyncedState["logEntries"]>,
   { type: "achievement" }
 >;
 
-export type RRDiceTemplate = SyncedState["diceTemplates"]["__trait"];
+export type RRDiceTemplate = ECE<SyncedState["diceTemplates"]>;
 
 export const linkedModifierNames = [
   "STR",
@@ -181,42 +186,42 @@ export const linkedModifierNames = [
 ] as const;
 
 export type RRDiceTemplatePartTemplate = Extract<
-  IterableElement<SyncedState["diceTemplates"]["__trait"]["parts"]>,
+  IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
   {
     type: "template";
   }
 >;
 
 export type RRDiceTemplatePartModifier = Extract<
-  IterableElement<SyncedState["diceTemplates"]["__trait"]["parts"]>,
+  IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
   {
     type: "modifier";
   }
 >;
 
 export type RRDiceTemplatePartLinkedModifier = Extract<
-  IterableElement<SyncedState["diceTemplates"]["__trait"]["parts"]>,
+  IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
   {
     type: "linkedModifier";
   }
 >;
 
 export type RRDiceTemplatePartDice = Extract<
-  IterableElement<SyncedState["diceTemplates"]["__trait"]["parts"]>,
+  IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
   {
     type: "dice";
   }
 >;
 
 export type RRDiceTemplatePartWithDamage = Extract<
-  IterableElement<SyncedState["diceTemplates"]["__trait"]["parts"]>,
+  IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
   {
     damage: RRDamageType;
   }
 >;
 
 export type RRDiceTemplatePart = IterableElement<
-  SyncedState["diceTemplates"]["__trait"]["parts"]
+  ECE<SyncedState["diceTemplates"]>["parts"]
 >;
 
 export const damageTypes = [
@@ -294,21 +299,15 @@ export type RRModifier = Extract<
 >;
 
 export type RRLogEntryDiceRoll = Extract<
-  SyncedState["logEntries"]["__trait"],
+  ECE<SyncedState["logEntries"]>,
   { type: "diceRoll" }
 >;
 
-export type RRLogEntry = SyncedState["logEntries"]["__trait"];
+export type RRLogEntry = ECE<SyncedState["logEntries"]>;
 
-export type RRSong = Extract<
-  SyncedState["assets"]["__trait"],
-  { type: "song" }
->;
+export type RRSong = Extract<ECE<SyncedState["assets"]>, { type: "song" }>;
 
-export type RRImage = Extract<
-  SyncedState["assets"]["__trait"],
-  { type: "image" }
->;
+export type RRImage = Extract<ECE<SyncedState["assets"]>, { type: "image" }>;
 
 export type RRAsset = RRSong | RRImage;
 
@@ -318,54 +317,28 @@ export type RRAsset = RRSong | RRImage;
 export interface EntityCollection<E extends { id: RRID }> {
   entities: Record<E["id"], E>;
   ids: E["id"][];
-  // __trait is only needed for type checking. Otherwise, our checks to verify
-  // that the schema matches the state always return true as soon as they
-  // encounter an entity collection. This is because they get confused by our
-  // opaque RRIDs as Record keys.
-  //
-  // assert<IsExact<SchemaType, SyncedState>>(true);
-  __trait: E;
-}
-
-export function byId<E extends { id: RRID }>(
-  entities: Record<E["id"], E>,
-  id: E["id"]
-): E | undefined {
-  return entities[id];
-}
-
-export function setById<E extends { id: RRID }>(
-  entities: Record<E["id"], E>,
-  id: E["id"],
-  value: E
-): void {
-  entities[id] = value;
 }
 
 export function entries<E extends { id: RRID }>(
   collection: EntityCollection<E>
 ): E[] {
-  return collection.ids.map((id) => byId(collection.entities, id)!);
-}
-
-export function makeEntityCollection<E extends { id: RRID }>(
-  collection: Omit<EntityCollection<E>, "__trait">
-): EntityCollection<E> {
-  return collection as EntityCollection<E>;
+  return collection.ids.map((id) => collection.entities[id]!);
 }
 
 // useful if you want to make sure that the identity of the empty collection
 // never changes.
-export const EMPTY_ENTITY_COLLECTION = makeEntityCollection<never>({
+export const EMPTY_ENTITY_COLLECTION = {
   entities: {},
   ids: [],
-});
+};
 
 export type InitiativeTrackerSyncedState = SyncedState["initiativeTracker"];
 
-export type EphermalPlayer = SyncedState["ephemeral"]["players"]["__trait"];
+export type EphermalPlayer = ECE<SyncedState["ephemeral"]["players"]>;
 
-export type RRActiveSong = SyncedState["ephemeral"]["activeSongs"]["__trait"];
+export type RRActiveSong = ValueOf<
+  SyncedState["ephemeral"]["activeSongs"]["entities"]
+>;
 
 export type EphermalSyncedState = SyncedState["ephemeral"];
 
@@ -400,10 +373,10 @@ export const initialSyncedState: SyncedState = {
   characters: EMPTY_ENTITY_COLLECTION,
   characterTemplates: EMPTY_ENTITY_COLLECTION,
   diceTemplates: EMPTY_ENTITY_COLLECTION,
-  maps: makeEntityCollection({
+  maps: {
     entities: { [defaultMap.id]: defaultMap },
     ids: [defaultMap.id],
-  }),
+  },
   privateChats: EMPTY_ENTITY_COLLECTION,
   logEntries: EMPTY_ENTITY_COLLECTION,
   assets: EMPTY_ENTITY_COLLECTION,

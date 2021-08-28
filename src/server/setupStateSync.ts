@@ -1,12 +1,7 @@
 import { buildPatch, isEmptyObject } from "./util";
 import { MyStore } from "./setupReduxStore";
 import { Server as SocketIOServer, Socket as SocketIOSocket } from "socket.io";
-import {
-  byId,
-  OptimisticUpdateID,
-  RRPlayerID,
-  SyncedState,
-} from "../shared/state";
+import { OptimisticUpdateID, RRPlayerID, SyncedState } from "../shared/state";
 import { ephemeralPlayerAdd, ephemeralPlayerRemove } from "../shared/actions";
 import { throttled } from "../shared/util";
 import * as t from "typanion";
@@ -117,10 +112,8 @@ export const setupStateSync = (
 
   function setPlayerId(data: AdditionalSocketData, playerId: RRPlayerID) {
     data.playerId = playerId;
-    const existingEphermalPlayer = byId(
-      store.getState().ephemeral.players.entities,
-      playerId
-    );
+    const existingEphermalPlayer =
+      store.getState().ephemeral.players.entities[playerId];
     if (!existingEphermalPlayer) {
       store.dispatch(
         ephemeralPlayerAdd({
@@ -216,7 +209,7 @@ export const setupStateSync = (
       io.sockets.sockets.forEach((socket) => {
         const data = additionalSocketData.get(socket.id);
         const player = data?.playerId
-          ? byId(state.players.entities, data.playerId) ?? null
+          ? state.players.entities[data.playerId] ?? null
           : null;
 
         log(

@@ -11,7 +11,6 @@ import {
   initiativeTrackerSetVisible,
 } from "../../shared/actions";
 import {
-  byId,
   entries,
   RRInitiativeTrackerEntry,
   RRPlayer,
@@ -53,7 +52,7 @@ function canEditEntry(
   }
 
   return entry.characterIds.some((characterId) => {
-    const character = byId(characterCollection.entities, characterId);
+    const character = characterCollection.entities[characterId];
     return (
       character &&
       (canControlToken(character, { ...myself, isGM: false }) ||
@@ -94,8 +93,8 @@ const InitiativeEntry = React.memo<{
       </>
     );
   } else {
-    const characters = entry.characterIds.map((id) =>
-      byId(characterCollection.entities, id)
+    const characters = entry.characterIds.map(
+      (id) => characterCollection.entities[id]
     );
     const names = new Set(
       characters.map((character) => character?.name ?? "Unknown Token")
@@ -361,7 +360,7 @@ function RollInitiative({
   const [mapObjectsOutdated, mapObjects] = useDeferredValueWithPending(
     useServerState(
       (state) =>
-        byId(state.maps.entities, myself.currentMap)?.objects ??
+        state.maps.entities[myself.currentMap]?.objects ??
         EMPTY_ENTITY_COLLECTION
     )
   );
@@ -401,7 +400,7 @@ const RollInitiativeDeferredImpl = React.memo<{
   const selectedTokenIds = [
     ...new Set(
       selectedMapObjectIds.flatMap((mapObjectId) => {
-        const mapObject = byId(mapObjects.entities, mapObjectId);
+        const mapObject = mapObjects.entities[mapObjectId];
         return mapObject?.type === "token" ? mapObject.characterId : [];
       })
     ),
@@ -418,10 +417,8 @@ const RollInitiativeDeferredImpl = React.memo<{
   const hasSelection = selectedTokenIds.length !== 0;
 
   const characters = selectedMapObjectIds.flatMap((id) =>
-    withDo(byId(mapObjects.entities, id), (obj) =>
-      obj?.type === "token"
-        ? byId(characterCollection.entities, obj.characterId)
-        : []
+    withDo(mapObjects.entities[id], (obj) =>
+      obj?.type === "token" ? characterCollection.entities[obj.characterId] : []
     )
   );
 
