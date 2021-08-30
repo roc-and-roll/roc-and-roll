@@ -109,11 +109,22 @@ function Notification({
       <span className="player-name" style={{ color: player!.color }}>
         {player!.name}
       </span>
-      {" rolled a "}
+      {" rolled "}
+      {notification.payload.rollName && (
+        <>
+          {"for "}
+          <span style={{ fontWeight: "bold" }}>
+            {`${notification.payload.rollName} `}
+          </span>
+        </>
+      )}
       {notificationReady ? (
-        <strong>
-          <DiceResultWithTypes logEntry={notification} />
-        </strong>
+        <>
+          {notification.payload.rollName && " = "}
+          <strong>
+            <DiceResultWithTypes logEntry={notification} />
+          </strong>
+        </>
       ) : (
         "..."
       )}

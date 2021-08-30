@@ -20,6 +20,7 @@ export function rollInitiative(
   return {
     payload: {
       rollType: "initiative",
+      rollName: "Intiative",
       dice: [rollD20(multiple), ...(mod === 0 ? [] : [modifier(mod)])],
     },
     silent: false,

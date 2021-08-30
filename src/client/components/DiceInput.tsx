@@ -53,7 +53,7 @@ export function DiceInput() {
         logEntryDiceRollAdd({
           silent: false,
           playerId: myself.id,
-          payload: { dice, rollType: null },
+          payload: { dice, rollType: null, rollName: null },
         })
       );
       setText("");

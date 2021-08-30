@@ -172,12 +172,21 @@ export function DiceTemplates({ open }: { open: boolean }) {
     );
     if (parts.length < 1) return;
 
+    let rolledTemplates = "";
+    const templates = selectedTemplates.flatMap(
+      ({ id }) => allTemplates.find((t) => t.id === id)!
+    );
+    templates.map((t) => {
+      rolledTemplates += " " + t.name;
+    });
+
     dispatch(
       logEntryDiceRollAdd({
         silent: false,
         playerId: myself.id,
         payload: {
           rollType: "attack", // TODO
+          rollName: rolledTemplates,
           dice: parts,
         },
       })

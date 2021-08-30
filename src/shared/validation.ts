@@ -359,6 +359,7 @@ export const isSyncedState = t.isObject({
                 "attack",
                 null,
               ] as const),
+              rollName: t.isNullable(t.isString()),
               dice: t.isArray(
                 t.isOneOf(
                   withDo({ damageType: isDamageType }, (sharedValidators) => [
