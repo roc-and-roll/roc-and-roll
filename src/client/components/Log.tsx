@@ -22,7 +22,8 @@ function LogEntry({ logEntry }: { logEntry: RRLogEntry }) {
     case "diceRoll":
       content = (
         <>
-          {playerName} rolled{logEntry.payload.rollName}:{" "}
+          {playerName} rolled
+          {logEntry.payload.rollName && ` ${logEntry.payload.rollName}`}:{" "}
           {diceResultString(logEntry)} ={" "}
           <u>
             <DiceResultWithTypes logEntry={logEntry} />

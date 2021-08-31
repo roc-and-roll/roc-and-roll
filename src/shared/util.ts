@@ -147,3 +147,7 @@ export function hashString(str: string, seed = 0): number {
 
   return 4294967296 * (2097151 & h2) + (h1 >>> 0);
 }
+
+export function empty2Null<T extends string>(str: T): Exclude<T, ""> | null {
+  return str === "" ? null : (str as Exclude<T, "">);
+}

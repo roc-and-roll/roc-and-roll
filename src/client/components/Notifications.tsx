@@ -113,14 +113,12 @@ function Notification({
       {notification.payload.rollName && (
         <>
           {"for "}
-          <span style={{ fontWeight: "bold" }}>
-            {`${notification.payload.rollName} `}
-          </span>
+          <strong>{notification.payload.rollName}</strong>{" "}
         </>
       )}
       {notificationReady ? (
         <>
-          {notification.payload.rollName && " = "}
+          {notification.payload.rollName && "= "}
           <strong>
             <DiceResultWithTypes logEntry={notification} />
           </strong>

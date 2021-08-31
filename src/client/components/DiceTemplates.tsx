@@ -29,7 +29,7 @@ import {
   RRMultipleRoll,
   SyncedStateAction,
 } from "../../shared/state";
-import { assertNever, rrid } from "../../shared/util";
+import { assertNever, empty2Null, rrid } from "../../shared/util";
 import { useMyself } from "../myself";
 import { roll } from "../roll";
 import { useServerDispatch, useServerState, useServerStateRef } from "../state";
@@ -172,13 +172,15 @@ export function DiceTemplates({ open }: { open: boolean }) {
     );
     if (parts.length < 1) return;
 
-    let rolledTemplates = "";
     const templates = selectedTemplates.flatMap(
       ({ id }) => allTemplates.find((t) => t.id === id)!
     );
-    templates.map((t) => {
-      rolledTemplates += " " + t.name;
-    });
+    const rollName = empty2Null(
+      templates
+        .map((template) => template.name)
+        .join(" ")
+        .trim()
+    );
 
     dispatch(
       logEntryDiceRollAdd({
@@ -186,7 +188,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
         playerId: myself.id,
         payload: {
           rollType: "attack", // TODO
-          rollName: rolledTemplates,
+          rollName,
           dice: parts,
         },
       })
@@ -311,7 +313,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
             ...characters.map((c) => ({ label: c.name, value: c.id })),
           ]}
           onChange={(v) => {
-            setSelectedCharacterId(v === "" ? null : v);
+            setSelectedCharacterId(empty2Null(v));
           }}
         ></Select>
       </div>
@@ -746,7 +748,7 @@ function DamageTypeEditor({
                 id: part.id,
                 changes: {
                   damage: {
-                    type: damageType === "" ? null : damageType,
+                    type: empty2Null(damageType),
                     // FIXME: This currently overwrites the modifiers, but it is
                     // fine because we don't use them yet.
                     modifiers: [],
