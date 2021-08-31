@@ -185,7 +185,7 @@
   },
   "engines": {
     "node": ">=14",
-    "yarn": ">=2"
+    "yarn": ">=3"
   },
   "resolutions": {
     "@reduxjs/toolkit": "patch:@reduxjs/toolkit@npm:1.6.1#.yarn/patches/@reduxjs-toolkit-npm-1.6.1-a0999c8262",
