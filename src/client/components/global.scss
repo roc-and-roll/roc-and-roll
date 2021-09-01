@@ -630,12 +630,12 @@ $gmAreaColor: #ab62c0;
         width: 3rem;
       }
 
-      &.current {
-        background: orange;
-      }
-
       &.player-character {
         background: #555;
+      }
+
+      &.current {
+        background: orange;
       }
     }
   }
