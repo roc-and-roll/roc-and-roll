@@ -148,4 +148,22 @@ describe("IntegerInput", () => {
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith(789);
   });
+
+  test("the types are correct for nullable and non-nullable inputs", () => {
+    const nullableValue: number | null = null;
+    const nullableOnChange = (v: number | null) => {};
+    const _nullable = (
+      <SmartIntegerInput
+        value={nullableValue}
+        onChange={nullableOnChange}
+        nullable
+      />
+    );
+
+    const value = 123 as number;
+    const onChange = (v: number) => {};
+    const _nonNullable = (
+      <SmartIntegerInput value={value} onChange={onChange} />
+    );
+  });
 });

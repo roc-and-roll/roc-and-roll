@@ -31,7 +31,7 @@ export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
 export const SmartTextInput = React.forwardRef<
   HTMLInputElement,
   TextInputProps
->(function DebouncedTextInput(props, ref) {
+>(function SmartTextInput(props, ref) {
   const [fieldProps, debouncedRef, _isPending] = useDebouncedField<
     string,
     HTMLInputElement
@@ -43,19 +43,32 @@ export const SmartTextInput = React.forwardRef<
   return <TextInput ref={composeRefs(ref, debouncedRef)} {...fieldProps} />;
 });
 
-type IntegerInputProps = Omit<TextInputProps<number>, "type">;
+type IntegerInputProps =
+  | (Omit<TextInputProps<number>, "type"> & { nullable?: false })
+  | (Omit<TextInputProps<number | null>, "type"> & { nullable: true });
 
 export const SmartIntegerInput = React.forwardRef<
   HTMLInputElement,
   IntegerInputProps
->(function DebouncedIntegerInput(
-  { value: externalValue, onChange: externalOnChange, ...props },
+>(function SmartIntegerInput(
+  { value: externalValue, onChange: externalOnChange, nullable, ...props },
   ref
 ) {
   const [value, onChange, { reportChangesRef }] = useIsolatedValue({
-    value: externalValue.toString(),
+    value: externalValue === null ? "" : externalValue.toString(),
     onChange: (value) => {
-      externalOnChange(parseInt(value));
+      if (value === "") {
+        // @ts-expect-error TS cannot infer that it is okay to assign null if
+        // nullable is true.
+        externalOnChange(nullable ? null : 0);
+        return;
+      }
+
+      const integer = parseInt(value);
+      if (isNaN(integer)) {
+        throw new Error("Integer was NaN - this should never happen.");
+      }
+      externalOnChange(integer);
     },
   });
 
@@ -64,6 +77,11 @@ export const SmartIntegerInput = React.forwardRef<
       ref={ref}
       value={value}
       onChange={(value) => {
+        if (value.trim() === "") {
+          reportChangesRef.current = true;
+          onChange("");
+          return;
+        }
         const number = parseInt(value);
         reportChangesRef.current = !isNaN(number);
         onChange(value);
@@ -99,7 +117,7 @@ export const TextareaInput = React.forwardRef<
 export const SmartTextareaInput = React.forwardRef<
   HTMLTextAreaElement,
   TextareaInputProps
->(function DebouncedTextareaInput(props, ref) {
+>(function SmartTextareaInput(props, ref) {
   const [fieldProps, debouncedRef, _isPending] = useDebouncedField<
     string,
     HTMLTextAreaElement

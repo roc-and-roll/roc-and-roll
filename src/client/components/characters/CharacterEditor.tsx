@@ -235,7 +235,7 @@ export function CharacterEditor({
         {linkedModifierNames.map((modifier) => (
           <AttributeEditor
             key={modifier}
-            value={character.attributes[modifier] ?? 0}
+            value={character.attributes[modifier] ?? null}
             label={modifier}
             onChange={(newValue) =>
               dispatch((state) => {
@@ -634,7 +634,7 @@ function AttributeEditor({
   onChange,
 }: {
   label: string;
-  value: number;
+  value: number | null;
   onChange: (newValue: number | null) => void;
 }) {
   return (
@@ -642,8 +642,9 @@ function AttributeEditor({
       <label>
         <div className="character-editor-attribute-label">{label}</div>
         <SmartIntegerInput
-          value={value}
           placeholder="Mod ..."
+          value={value}
+          nullable
           onChange={(value) => onChange(value)}
         />
       </label>
