@@ -1,4 +1,5 @@
 import path from "path";
+import { fileURLToPath } from "url";
 import express from "express";
 import { Server as SocketIOServer } from "socket.io";
 // These two packages speed up socket.io. Include them here just to verify that
@@ -16,6 +17,9 @@ import fetch from "node-fetch";
 import AsyncLock from "async-lock";
 import { GRID_SIZE, SOCKET_IO_PATH } from "../shared/constants";
 import compression from "compression";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export async function setupWebServer(
   httpPort: number,

@@ -1,20 +1,36 @@
-const path = require("path");
-const webpack = require("webpack");
-const nodeExternals = require("webpack-node-externals");
-const { GitRevisionPlugin } = require("git-revision-webpack-plugin");
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const NodemonPlugin = require('nodemon-webpack-plugin');
-const CopyWebpackPlugin = require("copy-webpack-plugin");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+import path from "path";
+import { fileURLToPath } from 'url';
+import webpack from "webpack";
+import nodeExternals from "webpack-node-externals";
+import { GitRevisionPlugin } from "git-revision-webpack-plugin";
+import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
+import NodemonPlugin from 'nodemon-webpack-plugin';
+import CopyWebpackPlugin from "copy-webpack-plugin";
+import { CleanWebpackPlugin } from "clean-webpack-plugin";
 
 const gitRevisionPlugin = new GitRevisionPlugin();
 
-module.exports = (webpackEnv) => {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default (webpackEnv) => {
   const isEnvDevelopment = webpackEnv.development === true;
   const isEnvProduction = webpackEnv.production === true;
 
   return {
-    target: "node",
+    target: "node14",
+    externalsPresets: { node: true },
+    experiments: {
+      outputModule: true,
+    },
+    externalsType: "module",
+    externals: [nodeExternals({
+      modulesFromFile: true,
+      importType: (moduleId) => {
+        // @reduxjs/toolkit produces errors when importing it as an ESM module for some reason :/
+        return `${moduleId === "@reduxjs/toolkit" ? "node-commonjs" : "module"} ${moduleId}`;
+      }
+    })],
     mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
     bail: isEnvProduction,
     devtool: isEnvProduction
@@ -31,7 +47,7 @@ module.exports = (webpackEnv) => {
       // you change these files.
       server: [
         // Support for sourcemaps
-        "source-map-support/register",
+        "source-map-support/register.js",
         // Entrypoint
         "./src/server/server.ts"
       ]
@@ -107,7 +123,6 @@ module.exports = (webpackEnv) => {
       // error message should open your editor.
       devtoolModuleFilenameTemplate: '../[resource-path]',
     },
-    externals: [nodeExternals({ modulesFromFile: true })],
     stats: {
       assets: false
     }

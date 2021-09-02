@@ -3,7 +3,8 @@
   "name": "roc-and-roll",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/server.js",
+  "main": "dist/server.roc-and-roll.js",
+  "type": "module",
   "scripts": {
     "dev": "concurrently --handle-input --kill-others --names server,client --prefix-colors green,blue yarn:dev:server yarn:dev:client",
     "dev:client": "webpack serve   --config webpack.client.js --env development",

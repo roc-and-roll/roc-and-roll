@@ -1,17 +1,23 @@
-const path = require("path");
-const webpack = require("webpack");
-const { GitRevisionPlugin } = require("git-revision-webpack-plugin");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const ForkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin");
-const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-const GoogleFontsPlugin = require("@beyonk/google-fonts-webpack-plugin")
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+import path from "path";
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+import webpack from "webpack";
+import { GitRevisionPlugin } from "git-revision-webpack-plugin";
+import HtmlWebpackPlugin from "html-webpack-plugin";
+import HtmlWebpackTagsPlugin from 'html-webpack-tags-plugin';
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import GoogleFontsPlugin from "@beyonk/google-fonts-webpack-plugin";
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 
 const gitRevisionPlugin = new GitRevisionPlugin();
 
-module.exports = (webpackEnv) => {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
+
+export default (webpackEnv) => {
   const isEnvDevelopment = webpackEnv.development === true;
   const isEnvProduction = webpackEnv.production === true;
   const isCodeSpaces = !!process.env.CODESPACES;

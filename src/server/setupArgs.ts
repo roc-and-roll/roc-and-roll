@@ -1,6 +1,8 @@
 import { Command, InvalidOptionArgumentError } from "commander";
-import { version } from "../../package.json";
+import packageJson from "../../package.json";
 import path from "path";
+
+const { version } = packageJson;
 
 function myParseInt(value: string): number {
   const parsedValue = parseInt(value, 10);

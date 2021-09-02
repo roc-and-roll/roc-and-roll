@@ -5,7 +5,7 @@
     "noEmit": true,
     "incremental": true,
 
-    "module": "commonjs",
+    "module": "es2020",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "strict": true,
