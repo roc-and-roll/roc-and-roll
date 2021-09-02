@@ -8,14 +8,14 @@
     "dev": "concurrently --handle-input --kill-others --names server,client --prefix-colors green,blue yarn:dev:server yarn:dev:client",
     "dev:client": "webpack serve   --config webpack.client.js --env development",
     "dev:server": "webpack --watch --config webpack.server.js --env development",
-    "test": "jest",
+    "test": "node --unhandled-rejections=strict --enable-source-maps node_modules/.bin/jest",
     "lint": "eslint --cache --ext .ts,.tsx,.js,.jsx src",
     "format": "yarn run lint --fix",
     "build": "concurrently --names client,server --prefix-colors blue,green yarn:build:client yarn:build:server",
     "build:client": "webpack --config webpack.client.js --env production",
     "build:server": "webpack --config webpack.server.js --env production",
     "analyze-bundle:client": "webpack --config webpack.client.js --env production --profile --json dist/client/stats.json && yarn webpack-bundle-analyzer dist/client/stats.json",
-    "start": "nodemon --unhandled-rejections=strict --watch dist/server.roc-and-roll.js dist/server.roc-and-roll.js --workspace ./workspace",
+    "start": "nodemon --unhandled-rejections=strict --enable-source-maps --watch dist/server.roc-and-roll.js dist/server.roc-and-roll.js --workspace ./workspace",
     "postinstall": "husky install"
   },
   "dependencies": {
@@ -151,7 +151,8 @@
         {
           "module": {
             "type": "commonjs"
-          }
+          },
+          "sourceMaps": true
         }
       ]
     },
