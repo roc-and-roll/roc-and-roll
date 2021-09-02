@@ -240,27 +240,25 @@ export function useIsolatedValue<V>({
 
   const [internalValue, setInternalValue] = useState(externalValue);
 
-  const internalValueChangedRef = useRef(false);
-
   useEffect(() => {
     if (takeValueRef.current) {
       setInternalValue(externalValue);
     }
   }, [externalValue]);
 
-  useEffect(() => {
-    if (reportChangesRef.current && internalValueChangedRef.current) {
-      setExternalValue(internalValue);
-      internalValueChangedRef.current = false;
-    }
-  }, [internalValue, setExternalValue]);
+  const setExternalValueRef = useLatest(setExternalValue);
 
   return [
     internalValue,
-    useCallback((value: V) => {
-      internalValueChangedRef.current = true;
-      setInternalValue(value);
-    }, []),
+    useCallback(
+      (value: V) => {
+        setInternalValue(value);
+        if (reportChangesRef.current) {
+          setExternalValueRef.current(value);
+        }
+      },
+      [setExternalValueRef]
+    ),
     { takeValueRef, reportChangesRef },
   ];
 }
@@ -355,7 +353,13 @@ export function useDebouncedField<V, E extends HTMLElement>({
           // Immediately propagate the change to the outside as part of a
           // transition.
           // TODO: I'm not 100% certain that this does what we want it to.
-          startTransition(() => executePending());
+          if (
+            process.env.NODE_ENV !== "test" ||
+            // @ts-ignore
+            !globalThis.DISABLE_TRANSITION_FOR_TEST
+          ) {
+            startTransition(() => executePending());
+          }
 
           // No idea if this would even make sense:
           // ReactDOM.unstable_scheduleHydration(ref.current);

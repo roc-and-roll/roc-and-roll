@@ -1,6 +1,6 @@
 import React from "react";
 import { render, act, fireEvent } from "@testing-library/react";
-import { SmartIntegerInput } from "./TextInput";
+import { SmartIntegerInput, SmartTextInput } from "./TextInput";
 
 // TODO: These tests no longer make sense now that we always trigger onChange
 // wrapped in a startTransition.
@@ -102,7 +102,7 @@ describe("SmartTextInput", () => {
 });
 */
 
-describe("IntegerInput", () => {
+describe("SmartIntegerInput", () => {
   test("it does not trigger onChange unnecessarily", () => {
     const onChange = jest.fn();
     const { rerender, getByPlaceholderText } = render(
@@ -166,4 +166,55 @@ describe("IntegerInput", () => {
       <SmartIntegerInput value={value} onChange={onChange} />
     );
   });
+});
+
+describe("SmartTextInput & SmartIntegerInput", () => {
+  it.each([
+    ["SmartTextInput", SmartTextInput, "123", "456"],
+    ["SmartIntegerInput", SmartIntegerInput, 123, 456],
+  ] as const)(
+    "%s sends its latest value on unmount",
+    (
+      _componentAsString: string,
+      Component: typeof SmartTextInput | typeof SmartIntegerInput,
+      initialValue,
+      endValue
+    ) => {
+      // @ts-ignore
+      globalThis.DISABLE_TRANSITION_FOR_TEST = true;
+
+      const onChange = jest.fn();
+      const { unmount, getByPlaceholderText } = render(
+        // @ts-expect-error Typescript thinks that we might assign the wrong
+        // value to the component.
+        React.createElement(Component, {
+          value: initialValue,
+          onChange: onChange,
+          placeholder: "input",
+        })
+      );
+
+      expect(onChange).not.toHaveBeenCalled();
+
+      act(() => {
+        fireEvent.focus(getByPlaceholderText("input"));
+        fireEvent.change(getByPlaceholderText("input"), {
+          target: { value: "4" },
+        });
+        fireEvent.change(getByPlaceholderText("input"), {
+          target: { value: "45" },
+        });
+        fireEvent.change(getByPlaceholderText("input"), {
+          target: { value: "456" },
+        });
+      });
+
+      expect(onChange).toHaveBeenCalledTimes(0);
+
+      unmount();
+
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(onChange).toHaveBeenCalledWith(endValue);
+    }
+  );
 });
