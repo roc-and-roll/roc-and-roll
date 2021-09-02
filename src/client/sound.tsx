@@ -130,15 +130,15 @@ export function useRRComplexSound(
       // interrupt it and start it again.
       soundIdRef.current = howlRef.current?.play(soundIdRef.current);
     } else {
-      if (durationRef.current !== undefined) {
-        soundIdRef.current = howlRef.current?.play(soundIdRef.current);
+      if (durationRef.current !== undefined && howlRef.current) {
+        soundIdRef.current = howlRef.current.play(soundIdRef.current);
         // At least in Chrome, seeking in a looped sound only works when seeking
         // to an offset <= duration the duration of the song. Therefore, we can
         // only start playing the song at the correct seek position if we know
         // the duration of the song.
         const seekSeconds =
           ((Date.now() - startedAtRef.current) / 1000) % durationRef.current;
-        howlRef.current?.seek(seekSeconds, soundIdRef.current);
+        howlRef.current.seek(seekSeconds, soundIdRef.current);
       }
     }
   }, []);
