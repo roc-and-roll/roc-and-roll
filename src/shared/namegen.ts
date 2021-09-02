@@ -634,7 +634,7 @@ class GroupSymbol extends Group {
     super(GroupTypes.symbol);
   }
 
-  public add(a: string): void {
+  public override add(a: string): void {
     const g = new Random([]);
     const symbols =
       a in symbolMap ? symbolMap[a as keyof typeof symbolMap] : null;
@@ -774,7 +774,7 @@ class Random extends Generator {
     super(generators);
   }
 
-  public combinations(): number {
+  public override combinations(): number {
     let total = 0;
     this.generators.forEach((g, i, a) => {
       total += g.combinations();
@@ -782,7 +782,7 @@ class Random extends Generator {
     return total ? total : 1;
   }
 
-  public min(): number {
+  public override min(): number {
     let final = -1;
     this.generators.forEach((g, i, a) => {
       const curr = g.min();
@@ -793,7 +793,7 @@ class Random extends Generator {
     return final;
   }
 
-  public max(): number {
+  public override max(): number {
     let final = 0;
     this.generators.forEach((g, i, a) => {
       const curr = g.max();
@@ -804,7 +804,7 @@ class Random extends Generator {
     return final;
   }
 
-  public toString(): string {
+  public override toString(): string {
     if (this.generators.length === 0) {
       return "";
     }
@@ -826,19 +826,19 @@ class Literal extends Generator {
     this.value = value;
   }
 
-  public combinations(): number {
+  public override combinations(): number {
     return 1;
   }
 
-  public min(): number {
+  public override min(): number {
     return this.value.length;
   }
 
-  public max(): number {
+  public override max(): number {
     return this.value.length;
   }
 
-  public toString(): string {
+  public override toString(): string {
     return this.value;
   }
 }
@@ -848,7 +848,7 @@ class Reverser extends Generator {
     super([generator]);
   }
 
-  public toString(): string {
+  public override toString(): string {
     return super.toString().split("").reverse().join("");
   }
 }
@@ -858,7 +858,7 @@ class Capitalizer extends Generator {
     super([generator]);
   }
 
-  public toString(): string {
+  public override toString(): string {
     const str = super.toString();
     if (!str) return "";
     return str[0]!.toUpperCase() + str.substr(1).toLowerCase();
@@ -870,7 +870,7 @@ class Collapser extends Generator {
     super([generator]);
   }
 
-  public toString(): string {
+  public override toString(): string {
     const str = super.toString();
     let out = "";
     let cnt = 0;
