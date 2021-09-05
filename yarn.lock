@@ -10135,6 +10135,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"process@npm:^0.11.10":
+  version: 0.11.10
+  resolution: "process@npm:0.11.10"
+  checksum: bfcce49814f7d172a6e6a14d5fa3ac92cc3d0c3b9feb1279774708a719e19acd673995226351a082a9ae99978254e320ccda4240ddc474ba31a76c79491ca7c3
+  languageName: node
+  linkType: hard
+
 "progress@npm:^2.0.0":
   version: 2.0.3
   resolution: "progress@npm:2.0.3"
@@ -11043,6 +11050,7 @@ resolve@^2.0.0-next.3:
     nodemon: ^2.0.12
     nodemon-webpack-plugin: ^4.5.2
     prettier: ^2.3.2
+    process: ^0.11.10
     raw-loader: ^4.0.2
     re-resizable: ^6.9.0
     react: alpha

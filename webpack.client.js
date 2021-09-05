@@ -120,6 +120,14 @@ export default (webpackEnv) => {
         // $ heroku config:set HEROKU=1
         '__VERSION__': JSON.stringify(process.env.HEROKU ? "master" : gitRevisionPlugin.version()),
       }),
+      new webpack.ProvidePlugin({
+        // https://github.com/browserify/node-util/issues/57
+        //
+        // Make a global `process` variable that points to the `process` package,
+        // because the `util` package expects there to be a global variable named `process`.
+        // Thanks to https://stackoverflow.com/a/65018686/14239942
+        process: 'process/browser'
+      }),
       isEnvDevelopment && new ReactRefreshWebpackPlugin({
         overlay: {
           sockPort: DEV_SERVER_SOCK_PORT
