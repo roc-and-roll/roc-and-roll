@@ -5,7 +5,7 @@ import {
   damageTypeModifiers,
   damageTypes,
   EntityCollection,
-  linkedModifierNames,
+  characterAttributeNames,
   multipleRollValues,
   RRActiveSongID,
   RRAssetID,
@@ -201,9 +201,8 @@ export const isSyncedState = t.isObject({
           // Can also be used to decrease the hit point maximum temporarily.
           maxHPAdjustment: t.applyCascade(t.isNumber(), [t.isInteger()]),
           attributes: t.isDict(
-            // TODO: This should have explicit keys
             t.isNullable(t.applyCascade(t.isNumber(), [t.isInteger()])),
-            { keys: t.isString() }
+            { keys: t.isEnum(characterAttributeNames) }
           ),
           conditions: t.isArray(t.isEnum(conditionNames)),
 
@@ -416,7 +415,7 @@ export const isSyncedState = t.isObject({
                 t.isObject({
                   ...sharedValidators,
                   type: t.isLiteral("linkedModifier"),
-                  name: t.isEnum(linkedModifierNames),
+                  name: t.isEnum(characterAttributeNames),
                   damage: isDamageType,
                 }),
                 t.isObject({

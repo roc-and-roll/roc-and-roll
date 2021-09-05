@@ -174,7 +174,7 @@ export type RRLogEntryAchievement = Extract<
 
 export type RRDiceTemplate = ECE<SyncedState["diceTemplates"]>;
 
-export const linkedModifierNames = [
+export const characterAttributeNames = [
   "STR",
   "DEX",
   "CON",

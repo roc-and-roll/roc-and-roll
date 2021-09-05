@@ -15,7 +15,7 @@ import {
   colorForDamageType,
   damageTypes,
   entries,
-  linkedModifierNames,
+  characterAttributeNames,
   multipleRollValues,
   RRCharacter,
   RRDice,
@@ -369,7 +369,7 @@ function DicePicker() {
       <hr className="solid"></hr>
       <PickerDiceTemplateNested />
       <hr className="solid"></hr>
-      {linkedModifierNames.map((name) => {
+      {characterAttributeNames.map((name) => {
         const part = {
           id: rrid<RRDiceTemplatePart>(),
           type: "linkedModifier" as const,

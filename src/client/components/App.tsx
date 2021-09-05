@@ -6,7 +6,7 @@ import { useLoginLogout } from "../myself";
 import { JoinGame } from "./JoinGame";
 import { BottomFloats } from "./BottomFloats";
 import { Notifications, NotificationTopAreaPortal } from "./Notifications";
-import { SongPlayer } from "../sound";
+import { ActiveSongsPlayer } from "../sound";
 import QuickReferenceWrapper from "./quickReference/QuickReferenceWrapper";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { useServerConnection } from "../state";
@@ -63,7 +63,7 @@ const Game = React.memo<{
 }>(function Game({ logout, notificationTopAreaPortal }) {
   return (
     <div className="app-wrapper">
-      <SongPlayer />
+      <ActiveSongsPlayer />
       <ErrorBoundary>
         <Sidebar logout={logout} />
       </ErrorBoundary>

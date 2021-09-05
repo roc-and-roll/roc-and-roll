@@ -216,8 +216,10 @@ export function useRRComplexSound(
   return [play, pause, stop, state] as const;
 }
 
-export function SongPlayer() {
-  const songs = entries(useServerState((state) => state.ephemeral.activeSongs));
+export const ActiveSongsPlayer = React.memo(function ActiveSongsPlayer() {
+  const activeSongs = entries(
+    useServerState((state) => state.ephemeral.activeSongs)
+  );
   // We can't usually autoplay audio, so prompt the user to confirm it.
   // It may not be sufficient to prompt the user just once, when many additional
   // sounds are played at once.
@@ -228,22 +230,28 @@ export function SongPlayer() {
       {needsUnlock.length > 0 && (
         <div className="join-audio-popup">Click to join the music</div>
       )}
-      {songs.map((s) => {
-        return <ActiveSongPlayer key={assetUrl(s.song)} song={s} />;
-      })}
+      {activeSongs.map((activeSong) => (
+        <ActiveSongPlayer key={activeSong.id} activeSong={activeSong} />
+      ))}
     </>
   );
-}
+});
 
-function ActiveSongPlayer({ song }: { song: RRActiveSong }) {
-  const [play] = useRRComplexSound(assetUrl(song.song), song.volume, {
-    stream: true,
-    loop: true,
-  });
+function ActiveSongPlayer({ activeSong }: { activeSong: RRActiveSong }) {
+  const [play, _pause, stop] = useRRComplexSound(
+    assetUrl(activeSong.song),
+    activeSong.volume,
+    {
+      stream: true,
+      loop: true,
+    }
+  );
 
   useEffect(() => {
-    play(song.startedAt);
-  }, [play, song.startedAt]);
+    play(activeSong.startedAt);
+
+    return () => stop();
+  }, [play, stop, activeSong.startedAt]);
 
   return null;
 }

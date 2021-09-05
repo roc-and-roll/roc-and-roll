@@ -8,7 +8,7 @@ import {
 import { randomColor } from "../../../shared/colors";
 import {
   conditionNames,
-  linkedModifierNames,
+  characterAttributeNames,
   RRCharacter,
   RRCharacterCondition,
   RRCharacterTemplate,
@@ -232,11 +232,11 @@ export function CharacterEditor({
       </div>
       <HPEditor character={character} updateFunc={updateFunc} />
       <div className="character-editor-attributes">
-        {linkedModifierNames.map((modifier) => (
+        {characterAttributeNames.map((attributeName) => (
           <AttributeEditor
-            key={modifier}
-            value={character.attributes[modifier] ?? null}
-            label={modifier}
+            key={attributeName}
+            value={character.attributes[attributeName] ?? null}
+            label={attributeName}
             onChange={(newValue) =>
               dispatch((state) => {
                 const oldAttributes = (
@@ -254,7 +254,7 @@ export function CharacterEditor({
                       changes: {
                         attributes: {
                           ...oldAttributes,
-                          [modifier]: newValue,
+                          [attributeName]: newValue,
                         },
                       },
                     }),

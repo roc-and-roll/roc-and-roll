@@ -65,8 +65,8 @@ export const ColorInput = React.memo(
 
 export const SmartColorInput = React.forwardRef<
   HTMLInputElement,
-  ColorInputProps & { debounce?: number }
->(function DebouncedColorInput(props, ref) {
+  ColorInputProps
+>(function SmartColorInput(props, ref) {
   const [fieldProps, debouncedRef, _isPending] = useDebouncedField<
     string,
     HTMLInputElement

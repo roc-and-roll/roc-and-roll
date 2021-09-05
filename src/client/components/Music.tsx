@@ -20,6 +20,7 @@ import { rrid, timestamp } from "../../shared/util";
 import { useFileUpload } from "../files";
 import { useMyself } from "../myself";
 import { useServerDispatch, useServerState } from "../state";
+import { TextInput } from "./ui/TextInput";
 import { volumeLinear2Log, VolumeSlider } from "./VolumeSlider";
 
 interface TabletopAudio {
@@ -177,11 +178,11 @@ export const Music = React.memo(function Music() {
   const allSongs = [...ownSongs, ...(tabletopAudio ?? [])];
 
   return (
-    <div>
-      <input
+    <>
+      <TextInput
         type="search"
         value={filter}
-        onChange={(e) => setFilter(e.target.value)}
+        onChange={(filter) => setFilter(filter)}
         placeholder="search music..."
       />
       <UploadAudio onUploaded={() => setFilter("")} />
@@ -218,7 +219,7 @@ export const Music = React.memo(function Music() {
         <strong>- Tabletop Audio -</strong>
         {tabletopAudio && showSongList(tabletopAudio)}
       </div>
-    </div>
+    </>
   );
 });
 
