@@ -38,6 +38,7 @@
     "core-js": "^3.17.1",
     "emoji-picker-react": "^3.4.8",
     "express": "^4.17.1",
+    "file-type": "^16.5.3",
     "howler": "^2.2.3",
     "husky": "^6.0.0",
     "immer": "^9.0.6",

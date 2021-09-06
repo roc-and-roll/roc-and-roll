@@ -70,9 +70,13 @@ function isColor() {
   ]);
 }
 
-const isRRFile = t.isObject({
+const isRRFileImage = t.isObject({
   originalFilename: t.isString(),
   filename: t.isString(),
+  mimeType: t.isString(),
+  type: t.isLiteral("image"),
+  width: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
+  height: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
 });
 
 const isRRPoint = t.isObject({
@@ -171,7 +175,7 @@ export const isSyncedState = t.isObject({
           id: isRRID<RRCharacterID>(),
           name: t.isString(),
 
-          tokenImage: t.isNullable(isRRFile),
+          tokenImage: t.isNullable(isRRFileImage),
           tokenBorderColor: isColor(),
           scale: t.applyCascade(t.isNumber(), [t.isAtLeast(1)]),
 
@@ -254,8 +258,7 @@ export const isSyncedState = t.isObject({
                   t.isObject({
                     ...sharedValidators,
                     type: t.isLiteral("image"),
-                    image: isRRFile,
-                    originalSize: isRRPoint,
+                    image: isRRFileImage,
                     height: t.applyCascade(t.isNumber(), [
                       t.isInteger(),
                       t.isPositive(),
@@ -446,11 +449,12 @@ export const isSyncedState = t.isObject({
     t.isOneOf(
       [
         isRRSong,
-        t.isObject({
-          ...sharedAssetValidators,
-          type: t.isLiteral("image"),
-          originalFunction: t.isEnum(["token", "map"] as const),
-        }),
+        // TODO: Asset images are not yet used
+        // t.isObject({
+        //   ...sharedAssetValidators,
+        //   type: t.isLiteral("image"),
+        //   originalFunction: t.isEnum(["token", "map"] as const),
+        // }),
       ],
       { exclusive: true }
     )

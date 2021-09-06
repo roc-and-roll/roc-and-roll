@@ -130,9 +130,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
         return (
           <image
             {...imageProps}
-            width={
-              (object.originalSize.x / object.originalSize.y) * object.height
-            }
+            width={(object.image.width / object.image.height) * object.height}
             height={object.height}
             href={fileUrl(object.image)}
           />

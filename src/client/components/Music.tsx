@@ -77,7 +77,7 @@ export const Music = React.memo(function Music() {
   const [filter, setFilter] = useState("");
 
   const ownSongs = entries(useServerState((state) => state.assets)).flatMap(
-    (a) => (a.type === "song" ? a : [])
+    (a) => /*(a.type === "song" ? a : [])*/ a
   );
 
   const onStop = useCallback(
@@ -229,7 +229,7 @@ function UploadAudio({ onUploaded }: { onUploaded: () => void }) {
   const myself = useMyself();
 
   const doUpload = async (files: FileList | null) => {
-    const uploadedFiles = await upload(files);
+    const uploadedFiles = await upload(files, "audio");
     if (uploadedFiles.length > 0) {
       dispatch(
         uploadedFiles.map((f) =>

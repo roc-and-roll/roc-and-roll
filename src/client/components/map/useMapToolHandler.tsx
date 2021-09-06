@@ -368,12 +368,11 @@ export function useMapToolHandler(
             if (files === null) {
               return;
             }
-            const [image, size] = files[0]!;
+            const image = files[0]!;
 
             const action = mapObjectAdd(mapId, {
               type: "image",
               height: DEFAULT_BACKGROUND_IMAGE_HEIGHT,
-              originalSize: size,
               image,
               ...create(p),
             });

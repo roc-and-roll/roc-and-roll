@@ -15,11 +15,12 @@ export const assetsReducer = createReducer(
   initialSyncedState.assets,
   (builder) => {
     builder
-      .addCase(assetImageAdd, assetAdapter.addOne)
+      // TODO: Asset images are not yet used.
+      // .addCase(assetImageAdd, assetAdapter.addOne)
       .addCase(assetSongAdd, assetAdapter.addOne)
-      .addCase(assetImageUpdate, assetAdapter.updateOne)
+      // .addCase(assetImageUpdate, assetAdapter.updateOne)
       .addCase(assetSongUpdate, assetAdapter.updateOne)
-      .addCase(assetImageRemove, assetAdapter.removeOne)
+      // .addCase(assetImageRemove, assetAdapter.removeOne)
       .addCase(assetSongRemove, assetAdapter.removeOne);
   }
 );

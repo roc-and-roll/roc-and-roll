@@ -22,7 +22,7 @@ void (async () => {
 
   const statePath = path.join(workspaceDir, "state.json");
 
-  const initialState = await setupInitialState(statePath);
+  const initialState = await setupInitialState(statePath, uploadedFilesDir);
   const store = setupReduxStore(initialState);
 
   const { io, url } = await setupWebServer(

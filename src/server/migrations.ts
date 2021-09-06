@@ -4,7 +4,10 @@ import { LAST_MIGRATION_VERSION } from "../shared/constants";
 export abstract class AbstractMigration {
   public abstract readonly version: number;
 
-  public abstract migrate(oldState: any): Promisable<any>;
+  public abstract migrate(
+    oldState: any,
+    uploadedFilesDir: string
+  ): Promisable<Record<string, unknown>>;
 }
 
 const ctx = require.context("./migrations", false, /\.ts/);

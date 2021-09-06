@@ -8,7 +8,7 @@ import "bufferutil";
 import "utf-8-validate";
 import multer from "multer";
 import { nanoid } from "@reduxjs/toolkit";
-import { RRFile } from "../shared/state";
+import { RRFile, RRFileImage } from "../shared/state";
 import sharp from "sharp";
 import { fittingTokenSize } from "../shared/util";
 import { existsSync } from "fs";
@@ -17,6 +17,14 @@ import fetch from "node-fetch";
 import AsyncLock from "async-lock";
 import { GRID_SIZE, SOCKET_IO_PATH } from "../shared/constants";
 import compression from "compression";
+import {
+  getAudioDuration,
+  getImageDimensions,
+  getMimeType,
+  isMimeTypeAudio,
+  isMimeTypeImage,
+} from "./files";
+import { isAllowedFiletypes } from "../shared/files";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,10 +67,52 @@ export async function setupWebServer(
           res.status(400);
           return;
         }
-        const data: RRFile[] = req.files.map((file) => ({
-          originalFilename: file.originalname,
-          filename: file.filename,
-        }));
+
+        const allowedFileTypes = req.body.allowedFileTypes;
+        if (!isAllowedFiletypes(allowedFileTypes)) {
+          res.status(400);
+          return;
+        }
+
+        const data: RRFile[] = await Promise.all(
+          req.files.map(async (file) => {
+            const mimeType = await getMimeType(file.path);
+            if (mimeType === undefined) {
+              throw new Error(
+                "MimeType could not be determined for uploaded file."
+              );
+            }
+
+            const isImage = isMimeTypeImage(mimeType);
+            const isAudio = isMimeTypeAudio(mimeType);
+
+            if (
+              (allowedFileTypes === "image" && !isImage) ||
+              (allowedFileTypes === "audio" && !isAudio)
+            ) {
+              throw new Error(
+                `A file with mime type ${mimeType} cannot be uploaded as ${allowedFileTypes}.`
+              );
+            }
+
+            return {
+              originalFilename: file.originalname,
+              filename: file.filename,
+              mimeType,
+              ...(isImage
+                ? {
+                    type: "image" as const,
+                    ...(await getImageDimensions(file.path)),
+                  }
+                : isAudio
+                ? {
+                    type: "audio" as const,
+                    duration: await getAudioDuration(file.path),
+                  }
+                : { type: "other" as const }),
+            };
+          })
+        );
         res.json(data);
       } catch (err) {
         next(err);
@@ -180,8 +230,13 @@ export async function setupWebServer(
   const ctx = require.context("../third-party/game-icons.net", true, /\.svg$/);
   const icons = ctx
     .keys()
-    .map((key) => ctx(key))
-    .map((each) => path.join(__dirname, each));
+    .map((moduleId) => ctx(moduleId))
+    .map((path: string) => {
+      if (!path.startsWith("file://")) {
+        throw new Error("Expected file path to start with file://");
+      }
+      return path.replace("file://", "");
+    });
 
   app.post("/api/random-token", async (req, res, next) => {
     try {
@@ -199,9 +254,13 @@ export async function setupWebServer(
         .png()
         .toFile(path.join(uploadedFilesDir, filename));
 
-      const file: RRFile = {
+      const file: RRFileImage = {
         filename,
         originalFilename: filename,
+        mimeType: "image/png",
+        type: "image",
+        width: 550,
+        height: 550,
       };
       return res.json(file);
     } catch (err) {

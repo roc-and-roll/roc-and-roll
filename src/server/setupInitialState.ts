@@ -40,7 +40,8 @@ class StateValidationFailedError extends StateInvalidRecoverableError {
 }
 
 export async function setupInitialState(
-  statePath: string
+  statePath: string,
+  uploadedFilesDir: string
 ): Promise<SyncedState | undefined> {
   if (!fs.existsSync(statePath)) {
     return undefined;
@@ -48,7 +49,7 @@ export async function setupInitialState(
 
   let state;
   try {
-    state = await loadAndMigrateState(statePath);
+    state = await loadAndMigrateState(statePath, uploadedFilesDir);
   } catch (err) {
     if (err instanceof StateInvalidError) {
       state = await recoverFromStateInvalidError(err);
@@ -74,7 +75,8 @@ const isWithVersion = t.isObject(
 );
 
 async function loadAndMigrateState(
-  statePath: string
+  statePath: string,
+  uploadedFilesDir: string
 ): Promise<SyncedState | undefined> {
   let state;
   try {
@@ -123,7 +125,7 @@ async function loadAndMigrateState(
 
       try {
         console.info(`Running migration for version ${migration.version}.`);
-        state = await migration.migrate(state);
+        state = await migration.migrate(state, uploadedFilesDir);
         if (
           !t.isObject(
             { version: t.isUnknown() },
@@ -137,7 +139,9 @@ async function loadAndMigrateState(
         state.version = migration.version;
       } catch (err) {
         throw new StateInvalidError(
-          `An error occurred while trying to migrate the state to version ${migration.version}.`,
+          `An error occurred while trying to migrate the state to version ${
+            migration.version
+          }${err instanceof Error ? `:\n${err.toString()}` : "."}`,
           err
         );
       }

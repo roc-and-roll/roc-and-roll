@@ -111,7 +111,7 @@ export function CharacterEditor({
   const removeFunc = isTemplate ? characterTemplateRemove : characterRemove;
 
   const updateImage = async () => {
-    const uploadedFiles = await upload(fileInput.current!.files);
+    const uploadedFiles = await upload(fileInput.current!.files, "image");
     dispatch(
       updateFunc({
         id: character.id,

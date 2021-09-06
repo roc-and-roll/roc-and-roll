@@ -1,8 +1,16 @@
 import { useCallback, useState } from "react";
-import { RRAsset, RRCharacter, RRFile, RRPoint } from "../shared/state";
+import { AllowedFileTypes, AllowedFileTypesToObject } from "../shared/files";
+import {
+  RRAsset,
+  RRCharacter,
+  RRFile,
+  RRFileAudio,
+  RRFileImage,
+  RRPoint,
+} from "../shared/state";
 import { fittingTokenSize } from "../shared/util";
 
-export function fileUrl(file: RRFile) {
+export function fileUrl(file: RRFileImage) {
   return _fileUrl(file.filename);
 }
 
@@ -28,13 +36,13 @@ export function tokenImageUrl(
   )}?borderColor=${encodeURIComponent(token.tokenBorderColor)}`;
 }
 
-export async function generateRandomToken(): Promise<RRFile> {
+export async function generateRandomToken(): Promise<RRFileImage> {
   const result = await fetch(`/api/random-token`, {
     method: "POST",
   });
 
   if (result.status === 200) {
-    return (await result.json()) as RRFile;
+    return (await result.json()) as RRFileImage;
   }
   throw new Error("something went wrong");
 }
@@ -42,25 +50,31 @@ export async function generateRandomToken(): Promise<RRFile> {
 export function useFileUpload() {
   const [isUploading, setIsUploading] = useState(false);
 
-  const upload = useCallback(async (fileList: FileList | null | undefined) => {
-    setIsUploading(true);
+  const upload = useCallback(
+    async <T extends AllowedFileTypes>(
+      fileList: FileList | null | undefined,
+      allowedFileTypes: T
+    ): Promise<Array<AllowedFileTypesToObject<T>>> => {
+      setIsUploading(true);
 
-    try {
-      if (fileList === null || fileList === undefined) {
-        return [];
+      try {
+        if (fileList === null || fileList === undefined) {
+          return [];
+        }
+        return uploadFiles(fileList, allowedFileTypes);
+      } finally {
+        setIsUploading(false);
       }
-      return uploadFiles(fileList);
-    } finally {
-      setIsUploading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   return [isUploading, upload] as const;
 }
 
 export async function askAndUploadImages(
   multiple: boolean = false
-): Promise<[RRFile, RRPoint][] | null> {
+): Promise<RRFileImage[] | null> {
   const input = document.createElement("input");
   input.type = "file";
   input.multiple = multiple;
@@ -76,27 +90,7 @@ export async function askAndUploadImages(
     return null;
   }
 
-  const uploadedFiles = await uploadFiles(fileList);
-  const sizes = await Promise.all(
-    fileListToArray(fileList).map((f) => getImageSize(f))
-  );
-
-  return uploadedFiles.map((f, i) => [f, sizes[i]!]);
-}
-
-export function getImageSize(image: File) {
-  return new Promise<RRPoint>((resolve, reject) => {
-    const url = URL.createObjectURL(image);
-    const i = new Image();
-    i.onload = () => {
-      resolve({ x: i.width, y: i.height });
-      URL.revokeObjectURL(url);
-    };
-    i.onerror = (err) => {
-      reject(err);
-    };
-    i.src = url;
-  });
+  return await uploadFiles(fileList, "image");
 }
 
 const fileListToArray = (fileList: FileList) => {
@@ -115,11 +109,15 @@ const fileListToArray = (fileList: FileList) => {
   return files;
 };
 
-export async function uploadFiles(fileList: FileList | File[]) {
+export async function uploadFiles<T extends AllowedFileTypes>(
+  fileList: FileList | File[],
+  allowedFileTypes: T
+): Promise<Array<AllowedFileTypesToObject<T>>> {
   const files =
     fileList instanceof FileList ? fileListToArray(fileList) : fileList;
   const formData = new FormData();
   files.forEach((file) => formData.append("files", file));
+  formData.set("allowedFileTypes", allowedFileTypes);
 
   const result = await fetch(`/api/upload`, {
     method: "POST",
@@ -127,7 +125,7 @@ export async function uploadFiles(fileList: FileList | File[]) {
   });
 
   if (result.status === 200) {
-    return (await result.json()) as RRFile[];
+    return (await result.json()) as Array<AllowedFileTypesToObject<T>>;
   }
   throw new Error("something went wrong");
 }

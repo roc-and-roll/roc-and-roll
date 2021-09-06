@@ -44,10 +44,28 @@ export type RRActiveSongID = MakeRRID<"activeSong">;
 
 export type RRAssetID = MakeRRID<"asset">;
 
-export type RRFile = {
+type RRFileBase = {
   originalFilename: string;
   filename: string;
+  mimeType: string;
 };
+
+export type RRFileAudio = RRFileBase & {
+  type: "audio";
+  duration: number;
+};
+
+export type RRFileImage = RRFileBase & {
+  type: "image";
+  width: number;
+  height: number;
+};
+
+export type RRFileOther = RRFileBase & {
+  type: "other";
+};
+
+export type RRFile = RRFileAudio | RRFileImage | RRFileOther;
 
 // Extracts the entity type from an entity collection
 type ECE<E extends EntityCollection<{ id: RRID }>> = ValueOf<E["entities"]>;

@@ -58,7 +58,7 @@ import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";
 import { changeHPSmartly, isTriggeredByFormElement } from "../../util";
 import { MapMusicIndicator } from "./MapMusicIndicator";
 import { NativeTypes } from "react-dnd-html5-backend";
-import { getImageSize, uploadFiles } from "../../files";
+import { uploadFiles } from "../../files";
 import { MAP_LINK_SIZE } from "./MapLink";
 import {
   characterFamily,
@@ -133,12 +133,11 @@ export default function MapContainer() {
 
   const addBackgroundImages = async (files: File[], point: RRPoint) => {
     try {
-      const uploadedFiles = await uploadFiles(files);
+      const uploadedFiles = await uploadFiles(files, "image");
 
       dispatch(
         await Promise.all(
           uploadedFiles.map(async (uploadedFile, i) => {
-            const file = files[i]!;
             return mapObjectAdd(mapId, {
               id: rrid<RRMapObject>(),
               playerId: myself.id,
@@ -150,7 +149,6 @@ export default function MapContainer() {
 
               type: "image",
               height: DEFAULT_BACKGROUND_IMAGE_HEIGHT,
-              originalSize: await getImageSize(file),
               image: uploadedFile,
             });
           })
