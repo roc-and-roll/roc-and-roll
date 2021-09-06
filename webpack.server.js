@@ -27,8 +27,17 @@ export default (webpackEnv) => {
     externals: [nodeExternals({
       modulesFromFile: true,
       importType: (moduleId) => {
-        // @reduxjs/toolkit produces errors when importing it as an ESM module for some reason :/
-        return `${moduleId === "@reduxjs/toolkit" ? "node-commonjs" : "module"} ${moduleId}`;
+        // Some modules produce errors when importing them as ES modules :/
+        return `${[
+          "@reduxjs/toolkit",
+          "typanion",
+          "conditional-type-checks",
+          "express",
+          "compression",
+          "multer",
+          "async-lock",
+          "socket.io"
+        ].includes(moduleId) ? "node-commonjs" : "module"} ${moduleId}`;
       }
     })],
     mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
@@ -118,6 +127,7 @@ export default (webpackEnv) => {
     output: {
       filename: "[name].roc-and-roll.js",
       path: path.resolve(__dirname, "dist"),
+      module: true,
       // Makes sure that the file paths generated in the .js.map file are correct.
       // To verify, throw an error in server.ts. Clicking the file path in the
       // error message should open your editor.

@@ -1,5 +1,7 @@
 declare const __VERSION__: string;
 
+declare const IMPORT_META_URL: string;
+
 declare module "!!raw-loader!*" {
   const contents: string;
   export = contents;

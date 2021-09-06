@@ -26,9 +26,6 @@ import {
 } from "./files";
 import { isAllowedFiletypes } from "../shared/files";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 export async function setupWebServer(
   httpPort: number,
   uploadedFilesDir: string,
@@ -269,7 +266,7 @@ export async function setupWebServer(
   });
 
   // (6) Serve the client code to the browser
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV !== "production") {
     // In development, simply redirect all non-api requests to the webpack dev
     // server, which serves the client code on its own.
     app.get("*", (req, res, next) => {
@@ -286,6 +283,18 @@ export async function setupWebServer(
       );
     });
   } else {
+    // We cannot use `import.meta.url` here, because webpack replaces that at build
+    // time. Thus, we use a global that does not exist which we sed replace in the
+    // generated js files after webpack is done. Our fake global must have the same
+    // length as the `import.meta.url` so that source maps continue to work.
+    //
+    // Additional files:
+    // - src/shared/types/index.d.ts
+    // - import-meta-url-hack.sh
+    //
+    const __filename = fileURLToPath(IMPORT_META_URL);
+    const __dirname = path.dirname(__filename);
+
     // 1. In production, serve the client code and static assets.
 
     // Serve the index.html file explicitly, instead of reyling on the express.static
