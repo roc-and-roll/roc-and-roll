@@ -27,17 +27,12 @@ export default (webpackEnv) => {
     externals: [nodeExternals({
       modulesFromFile: true,
       importType: (moduleId) => {
-        // Some modules produce errors when importing them as ES modules :/
+        // Many dependencies do not (yet?) work as ES modules. Thus, we only opt
+        // into ES modules for those dependencies that do no longer work as
+        // commonjs modules.
         return `${[
-          "@reduxjs/toolkit",
-          "typanion",
-          "conditional-type-checks",
-          "express",
-          "compression",
-          "multer",
-          "async-lock",
-          "socket.io"
-        ].includes(moduleId) ? "node-commonjs" : "module"} ${moduleId}`;
+          "node-fetch",
+        ].includes(moduleId) ? "module" : "node-commonjs"} ${moduleId}`;
       }
     })],
     mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
