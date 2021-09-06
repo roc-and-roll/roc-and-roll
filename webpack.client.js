@@ -8,7 +8,7 @@ import HtmlWebpackTagsPlugin from 'html-webpack-tags-plugin';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
-import GoogleFontsPlugin from "@beyonk/google-fonts-webpack-plugin";
+import GoogleFontsPlugin from "@cmfcmf/google-fonts-webpack-plugin";
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 
 const gitRevisionPlugin = new GitRevisionPlugin();

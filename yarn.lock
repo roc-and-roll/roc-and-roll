@@ -1366,10 +1366,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@beyonk/google-fonts-webpack-plugin@npm:1.7.0":
+"@cmfcmf/google-fonts-webpack-plugin@cmfcmf/google-fonts-webpack-plugin.git#caching":
   version: 1.7.0
-  resolution: "@beyonk/google-fonts-webpack-plugin@npm:1.7.0"
+  resolution: "@cmfcmf/google-fonts-webpack-plugin@https://github.com/cmfcmf/google-fonts-webpack-plugin.git#commit=1b32065dbd87a117ac9cfd38566e50d59640c9b5"
   dependencies:
+    abort-controller: ^3.0.0
+    find-cache-dir: ^3.3.2
     lodash: ^4.17.4
     md5: ^2.2.1
     node-fetch: ^2.1.2
@@ -1377,22 +1379,7 @@ __metadata:
     yauzl: ^2.8.0
   peerDependencies:
     webpack: ">=4.14.0"
-  checksum: 8b5dca28ce0a7f4d8831e7ca866bfea62b328e951194c1f04c7a549596f9f47d0647553b4e9cb77bd47e7dec5ce7adbdc1a2f7e65cc95121256544807b9de7d8
-  languageName: node
-  linkType: hard
-
-"@beyonk/google-fonts-webpack-plugin@patch:@beyonk/google-fonts-webpack-plugin@npm:1.7.0#.yarn/patches/@beyonk-google-fonts-webpack-plugin-npm-1.7.0-59283e9daf::locator=roc-and-roll%40workspace%3A.":
-  version: 1.7.0
-  resolution: "@beyonk/google-fonts-webpack-plugin@patch:@beyonk/google-fonts-webpack-plugin@npm%3A1.7.0#.yarn/patches/@beyonk-google-fonts-webpack-plugin-npm-1.7.0-59283e9daf::version=1.7.0&hash=ca8b4c&locator=roc-and-roll%40workspace%3A."
-  dependencies:
-    lodash: ^4.17.4
-    md5: ^2.2.1
-    node-fetch: ^2.1.2
-    webpack-sources: ^1.1.0
-    yauzl: ^2.8.0
-  peerDependencies:
-    webpack: ">=4.14.0"
-  checksum: c8434ffd64cd3bf7e5953a26e0949e266aaccf34db34f31cba7c767260d40a6462597aa9598247d31d6ac1afde81a501aa3d256a2a6fd1d7e533033f827623d1
+  checksum: 5dba962d9cc47c7311c9de9993a876b49ff7122ba9ef2df3b458025cc66a7b26ab4e7f95d7419e19f487a86d1149c38b8c9cb5372537492b2077b0a31eb568f8
   languageName: node
   linkType: hard
 
@@ -3087,6 +3074,15 @@ __metadata:
   version: 1.1.1
   resolution: "abbrev@npm:1.1.1"
   checksum: a4a97ec07d7ea112c517036882b2ac22f3109b7b19077dc656316d07d308438aac28e4d9746dc4d84bf6b1e75b4a7b0a5f3cb30592419f128ca9a8cee3bcfa17
+  languageName: node
+  linkType: hard
+
+"abort-controller@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "abort-controller@npm:3.0.0"
+  dependencies:
+    event-target-shim: ^5.0.0
+  checksum: 170bdba9b47b7e65906a28c8ce4f38a7a369d78e2271706f020849c1bfe0ee2067d4261df8bbb66eb84f79208fd5b710df759d64191db58cfba7ce8ef9c54b75
   languageName: node
   linkType: hard
 
@@ -5651,6 +5647,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"event-target-shim@npm:^5.0.0":
+  version: 5.0.1
+  resolution: "event-target-shim@npm:5.0.1"
+  checksum: 1ffe3bb22a6d51bdeb6bf6f7cf97d2ff4a74b017ad12284cc9e6a279e727dc30a5de6bb613e5596ff4dc3e517841339ad09a7eec44266eccb1aa201a30448166
+  languageName: node
+  linkType: hard
+
 "eventemitter3@npm:^4.0.0":
   version: 4.0.7
   resolution: "eventemitter3@npm:4.0.7"
@@ -5901,14 +5904,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"find-cache-dir@npm:^3.3.1":
-  version: 3.3.1
-  resolution: "find-cache-dir@npm:3.3.1"
+"find-cache-dir@npm:^3.3.1, find-cache-dir@npm:^3.3.2":
+  version: 3.3.2
+  resolution: "find-cache-dir@npm:3.3.2"
   dependencies:
     commondir: ^1.0.1
     make-dir: ^3.0.2
     pkg-dir: ^4.1.0
-  checksum: 0f7c22b65e07f9b486b4560227d014fab1e79ffbbfbafb87d113a2e878510bd620ef6fdff090e5248bb2846d28851d19e42bfdc7c50687966acc106328e7abf1
+  checksum: 1e61c2e64f5c0b1c535bd85939ae73b0e5773142713273818cc0b393ee3555fb0fd44e1a5b161b8b6c3e03e98c2fcc9c227d784850a13a90a8ab576869576817
   languageName: node
   linkType: hard
 
@@ -10973,7 +10976,7 @@ resolve@^2.0.0-next.3:
     "@babel/preset-env": ^7.15.0
     "@babel/preset-react": ^7.14.5
     "@babel/preset-typescript": ^7.15.0
-    "@beyonk/google-fonts-webpack-plugin": ^1.7.0
+    "@cmfcmf/google-fonts-webpack-plugin": "cmfcmf/google-fonts-webpack-plugin.git#caching"
     "@doodle3d/clipper-js": ^1.0.11
     "@fortawesome/fontawesome-svg-core": ^1.2.36
     "@fortawesome/free-solid-svg-icons": ^5.15.4
