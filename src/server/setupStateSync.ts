@@ -13,6 +13,7 @@ import {
   SOCKET_DISPATCH_ACTION,
   SOCKET_BROADCAST_MSG,
 } from "../shared/constants";
+import { batchActions } from "redux-batched-actions";
 
 type AdditionalSocketData = {
   finishedOptimisticUpdateIds: OptimisticUpdateID[];
@@ -169,7 +170,7 @@ export const setupStateSync = (
           }
         }
 
-        actions.forEach((action) => store.dispatch(action));
+        store.dispatch(batchActions(actions));
       }
     );
     socket.on(

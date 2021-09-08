@@ -10645,6 +10645,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"redux-batched-actions@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "redux-batched-actions@npm:0.5.0"
+  peerDependencies:
+    redux: ">=1.0.0"
+  checksum: 76d3219ad2d319305b15b76ff120e4339aba1e42b01119205f0e5542db11a6de23c91282837274246f38ac085419e30ddc078bb93604abfbe827eec8c0449443
+  languageName: node
+  linkType: hard
+
 "redux-thunk@npm:^2.3.0":
   version: 2.3.0
   resolution: "redux-thunk@npm:2.3.0"
@@ -11101,6 +11110,7 @@ resolve@^2.0.0-next.3:
     react-refresh: ^0.10.0
     recoil: ^0.4.1
     redux: ^4.1.1
+    redux-batched-actions: ^0.5.0
     regenerator-runtime: ^0.13.9
     remark-breaks: ^3.0.1
     remark-gfm: ^2.0.0

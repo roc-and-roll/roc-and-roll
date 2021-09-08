@@ -1,5 +1,5 @@
 import { matchSorter } from "match-sorter";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   assetSongAdd,
   ephemeralSongAdd,
@@ -13,71 +13,34 @@ import {
   entries,
   RRActiveSong,
   RRAsset,
-  RRAssetID,
-  RRSong,
+  RRAssetSong,
 } from "../../shared/state";
-import { rrid, timestamp } from "../../shared/util";
+import { isTabletopAudioAsset } from "../../shared/tabletopaudio";
+import { partition, rrid, timestamp } from "../../shared/util";
 import { useFileUpload } from "../files";
 import { useMyself } from "../myself";
 import { useServerDispatch, useServerState } from "../state";
 import { TextInput } from "./ui/TextInput";
 import { volumeLinear2Log, VolumeSlider } from "./VolumeSlider";
 
-interface TabletopAudio {
-  key: number;
-  track_title: string;
-  track_type: string;
-  track_genre: string[];
-  flavor: string;
-  small_image: string;
-  large_image: string;
-  link: string;
-  new: boolean;
-  tags: string[];
-}
-
-interface TabletopAudioResponse {
-  tracks: TabletopAudio[];
-}
-
 const DEFAULT_VOLUME = 0.5;
 
 export const Music = React.memo(function Music() {
-  const [tabletopAudio, setTabletopAudio] = useState<RRSong[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
   const myself = useMyself();
   const dispatch = useServerDispatch();
   const activeSongs = entries(
     useServerState((state) => state.ephemeral.activeSongs)
   );
 
-  useEffect(() => {
-    fetch(`/api/tabletopaudio`)
-      .then((res) => res.json() as Promise<TabletopAudioResponse>)
-      .then((l) =>
-        setTabletopAudio(
-          l.tracks.map((t) => ({
-            // use a stable ID such that favoriting external tracks works
-            id: t.link as RRAssetID,
-            type: "song",
-            name: t.track_title,
-            durationSeconds: 0,
-            tags: t.tags,
-            external: true,
-            filenameOrUrl: t.link,
-            playerId: myself.id,
-          }))
-        )
-      )
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      .catch((err) => setError(err.toString()));
-  }, [myself.id]);
-
   const [filter, setFilter] = useState("");
 
-  const ownSongs = entries(useServerState((state) => state.assets)).flatMap(
+  const assets = useServerState((state) => state.assets);
+  const allSongs = entries(assets).flatMap(
     (a) => /*(a.type === "song" ? a : [])*/ a
+  );
+
+  const [tabletopaudioSongs, ownSongs] = partition(allSongs, (song) =>
+    isTabletopAudioAsset(song)
   );
 
   const onStop = useCallback(
@@ -89,7 +52,7 @@ export const Music = React.memo(function Music() {
 
   // FIXME: can be a race condition if the user clicks the button quickly
   const onFavorite = useCallback(
-    (s: RRSong) => {
+    (s: RRAssetSong) => {
       if (myself.favoritedAssetIds.includes(s.id)) {
         dispatch({
           actions: [
@@ -115,7 +78,7 @@ export const Music = React.memo(function Music() {
   );
 
   const onReplace = useCallback(
-    (t: RRSong) => {
+    (t: RRAssetSong) => {
       dispatch((state) => [
         ...entries(state.ephemeral.activeSongs).map((activeSong) =>
           ephemeralSongRemove(activeSong.id)
@@ -133,7 +96,7 @@ export const Music = React.memo(function Music() {
   );
 
   const onAdd = useCallback(
-    (t: RRSong) => {
+    (t: RRAssetSong) => {
       dispatch(
         ephemeralSongAdd({
           startedAt: timestamp(),
@@ -157,9 +120,9 @@ export const Music = React.memo(function Music() {
     [dispatch]
   );
 
-  const showSongList = (songs: RRSong[]) =>
+  const showSongList = (songs: RRAssetSong[]) =>
     matchSorter(songs, filter, {
-      keys: ["name", "tags.*"],
+      keys: ["name", "description", "tags.*"],
       threshold: matchSorter.rankings.ACRONYM,
     }).map((t) => (
       <Song
@@ -175,8 +138,6 @@ export const Music = React.memo(function Music() {
       />
     ));
 
-  const allSongs = [...ownSongs, ...(tabletopAudio ?? [])];
-
   return (
     <>
       <TextInput
@@ -186,7 +147,6 @@ export const Music = React.memo(function Music() {
         placeholder="search music..."
       />
       <UploadAudio onUploaded={() => setFilter("")} />
-      {error}
       <div>
         <strong>- Playing -</strong>
         {activeSongs.map((activeSong) => (
@@ -206,9 +166,7 @@ export const Music = React.memo(function Music() {
       <div>
         <strong>- Favorites -</strong>
         {showSongList(
-          myself.favoritedAssetIds.flatMap(
-            (id) => allSongs.find((song) => song.id === id) ?? []
-          )
+          myself.favoritedAssetIds.flatMap((id) => assets.entities[id] ?? [])
         )}
       </div>
       <div>
@@ -217,7 +175,7 @@ export const Music = React.memo(function Music() {
       </div>
       <div>
         <strong>- Tabletop Audio -</strong>
-        {tabletopAudio && showSongList(tabletopAudio)}
+        {showSongList(tabletopaudioSongs)}
       </div>
     </>
   );
@@ -236,12 +194,14 @@ function UploadAudio({ onUploaded }: { onUploaded: () => void }) {
           assetSongAdd({
             id: rrid<RRAsset>(),
             name: f.originalFilename,
+            description: null,
             filenameOrUrl: f.filename,
             external: false,
             type: "song",
             playerId: myself.id,
             tags: [],
-            durationSeconds: 0,
+            durationSeconds: f.duration / 1000,
+            extra: {},
           })
         )
       );
@@ -290,24 +250,31 @@ const Song = React.memo(function Song({
   onSetVolume,
   filterText,
 }: {
-  audio: RRSong;
+  audio: RRAssetSong;
   active?: RRActiveSong;
   filterText: string;
-  onAdd: (audio: RRSong) => void;
-  onReplace: (audio: RRSong) => void;
+  onAdd: (audio: RRAssetSong) => void;
+  onReplace: (audio: RRAssetSong) => void;
   onStop: (audio: RRActiveSong) => void;
-  onFavorite: (audio: RRSong) => void;
+  onFavorite: (audio: RRAssetSong) => void;
   onSetVolume: (audio: RRActiveSong, volume: number) => void;
 }) {
-  const showTags = filterText.length > 0;
+  const showTagsAndDescription = filterText.length > 0;
 
   return (
     <div className="tabletopaudio-song">
       <div className="tabletopaudio-label">
         {highlightMatching(audio.name, filterText)}
-        <div className="tabletopaudio-tags">
-          {showTags && highlightMatching(audio.tags.join(". "), filterText)}
-        </div>
+        {showTagsAndDescription && audio.description && (
+          <div className="tabletopaudio-description">
+            {highlightMatching(audio.description, filterText)}
+          </div>
+        )}
+        {showTagsAndDescription && (
+          <div className="tabletopaudio-tags">
+            {highlightMatching(audio.tags.join(". "), filterText)}
+          </div>
+        )}
       </div>
       {active ? (
         <>

@@ -70,14 +70,31 @@ function isColor() {
   ]);
 }
 
-const isRRFileImage = t.isObject({
+const sharedRRFileValidators = {
   originalFilename: t.isString(),
   filename: t.isString(),
   mimeType: t.isString(),
+};
+
+const isRRFileImage = t.isObject({
+  ...sharedRRFileValidators,
   type: t.isLiteral("image"),
   width: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
   height: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
 });
+
+const isRRFileAudio = t.isObject({
+  ...sharedRRFileValidators,
+  type: t.isLiteral("audio"),
+  duration: t.applyCascade(t.isNumber(), [t.isPositive()]),
+});
+
+const isRRFileOther = t.isObject({
+  ...sharedRRFileValidators,
+  type: t.isLiteral("other"),
+});
+
+const isRRFile = t.isOneOf([isRRFileImage, isRRFileAudio, isRRFileOther]);
 
 const isRRPoint = t.isObject({
   x: t.isNumber(),
@@ -102,19 +119,24 @@ export const isDamageType = t.isObject({
 const sharedAssetValidators = {
   id: isRRID<RRAssetID>(false),
   name: t.isString(),
+  description: t.isNullable(t.isString()),
   external: t.isBoolean(),
   filenameOrUrl: t.isString(),
-  playerId: isRRID<RRPlayerID>(),
+  playerId: t.isNullable(isRRID<RRPlayerID>()),
+  extra: t.isObject({}, { extra: t.isUnknown() }),
 };
 
-const isRRSong = t.isObject({
+const isRRAssetSong = t.isObject({
   ...sharedAssetValidators,
   type: t.isLiteral("song"),
   tags: t.isArray(t.isString()),
-  durationSeconds: t.applyCascade(t.isNumber(), [
-    t.isInteger(),
-    t.isPositive(),
-  ]),
+  durationSeconds: t.applyCascade(t.isNumber(), [t.isPositive()]),
+});
+
+const isRRAssetImage = t.isObject({
+  ...sharedAssetValidators,
+  type: t.isLiteral("image"),
+  originalFunction: t.isEnum(["token", "map"] as const),
 });
 
 export const isStateVersion = t.applyCascade(t.isNumber(), [
@@ -448,13 +470,9 @@ export const isSyncedState = t.isObject({
   assets: isEntityCollection(
     t.isOneOf(
       [
-        isRRSong,
+        isRRAssetSong,
         // TODO: Asset images are not yet used
-        // t.isObject({
-        //   ...sharedAssetValidators,
-        //   type: t.isLiteral("image"),
-        //   originalFunction: t.isEnum(["token", "map"] as const),
-        // }),
+        // isRRAssetImage,
       ],
       { exclusive: true }
     )
@@ -477,7 +495,7 @@ export const isSyncedState = t.isObject({
     activeSongs: isEntityCollection(
       t.isObject({
         id: isRRID<RRActiveSongID>(false),
-        song: isRRSong,
+        song: isRRAssetSong,
         startedAt: isTimestamp,
         volume: t.applyCascade(t.isNumber(), [t.isInInclusiveRange(0, 1)]),
         addedBy: isRRID<RRPlayerID>(),

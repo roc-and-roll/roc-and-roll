@@ -23,8 +23,8 @@ import {
   RRDiceTemplate,
   RRLogEntryAchievement,
   RRActiveSong,
-  RRImage,
-  RRSong,
+  RRAssetImage,
+  RRAssetSong,
   RRToken,
   RRMapObjectID,
   RRAssetID,
@@ -418,23 +418,24 @@ export const diceTemplatePartRemove = createAction<{
 // Asset state
 ////////////////////////////////////////////////////////////////////////////////
 
-export const assetSongAdd = createAction<RRSong>("asset/song/add");
+export const assetSongAdd = createAction<RRAssetSong>("asset/song/add");
 
-export const assetImageAdd = createAction<RRImage>("asset/image/add");
+export const assetImageAdd = createAction<RRAssetImage>("asset/image/add");
 
 export const assetSongUpdate =
-  createAction<Update<RRSong>>("asset/song/update");
+  createAction<Update<RRAssetSong>>("asset/song/update");
 
 export const assetImageUpdate =
-  createAction<Update<RRImage>>("asset/image/update");
+  createAction<Update<RRAssetImage>>("asset/image/update");
 
-export const assetSongRemove = createAction<RRSong["id"]>("asset/song/remove");
+export const assetSongRemove =
+  createAction<RRAssetSong["id"]>("asset/song/remove");
 
 export const assetImageRemove =
-  createAction<RRImage["id"]>("asset/image/remove");
+  createAction<RRAssetImage["id"]>("asset/image/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
-// Asset state
+// Global settings
 ////////////////////////////////////////////////////////////////////////////////
 
 export const globalSettingsUpdate = createAction<Partial<RRGlobalSettings>>(

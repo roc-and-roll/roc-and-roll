@@ -151,3 +151,21 @@ export function hashString(str: string, seed = 0): number {
 export function empty2Null<T extends string>(str: T): Exclude<T, ""> | null {
   return str === "" ? null : (str as Exclude<T, "">);
 }
+
+export function partition<E, A extends E = E, B extends E = E>(
+  arr: Iterable<E>,
+  fn: (each: E) => boolean
+) {
+  const a = [] as A[];
+  const b = [] as B[];
+
+  for (const each of arr) {
+    if (fn(each)) {
+      a.push(each as A);
+    } else {
+      b.push(each as B);
+    }
+  }
+
+  return [a, b] as const;
+}

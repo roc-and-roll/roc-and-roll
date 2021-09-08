@@ -13,7 +13,6 @@ import sharp from "sharp";
 import { fittingTokenSize } from "../shared/util";
 import { existsSync } from "fs";
 import { randomColor } from "../shared/colors";
-import fetch from "node-fetch";
 import AsyncLock from "async-lock";
 import { GRID_SIZE, SOCKET_IO_PATH } from "../shared/constants";
 import compression from "compression";
@@ -117,21 +116,6 @@ export async function setupWebServer(
     }
   );
 
-  let cachedTabletopaudioResponse: any;
-  app.get("/api/tabletopaudio", async (req, res, next) => {
-    try {
-      if (cachedTabletopaudioResponse) {
-        res.json(cachedTabletopaudioResponse);
-        return;
-      }
-
-      const result = await fetch("https://tabletopaudio.com/tta_data");
-      res.json((cachedTabletopaudioResponse = await result.json()));
-    } catch (err) {
-      next(err);
-    }
-  });
-
   // (3) Serve uploaded files
   app.use("/api/files", express.static(uploadedFilesDir, { etag: true }));
 
@@ -228,12 +212,7 @@ export async function setupWebServer(
   const icons = ctx
     .keys()
     .map((moduleId) => ctx(moduleId))
-    .map((path: string) => {
-      if (!path.startsWith("file://")) {
-        throw new Error("Expected file path to start with file://");
-      }
-      return path.replace("file://", "");
-    });
+    .map((path: string) => fileURLToPath(path));
 
   app.post("/api/random-token", async (req, res, next) => {
     try {

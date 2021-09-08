@@ -1,9 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { SyncedState } from "../shared/state";
 import { reducer } from "../shared/reducer";
+import { enableBatching } from "redux-batched-actions";
 
 const options = {
-  reducer,
+  reducer: enableBatching(reducer),
 };
 
 export function setupReduxStore(preloadedState: SyncedState | undefined) {

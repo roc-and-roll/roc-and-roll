@@ -9,6 +9,8 @@ import { ephemeralPlayerUpdate } from "../shared/actions";
 import { setupArgs } from "./setupArgs";
 import { isSyncedState } from "../shared/validation";
 import { setupInitialState } from "./setupInitialState";
+import { setupTabletopAudioTrackSync } from "./setupTabletopaudio";
+import { batchActions } from "redux-batched-actions";
 
 void (async () => {
   const { workspace: workspaceDir, quiet, port: httpPort } = setupArgs();
@@ -54,22 +56,30 @@ This should not have happened!
 
   setupStatePersistence(store, statePath);
 
+  await setupTabletopAudioTrackSync(store);
+
   // Delete mouse position if it has not changed for some time.
   const DELETE_MOUSE_POSITION_TIME_THRESHOLD = 60 * 1000;
   setInterval(() => {
     const now = Date.now();
     const state = store.getState();
-    entries(state.ephemeral.players)
-      .filter(
-        (each) =>
-          each.mapMouse &&
-          now - each.mapMouse.lastUpdate > DELETE_MOUSE_POSITION_TIME_THRESHOLD
+    store.dispatch(
+      batchActions(
+        entries(state.ephemeral.players)
+          .filter(
+            (each) =>
+              each.mapMouse &&
+              now - each.mapMouse.lastUpdate >
+                DELETE_MOUSE_POSITION_TIME_THRESHOLD
+          )
+          .map((each) =>
+            ephemeralPlayerUpdate({
+              id: each.id,
+              changes: { mapMouse: null },
+            })
+          )
       )
-      .forEach((each) => {
-        store.dispatch(
-          ephemeralPlayerUpdate({ id: each.id, changes: { mapMouse: null } })
-        );
-      });
+    );
   }, 2000);
 
   console.log(`Roc & Roll started at ${url}.`);

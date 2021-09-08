@@ -1,13 +1,6 @@
 import { useCallback, useState } from "react";
 import { AllowedFileTypes, AllowedFileTypesToObject } from "../shared/files";
-import {
-  RRAsset,
-  RRCharacter,
-  RRFile,
-  RRFileAudio,
-  RRFileImage,
-  RRPoint,
-} from "../shared/state";
+import { RRAsset, RRCharacter, RRFileImage } from "../shared/state";
 import { fittingTokenSize } from "../shared/util";
 
 export function fileUrl(file: RRFileImage) {
@@ -61,7 +54,7 @@ export function useFileUpload() {
         if (fileList === null || fileList === undefined) {
           return [];
         }
-        return uploadFiles(fileList, allowedFileTypes);
+        return await uploadFiles(fileList, allowedFileTypes);
       } finally {
         setIsUploading(false);
       }

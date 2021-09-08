@@ -323,11 +323,14 @@ export type RRLogEntryDiceRoll = Extract<
 
 export type RRLogEntry = ECE<SyncedState["logEntries"]>;
 
-export type RRSong = Extract<ECE<SyncedState["assets"]>, { type: "song" }>;
+export type RRAssetSong = Extract<ECE<SyncedState["assets"]>, { type: "song" }>;
 
-export type RRImage = Extract<ECE<SyncedState["assets"]>, { type: "image" }>;
+export type RRAssetImage = Extract<
+  ECE<SyncedState["assets"]>,
+  { type: "image" }
+>;
 
-export type RRAsset = RRSong | RRImage;
+export type RRAsset = RRAssetSong | RRAssetImage;
 
 // This must resemble the EntityState type from @reduxjs/toolkit to work with
 // createEntityAdapter
