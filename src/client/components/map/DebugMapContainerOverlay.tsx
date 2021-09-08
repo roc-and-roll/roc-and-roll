@@ -175,15 +175,15 @@ export function DebugMapContainerOverlay(props: {
       </CollapsibleWithLocalState>
       <CollapsibleWithLocalState
         localStateKey="map/debug/overlay/ephemeral-players"
-        title="Ephermal players"
+        title="Ephemeral players"
       >
-        <DebugEphermalPlayers />
+        <DebugEphemeralPlayers />
       </CollapsibleWithLocalState>
     </div>
   );
 }
 
-function DebugEphermalPlayers() {
+function DebugEphemeralPlayers() {
   const ephemeralPlayers = useServerState((s) => s.ephemeral.players);
 
   return (

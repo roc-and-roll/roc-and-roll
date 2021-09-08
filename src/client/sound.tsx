@@ -1,8 +1,16 @@
-import React, { useMemo } from "react";
+import React, { useDebugValue, useMemo } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { entries, RRActiveSong } from "../shared/state";
+import {
+  entries,
+  RRActiveSong,
+  RRActiveSongOrSoundSet,
+  RRActiveSoundSet,
+  RRAssetSong,
+  RRPlaylist,
+  RRPlaylistEntry,
+} from "../shared/state";
 import { useRRSettings } from "./settings";
-import { useServerState } from "./state";
+import { useServerState, useServerStateRef } from "./state";
 import { useLatest } from "./useLatest";
 import { Howl } from "howler";
 import { assetUrl } from "./files";
@@ -80,19 +88,15 @@ type SoundState =
   | "error-needs-unlock";
 
 export function useRRComplexSound(
-  url: string,
+  urlAndDuration: { url: string; duration: number } | null,
   soundVolume: number,
   {
-    stream: html5,
     loop,
   }: {
-    // if true, the sound does not need to be downloaded in its entirety before it
-    // starts playing
-    stream: boolean;
     loop: boolean;
   }
 ): readonly [(startedAt: number) => void, () => void, () => void, SoundState] {
-  const urlRef = useLatest(url);
+  const urlRef = useLatest(urlAndDuration?.url);
   const loopRef = useLatest(loop);
 
   const howlRef = useRef<Howl | null>(null);
@@ -115,33 +119,35 @@ export function useRRComplexSound(
   }, []);
 
   const [state, setState] = useState<SoundState>("stopped");
-  const lastUrlRef = useRef("");
+  const lastUrlRef = useRef<string | undefined>("");
 
-  const durationRef = useRef<number | undefined>(undefined);
+  const durationRef = useLatest(urlAndDuration?.duration);
   const soundIdRef = useRef<number | undefined>(undefined);
   const startedAtRef = useRef<number | undefined>(undefined);
 
   const _play = useCallback(() => {
+    if (!howlRef.current || durationRef.current === undefined) {
+      return;
+    }
+
     if (startedAtRef.current === undefined) {
       // When calling play() multiple times, we do not want to queue additional
       // versions of this sound. Instead, we want to stop playing the
       // potentially already playing sound before calling play() again.
       // Therefore we pass the soundId of the previously played sound to
       // interrupt it and start it again.
-      soundIdRef.current = howlRef.current?.play(soundIdRef.current);
+      soundIdRef.current = howlRef.current.play(soundIdRef.current);
     } else {
-      if (durationRef.current !== undefined && howlRef.current) {
-        soundIdRef.current = howlRef.current.play(soundIdRef.current);
-        // At least in Chrome, seeking in a looped sound only works when seeking
-        // to an offset <= duration the duration of the song. Therefore, we can
-        // only start playing the song at the correct seek position if we know
-        // the duration of the song.
-        const seekSeconds =
-          ((Date.now() - startedAtRef.current) / 1000) % durationRef.current;
-        howlRef.current.seek(seekSeconds, soundIdRef.current);
-      }
+      soundIdRef.current = howlRef.current.play(soundIdRef.current);
+      // At least in Chrome, seeking in a looped sound only works when seeking
+      // to an offset <= the duration of the song. Therefore, we can only
+      // start playing the song at the correct seek position if we know
+      // the duration of the song.
+      const seekSeconds =
+        ((Date.now() - startedAtRef.current) % durationRef.current) / 1000;
+      howlRef.current.seek(seekSeconds, soundIdRef.current);
     }
-  }, []);
+  }, [durationRef]);
 
   const play = useCallback(
     (startedAt?: number) => {
@@ -150,7 +156,6 @@ export function useRRComplexSound(
       // Unload the previous sound if the url changes.
       if (lastUrlRef.current !== urlRef.current) {
         howlRef.current?.unload();
-        durationRef.current = undefined;
         soundIdRef.current = undefined;
         howlRef.current = null;
       }
@@ -160,7 +165,7 @@ export function useRRComplexSound(
         setState("loading");
         howlRef.current = new Howl({
           src: urlRef.current,
-          html5,
+          html5: false, // never enable html5, Howler is buggy with html5
           autoplay: false,
           preload: true,
           // We need to initialize volume, mute, and loop both here and in the
@@ -175,10 +180,10 @@ export function useRRComplexSound(
           onend: () => setState("stopped"),
           onloaderror: () => setState("error"),
           onload: () => {
-            durationRef.current = howlRef.current?.duration();
             _play();
           },
           onplayerror: () => {
+            console.log("is locked");
             // https://github.com/goldfire/howler.js/#mobilechrome-playback
             setState("error-needs-unlock");
           },
@@ -186,10 +191,11 @@ export function useRRComplexSound(
             _play();
           },
         });
+      } else {
+        _play();
       }
-      _play();
     },
-    [globalUserMuteRef, volumeRef, loopRef, html5, urlRef, _play]
+    [globalUserMuteRef, volumeRef, loopRef, urlRef, _play]
   );
 
   useEffect(() => {
@@ -204,6 +210,8 @@ export function useRRComplexSound(
 
   const stop = useCallback(() => {
     howlRef.current?.stop();
+    soundIdRef.current = undefined;
+    startedAtRef.current = undefined;
   }, []);
 
   const setLockedSounds = useSetRecoilState(lockedSoundsAtom);
@@ -213,12 +221,20 @@ export function useRRComplexSound(
     return () => setLockedSounds(updateLockedSounds(id, false));
   }, [state, setLockedSounds, id]);
 
+  useDebugValue({
+    url: urlAndDuration?.url,
+    duration: urlAndDuration?.duration,
+    startedAt: startedAtRef.current,
+    soundId: soundIdRef.current,
+    state,
+  });
+
   return [play, pause, stop, state] as const;
 }
 
-export const ActiveSongsPlayer = React.memo(function ActiveSongsPlayer() {
-  const activeSongs = entries(
-    useServerState((state) => state.ephemeral.activeSongs)
+export const ActiveMusicPlayer = React.memo(function ActiveSongsPlayer() {
+  const activeMusic = entries(
+    useServerState((state) => state.ephemeral.activeMusic)
   );
   // We can't usually autoplay audio, so prompt the user to confirm it.
   // It may not be sufficient to prompt the user just once, when many additional
@@ -230,21 +246,47 @@ export const ActiveSongsPlayer = React.memo(function ActiveSongsPlayer() {
       {needsUnlock.length > 0 && (
         <div className="join-audio-popup">Click to join the music</div>
       )}
-      {activeSongs.map((activeSong) => (
-        <ActiveSongPlayer key={activeSong.id} activeSong={activeSong} />
-      ))}
+      {activeMusic.map((activeSongOrSoundSet) => {
+        if (activeSongOrSoundSet.type === "soundSet") {
+          return (
+            <ActiveSoundSetPlayer
+              key={activeSongOrSoundSet.id}
+              activeSoundSet={activeSongOrSoundSet}
+            />
+          );
+        }
+        return (
+          <ActiveSongPlayer
+            key={activeSongOrSoundSet.id}
+            activeSong={activeSongOrSoundSet}
+          />
+        );
+      })}
     </>
   );
 });
 
 function ActiveSongPlayer({ activeSong }: { activeSong: RRActiveSong }) {
+  const song = useServerState(
+    (state) => state.assets.entities[activeSong.songId]
+  );
+
+  return song ? (
+    <ActiveSongPlayerImpl activeSong={activeSong} song={song} />
+  ) : null;
+}
+
+function ActiveSongPlayerImpl({
+  activeSong,
+  song,
+}: {
+  activeSong: RRActiveSongOrSoundSet;
+  song: RRAssetSong;
+}) {
   const [play, _pause, stop] = useRRComplexSound(
-    assetUrl(activeSong.song),
+    { url: assetUrl(song), duration: song.duration },
     activeSong.volume,
-    {
-      stream: true,
-      loop: true,
-    }
+    { loop: false }
   );
 
   useEffect(() => {
@@ -254,4 +296,144 @@ function ActiveSongPlayer({ activeSong }: { activeSong: RRActiveSong }) {
   }, [play, stop, activeSong.startedAt]);
 
   return null;
+}
+
+function ActiveSoundSetPlayer({
+  activeSoundSet,
+}: {
+  activeSoundSet: RRActiveSoundSet;
+}) {
+  const soundSet = useServerState(
+    (state) => state.soundSets.entities[activeSoundSet.soundSetId]
+  );
+
+  return soundSet ? (
+    <>
+      {soundSet.playlists.map((playlist) => (
+        <ActivePlaylistPlayerImpl
+          key={playlist.id}
+          activeSoundSet={activeSoundSet}
+          playlist={playlist}
+        />
+      ))}
+    </>
+  ) : null;
+}
+
+function ActivePlaylistPlayerImpl({
+  activeSoundSet,
+  playlist,
+}: {
+  activeSoundSet: RRActiveSoundSet;
+  playlist: RRPlaylist;
+}) {
+  const current = useCurrentlyPlayingPlaylistEntryAndSong(
+    playlist,
+    activeSoundSet
+  );
+
+  const [play, _pause, stop] = useRRComplexSound(
+    current
+      ? { url: assetUrl(current.song), duration: current.song.duration }
+      : null,
+    volumeLog2linear(
+      activeSoundSet.volume *
+        playlist.volume *
+        (current?.playlistEntry.volume ?? 0)
+    ),
+    { loop: false }
+  );
+
+  useEffect(() => {
+    if (current?.startedAt === undefined) {
+      return;
+    }
+    play(current.startedAt);
+  }, [
+    play,
+    stop,
+    current?.startedAt,
+    // Also restart playing if the song changes
+    current?.song,
+  ]);
+
+  return null;
+}
+
+type CurrentlyPlaylingPlaylistEntryAndSongResult = null | {
+  song: RRAssetSong;
+  startedAt: number;
+  timeRemaining: number;
+  playlistEntry: RRPlaylistEntry;
+};
+
+export function useCurrentlyPlayingPlaylistEntryAndSong(
+  playlist: RRPlaylist,
+  activeSoundSet?: RRActiveSoundSet
+): CurrentlyPlaylingPlaylistEntryAndSongResult {
+  const assetsRef = useServerStateRef((state) => state.assets);
+
+  const calculate = useCallback(() => {
+    if (activeSoundSet?.startedAt === undefined) {
+      return null;
+    }
+
+    const assets = assetsRef.current;
+    const playlistEntriesWithSongs = playlist.entries.flatMap(
+      (playlistEntry) => {
+        const song = assets.entities[playlistEntry.songId];
+        return song ? { playlistEntry, song } : [];
+      }
+    );
+
+    const totalPlaylistDuration = playlistEntriesWithSongs.reduce(
+      (sum, { song }) => sum + song.duration,
+      0
+    );
+
+    const playlistTimeOffset =
+      (Date.now() - activeSoundSet.startedAt) % totalPlaylistDuration;
+
+    let currentSongStartedAt: number | null = null;
+    let currentSongTimeRemaining: number | null = null;
+    let currentPlaylistEntryWithSong: {
+      song: RRAssetSong;
+      playlistEntry: RRPlaylistEntry;
+    } | null = null;
+    let time = 0;
+    for (const entry of playlistEntriesWithSongs) {
+      if (playlistTimeOffset <= time + entry.song.duration) {
+        currentPlaylistEntryWithSong = entry;
+        currentSongTimeRemaining =
+          entry.song.duration - (playlistTimeOffset - time);
+        currentSongStartedAt = Date.now() - (playlistTimeOffset - time);
+        break;
+      }
+
+      time += entry.song.duration;
+    }
+
+    return currentPlaylistEntryWithSong === null ||
+      currentSongStartedAt === null ||
+      currentSongTimeRemaining === null
+      ? null
+      : {
+          ...currentPlaylistEntryWithSong,
+          startedAt: currentSongStartedAt,
+          timeRemaining: currentSongTimeRemaining,
+        };
+  }, [activeSoundSet?.startedAt, assetsRef, playlist.entries]);
+
+  const [current, setCurrent] =
+    useState<CurrentlyPlaylingPlaylistEntryAndSongResult>(() => calculate());
+
+  useEffect(() => setCurrent(calculate()), [calculate]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => setCurrent(calculate()), 1000);
+
+    return () => clearInterval(intervalId);
+  }, [calculate]);
+
+  return current;
 }

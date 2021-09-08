@@ -14,7 +14,7 @@ export const FORCE_COMMIT_FIELD_VALUE_AFTER = 30 * 1000;
 
 export const STORE_SUBSCRIPTION_THROTTLE = 100;
 
-export const LAST_MIGRATION_VERSION = 9;
+export const LAST_MIGRATION_VERSION = 11;
 
 export const SYNC_MY_MOUSE_POSITION = true as boolean;
 
@@ -29,3 +29,5 @@ export const SOCKET_PATCH_STATE = "PATCH_STATE";
 export const SOCKET_DISPATCH_ACTION = "REDUX_ACTION";
 
 export const SOCKET_BROADCAST_MSG = "MESSAGE";
+
+export const DEFAULT_VOLUME = 0.5;

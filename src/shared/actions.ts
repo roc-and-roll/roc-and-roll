@@ -1,7 +1,7 @@
 import { createAction } from "@reduxjs/toolkit";
 import type { Update as OriginalUpdate } from "@reduxjs/toolkit";
 import {
-  EphermalPlayer,
+  EphemeralPlayer,
   InitiativeTrackerSyncedState,
   RRID,
   RRInitiativeTrackerEntry,
@@ -22,7 +22,7 @@ import {
   RRCharacterID,
   RRDiceTemplate,
   RRLogEntryAchievement,
-  RRActiveSong,
+  RRActiveSongOrSoundSet,
   RRAssetImage,
   RRAssetSong,
   RRToken,
@@ -32,6 +32,11 @@ import {
   RRDiceTemplatePart,
   RRDiceTemplateID,
   EMPTY_ENTITY_COLLECTION,
+  RRPlaylist,
+  RRPlaylistEntryID,
+  RRSoundSet,
+  RRPlaylistID,
+  RRPlaylistEntry,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -365,30 +370,31 @@ export const initiativeTrackerEntryRemove = createAction<
 >("initiativetracker/entry/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
-// Ephermal state
+// Ephemeral state
 ////////////////////////////////////////////////////////////////////////////////
 
-export const ephemeralPlayerAdd = createAction<EphermalPlayer>(
+export const ephemeralPlayerAdd = createAction<EphemeralPlayer>(
   "ephemeral/player/add"
 );
 
-export const ephemeralPlayerUpdate = createAction<Update<EphermalPlayer>>(
+export const ephemeralPlayerUpdate = createAction<Update<EphemeralPlayer>>(
   "ephemeral/player/update"
 );
 
-export const ephemeralPlayerRemove = createAction<EphermalPlayer["id"]>(
+export const ephemeralPlayerRemove = createAction<EphemeralPlayer["id"]>(
   "ephemeral/player/remove"
 );
 
-export const ephemeralSongAdd =
-  createAction<RRActiveSong>("ephemeral/song/add");
-
-export const ephemeralSongUpdate = createAction<Update<RRActiveSong>>(
-  "ephemeral/song/update"
+export const ephemeralMusicAdd = createAction<RRActiveSongOrSoundSet>(
+  "ephemeral/music/add"
 );
 
-export const ephemeralSongRemove = createAction<RRActiveSong["id"]>(
-  "ephemeral/song/remove"
+export const ephemeralMusicUpdate = createAction<
+  Update<RRActiveSongOrSoundSet>
+>("ephemeral/music/update");
+
+export const ephemeralMusicRemove = createAction<RRActiveSongOrSoundSet["id"]>(
+  "ephemeral/music/remove"
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -433,6 +439,82 @@ export const assetSongRemove =
 
 export const assetImageRemove =
   createAction<RRAssetImage["id"]>("asset/image/remove");
+
+////////////////////////////////////////////////////////////////////////////////
+// Sound Sets
+////////////////////////////////////////////////////////////////////////////////
+
+export const soundSetAdd = createAction(
+  "soundSet/add",
+  (soundSet: Omit<RRSoundSet, "id">): { payload: RRSoundSet } => ({
+    payload: { id: rrid<RRSoundSet>(), ...soundSet },
+  })
+);
+
+export const soundSetUpdate =
+  createAction<Update<RRSoundSet>>("soundSet/update");
+
+export const soundSetRemove = createAction<RRSoundSet["id"]>("soundSet/remove");
+
+export const soundSetPlaylistAdd = createAction(
+  "soundSet/playlist/add",
+  (
+    soundSetId: RRSoundSet["id"],
+    playlist: Omit<RRPlaylist, "id">
+  ): { payload: { soundSetId: RRSoundSet["id"]; playlist: RRPlaylist } } => ({
+    payload: { soundSetId, playlist: { id: rrid<RRPlaylist>(), ...playlist } },
+  })
+);
+
+export const soundSetPlaylistUpdate = createAction<{
+  soundSetId: RRSoundSet["id"];
+  update: Update<RRPlaylist>;
+}>("soundSet/playlist/update");
+
+export const soundSetPlaylistRemove = createAction<{
+  soundSetId: RRSoundSet["id"];
+  playlistId: RRPlaylistID;
+}>("soundSet/playlist/remove");
+
+export const soundSetPlaylistEntryAdd = createAction(
+  "soundSet/playlist/entry/add",
+  (
+    soundSetId: RRSoundSet["id"],
+    playlistId: RRPlaylistID,
+    playlistEntry: Omit<RRPlaylistEntry, "id">
+  ): {
+    payload: {
+      soundSetId: RRSoundSet["id"];
+      playlistId: RRPlaylistID;
+      playlistEntry: RRPlaylistEntry;
+    };
+  } => ({
+    payload: {
+      soundSetId,
+      playlistId,
+      playlistEntry: { id: rrid<RRPlaylistEntry>(), ...playlistEntry },
+    },
+  })
+);
+
+export const soundSetPlaylistEntryUpdate = createAction<{
+  soundSetId: RRSoundSet["id"];
+  playlistId: RRPlaylistID;
+  update: Update<RRPlaylistEntry>;
+}>("soundSet/playlist/entry/update");
+
+export const soundSetPlaylistEntryMove = createAction<{
+  soundSetId: RRSoundSet["id"];
+  playlistId: RRPlaylistID;
+  playlistEntryId: RRPlaylistEntryID;
+  direction: "up" | "down";
+}>("soundSet/playlist/entry/move");
+
+export const soundSetPlaylistEntryRemove = createAction<{
+  soundSetId: RRSoundSet["id"];
+  playlistId: RRPlaylist["id"];
+  playlistEntryId: RRPlaylistEntryID;
+}>("soundSet/playlist/entry/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global settings

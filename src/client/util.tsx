@@ -89,3 +89,36 @@ export function changeHPSmartly(
 
   return { hp: newHP, temporaryHP: newTemporaryHP };
 }
+
+export const highlightMatching = (text: string, search: string) => {
+  if (search.length < 1) {
+    return text;
+  }
+
+  const index = text.toLowerCase().indexOf(search.toLowerCase());
+  if (index >= 0) {
+    return (
+      <>
+        {text.substring(0, index)}
+        <strong className="search-match">
+          {text.substring(index, index + search.length)}
+        </strong>
+        {text.substring(index + search.length)}
+      </>
+    );
+  }
+
+  return text;
+};
+
+export function formatDuration(duration: number) {
+  duration = Math.round(duration / 1000);
+
+  const seconds = duration % 60;
+  const minutes = Math.floor(duration / 60) % 60;
+  const hours = Math.floor(minutes / 60);
+
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+}

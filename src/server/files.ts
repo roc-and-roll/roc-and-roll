@@ -33,7 +33,12 @@ export async function getAudioDuration(path: string) {
 
     ffprobe.on("close", (code) => {
       if (code === 0) {
-        resolve(parseFloat(result.trim()));
+        const duration = parseFloat(result.trim()) * 1000;
+        if (duration <= 0) {
+          reject(-1);
+        } else {
+          resolve(duration);
+        }
       } else {
         reject(code);
       }

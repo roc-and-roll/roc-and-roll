@@ -40,9 +40,15 @@ export type RRDiceTemplateID = MakeRRID<"diceTemplate">;
 
 export type RRDiceTemplatePartID = MakeRRID<"diceTemplatePart">;
 
-export type RRActiveSongID = MakeRRID<"activeSong">;
+export type RRActiveMusicID = MakeRRID<"activeMusic">;
 
 export type RRAssetID = MakeRRID<"asset">;
+
+export type RRSoundSetID = MakeRRID<"soundSet">;
+
+export type RRPlaylistID = MakeRRID<"playlist">;
+
+export type RRPlaylistEntryID = MakeRRID<"playlistEntry">;
 
 type RRFileBase = {
   originalFilename: string;
@@ -355,13 +361,26 @@ export const EMPTY_ENTITY_COLLECTION = {
 
 export type InitiativeTrackerSyncedState = SyncedState["initiativeTracker"];
 
-export type EphermalPlayer = ECE<SyncedState["ephemeral"]["players"]>;
+export type RRSoundSet = ECE<SyncedState["soundSets"]>;
 
-export type RRActiveSong = ValueOf<
-  SyncedState["ephemeral"]["activeSongs"]["entities"]
+export type RRPlaylist = IterableElement<RRSoundSet["playlists"]>;
+
+export type RRPlaylistEntry = IterableElement<RRPlaylist["entries"]>;
+
+export type EphemeralPlayer = ECE<SyncedState["ephemeral"]["players"]>;
+
+export type RRActiveSongOrSoundSet = ValueOf<
+  SyncedState["ephemeral"]["activeMusic"]["entities"]
 >;
 
-export type EphermalSyncedState = SyncedState["ephemeral"];
+export type RRActiveSong = Extract<RRActiveSongOrSoundSet, { type: "song" }>;
+
+export type RRActiveSoundSet = Extract<
+  RRActiveSongOrSoundSet,
+  { type: "soundSet" }
+>;
+
+export type EphemeralSyncedState = SyncedState["ephemeral"];
 
 export type RRGlobalSettings = SyncedState["globalSettings"];
 
@@ -401,9 +420,10 @@ export const initialSyncedState: SyncedState = {
   privateChats: EMPTY_ENTITY_COLLECTION,
   logEntries: EMPTY_ENTITY_COLLECTION,
   assets: EMPTY_ENTITY_COLLECTION,
+  soundSets: EMPTY_ENTITY_COLLECTION,
   ephemeral: {
     players: EMPTY_ENTITY_COLLECTION,
-    activeSongs: EMPTY_ENTITY_COLLECTION,
+    activeMusic: EMPTY_ENTITY_COLLECTION,
   },
 };
 

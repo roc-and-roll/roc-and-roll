@@ -6,7 +6,8 @@ import { MockClientSocket } from "../../test-utils";
 import { rrid } from "../../../shared/util";
 import {
   EMPTY_ENTITY_COLLECTION,
-  RRActiveSong,
+  RRActiveSongOrSoundSet,
+  RRAssetSong,
   RRPlayer,
 } from "../../../shared/state";
 
@@ -24,7 +25,8 @@ describe("MapMusicIndicator", () => {
       screen.queryByTitle("Now playing:", { exact: false })
     ).not.toBeInTheDocument();
 
-    const id1 = rrid<RRActiveSong>();
+    const songId1 = rrid<RRAssetSong>();
+    const activeSongId1 = rrid<RRActiveSongOrSoundSet>();
 
     const playerId = rrid<RRPlayer>();
 
@@ -38,19 +40,26 @@ describe("MapMusicIndicator", () => {
           },
           ids: [playerId],
         },
+        assets: {
+          entities: {
+            [songId1]: {
+              name: "test song",
+            },
+          },
+          ids: [songId1],
+        },
         ephemeral: {
           players: EMPTY_ENTITY_COLLECTION,
-          activeSongs: {
+          activeMusic: {
             entities: {
-              [id1]: {
-                id: id1,
-                song: {
-                  name: "test song",
-                },
+              [activeSongId1]: {
+                id: activeSongId1,
+                type: "song",
+                songId: songId1,
                 addedBy: playerId,
               },
             },
-            ids: [id1],
+            ids: [activeSongId1],
           },
         },
       });
@@ -71,7 +80,8 @@ describe("MapMusicIndicator", () => {
     ).toBeInTheDocument();
 
     act(() => {
-      const id2 = rrid<RRActiveSong>();
+      const songId2 = rrid<RRAssetSong>();
+      const activeSongId2 = rrid<RRActiveSongOrSoundSet>();
 
       const doesNotExistPlayerId = rrid<RRPlayer>();
 
@@ -84,26 +94,35 @@ describe("MapMusicIndicator", () => {
           },
           ids: [playerId],
         },
+        assets: {
+          entities: {
+            [songId1]: {
+              name: "test song",
+            },
+            [songId2]: {
+              name: "another song",
+            },
+          },
+          ids: [songId1, songId2],
+        },
         ephemeral: {
           players: EMPTY_ENTITY_COLLECTION,
-          activeSongs: {
+          activeMusic: {
             entities: {
-              [id1]: {
-                id: id1,
-                song: {
-                  name: "test song",
-                },
+              [activeSongId1]: {
+                id: activeSongId1,
+                type: "song",
+                songId: songId1,
                 addedBy: playerId,
               },
-              [id2]: {
-                id: id2,
-                song: {
-                  name: "another song",
-                },
+              [activeSongId2]: {
+                id: activeSongId2,
+                type: "song",
+                songId: songId2,
                 addedBy: doesNotExistPlayerId,
               },
             },
-            ids: [id1, id2],
+            ids: [activeSongId1, activeSongId2],
           },
         },
       });

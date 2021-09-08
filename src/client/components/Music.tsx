@@ -1,35 +1,52 @@
 import { matchSorter } from "match-sorter";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   assetSongAdd,
-  ephemeralSongAdd,
-  ephemeralSongRemove,
-  ephemeralSongUpdate,
+  ephemeralMusicAdd,
+  ephemeralMusicRemove,
+  ephemeralMusicUpdate,
   playerUpdateAddFavoritedAssetId,
   playerUpdateRemoveFavoritedAssetId,
 } from "../../shared/actions";
-import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
+import {
+  DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+  DEFAULT_VOLUME,
+} from "../../shared/constants";
 import {
   entries,
   RRActiveSong,
+  RRActiveSongOrSoundSet,
   RRAsset,
   RRAssetSong,
+  RRSoundSet,
 } from "../../shared/state";
 import { isTabletopAudioAsset } from "../../shared/tabletopaudio";
 import { partition, rrid, timestamp } from "../../shared/util";
 import { useFileUpload } from "../files";
 import { useMyself } from "../myself";
 import { useServerDispatch, useServerState } from "../state";
+import { formatDuration, highlightMatching } from "../util";
+import { ActiveSoundSet, SoundSets as SoundSets } from "./SoundSets";
+import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
 import { volumeLinear2Log, VolumeSlider } from "./VolumeSlider";
 
-const DEFAULT_VOLUME = 0.5;
+export type MusicActions = {
+  onAdd: (songOrSoundSet: RRAssetSong | RRSoundSet) => void;
+  onReplace: (songOrSoundSet: RRAssetSong | RRSoundSet) => void;
+  onStop: (activeSongOrSoundSet: RRActiveSongOrSoundSet) => void;
+  onFavorite: (song: RRAssetSong) => void;
+  onSetVolume: (
+    activeSongOrSoundSet: RRActiveSongOrSoundSet,
+    volume: number
+  ) => void;
+};
 
 export const Music = React.memo(function Music() {
   const myself = useMyself();
   const dispatch = useServerDispatch();
-  const activeSongs = entries(
-    useServerState((state) => state.ephemeral.activeSongs)
+  const activeMusic = entries(
+    useServerState((state) => state.ephemeral.activeMusic)
   );
 
   const [filter, setFilter] = useState("");
@@ -44,49 +61,42 @@ export const Music = React.memo(function Music() {
   );
 
   const onStop = useCallback(
-    (s: RRActiveSong) => {
-      dispatch(ephemeralSongRemove(s.id));
+    (s: RRActiveSongOrSoundSet) => {
+      dispatch(ephemeralMusicRemove(s.id));
     },
     [dispatch]
   );
 
-  // FIXME: can be a race condition if the user clicks the button quickly
   const onFavorite = useCallback(
-    (s: RRAssetSong) => {
-      if (myself.favoritedAssetIds.includes(s.id)) {
-        dispatch({
-          actions: [
-            playerUpdateRemoveFavoritedAssetId({
-              id: myself.id,
-              assetId: s.id,
-            }),
-          ],
-          optimisticKey: `favourite/${myself.id}/${s.id}`,
-          syncToServerThrottle: 0,
-        });
-      } else {
-        dispatch({
-          actions: [
-            playerUpdateAddFavoritedAssetId({ id: myself.id, assetId: s.id }),
-          ],
-          optimisticKey: `favourite/${myself.id}/${s.id}`,
-          syncToServerThrottle: 0,
-        });
-      }
+    (song: RRAssetSong) => {
+      dispatch({
+        actions: [
+          (myself.favoritedAssetIds.includes(song.id)
+            ? playerUpdateRemoveFavoritedAssetId
+            : playerUpdateAddFavoritedAssetId)({
+            id: myself.id,
+            assetId: song.id,
+          }),
+        ],
+        optimisticKey: `favourite/${myself.id}/${song.id}`,
+        syncToServerThrottle: 0,
+      });
     },
     [dispatch, myself.id, myself.favoritedAssetIds]
   );
 
   const onReplace = useCallback(
-    (t: RRAssetSong) => {
+    (songOrSoundSet: RRAssetSong | RRSoundSet) => {
       dispatch((state) => [
-        ...entries(state.ephemeral.activeSongs).map((activeSong) =>
-          ephemeralSongRemove(activeSong.id)
+        ...entries(state.ephemeral.activeMusic).map((activeSong) =>
+          ephemeralMusicRemove(activeSong.id)
         ),
-        ephemeralSongAdd({
+        ephemeralMusicAdd({
+          ...("playlists" in songOrSoundSet
+            ? { type: "soundSet", soundSetId: songOrSoundSet.id }
+            : { type: "song", songId: songOrSoundSet.id }),
           startedAt: timestamp(),
-          id: rrid<RRActiveSong>(),
-          song: t,
+          id: rrid<RRActiveSongOrSoundSet>(),
           volume: volumeLinear2Log(DEFAULT_VOLUME),
           addedBy: myself.id,
         }),
@@ -96,12 +106,14 @@ export const Music = React.memo(function Music() {
   );
 
   const onAdd = useCallback(
-    (t: RRAssetSong) => {
+    (songOrSoundSet: RRAssetSong | RRSoundSet) => {
       dispatch(
-        ephemeralSongAdd({
+        ephemeralMusicAdd({
+          ...("playlists" in songOrSoundSet
+            ? { type: "soundSet", soundSetId: songOrSoundSet.id }
+            : { type: "song", songId: songOrSoundSet.id }),
           startedAt: timestamp(),
-          id: rrid<RRActiveSong>(),
-          song: t,
+          id: rrid<RRActiveSongOrSoundSet>(),
           volume: volumeLinear2Log(DEFAULT_VOLUME),
           addedBy: myself.id,
         })
@@ -111,32 +123,47 @@ export const Music = React.memo(function Music() {
   );
 
   const onSetVolume = useCallback(
-    (t: RRActiveSong, volume: number) =>
+    (t: RRActiveSongOrSoundSet, volume: number) =>
       dispatch({
-        actions: [ephemeralSongUpdate({ id: t.id, changes: { volume } })],
-        optimisticKey: `volume/${t.id}/${t.song.id}`,
+        actions: [ephemeralMusicUpdate({ id: t.id, changes: { volume } })],
+        optimisticKey: `volume/${t.id}`,
         syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
       }),
     [dispatch]
+  );
+
+  const actions = useMemo(
+    () => ({
+      onAdd,
+      onReplace,
+      onStop,
+      onFavorite,
+      onSetVolume,
+    }),
+    [onAdd, onFavorite, onReplace, onSetVolume, onStop]
   );
 
   const showSongList = (songs: RRAssetSong[]) =>
     matchSorter(songs, filter, {
       keys: ["name", "description", "tags.*"],
       threshold: matchSorter.rankings.ACRONYM,
-    }).map((t) => (
-      <Song
-        key={t.id}
-        active={activeSongs.find((s) => t.id === s.song.id)}
-        audio={t}
-        filterText={filter}
-        onAdd={onAdd}
-        onReplace={onReplace}
-        onStop={onStop}
-        onFavorite={onFavorite}
-        onSetVolume={onSetVolume}
-      />
-    ));
+    }).map((song) => {
+      const activeSong = activeMusic.find(
+        (activeSongOrSoundSet) =>
+          activeSongOrSoundSet.type === "song" &&
+          song.id === activeSongOrSoundSet.songId
+      );
+      return (
+        <Song
+          key={song.id}
+          active={activeSong?.type === "song" ? activeSong : undefined}
+          audio={song}
+          filterText={filter}
+          actions={actions}
+          isFavorite={myself.favoritedAssetIds.includes(song.id)}
+        />
+      );
+    });
 
   return (
     <>
@@ -149,19 +176,24 @@ export const Music = React.memo(function Music() {
       <UploadAudio onUploaded={() => setFilter("")} />
       <div>
         <strong>- Playing -</strong>
-        {activeSongs.map((activeSong) => (
-          <Song
-            filterText={""}
-            key={activeSong.id}
-            active={activeSong}
-            audio={activeSong.song}
-            onAdd={onAdd}
-            onReplace={onReplace}
-            onStop={onStop}
-            onFavorite={onFavorite}
-            onSetVolume={onSetVolume}
-          />
-        ))}
+        {activeMusic.map((activeSongOrSoundSet) => {
+          if (activeSongOrSoundSet.type === "soundSet") {
+            return (
+              <ActiveSoundSet
+                key={activeSongOrSoundSet.id}
+                activeSoundSet={activeSongOrSoundSet}
+                actions={actions}
+              />
+            );
+          }
+          return (
+            <ActiveSong
+              key={activeSongOrSoundSet.id}
+              activeSong={activeSongOrSoundSet}
+              actions={actions}
+            />
+          );
+        })}
       </div>
       <div>
         <strong>- Favorites -</strong>
@@ -170,7 +202,15 @@ export const Music = React.memo(function Music() {
         )}
       </div>
       <div>
-        <strong>- Own Audio -</strong>
+        <strong>- Sound Sets -</strong>
+        <SoundSets
+          filterText={filter}
+          actions={actions}
+          activeMusic={activeMusic}
+        />
+      </div>
+      <div>
+        <strong>- Uploaded Audio -</strong>
         {showSongList(ownSongs)}
       </div>
       <div>
@@ -200,7 +240,7 @@ function UploadAudio({ onUploaded }: { onUploaded: () => void }) {
             type: "song",
             playerId: myself.id,
             tags: [],
-            durationSeconds: f.duration / 1000,
+            duration: f.duration,
             extra: {},
           })
         )
@@ -219,90 +259,74 @@ function UploadAudio({ onUploaded }: { onUploaded: () => void }) {
   );
 }
 
-const highlightMatching = (text: string, search: string) => {
-  if (search.length < 1) {
-    return text;
-  }
+const ActiveSong = React.memo(function ActiveSong({
+  activeSong,
+  actions,
+}: {
+  activeSong: RRActiveSong;
+  actions: MusicActions;
+}) {
+  const song = useServerState(
+    (state) => state.assets.entities[activeSong.songId]
+  );
 
-  const index = text.toLowerCase().indexOf(search.toLowerCase());
-  if (index >= 0) {
-    return (
-      <>
-        {text.substring(0, index)}
-        <strong className="search-match">
-          {text.substring(index, index + search.length)}
-        </strong>
-        {text.substring(index + search.length)}
-      </>
-    );
-  }
-
-  return text;
-};
+  return song ? (
+    <Song audio={song} active={activeSong} filterText="" actions={actions} />
+  ) : null;
+});
 
 const Song = React.memo(function Song({
   audio,
   active,
-  onAdd,
-  onReplace,
-  onStop,
-  onFavorite,
-  onSetVolume,
   filterText,
+  actions: { onAdd, onReplace, onStop, onFavorite, onSetVolume },
+  isFavorite,
 }: {
   audio: RRAssetSong;
   active?: RRActiveSong;
   filterText: string;
-  onAdd: (audio: RRAssetSong) => void;
-  onReplace: (audio: RRAssetSong) => void;
-  onStop: (audio: RRActiveSong) => void;
-  onFavorite: (audio: RRAssetSong) => void;
-  onSetVolume: (audio: RRActiveSong, volume: number) => void;
+  actions: MusicActions;
+  isFavorite?: boolean;
 }) {
   const showTagsAndDescription = filterText.length > 0;
 
   return (
-    <div className="tabletopaudio-song">
-      <div className="tabletopaudio-label">
+    <div className="music-row">
+      <div className="music-label">
         {highlightMatching(audio.name, filterText)}
         {showTagsAndDescription && audio.description && (
-          <div className="tabletopaudio-description">
+          <div className="music-description">
             {highlightMatching(audio.description, filterText)}
           </div>
         )}
         {showTagsAndDescription && (
-          <div className="tabletopaudio-tags">
+          <div className="music-tags">
             {highlightMatching(audio.tags.join(". "), filterText)}
           </div>
         )}
       </div>
+      <small>{formatDuration(audio.duration)}</small>
       {active ? (
         <>
           <VolumeSlider
             volume={active.volume}
             onChange={(volume) => onSetVolume(active, volume)}
           />
-          <div className="tabletopaudio-button" onClick={() => onStop(active)}>
-            STOP
-          </div>
+          <Button className="music-button" onClick={() => onStop(active)}>
+            stop
+          </Button>
         </>
       ) : (
         <>
-          <div
-            className="tabletopaudio-button"
-            onClick={() => onFavorite(audio)}
-          >
-            FAV
-          </div>
-          <div className="tabletopaudio-button" onClick={() => onAdd(audio)}>
-            ADD
-          </div>
-          <div
-            className="tabletopaudio-button"
-            onClick={() => onReplace(audio)}
-          >
-            PLAY
-          </div>
+          <Button className="music-button" onClick={() => onFavorite(audio)}>
+            {isFavorite === true ? "unfav" : "fav"}
+          </Button>
+          <Button className="music-button" onClick={() => onAdd(audio)}>
+            add
+          </Button>
+          <Button className="music-button" onClick={() => onReplace(audio)}>
+            play
+          </Button>
         </>
       )}
     </div>

@@ -62,7 +62,7 @@ export async function setupInitialState(
     // Reset ephemeral state
     state.ephemeral = {
       players: EMPTY_ENTITY_COLLECTION,
-      activeSongs: EMPTY_ENTITY_COLLECTION,
+      activeMusic: EMPTY_ENTITY_COLLECTION,
     };
   }
 

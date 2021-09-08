@@ -83,7 +83,7 @@ export async function askAndUploadImages(
     return null;
   }
 
-  return await uploadFiles(fileList, "image");
+  return uploadFiles(fileList, "image");
 }
 
 const fileListToArray = (fileList: FileList) => {
@@ -93,10 +93,6 @@ const fileListToArray = (fileList: FileList) => {
     if (file) {
       files.push(file);
     }
-  }
-
-  if (files.length === 0) {
-    return [];
   }
 
   return files;

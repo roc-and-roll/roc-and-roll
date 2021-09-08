@@ -1,5 +1,5 @@
 import {
-  EphermalPlayer,
+  EphemeralPlayer,
   RRMapObject,
   RRMapObjectID,
   RRPlayerID,
@@ -67,15 +67,15 @@ export const characterTemplateIdsAtom = atom<ReadonlyArray<RRCharacterID>>({
 });
 
 export const ephemeralPlayersFamily = atomFamily<
-  EphermalPlayer | null,
+  EphemeralPlayer | null,
   RRPlayerID
 >({
-  key: "EphermalPlayer",
+  key: "EphemeralPlayer",
   default: null,
 });
 
 export const ephemeralPlayerIdsAtom = atom<ReadonlyArray<RRPlayerID>>({
-  key: "EphermalPlayerIds",
+  key: "EphemeralPlayerIds",
   default: [],
 });
 

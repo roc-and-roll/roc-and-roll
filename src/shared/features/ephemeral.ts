@@ -3,15 +3,19 @@ import {
   ephemeralPlayerAdd,
   ephemeralPlayerRemove,
   ephemeralPlayerUpdate,
-  ephemeralSongAdd,
-  ephemeralSongRemove,
-  ephemeralSongUpdate,
+  ephemeralMusicAdd,
+  ephemeralMusicRemove,
+  ephemeralMusicUpdate,
 } from "../actions";
-import { EphermalPlayer, initialSyncedState, RRActiveSong } from "../state";
+import {
+  EphemeralPlayer,
+  initialSyncedState,
+  RRActiveSongOrSoundSet,
+} from "../state";
 
-const ephemeralPlayersAdapter = createEntityAdapter<EphermalPlayer>();
+const ephemeralPlayersAdapter = createEntityAdapter<EphemeralPlayer>();
 
-const ephemeralSongsAdapter = createEntityAdapter<RRActiveSong>();
+const ephemeralMusicAdapter = createEntityAdapter<RRActiveSongOrSoundSet>();
 
 export const ephemeralPlayersReducer = createReducer(
   initialSyncedState.ephemeral.players,
@@ -23,12 +27,12 @@ export const ephemeralPlayersReducer = createReducer(
   }
 );
 
-export const ephemeralSongsReducer = createReducer(
-  initialSyncedState.ephemeral.activeSongs,
+export const ephemeralMusicReducer = createReducer(
+  initialSyncedState.ephemeral.activeMusic,
   (builder) => {
     builder
-      .addCase(ephemeralSongAdd, ephemeralSongsAdapter.addOne)
-      .addCase(ephemeralSongUpdate, ephemeralSongsAdapter.updateOne)
-      .addCase(ephemeralSongRemove, ephemeralSongsAdapter.removeOne);
+      .addCase(ephemeralMusicAdd, ephemeralMusicAdapter.addOne)
+      .addCase(ephemeralMusicUpdate, ephemeralMusicAdapter.updateOne)
+      .addCase(ephemeralMusicRemove, ephemeralMusicAdapter.removeOne);
   }
 );

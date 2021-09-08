@@ -8,12 +8,13 @@ import { logEntriesReducer } from "../shared/features/logEntries";
 import { initialSyncedState } from "../shared/state";
 import {
   ephemeralPlayersReducer,
-  ephemeralSongsReducer,
+  ephemeralMusicReducer,
 } from "../shared/features/ephemeral";
 import { diceTemplatesReducer } from "../shared/features/diceTemplate";
 import { assetsReducer } from "../shared/features/assets";
 import { characterTemplatesReducer } from "../shared/features/charactersTemplates";
 import { globalSettingsReducer } from "../shared/features/globalSettings";
+import { soundSetsReducer } from "./features/soundSets";
 
 export const reducer = combineReducers({
   // Add new slices of state here.
@@ -30,8 +31,9 @@ export const reducer = combineReducers({
   logEntries: logEntriesReducer,
   diceTemplates: diceTemplatesReducer,
   assets: assetsReducer,
+  soundSets: soundSetsReducer,
   ephemeral: combineReducers({
     players: ephemeralPlayersReducer,
-    activeSongs: ephemeralSongsReducer,
+    activeMusic: ephemeralMusicReducer,
   }),
 });

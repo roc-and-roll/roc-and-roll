@@ -25,7 +25,12 @@ export function VolumeSlider({
         max={1}
         onChange={(e) => onChange(volumeLinear2Log(e.target.valueAsNumber))}
       />
-      {Math.round(100 * linearVolume)}%
+      <span className="ascii-art">
+        {Math.round(100 * linearVolume)
+          .toString()
+          .padStart(3, " ")}
+        %
+      </span>
     </>
   );
 }

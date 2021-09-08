@@ -7,7 +7,7 @@ import {
   EntityCollection,
   characterAttributeNames,
   multipleRollValues,
-  RRActiveSongID,
+  RRActiveMusicID,
   RRAssetID,
   RRCharacterID,
   RRDiceTemplateID,
@@ -21,6 +21,9 @@ import {
   RRPrivateChatID,
   RRPrivateChatMessageID,
   SyncedState,
+  RRSoundSetID,
+  RRPlaylistEntryID,
+  RRPlaylistID,
 } from "./state";
 import { withDo } from "./util";
 import tinycolor from "tinycolor2";
@@ -86,7 +89,7 @@ const isRRFileImage = t.isObject({
 const isRRFileAudio = t.isObject({
   ...sharedRRFileValidators,
   type: t.isLiteral("audio"),
-  duration: t.applyCascade(t.isNumber(), [t.isPositive()]),
+  duration: t.applyCascade(t.isNumber(), [t.isAtLeast(1)]),
 });
 
 const isRRFileOther = t.isObject({
@@ -130,7 +133,7 @@ const isRRAssetSong = t.isObject({
   ...sharedAssetValidators,
   type: t.isLiteral("song"),
   tags: t.isArray(t.isString()),
-  durationSeconds: t.applyCascade(t.isNumber(), [t.isPositive()]),
+  duration: t.applyCascade(t.isNumber(), [t.isAtLeast(1)]),
 });
 
 const isRRAssetImage = t.isObject({
@@ -138,6 +141,8 @@ const isRRAssetImage = t.isObject({
   type: t.isLiteral("image"),
   originalFunction: t.isEnum(["token", "map"] as const),
 });
+
+const isVolume = t.applyCascade(t.isNumber(), [t.isInInclusiveRange(0, 1)]);
 
 export const isStateVersion = t.applyCascade(t.isNumber(), [
   t.isInteger(),
@@ -477,6 +482,31 @@ export const isSyncedState = t.isObject({
       { exclusive: true }
     )
   ),
+  soundSets: isEntityCollection(
+    t.isObject({
+      id: isRRID<RRSoundSetID>(),
+      name: t.isString(),
+      description: t.isNullable(t.isString()),
+      playerId: isRRID<RRPlayerID>(),
+      // A sound set has an array of playlists. Each playlist is an array of
+      // songs, each with separately controllable volume. All playlists are
+      // played in parallel and loop individually. Songs of a playlist are
+      // played in order.
+      playlists: t.isArray(
+        t.isObject({
+          id: isRRID<RRPlaylistID>(),
+          volume: isVolume,
+          entries: t.isArray(
+            t.isObject({
+              id: isRRID<RRPlaylistEntryID>(),
+              songId: isRRID<RRAssetID>(),
+              volume: isVolume,
+            })
+          ),
+        })
+      ),
+    })
+  ),
   ephemeral: t.isObject({
     players: isEntityCollection(
       t.isObject({
@@ -492,14 +522,28 @@ export const isSyncedState = t.isObject({
         measurePath: t.isArray(isRRPoint),
       })
     ),
-    activeSongs: isEntityCollection(
-      t.isObject({
-        id: isRRID<RRActiveSongID>(false),
-        song: isRRAssetSong,
-        startedAt: isTimestamp,
-        volume: t.applyCascade(t.isNumber(), [t.isInInclusiveRange(0, 1)]),
-        addedBy: isRRID<RRPlayerID>(),
-      })
+    activeMusic: isEntityCollection(
+      withDo(
+        {
+          id: isRRID<RRActiveMusicID>(false),
+          startedAt: isTimestamp,
+          volume: isVolume,
+          addedBy: isRRID<RRPlayerID>(),
+        },
+        (sharedActiveMusicValidators) =>
+          t.isOneOf([
+            t.isObject({
+              ...sharedActiveMusicValidators,
+              type: t.isLiteral("song"),
+              songId: isRRID<RRAssetID>(),
+            }),
+            t.isObject({
+              ...sharedActiveMusicValidators,
+              type: t.isLiteral("soundSet"),
+              soundSetId: isRRID<RRSoundSetID>(),
+            }),
+          ])
+      )
     ),
   }),
 });

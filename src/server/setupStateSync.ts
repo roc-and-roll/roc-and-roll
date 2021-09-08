@@ -113,9 +113,9 @@ export const setupStateSync = (
 
   function setPlayerId(data: AdditionalSocketData, playerId: RRPlayerID) {
     data.playerId = playerId;
-    const existingEphermalPlayer =
+    const existingEphemeralPlayer =
       store.getState().ephemeral.players.entities[playerId];
-    if (!existingEphermalPlayer) {
+    if (!existingEphemeralPlayer) {
       store.dispatch(
         ephemeralPlayerAdd({
           id: playerId,

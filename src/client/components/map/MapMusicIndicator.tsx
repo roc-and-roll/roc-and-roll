@@ -4,6 +4,7 @@ import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import tinycolor from "tinycolor2";
 import { entries, RRColor } from "../../../shared/state";
+import { assertNever } from "../../../shared/util";
 import { useRRSettings } from "../../settings";
 import { useServerState } from "../../state";
 import { contrastColor } from "../../util";
@@ -14,15 +15,39 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
     const [isTimeouted, setIsTimeouted] = useState(false);
 
     const players = useServerState((state) => state.players.entities);
-    const activeSongs = useServerState((state) => state.ephemeral.activeSongs);
+    const activeMusic = useServerState((state) => state.ephemeral.activeMusic);
+    const assets = useServerState((state) => state.assets);
+    const soundSets = useServerState((state) => state.soundSets);
 
-    const activeSongTitles = entries(activeSongs)
-      .map(
-        (activeSong) =>
-          `${activeSong.song.name} [${
-            players[activeSong.addedBy]?.name ?? "Unknown Player"
-          }]`
-      )
+    const activeSongTitles = entries(activeMusic)
+      .flatMap((activeSongOrSoundSet) => {
+        let name;
+        switch (activeSongOrSoundSet.type) {
+          case "song": {
+            const song = assets.entities[activeSongOrSoundSet.songId];
+            if (!song) {
+              return [];
+            }
+            name = song.name;
+            break;
+          }
+          case "soundSet": {
+            const soundSet =
+              soundSets.entities[activeSongOrSoundSet.soundSetId];
+            if (!soundSet) {
+              return [];
+            }
+            name = soundSet.name;
+            break;
+          }
+          default:
+            assertNever(activeSongOrSoundSet);
+        }
+
+        return `${name} [${
+          players[activeSongOrSoundSet.addedBy]?.name ?? "Unknown Player"
+        }]`;
+      })
       .join(", ");
 
     useEffect(() => {

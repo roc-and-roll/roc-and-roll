@@ -323,6 +323,13 @@ a {
   border-radius: 32px;
   line-height: 32px;
   cursor: pointer;
+
+  &.size-20 {
+    width: 20px;
+    height: 20px;
+    border-radius: 20px;
+    line-height: 20px;
+  }
 }
 
 .collapsible-header {
@@ -895,7 +902,7 @@ button.color-picker-color {
   cursor: pointer;
 }
 
-.tabletopaudio-song {
+.music-row {
   display: flex;
   align-items: center;
   padding: 0 0.25rem;
@@ -904,24 +911,72 @@ button.color-picker-color {
     background: rgba(255, 255, 255, 0.1);
   }
 
-  .tabletopaudio-label {
+  .music-label {
     flex-grow: 1;
   }
-  .tabletopaudio-description {
+  .music-description {
     font-size: 0.7rem;
   }
-  .tabletopaudio-tags {
+  .music-tags {
     font-size: 0.6rem;
   }
-  .tabletopaudio-button {
+  .music-button {
     margin: 0 0.25rem;
     font-size: 0.8rem;
     font-weight: bold;
-    cursor: pointer;
+
+    &:not(:disabled) {
+      cursor: pointer;
+    }
+
+    text-transform: uppercase;
+
+    padding: 0;
+    background-color: unset;
+    border: none;
+    border-radius: 0;
+
+    &.no-margin {
+      margin: 0;
+    }
   }
-  .search-match {
-    background: #ff0;
-    color: #000;
+}
+
+.music-playlist-song-select-list {
+  padding-left: 0;
+  margin: 0;
+
+  li {
+    label {
+      padding: 2px 0;
+      cursor: pointer;
+
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      border-bottom: 1px solid #ccc;
+      &:hover {
+        background: #111;
+      }
+
+      & > span {
+        flex-grow: 1;
+      }
+
+      .music-playlist-song-label {
+        display: flex;
+        flex-direction: row;
+
+        span {
+          flex-grow: 1;
+        }
+      }
+
+      input[type="checkbox"] {
+        margin-right: 8px;
+      }
+    }
   }
 }
 
@@ -1240,5 +1295,65 @@ aside.emoji-picker-react {
   @keyframes map-music-bar {
     0%, 100% { transform: scaleY(0); }
     50% { transform: scaleY(1); }
+  }
+}
+
+.ascii-art {
+  font-family: monospace;
+  white-space: pre;
+}
+
+.search-match {
+  background: #ff0;
+  color: #000;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  z-index: 9999;
+
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.dialog-modal {
+  margin: 20vh auto;
+  width: 60vw;
+  max-height: 70vh;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 1rem;
+
+  background: rgba(55, 55, 55, 0.95);
+  color: white;
+
+  .dialog-title {
+    font-size: 2rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .dialog-content {
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    overflow: auto;
+  }
+
+  .dialog-actions {
+    padding-top: 1rem;
+
+    text-align: right;
+
+    button {
+      text-transform: uppercase;
+    }
+
+    & > *:not(:last-child) {
+      margin-right: 12px;
+    }
   }
 }

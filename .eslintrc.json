@@ -37,6 +37,8 @@
       { "ts-ignore": false }
     ],
     "@typescript-eslint/require-await": "off",
+    "@typescript-eslint/return-await": ["error", "in-try-catch"],
+    "@typescript-eslint/prefer-string-starts-ends-with": "warn",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/no-inferrable-types": ["error", { "ignoreParameters": true }],

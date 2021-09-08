@@ -1,15 +1,15 @@
 import { matchSorter } from "match-sorter";
 import React, { useDeferredValue, useMemo, useState } from "react";
 import { useEffect, useRef } from "react";
-import ReactDOM from "react-dom";
 import { IterableElement } from "type-fest";
 import { assertNever } from "../../../shared/util";
 import { useCompendium } from "../compendium/Compendium";
 import { CompendiumSpell, CompendiumTextEntry } from "../compendium/types";
+import { Dialog, DialogContent, DialogTitle } from "../Dialog";
+import { SmartTextInput } from "../ui/TextInput";
 import "./QuickReference.scss";
 
 export default function QuickReference({ onClose }: { onClose: () => void }) {
-  const backdropRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
@@ -18,28 +18,23 @@ export default function QuickReference({ onClose }: { onClose: () => void }) {
     inputRef.current?.focus();
   }, []);
 
-  return ReactDOM.createPortal(
-    <div
-      className="quick-reference"
-      onClick={(e) => e.target === backdropRef.current && onClose()}
-      ref={backdropRef}
-    >
-      <div className="quick-reference-modal">
-        <h1>Quick Reference</h1>
-        <input
-          type="search"
-          placeholder="Search..."
-          ref={inputRef}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+  return (
+    <Dialog open onClose={onClose} className="quick-reference-modal">
+      <DialogTitle>Quick Reference</DialogTitle>
+      <SmartTextInput
+        type="search"
+        placeholder="Search..."
+        ref={inputRef}
+        value={search}
+        onChange={(search) => setSearch(search)}
+      />
+      <DialogContent>
         <Spells
           search={deferredSearch}
           searchIsStale={search !== deferredSearch}
         />
-      </div>
-    </div>,
-    document.body
+      </DialogContent>
+    </Dialog>
   );
 }
 

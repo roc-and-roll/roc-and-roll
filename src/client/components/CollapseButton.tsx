@@ -8,10 +8,13 @@ export function CollapseButton(props: {
   className?: string;
   setCollapsed: (u: (c: boolean) => boolean) => void;
   collapsed: boolean;
+  size?: 32 | 20;
 }) {
   return (
     <Button
-      className={clsx("collapse-button", props.className)}
+      className={clsx("collapse-button", props.className, {
+        "size-20": props.size === 20,
+      })}
       onClick={() => {
         props.setCollapsed((collapsed) => !collapsed);
       }}
@@ -20,10 +23,14 @@ export function CollapseButton(props: {
         <FontAwesomeIcon
           icon={faCaretLeft}
           fixedWidth
-          transform="left-2 grow-10"
+          transform={`left-2 grow-${props.size === 20 ? "4" : "10"}`}
         />
       ) : (
-        <FontAwesomeIcon icon={faCaretDown} fixedWidth transform="grow-10" />
+        <FontAwesomeIcon
+          icon={faCaretDown}
+          fixedWidth
+          transform={`grow-${props.size === 20 ? "4" : "10"}`}
+        />
       )}
     </Button>
   );

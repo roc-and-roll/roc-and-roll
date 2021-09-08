@@ -3,7 +3,7 @@ import { useRecoilValue } from "recoil";
 import { Matrix } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
 import {
-  EphermalPlayer,
+  EphemeralPlayer,
   RRColor,
   RRPlayerID,
   RRPoint,
@@ -47,7 +47,7 @@ const MouseCursorInner = React.memo<{
   transform: Matrix;
   viewPortSize: RRPoint;
   contrastColor: RRColor;
-  mapMouse: NonNullable<EphermalPlayer["mapMouse"]>;
+  mapMouse: NonNullable<EphemeralPlayer["mapMouse"]>;
 }>(function MouseCursorInner({ transform, viewPortSize, ...props }) {
   const [rafStart, rafStop] = useRafLoop();
 

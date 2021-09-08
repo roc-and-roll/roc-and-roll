@@ -80,7 +80,7 @@ async function updateTabletopAudioTracks(store: MyStore) {
           type: "song",
           name: newTrack.track_title,
           description: newTrack.flavor_text,
-          durationSeconds: 10 * 60,
+          duration: 10 /* min */ * 60 /* sec */ * 1000 /* ms */,
           tags: newTrack.tags,
           external: true,
           filenameOrUrl: newTrack.link,
