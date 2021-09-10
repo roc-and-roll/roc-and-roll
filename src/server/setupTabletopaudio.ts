@@ -1,3 +1,5 @@
+import path from "path";
+import fs from "fs";
 import {
   assetSongAdd,
   assetSongUpdate,
@@ -13,17 +15,44 @@ import {
 } from "../shared/tabletopaudio";
 import { batchActions } from "redux-batched-actions";
 
-export async function setupTabletopAudioTrackSync(store: MyStore) {
+export async function setupTabletopAudioTrackSync(
+  store: MyStore,
+  workspaceDir: string
+) {
   // Update list of tabletop audio files once per day
-
   setInterval(
-    async () => updateTabletopAudioTracks(store),
+    async () => updateTabletopAudioTracks(store, workspaceDir),
     24 * 60 * 60 * 1000
   );
-  await updateTabletopAudioTracks(store);
+
+  // Update list of tabletop audio files immediately only if the last update
+  // attempt happened more than an hour ago.
+  if (
+    (await getLastUpdateAttempt(workspaceDir)) <
+    new Date(Date.now() - 60 * 60 * 1000)
+  ) {
+    await updateTabletopAudioTracks(store, workspaceDir);
+  }
 }
 
-async function updateTabletopAudioTracks(store: MyStore) {
+async function rememberUpdateAttempt(workspaceDir: string) {
+  const filePath = path.join(workspaceDir, "last-tabletopaudio-update.txt");
+  await fs.promises.writeFile(filePath, new Date().toISOString(), "utf-8");
+}
+
+async function getLastUpdateAttempt(workspaceDir: string) {
+  const filePath = path.join(workspaceDir, "last-tabletopaudio-update.txt");
+  try {
+    const lastUpdateAttempt = await fs.promises.readFile(filePath, "utf-8");
+    return new Date(lastUpdateAttempt);
+  } catch (e) {
+    return new Date(0);
+  }
+}
+
+async function updateTabletopAudioTracks(store: MyStore, workspaceDir: string) {
+  await rememberUpdateAttempt(workspaceDir);
+
   let result;
   try {
     result = await fetch("https://tabletopaudio.com/tta_data");

@@ -2,7 +2,6 @@ import React from "react";
 import { DiceInterface } from "./DiceInterface";
 import { CharacterManager } from "./characters/CharacterManager";
 import { Collapsible } from "./Collapsible";
-import { Playground } from "./Playground";
 import { Resizable } from "re-resizable";
 import useLocalState from "../useLocalState";
 import { Player } from "./Player";
@@ -116,8 +115,6 @@ export function Sidebar({ logout }: { logout: () => void }) {
         <Collapsible title="About" defaultCollapsed={true}>
           <About />
         </Collapsible>
-
-        {process.env.NODE_ENV === "development" && <Playground />}
       </div>
     </Resizable>
   );

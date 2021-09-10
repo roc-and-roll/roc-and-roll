@@ -6,39 +6,55 @@ export async function getMimeType(path: string) {
   return (await fileType.fromFile(path))?.mime;
 }
 
+export async function assertFFprobeIsInstalled() {
+  try {
+    await execute("ffprobe", ["-version"]);
+  } catch (err) {
+    console.error(
+      "It looks like `ffprobe`, which is needed to measure the length of audio files, is not currently installed on this machine. `ffprobe` is part of `ffmpeg` and can likely be installed by running `sudo apt install ffmpeg`."
+    );
+    throw err;
+  }
+}
+
 export async function getAudioDuration(path: string) {
-  return new Promise<number>((resolve, reject) => {
-    const ffprobe = spawn("ffprobe", [
-      "-i",
-      path,
-      "-show_entries",
-      "format=duration",
-      "-v",
-      "quiet",
-      "-of",
-      "csv=p=0",
-    ]);
+  const result = await execute("ffprobe", [
+    "-i",
+    path,
+    "-show_entries",
+    "format=duration",
+    "-v",
+    "quiet",
+    "-of",
+    "csv=p=0",
+  ]);
+
+  const duration = parseFloat(result.trim()) * 1000;
+  if (duration <= 0 || isNaN(duration) || duration === Infinity) {
+    throw new Error(`The measured duration was invalid (${duration})`);
+  }
+  return duration;
+}
+
+async function execute(command: string, args: string[]) {
+  return new Promise<string>((resolve, reject) => {
+    const childProcess = spawn(command, args);
 
     let result = "";
-    ffprobe.stdout.on(
+    childProcess.stdout.on(
       "data",
       (data: Buffer) => (result += data.toString("utf-8"))
     );
 
-    ffprobe.stderr.on("data", (data: Buffer) =>
+    childProcess.stderr.on("data", (data: Buffer) =>
       console.error(data.toString("utf-8"))
     );
 
-    ffprobe.on("error", (err) => reject(err));
+    childProcess.on("error", (err) => reject(err));
 
-    ffprobe.on("close", (code) => {
+    childProcess.on("close", (code) => {
       if (code === 0) {
-        const duration = parseFloat(result.trim()) * 1000;
-        if (duration <= 0) {
-          reject(-1);
-        } else {
-          resolve(duration);
-        }
+        resolve(result);
       } else {
         reject(code);
       }

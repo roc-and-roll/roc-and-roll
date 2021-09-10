@@ -11,9 +11,13 @@ import { isSyncedState } from "../shared/validation";
 import { setupInitialState } from "./setupInitialState";
 import { setupTabletopAudioTrackSync } from "./setupTabletopaudio";
 import { batchActions } from "redux-batched-actions";
+import { assertFFprobeIsInstalled } from "./files";
 
 void (async () => {
   const { workspace: workspaceDir, quiet, port: httpPort } = setupArgs();
+
+  await assertFFprobeIsInstalled();
+
   fs.mkdirSync(workspaceDir, { recursive: true });
 
   const uploadedFilesDir = path.join(workspaceDir, "uploaded-files");
@@ -56,7 +60,7 @@ This should not have happened!
 
   setupStatePersistence(store, statePath);
 
-  await setupTabletopAudioTrackSync(store);
+  await setupTabletopAudioTrackSync(store, workspaceDir);
 
   // Delete mouse position if it has not changed for some time.
   const DELETE_MOUSE_POSITION_TIME_THRESHOLD = 60 * 1000;
