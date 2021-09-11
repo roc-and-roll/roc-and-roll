@@ -936,9 +936,15 @@ button.color-picker-color {
     border: none;
     border-radius: 0;
 
-    &.no-margin {
-      margin: 0;
+    &.no-margin-left {
+      margin-left: 0;
     }
+  }
+
+  input[type="range"], .range-placeholder {
+    width: 130px;
+    margin: 2;
+    min-height: 16px;
   }
 }
 

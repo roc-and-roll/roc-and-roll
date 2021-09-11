@@ -497,11 +497,25 @@ export const isSyncedState = t.isObject({
           id: isRRID<RRPlaylistID>(),
           volume: isVolume,
           entries: t.isArray(
-            t.isObject({
-              id: isRRID<RRPlaylistEntryID>(),
-              songId: isRRID<RRAssetID>(),
-              volume: isVolume,
-            })
+            withDo(
+              {
+                id: isRRID<RRPlaylistEntryID>(),
+              },
+              (sharedValidators) =>
+                t.isOneOf([
+                  t.isObject({
+                    ...sharedValidators,
+                    type: t.isLiteral("song"),
+                    songId: isRRID<RRAssetID>(),
+                    volume: isVolume,
+                  }),
+                  t.isObject({
+                    ...sharedValidators,
+                    type: t.isLiteral("silence"),
+                    duration: t.applyCascade(t.isNumber(), [t.isAtLeast(1)]),
+                  }),
+                ])
+            )
           ),
         })
       ),

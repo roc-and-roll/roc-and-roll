@@ -62,8 +62,10 @@ export const SoundSets = React.memo<{
 
   const createNewSoundSetButton = (
     <div className="music-row">
-      <div className="music-label" />
-      <Button className="music-button" onClick={() => createSoundSet()}>
+      <Button
+        className="music-button no-margin-left"
+        onClick={() => createSoundSet()}
+      >
         create new sound set
       </Button>
     </div>
@@ -214,6 +216,7 @@ function SoundSetDetails({
 }) {
   const dispatch = useServerDispatch();
   const assets = useServerState((state) => state.assets);
+  const prompt = usePrompt();
 
   const addPlaylist = () =>
     dispatch(
@@ -227,8 +230,30 @@ function SoundSetDetails({
     useState<RRPlaylistID | null>(null);
 
   const addPlaylistEntry = useCallback(
-    (playlistId: RRPlaylistID) => setSelectSongsForPlaylistId(playlistId),
-    []
+    async (playlistId: RRPlaylistID, type: "silence" | "song") => {
+      if (type === "song") {
+        setSelectSongsForPlaylistId(playlistId);
+      } else {
+        const durationText = (
+          await prompt("Enter the duration of the silence in seconds.")
+        )?.trim();
+        if (durationText === undefined || durationText.length === 0) {
+          return;
+        }
+        const duration = parseInt(durationText) * 1000;
+        if (isNaN(duration)) {
+          return;
+        }
+
+        dispatch(
+          soundSetPlaylistEntryAdd(soundSet.id, playlistId, {
+            type: "silence",
+            duration,
+          })
+        );
+      }
+    },
+    [dispatch, prompt, soundSet.id]
   );
 
   return (
@@ -240,7 +265,9 @@ function SoundSetDetails({
           selectSongsForPlaylistId !== null
             ? soundSet.playlists
                 .find((playlist) => playlist.id === selectSongsForPlaylistId)
-                ?.entries.map(({ songId }) => songId) ?? []
+                ?.entries.flatMap((playlistEntry) =>
+                  playlistEntry.type === "song" ? playlistEntry.songId : []
+                ) ?? []
             : []
         }
         onClose={(selectedSongIds) => {
@@ -251,6 +278,7 @@ function SoundSetDetails({
                   soundSet.id,
                   selectSongsForPlaylistId,
                   {
+                    type: "song",
                     songId: selectedSongId,
                     volume: 1,
                   }
@@ -274,7 +302,7 @@ function SoundSetDetails({
       ))}
       <div className="music-row">
         <span className="ascii-art">└ </span>
-        <Button className="music-button no-margin" onClick={addPlaylist}>
+        <Button className="music-button no-margin-left" onClick={addPlaylist}>
           add playlist to sound set
         </Button>
       </div>
@@ -294,7 +322,10 @@ function Playlist({
   playlist: RRPlaylist;
   playlistIdx: number;
   activeSoundSet?: RRActiveSoundSet;
-  addPlaylistEntry: (playlistId: RRPlaylistID) => void;
+  addPlaylistEntry: (
+    playlistId: RRPlaylistID,
+    type: "silence" | "song"
+  ) => void;
   assets: SyncedState["assets"];
 }) {
   const dispatch = useServerDispatch();
@@ -315,9 +346,10 @@ function Playlist({
         <small>
           {formatDuration(
             playlist.entries
-              .map(
-                (playlistEntry) =>
-                  assets.entities[playlistEntry.songId]?.duration ?? 0
+              .map((playlistEntry) =>
+                playlistEntry.type === "silence"
+                  ? playlistEntry.duration
+                  : assets.entities[playlistEntry.songId]?.duration ?? 0
               )
               .reduce((sum, duration) => sum + duration, 0)
           )}
@@ -361,62 +393,76 @@ function Playlist({
           DEL
         </Button>
       </div>
-      {playlist.entries.map(
-        ({ id: playlistEntryId, songId, volume }, playlistEntryIdx) => {
-          const isCurrent =
-            playlistEntryId === currentlyPlaying?.playlistEntry.id;
-          const song = assets.entities[songId];
+      {playlist.entries.map((playlistEntry, playlistEntryIdx) => {
+        const isCurrent =
+          playlistEntry.id === currentlyPlaying?.playlistEntry.id;
+        const song =
+          playlistEntry.type === "song"
+            ? assets.entities[playlistEntry.songId]
+            : undefined;
+        const duration =
+          song?.duration ??
+          (playlistEntry.type === "silence" && playlistEntry.duration);
 
-          const trackNum = (playlistEntryIdx + 1).toString().padStart(2, "0");
+        const trackNum = (playlistEntryIdx + 1).toString().padStart(2, "0");
 
-          return (
-            <div key={playlistEntryId} className="music-row">
-              <div className="music-label">
-                <span className="ascii-art">│ ├ {trackNum} </span>
-                {isCurrent && "> "}
-                {song ? song.name : <em>song not found</em>}
-              </div>
-              <Button
-                disabled={playlistEntryIdx === 0}
-                className="music-button"
-                onClick={() => {
-                  dispatch(
-                    soundSetPlaylistEntryMove({
-                      soundSetId: soundSet.id,
-                      playlistId: playlist.id,
-                      playlistEntryId: playlistEntryId,
-                      direction: "up",
-                    })
-                  );
-                }}
-              >
-                ↑
-              </Button>
-              <Button
-                disabled={playlistEntryIdx === playlist.entries.length - 1}
-                className="music-button"
-                onClick={() => {
-                  dispatch(
-                    soundSetPlaylistEntryMove({
-                      soundSetId: soundSet.id,
-                      playlistId: playlist.id,
-                      playlistEntryId: playlistEntryId,
-                      direction: "down",
-                    })
-                  );
-                }}
-              >
-                ↓
-              </Button>
-              {song && (
-                <small>
-                  {formatDuration(
-                    isCurrent ? currentlyPlaying.timeRemaining : song.duration
-                  )}
-                </small>
+        return (
+          <div key={playlistEntry.id} className="music-row">
+            <div className="music-label">
+              <span className="ascii-art">│ ├ {trackNum} </span>
+              {isCurrent && "> "}
+              {playlistEntry.type === "song" ? (
+                song ? (
+                  song.name
+                ) : (
+                  <em>song not found</em>
+                )
+              ) : (
+                <em>~ silence ~</em>
               )}
+            </div>
+            <Button
+              disabled={playlistEntryIdx === 0}
+              className="music-button"
+              onClick={() => {
+                dispatch(
+                  soundSetPlaylistEntryMove({
+                    soundSetId: soundSet.id,
+                    playlistId: playlist.id,
+                    playlistEntryId: playlistEntry.id,
+                    direction: "up",
+                  })
+                );
+              }}
+            >
+              ↑
+            </Button>
+            <Button
+              disabled={playlistEntryIdx === playlist.entries.length - 1}
+              className="music-button"
+              onClick={() => {
+                dispatch(
+                  soundSetPlaylistEntryMove({
+                    soundSetId: soundSet.id,
+                    playlistId: playlist.id,
+                    playlistEntryId: playlistEntry.id,
+                    direction: "down",
+                  })
+                );
+              }}
+            >
+              ↓
+            </Button>
+            {duration && (
+              <small>
+                {formatDuration(
+                  isCurrent ? currentlyPlaying.timeRemaining : duration
+                )}
+              </small>
+            )}
+            {playlistEntry.type === "song" ? (
               <VolumeSlider
-                volume={volume}
+                volume={playlistEntry.volume}
                 onChange={(volume) =>
                   dispatch({
                     actions: [
@@ -424,48 +470,60 @@ function Playlist({
                         soundSetId: soundSet.id,
                         playlistId: playlist.id,
                         update: {
-                          id: playlistEntryId,
+                          id: playlistEntry.id,
                           changes: {
                             volume,
                           },
                         },
                       }),
                     ],
-                    optimisticKey: `${soundSet.id}/${playlist.id}/${playlistEntryId}/volume`,
+                    optimisticKey: `${soundSet.id}/${playlist.id}/${playlistEntry.id}/volume`,
                     syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
                   })
                 }
               />
-              <Button
-                className="music-button"
-                onClick={async () => {
-                  if (
-                    await confirm(
-                      "Do you really want to delete this song from the playlist (this can not be undone)?"
-                    )
+            ) : (
+              <>
+                <span className="range-placeholder" />
+                <span className="ascii-art">{"    "}</span>
+              </>
+            )}
+            <Button
+              className="music-button"
+              onClick={async () => {
+                if (
+                  await confirm(
+                    "Do you really want to delete this song from the playlist (this can not be undone)?"
                   )
-                    dispatch(
-                      soundSetPlaylistEntryRemove({
-                        soundSetId: soundSet.id,
-                        playlistId: playlist.id,
-                        playlistEntryId: playlistEntryId,
-                      })
-                    );
-                }}
-              >
-                DEL
-              </Button>
-            </div>
-          );
-        }
-      )}
+                )
+                  dispatch(
+                    soundSetPlaylistEntryRemove({
+                      soundSetId: soundSet.id,
+                      playlistId: playlist.id,
+                      playlistEntryId: playlistEntry.id,
+                    })
+                  );
+              }}
+            >
+              DEL
+            </Button>
+          </div>
+        );
+      })}
       <div className="music-row">
         <span className="ascii-art">│ └ </span>
         <Button
-          className="music-button no-margin"
-          onClick={() => addPlaylistEntry(playlist.id)}
+          className="music-button no-margin-left"
+          onClick={() => addPlaylistEntry(playlist.id, "song")}
         >
           add songs to playlist
+        </Button>
+        |
+        <Button
+          className="music-button"
+          onClick={() => addPlaylistEntry(playlist.id, "silence")}
+        >
+          add silence to playlist
         </Button>
       </div>
     </React.Fragment>

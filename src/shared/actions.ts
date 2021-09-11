@@ -42,6 +42,15 @@ import { rrid, timestamp } from "./util";
 
 type Update<T extends { id: RRID }> = OriginalUpdate<T, T["id"]>;
 
+// Omits a property from a union of types
+//
+// CC-BY-SA 4.0 by jcalz
+// https://stackoverflow.com/a/57103940/2560557
+// https://stackoverflow.com/users/2887218/jcalz
+type DistributiveOmit<T, K extends keyof T> = T extends unknown
+  ? Omit<T, K>
+  : never;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Players
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,8 +138,7 @@ export const mapObjectAdd = createAction(
   "map/object/add",
   (
     mapId: RRMapID,
-    // TODO: We really want Omit<RRMapObject, "id">, but this breaks everything
-    mapObject: RRMapObject
+    mapObject: DistributiveOmit<RRMapObject, "id">
   ): {
     payload: { mapId: RRMapID; mapObject: RRMapObject };
   } => {
@@ -481,7 +489,7 @@ export const soundSetPlaylistEntryAdd = createAction(
   (
     soundSetId: RRSoundSet["id"],
     playlistId: RRPlaylistID,
-    playlistEntry: Omit<RRPlaylistEntry, "id">
+    playlistEntry: DistributiveOmit<RRPlaylistEntry, "id">
   ): {
     payload: {
       soundSetId: RRSoundSet["id"];

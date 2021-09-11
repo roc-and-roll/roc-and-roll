@@ -367,6 +367,13 @@ export type RRPlaylist = IterableElement<RRSoundSet["playlists"]>;
 
 export type RRPlaylistEntry = IterableElement<RRPlaylist["entries"]>;
 
+export type RRPlaylistEntrySong = Extract<RRPlaylistEntry, { type: "song" }>;
+
+export type RRPlaylistEntrySilence = Extract<
+  RRPlaylistEntry,
+  { type: "silence" }
+>;
+
 export type EphemeralPlayer = ECE<SyncedState["ephemeral"]["players"]>;
 
 export type RRActiveSongOrSoundSet = ValueOf<

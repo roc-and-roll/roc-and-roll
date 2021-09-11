@@ -7,7 +7,8 @@ import {
   RRActiveSoundSet,
   RRAssetSong,
   RRPlaylist,
-  RRPlaylistEntry,
+  RRPlaylistEntrySilence,
+  RRPlaylistEntrySong,
 } from "../shared/state";
 import { useRRSettings } from "./settings";
 import { useServerState, useServerStateRef } from "./state";
@@ -17,10 +18,16 @@ import { assetUrl } from "./files";
 import { atom, useRecoilValue, useSetRecoilState } from "recoil";
 import { nanoid } from "@reduxjs/toolkit";
 import { volumeLinear2Log, volumeLog2linear } from "./components/VolumeSlider";
+import { setAddImmutably, setDeleteImmutably } from "./immutable-helpers";
 
 const lockedSoundsAtom = atom<string[]>({
   key: "lockedSounds",
   default: [],
+});
+
+export const loadingSoundsAtom = atom<Set<string>>({
+  key: "loadingSounds",
+  default: new Set(),
 });
 
 const updateLockedSounds =
@@ -99,6 +106,8 @@ export function useRRComplexSound(
   const urlRef = useLatest(urlAndDuration?.url);
   const loopRef = useLatest(loop);
 
+  const setLoadingSounds = useSetRecoilState(loadingSoundsAtom);
+
   const howlRef = useRef<Howl | null>(null);
 
   const [{ volume: globalUserVolume, mute: globalUserMute }] = useRRSettings();
@@ -108,22 +117,15 @@ export function useRRComplexSound(
   const volumeRef = useLatest(volume);
   const globalUserMuteRef = useLatest(globalUserMute);
 
-  useEffect(() => {
-    return () => {
-      // turn off the "stop" event handler, which would otherwise call setState,
-      // which triggers an error when done during unmounting.
-      howlRef.current?.off("stop");
-      howlRef.current?.unload();
-      howlRef.current = null;
-    };
-  }, []);
-
   const [state, setState] = useState<SoundState>("stopped");
   const lastUrlRef = useRef<string | undefined>("");
 
   const durationRef = useLatest(urlAndDuration?.duration);
   const soundIdRef = useRef<number | undefined>(undefined);
   const startedAtRef = useRef<number | undefined>(undefined);
+
+  const id = useMemo(() => nanoid(), []);
+  const idRef = useLatest(id);
 
   const _play = useCallback(() => {
     if (!howlRef.current || durationRef.current === undefined) {
@@ -151,6 +153,10 @@ export function useRRComplexSound(
 
   const play = useCallback(
     (startedAt?: number) => {
+      if (urlRef.current === undefined || durationRef.current === undefined) {
+        return;
+      }
+
       startedAtRef.current = startedAt;
 
       // Unload the previous sound if the url changes.
@@ -162,7 +168,12 @@ export function useRRComplexSound(
       lastUrlRef.current = urlRef.current;
 
       if (!howlRef.current) {
+        const id = idRef.current;
+
         setState("loading");
+
+        setLoadingSounds((loadingSounds) => setAddImmutably(loadingSounds, id));
+
         howlRef.current = new Howl({
           src: urlRef.current,
           html5: false, // never enable html5, Howler is buggy with html5
@@ -180,10 +191,12 @@ export function useRRComplexSound(
           onend: () => setState("stopped"),
           onloaderror: () => setState("error"),
           onload: () => {
+            setLoadingSounds((loadingSounds) =>
+              setDeleteImmutably(loadingSounds, id)
+            );
             _play();
           },
           onplayerror: () => {
-            console.log("is locked");
             // https://github.com/goldfire/howler.js/#mobilechrome-playback
             setState("error-needs-unlock");
           },
@@ -195,8 +208,33 @@ export function useRRComplexSound(
         _play();
       }
     },
-    [globalUserMuteRef, volumeRef, loopRef, urlRef, _play]
+    [
+      globalUserMuteRef,
+      volumeRef,
+      loopRef,
+      urlRef,
+      durationRef,
+      idRef,
+      _play,
+      setLoadingSounds,
+    ]
   );
+
+  useEffect(() => {
+    const id = idRef.current;
+    return () => {
+      setLoadingSounds((loadingSounds) =>
+        setDeleteImmutably(loadingSounds, id)
+      );
+
+      // turn off the "stop" event handler, which would otherwise call setState,
+      // which triggers an error when done during unmounting.
+      howlRef.current?.off("stop");
+
+      howlRef.current?.unload();
+      howlRef.current = null;
+    };
+  }, [idRef, setLoadingSounds]);
 
   useEffect(() => {
     howlRef.current?.volume(volume);
@@ -212,10 +250,18 @@ export function useRRComplexSound(
     howlRef.current?.stop();
     soundIdRef.current = undefined;
     startedAtRef.current = undefined;
-  }, []);
+
+    setLoadingSounds((loadingSounds) =>
+      setDeleteImmutably(loadingSounds, idRef.current)
+    );
+  }, [idRef, setLoadingSounds]);
+
+  useEffect(() => {
+    // Stop playback if the url or duration changes.
+    stop();
+  }, [stop, urlAndDuration?.url, urlAndDuration?.duration]);
 
   const setLockedSounds = useSetRecoilState(lockedSoundsAtom);
-  const id = useMemo(() => nanoid(), []);
   useEffect(() => {
     setLockedSounds(updateLockedSounds(id, state === "error-needs-unlock"));
     return () => setLockedSounds(updateLockedSounds(id, false));
@@ -333,16 +379,18 @@ function ActivePlaylistPlayerImpl({
   );
 
   const [play, _pause, stop] = useRRComplexSound(
-    current
+    current?.type === "song"
       ? { url: assetUrl(current.song), duration: current.song.duration }
       : null,
-    volumeLog2linear(
-      activeSoundSet.volume *
-        playlist.volume *
-        (current?.playlistEntry.volume ?? 0)
-    ),
+    current?.type === "song"
+      ? volumeLog2linear(
+          activeSoundSet.volume * playlist.volume * current.playlistEntry.volume
+        )
+      : 1,
     { loop: false }
   );
+
+  const song = current?.type === "song" ? current.song : null;
 
   useEffect(() => {
     if (current?.startedAt === undefined) {
@@ -354,18 +402,30 @@ function ActivePlaylistPlayerImpl({
     stop,
     current?.startedAt,
     // Also restart playing if the song changes
-    current?.song,
+    song,
   ]);
 
   return null;
 }
 
-type CurrentlyPlaylingPlaylistEntryAndSongResult = null | {
-  song: RRAssetSong;
-  startedAt: number;
-  timeRemaining: number;
-  playlistEntry: RRPlaylistEntry;
-};
+type CurrentlyPlaylingPlaylistEntryAndSongResult =
+  | null
+  | ({
+      startedAt: number;
+      timeRemaining: number;
+    } & (
+      | {
+          type: "song";
+          playlistEntry: RRPlaylistEntrySong;
+          duration: number;
+          song: RRAssetSong;
+        }
+      | {
+          type: "silence";
+          playlistEntry: RRPlaylistEntrySilence;
+          duration: number;
+        }
+    ));
 
 export function useCurrentlyPlayingPlaylistEntryAndSong(
   playlist: RRPlaylist,
@@ -379,15 +439,30 @@ export function useCurrentlyPlayingPlaylistEntryAndSong(
     }
 
     const assets = assetsRef.current;
-    const playlistEntriesWithSongs = playlist.entries.flatMap(
+    const playlistEntriesWithDurations = playlist.entries.flatMap(
       (playlistEntry) => {
+        if (playlistEntry.type === "silence") {
+          return {
+            type: "silence" as const,
+            playlistEntry,
+            duration: playlistEntry.duration,
+          };
+        }
+
         const song = assets.entities[playlistEntry.songId];
-        return song ? { playlistEntry, song } : [];
+        return song
+          ? {
+              type: "song" as const,
+              playlistEntry,
+              duration: song.duration,
+              song,
+            }
+          : [];
       }
     );
 
-    const totalPlaylistDuration = playlistEntriesWithSongs.reduce(
-      (sum, { song }) => sum + song.duration,
+    const totalPlaylistDuration = playlistEntriesWithDurations.reduce(
+      (sum, { duration }) => sum + duration,
       0
     );
 
@@ -396,21 +471,31 @@ export function useCurrentlyPlayingPlaylistEntryAndSong(
 
     let currentSongStartedAt: number | null = null;
     let currentSongTimeRemaining: number | null = null;
-    let currentPlaylistEntryWithSong: {
-      song: RRAssetSong;
-      playlistEntry: RRPlaylistEntry;
-    } | null = null;
+    let currentPlaylistEntryWithSong:
+      | (
+          | {
+              type: "song";
+              playlistEntry: RRPlaylistEntrySong;
+              duration: number;
+              song: RRAssetSong;
+            }
+          | {
+              type: "silence";
+              playlistEntry: RRPlaylistEntrySilence;
+              duration: number;
+            }
+        )
+      | null = null;
     let time = 0;
-    for (const entry of playlistEntriesWithSongs) {
-      if (playlistTimeOffset <= time + entry.song.duration) {
+    for (const entry of playlistEntriesWithDurations) {
+      if (playlistTimeOffset <= time + entry.duration) {
         currentPlaylistEntryWithSong = entry;
-        currentSongTimeRemaining =
-          entry.song.duration - (playlistTimeOffset - time);
+        currentSongTimeRemaining = entry.duration - (playlistTimeOffset - time);
         currentSongStartedAt = Date.now() - (playlistTimeOffset - time);
         break;
       }
 
-      time += entry.song.duration;
+      time += entry.duration;
     }
 
     return currentPlaylistEntryWithSong === null ||

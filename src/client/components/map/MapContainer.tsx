@@ -12,7 +12,6 @@ import {
 import {
   entries,
   RRColor,
-  RRMapObject,
   RRPoint,
   RRCharacterID,
   RRMapID,
@@ -43,7 +42,7 @@ import {
   GRID_SIZE,
   SYNC_MY_MOUSE_POSITION,
 } from "../../../shared/constants";
-import { assertNever, rrid, timestamp, withDo } from "../../../shared/util";
+import { assertNever, timestamp, withDo } from "../../../shared/util";
 import { useRRSettings } from "../../settings";
 import {
   makePoint,
@@ -141,7 +140,6 @@ export default function MapContainer() {
         await Promise.all(
           uploadedFiles.map(async (uploadedFile, i) => {
             return mapObjectAdd(mapId, {
-              id: rrid<RRMapObject>(),
               playerId: myself.id,
               color: "black",
               position: pointAdd(point, pointScale(makePoint(GRID_SIZE), i)),
@@ -191,7 +189,6 @@ export default function MapContainer() {
         if (monitor.getItemType() === "map") {
           dispatch(
             mapObjectAdd(mapId, {
-              id: rrid<RRMapObject>(),
               type: "mapLink",
               position: pointSubtract(
                 point,
@@ -230,7 +227,6 @@ export default function MapContainer() {
 
         dispatch(
           mapObjectAdd(mapId, {
-            id: rrid<RRMapObject>(),
             type: "token",
             position: snapPointToGrid(point),
             rotation: 0,

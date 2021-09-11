@@ -1,11 +1,17 @@
-import { faCircle, faVolumeMute } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCircle,
+  faSpinner,
+  faVolumeMute,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
+import { useRecoilValue } from "recoil";
 import tinycolor from "tinycolor2";
 import { entries, RRColor } from "../../../shared/state";
 import { assertNever } from "../../../shared/util";
 import { useRRSettings } from "../../settings";
+import { loadingSoundsAtom } from "../../sound";
 import { useServerState } from "../../state";
 import { contrastColor } from "../../util";
 
@@ -13,6 +19,8 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
   function MapMusicIndicator({ mapBackgroundColor }) {
     const [{ mute: isMuted }, setSettings] = useRRSettings();
     const [isTimeouted, setIsTimeouted] = useState(false);
+
+    const isLoadingSounds = useRecoilValue(loadingSoundsAtom).size > 0;
 
     const players = useServerState((state) => state.players.entities);
     const activeMusic = useServerState((state) => state.ephemeral.activeMusic);
@@ -78,12 +86,34 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
         style={{ backgroundColor, color: textColor }}
         title={title}
         role="button"
-        aria-label={isMuted ? "Unmute music" : "Mute music"}
+        aria-label={`${isLoadingSounds ? "Loading music - " : ""}${
+          isMuted ? "Unmute music" : "Mute music"
+        }`}
         onClick={() =>
           setSettings((settings) => ({ ...settings, mute: !settings.mute }))
         }
       >
-        {isMuted ? (
+        {isLoadingSounds ? (
+          <span className="fa-layers fa-fw">
+            <FontAwesomeIcon icon={faSpinner} spin transform="grow-10" />
+            {isMuted && (
+              <>
+                <FontAwesomeIcon
+                  icon={faCircle}
+                  color="#cc0000"
+                  transform="grow-4 right-10 down-10"
+                  fixedWidth
+                />
+                <FontAwesomeIcon
+                  icon={faVolumeMute}
+                  color="white"
+                  fixedWidth
+                  transform="shrink-4 right-10 down-10"
+                />
+              </>
+            )}
+          </span>
+        ) : isMuted ? (
           <span className="fa-layers fa-fw">
             <FontAwesomeIcon
               icon={faCircle}
