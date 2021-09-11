@@ -51,6 +51,7 @@ import bullseye from "../../../third-party/game-icons.net/ffffff/transparent/1x1
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import { faSkullCrossbones } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useConfirm } from "../../popup-boxes";
 
 export interface ConditionWithIcon {
   name: RRCharacterCondition;
@@ -105,6 +106,7 @@ export function CharacterEditor({
   const fileInput = useRef<HTMLInputElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
   const [isUploading, upload] = useFileUpload();
+  const confirm = useConfirm();
 
   const dispatch = useServerDispatch();
   const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
@@ -181,9 +183,19 @@ export function CharacterEditor({
     if (wasJustCreated) onNameFirstEdited();
   }, [character.name, onNameFirstEdited, wasJustCreated]);
 
-  const remove = () => {
-    dispatch(removeFunc(character.id));
-    onClose();
+  const remove = async () => {
+    if (
+      await confirm(
+        `Do you really want to delete this character${
+          isTemplate ? " template" : ""
+        } forever? This will _not_ just delete the token, but the entire character${
+          isTemplate ? " template" : ""
+        }!`
+      )
+    ) {
+      dispatch(removeFunc(character.id));
+      onClose();
+    }
   };
 
   return (

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { RRID } from "../../shared/state";
 import { rrid } from "../../shared/util";
+import { useAlert } from "../popup-boxes";
 import { useLatest } from "../useLatest";
 import useLocalState from "../useLocalState";
 import { useCompendium } from "./compendium/Compendium";
@@ -23,13 +24,14 @@ export function Modding() {
 function OneOffMod() {
   const [script, setScript] = useLocalState("one-off-mod", "");
   const [executing, setExecuting] = useState(false);
+  const alert = useAlert();
 
   async function execute() {
     try {
       setExecuting(true);
       console.log(await eval(script));
     } catch (err) {
-      alert(err);
+      await alert(String(err));
     } finally {
       setExecuting(false);
     }

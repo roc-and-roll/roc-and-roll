@@ -5,13 +5,15 @@ import { useMyself } from "../myself";
 import { useServerDispatch } from "../state";
 import { roll } from "../roll";
 import { Button } from "./ui/Button";
+import { useAlert } from "../popup-boxes";
 
 export function DiceInput() {
   const [text, setText] = useState("");
   const myself = useMyself();
   const dispatch = useServerDispatch();
+  const alert = useAlert();
 
-  const doRoll = () => {
+  const doRoll = async () => {
     const regex = /(^| *[+-] *)(?:(\d*)(d|a|i)(\d+)|(\d+))/g;
     const dice = [...text.matchAll(regex)].map(
       ([_, sign, diceCount, die, dieFaces, mod]): RRDice | RRModifier => {
@@ -58,7 +60,7 @@ export function DiceInput() {
       );
       setText("");
     } else {
-      alert("Please follow the regex: " + regex.toString());
+      await alert("Please follow the regex: " + regex.toString());
     }
   };
 

@@ -68,6 +68,7 @@ import {
   selectedMapObjectsFamily,
   ReduxToRecoilBridge,
 } from "./recoil";
+import { useAlert } from "../../popup-boxes";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -101,6 +102,7 @@ export default function MapContainer() {
   const syncedDebounce = useRef(
     new SyncedDebouncer(CURSOR_POSITION_SYNC_DEBOUNCE)
   );
+  const alert = useAlert();
 
   const mapViewRef = useRef<RRMapViewRef>(null);
 
@@ -156,7 +158,7 @@ export default function MapContainer() {
       );
     } catch (err) {
       console.error(err);
-      alert("File upload failed.");
+      await alert("File upload failed.");
     }
   };
   const addBackgroundImagesRef = useLatest(addBackgroundImages);

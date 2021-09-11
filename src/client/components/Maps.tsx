@@ -13,6 +13,7 @@ import {
 } from "../../shared/state";
 import { EMPTY_ENTITY_COLLECTION } from "../../shared/state";
 import { useMyself } from "../myself";
+import { usePrompt } from "../popup-boxes";
 import { useServerDispatch, useServerState } from "../state";
 import { GMArea } from "./GMArea";
 import { Button } from "./ui/Button";
@@ -23,6 +24,7 @@ export function Maps() {
   const myself = useMyself();
   const mapIds = useServerState((state) => state.maps.ids);
   const players = useServerState((state) => state.players);
+  const prompt = usePrompt();
 
   return (
     <GMArea>
@@ -38,8 +40,8 @@ export function Maps() {
         ))}
         <li className="maps-create">
           <Button
-            onClick={() => {
-              const name = prompt("Enter the name of the map")?.trim();
+            onClick={async () => {
+              const name = (await prompt("Enter the name of the map"))?.trim();
               if (name === undefined || name.length === 0) {
                 return;
               }

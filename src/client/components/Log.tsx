@@ -3,6 +3,7 @@ import { logEntryMessageAdd } from "../../shared/actions";
 import { entries, RRLogEntry } from "../../shared/state";
 import { assertNever, withDo } from "../../shared/util";
 import { useMyself } from "../myself";
+import { usePrompt } from "../popup-boxes";
 import { diceResultString, DiceResultWithTypes } from "../roll";
 import { useServerDispatch, useServerState } from "../state";
 import { useScrollToBottom } from "../useScrollToBottom";
@@ -67,6 +68,7 @@ export function Log() {
       ]
     : null;
   const [scrollRef] = useScrollToBottom<HTMLUListElement>([collapsed]);
+  const prompt = usePrompt();
 
   return (
     <div className="log">
@@ -116,8 +118,8 @@ export function Log() {
             )}
           </ul>
           <Button
-            onClick={() => {
-              const text = prompt("text");
+            onClick={async () => {
+              const text = await prompt("Type your message");
               if (text === null) {
                 return;
               }

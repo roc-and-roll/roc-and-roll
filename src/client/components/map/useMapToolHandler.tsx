@@ -32,6 +32,7 @@ import Shape from "@doodle3d/clipper-js";
 import tinycolor from "tinycolor2";
 import { RRMessage, useServerMessages } from "../../serverMessages";
 import { RRMapViewRef } from "./Map";
+import { usePrompt } from "../../popup-boxes";
 
 const SERVER_SYNC_THROTTLE_TIME = 100;
 
@@ -109,6 +110,8 @@ export function useMapToolHandler(
   );
 
   const { send } = useServerMessages();
+
+  const prompt = usePrompt();
 
   if (editState.tool === "draw") {
     const create = (p: RRPoint) => ({
@@ -280,8 +283,8 @@ export function useMapToolHandler(
         break;
       case "text":
         toolHandlerRef.current = {
-          onMouseUp: (p: RRPoint) => {
-            const text = prompt("enter text")?.trim();
+          onMouseUp: async (p: RRPoint) => {
+            const text = (await prompt("enter text"))?.trim();
             if (text === undefined || text.length === 0) {
               return;
             }

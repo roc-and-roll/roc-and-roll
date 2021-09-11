@@ -26,6 +26,7 @@
   },
   "plugins": ["react", "react-hooks", "@typescript-eslint", "prettier"],
   "rules": {
+    "no-alert": "warn",
     "prettier/prettier": "warn",
     "react/prop-types": "off",
     "react/display-name": "warn",

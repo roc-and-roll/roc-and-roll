@@ -11,14 +11,16 @@ import { useMyself } from "../myself";
 import { useServerDispatch } from "../state";
 import { roll } from "../roll";
 import { rrid } from "../../shared/util";
+import { useAlert } from "../popup-boxes";
 
 export function DiceInterface() {
   const [diceTypes, setDiceTypes] = useState<string[]>([]);
   const [boni, setBoni] = useState<number>(0);
   const myself = useMyself();
   const dispatch = useServerDispatch();
+  const alert = useAlert();
 
-  const doRoll = (addTemplate: boolean) => {
+  const doRoll = async (addTemplate: boolean) => {
     const boniString = boni >= 0 ? "+" + boni.toString() : boni.toString();
     const rollString = diceTypes.join("+") + boniString;
 
@@ -99,7 +101,7 @@ export function DiceInterface() {
       setDiceTypes([]);
       setBoni(0);
     } else {
-      alert("Please follow the regex: " + regex.toString());
+      await alert("Please follow the regex: " + regex.toString());
     }
   };
 

@@ -4,9 +4,11 @@ import { DiceGeometry } from "./Dice";
 import * as THREE from "three";
 import { GLTFLoader, GLTF } from "three/examples/jsm/loaders/GLTFLoader";
 import d12Glb from "./dice/d12.glb";
+import { useAlert } from "../../popup-boxes";
 
 export function DebugDiceRotation() {
   const [die] = useLoader(GLTFLoader, [d12Glb]);
+  const alert = useAlert();
 
   const geometryFrom = (die: GLTF | undefined) => {
     return die ? (die.scene.children[0]! as THREE.Mesh).geometry : undefined;
@@ -42,7 +44,7 @@ export function DebugDiceRotation() {
         step="any"
         onChange={(e) => setZ(e.target.valueAsNumber)}
       />
-      <button onClick={() => alert(`new THREE.Euler(${x}, ${y}, ${z})`)}>
+      <button onClick={async () => alert(`new THREE.Euler(${x}, ${y}, ${z})`)}>
         show
       </button>
       <Canvas

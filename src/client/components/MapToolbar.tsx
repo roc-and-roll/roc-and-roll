@@ -23,6 +23,7 @@ import { isTriggeredByFormElement } from "../util";
 import { SmartTextInput } from "./ui/TextInput";
 import EmojiPicker from "emoji-picker-react";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
+import { mapAddImmutably, mapDeleteImmutably } from "../immutable-helpers";
 // TODO: Lazy loding the emoji picker does not play nicely with Tippy :/
 // const EmojiPicker = React.lazy(
 //   () => import(/* webpackPrefetch: true */ "emoji-picker-react")
@@ -84,19 +85,9 @@ function useIndeterminateBoolean<K extends keyof NonTokenMapObject>({
     (selectedMapObjectId: RRMapObjectID, value: boolean | "remove") => {
       setStates((oldMap) => {
         if (value === "remove") {
-          if (!oldMap.has(selectedMapObjectId)) {
-            return oldMap;
-          }
-          const newMap = new Map(oldMap);
-          newMap.delete(selectedMapObjectId);
-          return newMap;
+          return mapDeleteImmutably(oldMap, selectedMapObjectId);
         }
-        if (oldMap.get(selectedMapObjectId) === value) {
-          return oldMap;
-        }
-        const newMap = new Map(oldMap);
-        newMap.set(selectedMapObjectId, value);
-        return newMap;
+        return mapAddImmutably(oldMap, selectedMapObjectId, value);
       });
     },
     []

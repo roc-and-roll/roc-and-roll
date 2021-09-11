@@ -31,6 +31,7 @@ import { Button } from "./ui/Button";
 import { SmartTextInput } from "./ui/TextInput";
 import { VolumeSlider } from "./VolumeSlider";
 import { useCurrentlyPlayingPlaylistEntryAndSong } from "../sound";
+import { useConfirm, usePrompt } from "../popup-boxes";
 
 export const SoundSets = React.memo<{
   filterText: string;
@@ -40,9 +41,10 @@ export const SoundSets = React.memo<{
   const myself = useMyself();
   const dispatch = useServerDispatch();
   const soundSets = useServerState((state) => state.soundSets);
+  const prompt = usePrompt();
 
-  const createSoundSet = () => {
-    const name = prompt("Enter a name for the sound set")?.trim();
+  const createSoundSet = async () => {
+    const name = (await prompt("Enter a name for the sound set"))?.trim();
 
     if (name === "" || name === undefined) {
       return;
@@ -296,6 +298,7 @@ function Playlist({
   assets: SyncedState["assets"];
 }) {
   const dispatch = useServerDispatch();
+  const confirm = useConfirm();
 
   const currentlyPlaying = useCurrentlyPlayingPlaylistEntryAndSong(
     playlist,
@@ -341,9 +344,9 @@ function Playlist({
         />
         <Button
           className="music-button"
-          onClick={() => {
+          onClick={async () => {
             if (
-              confirm(
+              await confirm(
                 "Do you really want to delete this playlist from the sound set (this can not be undone)?"
               )
             )
@@ -435,9 +438,9 @@ function Playlist({
               />
               <Button
                 className="music-button"
-                onClick={() => {
+                onClick={async () => {
                   if (
-                    confirm(
+                    await confirm(
                       "Do you really want to delete this song from the playlist (this can not be undone)?"
                     )
                   )

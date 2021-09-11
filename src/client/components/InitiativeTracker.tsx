@@ -41,6 +41,7 @@ import ReactDOM from "react-dom";
 import { NotificationTopAreaPortal } from "./Notifications";
 import { Collapsible } from "./Collapsible";
 import { SmartIntegerInput } from "./ui/TextInput";
+import { usePrompt } from "../popup-boxes";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -222,16 +223,17 @@ function InitiativeTrackerInner({
   const dispatch = useServerDispatch();
   const characterCollection = useServerState((state) => state.characters);
   const playerCollection = useServerState((state) => state.players);
+  const prompt = usePrompt();
 
-  const addLairAction = () => {
-    const description = prompt(
+  const addLairAction = async () => {
+    const description = await prompt(
       'How should we name this lair action in the initiative tracker ("Lair Action" works fine)?',
       "Lair Action"
     );
     if (!description) {
       return;
     }
-    const initiativeStr = prompt("Enter the initiative value", "20");
+    const initiativeStr = await prompt("Enter the initiative value", "20");
     if (!initiativeStr) {
       return;
     }

@@ -4,6 +4,7 @@ import { entries, RRPlayerID } from "../../shared/state";
 import { randomColor } from "../../shared/colors";
 import { useServerDispatch, useServerState } from "../state";
 import "./JoinGame.scss";
+import { usePrompt } from "../popup-boxes";
 
 export const JoinGame = React.memo(function JoinGame({
   login,
@@ -13,9 +14,10 @@ export const JoinGame = React.memo(function JoinGame({
   const dispatch = useServerDispatch();
   const players = useServerState((state) => state.players);
   const maps = useServerState((s) => s.maps);
+  const prompt = usePrompt();
 
-  const joinAsNewPlayer = () => {
-    const name = prompt("What is your name?")?.trim();
+  const joinAsNewPlayer = async () => {
+    const name = (await prompt("What is your name?"))?.trim();
     if (name === undefined || name.length === 0) {
       return;
     }
