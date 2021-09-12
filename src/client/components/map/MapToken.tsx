@@ -22,7 +22,7 @@ import {
 } from "../../../shared/state";
 import { tokenImageUrl } from "../../files";
 import { canControlToken, canViewTokenOnMap } from "../../permissions";
-import { RoughRectangle, RoughText } from "../rough";
+import { RoughLine, RoughRectangle, RoughText } from "../rough";
 import tinycolor from "tinycolor2";
 import {
   assertNever,
@@ -263,7 +263,12 @@ function MapTokenInner({
               />
             )}
             <g transform={`translate(${x},${y})`}>
-              <ConditionIcons character={character} />
+              <ConditionIcons
+                character={character}
+                canControl={canControl}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+              />
             </g>
           </>,
           healthbarArea
@@ -404,19 +409,31 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
 
 const ConditionIcons = React.memo(function ConditionIcons({
   character,
+  onMouseDown,
+  onMouseUp,
+  canControl,
 }: {
   character: RRCharacter;
+  onMouseDown: (e: React.MouseEvent) => void;
+  onMouseUp: (e: React.MouseEvent) => void;
+  canControl: boolean;
 }) {
+  const tinyIcons = character.conditions.length > 12;
+  const iconSize = (tinyIcons ? 12 : 16) * character.scale;
+  const iconsPerRow = tinyIcons ? 6 : 4;
+
   return (
     <>
       {character.conditions.map((condition, index) => {
         const icon = conditionIcons[condition];
-        const iconSize = 16 * character.scale;
         const props = {
-          x: (index % 4) * iconSize,
-          y: Math.floor(index / 4) * iconSize,
+          x: (index % iconsPerRow) * iconSize,
+          y: Math.floor(index / iconsPerRow) * iconSize,
           width: iconSize,
           height: iconSize,
+          onMouseDown,
+          onMouseUp,
+          style: canControl ? { cursor: "move" } : {},
         };
 
         // TODO: Normally, we'd want to disable pointer events on
@@ -443,6 +460,7 @@ const ConditionIcons = React.memo(function ConditionIcons({
               style={{
                 stroke: "white",
                 strokeWidth: 18,
+                ...props.style,
               }}
             >
               <title>{condition}</title>
@@ -455,31 +473,40 @@ const ConditionIcons = React.memo(function ConditionIcons({
 });
 
 function DeadMarker({ x, y, scale }: { x: number; y: number; scale: number }) {
-  const COLOR = "red";
-  const barSize = 8 + 8 * Math.max(0, Math.log(scale));
-  const tokenSize = GRID_SIZE * scale;
+  const TOKEN_SIZE = GRID_SIZE * scale;
+
+  const OUTER_COLOR = "#9b111c";
+  const OUTER_SIZE = 6 + 6 * Math.max(0, Math.log(scale));
+  const INNER_COLOR = "#E32636";
+  const INNER_SIZE = OUTER_SIZE / 3;
 
   const sharedProps = {
-    w: tokenSize * Math.SQRT2,
-    h: barSize,
-    fill: COLOR,
-    fillStyle: "solid",
-    roughness: 0,
+    x,
+    w: TOKEN_SIZE,
+    roughness: 3,
+  };
+
+  const outerProps = {
+    ...sharedProps,
+    stroke: OUTER_COLOR,
+    strokeWidth: OUTER_SIZE,
+  };
+
+  const innerProps = {
+    ...sharedProps,
+    stroke: INNER_COLOR,
+    strokeWidth: INNER_SIZE,
   };
 
   return (
-    <>
-      <g transform={`rotate(45, ${x}, ${y})`} pointerEvents="none">
-        <RoughRectangle x={x} y={y - barSize / 2} {...sharedProps} />
-      </g>
-      <g transform={`rotate(-45, ${x}, ${y + tokenSize})`} pointerEvents="none">
-        <RoughRectangle
-          x={x}
-          y={y + tokenSize - barSize / 2}
-          {...sharedProps}
-        />
-      </g>
-    </>
+    <g pointerEvents="none">
+      {[outerProps, innerProps].map((props, i) => (
+        <React.Fragment key={i}>
+          <RoughLine y={y} h={TOKEN_SIZE} {...props} />
+          <RoughLine y={y + TOKEN_SIZE} h={-TOKEN_SIZE} {...props} />
+        </React.Fragment>
+      ))}
+    </g>
   );
 }
 

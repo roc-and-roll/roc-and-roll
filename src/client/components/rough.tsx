@@ -10,8 +10,7 @@ import { hashString } from "../../shared/util";
 
 const DEFAULT_ROUGHNESS = 3;
 
-// Stroke width used in simple mode.
-const STROKE_WIDTH_SIMPLE = 5;
+const STROKE_WIDTH_SIMPLE = 4;
 
 export const RoughContext = React.createContext<RoughGenerator | null>(null);
 
@@ -125,7 +124,12 @@ const DrawablePrimitive = React.forwardRef<
 
 type PassedThroughOptions = Pick<
   Options,
-  "fill" | "fillStyle" | "stroke" | "strokeLineDash" | "roughness"
+  | "fill"
+  | "fillStyle"
+  | "stroke"
+  | "strokeWidth"
+  | "strokeLineDash"
+  | "roughness"
 >;
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -145,7 +149,10 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
       onMouseDown?: (e: React.MouseEvent<SVGElement>) => void;
       onMouseUp?: (e: React.MouseEvent<SVGElement>) => void;
       onContextMenu?: (e: React.MouseEvent<SVGElement>) => void;
-    } & Pick<PassedThroughOptions, "fill" | "stroke" | "strokeLineDash">,
+    } & Pick<
+        PassedThroughOptions,
+        "fill" | "stroke" | "strokeWidth" | "strokeLineDash"
+      >,
     ref: React.ForwardedRef<E>
   ) => React.ReactElement
 ) {
@@ -170,7 +177,16 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
         }
     >(
       (
-        { fill, fillStyle, stroke, strokeLineDash, seed, roughness, ...props },
+        {
+          fill,
+          fillStyle,
+          stroke,
+          strokeWidth,
+          strokeLineDash,
+          seed,
+          roughness,
+          ...props
+        },
         ref
       ) => {
         const generator = useContext(RoughContext);
@@ -199,6 +215,8 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
                   fill,
                   fillStyle,
                   stroke,
+                  strokeWidth:
+                    strokeWidth ?? generator.defaultOptions.strokeWidth,
                   strokeLineDash,
                   roughness: roughness ?? DEFAULT_ROUGHNESS,
                   seed: realSeed,
@@ -210,6 +228,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
             fill,
             fillStyle,
             stroke,
+            strokeWidth,
             strokeLineDash,
             roughness,
             realSeed,
@@ -254,7 +273,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
               fill,
               stroke,
               strokeLineDash,
-              strokeWidth: STROKE_WIDTH_SIMPLE,
+              strokeWidth: strokeWidth ?? STROKE_WIDTH_SIMPLE,
               ...(generatorProps as C),
             },
             ref as React.ForwardedRef<E>
