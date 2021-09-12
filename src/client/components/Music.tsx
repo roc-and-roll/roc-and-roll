@@ -1,3 +1,5 @@
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { matchSorter } from "match-sorter";
 import React, { useCallback, useMemo, useState } from "react";
 import {
@@ -250,12 +252,22 @@ function UploadAudio({ onUploaded }: { onUploaded: () => void }) {
   };
 
   return (
-    <input
-      type="file"
-      multiple
-      onChange={(e) => doUpload(e.target.files)}
-      disabled={isUploading}
-    />
+    <>
+      <input
+        type="file"
+        multiple
+        onChange={async (e) => {
+          await doUpload(e.target.files);
+          e.target.value = "";
+        }}
+        disabled={isUploading}
+      />
+      {isUploading && (
+        <span>
+          <FontAwesomeIcon icon={faSpinner} spin /> uploading...
+        </span>
+      )}
+    </>
   );
 }
 

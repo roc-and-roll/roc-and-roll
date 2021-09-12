@@ -24,6 +24,10 @@ import {
   isMimeTypeImage,
 } from "./files";
 import { isAllowedFiletypes } from "../shared/files";
+import serverTiming from "server-timing";
+import { randomBetweenInclusive } from "../shared/random";
+
+const ONE_YEAR = 1000 * 60 * 60 * 24 * 365;
 
 export async function setupWebServer(
   httpPort: number,
@@ -36,6 +40,11 @@ export async function setupWebServer(
   const app = express();
   app.set("etag", true);
   app.use(compression());
+  app.use(
+    serverTiming({
+      enabled: process.env.NODE_ENV !== "production",
+    })
+  );
 
   if (process.env.NODE_ENV === "development") {
     // (1) In development, add a CORS header so that the client is allowed to
@@ -117,7 +126,14 @@ export async function setupWebServer(
   );
 
   // (3) Serve uploaded files
-  app.use("/api/files", express.static(uploadedFilesDir, { etag: true }));
+  app.use(
+    "/api/files",
+    express.static(uploadedFilesDir, {
+      etag: true,
+      immutable: true,
+      maxAge: ONE_YEAR,
+    })
+  );
 
   const lock = new AsyncLock();
 
@@ -144,8 +160,11 @@ export async function setupWebServer(
           return;
         }
 
+        res.startTime("lock", "Awaiting lock");
+
         // Only allow to generate one token size per token in parallel.
         await lock.acquire(filename, async () => {
+          res.endTime("lock");
           const size = fittingTokenSize(requestedSize);
 
           const inputPath = path.join(uploadedFilesDir, filename);
@@ -156,6 +175,7 @@ export async function setupWebServer(
 
           if (!existsSync(outputPath)) {
             console.log("Generating token", { filename, size, borderColor });
+            res.startTime("generate", "Generating token");
 
             const CENTER = size / 2;
             const RADIUS = size / 2 - 1;
@@ -197,6 +217,7 @@ export async function setupWebServer(
               .png()
               .toFile(outputPath);
             console.log("Finished token", { filename, size, borderColor });
+            res.endTime("generate");
           }
 
           res.sendFile(outputPath);
@@ -216,7 +237,7 @@ export async function setupWebServer(
 
   app.post("/api/random-token", async (req, res, next) => {
     try {
-      const icon = icons[Math.floor(Math.random() * icons.length)];
+      const icon = icons[randomBetweenInclusive(0, icons.length - 1)];
       if (!icon) {
         throw new Error();
       }
@@ -224,11 +245,13 @@ export async function setupWebServer(
       const filename = `generated-${nanoid()}.svg`;
       const background = randomColor();
 
+      res.startTime("generate", "Generating token");
       await sharp(await sharp(icon).resize(450, 450).toBuffer())
         .extend({ top: 50, left: 50, right: 50, bottom: 50, background })
         .flatten({ background })
         .png()
         .toFile(path.join(uploadedFilesDir, filename));
+      res.endTime("generate");
 
       const file: RRFileImage = {
         filename,
@@ -284,12 +307,20 @@ export async function setupWebServer(
     app.get("/", (req, res, next) =>
       res.sendFile(path.resolve(__dirname, "client", "index.html"))
     );
+    // Serve font files without immutable and maxAge set to true, since they do
+    // not include hashes in their filenames.
+    app.get(
+      "/fonts/*",
+      express.static(path.resolve(__dirname, "client"), {
+        etag: true,
+      })
+    );
 
     app.use(
       express.static(path.resolve(__dirname, "client"), {
         etag: true,
         immutable: true,
-        maxAge: 1000 * 60 * 60 * 24 * 365,
+        maxAge: ONE_YEAR,
       })
     );
     app.use(express.static(path.resolve(__dirname, "public"), { etag: true }));

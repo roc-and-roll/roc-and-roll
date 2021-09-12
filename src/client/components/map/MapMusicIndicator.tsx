@@ -12,51 +12,63 @@ import { entries, RRColor } from "../../../shared/state";
 import { assertNever } from "../../../shared/util";
 import { useRRSettings } from "../../settings";
 import { loadingSoundsAtom } from "../../sound";
-import { useServerState } from "../../state";
+import { useServerState, useServerStateRef } from "../../state";
 import { contrastColor } from "../../util";
 
 export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
   function MapMusicIndicator({ mapBackgroundColor }) {
     const [{ mute: isMuted }, setSettings] = useRRSettings();
-    const [isTimeouted, setIsTimeouted] = useState(false);
-
     const isLoadingSounds = useRecoilValue(loadingSoundsAtom).size > 0;
 
-    const players = useServerState((state) => state.players.entities);
+    const serverStateRef = useServerStateRef((state) => state);
     const activeMusic = useServerState((state) => state.ephemeral.activeMusic);
-    const assets = useServerState((state) => state.assets);
-    const soundSets = useServerState((state) => state.soundSets);
+    const [activeSongTitles, setActiveSongTitles] = useState<string>("");
+    const [isTimeouted, setIsTimeouted] = useState(false);
 
-    const activeSongTitles = entries(activeMusic)
-      .flatMap((activeSongOrSoundSet) => {
-        let name;
-        switch (activeSongOrSoundSet.type) {
-          case "song": {
-            const song = assets.entities[activeSongOrSoundSet.songId];
-            if (!song) {
-              return [];
-            }
-            name = song.name;
-            break;
-          }
-          case "soundSet": {
-            const soundSet =
-              soundSets.entities[activeSongOrSoundSet.soundSetId];
-            if (!soundSet) {
-              return [];
-            }
-            name = soundSet.name;
-            break;
-          }
-          default:
-            assertNever(activeSongOrSoundSet);
-        }
+    useEffect(() => {
+      // This is a deliberate optimization (and tradeoff): Instead of
+      // subscribing to changes to ephemeral music, players, assets, and sound
+      // sets, we only subscribe to changes to ephemeral music, and read the
+      // others from a ref. Thus, the text will not update if, i.e., the player
+      // name changes.
+      const players = serverStateRef.current.players;
+      const assets = serverStateRef.current.assets;
+      const soundSets = serverStateRef.current.soundSets;
 
-        return `${name} [${
-          players[activeSongOrSoundSet.addedBy]?.name ?? "Unknown Player"
-        }]`;
-      })
-      .join(", ");
+      setActiveSongTitles(
+        entries(activeMusic)
+          .flatMap((activeSongOrSoundSet) => {
+            let name;
+            switch (activeSongOrSoundSet.type) {
+              case "song": {
+                const song = assets.entities[activeSongOrSoundSet.songId];
+                if (!song) {
+                  return [];
+                }
+                name = song.name;
+                break;
+              }
+              case "soundSet": {
+                const soundSet =
+                  soundSets.entities[activeSongOrSoundSet.soundSetId];
+                if (!soundSet) {
+                  return [];
+                }
+                name = soundSet.name;
+                break;
+              }
+              default:
+                assertNever(activeSongOrSoundSet);
+            }
+
+            return `${name} [${
+              players.entities[activeSongOrSoundSet.addedBy]?.name ??
+              "Unknown Player"
+            }]`;
+          })
+          .join(", ")
+      );
+    }, [serverStateRef, activeMusic]);
 
     useEffect(() => {
       if (activeSongTitles.length === 0) {
