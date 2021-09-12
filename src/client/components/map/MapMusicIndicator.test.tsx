@@ -10,15 +10,18 @@ import {
   RRAssetSong,
   RRPlayer,
 } from "../../../shared/state";
+import { RecoilRoot } from "recoil";
 
 describe("MapMusicIndicator", () => {
   it("works", () => {
     const mockSocket = new MockClientSocket();
 
     const { unmount } = render(
-      <ServerStateProvider socket={mockSocket.__cast()}>
-        <MapMusicIndicator mapBackgroundColor="orange" />
-      </ServerStateProvider>
+      <RecoilRoot>
+        <ServerStateProvider socket={mockSocket.__cast()}>
+          <MapMusicIndicator mapBackgroundColor="orange" />
+        </ServerStateProvider>
+      </RecoilRoot>
     );
 
     expect(
