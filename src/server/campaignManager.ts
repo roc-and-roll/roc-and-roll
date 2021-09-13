@@ -10,6 +10,7 @@ import { Knex } from "knex";
 import { throttled } from "../shared/util";
 import { updateCampaignState } from "./database";
 import { batchActions } from "redux-batched-actions";
+import { setupTabletopAudioTrackSync } from "./setupTabletopaudio";
 
 export class CampaignManager {
   private _store?: MyStore;
@@ -98,7 +99,6 @@ export class CampaignManager {
       );
     }, 2000);
 
-    // TODO
-    // await setupTabletopAudioTrackSync(store, TODO);
+    await setupTabletopAudioTrackSync(this.store, this.knex, campaignId);
   }
 }

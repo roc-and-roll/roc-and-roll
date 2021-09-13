@@ -29,13 +29,15 @@ void (async () => {
 
   // TODO: Remove
   {
-    const { id } = await insertCampaign(knex, "Legacy Campaign");
-    const statePath = path.join(workspaceDir, "state.json");
-    await updateCampaignState(
-      knex,
-      id,
-      JSON.parse(fs.readFileSync(statePath, "utf-8")) as SyncedState
-    );
+    if ((await listCampaigns(knex)).length === 0) {
+      const { id } = await insertCampaign(knex, "Legacy Campaign");
+      const statePath = path.join(workspaceDir, "state.json");
+      await updateCampaignState(
+        knex,
+        id,
+        JSON.parse(fs.readFileSync(statePath, "utf-8")) as SyncedState
+      );
+    }
   }
 
   const { io, url } = await setupWebServer(

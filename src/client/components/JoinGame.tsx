@@ -3,7 +3,6 @@ import { playerAdd } from "../../shared/actions";
 import { entries, RRPlayerID } from "../../shared/state";
 import { randomColor } from "../../shared/colors";
 import { useServerDispatch, useServerState } from "../state";
-import "./JoinGame.scss";
 import { usePrompt } from "../popup-boxes";
 import { CampaignEntity } from "../../shared/campaign";
 

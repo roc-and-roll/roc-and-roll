@@ -29,7 +29,11 @@ function setup<A extends Record<string, unknown>, H>(
     return (
       <CampaignAndServerStateProvider
         forTestingInitialState={{
-          campaign: { id: rrid<CampaignEntity>(), name: "Campaign" },
+          campaign: {
+            id: rrid<CampaignEntity>(),
+            name: "Campaign",
+            lastTabletopAudioUpdate: new Date(0),
+          },
           socket,
         }}
       >

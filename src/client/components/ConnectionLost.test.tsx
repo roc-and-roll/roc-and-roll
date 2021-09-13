@@ -13,7 +13,11 @@ describe("ConnectionLost", () => {
     const { unmount } = render(
       <CampaignAndServerStateProvider
         forTestingInitialState={{
-          campaign: { id: rrid<CampaignEntity>(), name: "Campaign" },
+          campaign: {
+            id: rrid<CampaignEntity>(),
+            name: "Campaign",
+            lastTabletopAudioUpdate: new Date(0),
+          },
           socket: mockSocket.__cast(),
         }}
       >
