@@ -32,7 +32,7 @@ export const SmartTextInput = React.forwardRef<
   HTMLInputElement,
   TextInputProps
 >(function SmartTextInput(props, ref) {
-  const [fieldProps, debouncedRef, _isPending] = useDebouncedField<
+  const [fieldProps, debouncedRef, isPending] = useDebouncedField<
     string,
     HTMLInputElement
   >({
@@ -40,7 +40,15 @@ export const SmartTextInput = React.forwardRef<
     ...props,
   });
 
-  return <TextInput ref={composeRefs(ref, debouncedRef)} {...fieldProps} />;
+  return (
+    <TextInput
+      ref={composeRefs(ref, debouncedRef)}
+      {...fieldProps}
+      // This should eventually display a spinner. However, to be able to test
+      // it, we simply set a data attribute for now.
+      data-ispending={isPending ? 1 : 0}
+    />
+  );
 });
 
 type IntegerInputProps =

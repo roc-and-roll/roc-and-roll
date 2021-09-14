@@ -2092,9 +2092,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/dom@npm:^8.0.0":
-  version: 8.2.0
-  resolution: "@testing-library/dom@npm:8.2.0"
+"@testing-library/dom@npm:^8.5.0":
+  version: 8.5.0
+  resolution: "@testing-library/dom@npm:8.5.0"
   dependencies:
     "@babel/code-frame": ^7.10.4
     "@babel/runtime": ^7.12.5
@@ -2104,7 +2104,7 @@ __metadata:
     dom-accessibility-api: ^0.5.6
     lz-string: ^1.4.4
     pretty-format: ^27.0.2
-  checksum: e631d2fe0490dd7ed193ea631541708656f9b4e6054a7ec0c6617f7fb0bf01b414dac63821f04bc9cd4eb3f573a2be69a4dd493b64db725962c9f1c1858f204d
+  checksum: fde0e9086de62e92a50e866a3b7d00c05ebdd054f5b044652b80726c82733f50fd290dda99a8aba4a3ff763ea16910c1916f0c8fbadd0a1b48ffdc159eafcb9c
   languageName: node
   linkType: hard
 
@@ -2147,16 +2147,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/react@npm:^12.0.0":
-  version: 12.0.0
-  resolution: "@testing-library/react@npm:12.0.0"
+"@testing-library/react@npm:alpha":
+  version: 13.0.0-alpha.1
+  resolution: "@testing-library/react@npm:13.0.0-alpha.1"
   dependencies:
     "@babel/runtime": ^7.12.5
-    "@testing-library/dom": ^8.0.0
+    "@testing-library/dom": ^8.5.0
   peerDependencies:
     react: "*"
     react-dom: "*"
-  checksum: 07f0ba4092f7cd3232c2c61329353b2f2fa65388fc58666780be80f99f75daaf897a09a9897ac53f213d7b2d57e3cecb8127fd940da8cfd4275fa4a281e5b32c
+  checksum: 9028528156ef03549d44b27b9f49fb3efb1f532488268c49dc532db20b6b2bebf34c5a0ea6bee2df695173990299ca9cc236407af3887287caadcc58f948150c
   languageName: node
   linkType: hard
 
@@ -11038,7 +11038,7 @@ resolve@^2.0.0-next.3:
     "@swc/core": ^1.2.84
     "@swc/jest": ^0.2.2
     "@testing-library/jest-dom": ^5.14.1
-    "@testing-library/react": ^12.0.0
+    "@testing-library/react": alpha
     "@testing-library/react-hooks": ^7.0.2
     "@tippyjs/react": ^4.2.5
     "@types/async-lock": ^1.1.3

@@ -10,7 +10,7 @@ export const SOCKET_IO_PATH = "/api/socket.io";
 
 export const DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME = 500;
 
-export const FORCE_COMMIT_FIELD_VALUE_AFTER = 30 * 1000;
+export const FORCE_COMMIT_FIELD_VALUE_AFTER = 5 * 1000;
 
 export const STORE_SUBSCRIPTION_THROTTLE = 100;
 

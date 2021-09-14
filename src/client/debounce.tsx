@@ -20,23 +20,23 @@ class DebouncerImpl<A extends unknown[], R extends unknown> {
     private readonly unschedule: (debouncer: DebouncerImpl<A, R>) => void
   ) {}
 
-  public debounced = (...args: A): void => {
+  public debouncedCallback = (...args: A): void => {
     this.lastArgs = args;
     this.pendingChangeSubscribers.forEach((subscriber) => subscriber(true));
 
     this.schedule(this);
   };
 
-  public active = () => this.lastArgs !== null;
+  public hasPendingCall = () => this.lastArgs !== null;
 
   public dispose = (executePending: boolean) => {
     this.unschedule(this);
     if (executePending) {
-      this.executePending();
+      this.forceExecutePendingCall();
     }
   };
 
-  public executePending = () => {
+  public forceExecutePendingCall = () => {
     if (this.lastArgs !== null) {
       this.pendingChangeSubscribers.forEach((subscriber) => subscriber(false));
       this.unschedule(this);
@@ -46,14 +46,16 @@ class DebouncerImpl<A extends unknown[], R extends unknown> {
     }
   };
 
-  public onPendingChanges = (subscriber: PendingChangeSubscriber) => {
+  public subscribeToPendingStateUpdates = (
+    subscriber: PendingChangeSubscriber
+  ) => {
     this.pendingChangeSubscribers.add(subscriber);
 
     return () => this.pendingChangeSubscribers.delete(subscriber);
   };
 }
 
-export class SyncedDebouncer {
+export class SyncedDebounceMaker {
   private timeoutId: ReturnType<typeof setTimeout> | null = null;
   private readonly pendingDebouncers: Set<DebouncerImpl<any, any>> = new Set();
 
@@ -73,7 +75,7 @@ export class SyncedDebouncer {
         this.pendingDebouncers.clear();
         this.timeoutId = null;
         for (const debouncer of debouncers) {
-          debouncer.executePending();
+          debouncer.forceExecutePendingCall();
         }
       }, this.time);
     };
@@ -86,15 +88,7 @@ export class SyncedDebouncer {
       }
     };
 
-    const debouncer = new DebouncerImpl(debouncee, schedule, unschedule);
-
-    return {
-      debounced: debouncer.debounced,
-      active: debouncer.active,
-      executePending: debouncer.executePending,
-      dispose: debouncer.dispose,
-      onPendingChanges: debouncer.onPendingChanges,
-    };
+    return new DebouncerImpl(debouncee, schedule, unschedule);
   }
 
   public getTime() {
@@ -102,26 +96,26 @@ export class SyncedDebouncer {
   }
 }
 
-export type Debouncer = number | SyncedDebouncer;
+export type Debouncer = number | SyncedDebounceMaker;
 
 export function debouncerTime(debounce: Debouncer) {
   return typeof debounce === "number" ? debounce : debounce.getTime();
 }
 
-function ensureSyncedDebouncer(debounce: Debouncer) {
+function ensureSyncedDebounceMaker(debounce: Debouncer) {
   return typeof debounce === "number"
-    ? new SyncedDebouncer(debounce)
+    ? new SyncedDebounceMaker(debounce)
     : debounce;
 }
 
 /**
  * Returns a new function that, when called, will debounce calls to the passed
- * callback function by debounceTime ms.
+ * callback function by using the provided debounce implementation.
  */
 export function useDebounce<A extends unknown[]>(
   callback: (...args: A) => unknown,
   debounce: Debouncer,
-  forceOnUnmount: boolean = false
+  forceOnUnmount: boolean
 ): [
   debounce: (...args: A) => void,
   isDebouncing: () => boolean,
@@ -130,14 +124,14 @@ export function useDebounce<A extends unknown[]>(
 ] {
   const forceOnUnmountRef = useLatest(forceOnUnmount);
 
-  const syncedDebouncer = useGuranteedMemo(
-    () => ensureSyncedDebouncer(debounce),
+  const syncedDebounceMaker = useGuranteedMemo(
+    () => ensureSyncedDebounceMaker(debounce),
     [debounce]
   );
 
   const debouncer = useGuranteedMemo(
-    () => syncedDebouncer.makeDebouncer<A, unknown>(callback),
-    [callback, syncedDebouncer]
+    () => syncedDebounceMaker.makeDebouncer<A, unknown>(callback),
+    [callback, syncedDebounceMaker]
   );
 
   useEffect(() => {
@@ -148,10 +142,10 @@ export function useDebounce<A extends unknown[]>(
   }, [debouncer, forceOnUnmountRef]);
 
   return [
-    debouncer.debounced,
-    debouncer.active,
-    debouncer.executePending,
-    debouncer.onPendingChanges,
+    debouncer.debouncedCallback,
+    debouncer.hasPendingCall,
+    debouncer.forceExecutePendingCall,
+    debouncer.subscribeToPendingStateUpdates,
   ];
 }
 
@@ -164,7 +158,7 @@ export function useDebounce<A extends unknown[]>(
 export function useAggregatedDebounce<A extends unknown[]>(
   callback: (args: A[]) => unknown,
   debounce: Debouncer,
-  forceOnUnmount: boolean = false
+  forceOnUnmount: boolean
 ): (...args: A) => void {
   const argHistory = useRef<A[]>([]);
 
@@ -198,13 +192,10 @@ export function useAggregatedDoubleDebounce<
   callback: (args: A[]) => R,
   serverDebounce: Debouncer,
   localDebounceSteps: number,
-  forceOnUnmount: boolean = false
+  forceOnUnmount: boolean
 ): (...args: A) => void {
   const localDebounceTime = debouncerTime(serverDebounce) / localDebounceSteps;
-  if (
-    process.env.NODE_ENV !== "production" &&
-    (isNaN(localDebounceTime) || !isFinite(localDebounceTime))
-  ) {
+  if (isNaN(localDebounceTime) || !isFinite(localDebounceTime)) {
     throw new Error(`localDebounceTime must be a number and finite.`);
   }
 
@@ -263,61 +254,8 @@ export function useIsolatedValue<V>({
   ];
 }
 
-function useDebouncedOrTransition<V>(
-  onChange: (v: V) => void,
-  debounce: number
-) {
-  const onChangeRef = useLatest(onChange);
-
-  const [isPending, setIsPending] = useState(false);
-
-  const [propagateValueToOutside, _, executePending, onPendingChanges] =
-    useDebounce(
-      useCallback((value: V) => onChangeRef.current(value), [onChangeRef]),
-      debounce,
-      true
-    );
-
-  useEffect(() => {
-    const unsubscribe = onPendingChanges((pending) => setIsPending(pending));
-
-    return () => unsubscribe();
-  });
-
-  return [propagateValueToOutside, executePending, isPending] as const;
-
-  // FIXME: This code is not working correctly. When throttling the CPU 6x,
-  //        it fails to report the latest value to the server when repeatedly
-  //        making changes.
-  //
-  // const [isPending, startTransition] = useTransition();
-  // const valueRef = useRef<null | { value: V }>(null);
-
-  // return [
-  //   useCallback(
-  //     (value: V) => {
-  //       valueRef.current = { value };
-  //       startTransition(() => {
-  //         console.log("t", value);
-  //         onChangeRef.current(value);
-  //       });
-  //     },
-  //     [onChangeRef, startTransition]
-  //   ),
-  //   useCallback(() => {
-  //     if (valueRef.current !== null) {
-  //       const value = valueRef.current.value;
-  //       valueRef.current = null;
-  //       console.log("s", value);
-  //       onChangeRef.current(value);
-  //     }
-  //   }, [onChangeRef]),
-  //   isPending,
-  // ] as const;
-}
-
 export function useDebouncedField<V, E extends HTMLElement>({
-  debounce,
+  debounce: debounceTime,
   value: externalValue,
   onChange: externalOnChange,
   onKeyPress,
@@ -328,6 +266,9 @@ export function useDebouncedField<V, E extends HTMLElement>({
   React.HTMLAttributes<E>,
   "value" | "onChange"
 >) {
+  const externalOnChangeRef = useLatest(externalOnChange);
+  const debounceTimeRef = useLatest(debounceTime);
+
   const [value, setValue, { takeValueRef }] = useIsolatedValue({
     value: externalValue,
     onChange: externalOnChange,
@@ -338,10 +279,30 @@ export function useDebouncedField<V, E extends HTMLElement>({
 
   const ref = useRef<E>(null);
 
-  const [propagateValueToOutside, executePending, isDebouncePending] =
-    useDebouncedOrTransition(externalOnChange, debounce);
-
   const [isTransitionPending, startTransition] = useTransition();
+
+  const changedValueRef = useRef<{
+    value: V;
+    dirtyTimeoutId: ReturnType<typeof setTimeout> | null;
+  }>({ value, dirtyTimeoutId: null });
+
+  useEffect(() => {
+    if (!isTransitionPending) {
+      if (changedValueRef.current.dirtyTimeoutId !== null) {
+        clearTimeout(changedValueRef.current.dirtyTimeoutId);
+      }
+      changedValueRef.current.dirtyTimeoutId = null;
+    }
+  }, [isTransitionPending]);
+
+  const executePending = useCallback(() => {
+    if (changedValueRef.current.dirtyTimeoutId !== null) {
+      clearTimeout(changedValueRef.current.dirtyTimeoutId);
+      changedValueRef.current.dirtyTimeoutId = null;
+
+      externalOnChangeRef.current(changedValueRef.current.value);
+    }
+  }, [externalOnChangeRef]);
 
   return [
     {
@@ -349,28 +310,17 @@ export function useDebouncedField<V, E extends HTMLElement>({
       onChange: useCallback(
         (value: V) => {
           setValue(value);
-          propagateValueToOutside(value);
+          changedValueRef.current = {
+            value,
+            dirtyTimeoutId:
+              changedValueRef.current.dirtyTimeoutId ??
+              setTimeout(executePending, debounceTimeRef.current),
+          };
           // Immediately propagate the change to the outside as part of a
           // transition.
-          // TODO: I'm not 100% certain that this does what we want it to.
-          if (
-            process.env.NODE_ENV !== "test" ||
-            // @ts-ignore
-            !globalThis.DISABLE_TRANSITION_FOR_TEST
-          ) {
-            startTransition(() => executePending());
-          }
-
-          // No idea if this would even make sense:
-          // ReactDOM.unstable_scheduleHydration(ref.current);
+          startTransition(() => externalOnChangeRef.current(value));
         },
-        [
-          setValue,
-          propagateValueToOutside,
-          executePending,
-          startTransition,
-          /* ref, */
-        ]
+        [setValue, debounceTimeRef, executePending, externalOnChangeRef]
       ),
       onKeyPress: useCallback(
         (e: React.KeyboardEvent<E>) => {
@@ -399,6 +349,6 @@ export function useDebouncedField<V, E extends HTMLElement>({
       ...props,
     },
     ref,
-    isDebouncePending || isTransitionPending,
+    isTransitionPending,
   ] as const;
 }

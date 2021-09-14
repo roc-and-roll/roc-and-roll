@@ -1,6 +1,8 @@
-import React from "react";
+import React, { Suspense, useState } from "react";
 import { render, act, fireEvent } from "@testing-library/react";
 import { SmartIntegerInput, SmartTextInput } from "./TextInput";
+import { FORCE_COMMIT_FIELD_VALUE_AFTER } from "../../../shared/constants";
+import { assertNever } from "../../../shared/util";
 
 // TODO: These tests no longer make sense now that we always trigger onChange
 // wrapped in a startTransition.
@@ -168,33 +170,71 @@ describe("SmartIntegerInput", () => {
   });
 });
 
+function isPartOfTransition(): boolean {
+  return (
+    // @ts-expect-error There are no types for
+    // __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED :)
+    React["__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED"]
+      .ReactCurrentBatchConfig.transition === 1
+  );
+}
+
+const AlwaysSuspending = React.lazy(() => new Promise(() => {}));
+
 describe("SmartTextInput & SmartIntegerInput", () => {
   it.each([
-    ["SmartTextInput", SmartTextInput, "123", "456"],
-    ["SmartIntegerInput", SmartIntegerInput, 123, 456],
+    ["SmartTextInput", SmartTextInput, "timeout"],
+    ["SmartTextInput", SmartTextInput, "suspenseUnmount"],
+    ["SmartIntegerInput", SmartIntegerInput, "timeout"],
+    ["SmartIntegerInput", SmartIntegerInput, "suspenseUnmount"],
   ] as const)(
-    "%s sends its latest value on unmount",
+    "%s sends its latest value on %s",
     (
-      _componentAsString: string,
+      componentAsString: string,
       Component: typeof SmartTextInput | typeof SmartIntegerInput,
-      initialValue,
-      endValue
+      endWith
     ) => {
-      // @ts-ignore
-      globalThis.DISABLE_TRANSITION_FOR_TEST = true;
-
       const onChange = jest.fn();
-      const { unmount, getByPlaceholderText } = render(
-        // @ts-expect-error Typescript thinks that we might assign the wrong
-        // value to the component.
-        React.createElement(Component, {
-          value: initialValue,
-          onChange: onChange,
-          placeholder: "input",
-        })
+
+      const Wrapper = function Wrapper({
+        unmountInput,
+        unmountSuspense,
+      }: {
+        unmountInput: boolean;
+        unmountSuspense: boolean;
+      }) {
+        const [value, setValue] = useState("???");
+        const [suspend, setSuspend] = useState(false);
+
+        const Input =
+          // @ts-expect-error Typescript thinks that we might assign the wrong
+          // value to the component.
+          React.createElement(Component, {
+            value: componentAsString === "SmartTextInput" ? "123" : 123,
+            onChange: (value: string | number) => {
+              setSuspend(true);
+              setValue(value.toString());
+
+              onChange(value, isPartOfTransition());
+            },
+            placeholder: "input",
+          });
+
+        return (
+          <Suspense fallback={null}>
+            <p data-testid="value">{value}</p>
+            {!unmountSuspense && suspend && <AlwaysSuspending />}
+            {!unmountInput && Input}
+          </Suspense>
+        );
+      };
+
+      const { rerender, getByPlaceholderText, getByTestId } = render(
+        <Wrapper unmountInput={false} unmountSuspense={false} />
       );
 
       expect(onChange).not.toHaveBeenCalled();
+      expect(getByTestId("value").textContent).toBe("???");
 
       act(() => {
         fireEvent.focus(getByPlaceholderText("input"));
@@ -209,12 +249,48 @@ describe("SmartTextInput & SmartIntegerInput", () => {
         });
       });
 
-      expect(onChange).toHaveBeenCalledTimes(0);
+      // onChange should have been called as part of a transition for each
+      // change event. However, since the transitions never finish (we
+      // deliberately mount a component that suspends forever), the updated
+      // value should not be reflected in the DOM.
+      expect(onChange.mock.calls).toEqual([
+        [componentAsString === "SmartTextInput" ? "4" : 4, true],
+        [componentAsString === "SmartTextInput" ? "45" : 45, true],
+        [componentAsString === "SmartTextInput" ? "456" : 456, true],
+      ]);
+      expect(getByTestId("value").textContent).toBe("???");
+      expect(getByPlaceholderText("input").dataset["ispending"]).toBe("1");
 
-      unmount();
+      switch (endWith) {
+        case "timeout":
+          act(() => {
+            jest.advanceTimersByTime(FORCE_COMMIT_FIELD_VALUE_AFTER);
+          });
+          expect(onChange).toHaveBeenCalledTimes(4);
+          expect(onChange).toHaveBeenLastCalledWith(
+            componentAsString === "SmartTextInput" ? "456" : 456,
+            false
+          );
+          expect(getByTestId("value").textContent).toBe("???");
+          expect(getByPlaceholderText("input").dataset["ispending"]).toBe("1");
 
-      expect(onChange).toHaveBeenCalledTimes(1);
-      expect(onChange).toHaveBeenCalledWith(endValue);
+          rerender(<Wrapper unmountInput={false} unmountSuspense={true} />);
+
+          expect(getByTestId("value").textContent).toBe("456");
+          expect(getByPlaceholderText("input").dataset["ispending"]).toBe("0");
+
+          expect(onChange).toHaveBeenCalledTimes(4);
+          break;
+        case "suspenseUnmount":
+          rerender(<Wrapper unmountInput={false} unmountSuspense={true} />);
+          expect(getByTestId("value").textContent).toBe("456");
+          expect(getByPlaceholderText("input").dataset["ispending"]).toBe("0");
+
+          expect(onChange).toHaveBeenCalledTimes(3);
+          break;
+        default:
+          assertNever(endWith);
+      }
     }
   );
 });

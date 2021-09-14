@@ -679,6 +679,15 @@ export function useServerDispatch() {
       }
 
       if (actionsToSyncToServerImmediately.length > 0) {
+        if (
+          process.env.NODE_ENV !== "production" &&
+          window.event instanceof InputEvent
+        ) {
+          console.warn(
+            `It looks like you dispatched ${actionsToSyncToServerImmediately.length} actions as part of an input event. Consider using optimistic dispatching with a syncToServerThrottle > 0 instead, so that actions are not sent to the server on every keypress. Actions you dispatched:`,
+            actionsToSyncToServerImmediately
+          );
+        }
         socket?.emit(SOCKET_DISPATCH_ACTION, {
           actions: actionsToSyncToServerImmediately,
           optimisticUpdateId: hasImmediateOptimisticActions

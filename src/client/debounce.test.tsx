@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   Debouncer,
-  SyncedDebouncer,
+  SyncedDebounceMaker,
   useAggregatedDebounce,
   useDebounce,
   useIsolatedValue,
@@ -10,26 +10,27 @@ import { renderHook } from "@testing-library/react-hooks";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { act } from "@testing-library/react-hooks";
 
-describe("synced debouncer", () => {
+describe("SyncedDebounceMaker", () => {
   const TIME = 100;
 
   it("works", async () => {
     const START_NOW = Date.now();
 
-    const syncedDebouncer = new SyncedDebouncer(TIME);
+    const syncedDebounceMaker = new SyncedDebounceMaker(TIME);
 
-    expect(syncedDebouncer.getTime()).toBe(TIME);
+    expect(syncedDebounceMaker.getTime()).toBe(TIME);
 
     const fn = jest.fn();
 
-    const { debounced, dispose } = syncedDebouncer.makeDebouncer(fn);
+    const { debouncedCallback, dispose } =
+      syncedDebounceMaker.makeDebouncer(fn);
     expect(fn).toBeCalledTimes(0);
 
     jest.advanceTimersToNextTimer();
     expect(fn).toBeCalledTimes(0);
 
-    debounced(1);
-    debounced(2);
+    debouncedCallback(1);
+    debouncedCallback(2);
     expect(fn).toBeCalledTimes(0);
 
     jest.advanceTimersToNextTimer();
@@ -37,7 +38,7 @@ describe("synced debouncer", () => {
     expect(fn).toHaveBeenLastCalledWith(2);
     expect(Date.now() - START_NOW).toBe(TIME);
 
-    debounced(3);
+    debouncedCallback(3);
     expect(fn).toBeCalledTimes(1);
 
     jest.advanceTimersToNextTimer();
@@ -45,7 +46,7 @@ describe("synced debouncer", () => {
     expect(fn).toHaveBeenLastCalledWith(3);
     expect(Date.now() - START_NOW).toBe(TIME * 2);
 
-    debounced(4);
+    debouncedCallback(4);
     expect(fn).toBeCalledTimes(2);
     dispose(false);
     expect(fn).toBeCalledTimes(2);
@@ -54,20 +55,21 @@ describe("synced debouncer", () => {
     expect(fn).toBeCalledTimes(2);
     expect(Date.now() - START_NOW).toBe(TIME * 2);
 
-    expect(() => debounced()).not.toThrow();
+    expect(() => debouncedCallback()).not.toThrow();
   });
 
   it("executes pending callbacks on dispose if instructed so", async () => {
     const START_NOW = Date.now();
-    const syncedDebouncer = new SyncedDebouncer(TIME);
+    const syncedDebounceMaker = new SyncedDebounceMaker(TIME);
 
     const fn = jest.fn();
 
-    const { debounced, dispose } = syncedDebouncer.makeDebouncer(fn);
+    const { debouncedCallback, dispose } =
+      syncedDebounceMaker.makeDebouncer(fn);
 
-    debounced(1);
-    debounced(2);
-    debounced(3);
+    debouncedCallback(1);
+    debouncedCallback(2);
+    debouncedCallback(3);
     expect(fn).toBeCalledTimes(0);
 
     dispose(true);
@@ -103,8 +105,8 @@ describe("useDebounce", () => {
     forceOnUnmount | debounce
     ${true}        | ${TIME}
     ${false}       | ${TIME}
-    ${true}        | ${new SyncedDebouncer(TIME)}
-    ${false}       | ${new SyncedDebouncer(TIME)}
+    ${true}        | ${new SyncedDebounceMaker(TIME)}
+    ${false}       | ${new SyncedDebounceMaker(TIME)}
   `("works", async ({ forceOnUnmount, debounce }) => {
     const START_NOW = Date.now();
     const callback = jest.fn();
@@ -195,8 +197,8 @@ describe("useAggregatedDebounce", () => {
     forceOnUnmount | debounce
     ${true}        | ${TIME}
     ${false}       | ${TIME}
-    ${true}        | ${new SyncedDebouncer(TIME)}
-    ${false}       | ${new SyncedDebouncer(TIME)}
+    ${true}        | ${new SyncedDebounceMaker(TIME)}
+    ${false}       | ${new SyncedDebounceMaker(TIME)}
   `("works", async ({ forceOnUnmount, debounce }) => {
     const START_NOW = Date.now();
     const callback = jest.fn();
