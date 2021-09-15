@@ -56,7 +56,7 @@ export const DiceGeometry: React.FC<
     if (animationFinished.current) return;
 
     if (velocity.current > 0.1) {
-      velocity.current *= 0.9 + speed;
+      velocity.current *= 0.9 + speed * delta * 60;
       mesh.current.rotation.setFromQuaternion(
         startRotation.clone().slerp(finalRotation, 1 - velocity.current)
       );
