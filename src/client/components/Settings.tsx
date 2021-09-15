@@ -84,6 +84,19 @@ export function Settings() {
           </label>
         </GMArea>
       )}
+      <label>
+        Collapse Dice Template
+        <input
+          type="checkbox"
+          checked={settings.collapseDiceTemplates}
+          onChange={(e) =>
+            setSettings((old) => ({
+              ...old,
+              collapseDiceTemplates: e.target.checked,
+            }))
+          }
+        />
+      </label>
       {process.env.NODE_ENV === "development" && (
         <>
           <h4>debug settings</h4>

@@ -61,7 +61,8 @@ label {
 
 .resize-handle {
   transition: background 200ms ease-in-out;
-  &:hover, &:active {
+  &:hover,
+  &:active {
     background: orange;
   }
 }
@@ -209,20 +210,30 @@ a {
     animation-duration: 2s;
   }
 
-  &.hurt, &.unconsciousOrDead, &.overhealed {
+  &.hurt,
+  &.unconsciousOrDead,
+  &.overhealed {
     animation-direction: alternate;
     animation-iteration-count: infinite;
     animation-timing-function: ease-in-out;
   }
 
   @keyframes hurt {
-    from { box-shadow: none; }
-    to { box-shadow: 0 0 4px 2px red; }
+    from {
+      box-shadow: none;
+    }
+    to {
+      box-shadow: 0 0 4px 2px red;
+    }
   }
 
   @keyframes overhealed {
-    from { box-shadow: none; }
-    to { box-shadow: 0 0 4px 2px green; }
+    from {
+      box-shadow: none;
+    }
+    to {
+      box-shadow: 0 0 4px 2px green;
+    }
   }
 }
 
@@ -296,7 +307,8 @@ a {
   justify-content: space-between;
 }
 
-.log-divider-timestamp, .log-divider-small {
+.log-divider-timestamp,
+.log-divider-small {
   list-style: none;
   text-align: center;
   font-style: italic;
@@ -440,9 +452,17 @@ $dice-templates-height: 200px;
     align-items: center;
     background: $panel-background;
 
+    & > p {
+      width: 100%;
+    }
+
     &.selected {
       border: 1px solid white;
       background: adjust-color($color: $panel-background, $lightness: 9%);
+    }
+
+    &:not(.expanded) {
+      min-height: 30px;
     }
 
     .dice-template-selection-count {
@@ -941,7 +961,8 @@ button.color-picker-color {
     }
   }
 
-  input[type="range"], .range-placeholder {
+  input[type="range"],
+  .range-placeholder {
     width: 130px;
     margin: 2;
     min-height: 16px;
@@ -1292,15 +1313,22 @@ aside.emoji-picker-react {
 
   @for $i from 1 through $bars {
     & > span:nth-child(#{$i}) {
-      left: calc(#{$width} / (#{$bars} + (#{$bars} - 1) / 2) * (#{$i} - 1) * 1.5);
+      left: calc(
+        #{$width} / (#{$bars} + (#{$bars} - 1) / 2) * (#{$i} - 1) * 1.5
+      );
       animation-duration: $duration - $i * 0.1s;
       animation-delay: math.div($duration, $bars) * ($i - 1);
     }
   }
 
   @keyframes map-music-bar {
-    0%, 100% { transform: scaleY(0); }
-    50% { transform: scaleY(1); }
+    0%,
+    100% {
+      transform: scaleY(0);
+    }
+    50% {
+      transform: scaleY(1);
+    }
   }
 }
 

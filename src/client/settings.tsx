@@ -15,6 +15,7 @@ export type RRSettings = ReadonlyDeep<{
     mapTokenPositions: boolean;
   };
   enableExperimental25D: boolean;
+  collapseDiceTemplates: boolean;
 }>;
 
 const initialSettings: RRSettings = {
@@ -26,6 +27,7 @@ const initialSettings: RRSettings = {
     mapTokenPositions: false,
   },
   enableExperimental25D: false,
+  collapseDiceTemplates: false,
 };
 
 const RRSettingsContext = React.createContext<
