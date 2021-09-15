@@ -197,7 +197,7 @@ function Notification({
 
   return (
     <Flipped flipId={notification.id}>
-      <div className="notification" style={style}>
+      <div className="notification" style={style} onClick={onExpired}>
         {view(notification)}
       </div>
     </Flipped>
