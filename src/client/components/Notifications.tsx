@@ -34,6 +34,7 @@ export function Notifications({
   const notifications = entries(serverNotifications);
   const [lastShownID, setLastShownID] = useState<RRLogEntryID>();
   const [newNotifications, setNewNotifications] = useState<RRLogEntry[]>([]);
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     const list = notifications;
@@ -55,11 +56,16 @@ export function Notifications({
   }, [lastShownID, notifications]);
 
   return (
-    <div className="notifications">
+    <div
+      className="notifications"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div className="notitifactions-top-area" ref={topAreaPortal}></div>
       <Flipper flipKey={newNotifications.map((n) => n.id).join("")}>
         {newNotifications.map((notification) => (
           <Notification
+            frozen={hovered}
             key={notification.id}
             onExpired={() =>
               setNewNotifications((l) =>
@@ -77,27 +83,46 @@ export function Notifications({
 function Notification({
   notification,
   onExpired,
+  frozen,
 }: {
   notification: RRLogEntry;
   onExpired: () => void;
+  frozen: boolean;
 }) {
   const expiredRef = useRef(onExpired);
   const [notificationReady, setNotificationReady] = useState(
     notification.type !== "diceRoll"
   );
+  const [timerStartTime, setTimerStartTime] = useState(() => new Date());
+  const [timeLeft, setTimeLeft] = useState(NOTIFICATION_TIMEOUT);
 
   useEffect(() => {
     expiredRef.current = onExpired;
   }, [onExpired]);
 
   useEffect(() => {
+    if (!frozen) {
+      setTimerStartTime(new Date());
+    } else {
+      setTimeLeft((timeLeft) => timeLeft - (+new Date() - +timerStartTime));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frozen]);
+
+  useEffect(() => {
     if (notificationReady) {
-      const id = setTimeout(() => {
-        expiredRef.current();
-      }, NOTIFICATION_TIMEOUT);
-      return () => clearTimeout(id);
+      setTimerStartTime(new Date());
     }
   }, [notificationReady]);
+
+  useEffect(() => {
+    if (notificationReady && !frozen) {
+      const id = setTimeout(() => {
+        expiredRef.current();
+      }, timeLeft);
+      return () => clearTimeout(id);
+    }
+  }, [notificationReady, frozen, timeLeft]);
 
   const players = useServerState((state) => state.players);
   const player = notification.playerId
