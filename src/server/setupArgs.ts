@@ -1,6 +1,7 @@
 import { Command, InvalidOptionArgumentError } from "commander";
 import packageJson from "../../package.json";
 import path from "path";
+import { CampaignId } from "../shared/campaign";
 
 const { version } = packageJson;
 
@@ -28,7 +29,11 @@ type StartOptions = SharedOptions & {
 
 type ExtractForOneShotOptions = SharedOptions & {
   readonly outputFilePath: string;
+  readonly campaignId: CampaignId;
 };
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+type CampaignOptions = SharedOptions & {};
 
 export async function setupArgs() {
   const program = new Command();
@@ -46,6 +51,7 @@ export async function setupArgs() {
   return new Promise<
     | ({ command: "start" } & StartOptions)
     | ({ command: "extractForOneShot" } & ExtractForOneShotOptions)
+    | ({ command: "campaign"; subCommand: "list" } & CampaignOptions)
   >((resolve) => {
     program
       .command("start", { isDefault: true })
@@ -61,25 +67,48 @@ export async function setupArgs() {
       .description(
         "extracts a copy of the state to <outputFile> that only contains selected players, dice templates, assets, and sound sets."
       )
-      .argument(
-        "<outputFile>",
+      .requiredOption(
+        "-o, --output-file <path>",
         "the file path of the generated output file",
         resolvePath
       )
+      .requiredOption(
+        "-c, --campaign-id <campaign id>",
+        "the id of the campaign"
+      )
       .action(
         (
-          outputFilePath: string,
-          options: Record<never, never>,
+          {
+            outputFile: outputFilePath,
+            campaignId,
+          }: { outputFile: string; campaignId: CampaignId },
           command: Command
         ) => {
           resolve({
             ...command.parent!.opts(),
             outputFilePath,
-            ...options,
+            campaignId,
             command: "extractForOneShot",
           });
         }
       );
+
+    const campaignSubCommand = program
+      .command("campaign")
+      .description("manage campaigns");
+
+    campaignSubCommand
+      .command("list")
+      .description("list all campaigns")
+      .action((options: Record<never, never>, command: Command) => {
+        resolve({
+          ...command.parent!.parent!.opts(),
+          ...command.parent!.opts(),
+          ...options,
+          command: "campaign",
+          subCommand: "list",
+        });
+      });
 
     program.parse(process.argv);
   });

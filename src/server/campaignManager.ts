@@ -1,4 +1,4 @@
-import { CampaignEntityWithState } from "../shared/campaign";
+import { CampaignEntityWithState, CampaignId } from "../shared/campaign";
 import { Server as SocketIOServer } from "socket.io";
 import { MyStore, setupReduxStore } from "./setupReduxStore";
 import { setupStateSync } from "./setupStateSync";
@@ -11,21 +11,41 @@ import { throttled } from "../shared/util";
 import { updateCampaignState } from "./database";
 import { batchActions } from "redux-batched-actions";
 import { setupTabletopAudioTrackSync } from "./setupTabletopaudio";
+import { extractForOneShot } from "./extractForOneShot";
 
 export class CampaignManager {
   private _store?: MyStore;
 
   constructor(
-    private readonly knex: Knex,
-    private readonly io: SocketIOServer,
+    private readonly campaignId: CampaignId,
     private readonly quiet: boolean,
     private readonly backupPath: string,
     private readonly uploadedFilesDir: string
   ) {}
 
+  public getCampaignId() {
+    return this.campaignId;
+  }
+
+  public extractForOneShot(outputFilePath: string) {
+    return extractForOneShot(this.store, outputFilePath);
+  }
+
+  public async init_migrateStateAndSetupStore(
+    initialState: CampaignEntityWithState["state"]
+  ) {
+    const state = await setupInitialState(
+      initialState,
+      this.campaignId,
+      this.backupPath,
+      this.uploadedFilesDir
+    );
+    this.store = setupReduxStore(state);
+  }
+
   private get store() {
     if (!this._store) {
-      throw new Error("You must call begin() first!");
+      throw new Error("You must call init_migrateStateAndSetupStore() first!");
     }
     return this._store;
   }
@@ -34,19 +54,8 @@ export class CampaignManager {
     this._store = store;
   }
 
-  public async begin({
-    id: campaignId,
-    state: initialState,
-  }: CampaignEntityWithState) {
-    const state = await setupInitialState(
-      initialState,
-      campaignId,
-      this.backupPath,
-      this.uploadedFilesDir
-    );
-    this.store = setupReduxStore(state);
-
-    setupStateSync(campaignId, this.io, this.store, this.quiet);
+  public async init_syncAndIO(knex: Knex, io: SocketIOServer) {
+    setupStateSync(this.campaignId, io, this.store, this.quiet);
 
     if (process.env.NODE_ENV === "development") {
       this.store.subscribe(() => {
@@ -71,7 +80,7 @@ export class CampaignManager {
       throttled(async () => {
         const state = this.store.getState();
         // TODO: Using async/await here is not 100% ok.
-        await updateCampaignState(this.knex, campaignId, state);
+        await updateCampaignState(knex, this.campaignId, state);
       }, 3000)
     );
 
@@ -99,6 +108,6 @@ export class CampaignManager {
       );
     }, 2000);
 
-    await setupTabletopAudioTrackSync(this.store, this.knex, campaignId);
+    await setupTabletopAudioTrackSync(this.store, knex, this.campaignId);
   }
 }
