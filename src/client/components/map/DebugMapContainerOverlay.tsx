@@ -1,19 +1,45 @@
-import React from "react";
-import { RRMapObject } from "../../../shared/state";
+import React, { useEffect, useState } from "react";
+import {
+  EMPTY_ENTITY_COLLECTION,
+  entries,
+  RRMapID,
+  RRMapObject,
+} from "../../../shared/state";
 import { identityHash } from "../../../shared/util";
-import { useServerState } from "../../state";
+import { useDEBUG__serverState, useServerState } from "../../state";
 import { CollapsibleWithLocalState } from "../Collapsible";
 
-export function DebugMapContainerOverlay(props: {
-  localMapObjects: RRMapObject[];
-  serverMapObjects: RRMapObject[];
+export function DebugMapContainerOverlay({
+  mapId,
+  mapObjects: localMapObjects,
+}: {
+  mapId: RRMapID;
+  mapObjects: RRMapObject[];
 }) {
+  const {
+    serverStateWithoutOptimisticActionsAppliedRef,
+    optimisticActionAppliersRef,
+  } = useDEBUG__serverState();
+  const serverMapObjects: RRMapObject[] = entries(
+    serverStateWithoutOptimisticActionsAppliedRef.current.maps.entities[mapId]
+      ?.objects ?? EMPTY_ENTITY_COLLECTION
+  );
+
   const mapObjectIds = [
     ...new Set([
-      ...props.localMapObjects.map((t) => t.id),
-      ...props.serverMapObjects.map((t) => t.id),
+      ...localMapObjects.map((t) => t.id),
+      ...serverMapObjects.map((t) => t.id),
     ]),
   ];
+
+  // Force rerender every so often, since we use some refs (e.g.
+  // serverMapObjects) which would not cause this component to re-render.
+  const [_, setRerender] = useState({});
+  useEffect(() => {
+    const id = setInterval(() => setRerender({}), 50);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <div
       style={{
@@ -42,12 +68,10 @@ export function DebugMapContainerOverlay(props: {
           <tbody>
             {mapObjectIds.map((mapObjectId) => {
               const serverMapObject =
-                props.serverMapObjects.find(
-                  (each) => each.id === mapObjectId
-                ) ?? null;
-              const localMapObject =
-                props.localMapObjects.find((each) => each.id === mapObjectId) ??
+                serverMapObjects.find((each) => each.id === mapObjectId) ??
                 null;
+              const localMapObject =
+                localMapObjects.find((each) => each.id === mapObjectId) ?? null;
               return (
                 <tr key={mapObjectId}>
                   <td>{mapObjectId}</td>
@@ -55,11 +79,15 @@ export function DebugMapContainerOverlay(props: {
                     x: {serverMapObject?.position.x}
                     <br />
                     y: {serverMapObject?.position.y}
+                    <br />
+                    r: {serverMapObject?.rotation}
                   </td>
                   <td>
                     x: {localMapObject?.position.x}
                     <br />
                     y: {localMapObject?.position.y}
+                    <br />
+                    r: {localMapObject?.rotation}
                   </td>
                   <td>
                     {localMapObject && serverMapObject && (
@@ -69,6 +97,8 @@ export function DebugMapContainerOverlay(props: {
                         <br />
                         y:{" "}
                         {localMapObject.position.y - serverMapObject.position.y}
+                        <br />
+                        r: {localMapObject.rotation - serverMapObject.rotation}
                       </>
                     )}
                   </td>
@@ -94,12 +124,10 @@ export function DebugMapContainerOverlay(props: {
           <tbody>
             {mapObjectIds.map((mapObjectId) => {
               const serverMapObject =
-                props.serverMapObjects.find(
-                  (each) => each.id === mapObjectId
-                ) ?? null;
-              const localMapObject =
-                props.localMapObjects.find((each) => each.id === mapObjectId) ??
+                serverMapObjects.find((each) => each.id === mapObjectId) ??
                 null;
+              const localMapObject =
+                localMapObjects.find((each) => each.id === mapObjectId) ?? null;
 
               if (
                 serverMapObject?.type !== "rectangle" ||
@@ -151,12 +179,10 @@ export function DebugMapContainerOverlay(props: {
           <tbody>
             {mapObjectIds.map((mapObjectId) => {
               const serverMapObject =
-                props.serverMapObjects.find(
-                  (each) => each.id === mapObjectId
-                ) ?? null;
-              const localMapObject =
-                props.localMapObjects.find((each) => each.id === mapObjectId) ??
+                serverMapObjects.find((each) => each.id === mapObjectId) ??
                 null;
+              const localMapObject =
+                localMapObjects.find((each) => each.id === mapObjectId) ?? null;
 
               return (
                 <tr key={mapObjectId}>
@@ -178,6 +204,33 @@ export function DebugMapContainerOverlay(props: {
         title="Ephemeral players"
       >
         <DebugEphemeralPlayers />
+      </CollapsibleWithLocalState>
+      <CollapsibleWithLocalState
+        localStateKey="map/debug/overlay/optimistic-actions"
+        title="Optimistic Actions"
+      >
+        <table cellPadding={8}>
+          <thead>
+            <tr>
+              <th>dispatcher key</th>
+              <th>key</th>
+              <th>update id</th>
+              <th>actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {optimisticActionAppliersRef.current.appliers().map((applier) => (
+              <tr key={applier.optimisticUpdateId}>
+                <td>{applier.dispatcherKey}</td>
+                <td>{applier.key}</td>
+                <td>{applier.optimisticUpdateId}</td>
+                <td>
+                  <pre>{JSON.stringify(applier.actions, null, "  ")}</pre>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </CollapsibleWithLocalState>
     </div>
   );

@@ -2092,9 +2092,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/dom@npm:^8.0.0":
-  version: 8.2.0
-  resolution: "@testing-library/dom@npm:8.2.0"
+"@testing-library/dom@npm:^8.5.0":
+  version: 8.5.0
+  resolution: "@testing-library/dom@npm:8.5.0"
   dependencies:
     "@babel/code-frame": ^7.10.4
     "@babel/runtime": ^7.12.5
@@ -2104,7 +2104,7 @@ __metadata:
     dom-accessibility-api: ^0.5.6
     lz-string: ^1.4.4
     pretty-format: ^27.0.2
-  checksum: e631d2fe0490dd7ed193ea631541708656f9b4e6054a7ec0c6617f7fb0bf01b414dac63821f04bc9cd4eb3f573a2be69a4dd493b64db725962c9f1c1858f204d
+  checksum: fde0e9086de62e92a50e866a3b7d00c05ebdd054f5b044652b80726c82733f50fd290dda99a8aba4a3ff763ea16910c1916f0c8fbadd0a1b48ffdc159eafcb9c
   languageName: node
   linkType: hard
 
@@ -2147,16 +2147,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/react@npm:^12.0.0":
-  version: 12.0.0
-  resolution: "@testing-library/react@npm:12.0.0"
+"@testing-library/react@npm:alpha":
+  version: 13.0.0-alpha.1
+  resolution: "@testing-library/react@npm:13.0.0-alpha.1"
   dependencies:
     "@babel/runtime": ^7.12.5
-    "@testing-library/dom": ^8.0.0
+    "@testing-library/dom": ^8.5.0
   peerDependencies:
     react: "*"
     react-dom: "*"
-  checksum: 07f0ba4092f7cd3232c2c61329353b2f2fa65388fc58666780be80f99f75daaf897a09a9897ac53f213d7b2d57e3cecb8127fd940da8cfd4275fa4a281e5b32c
+  checksum: 9028528156ef03549d44b27b9f49fb3efb1f532488268c49dc532db20b6b2bebf34c5a0ea6bee2df695173990299ca9cc236407af3887287caadcc58f948150c
   languageName: node
   linkType: hard
 
@@ -2587,6 +2587,13 @@ __metadata:
   version: 2.3.0
   resolution: "@types/prettier@npm:2.3.0"
   checksum: 8dd9b5263fd91001d72ca4e2ff89fb0d1ba23a450bd723b4478eb651755a2f1151af14ab90c4f7dadba607142757b340c1d7271ae56806563c76719d3321ec20
+  languageName: node
+  linkType: hard
+
+"@types/prompts@npm:^2.0.14":
+  version: 2.4.0
+  resolution: "@types/prompts@npm:2.4.0"
+  checksum: ec75655f07fbc3cb2df60a3e3bdd13bfda0554a16f5541285c4b1cc0610756838a2863dccfc911cbb1385492054c07210512164e3dbef272ec638d631783b278
   languageName: node
   linkType: hard
 
@@ -10647,7 +10654,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prompts@npm:^2.0.1":
+"prompts@npm:^2.0.1, prompts@npm:^2.4.1":
   version: 2.4.1
   resolution: "prompts@npm:2.4.1"
   dependencies:
@@ -11519,7 +11526,7 @@ resolve@^2.0.0-next.3:
     "@swc/core": ^1.2.84
     "@swc/jest": ^0.2.2
     "@testing-library/jest-dom": ^5.14.1
-    "@testing-library/react": ^12.0.0
+    "@testing-library/react": alpha
     "@testing-library/react-hooks": ^7.0.2
     "@tippyjs/react": ^4.2.5
     "@types/async-lock": ^1.1.3
@@ -11531,6 +11538,7 @@ resolve@^2.0.0-next.3:
     "@types/multer": ^1.4.7
     "@types/node": ^14.17.14
     "@types/node-fetch": ^2.5.12
+    "@types/prompts": ^2.0.14
     "@types/react": ^17.0.19
     "@types/react-dom": ^17.0.9
     "@types/sharp": ^0.28.6
@@ -11587,6 +11595,7 @@ resolve@^2.0.0-next.3:
     nodemon-webpack-plugin: ^4.5.2
     prettier: ^2.3.2
     process: ^0.11.10
+    prompts: ^2.4.1
     raw-loader: ^4.0.2
     re-resizable: ^6.9.0
     react: alpha

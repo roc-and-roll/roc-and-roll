@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React, { useContext, useEffect, useState, useTransition } from "react";
+import React, { useContext, useEffect, useDeferredValue } from "react";
 import {
   initiativeTrackerEntryLairActionAdd,
   initiativeTrackerEntryLairActionUpdate,
@@ -334,19 +334,6 @@ function InitiativeTrackerInner({
   );
 }
 
-function useDeferredValueWithPending<T>(
-  upToDateValue: T
-): readonly [boolean, T] {
-  const [deferredValue, setDeferredValue] = useState<T>(upToDateValue);
-  const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    startTransition(() => setDeferredValue(upToDateValue));
-  }, [startTransition, upToDateValue]);
-
-  return [isPending, deferredValue] as const;
-}
-
 function RollInitiative({
   initiativeTracker,
   characterCollection,
@@ -359,21 +346,19 @@ function RollInitiative({
   const myself = useMyself();
   // Avoid re-rendering the RollInitiative component repeatedly when people are
   // moving map objects around the map.
-  const [mapObjectsOutdated, mapObjects] = useDeferredValueWithPending(
-    useServerState(
-      (state) =>
-        state.maps.entities[myself.currentMap]?.objects ??
-        EMPTY_ENTITY_COLLECTION
-    )
+  const upToDateMapObjects = useServerState(
+    (state) =>
+      state.maps.entities[myself.currentMap]?.objects ?? EMPTY_ENTITY_COLLECTION
   );
+  const deferredMapObjects = useDeferredValue(upToDateMapObjects);
 
   return (
     <RollInitiativeDeferredImpl
       initiativeTracker={initiativeTracker}
       characterCollection={characterCollection}
       myselfId={myselfId}
-      mapObjects={mapObjects}
-      mapObjectsOutdated={mapObjectsOutdated}
+      mapObjects={deferredMapObjects}
+      mapObjectsOutdated={upToDateMapObjects !== deferredMapObjects}
     />
   );
 }

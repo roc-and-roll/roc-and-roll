@@ -32,6 +32,7 @@ import {
 import { assertNever, empty2Null, rrid } from "../../shared/util";
 import { useMyself } from "../myself";
 import { roll } from "../roll";
+import { useRRSettings } from "../settings";
 import { useServerDispatch, useServerState, useServerStateRef } from "../state";
 import useLocalState from "../useLocalState";
 import { contrastColor } from "../util";
@@ -47,7 +48,7 @@ import {
 type SelectionPair = { id: RRDiceTemplateID; modified: RRMultipleRoll };
 
 export function DiceTemplates({ open }: { open: boolean }) {
-  const [pickerShown, setPickerShown] = useState(false);
+  const [templatesEditable, setTemplatesEditable] = useState(false);
   const myself = useMyself();
 
   const allTemplates = entries(
@@ -276,14 +277,12 @@ export function DiceTemplates({ open }: { open: boolean }) {
           </div>,
           document.body
         )}
-      {pickerShown && <DicePicker />}
+      {templatesEditable && <DicePicker />}
       <div className="dice-templates-container" ref={dropRef}>
-        <Button onClick={() => setPickerShown((b) => !b)}>
-          Show
+        <Button onClick={() => setTemplatesEditable((b) => !b)}>
+          Edit
           <br />
-          Dice
-          <br />
-          Picker
+          Templates
         </Button>
         {templates.map((t) => (
           <DiceTemplatePartMenuWrapper
@@ -303,6 +302,8 @@ export function DiceTemplates({ open }: { open: boolean }) {
               templateId={t.id}
               selectedCharacter={selectedCharacter}
               selectedTemplateIds={selectedTemplates}
+              editable={templatesEditable}
+              isChildTemplate={false}
             />
           </DiceTemplatePartMenuWrapper>
         ))}
@@ -456,6 +457,7 @@ function PickerDiceTemplatePart({
       selectedCharacter={null}
       newIds={newIds}
       part={part}
+      editable={false}
     />
   );
 }
@@ -466,6 +468,8 @@ const DiceTemplate = React.memo(function DiceTemplate({
   onRoll,
   selectedCharacter,
   selectedTemplateIds,
+  editable,
+  isChildTemplate,
 }: {
   templateId: RRDiceTemplateID;
   newIds: React.MutableRefObject<RRDiceTemplateID[]>;
@@ -476,6 +480,8 @@ const DiceTemplate = React.memo(function DiceTemplate({
     event: React.MouseEvent
   ) => void;
   selectedTemplateIds: SelectionPair[];
+  editable: boolean;
+  isChildTemplate: boolean;
 }) {
   const template = useServerState(
     (state) => state.diceTemplates.entities[templateId]
@@ -492,6 +498,8 @@ const DiceTemplate = React.memo(function DiceTemplate({
       newIds={newIds}
       selectedTemplateIds={selectedTemplateIds}
       selectedCharacter={selectedCharacter}
+      editable={editable}
+      isChildTemplate={isChildTemplate}
     />
   );
 });
@@ -502,6 +510,8 @@ function DiceTemplateInner({
   onRoll,
   selectedTemplateIds,
   selectedCharacter,
+  editable,
+  isChildTemplate,
 }: {
   template: RRDiceTemplate;
   newIds: React.MutableRefObject<RRDiceTemplateID[]>;
@@ -512,11 +522,18 @@ function DiceTemplateInner({
     event: React.MouseEvent
   ) => void;
   selectedTemplateIds: SelectionPair[];
+  editable: boolean;
+  isChildTemplate: boolean;
 }) {
   const myself = useMyself();
   const dispatch = useServerDispatch();
 
   const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const [{ collapseDiceTemplates }] = useRRSettings();
+  const [myExpanded, setExpanded] = useState(false);
+  const expanded =
+    isChildTemplate || !collapseDiceTemplates || myExpanded || editable;
 
   const [, dropRef] = useDrop<
     RRDiceTemplatePart | RRDiceTemplatePart[],
@@ -644,84 +661,101 @@ function DiceTemplateInner({
           onRoll([template], defaultModified, e);
         }
       }}
+      onMouseEnter={(e) => setExpanded(true)}
+      onMouseLeave={(e) => setExpanded(false)}
       className={clsx("dice-template", {
         created: template,
         selected: selectionCount > 0,
+        expanded: expanded,
       })}
     >
       {selectionCount > 1 && (
         <div className="dice-template-selection-count">{selectionCount}</div>
       )}
-      <SmartTextInput
-        ref={nameInputRef}
-        value={template.name}
-        onClick={(e) => e.stopPropagation()}
-        onChange={(name) =>
-          dispatch({
-            actions: [
-              diceTemplateUpdate({
-                id: template.id,
-                changes: { name },
-              }),
-            ],
-            optimisticKey: "name",
-            syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-          })
-        }
-      />
-      {[...template.parts].sort(sortTemplateParts).map((part, i) => (
-        <DiceTemplatePartMenuWrapper template={template} key={i} part={part}>
-          <DiceTemplatePart
-            selectedCharacter={selectedCharacter}
-            selectedTemplateIds={selectedTemplateIds}
-            onRoll={(templates, modified, event) =>
-              onRoll([template, ...templates], modified, event)
-            }
-            part={part}
-            newIds={newIds}
-          />
-        </DiceTemplatePartMenuWrapper>
-      ))}
-      {canMultipleRoll && (
+      {expanded && (
         <>
-          {defaultModified !== "advantage" && (
-            <Button
-              onClick={(e) => {
-                if (e.button === 0) {
-                  e.stopPropagation();
-                  onRoll([template], "advantage", e);
-                }
-              }}
-            >
-              ADV
-            </Button>
+          {editable ? (
+            <SmartTextInput
+              ref={nameInputRef}
+              value={template.name}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(name) =>
+                dispatch({
+                  actions: [
+                    diceTemplateUpdate({
+                      id: template.id,
+                      changes: { name },
+                    }),
+                  ],
+                  optimisticKey: "name",
+                  syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+                })
+              }
+            />
+          ) : (
+            <p>{template.name}</p>
           )}
-          {defaultModified !== "none" && (
-            <Button
-              onClick={(e) => {
-                if (e.button === 0) {
-                  e.stopPropagation();
-                  onRoll([template], "none", e);
-                }
-              }}
+          {[...template.parts].sort(sortTemplateParts).map((part, i) => (
+            <DiceTemplatePartMenuWrapper
+              template={template}
+              key={i}
+              part={part}
             >
-              REG
-            </Button>
-          )}
-          {defaultModified !== "disadvantage" && (
-            <Button
-              onClick={(e) => {
-                if (e.button === 0) {
-                  e.stopPropagation();
-                  onRoll([template], "disadvantage", e);
+              <DiceTemplatePart
+                selectedCharacter={selectedCharacter}
+                selectedTemplateIds={selectedTemplateIds}
+                onRoll={(templates, modified, event) =>
+                  onRoll([template, ...templates], modified, event)
                 }
-              }}
-            >
-              DIS
-            </Button>
+                part={part}
+                newIds={newIds}
+                editable={editable}
+              />
+            </DiceTemplatePartMenuWrapper>
+          ))}
+          {canMultipleRoll && (
+            <>
+              {defaultModified !== "advantage" && (
+                <Button
+                  onClick={(e) => {
+                    if (e.button === 0) {
+                      e.stopPropagation();
+                      onRoll([template], "advantage", e);
+                    }
+                  }}
+                >
+                  ADV
+                </Button>
+              )}
+              {defaultModified !== "none" && (
+                <Button
+                  onClick={(e) => {
+                    if (e.button === 0) {
+                      e.stopPropagation();
+                      onRoll([template], "none", e);
+                    }
+                  }}
+                >
+                  REG
+                </Button>
+              )}
+              {defaultModified !== "disadvantage" && (
+                <Button
+                  onClick={(e) => {
+                    if (e.button === 0) {
+                      e.stopPropagation();
+                      onRoll([template], "disadvantage", e);
+                    }
+                  }}
+                >
+                  DIS
+                </Button>
+              )}
+            </>
           )}
         </>
       )}
+      {!expanded && <p>{template.name}</p>}
     </div>
   );
 }
@@ -984,9 +1018,18 @@ const DiceTemplatePart = React.forwardRef<
     selectedTemplateIds: SelectionPair[];
     selectedCharacter: RRCharacter | null;
     onClick?: () => void;
+    editable: boolean;
   }
 >(function DiceTemplatePart(
-  { part, newIds, onRoll, selectedTemplateIds, selectedCharacter, onClick },
+  {
+    part,
+    newIds,
+    onRoll,
+    selectedTemplateIds,
+    selectedCharacter,
+    onClick,
+    editable,
+  },
   ref
 ) {
   let content: JSX.Element;
@@ -1034,6 +1077,8 @@ const DiceTemplatePart = React.forwardRef<
           templateId={part.templateId}
           newIds={newIds}
           selectedTemplateIds={selectedTemplateIds}
+          editable={editable}
+          isChildTemplate={true}
         />
       );
       break;

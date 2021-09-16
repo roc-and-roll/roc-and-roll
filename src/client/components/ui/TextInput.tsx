@@ -2,7 +2,10 @@ import composeRefs from "@seznam/compose-react-refs";
 import clsx from "clsx";
 import React from "react";
 import { FORCE_COMMIT_FIELD_VALUE_AFTER } from "../../../shared/constants";
-import { useDebouncedField, useIsolatedValue } from "../../debounce";
+import {
+  useFieldWithSmartOnChangeTransitions,
+  useIsolatedValue,
+} from "../../debounce";
 
 type TextInputProps<T = string> = Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -32,15 +35,21 @@ export const SmartTextInput = React.forwardRef<
   HTMLInputElement,
   TextInputProps
 >(function SmartTextInput(props, ref) {
-  const [fieldProps, debouncedRef, _isPending] = useDebouncedField<
-    string,
-    HTMLInputElement
-  >({
-    debounce: FORCE_COMMIT_FIELD_VALUE_AFTER,
-    ...props,
-  });
+  const [fieldProps, debouncedRef, isPending] =
+    useFieldWithSmartOnChangeTransitions<string, HTMLInputElement>({
+      debounce: FORCE_COMMIT_FIELD_VALUE_AFTER,
+      ...props,
+    });
 
-  return <TextInput ref={composeRefs(ref, debouncedRef)} {...fieldProps} />;
+  return (
+    <TextInput
+      ref={composeRefs(ref, debouncedRef)}
+      {...fieldProps}
+      // This should eventually display a spinner. However, to be able to test
+      // it, we simply set a data attribute for now.
+      data-ispending={isPending ? 1 : 0}
+    />
+  );
 });
 
 type IntegerInputProps =
@@ -118,13 +127,11 @@ export const SmartTextareaInput = React.forwardRef<
   HTMLTextAreaElement,
   TextareaInputProps
 >(function SmartTextareaInput(props, ref) {
-  const [fieldProps, debouncedRef, _isPending] = useDebouncedField<
-    string,
-    HTMLTextAreaElement
-  >({
-    debounce: FORCE_COMMIT_FIELD_VALUE_AFTER,
-    ...props,
-  });
+  const [fieldProps, debouncedRef, _isPending] =
+    useFieldWithSmartOnChangeTransitions<string, HTMLTextAreaElement>({
+      debounce: FORCE_COMMIT_FIELD_VALUE_AFTER,
+      ...props,
+    });
 
   return <TextareaInput ref={composeRefs(ref, debouncedRef)} {...fieldProps} />;
 });

@@ -32,12 +32,13 @@ import { listCampaigns, insertCampaign } from "./database";
 const ONE_YEAR = 1000 * 60 * 60 * 24 * 365;
 
 export async function setupWebServer(
+  httpHost: string,
   httpPort: number,
   uploadedFilesDir: string,
   uploadedFilesCacheDir: string,
   knex: Knex
 ) {
-  const url = `http://localhost:${httpPort}`;
+  const url = `http://${httpHost}:${httpPort}`;
 
   // First, create a new Express JS app that we use to serve our website.
   const app = express();
@@ -358,15 +359,15 @@ export async function setupWebServer(
   }
 
   // Spin up the Express JS instance.
-  const http = app.listen(httpPort, "0.0.0.0");
+  const http = app.listen(httpPort, httpHost);
 
   // Now also spin up a websocket server.
-  // In development, we need to allow CORS access not only from the url of the
-  // server, but also from the webpack dev server port.
+  // In development, we need to allow CORS access since the client code is
+  // running on a different port.
   const io = new SocketIOServer(http, {
     path: SOCKET_IO_PATH,
     cors: {
-      origin: process.env.NODE_ENV !== "development" ? url : "*",
+      origin: process.env.NODE_ENV === "development" ? "*" : undefined,
     },
   });
 

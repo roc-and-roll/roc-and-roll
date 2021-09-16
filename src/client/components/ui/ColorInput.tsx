@@ -2,7 +2,7 @@ import composeRefs from "@seznam/compose-react-refs";
 import React, { useCallback, useState } from "react";
 import { colors } from "../../../shared/colors";
 import { FORCE_COMMIT_FIELD_VALUE_AFTER } from "../../../shared/constants";
-import { useDebouncedField } from "../../debounce";
+import { useFieldWithSmartOnChangeTransitions } from "../../debounce";
 import { Popover } from "../Popover";
 import { Button } from "./Button";
 
@@ -67,13 +67,11 @@ export const SmartColorInput = React.forwardRef<
   HTMLInputElement,
   ColorInputProps
 >(function SmartColorInput(props, ref) {
-  const [fieldProps, debouncedRef, _isPending] = useDebouncedField<
-    string,
-    HTMLInputElement
-  >({
-    debounce: FORCE_COMMIT_FIELD_VALUE_AFTER,
-    ...props,
-  });
+  const [fieldProps, debouncedRef, _isPending] =
+    useFieldWithSmartOnChangeTransitions<string, HTMLInputElement>({
+      debounce: FORCE_COMMIT_FIELD_VALUE_AFTER,
+      ...props,
+    });
 
   return <ColorInput ref={composeRefs(ref, debouncedRef)} {...fieldProps} />;
 });

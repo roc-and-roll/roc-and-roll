@@ -19,8 +19,8 @@ import {
 import { reducer } from "../shared/reducer";
 import {
   initialSyncedState,
+  MakeRRID,
   OptimisticUpdateID,
-  RRID,
   RRPlayerID,
   SyncedState,
   SyncedStateAction,
@@ -108,10 +108,13 @@ type OptimisticUpdateExecutedSubscriber = (
   optimisticUpdateIds: OptimisticUpdateID[]
 ) => void;
 
+type OptimisticActionApplierDispatcherKey =
+  MakeRRID<"optimistic-dispatcher-key">;
+
 type OptimisticActionApplier = {
   readonly key?: string;
   readonly optimisticUpdateId: OptimisticUpdateID;
-  readonly dispatcherKey: RRID;
+  readonly dispatcherKey: OptimisticActionApplierDispatcherKey;
   readonly actions: ReadonlyArray<SyncedStateAction>;
 };
 
@@ -139,6 +142,8 @@ const ServerStateContext = React.createContext<{
     subscriber: OptimisticUpdateExecutedSubscriber
   ) => void;
   stateRef: React.MutableRefObject<SyncedState>;
+  __DEBUG__serverStateRefWithoutOptimisticActionsApplied: React.MutableRefObject<SyncedState>;
+  __DEBUG__optimisticActionAppliersRef: React.MutableRefObject<OptimisticActionAppliers>;
   socket: Socket | null;
   addLocalOptimisticActionAppliers: (
     appliers: OptimisticActionApplier[]
@@ -149,6 +154,12 @@ const ServerStateContext = React.createContext<{
   subscribeToOptimisticUpdateExecuted: () => {},
   unsubscribeToOptimisticUpdateExecuted: () => {},
   stateRef: { current: initialSyncedState },
+  __DEBUG__serverStateRefWithoutOptimisticActionsApplied: {
+    current: initialSyncedState,
+  },
+  __DEBUG__optimisticActionAppliersRef: {
+    current: new OptimisticActionAppliers(),
+  },
   socket: null,
   addLocalOptimisticActionAppliers: () => {},
 });
@@ -444,6 +455,9 @@ export function Internal_ServerStateProvider({
     <ServerStateContext.Provider
       value={{
         stateRef: externalStateRef,
+        __DEBUG__serverStateRefWithoutOptimisticActionsApplied:
+          internalServerStateRef,
+        __DEBUG__optimisticActionAppliersRef: optimisticActionAppliers,
         subscribe,
         unsubscribe,
         subscribeToOptimisticUpdateExecuted,
@@ -547,6 +561,19 @@ export function useServerStateRef<T>(
   return selectedStateRef;
 }
 
+export function useDEBUG__serverState() {
+  const {
+    __DEBUG__serverStateRefWithoutOptimisticActionsApplied,
+    __DEBUG__optimisticActionAppliersRef,
+  } = useContext(ServerStateContext);
+
+  return {
+    serverStateWithoutOptimisticActionsAppliedRef:
+      __DEBUG__serverStateRefWithoutOptimisticActionsApplied,
+    optimisticActionAppliersRef: __DEBUG__optimisticActionAppliersRef,
+  };
+}
+
 type OptimisticAction = {
   actions: SyncedStateAction[];
   optimisticKey: string;
@@ -575,8 +602,12 @@ export function useServerDispatch() {
   const { socket, addLocalOptimisticActionAppliers, stateRef } =
     useContext(ServerStateContext);
   const socketRef = useLatest(socket);
-  const dispatcherKey = useGuranteedMemo(() => rrid(), []);
-  const throttledSyncToServer = useRef<
+
+  const dispatcherKey = useGuranteedMemo(
+    () => rrid<{ id: OptimisticActionApplierDispatcherKey }>(),
+    []
+  );
+  const throttledSyncToServerRef = useRef<
     Map<
       string,
       {
@@ -588,15 +619,24 @@ export function useServerDispatch() {
   >(new Map());
 
   useEffect(() => {
+    const socket = socketRef.current;
+    const throttledSyncToServer = throttledSyncToServerRef.current;
+
     return () => {
       for (const {
         timeoutId,
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      } of throttledSyncToServer.current.values()) {
+        actions,
+        optimisticUpdateId,
+      } of throttledSyncToServer.values()) {
         clearTimeout(timeoutId);
+
+        socket?.emit(SOCKET_DISPATCH_ACTION, {
+          actions: actions,
+          optimisticUpdateId,
+        });
       }
     };
-  }, []);
+  }, [socketRef]);
 
   return useCallback(
     <A extends SyncedStateAction | OptimisticAction, R extends A | Array<A>>(
@@ -647,7 +687,7 @@ export function useServerDispatch() {
             const throttledOptimisticUpdateId =
               throttledOptimisticUpdateIds.get(action.optimisticKey)!;
 
-            const activeThrottle = throttledSyncToServer.current.get(
+            const activeThrottle = throttledSyncToServerRef.current.get(
               action.optimisticKey
             );
 
@@ -664,13 +704,13 @@ export function useServerDispatch() {
               activeThrottle.actions = action.actions;
               activeThrottle.optimisticUpdateId = throttledOptimisticUpdateId;
             } else {
-              throttledSyncToServer.current.set(action.optimisticKey, {
+              throttledSyncToServerRef.current.set(action.optimisticKey, {
                 actions: action.actions,
                 optimisticUpdateId: throttledOptimisticUpdateId,
                 timeoutId: setTimeout(() => {
                   const { actions, optimisticUpdateId } =
-                    throttledSyncToServer.current.get(action.optimisticKey)!;
-                  throttledSyncToServer.current.delete(action.optimisticKey);
+                    throttledSyncToServerRef.current.get(action.optimisticKey)!;
+                  throttledSyncToServerRef.current.delete(action.optimisticKey);
                   socketRef.current?.emit(SOCKET_DISPATCH_ACTION, {
                     actions: actions,
                     optimisticUpdateId,
@@ -687,6 +727,15 @@ export function useServerDispatch() {
       }
 
       if (actionsToSyncToServerImmediately.length > 0) {
+        if (
+          process.env.NODE_ENV !== "production" &&
+          window.event instanceof InputEvent
+        ) {
+          console.warn(
+            `It looks like you dispatched ${actionsToSyncToServerImmediately.length} actions as part of an input event. Consider using optimistic dispatching with a syncToServerThrottle > 0 instead, so that actions are not sent to the server on every keypress. Actions you dispatched:`,
+            actionsToSyncToServerImmediately
+          );
+        }
         socketRef.current?.emit(SOCKET_DISPATCH_ACTION, {
           actions: actionsToSyncToServerImmediately,
           optimisticUpdateId: hasImmediateOptimisticActions

@@ -11,9 +11,14 @@ import {
   updateCampaignState,
 } from "./database";
 import { CampaignManager } from "./campaignManager";
+import { assertNever } from "../shared/util";
 
 void (async () => {
-  const { workspace: workspaceDir, quiet, port: httpPort } = setupArgs();
+  const {
+    workspace: workspaceDir,
+    quiet,
+    ...commandAndOptions
+  } = await setupArgs();
 
   await assertFFprobeIsInstalled();
 
@@ -40,26 +45,65 @@ void (async () => {
     }
   }
 
+  const campaigns = await listCampaigns(knex, true);
+  const campaignManagers = await Promise.all(
+    campaigns.map(async (campaign) => {
+      const campaignManager = new CampaignManager(
+        campaign.id,
+        quiet,
+        workspaceDir,
+        uploadedFilesDir
+      );
+      await campaignManager.init_migrateStateAndSetupStore(campaign.state);
+
+      return campaignManager;
+    })
+  );
+
+  if (commandAndOptions.command === "campaign") {
+    switch (commandAndOptions.subCommand) {
+      case "list":
+        console.table(
+          campaigns.map((campaign) => ({
+            ID: campaign.id,
+            Name: campaign.name,
+          }))
+        );
+        process.exit(0);
+        break;
+      default:
+        assertNever(commandAndOptions.subCommand);
+    }
+  } else if (commandAndOptions.command === "extractForOneShot") {
+    const { campaignId, outputFilePath } = commandAndOptions;
+
+    const campaignManager = campaignManagers.find(
+      (campaignManager) => campaignManager.getCampaignId() === campaignId
+    );
+
+    if (!campaignManager) {
+      console.error(`Cannot find campaign with id "${campaignId}".`);
+      process.exit(1);
+    }
+
+    await campaignManager.extractForOneShot(outputFilePath);
+    process.exit(0);
+  }
+
+  const { port: httpPort, host: httpHost } = commandAndOptions;
+
   const { io, url } = await setupWebServer(
+    httpHost,
     httpPort,
     uploadedFilesDir,
     uploadedFilesCacheDir,
     knex
   );
 
-  const campaigns = await listCampaigns(knex, true);
-  const campaignManagers = await Promise.all(
-    campaigns.map(async (campaign) => {
-      const manager = new CampaignManager(
-        knex,
-        io,
-        quiet,
-        workspaceDir,
-        uploadedFilesDir
-      );
-      await manager.begin(campaign);
-      return manager;
-    })
+  await Promise.all(
+    campaignManagers.map(async (campaignManager) =>
+      campaignManager.init_syncAndIO(knex, io)
+    )
   );
 
   // TODO: When adding a new campaign, we need to start another manager!

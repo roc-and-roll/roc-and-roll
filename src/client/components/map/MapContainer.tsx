@@ -25,7 +25,10 @@ import {
   useServerStateRef,
 } from "../../state";
 import { useLatest } from "../../useLatest";
-import { SyncedDebouncer, useAggregatedDoubleDebounce } from "../../debounce";
+import {
+  SyncedDebounceMaker,
+  useAggregatedDoubleDebounce,
+} from "../../debounce";
 import {
   CURSOR_POSITION_SYNC_DEBOUNCE,
   CURSOR_POSITION_SYNC_HISTORY_STEPS,
@@ -98,8 +101,8 @@ export default function MapContainer() {
   const mapId = map.id;
   const dispatch = useServerDispatch();
   const [settings] = useRRSettings();
-  const syncedDebounce = useRef(
-    new SyncedDebouncer(CURSOR_POSITION_SYNC_DEBOUNCE)
+  const syncedDebounceMakerRef = useRef(
+    new SyncedDebounceMaker(CURSOR_POSITION_SYNC_DEBOUNCE)
   );
   const alert = useAlert();
 
@@ -408,7 +411,7 @@ export default function MapContainer() {
       },
       [dispatch, myself.id]
     ),
-    syncedDebounce.current,
+    syncedDebounceMakerRef.current,
     CURSOR_POSITION_SYNC_HISTORY_STEPS,
     true
   );
@@ -435,9 +438,10 @@ export default function MapContainer() {
             }),
           ],
           optimisticKey: "measurePath",
-          // TODO: This should support the SyncedDebouncer. Currently the entire
-          // purpose of the SyncedDebouncer is defeated by calling getTime().
-          syncToServerThrottle: syncedDebounce.current.getTime(),
+          // TODO: This should support the SyncedDebounceMaker. Currently the
+          // entire purpose of the SyncedDebounceMaker is defeated by calling
+          // getTime().
+          syncToServerThrottle: syncedDebounceMakerRef.current.getTime(),
         };
       }),
     [dispatch, myself.id]
@@ -641,9 +645,8 @@ export default function MapContainer() {
       {process.env.NODE_ENV === "development" &&
         settings.debug.mapTokenPositions && (
           <DebugMapContainerOverlay
-            // TODO: This doesn't make sense any longer.
-            localMapObjects={entries(map.objects)}
-            serverMapObjects={entries(map.objects)}
+            mapId={map.id}
+            mapObjects={entries(map.objects)}
           />
         )}
     </div>
