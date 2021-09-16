@@ -2590,6 +2590,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/prompts@npm:^2.0.14":
+  version: 2.4.0
+  resolution: "@types/prompts@npm:2.4.0"
+  checksum: ec75655f07fbc3cb2df60a3e3bdd13bfda0554a16f5541285c4b1cc0610756838a2863dccfc911cbb1385492054c07210512164e3dbef272ec638d631783b278
+  languageName: node
+  linkType: hard
+
 "@types/prop-types@npm:*":
   version: 15.7.3
   resolution: "@types/prop-types@npm:15.7.3"
@@ -10201,7 +10208,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prompts@npm:^2.0.1":
+"prompts@npm:^2.0.1, prompts@npm:^2.4.1":
   version: 2.4.1
   resolution: "prompts@npm:2.4.1"
   dependencies:
@@ -11050,6 +11057,7 @@ resolve@^2.0.0-next.3:
     "@types/multer": ^1.4.7
     "@types/node": ^14.17.14
     "@types/node-fetch": ^2.5.12
+    "@types/prompts": ^2.0.14
     "@types/react": ^17.0.19
     "@types/react-dom": ^17.0.9
     "@types/sharp": ^0.28.6
@@ -11105,6 +11113,7 @@ resolve@^2.0.0-next.3:
     nodemon-webpack-plugin: ^4.5.2
     prettier: ^2.3.2
     process: ^0.11.10
+    prompts: ^2.4.1
     raw-loader: ^4.0.2
     re-resizable: ^6.9.0
     react: alpha

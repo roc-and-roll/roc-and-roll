@@ -12,9 +12,14 @@ import { setupInitialState } from "./setupInitialState";
 import { setupTabletopAudioTrackSync } from "./setupTabletopaudio";
 import { batchActions } from "redux-batched-actions";
 import { assertFFprobeIsInstalled } from "./files";
+import { extractForOneShot } from "./extractForOneShot";
 
 void (async () => {
-  const { workspace: workspaceDir, quiet, port: httpPort } = setupArgs();
+  const {
+    workspace: workspaceDir,
+    quiet,
+    ...commandAndOptions
+  } = await setupArgs();
 
   await assertFFprobeIsInstalled();
 
@@ -30,6 +35,13 @@ void (async () => {
 
   const initialState = await setupInitialState(statePath, uploadedFilesDir);
   const store = setupReduxStore(initialState);
+
+  if (commandAndOptions.command === "extractForOneShot") {
+    await extractForOneShot(store, commandAndOptions.outputFilePath);
+    return;
+  }
+
+  const { port: httpPort } = commandAndOptions;
 
   const { io, url } = await setupWebServer(
     httpPort,
