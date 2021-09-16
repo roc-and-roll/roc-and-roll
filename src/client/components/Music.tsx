@@ -1,7 +1,7 @@
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { matchSorter } from "match-sorter";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   assetSongAdd,
   ephemeralMusicAdd,
@@ -303,6 +303,29 @@ const Song = React.memo(function Song({
 }) {
   const showTagsAndDescription = filterText.length > 0;
 
+  const calculateTimeRemaining = useCallback(
+    () =>
+      active
+        ? audio.duration - ((Date.now() - active.startedAt) % audio.duration)
+        : 0,
+    [active, audio.duration]
+  );
+
+  const [timeRemaining, setTimeRemaining] = useState(() =>
+    calculateTimeRemaining()
+  );
+
+  useEffect(() => {
+    if (active) {
+      setTimeRemaining(calculateTimeRemaining());
+      const id = setInterval(() => {
+        setTimeRemaining(calculateTimeRemaining());
+      }, 1000);
+
+      return () => clearInterval(id);
+    }
+  }, [active, calculateTimeRemaining]);
+
   return (
     <div className="music-row">
       <div className="music-label">
@@ -318,7 +341,7 @@ const Song = React.memo(function Song({
           </div>
         )}
       </div>
-      <small>{formatDuration(audio.duration)}</small>
+      <small>{formatDuration(active ? timeRemaining : audio.duration)}</small>
       {active ? (
         <>
           <VolumeSlider

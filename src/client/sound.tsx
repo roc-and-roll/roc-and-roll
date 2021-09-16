@@ -332,7 +332,7 @@ function ActiveSongPlayerImpl({
   const [play, _pause, stop] = useRRComplexSound(
     { url: assetUrl(song), duration: song.duration },
     activeSong.volume,
-    { loop: false }
+    { loop: true }
   );
 
   useEffect(() => {
