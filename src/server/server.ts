@@ -41,9 +41,10 @@ void (async () => {
     return;
   }
 
-  const { port: httpPort } = commandAndOptions;
+  const { port: httpPort, host: httpHost } = commandAndOptions;
 
   const { io, url } = await setupWebServer(
+    httpHost,
     httpPort,
     uploadedFilesDir,
     uploadedFilesCacheDir

@@ -23,6 +23,7 @@ type SharedOptions = {
 
 type StartOptions = SharedOptions & {
   readonly port: number;
+  readonly host: string;
 };
 
 type ExtractForOneShotOptions = SharedOptions & {
@@ -50,7 +51,8 @@ export async function setupArgs() {
       .command("start", { isDefault: true })
       .description("starts the Roc & Roll web server")
       .option("-p, --port <port>", "http port", myParseInt, 3000)
-      .action((options: { port: number }, command: Command) => {
+      .option("-h, --host <host>", "http host", "127.0.0.1")
+      .action((options: { port: number; host: string }, command: Command) => {
         resolve({ ...command.parent!.opts(), ...options, command: "start" });
       });
 
