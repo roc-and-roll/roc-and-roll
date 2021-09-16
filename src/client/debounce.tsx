@@ -254,7 +254,7 @@ export function useIsolatedValue<V>({
   ];
 }
 
-export function useDebouncedField<V, E extends HTMLElement>({
+export function useFieldWithSmartOnChangeTransitions<V, E extends HTMLElement>({
   debounce: debounceTime,
   value: externalValue,
   onChange: externalOnChange,

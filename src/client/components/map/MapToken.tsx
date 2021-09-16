@@ -518,7 +518,7 @@ function MapTokenEditor({ mapId, token }: { mapId: RRMapID; token: RRToken }) {
       <hr />
       <h3>Map Token Settings</h3>
       <label>
-        Rotation:{" "}
+        Rotation
         <SmartIntegerInput
           min={-360}
           max={360}

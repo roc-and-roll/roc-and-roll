@@ -37,7 +37,7 @@ describe("SmartTextInput", () => {
     const input = screen.getByLabelText("test") as HTMLInputElement;
 
     act(() => {
-      fireEvent.focus(input);
+      input.focus();
       fireEvent.change(input, { target: { value: "abc" } });
       // Do not blur here
     });
@@ -74,7 +74,7 @@ describe("SmartTextInput", () => {
       const input = screen.getByLabelText("test") as HTMLInputElement;
 
       act(() => {
-        fireEvent.focus(input);
+        input.focus();
         fireEvent.change(input, { target: { value: "abc" } });
         // Do not blur here
       });
@@ -168,6 +168,38 @@ describe("SmartIntegerInput", () => {
       <SmartIntegerInput value={value} onChange={onChange} />
     );
   });
+
+  it("triggers onChange with 0 if the value is invalid", () => {
+    const onChange = jest.fn();
+    const { getByPlaceholderText } = render(
+      <SmartIntegerInput value={3} onChange={onChange} placeholder="input" />
+    );
+
+    expect(onChange).not.toHaveBeenCalled();
+
+    act(() => {
+      getByPlaceholderText("input").focus();
+      fireEvent.change(getByPlaceholderText("input"), {
+        target: { value: "abc" },
+      });
+    });
+
+    expect(onChange).toHaveBeenCalledWith(0);
+
+    act(() => {
+      fireEvent.change(getByPlaceholderText("input"), {
+        target: { value: "" },
+      });
+    });
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      getByPlaceholderText("input").blur();
+    });
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
 });
 
 function isPartOfTransition(): boolean {
@@ -237,7 +269,7 @@ describe("SmartTextInput & SmartIntegerInput", () => {
       expect(getByTestId("value").textContent).toBe("???");
 
       act(() => {
-        fireEvent.focus(getByPlaceholderText("input"));
+        getByPlaceholderText("input").focus();
         fireEvent.change(getByPlaceholderText("input"), {
           target: { value: "4" },
         });

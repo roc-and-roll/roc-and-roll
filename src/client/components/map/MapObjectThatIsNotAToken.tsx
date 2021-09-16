@@ -149,16 +149,12 @@ export const MapObjectThatIsNotAToken = React.memo<{
       interactive
       placement="right"
     >
-      {object.rotation !== 0 ? (
-        <g
-          transform={`rotate(${object.rotation}, 0, 0)`}
-          style={{ transformBox: "fill-box", transformOrigin: "center" }}
-        >
-          {content()}
-        </g>
-      ) : (
-        content()
-      )}
+      <g
+        transform={`rotate(${object.rotation}, 0, 0)`}
+        style={{ transformBox: "fill-box", transformOrigin: "center" }}
+      >
+        {content()}
+      </g>
     </Popover>
   );
 });
@@ -205,7 +201,7 @@ function ObjectEditOptions({
         />
       </label>
       <label>
-        Rotation:{" "}
+        Rotation
         <SmartIntegerInput
           min={-360}
           max={360}

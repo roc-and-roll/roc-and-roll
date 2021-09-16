@@ -645,9 +645,8 @@ export default function MapContainer() {
       {process.env.NODE_ENV === "development" &&
         settings.debug.mapTokenPositions && (
           <DebugMapContainerOverlay
-            // TODO: This doesn't make sense any longer.
-            localMapObjects={entries(map.objects)}
-            serverMapObjects={entries(map.objects)}
+            mapId={map.id}
+            mapObjects={entries(map.objects)}
           />
         )}
     </div>
