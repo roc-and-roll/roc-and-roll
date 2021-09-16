@@ -71,6 +71,7 @@ import {
   ReduxToRecoilBridge,
 } from "./recoil";
 import { useAlert } from "../../popup-boxes";
+import { DropIndicator } from "../DropIndicator";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -641,7 +642,11 @@ export default function MapContainer() {
         myself={myself}
         setEditState={setEditState}
       />
-      {dropProps.nativeFileHovered && <ExternalFileDropIndicator />}
+      {dropProps.nativeFileHovered && (
+        <DropIndicator>
+          <p>drop background images here</p>
+        </DropIndicator>
+      )}
       {process.env.NODE_ENV === "development" &&
         settings.debug.mapTokenPositions && (
           <DebugMapContainerOverlay
@@ -652,15 +657,3 @@ export default function MapContainer() {
     </div>
   );
 }
-
-const ExternalFileDropIndicator = React.memo(
-  function ExternalFileDropIndicator() {
-    return (
-      <div className="drop-indicator">
-        <div>
-          <p>drop background images here</p>
-        </div>
-      </div>
-    );
-  }
-);

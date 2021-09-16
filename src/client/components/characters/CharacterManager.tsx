@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   playerUpdateAddCharacterId,
   characterAdd,
@@ -10,9 +10,9 @@ import {
   RRCharacterID,
   RRCharacterTemplate,
 } from "../../../shared/state";
-import { generateRandomToken } from "../../files";
+import { generateRandomToken, uploadFiles } from "../../files";
 import { useServerDispatch, useServerState } from "../../state";
-import { useDrag } from "react-dnd";
+import { useDrag, useDrop } from "react-dnd";
 import { useMyself } from "../../myself";
 import { GMArea } from "../GMArea";
 import { Popover } from "../Popover";
@@ -21,8 +21,12 @@ import { randomName } from "../../../shared/util";
 import { CharacterEditor } from "./CharacterEditor";
 import { CharacterPreview } from "./CharacterPreview";
 import { randomColor } from "../../../shared/colors";
+import { NativeTypes } from "react-dnd-html5-backend";
+import { DropIndicator } from "../DropIndicator";
 
-async function makeNewCharacter(): Promise<Parameters<typeof characterAdd>[0]> {
+async function makeNewCharacter(
+  tokenImage?: RRCharacter["tokenImage"]
+): Promise<Parameters<typeof characterAdd>[0]> {
   return {
     auras: [],
     conditions: [],
@@ -34,7 +38,7 @@ async function makeNewCharacter(): Promise<Parameters<typeof characterAdd>[0]> {
     visibility: "everyone",
     attributes: {},
     name: await randomName(),
-    tokenImage: await generateRandomToken(),
+    tokenImage: tokenImage ?? (await generateRandomToken()),
     tokenBorderColor: randomColor(),
     localToMap: null,
   };
@@ -49,33 +53,41 @@ export const CharacterManager = React.memo(function CharacterManager() {
 
   const [isAddingToken, setIsAddingToken] = useState(false);
 
-  const addToken = () => {
-    setIsAddingToken(true);
-    (async () => {
-      const characterAddAction = characterAdd(await makeNewCharacter());
-      const newCharacter = characterAddAction.payload;
-      dispatch([
-        characterAddAction,
-        playerUpdateAddCharacterId({
-          id: myself.id,
-          characterId: newCharacter.id,
-        }),
-      ]);
-      setNewCharacterIds((l) => [...l, newCharacter.id]);
-    })().finally(() => setIsAddingToken(false));
-  };
+  const addCharacter = useCallback(
+    async (tokenImage?: RRCharacter["tokenImage"]) => {
+      setIsAddingToken(true);
+      try {
+        const characterAddAction = characterAdd(
+          await makeNewCharacter(tokenImage)
+        );
+        const newCharacterId = characterAddAction.payload.id;
+        dispatch([
+          characterAddAction,
+          playerUpdateAddCharacterId({
+            id: myself.id,
+            characterId: newCharacterId,
+          }),
+        ]);
+        setNewCharacterIds((l) => [...l, newCharacterId]);
+      } finally {
+        setIsAddingToken(false);
+      }
+    },
+    [dispatch, myself.id]
+  );
 
   return (
     <>
-      <Button onClick={addToken} disabled={isAddingToken}>
+      <Button onClick={() => addCharacter()} disabled={isAddingToken}>
         Add Character
       </Button>
-      <TokenList
+      <CharacterList
         newCharacterIds={newCharacterIds}
         setNewCharacterIds={setNewCharacterIds}
         characters={entries(characters).filter((t) =>
           myself.characterIds.includes(t.id)
         )}
+        addCharacter={addCharacter}
       />
 
       {myself.isGM && <TemplateEditor />}
@@ -83,15 +95,14 @@ export const CharacterManager = React.memo(function CharacterManager() {
       {myself.isGM && (
         <GMArea>
           <h4>Other {"players'"} characters</h4>
-          <div className="token-list">
-            <TokenList
-              newCharacterIds={newCharacterIds}
-              setNewCharacterIds={setNewCharacterIds}
-              characters={entries(characters).filter(
-                (t) => !myself.characterIds.includes(t.id) && !t.localToMap
-              )}
-            />
-          </div>
+          <CharacterList
+            newCharacterIds={newCharacterIds}
+            setNewCharacterIds={setNewCharacterIds}
+            characters={entries(characters).filter(
+              (t) => !myself.characterIds.includes(t.id) && !t.localToMap
+            )}
+            addCharacter={false}
+          />
         </GMArea>
       )}
     </>
@@ -105,14 +116,18 @@ const TemplateEditor = React.memo(function TemplateEditor() {
 
   const [isAddingToken, setIsAddingToken] = useState(false);
 
-  const addTemplate = () => {
+  const addTemplate = async (tokenImage?: RRCharacter["tokenImage"]) => {
     setIsAddingToken(true);
-    (async () => {
-      const characterAddAction = characterTemplateAdd(await makeNewCharacter());
+    try {
+      const characterAddAction = characterTemplateAdd(
+        await makeNewCharacter(tokenImage)
+      );
       const newCharacter = characterAddAction.payload;
       dispatch(characterAddAction);
       setNewCharacterIds((l) => [...l, newCharacter.id]);
-    })().finally(() => setIsAddingToken(false));
+    } finally {
+      setIsAddingToken(false);
+    }
   };
 
   const characterTemplates = entries(
@@ -124,36 +139,66 @@ const TemplateEditor = React.memo(function TemplateEditor() {
       <div className="clearfix">
         <Button
           style={{ float: "right" }}
-          onClick={addTemplate}
+          onClick={() => addTemplate()}
           disabled={isAddingToken}
         >
           Add
         </Button>
         <h4>Character Templates</h4>
-        <TokenList
+        <CharacterList
           isTemplate={true}
           newCharacterIds={newCharacterIds}
           setNewCharacterIds={setNewCharacterIds}
           characters={characterTemplates}
+          addCharacter={addTemplate}
         />
       </div>
     </GMArea>
   );
 });
 
-function TokenList({
+function CharacterList({
   characters,
   newCharacterIds,
   setNewCharacterIds,
   isTemplate,
+  addCharacter,
 }: {
   characters: RRCharacter[] | RRCharacterTemplate[];
   newCharacterIds: RRCharacterID[];
   setNewCharacterIds: React.Dispatch<React.SetStateAction<RRCharacterID[]>>;
   isTemplate?: boolean;
+  addCharacter: ((tokenImage?: RRCharacter["tokenImage"]) => void) | false;
 }) {
+  const [dropProps, dropRef] = useDrop<
+    { files: File[] },
+    void,
+    { nativeFileHovered: boolean }
+  >(() => ({
+    accept: addCharacter ? [NativeTypes.FILE] : [],
+    drop: (item) => {
+      void (async () => {
+        if (addCharacter !== false) {
+          const uploadedFiles = await uploadFiles(item.files, "image");
+          uploadedFiles.forEach((uploadedFile) => {
+            addCharacter(uploadedFile);
+          });
+        }
+      })();
+    },
+    collect: (monitor) => ({
+      nativeFileHovered:
+        monitor.canDrop() && monitor.getItemType() === NativeTypes.FILE,
+    }),
+  }));
+
   return (
-    <div className="token-list">
+    <div className="token-list" ref={dropRef}>
+      {dropProps.nativeFileHovered && (
+        <DropIndicator>
+          <p>create new character{isTemplate && " template"}</p>
+        </DropIndicator>
+      )}
       {characters.map((character) => (
         <EditableCharacterPreview
           key={character.id}
