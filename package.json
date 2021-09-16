@@ -16,7 +16,7 @@
     "build:client": "webpack --config webpack.client.js --env production",
     "build:server": "webpack --config webpack.server.js --env production && bash import-meta-url-hack.sh",
     "analyze-bundle:client": "webpack --config webpack.client.js --env production --profile --json dist/client/stats.json && yarn webpack-bundle-analyzer dist/client/stats.json",
-    "start": "nodemon --unhandled-rejections=strict --enable-source-maps --watch dist/server.roc-and-roll.js dist/server.roc-and-roll.js --workspace ./workspace",
+    "start": "nodemon --unhandled-rejections=strict --enable-source-maps --watch dist --ignore '*.js.map' --ignore dist/client dist/server.roc-and-roll.js --workspace ./workspace",
     "postinstall": "husky install"
   },
   "dependencies": {

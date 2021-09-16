@@ -13,6 +13,8 @@ const gitRevisionPlugin = new GitRevisionPlugin();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const outputPath = path.join(__dirname, "dist");
+
 export default (webpackEnv) => {
   const isEnvDevelopment = webpackEnv.development === true;
   const isEnvProduction = webpackEnv.production === true;
@@ -50,6 +52,8 @@ export default (webpackEnv) => {
       // Make sure to also change `package.json` -> `jest` -> `setupFiles` when
       // you change these files.
       server: [
+        // Set process.env correctly
+        "./src/server/env.ts",
         // Support for sourcemaps
         "source-map-support/register.js",
         // Entrypoint
@@ -105,7 +109,10 @@ export default (webpackEnv) => {
         async: isEnvDevelopment,
       }),
       isEnvDevelopment && new NodemonPlugin({
-        script: './dist/server.roc-and-roll.js',
+        script: path.join(outputPath, 'server.roc-and-roll.js'),
+        watch: outputPath,
+        //  ext: '*', // extensions to watch
+        ignore: ['*.js.map', path.join(outputPath, 'client')],
         // Arguments to pass to the script being watched.
         args: ["--workspace", "./workspace", "--host", "0.0.0.0"],
         // Node arguments.
@@ -121,7 +128,7 @@ export default (webpackEnv) => {
     },
     output: {
       filename: "[name].roc-and-roll.js",
-      path: path.resolve(__dirname, "dist"),
+      path: outputPath,
       module: true,
       // Makes sure that the file paths generated in the .js.map file are correct.
       // To verify, throw an error in server.ts. Clicking the file path in the
