@@ -4,7 +4,7 @@ import { DiceGeometry } from "./Dice";
 import * as THREE from "three";
 import { GLTFLoader, GLTF } from "three/examples/jsm/loaders/GLTFLoader";
 import d12Glb from "./dice/d12.glb";
-import { useAlert } from "../../popup-boxes";
+import { useAlert } from "../../dialog-boxes";
 
 export function DebugDiceRotation() {
   const [die] = useLoader(GLTFLoader, [d12Glb]);

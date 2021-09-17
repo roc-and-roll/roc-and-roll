@@ -1,6 +1,6 @@
 import React, { useCallback, useContext } from "react";
 import { rrid } from "../../../shared/util";
-import { useAlert } from "../../popup-boxes";
+import { useAlert } from "../../dialog-boxes";
 import { useGuranteedMemo } from "../../useGuranteedMemo";
 import useLocalState from "../../useLocalState";
 import { Button } from "../ui/Button";

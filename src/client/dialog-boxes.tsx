@@ -97,10 +97,42 @@ export function usePrompt() {
   );
 }
 
-export function PopupBoxes() {
+type DialogID = MakeRRID<"popup/dialog">;
+
+type DialogData<T> = {
+  content: (onClose: (result: T | null) => void) => ReactNode;
+  onClose: (result: T | null) => void;
+};
+
+const dialogAtom = atom<Map<DialogID, DialogData<any>>>({
+  default: new Map(),
+  key: "popup/dialog",
+});
+
+export function useDialog() {
+  const setDialogs = useSetRecoilState(dialogAtom);
+
+  return useCallback(
+    function <T>(content: DialogData<T>["content"]) {
+      const id = rrid<{ id: DialogID }>();
+      return new Promise<T | null>((resolve) =>
+        setDialogs((dialogs) =>
+          mapAddImmutably(dialogs, id, {
+            content,
+            onClose: resolve,
+          })
+        )
+      );
+    },
+    [setDialogs]
+  );
+}
+
+export function DialogBoxes() {
   const [alerts, setAlerts] = useRecoilState(alertAtom);
   const [confirms, setConfirms] = useRecoilState(confirmAtom);
   const [prompts, setPrompts] = useRecoilState(promptAtom);
+  const [dialogs, setDialogs] = useRecoilState(dialogAtom);
 
   return (
     <>
@@ -137,6 +169,16 @@ export function PopupBoxes() {
           />
         )
       )}
+      {[...dialogs.entries()].map(([id, { content, onClose }]) => (
+        <DialogHelper
+          key={id}
+          content={content}
+          onClose={(result) => {
+            setDialogs((dialogs) => mapDeleteImmutably(dialogs, id));
+            onClose(result);
+          }}
+        />
+      ))}
     </>
   );
 }
@@ -149,7 +191,7 @@ function nl2br(text: string) {
 }
 
 function formatMessage(message: ReactNode) {
-  return typeof message === "string" ? nl2br(message) : message;
+  return typeof message === "string" ? <p>{nl2br(message)}</p> : message;
 }
 
 function Alert({ message, onClose }: AlertData) {
@@ -201,6 +243,14 @@ function Prompt({ message, onClose, initialValue }: PromptData) {
         <Button onClick={() => onClose(null)}>cancel</Button>
         <Button onClick={() => onClose(value)}>confirm</Button>
       </DialogActions>
+    </Dialog>
+  );
+}
+
+function DialogHelper({ content, onClose }: DialogData<unknown>) {
+  return (
+    <Dialog open onClose={() => onClose(null)}>
+      {content(onClose)}
     </Dialog>
   );
 }

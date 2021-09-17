@@ -32,7 +32,7 @@ import Shape from "@doodle3d/clipper-js";
 import tinycolor from "tinycolor2";
 import { RRMessage, useServerMessages } from "../../serverMessages";
 import { RRMapViewRef } from "./Map";
-import { usePrompt } from "../../popup-boxes";
+import { usePrompt } from "../../dialog-boxes";
 
 const SERVER_SYNC_THROTTLE_TIME = 100;
 

@@ -26,7 +26,7 @@ import { isTabletopAudioAsset } from "../../shared/tabletopaudio";
 import { partition, rrid, timestamp } from "../../shared/util";
 import { useFileUpload } from "../files";
 import { useMyself } from "../myself";
-import { useAlert } from "../popup-boxes";
+import { useAlert } from "../dialog-boxes";
 import { useServerDispatch, useServerState } from "../state";
 import { formatDuration, highlightMatching } from "../util";
 import { ActiveSoundSet, SoundSets as SoundSets } from "./SoundSets";

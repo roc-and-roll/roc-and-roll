@@ -17,6 +17,7 @@ import {
   RRMapID,
   RRObjectVisibility,
   RRMapRevealedAreas,
+  RRCharacter,
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import {
@@ -70,8 +71,10 @@ import {
   selectedMapObjectsFamily,
   ReduxToRecoilBridge,
 } from "./recoil";
-import { useAlert } from "../../popup-boxes";
+import { useAlert, useDialog } from "../../dialog-boxes";
 import { DropIndicator } from "../DropIndicator";
+import { DialogActions, DialogContent, DialogTitle } from "../Dialog";
+import { Button } from "../ui/Button";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -502,26 +505,111 @@ export default function MapContainer() {
     }
   );
 
+  const dialog = useDialog();
+
   const onSmartSetTotalHP = useCallback(
-    (characterId: RRCharacterID, newTotalHP: number) =>
+    async (characterId: RRCharacterID, newTotalHP: number) => {
+      let changes: ReturnType<typeof changeHPSmartly> | undefined;
+      let character: RRCharacter | undefined;
+
       dispatch((state) => {
-        const character = state.characters.entities[characterId];
+        character = state.characters.entities[characterId];
         if (!character) {
           return [];
         }
+
+        changes = changeHPSmartly(character, newTotalHP);
 
         return {
           actions: [
             characterUpdate({
               id: characterId,
-              changes: changeHPSmartly(character, newTotalHP),
+              changes,
             }),
           ],
           optimisticKey: `${characterId}/hp`,
           syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
         };
-      }),
-    [dispatch]
+      });
+
+      if (!character || !changes) {
+        return;
+      }
+
+      let conditions = character.conditions;
+      const c = character;
+
+      if (character.hp > 0 && changes.hp <= 0) {
+        if (
+          !character.conditions.includes("unconscious") &&
+          !character.conditions.includes("dead")
+        ) {
+          if (myself.isGM) {
+            const result = await dialog<"dead" | "unconscious">((onClose) => (
+              <>
+                <DialogTitle>
+                  Uh oh... looks like {c.name} had a rough time.
+                </DialogTitle>
+                <DialogContent>
+                  <p>
+                    Do you want to mark this character as dead or unconcious?
+                  </p>
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={() => onClose("dead")}>dead</Button>
+                  <Button onClick={() => onClose("unconscious")}>
+                    unconscious
+                  </Button>
+                </DialogActions>
+              </>
+            ));
+            if (result === null) {
+              return;
+            }
+            conditions = [...character.conditions, result];
+          } else {
+            conditions = [...character.conditions, "unconscious"];
+          }
+        }
+      } else if (character.hp <= 0 && changes.hp > 0) {
+        if (
+          character.conditions.includes("unconscious") &&
+          !character.conditions.includes("dead")
+        ) {
+          const result = await dialog<"yes">((onClose) => (
+            <>
+              <DialogTitle>
+                Nice work! {c.name} has regained some hit points.
+              </DialogTitle>
+              <DialogContent>
+                <p>
+                  Do you want to remove the <em>unconscious</em> condition?
+                </p>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => onClose(null)}>no</Button>
+                <Button onClick={() => onClose("yes")}>yes</Button>
+              </DialogActions>
+            </>
+          ));
+          if (result === null) {
+            return;
+          }
+          conditions = character.conditions.filter(
+            (condition) => condition !== "unconscious"
+          );
+        }
+      }
+      if (conditions !== character.conditions) {
+        dispatch(
+          characterUpdate({
+            id: characterId,
+            changes: { conditions },
+          })
+        );
+      }
+    },
+    [dispatch, dialog, myself.isGM]
   );
 
   const onMoveMapObjects = useRecoilCallback(

@@ -11,7 +11,7 @@ import { useMyself } from "../myself";
 import { useServerDispatch } from "../state";
 import { roll } from "../roll";
 import { rrid } from "../../shared/util";
-import { useAlert } from "../popup-boxes";
+import { useAlert } from "../dialog-boxes";
 
 export function DiceInterface() {
   const [diceTypes, setDiceTypes] = useState<string[]>([]);

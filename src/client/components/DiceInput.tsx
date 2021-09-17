@@ -5,7 +5,7 @@ import { useMyself } from "../myself";
 import { useServerDispatch } from "../state";
 import { roll } from "../roll";
 import { Button } from "./ui/Button";
-import { useAlert } from "../popup-boxes";
+import { useAlert } from "../dialog-boxes";
 
 export function DiceInput() {
   const [text, setText] = useState("");

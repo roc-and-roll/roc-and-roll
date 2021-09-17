@@ -3,7 +3,7 @@ import { logEntryMessageAdd } from "../../shared/actions";
 import { entries, RRLogEntry } from "../../shared/state";
 import { assertNever, withDo } from "../../shared/util";
 import { useMyself } from "../myself";
-import { usePrompt } from "../popup-boxes";
+import { usePrompt } from "../dialog-boxes";
 import { diceResultString, DiceResultWithTypes } from "../roll";
 import { useServerDispatch, useServerState } from "../state";
 import { useScrollToBottom } from "../useScrollToBottom";

@@ -4,7 +4,7 @@ import { entries, RRPlayerID } from "../../shared/state";
 import { randomColor } from "../../shared/colors";
 import { useServerDispatch, useServerState } from "../state";
 import "./JoinGame.scss";
-import { usePrompt } from "../popup-boxes";
+import { usePrompt } from "../dialog-boxes";
 
 export const JoinGame = React.memo(function JoinGame({
   login,
