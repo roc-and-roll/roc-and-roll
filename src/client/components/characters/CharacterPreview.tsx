@@ -8,30 +8,28 @@ import {
   isCharacterOverhealed,
 } from "../../../shared/util";
 import { tokenImageUrl } from "../../files";
+import { BlurhashImage } from "../blurhash/BlurhashImage";
 
 export function CharacterPreview({ character }: { character: RRCharacter }) {
   const hurt = isCharacterHurt(character);
   const unconsciousOrDead = isCharacterUnconsciousOrDead(character);
   const overhealed = isCharacterOverhealed(character);
+
   return (
-    <div
+    <BlurhashImage
+      image={{
+        blurhash: character.tokenImage.blurhash,
+        url: tokenImageUrl(character, 32),
+      }}
+      width={32}
+      height={32}
+      loading="lazy"
       className={clsx("token-image", {
         hurt,
         unconsciousOrDead,
         overhealed,
       })}
       title={character.name}
-      style={{
-        backgroundImage: character.tokenImage
-          ? `url(${tokenImageUrl(
-              {
-                tokenImage: character.tokenImage,
-                tokenBorderColor: character.tokenBorderColor,
-              },
-              32
-            )})`
-          : "none",
-      }}
     />
   );
 }

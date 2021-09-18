@@ -17,6 +17,7 @@ import AsyncLock from "async-lock";
 import { GRID_SIZE, SOCKET_IO_PATH } from "../shared/constants";
 import compression from "compression";
 import {
+  calculateBlurhash,
   getAudioDuration,
   getImageDimensions,
   getMimeType,
@@ -109,6 +110,7 @@ export async function setupWebServer(
                 ? {
                     type: "image" as const,
                     ...(await getImageDimensions(file.path)),
+                    blurhash: await calculateBlurhash(file.path),
                   }
                 : isAudio
                 ? {
@@ -245,13 +247,14 @@ export async function setupWebServer(
 
       const filename = `generated-${nanoid()}.svg`;
       const background = randomColor();
+      const outputPath = path.join(uploadedFilesDir, filename);
 
       res.startTime("generate", "Generating token");
       await sharp(await sharp(icon).resize(450, 450).toBuffer())
         .extend({ top: 50, left: 50, right: 50, bottom: 50, background })
         .flatten({ background })
         .png()
-        .toFile(path.join(uploadedFilesDir, filename));
+        .toFile(outputPath);
       res.endTime("generate");
 
       const file: RRFileImage = {
@@ -261,6 +264,12 @@ export async function setupWebServer(
         type: "image",
         width: 550,
         height: 550,
+        blurhash: await (async () => {
+          res.startTime("blurhash", "Calculating blurhash");
+          const blurhash = await calculateBlurhash(outputPath);
+          res.endTime("blurhash");
+          return blurhash;
+        })(),
       };
       return res.json(file);
     } catch (err) {
