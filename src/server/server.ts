@@ -67,27 +67,40 @@ void (async () => {
           campaigns.map((campaign) => ({
             ID: campaign.id,
             Name: campaign.name,
+            "Migration Version": campaign.state.version,
           }))
         );
         process.exit(0);
         break;
+      case "extractForOneShot":
+        {
+          const { campaignId, outputFilePath } = commandAndOptions;
+
+          const campaignManager = campaignManagers.find(
+            (campaignManager) => campaignManager.getCampaignId() === campaignId
+          );
+
+          if (!campaignManager) {
+            console.error(`Cannot find campaign with id "${campaignId}".`);
+            process.exit(1);
+          }
+
+          await campaignManager.extractForOneShot(outputFilePath);
+          process.exit(0);
+        }
+        break;
+      case "migrate":
+        // The migration already happens as part of loading the state.
+        // We just need to make sure to persist the updated state to disk.
+        for (const campaignManager of campaignManagers) {
+          await campaignManager.persistState(knex);
+        }
+        console.log("Migration complete.");
+        process.exit(0);
+        break;
       default:
-        assertNever(commandAndOptions.subCommand);
+        assertNever(commandAndOptions);
     }
-  } else if (commandAndOptions.command === "extractForOneShot") {
-    const { campaignId, outputFilePath } = commandAndOptions;
-
-    const campaignManager = campaignManagers.find(
-      (campaignManager) => campaignManager.getCampaignId() === campaignId
-    );
-
-    if (!campaignManager) {
-      console.error(`Cannot find campaign with id "${campaignId}".`);
-      process.exit(1);
-    }
-
-    await campaignManager.extractForOneShot(outputFilePath);
-    process.exit(0);
   }
 
   const { port: httpPort, host: httpHost } = commandAndOptions;

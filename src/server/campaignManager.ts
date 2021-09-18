@@ -78,9 +78,8 @@ export class CampaignManager {
 
     this.store.subscribe(
       throttled(async () => {
-        const state = this.store.getState();
         // TODO: Using async/await here is not 100% ok.
-        await updateCampaignState(knex, this.campaignId, state);
+        await this.persistState(knex);
       }, 3000)
     );
 
@@ -109,5 +108,10 @@ export class CampaignManager {
     }, 2000);
 
     await setupTabletopAudioTrackSync(this.store, knex, this.campaignId);
+  }
+
+  public async persistState(knex: Knex) {
+    const state = this.store.getState();
+    await updateCampaignState(knex, this.campaignId, state);
   }
 }
