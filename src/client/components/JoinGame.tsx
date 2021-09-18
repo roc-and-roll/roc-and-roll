@@ -3,8 +3,8 @@ import { playerAdd } from "../../shared/actions";
 import { entries, RRPlayerID } from "../../shared/state";
 import { randomColor } from "../../shared/colors";
 import { useServerDispatch, useServerState } from "../state";
-import { usePrompt } from "../popup-boxes";
 import { CampaignEntity } from "../../shared/campaign";
+import { usePrompt } from "../dialog-boxes";
 
 export const JoinGame = React.memo(function JoinGame({
   login,

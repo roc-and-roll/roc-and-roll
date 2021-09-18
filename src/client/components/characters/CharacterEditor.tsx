@@ -51,7 +51,8 @@ import bullseye from "../../../third-party/game-icons.net/ffffff/transparent/1x1
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import { faSkullCrossbones } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useConfirm } from "../../popup-boxes";
+import { useConfirm } from "../../dialog-boxes";
+import { CharacterPreview } from "./CharacterPreview";
 
 export interface ConditionWithIcon {
   name: RRCharacterCondition;
@@ -203,6 +204,7 @@ export function CharacterEditor({
       <Button className="popover-close" onClick={onClose}>
         ×
       </Button>
+      <CharacterPreview character={character} />
       <div>
         <label>
           Name:{" "}

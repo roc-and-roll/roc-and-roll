@@ -56,6 +56,7 @@ import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import useRafLoop from "../../useRafLoop";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { SVGBlurHashImage } from "../blurhash/SVGBlurhashImage";
 
 export const MapToken = React.memo<{
   mapId: RRMapID;
@@ -330,40 +331,26 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
         ? { filter: "url(#tokenOverhealedShadow)" }
         : {}),
       ...(canControl ? { cursor: "move" } : {}),
+      borderRadius: tokenSize / 2,
     }),
-    [character, canControl]
+    [character, tokenSize, canControl]
   );
 
   return (
     <>
-      {character.tokenImage ? (
-        <image
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-          x={0}
-          y={0}
-          style={tokenStyle}
-          width={tokenSize}
-          height={tokenSize}
-          href={tokenImageUrl(
-            {
-              tokenImage: character.tokenImage,
-              tokenBorderColor: character.tokenBorderColor,
-            },
-            tokenSize * zoom
-          )}
-        />
-      ) : (
-        <circle
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-          cx={tokenSize / 2}
-          cy={tokenSize / 2}
-          r={tokenSize / 2}
-          fill="red"
-          style={tokenStyle}
-        />
-      )}
+      <SVGBlurHashImage
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        x={0}
+        y={0}
+        style={tokenStyle}
+        width={tokenSize}
+        height={tokenSize}
+        image={{
+          url: tokenImageUrl(character, tokenSize * zoom),
+          blurhash: character.tokenImage.blurhash,
+        }}
+      />
 
       {isSelectedOrHovered && (
         <circle

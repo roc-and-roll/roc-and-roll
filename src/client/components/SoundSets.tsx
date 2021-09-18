@@ -31,7 +31,7 @@ import { Button } from "./ui/Button";
 import { SmartTextInput } from "./ui/TextInput";
 import { VolumeSlider } from "./VolumeSlider";
 import { useCurrentlyPlayingPlaylistEntryAndSong } from "../sound";
-import { useConfirm, usePrompt } from "../popup-boxes";
+import { useConfirm, usePrompt } from "../dialog-boxes";
 
 export const SoundSets = React.memo<{
   filterText: string;

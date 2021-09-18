@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { RRID } from "../../shared/state";
 import { rrid } from "../../shared/util";
-import { useAlert } from "../popup-boxes";
+import { useAlert } from "../dialog-boxes";
 import { useLatest } from "../useLatest";
 import useLocalState from "../useLocalState";
 import { useCompendium } from "./compendium/Compendium";

@@ -11,7 +11,6 @@ import {
   RRPoint,
   RRToken,
 } from "../../../shared/state";
-import { fileUrl } from "../../files";
 import {
   RoughEllipse,
   RoughRectangle,
@@ -30,6 +29,7 @@ import { selectedMapObjectsFamily } from "./recoil";
 import { Popover } from "../Popover";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
+import { SVGBlurHashImage } from "../blurhash/SVGBlurhashImage";
 
 export const MapObjectThatIsNotAToken = React.memo<{
   object: Exclude<RRMapObject, RRToken | RRMapLink>;
@@ -64,7 +64,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
 
   const ref = useLatest({ object, onStartMove });
   const onMouseDown = useCallback(
-    (e: React.MouseEvent<SVGElement>) => {
+    (e: React.MouseEvent) => {
       ref.current.onStartMove(ref.current.object, e);
     },
     [ref]
@@ -76,7 +76,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
     x: object.position.x,
     y: object.position.y,
     style,
-    onMouseDown: (e: React.MouseEvent<SVGElement>) => {
+    onMouseDown: (e: React.MouseEvent) => {
       canControl && onMouseDown(e);
       clickPositionRef.current = { x: e.clientX, y: e.clientY };
     },
@@ -126,13 +126,20 @@ export const MapObjectThatIsNotAToken = React.memo<{
         );
       }
       case "image": {
-        const { strokeLineDash: _1, seed: _2, ...imageProps } = sharedProps;
+        const {
+          strokeLineDash: _1,
+          seed: _2,
+          fill: _3,
+          stroke: _4,
+          ...imageProps
+        } = sharedProps;
+
         return (
-          <image
-            {...imageProps}
+          <SVGBlurHashImage
+            image={object.image}
             width={(object.image.width / object.image.height) * object.height}
             height={object.height}
-            href={fileUrl(object.image)}
+            {...imageProps}
           />
         );
       }

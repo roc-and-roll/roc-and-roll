@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { SmartTextInput } from "../ui/TextInput";
 
 export function HPInlineEdit({
   hp,
@@ -26,7 +27,7 @@ export function HPInlineEdit({
     } else if (prefix === "+") {
       setHP(hp + number);
     } else {
-      throw new Error("Unexpected preix");
+      throw new Error("Unexpected prefix");
     }
 
     return true;
@@ -37,13 +38,16 @@ export function HPInlineEdit({
     setLocalHP(hp.toString());
   }, [hp]);
 
+  const ignoreBlurRef = useRef(false);
+
   return (
-    <input
+    <SmartTextInput
       ref={ref}
       className="hp-inline-edit"
+      placeholder="HP"
       type="text"
       value={localHP}
-      onChange={(e) => setLocalHP(e.target.value)}
+      onChange={(hp) => setLocalHP(hp)}
       // Avoid bubbling up the events that are also subscribed to by the <Map>
       // component, so that they are not preventDefaulted.
       onMouseDown={(e) => e.stopPropagation()}
@@ -53,6 +57,7 @@ export function HPInlineEdit({
 
         if (e.key === "Enter") {
           if (updateHP()) {
+            ignoreBlurRef.current = true;
             ref.current?.blur();
           } else {
             // The user entered garbage, ignore the event.
@@ -61,6 +66,14 @@ export function HPInlineEdit({
       }}
       onFocus={() => ref.current?.select()}
       onBlur={() => {
+        // Only update the hp if blur is not caused by the manual call to blur()
+        // in the keydown handler (isTrusted = false). Otherwise, we call
+        // updateHP twice, once in the keydown handler and once in the blur
+        // handler.
+        if (ignoreBlurRef.current) {
+          ignoreBlurRef.current = false;
+          return;
+        }
         if (!updateHP()) {
           // If the user entered garbage, replace the HP with the correct value
           setLocalHP(hp.toString());

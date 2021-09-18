@@ -27,6 +27,7 @@ import {
 } from "./state";
 import { withDo } from "./util";
 import tinycolor from "tinycolor2";
+import { isBlurhashValid } from "blurhash";
 
 export function isRRID<ID extends RRID>(testLength: boolean = true) {
   return t.makeValidator({
@@ -79,11 +80,26 @@ const sharedRRFileValidators = {
   mimeType: t.isString(),
 };
 
+const isBlurhash = <T extends string>() =>
+  t.makeValidator<T>({
+    test: (value, state) => {
+      const result = isBlurhashValid(value);
+      if (!result.result)
+        return t.pushError(
+          state,
+          `Expected a valid blurhash. ${result.errorReason ?? ""}`
+        );
+
+      return true;
+    },
+  });
+
 const isRRFileImage = t.isObject({
   ...sharedRRFileValidators,
   type: t.isLiteral("image"),
   width: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
   height: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
+  blurhash: t.applyCascade(t.isString(), [isBlurhash()]),
 });
 
 const isRRFileAudio = t.isObject({
@@ -202,7 +218,7 @@ export const isSyncedState = t.isObject({
           id: isRRID<RRCharacterID>(),
           name: t.isString(),
 
-          tokenImage: t.isNullable(isRRFileImage),
+          tokenImage: isRRFileImage,
           tokenBorderColor: isColor(),
           scale: t.applyCascade(t.isNumber(), [t.isAtLeast(1)]),
 

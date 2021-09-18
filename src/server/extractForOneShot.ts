@@ -65,7 +65,7 @@ export async function extractForOneShot(
       ids: [...playerIds],
     },
     characters: filterCharacters(state.characters, players),
-    characterTemplates: filterCharacters(state.characterTemplates, players),
+    characterTemplates: EMPTY_ENTITY_COLLECTION,
     maps: {
       entities: {
         [defaultMap.id]: defaultMap,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { CampaignEntity } from "../../shared/campaign";
 import { useChangeCampaign } from "../campaign";
-import { usePrompt } from "../popup-boxes";
+import { usePrompt } from "../dialog-boxes";
 
 async function fetchCampaigns(abortController?: AbortController) {
   try {

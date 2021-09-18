@@ -41,7 +41,7 @@ import ReactDOM from "react-dom";
 import { NotificationTopAreaPortal } from "./Notifications";
 import { Collapsible } from "./Collapsible";
 import { SmartIntegerInput } from "./ui/TextInput";
-import { usePrompt } from "../popup-boxes";
+import { usePrompt } from "../dialog-boxes";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,

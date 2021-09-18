@@ -15,7 +15,7 @@ export default function QuickReferenceWrapper() {
         return;
       }
 
-      if (e.key === "Shift") {
+      if (e.key === "Shift" && !e.repeat) {
         if (lastShiftPressRef.current !== 0) {
           if (Date.now() - lastShiftPressRef.current < 200) {
             startTransition(() => setOpen((open) => !open));

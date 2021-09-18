@@ -13,7 +13,7 @@ import {
 } from "../../shared/state";
 import { EMPTY_ENTITY_COLLECTION } from "../../shared/state";
 import { useMyself } from "../myself";
-import { usePrompt } from "../popup-boxes";
+import { usePrompt } from "../dialog-boxes";
 import { useServerDispatch, useServerState } from "../state";
 import { GMArea } from "./GMArea";
 import { Button } from "./ui/Button";

@@ -1,6 +1,8 @@
+import { encode } from "blurhash";
 import { spawn } from "child_process";
 import fileType from "file-type";
 import sharp from "sharp";
+import { clamp } from "../shared/util";
 
 export async function getMimeType(path: string) {
   return (await fileType.fromFile(path))?.mime;
@@ -81,4 +83,40 @@ export function isMimeTypeImage(mimeType: string) {
 
 export function isMimeTypeAudio(mimeType: string) {
   return mimeType.startsWith("audio/");
+}
+
+export async function calculateBlurhash(filePath: string) {
+  const { pixels, width, height } = await new Promise<{
+    pixels: Buffer;
+    width: number;
+    height: number;
+  }>((resolve, reject) => {
+    sharp(filePath)
+      .raw()
+      .ensureAlpha()
+      .resize(128, 128, { fit: "inside" })
+      .toBuffer((err: Error | undefined, pixels, info) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ pixels, width: info.width, height: info.height });
+        }
+      });
+  });
+
+  const aspectRatio = width / height;
+
+  try {
+    return encode(
+      new Uint8ClampedArray(pixels),
+      width,
+      height,
+      clamp(1, Math.round(4 * aspectRatio), 9),
+      clamp(1, Math.round(4 / aspectRatio), 9)
+    );
+  } catch (err) {
+    console.error(`Could not calculate blurhash of ${filePath}`);
+    console.error(err);
+    throw err;
+  }
 }

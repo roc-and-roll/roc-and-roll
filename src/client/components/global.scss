@@ -147,30 +147,38 @@ a {
   position: relative;
 
   .drop-indicator {
-    position: absolute;
-    top: 0;
-    left: 0;
-
-    width: 100%;
-    height: 100%;
+    font-size: 2rem;
 
     padding: 1rem;
 
-    background: rgba(30, 30, 30, 0.5);
-
     div {
-      width: 100%;
-      height: 100%;
-
-      border: 0.5rem dashed white;
-      border-radius: 1em;
-
-      font-size: 2rem;
-
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      border-width:  0.5rem;
     }
+  }
+}
+
+.drop-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  padding: 0.25rem;
+
+  background: rgba(30, 30, 30, 0.5);
+
+  div {
+    width: 100%;
+    height: 100%;
+
+    border: 0.25rem dashed white;
+    border-radius: 1em;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 }
 
@@ -181,6 +189,7 @@ a {
 }
 
 .token-list {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -188,7 +197,7 @@ a {
 
 .token-image {
   $size: 32px;
-  background: #555;
+  background-color: #555;
   width: $size;
   height: $size;
   border-radius: $size;

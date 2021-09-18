@@ -14,8 +14,8 @@ import { MyselfProvider } from "./myself";
 import { CompendiumProvider } from "./components/compendium/Compendium";
 import { ModApi } from "./components/Modding";
 import { ServerMessagesProvider } from "./serverMessages";
-import { PopupBoxes } from "./popup-boxes";
 import { CampaignAndServerStateProvider } from "./campaign";
+import { DialogBoxes } from "./dialog-boxes";
 
 export function render() {
   // Create a new div element, add it to the DOM, and render our app into it.
@@ -44,7 +44,7 @@ function Root() {
                   <DndProvider backend={HTML5Backend}>
                     <ModApi />
                     <App />
-                    <PopupBoxes />
+                    <DialogBoxes />
                   </DndProvider>
                 </CompendiumProvider>
               </MyselfProvider>

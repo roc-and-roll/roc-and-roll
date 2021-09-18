@@ -1,9 +1,10 @@
-import React, { useContext, useLayoutEffect, useMemo } from "react";
+import React, { useContext, useLayoutEffect } from "react";
 import { useRecoilValue } from "recoil";
 import { useSetRecoilState } from "recoil";
 import { atom } from "recoil";
 import { RRPlayer, RRPlayerID } from "../shared/state";
 import { useAutoDispatchPlayerIdOnChange, useServerState } from "./state";
+import { useGuranteedMemo } from "./useGuranteedMemo";
 import useLocalState from "./useLocalState";
 
 const MyselfContext = React.createContext<{
@@ -61,7 +62,7 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
 
   useAutoDispatchPlayerIdOnChange(myself?.id ?? null);
 
-  const ctx = useMemo(
+  const ctx = useGuranteedMemo(
     () => ({
       player: myself,
       setMyPlayerId,
