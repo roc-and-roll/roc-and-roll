@@ -76,21 +76,17 @@ export function Sidebar({ logout }: { logout: () => void }) {
           <Players />
         </Collapsible>
 
-        {musicIsGMOnly ? (
-          myselfIsGM ? (
-            <Collapsible title="Music" defaultCollapsed>
+        <Collapsible title="Music" defaultCollapsed>
+          {musicIsGMOnly ? (
+            myselfIsGM && (
               <GMArea>
                 <Music />
               </GMArea>
-            </Collapsible>
+            )
           ) : (
-            <></>
-          )
-        ) : (
-          <Collapsible title="Music" defaultCollapsed>
             <Music />
-          </Collapsible>
-        )}
+          )}
+        </Collapsible>
 
         <Collapsible title="Achievements" defaultCollapsed>
           <Achievements />
@@ -108,11 +104,11 @@ export function Sidebar({ logout }: { logout: () => void }) {
           <Modding />
         </Collapsible>
 
-        <Collapsible title="Acknowledgements" defaultCollapsed={true}>
+        <Collapsible title="Acknowledgements" defaultCollapsed>
           <Acknowledgements />
         </Collapsible>
 
-        <Collapsible title="About" defaultCollapsed={true}>
+        <Collapsible title="About" defaultCollapsed>
           <About />
         </Collapsible>
       </div>

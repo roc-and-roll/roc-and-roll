@@ -6,7 +6,7 @@ import { rrid } from "../shared/util";
 import { Dialog, DialogActions } from "./components/Dialog";
 import { Button } from "./components/ui/Button";
 import { SmartTextInput } from "./components/ui/TextInput";
-import { mapAddImmutably, mapDeleteImmutably } from "./immutable-helpers";
+import { mapSetImmutably, mapDeleteImmutably } from "./immutable-helpers";
 
 type AlertID = MakeRRID<"popup/alert">;
 
@@ -25,7 +25,7 @@ export function useAlert() {
       const id = rrid<{ id: AlertID }>();
       return new Promise<void>((resolve) =>
         setAlerts((alerts) =>
-          mapAddImmutably(alerts, id, { message, onClose: resolve })
+          mapSetImmutably(alerts, id, { message, onClose: resolve })
         )
       );
     },
@@ -53,7 +53,7 @@ export function useConfirm() {
       const id = rrid<{ id: ConfirmID }>();
       return new Promise<boolean>((resolve) =>
         setConfirms((confirms) =>
-          mapAddImmutably(confirms, id, {
+          mapSetImmutably(confirms, id, {
             message,
             onClose: resolve,
           })
@@ -85,7 +85,7 @@ export function usePrompt() {
       const id = rrid<{ id: PromptID }>();
       return new Promise<string | null>((resolve) =>
         setPrompts((prompts) =>
-          mapAddImmutably(prompts, id, {
+          mapSetImmutably(prompts, id, {
             message,
             onClose: resolve,
             initialValue,
@@ -117,7 +117,7 @@ export function useDialog() {
       const id = rrid<{ id: DialogID }>();
       return new Promise<T | null>((resolve) =>
         setDialogs((dialogs) =>
-          mapAddImmutably(dialogs, id, {
+          mapSetImmutably(dialogs, id, {
             content,
             onClose: resolve,
           })
