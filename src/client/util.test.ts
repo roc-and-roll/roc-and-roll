@@ -1,4 +1,4 @@
-import { changeHPSmartly, linkify } from "./util";
+import { changeHPSmartly, formatDuration, linkify } from "./util";
 
 describe("linkify", () => {
   it("works", () => {
@@ -66,5 +66,27 @@ describe("changeHPSmartly", () => {
     [{ hp: 90, temporaryHP: 20 }, 95, { hp: 90, temporaryHP: 5 }],
   ])("works", (character, newTotalHP, expectedCharacter) => {
     expect(changeHPSmartly(character, newTotalHP)).toEqual(expectedCharacter);
+  });
+});
+
+describe("formatDuration", () => {
+  it.each([
+    [0, "00:00:00"],
+    [1, "00:00:01"],
+    [59, "00:00:59"],
+    [60, "00:01:00"],
+    [61, "00:01:01"],
+    [3600, "01:00:00"],
+    [3601, "01:00:01"],
+    [3660, "01:01:00"],
+    [3661, "01:01:01"],
+    [3600 + 3600, "02:00:00"],
+    [3600 + 3601, "02:00:01"],
+    [3600 + 3660, "02:01:00"],
+    [3600 + 3661, "02:01:01"],
+    [3600 + 3600 + 3600, "03:00:00"],
+    [100 * 3600, "100:00:00"],
+  ])("correctly formats the duration", (seconds, output) => {
+    expect(formatDuration(seconds * 1000)).toEqual(output);
   });
 });

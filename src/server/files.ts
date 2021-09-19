@@ -1,6 +1,6 @@
 import { encode } from "blurhash";
 import { spawn } from "child_process";
-import fileType from "file-type";
+import fileType, { MimeType } from "file-type";
 import sharp from "sharp";
 import { clamp } from "../shared/util";
 
@@ -9,14 +9,22 @@ export async function getMimeType(path: string) {
 }
 
 export async function assertFFprobeIsInstalled() {
+  let _version;
   try {
-    await execute("ffprobe", ["-version"]);
+    _version = await execute("ffprobe", ["-version"]);
   } catch (err) {
     console.error(
       "It looks like `ffprobe`, which is needed to measure the length of audio files, is not currently installed on this machine. `ffprobe` is part of `ffmpeg` and can likely be installed by running `sudo apt install ffmpeg`."
     );
     throw err;
   }
+
+  // TODO: Should we require a specific version?
+  // if (!version.startsWith("ffprobe version 4.")) {
+  //   throw new Error(
+  //     `ffprobe is installed, but has the wrong version. Please install version 4.x (got ${version}).`
+  //   );
+  // }
 }
 
 export async function getAudioDuration(path: string) {
@@ -77,12 +85,16 @@ export async function getImageDimensions(path: string) {
   };
 }
 
-export function isMimeTypeImage(mimeType: string) {
+export function isMimeTypeImage(mimeType: MimeType) {
   return mimeType.startsWith("image/");
 }
 
-export function isMimeTypeAudio(mimeType: string) {
+export function isMimeTypeAudio(mimeType: MimeType) {
   return mimeType.startsWith("audio/");
+}
+
+export function isMimeTypeVideo(mimeType: MimeType) {
+  return mimeType.startsWith("video/");
 }
 
 export async function calculateBlurhash(filePath: string) {

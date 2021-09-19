@@ -1,6 +1,6 @@
 import composeRefs from "@seznam/compose-react-refs";
 import { decode } from "blurhash";
-import React, { ImgHTMLAttributes, useEffect, useRef, useState } from "react";
+import React, { ImgHTMLAttributes, useEffect, useState } from "react";
 import { RRFileImage } from "../../../shared/state";
 import { fileUrl } from "../../files";
 

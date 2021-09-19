@@ -1,6 +1,7 @@
 import { isObject } from "../shared/util";
 import path from "path";
 import { readdir } from "fs/promises";
+import os from "os";
 
 export function buildPatch(old: any, cur: any, keyPrefix: string = "") {
   if (typeof old !== "object" || typeof cur !== "object") {
@@ -65,4 +66,8 @@ export async function* getFilesInDirectoryRecursively(
       yield fullPath;
     }
   }
+}
+
+export function getDefaultHeavyIOConcurrencyLimit() {
+  return Math.ceil(os.cpus().length / 2);
 }

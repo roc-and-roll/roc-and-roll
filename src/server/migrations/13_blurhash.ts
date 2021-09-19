@@ -1,6 +1,8 @@
 import path from "path";
 import { AbstractMigration } from "../migrations";
 import { calculateBlurhash } from "../files";
+import pLimit from "p-limit";
+import { getDefaultHeavyIOConcurrencyLimit } from "../util";
 
 export default class extends AbstractMigration {
   version = 13;
@@ -23,33 +25,35 @@ export default class extends AbstractMigration {
   }
 
   migrate = async (state: any, uploadedFilesDir: string) => {
-    await Promise.all(
-      Object.values(state.maps.entities).flatMap((map: any) =>
-        Object.values(map.objects.entities).map(async (mapObject: any) => {
-          if (mapObject.type === "image") {
-            await this.handleObject(mapObject.image, uploadedFilesDir);
-          }
+    const limit = pLimit(getDefaultHeavyIOConcurrencyLimit());
+
+    await Promise.all([
+      ...Object.values(state.maps.entities).flatMap((map: any) =>
+        Object.values(map.objects.entities).map((mapObject: any) =>
+          limit(async () => {
+            if (mapObject.type === "image") {
+              await this.handleObject(mapObject.image, uploadedFilesDir);
+            }
+          })
+        )
+      ),
+
+      ...Object.values(state.characters.entities).map((character: any) =>
+        limit(async () => {
+          await this.handleObject(character.tokenImage, uploadedFilesDir);
         })
-      )
-    );
+      ),
 
-    await Promise.all(
-      Object.values(state.characters.entities).map(async (character: any) => {
-        await this.handleObject(character.tokenImage, uploadedFilesDir);
-      })
-    );
-
-    await Promise.all(
-      Object.values(state.characterTemplates.entities).map(
-        async (characterTemplate: any) => {
-          await this.handleObject(
-            characterTemplate.tokenImage,
-            uploadedFilesDir
-          );
-        }
-      )
-    );
-
+      ...Object.values(state.characterTemplates.entities).map(
+        (characterTemplate: any) =>
+          limit(async () => {
+            await this.handleObject(
+              characterTemplate.tokenImage,
+              uploadedFilesDir
+            );
+          })
+      ),
+    ]);
     return state;
   };
 }

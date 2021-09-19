@@ -34,6 +34,7 @@ export default (webpackEnv) => {
         // commonjs modules.
         return `${[
           "node-fetch",
+          "p-limit"
         ].includes(moduleId) ? "module" : "node-commonjs"} ${moduleId}`;
       }
     })],
