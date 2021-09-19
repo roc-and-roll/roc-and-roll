@@ -46,6 +46,63 @@ export async function getAudioDuration(path: string) {
   return duration;
 }
 
+export async function assertFFmpegIsInstalled() {
+  let _version;
+  try {
+    _version = await execute("ffmpeg", ["-version"]);
+  } catch (err) {
+    console.error(
+      "It looks like `ffmpeg`, which is needed to normalize the loudness of audio files, is not currently installed on this machine. It can likely be installed by running `sudo apt install ffmpeg`."
+    );
+    throw err;
+  }
+
+  // TODO: Should we require a specific version?
+  // if (!version.startsWith("ffmpeg version 4.")) {
+  //   throw new Error(
+  //     `ffmpeg is installed, but has the wrong version. Please install version 4.x (got ${version}).`
+  //   );
+  // }
+}
+
+export async function assertFFmpegNormalizeIsInstalled() {
+  let version;
+  try {
+    version = await execute("ffmpeg-normalize", ["--version"]);
+  } catch (err) {
+    console.error(
+      "It looks like `ffmpeg-normalize` (https://github.com/slhck/ffmpeg-normalize), which is needed to normalize the loudness of audio files, is not currently installed on this machine. It can be installed by running `pip3 install ffmpeg-normalize`."
+    );
+    throw err;
+  }
+
+  if (!version.startsWith("ffmpeg-normalize v1.")) {
+    throw new Error(
+      `ffmpeg-normalize is installed, but has the wrong version. Please install version v1.x (got ${version}).`
+    );
+  }
+}
+
+export async function normalizeLoudnessAndConvertToMP3(
+  inputPath: string,
+  outputPath: string
+) {
+  if (!outputPath.endsWith(".mp3")) {
+    throw new Error(`The output path must end with .mp3, got: ${outputPath}`);
+  }
+
+  await execute("ffmpeg-normalize", [
+    inputPath,
+    "-c:a",
+    "libmp3lame",
+    "-ar",
+    "44100",
+    "-f",
+    "-o",
+    outputPath,
+  ]);
+}
+
 async function execute(command: string, args: string[]) {
   return new Promise<string>((resolve, reject) => {
     const childProcess = spawn(command, args);

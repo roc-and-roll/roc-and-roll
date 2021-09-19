@@ -11,10 +11,11 @@ Warning: All state is regularly reset.
    Consider using [nvm](https://github.com/nvm-sh/nvm) if your package manager
    does not support Node.js 14 yet.
 2. Install the [yarn](https://yarnpkg.com/) package manager by executing `npm install -g yarn`.
-3. Install `ffprobe` (part of `ffmpeg`): `sudo apt-get install ffmpeg`
-4. Clone this repository.
-5. If using nvm, execute: `nvm install 14 && nvm use`
-6. Install dependencies: `yarn install`
+3. Install `ffmpeg`: `sudo apt-get install ffmpeg`
+4. Install `ffmpeg-normalize`: `pip3 install ffmpeg-normalize`
+5. Clone this repository.
+6. If using nvm, execute: `nvm install 14 && nvm use`
+7. Install dependencies: `yarn install`
 
 If you use VSCode:
 

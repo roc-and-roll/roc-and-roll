@@ -23,10 +23,14 @@ import {
   getMimeType,
   isMimeTypeAudio,
   isMimeTypeImage,
+  isMimeTypeVideo,
+  normalizeLoudnessAndConvertToMP3,
 } from "./files";
 import { isAllowedFiletypes } from "../shared/files";
 import serverTiming from "server-timing";
 import { randomBetweenInclusive } from "../shared/random";
+import pLimit from "p-limit";
+import { getDefaultHeavyIOConcurrencyLimit } from "./util";
 
 const ONE_YEAR = 1000 * 60 * 60 * 24 * 365;
 
@@ -65,6 +69,8 @@ export async function setupWebServer(
       cb(null, `${nanoid()}${path.extname(file.originalname)}`),
   });
 
+  const uploadConcurrencyLimit = pLimit(getDefaultHeavyIOConcurrencyLimit());
+
   app.post(
     "/api/upload",
     multer({ storage }).array("files"),
@@ -82,44 +88,105 @@ export async function setupWebServer(
         }
 
         const data: RRFile[] = await Promise.all(
-          req.files.map(async (file) => {
-            const mimeType = await getMimeType(file.path);
-            if (mimeType === undefined) {
-              throw new Error(
-                "MimeType could not be determined for uploaded file."
-              );
-            }
+          req.files.map((file, i) =>
+            uploadConcurrencyLimit(async () => {
+              res.startTime(`mimeType${i}`, `Detect mime type of file ${i}`);
+              const mimeType = await getMimeType(file.path);
+              res.endTime(`mimeType${i}`);
+              if (mimeType === undefined) {
+                throw new Error(
+                  "MimeType could not be determined for uploaded file."
+                );
+              }
 
-            const isImage = isMimeTypeImage(mimeType);
-            const isAudio = isMimeTypeAudio(mimeType);
+              const isImage = isMimeTypeImage(mimeType);
+              const isAudioOrVideo =
+                isMimeTypeAudio(mimeType) || isMimeTypeVideo(mimeType);
 
-            if (
-              (allowedFileTypes === "image" && !isImage) ||
-              (allowedFileTypes === "audio" && !isAudio)
-            ) {
-              throw new Error(
-                `A file with mime type ${mimeType} cannot be uploaded as ${allowedFileTypes}.`
-              );
-            }
+              if (
+                (allowedFileTypes === "image" && !isImage) ||
+                // Allow video files for audio uploads, since we convert them to
+                // mp3 anyway.
+                (allowedFileTypes === "audio" && !isAudioOrVideo)
+              ) {
+                throw new Error(
+                  `A file with mime type ${mimeType} cannot be uploaded as ${allowedFileTypes}.`
+                );
+              }
 
-            return {
-              originalFilename: file.originalname,
-              filename: file.filename,
-              mimeType,
-              ...(isImage
-                ? {
-                    type: "image" as const,
-                    ...(await getImageDimensions(file.path)),
-                    blurhash: await calculateBlurhash(file.path),
-                  }
-                : isAudio
-                ? {
-                    type: "audio" as const,
-                    duration: await getAudioDuration(file.path),
-                  }
-                : { type: "other" as const }),
-            };
-          })
+              if (isImage) {
+                res.startTime(`dimensions${i}`, `Get dimensions of file ${i}`);
+                const { width, height } = await getImageDimensions(file.path);
+                res.endTime(`dimensions${i}`);
+
+                res.startTime(`blurhash${i}`, `Get blurhash of file ${i}`);
+                const blurhash = await calculateBlurhash(file.path);
+                res.endTime(`blurhash${i}`);
+
+                return {
+                  type: "image" as const,
+                  originalFilename: file.originalname,
+                  filename: file.filename,
+                  mimeType,
+                  width,
+                  height,
+                  blurhash,
+                };
+              } else if (isAudioOrVideo) {
+                const normalizedFileName = `${
+                  path.parse(file.filename).name
+                }.normalized.mp3`;
+                const normalizedPath = path.join(
+                  path.dirname(file.path),
+                  normalizedFileName
+                );
+
+                res.startTime(
+                  `loudnessNormalization${i}`,
+                  `Normalize loudness of file ${i}`
+                );
+                await normalizeLoudnessAndConvertToMP3(
+                  file.path,
+                  normalizedPath
+                );
+                res.endTime(`loudnessNormalization${i}`);
+
+                res.startTime(
+                  `audioDuration${i}`,
+                  `Detect duration of file ${i}`
+                );
+                const duration = await getAudioDuration(normalizedPath);
+                res.endTime(`audioDuration${i}`);
+
+                res.startTime(
+                  `normalizedMimeType${i}`,
+                  `Detect normalized mime type of file ${i}`
+                );
+                const normalizedMimeType = await getMimeType(normalizedPath);
+                res.endTime(`normalizedMimeType${i}`);
+                if (!normalizedMimeType) {
+                  throw new Error(
+                    "Could not detect mime type after loudness normalization."
+                  );
+                }
+
+                return {
+                  type: "audio" as const,
+                  originalFilename: file.originalname,
+                  filename: normalizedFileName,
+                  mimeType: normalizedMimeType,
+                  duration,
+                };
+              } else {
+                return {
+                  type: "other" as const,
+                  originalFilename: file.originalname,
+                  filename: file.filename,
+                  mimeType,
+                };
+              }
+            })
+          )
         );
         res.json(data);
       } catch (err) {

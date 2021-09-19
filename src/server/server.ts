@@ -11,7 +11,11 @@ import { isSyncedState } from "../shared/validation";
 import { setupInitialState } from "./setupInitialState";
 import { setupTabletopAudioTrackSync } from "./setupTabletopaudio";
 import { batchActions } from "redux-batched-actions";
-import { assertFFprobeIsInstalled } from "./files";
+import {
+  assertFFmpegIsInstalled,
+  assertFFmpegNormalizeIsInstalled,
+  assertFFprobeIsInstalled,
+} from "./files";
 import { extractForOneShot } from "./extractForOneShot";
 
 void (async () => {
@@ -22,6 +26,8 @@ void (async () => {
   } = await setupArgs();
 
   await assertFFprobeIsInstalled();
+  await assertFFmpegIsInstalled();
+  await assertFFmpegNormalizeIsInstalled();
 
   fs.mkdirSync(workspaceDir, { recursive: true });
 
