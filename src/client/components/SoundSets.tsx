@@ -563,6 +563,17 @@ function SongSelectionDialog({
     }
   }, [open]);
 
+  const filteredSongs = assets.filter(
+    (song) => !existingSongIds.includes(song.id)
+  );
+
+  const selectAll = () => {
+    setSelectedSongIds(
+      (selectedSongIds) =>
+        new Set([...selectedSongIds, ...filteredSongs.map((song) => song.id)])
+    );
+  };
+
   return (
     <Dialog open={open} onClose={() => onClose(null)}>
       <DialogTitle>Select songs to add</DialogTitle>
@@ -576,46 +587,50 @@ function SongSelectionDialog({
         />
         <p>Songs that already are part of the playlist are not shown.</p>
         <ul role="list" className="music-playlist-song-select-list">
-          {assets
-            .filter((song) => !existingSongIds.includes(song.id))
-            .map((song) => (
-              <li key={song.id}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={selectedSongIds.has(song.id)}
-                    onChange={(e) =>
-                      setSelectedSongIds((selectedSongIds) => {
-                        selectedSongIds = new Set(selectedSongIds);
-                        if (e.target.checked) {
-                          selectedSongIds.add(song.id);
-                        } else {
-                          selectedSongIds.delete(song.id);
-                        }
-                        return selectedSongIds;
-                      })
-                    }
-                  />
-                  <span>
-                    <span className="music-playlist-song-label">
-                      <span>{highlightMatching(song.name, filter)}</span>
-                      {formatDuration(song.duration)}
-                    </span>
-                    {filter.length > 0 && (
-                      <small>
-                        {song.description &&
-                          highlightMatching(song.description, filter)}
-                        {song.description && song.tags.length > 0 && <br />}
-                        {highlightMatching(
-                          song.tags.map((tag) => `#${tag}`).join(" "),
-                          filter
-                        )}
-                      </small>
-                    )}
+          <li>
+            <label>
+              <input type="checkbox" checked={false} onClick={selectAll} />{" "}
+              <em>select all</em>
+            </label>
+          </li>
+          {filteredSongs.map((song) => (
+            <li key={song.id}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selectedSongIds.has(song.id)}
+                  onChange={(e) =>
+                    setSelectedSongIds((selectedSongIds) => {
+                      selectedSongIds = new Set(selectedSongIds);
+                      if (e.target.checked) {
+                        selectedSongIds.add(song.id);
+                      } else {
+                        selectedSongIds.delete(song.id);
+                      }
+                      return selectedSongIds;
+                    })
+                  }
+                />
+                <span>
+                  <span className="music-playlist-song-label">
+                    <span>{highlightMatching(song.name, filter)}</span>
+                    {formatDuration(song.duration)}
                   </span>
-                </label>
-              </li>
-            ))}
+                  {filter.length > 0 && (
+                    <small>
+                      {song.description &&
+                        highlightMatching(song.description, filter)}
+                      {song.description && song.tags.length > 0 && <br />}
+                      {highlightMatching(
+                        song.tags.map((tag) => `#${tag}`).join(" "),
+                        filter
+                      )}
+                    </small>
+                  )}
+                </span>
+              </label>
+            </li>
+          ))}
         </ul>
       </DialogContent>
       <DialogActions>
