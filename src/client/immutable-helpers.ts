@@ -1,4 +1,4 @@
-export function mapAddImmutably<K, V>(map: Map<K, V>, key: K, value: V) {
+export function mapSetImmutably<K, V>(map: Map<K, V>, key: K, value: V) {
   if (map.get(key) === value) {
     return map;
   }

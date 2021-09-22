@@ -32,7 +32,7 @@ import { formatDuration, highlightMatching } from "../util";
 import { ActiveSoundSet, SoundSets as SoundSets } from "./SoundSets";
 import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
-import { volumeLinear2Log, VolumeSlider } from "./VolumeSlider";
+import { VolumeSlider } from "./VolumeSlider";
 
 export type MusicActions = {
   onAdd: (songOrSoundSet: RRAssetSong | RRSoundSet) => void;
@@ -100,7 +100,7 @@ export const Music = React.memo(function Music() {
             : { type: "song", songId: songOrSoundSet.id }),
           startedAt: timestamp(),
           id: rrid<RRActiveSongOrSoundSet>(),
-          volume: volumeLinear2Log(DEFAULT_VOLUME),
+          volume: DEFAULT_VOLUME,
           addedBy: myself.id,
         }),
       ]);
@@ -117,7 +117,7 @@ export const Music = React.memo(function Music() {
             : { type: "song", songId: songOrSoundSet.id }),
           startedAt: timestamp(),
           id: rrid<RRActiveSongOrSoundSet>(),
-          volume: volumeLinear2Log(DEFAULT_VOLUME),
+          volume: DEFAULT_VOLUME,
           addedBy: myself.id,
         })
       );

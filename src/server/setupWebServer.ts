@@ -342,14 +342,6 @@ export async function setupWebServer(
     app.get("/", (req, res, next) =>
       res.sendFile(path.resolve(__dirname, "client", "index.html"))
     );
-    // Serve font files without immutable and maxAge set to true, since they do
-    // not include hashes in their filenames.
-    app.get(
-      "/fonts/*",
-      express.static(path.resolve(__dirname, "client"), {
-        etag: true,
-      })
-    );
 
     app.use(
       express.static(path.resolve(__dirname, "client"), {

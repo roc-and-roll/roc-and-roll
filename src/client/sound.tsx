@@ -17,7 +17,7 @@ import { Howl } from "howler";
 import { assetUrl } from "./files";
 import { atom, useRecoilValue, useSetRecoilState } from "recoil";
 import { nanoid } from "@reduxjs/toolkit";
-import { volumeLinear2Log, volumeLog2linear } from "./components/VolumeSlider";
+import { volumeLinear2Log } from "./components/VolumeSlider";
 import { setAddImmutably, setDeleteImmutably } from "./immutable-helpers";
 
 const lockedSoundsAtom = atom<string[]>({
@@ -111,9 +111,7 @@ export function useRRComplexSound(
   const howlRef = useRef<Howl | null>(null);
 
   const [{ volume: globalUserVolume, mute: globalUserMute }] = useRRSettings();
-  const volume = volumeLinear2Log(
-    volumeLog2linear(globalUserVolume) * volumeLog2linear(soundVolume)
-  );
+  const volume = volumeLinear2Log(globalUserVolume * soundVolume);
   const volumeRef = useLatest(volume);
   const globalUserMuteRef = useLatest(globalUserMute);
 
@@ -383,9 +381,7 @@ function ActivePlaylistPlayerImpl({
       ? { url: assetUrl(current.song), duration: current.song.duration }
       : null,
     current?.type === "song"
-      ? volumeLog2linear(
-          activeSoundSet.volume * playlist.volume * current.playlistEntry.volume
-        )
+      ? activeSoundSet.volume * playlist.volume * current.playlistEntry.volume
       : 1,
     { loop: false }
   );

@@ -31,11 +31,9 @@ $font-family-sans-serif:
 
 // END code from https://getbootstrap.com
 
-// 'Architects Daughter' is included and downloaded by a Google Fonts plugin in
-// webpack.client.js. Edit webpack.client.js to change or add new fonts.
-//
 // We deliberately use a local copy of Google Web Fonts instead of linking them
 // directly, so that we avoid having to add a stupid cookie warning.
+@import "~@fontsource/architects-daughter/index.css";
 $font-family-handwritten: "Architects Daughter", cursive;
 
 body,

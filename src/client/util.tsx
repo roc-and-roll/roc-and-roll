@@ -112,11 +112,11 @@ export const highlightMatching = (text: string, search: string) => {
 };
 
 export function formatDuration(duration: number) {
-  duration = Math.round(duration / 1000);
+  const totalSeconds = Math.round(duration / 1000);
 
-  const seconds = duration % 60;
-  const minutes = Math.floor(duration / 60) % 60;
-  const hours = Math.floor(minutes / 60);
+  const seconds = totalSeconds % 60;
+  const minutes = Math.floor(totalSeconds / 60) % 60;
+  const hours = Math.floor(totalSeconds / 60 / 60);
 
   return `${hours.toString().padStart(2, "0")}:${minutes
     .toString()
