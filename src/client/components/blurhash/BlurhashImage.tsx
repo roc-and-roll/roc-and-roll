@@ -12,14 +12,17 @@ export const BlurhashImage = React.forwardRef<
     image: RRFileImage | { blurhash: string; url: string };
     width: number;
     height: number;
+    offset?: number;
   } & Partial<
     Omit<ImgHTMLAttributes<HTMLImageElement>, "width" | "height" | "src">
   >
 >(function BlurhashImage(
-  { image, width, height, onLoad, style, ...rest },
+  { image, width, height, onLoad, style, offset, ...rest },
   externalRef
 ) {
   const [loaded, setLoaded] = useState(false);
+
+  style = { ...style, marginLeft: offset ?? 0, marginTop: offset ?? 0 };
 
   const [blurhashUrl, setBlurhashUrl] = useState<null | string>(null);
 
