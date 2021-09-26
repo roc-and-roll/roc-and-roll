@@ -150,7 +150,7 @@ a {
     padding: 1rem;
 
     div {
-      border-width:  0.5rem;
+      border-width: 0.5rem;
     }
   }
 }
@@ -747,6 +747,7 @@ $gmAreaColor: #ab62c0;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
+  flex-direction: column;
 
   button.active {
     font-weight: bold;
@@ -755,6 +756,32 @@ $gmAreaColor: #ab62c0;
   label {
     background: rgb(239, 239, 239);
     color: black;
+  }
+
+  .map-toolbar-combined {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+
+    button {
+      padding: 0.2rem;
+      margin: 0.1rem;
+      min-width: 36px;
+      &.active {
+        background: #ff9900;
+      }
+    }
+
+    & > button {
+      width: 36px;
+    }
+  }
+  .map-toolbar-submenu {
+    display: none;
+  }
+
+  &:hover .map-toolbar-submenu {
+    display: block;
   }
 }
 
