@@ -150,7 +150,7 @@ a {
     padding: 1rem;
 
     div {
-      border-width:  0.5rem;
+      border-width: 0.5rem;
     }
   }
 }
@@ -736,6 +736,18 @@ $gmAreaColor: #ab62c0;
   }
 
   background: orange;
+}
+
+.player-toolbar {
+  position: absolute;
+  top: 1rem;
+  right: 40rem;
+
+  display: flex;
+
+  & > * {
+    padding: 0.25rem;
+  }
 }
 
 .map-toolbar {

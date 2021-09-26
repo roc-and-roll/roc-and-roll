@@ -16,9 +16,11 @@ export function BottomFloats() {
         >
           DICE
         </div>
-        <ErrorBoundary>
-          <PrivateChatsWrapper />
-        </ErrorBoundary>
+        {
+          //<ErrorBoundary>
+          //<PrivateChatsWrapper />
+          //</ErrorBoundary>
+        }
         <ErrorBoundary>
           <Log />
         </ErrorBoundary>

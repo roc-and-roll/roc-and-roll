@@ -10,7 +10,13 @@ import {
 import { tokenImageUrl } from "../../files";
 import { BlurhashImage } from "../blurhash/BlurhashImage";
 
-export function CharacterPreview({ character }: { character: RRCharacter }) {
+export function CharacterPreview({
+  character,
+  title,
+}: {
+  character: RRCharacter;
+  title?: string;
+}) {
   const hurt = isCharacterHurt(character);
   const unconsciousOrDead = isCharacterUnconsciousOrDead(character);
   const overhealed = isCharacterOverhealed(character);
@@ -29,7 +35,7 @@ export function CharacterPreview({ character }: { character: RRCharacter }) {
         unconsciousOrDead,
         overhealed,
       })}
-      title={character.name}
+      title={title ?? character.name}
     />
   );
 }
