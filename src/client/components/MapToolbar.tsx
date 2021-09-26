@@ -38,6 +38,7 @@ import {
   faVectorSquare,
   faBezierCurve,
   faGripLines,
+  faCog,
 } from "@fortawesome/free-solid-svg-icons";
 // TODO: Lazy loding the emoji picker does not play nicely with Tippy :/
 // const EmojiPicker = React.lazy(
@@ -484,7 +485,11 @@ export const MapToolbar = React.memo<{
           <FontAwesomeIcon icon={faFlushed} />
         </Button>
       </div>
-      {myself.isGM && <MapSettings mapId={mapId} mapSettings={mapSettings} />}
+      {myself.isGM && (
+        <div className="map-toolbar-combined">
+          <MapSettings mapId={mapId} mapSettings={mapSettings} />
+        </div>
+      )}
     </div>
   );
 });
@@ -620,7 +625,7 @@ function MapSettings({
       visible={visible}
     >
       <Button className="gm-button" onClick={() => setVisible(true)}>
-        map settings
+        <FontAwesomeIcon icon={faCog} />
       </Button>
     </Popover>
   );
