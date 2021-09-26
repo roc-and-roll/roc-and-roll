@@ -413,7 +413,6 @@ $dice-templates-height: 200px;
   $panel-background: rgb(59, 28, 6);
   $animation-duration: 200ms;
 
-  height: 0;
   background: $panel-background;
   box-shadow: inset 0 0 30px black;
   border-top: 1px solid black;
@@ -424,15 +423,9 @@ $dice-templates-height: 200px;
   align-items: center;
   justify-content: flex-start;
   padding-left: 8px;
-  position: relative;
   user-select: none;
 
-  &.opened {
-    height: $dice-templates-height;
-  }
-
   .dice-templates-container {
-    overflow-y: auto;
     display: flex;
     flex-wrap: wrap;
     height: 100%;
@@ -461,6 +454,7 @@ $dice-templates-height: 200px;
 
     & > p {
       width: 100%;
+      font-size: 0.8em;
     }
 
     &.selected {
@@ -503,12 +497,12 @@ $dice-templates-height: 200px;
     }
   }
 
-  $dice-picker-height: 400px;
+  $dice-picker-height: 250px;
   .dice-picker {
     position: absolute;
     left: 12px;
     width: 270px;
-    height: 0;
+    height: $dice-picker-height;
     transition: $animation-duration $animation-duration;
     top: 0;
     background: #333;
@@ -520,11 +514,6 @@ $dice-templates-height: 200px;
     justify-content: flex-start;
     align-content: flex-start;
     padding: 0.5rem;
-  }
-
-  &.opened .dice-picker {
-    height: $dice-picker-height;
-    top: -$dice-picker-height;
   }
 
   .dice-holder {
@@ -741,7 +730,7 @@ $gmAreaColor: #ab62c0;
 .player-toolbar {
   position: absolute;
   top: 1rem;
-  right: 40rem;
+  right: 1rem;
 
   display: flex;
 
@@ -753,12 +742,13 @@ $gmAreaColor: #ab62c0;
 .map-toolbar {
   position: absolute;
   right: 1rem;
-  top: 1rem;
+  top: 40%;
   max-width: 40vw;
 
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
+  flex-direction: column;
 
   button.active {
     font-weight: bold;
@@ -767,6 +757,32 @@ $gmAreaColor: #ab62c0;
   label {
     background: rgb(239, 239, 239);
     color: black;
+  }
+
+  .map-toolbar-combined {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+
+    button {
+      padding: 0.2rem;
+      margin: 0.1rem;
+      min-width: 36px;
+      &.active {
+        background: #ff9900;
+      }
+    }
+
+    & > button {
+      width: 36px;
+    }
+  }
+  .map-toolbar-submenu {
+    display: none;
+  }
+
+  &:hover .map-toolbar-submenu {
+    display: block;
   }
 }
 
@@ -1425,5 +1441,22 @@ aside.emoji-picker-react {
   & > * {
     margin: 12px 8px;
     cursor: pointer;
+  }
+}
+.tab:not(.active) {
+  display: none;
+}
+.tab-buttons {
+  display: flex;
+  margin-bottom: 0.2rem;
+  .tab-button {
+    padding: 0.1rem 0.4rem;
+    margin: 0.1rem;
+    background: #666;
+    border-radius: 2px;
+
+    &.active {
+      background: #ff9900;
+    }
   }
 }

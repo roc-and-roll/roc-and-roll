@@ -19,6 +19,8 @@ import { GMArea } from "./GMArea";
 import { useServerState } from "../state";
 import { Modding } from "./Modding";
 import { Compendium } from "./compendium/Compendium";
+import { DiceTemplates } from "./DiceTemplates";
+import { DicePanel } from "./DicePanel";
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
@@ -58,8 +60,7 @@ export function Sidebar({ logout }: { logout: () => void }) {
         </Collapsible>
 
         <Collapsible title="Dice">
-          <DiceInterface />
-          <DiceInput />
+          <DicePanel />
         </Collapsible>
 
         {myselfIsGM && (

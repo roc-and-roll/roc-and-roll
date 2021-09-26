@@ -441,6 +441,7 @@ export const isSyncedState = t.isObject({
       playerId: isRRID<RRPlayerID>(),
       name: t.isString(),
       notes: t.isString(),
+      categoryIndex: t.isNumber(),
       parts: t.applyCascade(
         t.isArray(
           t.isOneOf(
