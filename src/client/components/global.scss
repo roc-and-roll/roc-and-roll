@@ -283,12 +283,14 @@ a {
 // log
 .log {
   padding: 5px;
+  margin: -0.75rem;
   background-color: $bottom-float-background;
 }
 
 .log-text {
   overflow-y: auto;
   max-height: 40vh;
+  margin-top: 0;
   font-size: 0.8rem;
   padding-left: 17px;
 
