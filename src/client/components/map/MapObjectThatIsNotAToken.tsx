@@ -136,6 +136,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
 
         return (
           <SVGBlurHashImage
+            tokenSize={object.image.width}
             image={object.image}
             width={(object.image.width / object.image.height) * object.height}
             height={object.height}
