@@ -27,7 +27,6 @@ import { Log } from "../Log";
 import { Maps } from "../Maps";
 import { Modding } from "../Modding";
 import { Music } from "../Music";
-import { Player } from "../Player";
 import { Settings } from "../Settings";
 
 export function Toolbar() {

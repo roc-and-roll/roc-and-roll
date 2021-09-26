@@ -19,17 +19,9 @@ export function CollapseButton(props: {
       }}
     >
       {props.collapsed ? (
-        <FontAwesomeIcon
-          icon={faAngleRight}
-          fixedWidth
-          //transform={`left-2 grow-${props.size === 20 ? "4" : "10"}`}
-        />
+        <FontAwesomeIcon icon={faAngleRight} fixedWidth />
       ) : (
-        <FontAwesomeIcon
-          icon={faAngleDown}
-          fixedWidth
-          //transform={`grow-${props.size === 20 ? "4" : "10"}`}
-        />
+        <FontAwesomeIcon icon={faAngleDown} fixedWidth />
       )}
     </div>
   );

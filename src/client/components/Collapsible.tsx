@@ -59,11 +59,11 @@ function CollapsibleImpl(
         className={clsx("collapsible-header", {
           collapsed: !props.collapsed,
         })}
+        onClick={() => {
+          props.setCollapsed((collapsed) => !collapsed);
+        }}
       >
-        <CollapseButton
-          collapsed={props.collapsed}
-          setCollapsed={props.setCollapsed}
-        />
+        <CollapseButton collapsed={props.collapsed} setCollapsed={() => {}} />
         <h4>{props.title}</h4>
       </div>
       <div className={"collapsible-content"}>
