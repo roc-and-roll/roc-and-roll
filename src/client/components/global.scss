@@ -283,8 +283,6 @@ a {
 // log
 .log {
   padding: 5px;
-  width: 30vw;
-  min-width: 300px;
   background-color: $bottom-float-background;
 }
 
@@ -1424,20 +1422,48 @@ aside.emoji-picker-react {
   }
 }
 
+.toolbar-container {
+  display: flex;
+  position: fixed;
+  top: 0;
+  height: 100%;
+  margin-top: 1rem;
+  align-items: flex-start;
+}
 .toolbar {
+  margin-left: 1rem;
   display: flex;
   flex-direction: column;
 
-  position: fixed;
-  top: 0;
-  transform: translate(0, 50%);
-
-  background: #949494;
+  background: #333;
+  border-radius: 5px;
 
   & > * {
-    margin: 12px 8px;
+    margin: 5px;
+    padding: 10px;
     cursor: pointer;
+    border-radius: 999px;
+    font-size: 38px;
+    display: block;
+
+    &.active {
+      background: #ff9900;
+    }
   }
+}
+.toolbar-panel {
+  margin: 0.5rem 0.5rem;
+  padding: 0.75rem;
+  background: #333;
+  &:first-child {
+    margin-top: 0;
+  }
+}
+.toolbar-tools {
+  $sidebar-width: 420px;
+  width: $sidebar-width;
+  overflow-y: auto;
+  max-height: 100%;
 }
 .tab:not(.active) {
   display: none;

@@ -39,7 +39,6 @@ import {
 import { EMPTY_ARRAY, withDo } from "../../shared/util";
 import ReactDOM from "react-dom";
 import { NotificationTopAreaPortal } from "./Notifications";
-import { Collapsible } from "./Collapsible";
 import { SmartIntegerInput } from "./ui/TextInput";
 import { usePrompt } from "../dialog-boxes";
 
@@ -204,12 +203,10 @@ export function InitiativeTracker() {
   }
 
   return (
-    <Collapsible title="Initiative">
-      <InitiativeTrackerInner
-        initiativeTracker={initiativeTracker}
-        myself={myself}
-      />
-    </Collapsible>
+    <InitiativeTrackerInner
+      initiativeTracker={initiativeTracker}
+      myself={myself}
+    />
   );
 }
 
