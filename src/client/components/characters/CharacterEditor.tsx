@@ -20,6 +20,13 @@ import { ColorInput, SmartColorInput } from "../ui/ColorInput";
 import { Select } from "../ui/Select";
 import { SmartIntegerInput, SmartTextInput, TextInput } from "../ui/TextInput";
 import clsx from "clsx";
+import blue from "./blue.svg";
+import green from "./green.svg";
+import orange from "./orange_transparent.svg";
+import purple from "./purple.svg";
+import red from "./red.svg";
+import teal from "./teal.svg";
+import yellow from "./yellow.svg";
 import blinded from "../../../third-party/icons/conditions/blinded.png";
 import charmed from "../../../third-party/icons/conditions/charmed.png";
 import deafened from "../../../third-party/icons/conditions/deafened.png";
@@ -37,12 +44,9 @@ import stunned from "../../../third-party/icons/conditions/stunned.png";
 import unconscious from "../../../third-party/icons/conditions/unconscious.png";
 import concealed from "../../../third-party/icons/conditions/concealed.png";
 import disarmed from "../../../third-party/icons/conditions/disarmed.png";
-import halfCover from "../../../third-party/icons/conditions/half-cover.png";
 import hidden from "../../../third-party/icons/conditions/hidden.png";
 import raging from "../../../third-party/icons/conditions/raging.png";
 import surprised from "../../../third-party/icons/conditions/surprised.png";
-import totalCover from "../../../third-party/icons/conditions/total-cover.png";
-import threeQuarterCovers from "../../../third-party/icons/conditions/three-quarters-cover.png";
 import speedometer from "../../../third-party/game-icons.net/ffffff/transparent/1x1/delapouite/speedometer.svg";
 import tortoise from "../../../third-party/game-icons.net/ffffff/transparent/1x1/delapouite/tortoise.svg";
 import snail from "../../../third-party/game-icons.net/ffffff/transparent/1x1/lorc/snail.svg";
@@ -60,6 +64,13 @@ export interface ConditionWithIcon {
 }
 
 export const conditionIcons = {
+  blue: blue,
+  green: green,
+  orange: orange,
+  purple: purple,
+  red: red,
+  teal: teal,
+  yellow: yellow,
   blinded: blinded,
   charmed: charmed,
   deafened: deafened,
@@ -77,12 +88,9 @@ export const conditionIcons = {
   unconscious: unconscious,
   concealed: concealed,
   disarmed: disarmed,
-  "half-cover": halfCover,
   hidden: hidden,
   raging: raging,
   surprised: surprised,
-  "total-cover": totalCover,
-  "three-quarters-cover": threeQuarterCovers,
   hasted: speedometer,
   cursed: voodooDoll,
   "hunters mark": bullseye,
