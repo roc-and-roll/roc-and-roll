@@ -332,11 +332,12 @@ a {
 
 .collapse-button {
   padding: 0px;
+  margin: 0.19rem 0.7rem 0 0;
   border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 32px;
-  line-height: 32px;
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  line-height: 10px;
   cursor: pointer;
 
   &.size-20 {
@@ -350,7 +351,24 @@ a {
 .collapsible-header {
   padding: 0.5rem 0;
   display: flex;
-  justify-content: space-between;
+}
+
+.collapsed {
+  background-color: #888;
+  margin: 0 -1rem;
+  padding: 0.5rem 1rem;
+}
+
+.collapsible-content {
+  padding: 0 1.35rem;
+
+  & > * {
+    padding: 0.25rem 0;
+  }
+}
+
+.checkbox {
+  margin: 0 0.5rem 0 0;
 }
 
 .bottom-floats-wrapper {

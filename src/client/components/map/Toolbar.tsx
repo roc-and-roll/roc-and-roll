@@ -10,7 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useState } from "react";
-import { useIsGM, useLoginLogout, useMyself } from "../../myself";
+import { useIsGM, useMyself } from "../../myself";
 import { useServerState } from "../../state";
 import useLocalState from "../../useLocalState";
 import { About } from "../About";
@@ -164,12 +164,12 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
     <Dialog open={true} onClose={onClose}>
       <DialogTitle>Settings</DialogTitle>
       <DialogContent>
-        <Collapsible title="Compendium" defaultCollapsed>
-          <Compendium />
+        <Collapsible title="User Settings" defaultCollapsed>
+          <Settings />
         </Collapsible>
 
-        <Collapsible title="Settings" defaultCollapsed>
-          <Settings />
+        <Collapsible title="Compendium" defaultCollapsed>
+          <Compendium />
         </Collapsible>
 
         <Collapsible title="Modding" defaultCollapsed>

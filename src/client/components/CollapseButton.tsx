@@ -1,8 +1,7 @@
-import { faCaretDown, faCaretLeft } from "@fortawesome/free-solid-svg-icons";
+import { faAngleDown, faAngleRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React from "react";
-import { Button } from "./ui/Button";
 
 export function CollapseButton(props: {
   className?: string;
@@ -11,7 +10,7 @@ export function CollapseButton(props: {
   size?: 32 | 20;
 }) {
   return (
-    <Button
+    <div
       className={clsx("collapse-button", props.className, {
         "size-20": props.size === 20,
       })}
@@ -21,17 +20,17 @@ export function CollapseButton(props: {
     >
       {props.collapsed ? (
         <FontAwesomeIcon
-          icon={faCaretLeft}
+          icon={faAngleRight}
           fixedWidth
-          transform={`left-2 grow-${props.size === 20 ? "4" : "10"}`}
+          //transform={`left-2 grow-${props.size === 20 ? "4" : "10"}`}
         />
       ) : (
         <FontAwesomeIcon
-          icon={faCaretDown}
+          icon={faAngleDown}
           fixedWidth
-          transform={`grow-${props.size === 20 ? "4" : "10"}`}
+          //transform={`grow-${props.size === 20 ? "4" : "10"}`}
         />
       )}
-    </Button>
+    </div>
   );
 }

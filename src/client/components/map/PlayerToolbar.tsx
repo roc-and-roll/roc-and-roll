@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { characterAdd, privateChatAdd } from "../../../shared/actions";
-import {
-  EntityCollection,
-  RRPlayer,
-  entries,
-  RRPlayerID,
-} from "../../../shared/state";
+import { privateChatAdd } from "../../../shared/actions";
+import { EntityCollection, RRPlayer, entries } from "../../../shared/state";
 import { useLoginLogout } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import { CharacterPreview } from "../characters/CharacterPreview";
