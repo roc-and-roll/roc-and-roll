@@ -53,7 +53,7 @@ const ToolbarPlayer = React.memo<{
       placement="bottom"
     >
       <div onClick={() => setSelected(!selected)}>
-        <CharacterPreview character={character} title={player.name} />
+        <CharacterPreview character={character} title={player.name} size={64} />
       </div>
     </Popover>
   );

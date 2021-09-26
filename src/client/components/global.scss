@@ -194,11 +194,7 @@ a {
 }
 
 .token-image {
-  $size: 32px;
   background-color: #555;
-  width: $size;
-  height: $size;
-  border-radius: $size;
   background-position: center center;
   background-size: cover;
 
@@ -735,7 +731,7 @@ $gmAreaColor: #ab62c0;
   display: flex;
 
   & > * {
-    padding: 0.25rem;
+    padding: 0.5rem;
   }
 }
 

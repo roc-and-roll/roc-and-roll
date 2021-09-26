@@ -13,28 +13,36 @@ import { BlurhashImage } from "../blurhash/BlurhashImage";
 export function CharacterPreview({
   character,
   title,
+  size,
 }: {
   character: RRCharacter;
   title?: string;
+  size?: number;
 }) {
   const hurt = isCharacterHurt(character);
   const unconsciousOrDead = isCharacterUnconsciousOrDead(character);
   const overhealed = isCharacterOverhealed(character);
 
+  const currentSize = size ?? 32;
   return (
     <BlurhashImage
       image={{
         blurhash: character.tokenImage.blurhash,
-        url: tokenImageUrl(character, 32),
+        url: tokenImageUrl(character, currentSize),
       }}
-      width={32}
-      height={32}
+      width={currentSize}
+      height={currentSize}
       loading="lazy"
       className={clsx("token-image", {
         hurt,
         unconsciousOrDead,
         overhealed,
       })}
+      style={{
+        width: currentSize,
+        height: currentSize,
+        borderRadius: currentSize,
+      }}
       title={title ?? character.name}
     />
   );
