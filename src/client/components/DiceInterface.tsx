@@ -67,6 +67,8 @@ export function DiceInterface() {
             id: rrid<RRDiceTemplate>(),
             name: "",
             notes: "",
+            // FIXME should allow to select
+            categoryIndex: 0,
             parts: dice.flatMap<RRDiceTemplatePart>((d) =>
               d.type === "modifier"
                 ? {

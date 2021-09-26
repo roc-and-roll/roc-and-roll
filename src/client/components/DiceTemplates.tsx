@@ -47,13 +47,15 @@ import {
 
 type SelectionPair = { id: RRDiceTemplateID; modified: RRMultipleRoll };
 
-export function DiceTemplates({ open }: { open: boolean }) {
+export function DiceTemplates({ categoryIndex }: { categoryIndex: number }) {
   const [templatesEditable, setTemplatesEditable] = useState(false);
   const myself = useMyself();
 
   const allTemplates = entries(
     useServerState((state) => state.diceTemplates)
-  ).filter((t) => t.playerId === myself.id);
+  ).filter(
+    (t) => t.playerId === myself.id && t.categoryIndex === categoryIndex
+  );
   const hasNested = (
     template: RRDiceTemplate,
     find: RRDiceTemplateID
@@ -94,6 +96,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
         dispatch(
           diceTemplateAdd({
             id,
+            categoryIndex,
             playerId: myself.id,
             name: "",
             notes: "",
@@ -104,7 +107,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
       },
       canDrop: (_item, monitor) => monitor.isOver({ shallow: true }),
     }),
-    [dispatch, myself.id]
+    [categoryIndex, dispatch, myself.id]
   );
 
   function evaluateDiceTemplatePart(
@@ -244,7 +247,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
 
   return (
     <div
-      className={clsx("dice-templates", { opened: open })}
+      className={clsx("dice-templates")}
       onContextMenu={(e) => {
         e.preventDefault();
         doRoll();
@@ -548,6 +551,7 @@ function DiceTemplateInner({
             const action = diceTemplateAdd({
               playerId: myself.id,
               name: "",
+              categoryIndex: -1,
               notes: "",
               parts: [],
               rollType: "attack",
