@@ -1399,3 +1399,19 @@ aside.emoji-picker-react {
     }
   }
 }
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+
+  position: fixed;
+  top: 0;
+  transform: translate(0, 50%);
+
+  background: #949494;
+
+  & > * {
+    margin: 12px 8px;
+    cursor: pointer;
+  }
+}
