@@ -320,6 +320,7 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
   handleMouseUp: (e: React.MouseEvent) => void;
 }) {
   const tokenSize = GRID_SIZE * character.scale;
+  const extraSpace = tokenSize / 2;
 
   const tokenStyle = useMemo(
     () => ({
@@ -341,11 +342,12 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
       <SVGBlurHashImage
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
-        x={0}
-        y={0}
+        tokenSize={extraSpace}
+        x={-extraSpace}
+        y={-extraSpace}
         style={tokenStyle}
-        width={tokenSize}
-        height={tokenSize}
+        width={tokenSize + extraSpace * 2}
+        height={tokenSize + extraSpace * 2}
         image={{
           url: tokenImageUrl(character, tokenSize * zoom),
           blurhash: character.tokenImage.blurhash,
