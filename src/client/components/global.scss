@@ -419,26 +419,31 @@ $dice-templates-height: 200px;
     flex-wrap: wrap;
     height: 100%;
     width: 100%;
-    align-items: flex-start;
+    align-items: stretch;
     justify-content: flex-start;
+
+    & > * {
+      flex: 0 0 50%;
+    }
   }
 
   .dice-template-outer {
-    flex-grow: 0;
+    align-items: stretch;
+    align-content: flex-start;
+    display: flex;
   }
 
   .dice-template {
     min-height: 60px;
-    max-width: 140px;
+    max-width: 170px;
     border: 1px solid rgba(255, 255, 255, 0.3);
-    margin: 0.2rem;
+    margin: 0.3rem;
     position: relative;
-    padding: 0.1rem;
+    padding: 0.2rem;
     display: flex;
     flex-wrap: wrap;
-    flex-grow: 0;
     cursor: pointer;
-    align-items: center;
+    align-items: flex-start;
     background: $panel-background;
 
     & > p {
@@ -488,21 +493,17 @@ $dice-templates-height: 200px;
 
   $dice-picker-height: 250px;
   .dice-picker {
-    position: absolute;
-    left: 12px;
-    width: 270px;
-    height: $dice-picker-height;
     transition: $animation-duration $animation-duration;
-    top: 0;
-    background: #333;
-    border-radius: 5px 5px 0 0;
-    overflow-y: auto;
+    background: #555;
+    border-radius: 5px;
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
     justify-content: flex-start;
     align-content: flex-start;
     padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
   }
 
   .dice-holder {

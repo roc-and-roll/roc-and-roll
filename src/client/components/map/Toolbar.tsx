@@ -160,15 +160,10 @@ export function Toolbar() {
 }
 
 export function SettingsDialog({ onClose }: { onClose: () => void }) {
-  const { logout } = useLoginLogout();
   return (
     <Dialog open={true} onClose={onClose}>
       <DialogTitle>Settings</DialogTitle>
       <DialogContent>
-        <Collapsible title="Player" defaultCollapsed>
-          <Player logout={logout} />
-        </Collapsible>
-
         <Collapsible title="Compendium" defaultCollapsed>
           <Compendium />
         </Collapsible>

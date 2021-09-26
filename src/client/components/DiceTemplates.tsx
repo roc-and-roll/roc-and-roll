@@ -1,3 +1,5 @@
+import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
@@ -281,46 +283,53 @@ export function DiceTemplates({ categoryIndex }: { categoryIndex: number }) {
           </div>,
           document.body
         )}
-      {templatesEditable && <DicePicker />}
-      <div className="dice-templates-container" ref={dropRef}>
-        <Button onClick={() => setTemplatesEditable((b) => !b)}>
-          Edit
-          <br />
-          Templates
-        </Button>
-        {templates.map((t) => (
-          <DiceTemplatePartMenuWrapper
-            key={t.id}
-            template={t}
-            part={{
-              id: rrid<RRDiceTemplatePart>(),
-              type: "template",
-              templateId: t.id,
+      <div>
+        <div style={{ display: "flex" }}>
+          <Select
+            value={selectedCharacterId ?? ""}
+            options={[
+              { label: "", value: "" },
+              ...characters.map((c) => ({ label: c.name, value: c.id })),
+            ]}
+            onChange={(v) => {
+              setSelectedCharacterId(empty2Null(v));
             }}
+            style={{ margin: "0.15rem" }}
+          ></Select>
+          <Button
+            style={{ width: "28px" }}
+            onClick={() => setTemplatesEditable((b) => !b)}
           >
-            <DiceTemplate
-              onRoll={(templates, modified, event) =>
-                clickedTemplates(templates, event, modified)
-              }
-              newIds={newIds}
-              templateId={t.id}
-              selectedCharacter={selectedCharacter}
-              selectedTemplateIds={selectedTemplates}
-              editable={templatesEditable}
-              isChildTemplate={false}
-            />
-          </DiceTemplatePartMenuWrapper>
-        ))}
-        <Select
-          value={selectedCharacterId ?? ""}
-          options={[
-            { label: "", value: "" },
-            ...characters.map((c) => ({ label: c.name, value: c.id })),
-          ]}
-          onChange={(v) => {
-            setSelectedCharacterId(empty2Null(v));
-          }}
-        ></Select>
+            <FontAwesomeIcon icon={faEdit} />
+          </Button>
+        </div>
+        {templatesEditable && <DicePicker />}
+
+        <div className="dice-templates-container" ref={dropRef}>
+          {templates.map((t) => (
+            <DiceTemplatePartMenuWrapper
+              key={t.id}
+              template={t}
+              part={{
+                id: rrid<RRDiceTemplatePart>(),
+                type: "template",
+                templateId: t.id,
+              }}
+            >
+              <DiceTemplate
+                onRoll={(templates, modified, event) =>
+                  clickedTemplates(templates, event, modified)
+                }
+                newIds={newIds}
+                templateId={t.id}
+                selectedCharacter={selectedCharacter}
+                selectedTemplateIds={selectedTemplates}
+                editable={templatesEditable}
+                isChildTemplate={false}
+              />
+            </DiceTemplatePartMenuWrapper>
+          ))}
+        </div>
       </div>
     </div>
   );
