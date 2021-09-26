@@ -1,25 +1,15 @@
 import React from "react";
-import { DiceInterface } from "./DiceInterface";
 import { CharacterManager } from "./characters/CharacterManager";
 import { Collapsible } from "./Collapsible";
 import { Resizable } from "re-resizable";
 import useLocalState from "../useLocalState";
-import { Player } from "./Player";
 import { InitiativeTracker } from "./InitiativeTracker";
-import { Acknowledgements } from "./Acknowledgements";
-import { Settings } from "./Settings";
-import { Players } from "./Players";
-import { About } from "./About";
 import { useIsGM } from "../myself";
 import { Maps } from "./Maps";
 import { Achievements } from "./Achievements";
 import { Music } from "./Music";
-import { DiceInput } from "./DiceInput";
 import { GMArea } from "./GMArea";
 import { useServerState } from "../state";
-import { Modding } from "./Modding";
-import { Compendium } from "./compendium/Compendium";
-import { DiceTemplates } from "./DiceTemplates";
 import { DicePanel } from "./DicePanel";
 
 export function Sidebar({ logout }: { logout: () => void }) {
@@ -68,10 +58,6 @@ export function Sidebar({ logout }: { logout: () => void }) {
             <Maps />
           </Collapsible>
         )}
-
-        {/* <Collapsible title="Players" defaultCollapsed>
-          <Players />
-        </Collapsible> */}
 
         <Collapsible title="Music" defaultCollapsed>
           {musicIsGMOnly ? (
