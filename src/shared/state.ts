@@ -80,6 +80,13 @@ type ECE<E extends EntityCollection<{ id: RRID }>> = ValueOf<E["entities"]>;
 export type RRAura = IterableElement<ECE<SyncedState["characters"]>["auras"]>;
 
 export const conditionNames = [
+  "blue",
+  "green",
+  "orange",
+  "purple",
+  "red",
+  "teal",
+  "yellow",
   "blinded",
   "charmed",
   "deafened",
@@ -102,12 +109,9 @@ export const conditionNames = [
   "cursed",
   "concealed",
   "disarmed",
-  "half-cover",
   "hidden",
   "raging",
   "surprised",
-  "three-quarters-cover",
-  "total-cover",
   "dead",
 ] as const;
 
