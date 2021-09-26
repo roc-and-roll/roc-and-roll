@@ -36,6 +36,7 @@ import { useRRSettings } from "../settings";
 import { useServerDispatch, useServerState, useServerStateRef } from "../state";
 import useLocalState from "../useLocalState";
 import { contrastColor } from "../util";
+import { diceCategories } from "./DicePanel";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { Select } from "./ui/Select";
@@ -915,22 +916,48 @@ function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
   }
 
   return (
-    <label>
-      Notes:
-      <SmartTextareaInput
-        value={template.notes}
-        onChange={(notes) =>
-          dispatch({
-            actions: [
-              diceTemplateUpdate({ id: templateId, changes: { notes } }),
-            ],
-            optimisticKey: "notes",
-            syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-          })
-        }
-        className="dice-template-notes"
-      />
-    </label>
+    <div>
+      <label>
+        Category Index:
+        <input
+          value={template.categoryIndex.toString()}
+          type="number"
+          onChange={(event) =>
+            dispatch({
+              actions: [
+                diceTemplateUpdate({
+                  id: templateId,
+                  changes: {
+                    categoryIndex: Math.min(
+                      event.target.valueAsNumber,
+                      diceCategories.length - 1
+                    ),
+                  },
+                }),
+              ],
+              optimisticKey: "categoryIndex",
+              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+            })
+          }
+        />
+      </label>
+      <label>
+        Notes:
+        <SmartTextareaInput
+          value={template.notes}
+          onChange={(notes) =>
+            dispatch({
+              actions: [
+                diceTemplateUpdate({ id: templateId, changes: { notes } }),
+              ],
+              optimisticKey: "notes",
+              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+            })
+          }
+          className="dice-template-notes"
+        />
+      </label>
+    </div>
   );
 }
 
