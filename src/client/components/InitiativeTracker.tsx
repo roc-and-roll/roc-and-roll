@@ -436,6 +436,11 @@ const RollInitiativeDeferredImpl = React.memo<{
         onClick={roll}
       >
         Roll Initiative
+        {characters.length > 0
+          ? characters.length > 1
+            ? ` for ${characters.length} characters`
+            : ` for ${characters[0]!.name}`
+          : ""}
       </Button>
       <input
         value={allHaveSameInitiative ? allSelectedInitiatives[0]! : modifier}
