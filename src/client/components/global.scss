@@ -271,10 +271,6 @@ a {
 }
 
 .token-hp-editor {
-  border: 1px solid #757575;
-  padding: 0.25rem 0.5rem;
-  margin: 1rem 0;
-
   .top-row {
     display: flex;
   }
@@ -1504,8 +1500,26 @@ aside.emoji-picker-react {
   outline-width: 1px;
   outline-color: #999;
   padding: 0.2rem;
-  margin: 0.4rem;
+  margin: 0.2rem;
 
   text-align: center;
   font-weight: bold;
+}
+.stat-change-icon {
+  font-size: 20px;
+  padding: 0;
+  margin: 0;
+}
+.stat-input {
+  width: 30px;
+  margin: 0.1rem;
+  font-size: 14px;
+}
+
+.aura-active {
+  background: #ff9900;
+
+  &:hover {
+    background: #ffbb22;
+  }
 }

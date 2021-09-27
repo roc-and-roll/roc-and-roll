@@ -1,3 +1,12 @@
+import {
+  faCircle,
+  faSquare,
+  faUserFriends,
+  faUsers,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import clsx from "clsx";
 import React from "react";
 import {
   characterTemplateUpdate,
@@ -5,11 +14,10 @@ import {
 } from "../../../shared/actions";
 import { randomColor } from "../../../shared/colors";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
-import { RRCharacter } from "../../../shared/state";
+import { RRAura, RRCharacter } from "../../../shared/state";
 import { useServerDispatch } from "../../state";
 import { Button } from "../ui/Button";
 import { ColorInput } from "../ui/ColorInput";
-import { Select } from "../ui/Select";
 
 export function Auras({
   character,
@@ -42,6 +50,30 @@ export function Auras({
         syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
       };
     });
+
+  function updateShape(
+    shape: "circle" | "square",
+    index: number,
+    aura: RRAura
+  ) {
+    setAuras([
+      ...character.auras.slice(0, index),
+      { ...aura, shape },
+      ...character.auras.slice(index + 1),
+    ]);
+  }
+
+  function updateVisibility(
+    visibility: "everyone" | "playerAndGM" | "playerOnly",
+    index: number,
+    aura: RRAura
+  ) {
+    setAuras([
+      ...character.auras.slice(0, index),
+      { ...aura, visibility },
+      ...character.auras.slice(index + 1),
+    ]);
+  }
 
   return (
     <ul>
@@ -80,46 +112,49 @@ export function Auras({
             </label>
           </div>
           <div>
-            <label>
-              Shape{" "}
-              <Select
-                value={aura.shape}
-                onChange={(shape) => {
-                  setAuras([
-                    ...character.auras.slice(0, i),
-                    { ...aura, shape },
-                    ...character.auras.slice(i + 1),
-                  ]);
-                }}
-                options={[
-                  { value: "circle", label: "circle" },
-                  { value: "square", label: "square" },
-                ]}
-              />
-            </label>
+            <p>Shape </p>
+            <Button
+              className={clsx(aura.shape === "circle" ? "aura-active" : "")}
+              onClick={() => updateShape("circle", i, aura)}
+            >
+              <FontAwesomeIcon icon={faCircle} />
+            </Button>
+            <Button
+              className={clsx(aura.shape === "square" ? "aura-active" : "")}
+              onClick={() => updateShape("square", i, aura)}
+            >
+              <FontAwesomeIcon icon={faSquare} />
+            </Button>
           </div>
           <div>
-            <label>
-              Visible to{" "}
-              <Select
-                value={aura.visibility}
-                options={[
-                  { value: "everyone", label: "everyone" },
-                  { value: "playerAndGM", label: "playerAndGM" },
-                  { value: "playerOnly", label: "myself" },
-                ]}
-                onChange={(visibility) => {
-                  setAuras([
-                    ...character.auras.slice(0, i),
-                    {
-                      ...aura,
-                      visibility,
-                    },
-                    ...character.auras.slice(i + 1),
-                  ]);
-                }}
-              />
-            </label>
+            <p>Visibility</p>
+            <Button
+              title="Everyone"
+              className={clsx(
+                aura.visibility === "everyone" ? "aura-active" : ""
+              )}
+              onClick={() => updateVisibility("everyone", i, aura)}
+            >
+              <FontAwesomeIcon icon={faUsers} />
+            </Button>
+            <Button
+              title="You and the GM"
+              className={clsx(
+                aura.visibility === "playerAndGM" ? "aura-active" : ""
+              )}
+              onClick={() => updateVisibility("playerAndGM", i, aura)}
+            >
+              <FontAwesomeIcon icon={faUserFriends} />
+            </Button>
+            <Button
+              title="Only you"
+              className={clsx(
+                aura.visibility === "playerOnly" ? "aura-active" : ""
+              )}
+              onClick={() => updateVisibility("playerOnly", i, aura)}
+            >
+              <FontAwesomeIcon icon={faUser} />
+            </Button>
           </div>
           {/*
             <div>

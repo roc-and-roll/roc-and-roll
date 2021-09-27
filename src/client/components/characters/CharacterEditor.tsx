@@ -54,7 +54,6 @@ import { faSkullCrossbones } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useConfirm } from "../../dialog-boxes";
 import { CharacterPreview } from "./CharacterPreview";
-import { Popover } from "../Popover";
 import { CharacterSheetEditor } from "./CharacterSheetEditor";
 import { Collapsible } from "../Collapsible";
 import { Auras } from "./Auras";
@@ -238,44 +237,8 @@ export function CharacterEditor({
         <HPEditor character={character} updateFunc={updateFunc} />
       </Collapsible>
       <Collapsible title="Character Editor" defaultCollapsed={true}>
-        <CharacterSheetEditor character={character} />
+        <CharacterSheetEditor character={character} isTemplate={isTemplate} />
       </Collapsible>
-      {
-        //<div className="character-editor-attributes">
-        //{characterAttributeNames.map((attributeName) => (
-        //<AttributeEditor
-        //key={attributeName}
-        //value={character.attributes[attributeName] ?? null}
-        //label={attributeName}
-        //onChange={(newValue) =>
-        //dispatch((state) => {
-        //const oldAttributes = (
-        //isTemplate ? state.characterTemplates : state.characters
-        //).entities[character.id]?.attributes;
-        //if (!oldAttributes) {
-        //return [];
-        //}
-        //return {
-        //actions: [
-        //updateFunc({
-        //id: character.id,
-        //changes: {
-        //attributes: {
-        //...oldAttributes,
-        //[attributeName]: newValue,
-        //},
-        //},
-        //}),
-        //],
-        //optimisticKey: "attributes",
-        //syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-        //};
-        //})
-        //}
-        ///>
-        //))}
-        //</div>
-      }
       <Collapsible title="Auras" defaultCollapsed={true}>
         <Auras character={character} isTemplate={isTemplate} />
       </Collapsible>
@@ -507,29 +470,5 @@ function ConditionPicker({
           })}
       </div>
     </>
-  );
-}
-
-export function AttributeEditor({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number | null;
-  onChange: (newValue: number | null) => void;
-}) {
-  return (
-    <div className="character-editor-attribute">
-      <label>
-        <div className="character-editor-attribute-label">{label}</div>
-        <SmartIntegerInput
-          placeholder="Mod ..."
-          value={value}
-          nullable
-          onChange={(value) => onChange(value)}
-        />
-      </label>
-    </div>
   );
 }
