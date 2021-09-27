@@ -50,29 +50,43 @@ import {
 
 type SelectionPair = { id: RRDiceTemplateID; modified: RRMultipleRoll };
 
-export function DiceTemplates({ categoryIndex }: { categoryIndex: number }) {
+export const DiceTemplates = React.memo(function DiceTemplates({
+  categoryIndex,
+}: {
+  categoryIndex: number;
+}) {
   const [templatesEditable, setTemplatesEditable] = useState(false);
   const myself = useMyself();
 
   const allTemplates = entries(
     useServerState((state) => state.diceTemplates)
-  ).filter(
-    (t) => t.playerId === myself.id && t.categoryIndex === categoryIndex
-  );
-  const hasNested = (
-    template: RRDiceTemplate,
-    find: RRDiceTemplateID
+  ).filter((t) => t.playerId === myself.id);
+
+  const isNestedTemplateOf = (
+    topTemplate: RRDiceTemplate | undefined,
+    childTemplateId: RRDiceTemplateID
   ): boolean =>
-    template.parts.some(
+    topTemplate?.parts.some(
       (p) =>
         p.type === "template" &&
-        (p.templateId === find ||
-          hasNested(allTemplates.find((t) => t.id === p.templateId)!, find))
-    );
+        (p.templateId === childTemplateId ||
+          isNestedTemplateOf(
+            allTemplates.find((t) => t.id === p.templateId),
+            childTemplateId
+          ))
+    ) ?? false;
 
-  const templates = allTemplates.filter(
+  const allTemplatesInCategory = allTemplates.filter(
+    (t) => t.categoryIndex === categoryIndex
+  );
+
+  // Get all top-level templates in this category (= all templates that are not
+  // nested as part of another template)
+  const allTopLevelTemplatesInCategory = allTemplatesInCategory.filter(
     (templateCandidate) =>
-      !allTemplates.some((t) => hasNested(t, templateCandidate.id))
+      !allTemplatesInCategory.some((t) =>
+        isNestedTemplateOf(t, templateCandidate.id)
+      )
   );
 
   const dispatch = useServerDispatch();
@@ -156,13 +170,17 @@ export function DiceTemplates({ categoryIndex }: { categoryIndex: number }) {
           },
         ];
       case "template": {
-        return (
-          templates
-            .find((t) => t.id === part.templateId)
-            ?.parts.flatMap((part) =>
-              evaluateDiceTemplatePart(part, modified, crit)
-            ) ?? []
-        );
+        // Do not evaluate nested templates, since they are evaluated separately
+        // if they are selected.
+        //
+        // return (
+        //   allTemplates
+        //     .find((t) => t.id === part.templateId)
+        //     ?.parts.flatMap((part) =>
+        //       evaluateDiceTemplatePart(part, modified, crit)
+        //     ) ?? []
+        // );
+        return [];
       }
       default:
         assertNever(part);
@@ -170,17 +188,17 @@ export function DiceTemplates({ categoryIndex }: { categoryIndex: number }) {
   }
 
   const doRoll = (crit: boolean = false) => {
-    const parts = selectedTemplates.flatMap(({ id, modified }) =>
-      allTemplates
-        .find((t) => t.id === id)!
-        .parts.flatMap((p) => {
-          return evaluateDiceTemplatePart(p, modified, crit);
-        })
+    const parts = selectedTemplates.flatMap(
+      ({ id, modified }) =>
+        allTemplates
+          .find((t) => t.id === id)
+          ?.parts.flatMap((p) => evaluateDiceTemplatePart(p, modified, crit)) ??
+        []
     );
     if (parts.length < 1) return;
 
     const templates = selectedTemplates.flatMap(
-      ({ id }) => allTemplates.find((t) => t.id === id)!
+      ({ id }) => allTemplates.find((t) => t.id === id) ?? []
     );
     const rollName = empty2Null(
       templates
@@ -306,7 +324,7 @@ export function DiceTemplates({ categoryIndex }: { categoryIndex: number }) {
         {templatesEditable && <DicePicker />}
 
         <div className="dice-templates-container" ref={dropRef}>
-          {templates.map((t) => (
+          {allTopLevelTemplatesInCategory.map((t) => (
             <DiceTemplatePartMenuWrapper
               key={t.id}
               template={t}
@@ -333,7 +351,7 @@ export function DiceTemplates({ categoryIndex }: { categoryIndex: number }) {
       </div>
     </div>
   );
-}
+});
 
 function DicePicker() {
   const makeDicePart = (faces: number) =>

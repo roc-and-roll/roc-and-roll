@@ -8,9 +8,8 @@ import {
   faStream,
   faStreetView,
 } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useState } from "react";
-import { useIsGM, useLoginLogout, useMyself } from "../../myself";
+import { useIsGM, useMyself } from "../../myself";
 import { useServerState } from "../../state";
 import useLocalState from "../../useLocalState";
 import { About } from "../About";
@@ -27,8 +26,15 @@ import { Log } from "../Log";
 import { Maps } from "../Maps";
 import { Modding } from "../Modding";
 import { Music } from "../Music";
-import { Player } from "../Player";
+import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 import { Settings } from "../Settings";
+import { RRTooltip, RRTooltipProps } from "../RRTooltip";
+import clsx from "clsx";
+
+const tooltipProps: RRTooltipProps = {
+  placement: "right",
+  offset: [0, 16],
+};
 
 export function Toolbar() {
   const myselfIsGM = useIsGM();
@@ -69,75 +75,94 @@ export function Toolbar() {
         {settingsOpen && (
           <SettingsDialog onClose={() => setSettingsOpen(false)} />
         )}
-        <FontAwesomeIcon
-          fixedWidth
-          size="2x"
-          className={charactersActive ? "active" : ""}
-          onClick={() => setCharactersActive((a) => !a)}
-          icon={faStreetView}
-          title="characters"
-        />
-        <FontAwesomeIcon
-          fixedWidth
-          size="2x"
-          className={diceActive ? "active" : ""}
-          onClick={() => setDiceActive((a) => !a)}
-          icon={faDiceD20}
-          title="dice"
-        />
-        {(initiativeTracker.visible || myself.isGM) && (
-          <FontAwesomeIcon
+        <RRTooltip
+          content="Characters"
+          {...tooltipProps}
+          disabled={charactersActive}
+        >
+          <RRFontAwesomeIcon
             fixedWidth
-            size="2x"
-            className={initiativeActive ? "active" : ""}
-            onClick={() => setIntiativeActive((a) => !a)}
-            icon={faSortNumericDown}
-            title="initiative"
+            className={charactersActive ? "active" : ""}
+            onClick={() => setCharactersActive((a) => !a)}
+            icon={faStreetView}
           />
+        </RRTooltip>
+        <RRTooltip content="Dice" {...tooltipProps} disabled={diceActive}>
+          <RRFontAwesomeIcon
+            fixedWidth
+            className={diceActive ? "active" : ""}
+            onClick={() => setDiceActive((a) => !a)}
+            icon={faDiceD20}
+          />
+        </RRTooltip>
+        {(initiativeTracker.visible || myself.isGM) && (
+          <RRTooltip
+            content="Initiative"
+            {...tooltipProps}
+            disabled={initiativeActive}
+          >
+            <RRFontAwesomeIcon
+              fixedWidth
+              className={clsx(
+                !initiativeTracker.visible && myself.isGM ? "gm-only" : "",
+                initiativeActive ? "active" : ""
+              )}
+              onClick={() => setIntiativeActive((a) => !a)}
+              icon={faSortNumericDown}
+            />
+          </RRTooltip>
         )}
         {myselfIsGM && (
-          <FontAwesomeIcon
-            fixedWidth
-            size="2x"
-            className={mapsActive ? "active" : ""}
-            onClick={() => setMapsActive((a) => !a)}
-            icon={faMapSigns}
-            title="maps"
-          />
+          <RRTooltip content="Maps" {...tooltipProps} disabled={mapsActive}>
+            <RRFontAwesomeIcon
+              fixedWidth
+              className={clsx("gm-only", mapsActive ? "active" : "")}
+              onClick={() => setMapsActive((a) => !a)}
+              icon={faMapSigns}
+            />
+          </RRTooltip>
         )}
         {(myselfIsGM || !musicIsGMOnly) && (
-          <FontAwesomeIcon
-            fixedWidth
-            size="2x"
-            icon={faMusic}
-            title="music"
-            className={musicActive ? "active" : ""}
-            onClick={() => setMusicActive((a) => !a)}
-          />
+          <RRTooltip content="Music" {...tooltipProps} disabled={musicActive}>
+            <RRFontAwesomeIcon
+              fixedWidth
+              icon={faMusic}
+              className={clsx(
+                musicIsGMOnly ? "gm-only" : "",
+                musicActive ? "active" : ""
+              )}
+              onClick={() => setMusicActive((a) => !a)}
+            />
+          </RRTooltip>
         )}
-        <FontAwesomeIcon
-          fixedWidth
-          size="2x"
-          icon={faStream}
-          title="log"
-          className={logActive ? "active" : ""}
-          onClick={() => setLogActive((a) => !a)}
-        />
-        <FontAwesomeIcon
-          fixedWidth
-          size="2x"
-          className={achievementsActive ? "active" : ""}
-          onClick={() => setAchievementsActive((a) => !a)}
-          icon={faAward}
-          title="achievements"
-        />
-        <FontAwesomeIcon
-          fixedWidth
-          size="2x"
-          icon={faCog}
-          title="settings"
-          onClick={() => setSettingsOpen(true)}
-        />
+        <RRTooltip content="Log" {...tooltipProps} disabled={logActive}>
+          <RRFontAwesomeIcon
+            fixedWidth
+            icon={faStream}
+            className={logActive ? "active" : ""}
+            onClick={() => setLogActive((a) => !a)}
+          />
+        </RRTooltip>
+        <RRTooltip
+          content="Achievements"
+          {...tooltipProps}
+          disabled={achievementsActive}
+        >
+          <RRFontAwesomeIcon
+            fixedWidth
+            className={achievementsActive ? "active" : ""}
+            onClick={() => setAchievementsActive((a) => !a)}
+            icon={faAward}
+          />
+        </RRTooltip>
+        <RRTooltip content="Settings" {...tooltipProps} disabled={settingsOpen}>
+          <RRFontAwesomeIcon
+            fixedWidth
+            className={settingsOpen ? "active" : ""}
+            icon={faCog}
+            onClick={() => setSettingsOpen(true)}
+          />
+        </RRTooltip>
       </div>
       <div className="toolbar-tools">
         {charactersActive && wrap(<CharacterManager />)}

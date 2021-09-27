@@ -419,6 +419,8 @@ $dice-templates-height: 200px;
     flex-wrap: wrap;
     height: 100%;
     width: 100%;
+    // We need a minimum height so that we have space to drop new templates in.
+    min-height: 4rem;
     align-items: stretch;
     justify-content: flex-start;
 
@@ -727,6 +729,7 @@ $gmAreaColor: #ab62c0;
 
   & > * {
     padding: 0.5rem;
+    cursor: pointer;
   }
 }
 
@@ -1420,6 +1423,10 @@ aside.emoji-picker-react {
 }
 
 .toolbar-container {
+  // Otherwise you cannot interact with the map, even if the entire toolbar is
+  // collapsed.
+  pointer-events: none;
+
   display: flex;
   position: fixed;
   top: 0;
@@ -1428,6 +1435,8 @@ aside.emoji-picker-react {
   align-items: flex-start;
 }
 .toolbar {
+  pointer-events: all;
+
   margin-left: 1rem;
   display: flex;
   flex-direction: column;
@@ -1435,13 +1444,21 @@ aside.emoji-picker-react {
   background: #333;
   border-radius: 5px;
 
-  & > * {
+  svg {
     margin: 5px;
     padding: 10px;
     cursor: pointer;
     border-radius: 999px;
     font-size: 38px;
     display: block;
+
+    &:hover {
+      background: #000000;
+    }
+
+    &.gm-only {
+      background: $gmAreaColor;
+    }
 
     &.active {
       background: #ff9900;
@@ -1457,6 +1474,8 @@ aside.emoji-picker-react {
   }
 }
 .toolbar-tools {
+  pointer-events: all;
+
   $sidebar-width: 420px;
   width: $sidebar-width;
   overflow-y: auto;
