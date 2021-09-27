@@ -35,7 +35,7 @@ export function DicePanel() {
             className={clsx("tab-button", active === index ? "active" : "")}
             onClick={() => setActive(index)}
           >
-            <FontAwesomeIcon icon={icon} />
+            <FontAwesomeIcon icon={icon} fixedWidth />
           </div>
         ))}
       </div>

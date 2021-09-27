@@ -31,7 +31,7 @@ import {
   RRMultipleRoll,
   SyncedStateAction,
 } from "../../shared/state";
-import { assertNever, empty2Null, rrid } from "../../shared/util";
+import { assertNever, clamp, empty2Null, rrid } from "../../shared/util";
 import { useMyself } from "../myself";
 import { roll } from "../roll";
 import { useRRSettings } from "../settings";
@@ -944,30 +944,40 @@ function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
 
   return (
     <div>
-      <label>
-        Category Index:
-        <input
-          value={template.categoryIndex.toString()}
-          type="number"
-          onChange={(event) =>
-            dispatch({
-              actions: [
-                diceTemplateUpdate({
-                  id: templateId,
-                  changes: {
-                    categoryIndex: Math.min(
-                      event.target.valueAsNumber,
-                      diceCategories.length - 1
-                    ),
-                  },
-                }),
-              ],
-              optimisticKey: "categoryIndex",
-              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-            })
-          }
-        />
-      </label>
+      {template.categoryIndex !== -1 && (
+        <label>
+          Category:
+          {diceCategories.map((category, categoryIndex) => (
+            <label key={categoryIndex} className="radio-label">
+              <input
+                type="radio"
+                name="categoryIndex"
+                value={categoryIndex}
+                checked={categoryIndex === template.categoryIndex}
+                onChange={(e) =>
+                  dispatch({
+                    actions: [
+                      diceTemplateUpdate({
+                        id: templateId,
+                        changes: {
+                          categoryIndex: clamp(
+                            0,
+                            categoryIndex,
+                            diceCategories.length - 1
+                          ),
+                        },
+                      }),
+                    ],
+                    optimisticKey: "categoryIndex",
+                    syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+                  })
+                }
+              />
+              <FontAwesomeIcon icon={category} fixedWidth />
+            </label>
+          ))}
+        </label>
+      )}
       <label>
         Notes:
         <SmartTextareaInput
