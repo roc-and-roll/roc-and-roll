@@ -24,6 +24,7 @@ import {
   RRSoundSetID,
   RRPlaylistEntryID,
   RRPlaylistID,
+  characterStatNames,
 } from "./state";
 import { withDo } from "./util";
 import tinycolor from "tinycolor2";
@@ -251,6 +252,10 @@ export const isSyncedState = t.isObject({
             t.isNullable(t.applyCascade(t.isNumber(), [t.isInteger()])),
             { keys: t.isEnum(characterAttributeNames) }
           ),
+          stats: t.isDict(
+            t.isNullable(t.applyCascade(t.isNumber(), [t.isInteger()])),
+            { keys: t.isEnum(characterStatNames) }
+          ),
           conditions: t.isArray(t.isEnum(conditionNames)),
 
           visibility: t.isEnum(["gmOnly", "everyone"] as const),
@@ -463,6 +468,12 @@ export const isSyncedState = t.isObject({
                   ...sharedValidators,
                   type: t.isLiteral("linkedModifier"),
                   name: t.isEnum(characterAttributeNames),
+                  damage: isDamageType,
+                }),
+                t.isObject({
+                  ...sharedValidators,
+                  type: t.isLiteral("linkedStat"),
+                  name: t.isEnum(characterStatNames),
                   damage: isDamageType,
                 }),
                 t.isObject({

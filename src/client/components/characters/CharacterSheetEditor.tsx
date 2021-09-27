@@ -6,7 +6,7 @@ import {
   characterUpdate,
 } from "../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
-import { RRCharacter } from "../../../shared/state";
+import { characterAttributeNames, RRCharacter } from "../../../shared/state";
 import { useServerDispatch } from "../../state";
 import { SmartIntegerInput } from "../ui/TextInput";
 
@@ -54,7 +54,7 @@ export const CharacterSheetEditor = React.memo<{
         />
       </div>
       <div className="character-editor-attributes">
-        {["initiative", "proficiency"].map((attributeName) => (
+        {characterAttributeNames.map((attributeName) => (
           <AttributeEditor
             key={attributeName}
             value={character.attributes[attributeName] ?? null}
@@ -100,7 +100,7 @@ function StatEditor({
   character: RRCharacter;
   isTemplate: boolean | undefined;
 }) {
-  const [value, setValue] = useState(character.attributes[name] ?? null);
+  const [value, setValue] = useState(character.stats[name] ?? null);
 
   const dispatch = useServerDispatch();
   const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
@@ -111,10 +111,10 @@ function StatEditor({
 
   function updateValue(newValue: number | null) {
     dispatch((state) => {
-      const oldAttributes = (
+      const oldStats = (
         isTemplate ? state.characterTemplates : state.characters
-      ).entities[character.id]?.attributes;
-      if (!oldAttributes) {
+      ).entities[character.id]?.stats;
+      if (!oldStats) {
         return [];
       }
       return {
@@ -122,14 +122,14 @@ function StatEditor({
           updateFunc({
             id: character.id,
             changes: {
-              attributes: {
-                ...oldAttributes,
+              stats: {
+                ...oldStats,
                 [name]: newValue,
               },
             },
           }),
         ],
-        optimisticKey: "attributes",
+        optimisticKey: "stats",
         syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
       };
     });
@@ -162,7 +162,7 @@ function StatEditor({
         </div>
         <input
           className="stat-input"
-          value={character.attributes[name] ?? 0}
+          value={character.stats[name] ?? 0}
           onChange={(e) => updateValue(parseInt(e.target.value) || null)}
         />
         <div onClick={() => updateValue((value ?? 0) + 1)}>
