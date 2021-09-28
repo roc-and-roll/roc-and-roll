@@ -14,17 +14,15 @@ export const SVGBlurHashImage = React.forwardRef<
   } & Partial<
     Omit<ImgHTMLAttributes<HTMLImageElement>, "width" | "height" | "src">
   >
->(function SVGBlurHashImage({ x, y, ...rest }, ref) {
+>(function SVGBlurHashImage({ x, y, tokenSize, width, height, ...rest }, ref) {
   return (
-    <foreignObject x={x} y={y} width={rest.width} height={rest.height}>
+    <foreignObject x={x} y={y} width={width} height={height}>
       <BlurhashImage
         ref={ref}
-        offset={rest.tokenSize}
-        {...{
-          ...rest,
-          width: rest.width - rest.tokenSize * 2,
-          height: rest.height - rest.tokenSize * 2,
-        }}
+        offset={tokenSize}
+        width={width - tokenSize * 2}
+        height={height - tokenSize * 2}
+        {...rest}
       />
     </foreignObject>
   );

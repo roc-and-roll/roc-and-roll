@@ -30,13 +30,10 @@ import { withDo } from "./util";
 import tinycolor from "tinycolor2";
 import { isBlurhashValid } from "blurhash";
 
-export function isRRID<ID extends RRID>(testLength: boolean = true) {
+export function isRRID<ID extends RRID>() {
   return t.makeValidator({
     test: (value, state): value is ID =>
-      t.applyCascade(t.isString(), testLength ? [t.hasExactLength(21)] : [])(
-        value,
-        state
-      ),
+      t.applyCascade(t.isString(), [t.hasExactLength(21)])(value, state),
   });
 }
 
@@ -137,7 +134,7 @@ export const isDamageType = t.isObject({
 });
 
 const sharedAssetValidators = {
-  id: isRRID<RRAssetID>(false),
+  id: isRRID<RRAssetID>(),
   name: t.isString(),
   description: t.isNullable(t.isString()),
   external: t.isBoolean(),
@@ -209,7 +206,7 @@ export const isSyncedState = t.isObject({
       isGM: t.isBoolean(),
       currentMap: isRRID<RRMapID>(),
       characterIds: t.isArray(isRRID<RRCharacterID>()),
-      favoritedAssetIds: t.isArray(isRRID<RRAssetID>(false)),
+      favoritedAssetIds: t.isArray(isRRID<RRAssetID>()),
     })
   ),
   ...withDo(
@@ -446,7 +443,10 @@ export const isSyncedState = t.isObject({
       playerId: isRRID<RRPlayerID>(),
       name: t.isString(),
       notes: t.isString(),
-      categoryIndex: t.isNumber(),
+      categoryIndex: t.applyCascade(t.isNumber(), [
+        t.isInteger(),
+        t.isAtLeast(-1),
+      ]),
       parts: t.applyCascade(
         t.isArray(
           t.isOneOf(
@@ -567,7 +567,7 @@ export const isSyncedState = t.isObject({
     activeMusic: isEntityCollection(
       withDo(
         {
-          id: isRRID<RRActiveMusicID>(false),
+          id: isRRID<RRActiveMusicID>(),
           startedAt: isTimestamp,
           volume: isVolume,
           addedBy: isRRID<RRPlayerID>(),

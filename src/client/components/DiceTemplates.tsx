@@ -32,7 +32,7 @@ import {
   SyncedStateAction,
   characterStatNames,
 } from "../../shared/state";
-import { assertNever, empty2Null, rrid } from "../../shared/util";
+import { assertNever, clamp, empty2Null, rrid } from "../../shared/util";
 import { useMyself } from "../myself";
 import { roll } from "../roll";
 import { useRRSettings } from "../settings";
@@ -51,29 +51,43 @@ import {
 
 type SelectionPair = { id: RRDiceTemplateID; modified: RRMultipleRoll };
 
-export function DiceTemplates({ categoryIndex }: { categoryIndex: number }) {
+export const DiceTemplates = React.memo(function DiceTemplates({
+  categoryIndex,
+}: {
+  categoryIndex: number;
+}) {
   const [templatesEditable, setTemplatesEditable] = useState(false);
   const myself = useMyself();
 
   const allTemplates = entries(
     useServerState((state) => state.diceTemplates)
-  ).filter(
-    (t) => t.playerId === myself.id && t.categoryIndex === categoryIndex
-  );
-  const hasNested = (
-    template: RRDiceTemplate,
-    find: RRDiceTemplateID
+  ).filter((t) => t.playerId === myself.id);
+
+  const isNestedTemplateOf = (
+    topTemplate: RRDiceTemplate | undefined,
+    childTemplateId: RRDiceTemplateID
   ): boolean =>
-    template.parts.some(
+    topTemplate?.parts.some(
       (p) =>
         p.type === "template" &&
-        (p.templateId === find ||
-          hasNested(allTemplates.find((t) => t.id === p.templateId)!, find))
-    );
+        (p.templateId === childTemplateId ||
+          isNestedTemplateOf(
+            allTemplates.find((t) => t.id === p.templateId),
+            childTemplateId
+          ))
+    ) ?? false;
 
-  const templates = allTemplates.filter(
+  const allTemplatesInCategory = allTemplates.filter(
+    (t) => t.categoryIndex === categoryIndex
+  );
+
+  // Get all top-level templates in this category (= all templates that are not
+  // nested as part of another template)
+  const allTopLevelTemplatesInCategory = allTemplatesInCategory.filter(
     (templateCandidate) =>
-      !allTemplates.some((t) => hasNested(t, templateCandidate.id))
+      !allTemplatesInCategory.some((t) =>
+        isNestedTemplateOf(t, templateCandidate.id)
+      )
   );
 
   const dispatch = useServerDispatch();
@@ -167,13 +181,17 @@ export function DiceTemplates({ categoryIndex }: { categoryIndex: number }) {
           },
         ];
       case "template": {
-        return (
-          templates
-            .find((t) => t.id === part.templateId)
-            ?.parts.flatMap((part) =>
-              evaluateDiceTemplatePart(part, modified, crit)
-            ) ?? []
-        );
+        // Do not evaluate nested templates, since they are evaluated separately
+        // if they are selected.
+        //
+        // return (
+        //   allTemplates
+        //     .find((t) => t.id === part.templateId)
+        //     ?.parts.flatMap((part) =>
+        //       evaluateDiceTemplatePart(part, modified, crit)
+        //     ) ?? []
+        // );
+        return [];
       }
       default:
         assertNever(part);
@@ -181,17 +199,17 @@ export function DiceTemplates({ categoryIndex }: { categoryIndex: number }) {
   }
 
   const doRoll = (crit: boolean = false) => {
-    const parts = selectedTemplates.flatMap(({ id, modified }) =>
-      allTemplates
-        .find((t) => t.id === id)!
-        .parts.flatMap((p) => {
-          return evaluateDiceTemplatePart(p, modified, crit);
-        })
+    const parts = selectedTemplates.flatMap(
+      ({ id, modified }) =>
+        allTemplates
+          .find((t) => t.id === id)
+          ?.parts.flatMap((p) => evaluateDiceTemplatePart(p, modified, crit)) ??
+        []
     );
     if (parts.length < 1) return;
 
     const templates = selectedTemplates.flatMap(
-      ({ id }) => allTemplates.find((t) => t.id === id)!
+      ({ id }) => allTemplates.find((t) => t.id === id) ?? []
     );
     const rollName = empty2Null(
       templates
@@ -317,7 +335,7 @@ export function DiceTemplates({ categoryIndex }: { categoryIndex: number }) {
         {templatesEditable && <DicePicker />}
 
         <div className="dice-templates-container" ref={dropRef}>
-          {templates.map((t) => (
+          {allTopLevelTemplatesInCategory.map((t) => (
             <DiceTemplatePartMenuWrapper
               key={t.id}
               template={t}
@@ -344,7 +362,7 @@ export function DiceTemplates({ categoryIndex }: { categoryIndex: number }) {
       </div>
     </div>
   );
-}
+});
 
 function DicePicker() {
   const makeDicePart = (faces: number) =>
@@ -954,30 +972,40 @@ function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
 
   return (
     <div>
-      <label>
-        Category Index:
-        <input
-          value={template.categoryIndex.toString()}
-          type="number"
-          onChange={(event) =>
-            dispatch({
-              actions: [
-                diceTemplateUpdate({
-                  id: templateId,
-                  changes: {
-                    categoryIndex: Math.min(
-                      event.target.valueAsNumber,
-                      diceCategories.length - 1
-                    ),
-                  },
-                }),
-              ],
-              optimisticKey: "categoryIndex",
-              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-            })
-          }
-        />
-      </label>
+      {template.categoryIndex !== -1 && (
+        <label>
+          Category:
+          {diceCategories.map((category, categoryIndex) => (
+            <label key={categoryIndex} className="radio-label">
+              <input
+                type="radio"
+                name="categoryIndex"
+                value={categoryIndex}
+                checked={categoryIndex === template.categoryIndex}
+                onChange={(e) =>
+                  dispatch({
+                    actions: [
+                      diceTemplateUpdate({
+                        id: templateId,
+                        changes: {
+                          categoryIndex: clamp(
+                            0,
+                            categoryIndex,
+                            diceCategories.length - 1
+                          ),
+                        },
+                      }),
+                    ],
+                    optimisticKey: "categoryIndex",
+                    syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+                  })
+                }
+              />
+              <FontAwesomeIcon icon={category} fixedWidth />
+            </label>
+          ))}
+        </label>
+      )}
       <label>
         Notes:
         <SmartTextareaInput
