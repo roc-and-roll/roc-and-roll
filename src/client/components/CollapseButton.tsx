@@ -1,4 +1,8 @@
-import { faAngleDown, faAngleRight } from "@fortawesome/free-solid-svg-icons";
+import {
+  faAngleDown,
+  faAngleLeft,
+  faAngleRight,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React from "react";
@@ -9,6 +13,7 @@ export function CollapseButton(props: {
   setCollapsed: (u: (c: boolean) => boolean) => void;
   collapsed: boolean;
   size?: 32 | 20;
+  side?: "left" | "right";
 }) {
   return (
     <Button
@@ -20,7 +25,14 @@ export function CollapseButton(props: {
       }}
     >
       {props.collapsed ? (
-        <FontAwesomeIcon icon={faAngleRight} fixedWidth />
+        <FontAwesomeIcon
+          icon={
+            props.side === undefined || props.side === "left"
+              ? faAngleRight
+              : faAngleLeft
+          }
+          fixedWidth
+        />
       ) : (
         <FontAwesomeIcon icon={faAngleDown} fixedWidth />
       )}
