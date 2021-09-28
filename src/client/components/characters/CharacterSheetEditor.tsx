@@ -79,7 +79,7 @@ export const CharacterSheetEditor = React.memo<{
                       },
                     }),
                   ],
-                  optimisticKey: "attributes",
+                  optimisticKey: `attributes/${attributeName}`,
                   syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
                 };
               })
@@ -100,8 +100,6 @@ function StatEditor({
   character: RRCharacter;
   isTemplate: boolean | undefined;
 }) {
-  const [value, setValue] = useState(character.stats[name] ?? null);
-
   const dispatch = useServerDispatch();
   const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
 
@@ -109,7 +107,7 @@ function StatEditor({
     return Math.floor((stat - 10) / 2);
   }
 
-  function updateValue(newValue: number | null) {
+  function updateValue(newValue: React.SetStateAction<number | null>) {
     dispatch((state) => {
       const oldStats = (
         isTemplate ? state.characterTemplates : state.characters
@@ -124,17 +122,21 @@ function StatEditor({
             changes: {
               stats: {
                 ...oldStats,
-                [name]: newValue,
+                [name]:
+                  typeof newValue === "function"
+                    ? newValue(oldStats[name] ?? null)
+                    : newValue,
               },
             },
           }),
         ],
-        optimisticKey: "stats",
+        optimisticKey: `stats/${name}`,
         syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
       };
     });
-    setValue(newValue);
   }
+
+  const value = character.stats[name] ?? null;
 
   return (
     <div className={"stat-editor"}>
@@ -153,19 +155,20 @@ function StatEditor({
           alignItems: "center",
         }}
       >
-        <div onClick={() => updateValue((value ?? 0) - 1)}>
+        <div onClick={() => updateValue((value) => (value ?? 0) - 1)}>
           <FontAwesomeIcon
             fixedWidth
             className="stat-change-icons"
             icon={faMinusSquare}
           ></FontAwesomeIcon>
         </div>
-        <input
+        <SmartIntegerInput
           className="stat-input"
-          value={character.stats[name] ?? 0}
-          onChange={(e) => updateValue(parseInt(e.target.value) || null)}
+          value={value}
+          nullable
+          onChange={(value) => updateValue(value)}
         />
-        <div onClick={() => updateValue((value ?? 0) + 1)}>
+        <div onClick={() => updateValue((value) => (value ?? 0) + 1)}>
           <FontAwesomeIcon
             fixedWidth
             className="stat-change-icons"

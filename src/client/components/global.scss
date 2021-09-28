@@ -332,13 +332,18 @@ a {
 
 .collapse-button {
   padding: 0px;
-  margin: 0.19rem 0.7rem 0 0;
   border: none;
   width: 10px;
   height: 10px;
   border-radius: 10px;
   line-height: 10px;
   cursor: pointer;
+  background: transparent;
+  color: inherit;
+
+  &:hover {
+    background: transparent;
+  }
 
   &.size-20 {
     width: 20px;
@@ -352,6 +357,10 @@ a {
   padding: 0.5rem 0;
   display: flex;
   cursor: pointer;
+
+  .collapse-button {
+    margin: 0.19rem 0.7rem 0 0;
+  }
 }
 
 .collapsed {
@@ -1534,7 +1543,7 @@ aside.emoji-picker-react {
   margin: 0;
 }
 .stat-input {
-  width: 30px;
+  width: 40px;
   margin: 0.1rem;
   font-size: 14px;
 }

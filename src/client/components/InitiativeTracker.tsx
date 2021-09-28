@@ -381,7 +381,7 @@ const RollInitiativeDeferredImpl = React.memo<{
     Boolean
   );
 
-  const selectedTokenIds = [
+  const selectedCharacterIds = [
     ...new Set(
       selectedMapObjectIds.flatMap((mapObjectId) => {
         const mapObject = mapObjects.entities[mapObjectId];
@@ -395,19 +395,19 @@ const RollInitiativeDeferredImpl = React.memo<{
   );
 
   const selectionAlreadyInList = characterIdsInTracker.some((id) =>
-    selectedTokenIds.includes(id)
+    selectedCharacterIds.includes(id)
   );
 
-  const hasSelection = selectedTokenIds.length !== 0;
+  const hasSelection = selectedCharacterIds.length !== 0;
 
-  const characters = selectedMapObjectIds.flatMap((id) =>
-    withDo(mapObjects.entities[id], (obj) =>
-      obj?.type === "token" ? characterCollection.entities[obj.characterId] : []
-    )
+  const selectedCharacters = selectedCharacterIds.flatMap(
+    (characterId) => characterCollection.entities[characterId] ?? []
   );
 
   const allSelectedInitiatives = [
-    ...new Set(characters.map((c) => c?.attributes["initiative"] ?? null)),
+    ...new Set(
+      selectedCharacters.map((c) => c.attributes["initiative"] ?? null)
+    ),
   ];
 
   const allHaveSameInitiative =
@@ -424,7 +424,7 @@ const RollInitiativeDeferredImpl = React.memo<{
       action,
       initiativeTrackerEntryCharacterAdd({
         initiative: diceResult(action.payload),
-        characterIds: selectedTokenIds,
+        characterIds: selectedCharacterIds,
       }),
     ]);
   };
@@ -436,10 +436,10 @@ const RollInitiativeDeferredImpl = React.memo<{
         onClick={roll}
       >
         Roll Initiative
-        {characters.length > 0
-          ? characters.length > 1
-            ? ` for ${characters.length} characters`
-            : ` for ${characters[0]!.name}`
+        {selectedCharacters.length > 0
+          ? selectedCharacters.length > 1
+            ? ` for ${selectedCharacters.length} characters`
+            : ` for ${selectedCharacters[0]!.name}`
           : ""}
       </Button>
       <input
