@@ -11,6 +11,7 @@ export default class extends AbstractMigration {
       >
     ).forEach((character) => {
       Object.entries(character.attributes).forEach(([key, value]) => {
+        character.stats ??= {};
         if (key === "profiency" || key === "initiative") return;
         character.stats[key] = value * 2 + 10;
         delete character.attributes[key];
@@ -23,6 +24,7 @@ export default class extends AbstractMigration {
       >
     ).forEach((character) => {
       Object.entries(character.attributes).forEach(([key, value]) => {
+        character.stats ??= {};
         if (key === "profiency" || key === "initiative") return;
         character.stats[key] = value * 2 + 10;
         delete character.attributes[key];
