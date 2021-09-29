@@ -1,7 +1,6 @@
 import React from "react";
 import { act, render, screen } from "@testing-library/react";
 import { MapMusicIndicator } from "./MapMusicIndicator";
-import { ServerStateProvider } from "../../state";
 import { MockClientSocket } from "../../test-utils";
 import { rrid } from "../../../shared/util";
 import {
@@ -11,6 +10,8 @@ import {
   RRPlayer,
 } from "../../../shared/state";
 import { RecoilRoot } from "recoil";
+import { CampaignEntity } from "../../../shared/campaign";
+import { CampaignAndServerStateProvider } from "../../campaign";
 
 describe("MapMusicIndicator", () => {
   it("works", () => {
@@ -18,9 +19,18 @@ describe("MapMusicIndicator", () => {
 
     const { unmount } = render(
       <RecoilRoot>
-        <ServerStateProvider socket={mockSocket.__cast()}>
+        <CampaignAndServerStateProvider
+          forTestingInitialState={{
+            campaign: {
+              id: rrid<CampaignEntity>(),
+              name: "Campaign",
+              lastTabletopAudioUpdate: new Date(0),
+            },
+            socket: mockSocket.__cast(),
+          }}
+        >
           <MapMusicIndicator mapBackgroundColor="orange" />
-        </ServerStateProvider>
+        </CampaignAndServerStateProvider>
       </RecoilRoot>
     );
 

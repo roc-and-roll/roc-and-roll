@@ -1,4 +1,5 @@
 import { nanoid } from "@reduxjs/toolkit";
+import { CampaignId } from "./campaign";
 import { TOKEN_SIZES } from "./constants";
 import { RRCharacter, RRID, RRTimestamp } from "./state";
 
@@ -168,4 +169,8 @@ export function partition<E, A extends E = E, B extends E = E>(
   }
 
   return [a, b] as const;
+}
+
+export function socketIONamespaceForCampaign(campaignId: CampaignId) {
+  return `/campaign/${campaignId}`;
 }

@@ -1,18 +1,17 @@
-import { setupReduxStore } from "./setupReduxStore";
-import { setupStateSync } from "./setupStateSync";
 import { setupWebServer } from "./setupWebServer";
 import path from "path";
 import fs from "fs";
-import { setupStatePersistence } from "./setupStatePersistence";
-import { entries } from "../shared/state";
-import { ephemeralPlayerUpdate } from "../shared/actions";
+import { SyncedState } from "../shared/state";
 import { setupArgs } from "./setupArgs";
-import { isSyncedState } from "../shared/validation";
-import { setupInitialState } from "./setupInitialState";
-import { setupTabletopAudioTrackSync } from "./setupTabletopaudio";
-import { batchActions } from "redux-batched-actions";
 import { assertFFprobeIsInstalled } from "./files";
-import { extractForOneShot } from "./extractForOneShot";
+import {
+  insertCampaign,
+  listCampaigns,
+  setupDatabase,
+  updateCampaignState,
+} from "./database";
+import { CampaignManager } from "./campaignManager";
+import { assertNever } from "../shared/util";
 
 void (async () => {
   const {
@@ -31,14 +30,77 @@ void (async () => {
   const uploadedFilesCacheDir = path.join(uploadedFilesDir, "cache");
   fs.mkdirSync(uploadedFilesCacheDir, { recursive: true });
 
-  const statePath = path.join(workspaceDir, "state.json");
+  const knex = await setupDatabase(workspaceDir);
 
-  const initialState = await setupInitialState(statePath, uploadedFilesDir);
-  const store = setupReduxStore(initialState);
+  // TODO: Remove
+  {
+    if ((await listCampaigns(knex)).length === 0) {
+      const { id } = await insertCampaign(knex, "Legacy Campaign");
+      const statePath = path.join(workspaceDir, "state.json");
+      await updateCampaignState(
+        knex,
+        id,
+        JSON.parse(fs.readFileSync(statePath, "utf-8")) as SyncedState
+      );
+    }
+  }
 
-  if (commandAndOptions.command === "extractForOneShot") {
-    await extractForOneShot(store, commandAndOptions.outputFilePath);
-    return;
+  const campaigns = await listCampaigns(knex, true);
+  const campaignManagers = await Promise.all(
+    campaigns.map(async (campaign) => {
+      const campaignManager = new CampaignManager(
+        campaign.id,
+        quiet,
+        workspaceDir,
+        uploadedFilesDir
+      );
+      await campaignManager.init_migrateStateAndSetupStore(campaign.state);
+
+      return campaignManager;
+    })
+  );
+
+  if (commandAndOptions.command === "campaign") {
+    switch (commandAndOptions.subCommand) {
+      case "list":
+        console.table(
+          campaigns.map((campaign) => ({
+            ID: campaign.id,
+            Name: campaign.name,
+            "Migration Version": campaign.state.version,
+          }))
+        );
+        process.exit(0);
+        break;
+      case "extractForOneShot":
+        {
+          const { campaignId, outputFilePath } = commandAndOptions;
+
+          const campaignManager = campaignManagers.find(
+            (campaignManager) => campaignManager.getCampaignId() === campaignId
+          );
+
+          if (!campaignManager) {
+            console.error(`Cannot find campaign with id "${campaignId}".`);
+            process.exit(1);
+          }
+
+          await campaignManager.extractForOneShot(outputFilePath);
+          process.exit(0);
+        }
+        break;
+      case "migrate":
+        // The migration already happens as part of loading the state.
+        // We just need to make sure to persist the updated state to disk.
+        for (const campaignManager of campaignManagers) {
+          await campaignManager.persistState(knex);
+        }
+        console.log("Migration complete.");
+        process.exit(0);
+        break;
+      default:
+        assertNever(commandAndOptions);
+    }
   }
 
   const { port: httpPort, host: httpHost } = commandAndOptions;
@@ -47,58 +109,20 @@ void (async () => {
     httpHost,
     httpPort,
     uploadedFilesDir,
-    uploadedFilesCacheDir
+    uploadedFilesCacheDir,
+    knex
   );
 
-  if (process.env.NODE_ENV === "development") {
-    store.subscribe(() => {
-      const errors: string[] = [];
-      if (!isSyncedState(store.getState(), { errors })) {
-        errors.forEach((error) => console.error(error));
-        console.error(`
-#############################################
-#############################################
+  await Promise.all(
+    campaignManagers.map(async (campaignManager) =>
+      campaignManager.init_syncAndIO(knex, io)
+    )
+  );
 
-Your state is invalid. This can lead to bugs.
-
-This should not have happened!
-
-#############################################
-#############################################`);
-      }
-    });
-  }
-
-  setupStateSync(io, store, quiet);
-
-  setupStatePersistence(store, statePath);
-
-  await setupTabletopAudioTrackSync(store, workspaceDir);
-
-  // Delete mouse position if it has not changed for some time.
-  const DELETE_MOUSE_POSITION_TIME_THRESHOLD = 60 * 1000;
-  setInterval(() => {
-    const now = Date.now();
-    const state = store.getState();
-    store.dispatch(
-      batchActions(
-        entries(state.ephemeral.players)
-          .filter(
-            (each) =>
-              each.mapMouse &&
-              now - each.mapMouse.lastUpdate >
-                DELETE_MOUSE_POSITION_TIME_THRESHOLD
-          )
-          .map((each) =>
-            ephemeralPlayerUpdate({
-              id: each.id,
-              changes: { mapMouse: null },
-            })
-          )
-      )
-    );
-  }, 2000);
+  // TODO: When adding a new campaign, we need to start another manager!
+  // TODO: When a campaign is deleted, we need to stop the manager!
 
   console.log(`Roc & Roll started at ${url}.`);
   console.log(`Files are stored in ${workspaceDir}.`);
+  console.log(`${campaignManagers.length} active campaigns.`);
 })();

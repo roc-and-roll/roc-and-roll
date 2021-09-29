@@ -26,6 +26,7 @@ import {
   SyncedStateAction,
 } from "../shared/state";
 import { mergeDeep, rrid } from "../shared/util";
+import { useCampaignSocket } from "./campaign";
 import { useGuranteedMemo } from "./useGuranteedMemo";
 import { useLatest } from "./useLatest";
 
@@ -187,8 +188,8 @@ export function useServerConnection() {
 function ServerConnectionProvider({
   socket,
   children,
-}: React.PropsWithChildren<{ socket: Socket }>) {
-  const [connected, setConnected] = useState(socket.connected);
+}: React.PropsWithChildren<{ socket: Socket | null }>) {
+  const [connected, setConnected] = useState(socket?.connected ?? false);
   const subscribers = useRef<Set<ReconnectionAttemptSubscriber>>(new Set());
 
   useEffect(() => {
@@ -197,14 +198,18 @@ function ServerConnectionProvider({
     const onAttemptReconnect = () =>
       subscribers.current.forEach((subscriber) => subscriber());
 
-    socket.on("connect", onConnect);
-    socket.on("disconnect", onDisconnect);
-    socket.io.on("reconnect_attempt", onAttemptReconnect);
+    socket?.on("connect", onConnect);
+    socket?.on("disconnect", onDisconnect);
+    socket?.io.on("reconnect_attempt", onAttemptReconnect);
+
+    if (!socket) {
+      setConnected(false);
+    }
 
     return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
-      socket.io.off("reconnect_attempt", onAttemptReconnect);
+      socket?.off("connect", onConnect);
+      socket?.off("disconnect", onDisconnect);
+      socket?.io.off("reconnect_attempt", onAttemptReconnect);
     };
   }, [socket]);
 
@@ -245,10 +250,12 @@ const batchUpdatesIfNotConcurrentMode = (cb: () => void) => {
   }
 };
 
-export function ServerStateProvider({
-  socket,
+export function Internal_ServerStateProvider({
   children,
-}: React.PropsWithChildren<{ socket: Socket }>) {
+}: {
+  children?: React.ReactNode;
+}) {
+  const socket = useCampaignSocket();
   // We must not useState in this component, because we do not want to cause
   // re-renders of this component and its children when the state changes.
   const internalStateRef = useRef<SyncedState>(initialSyncedState);
@@ -398,12 +405,12 @@ export function ServerStateProvider({
       updateState(msg.finishedOptimisticUpdateIds);
     };
 
-    socket.on(SOCKET_SET_STATE, onSetState);
-    socket.on(SOCKET_PATCH_STATE, onPatchState);
+    socket?.on(SOCKET_SET_STATE, onSetState);
+    socket?.on(SOCKET_PATCH_STATE, onPatchState);
 
     return () => {
-      socket.off(SOCKET_SET_STATE, onSetState);
-      socket.off(SOCKET_PATCH_STATE, onPatchState);
+      socket?.off(SOCKET_SET_STATE, onSetState);
+      socket?.off(SOCKET_PATCH_STATE, onPatchState);
     };
   }, [socket, updateState]);
 

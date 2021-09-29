@@ -1,16 +1,6 @@
 import { render } from "./render";
-import io from "socket.io-client";
-import { SOCKET_IO_PATH } from "../shared/constants";
 
-// Create a new socket, but do not connect yet
-const socket = io("/", {
-  path: SOCKET_IO_PATH,
-  autoConnect: false,
-});
-// Render the app
-render(socket);
-// Now connect the socket
-socket.connect();
+render();
 
 // Clear browser console on hot reload. This helps with the performance of the
 // console, which can become very slow when many messages accumulate over time.

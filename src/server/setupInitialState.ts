@@ -1,11 +1,13 @@
 import * as t from "typanion";
 import { SyncedState } from "../shared/state";
 import { EMPTY_ENTITY_COLLECTION } from "../shared/state";
-import fs from "fs";
+import { writeFile } from "fs/promises";
 import readline from "readline";
+import path from "path";
 import { isStateVersion, isSyncedState } from "../shared/validation";
 import { migrations } from "./migrations";
 import { LAST_MIGRATION_VERSION } from "../shared/constants";
+import { CampaignId } from "../shared/campaign";
 
 async function ask(question: string): Promise<string> {
   const rl = readline.createInterface({
@@ -40,16 +42,19 @@ class StateValidationFailedError extends StateInvalidRecoverableError {
 }
 
 export async function setupInitialState(
-  statePath: string,
+  initialState: unknown,
+  campaignId: CampaignId,
+  backupPath: string,
   uploadedFilesDir: string
 ): Promise<SyncedState | undefined> {
-  if (!fs.existsSync(statePath)) {
-    return undefined;
-  }
-
   let state;
   try {
-    state = await loadAndMigrateState(statePath, uploadedFilesDir);
+    state = await migrateState(
+      initialState,
+      campaignId,
+      backupPath,
+      uploadedFilesDir
+    );
   } catch (err) {
     if (err instanceof StateInvalidError) {
       state = await recoverFromStateInvalidError(err);
@@ -74,20 +79,12 @@ const isWithVersion = t.isObject(
   { extra: t.isUnknown() }
 );
 
-async function loadAndMigrateState(
-  statePath: string,
+async function migrateState(
+  state: unknown,
+  campaignId: CampaignId,
+  backupPath: string,
   uploadedFilesDir: string
 ): Promise<SyncedState | undefined> {
-  let state;
-  try {
-    state = JSON.parse(fs.readFileSync(statePath, { encoding: "utf-8" }));
-  } catch (err) {
-    throw new StateInvalidError(
-      `Error while parsing the JSON file at ${statePath}.`,
-      err
-    );
-  }
-
   if (!isWithVersion(state)) {
     throw new StateInvalidError(
       `The state does not have a valid migration version`
@@ -103,7 +100,10 @@ async function loadAndMigrateState(
   }
 
   if (currentVersion < LAST_MIGRATION_VERSION) {
-    const stateBackupPath = `${statePath}.backup.${currentVersion}`;
+    const stateBackupPath = path.join(
+      backupPath,
+      `state.campaign.${campaignId}.backup.${currentVersion}.json`
+    );
 
     console.info(`
 #
@@ -118,7 +118,7 @@ async function loadAndMigrateState(
       throw new StateInvalidRecoverableError("Skipped migrations.", state);
     }
 
-    fs.copyFileSync(statePath, stateBackupPath);
+    await writeFile(stateBackupPath, JSON.stringify(state), "utf-8");
 
     for (let i = currentVersion + 1; i < migrations.length; i++) {
       const migration = migrations[i]!;

@@ -27,6 +27,8 @@ import {
 import { isAllowedFiletypes } from "../shared/files";
 import serverTiming from "server-timing";
 import { randomBetweenInclusive } from "../shared/random";
+import { Knex } from "knex";
+import { listCampaigns, insertCampaign } from "./database";
 
 const ONE_YEAR = 1000 * 60 * 60 * 24 * 365;
 
@@ -34,7 +36,8 @@ export async function setupWebServer(
   httpHost: string,
   httpPort: number,
   uploadedFilesDir: string,
-  uploadedFilesCacheDir: string
+  uploadedFilesCacheDir: string,
+  knex: Knex
 ) {
   const url = `http://${httpHost}:${httpPort}`;
 
@@ -47,9 +50,10 @@ export async function setupWebServer(
       enabled: process.env.NODE_ENV !== "production",
     })
   );
+  app.use(express.json());
 
   if (process.env.NODE_ENV === "development") {
-    // (1) In development, add a CORS header so that the client is allowed to
+    // In development, add a CORS header so that the client is allowed to
     // communicate with the server. This is necessary, because client and
     // server run on different ports in development.
     app.use((req, res, next) => {
@@ -58,11 +62,32 @@ export async function setupWebServer(
     });
   }
 
-  // (2) Add an endpoint to upload files
+  // Add an endpoint to upload files
   const storage = multer.diskStorage({
     destination: uploadedFilesDir,
     filename: (req, file, cb) =>
       cb(null, `${nanoid()}${path.extname(file.originalname)}`),
+  });
+
+  app.get("/api/campaigns", async (req, res, next) => {
+    try {
+      res.json(await listCampaigns(knex));
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  app.post("/api/campaigns", async (req, res, next) => {
+    try {
+      const { name } = req.body;
+      if (typeof name !== "string") {
+        throw new Error("name must be a string");
+      }
+
+      res.json(await insertCampaign(knex, name));
+    } catch (err) {
+      next(err);
+    }
   });
 
   app.post(
@@ -128,7 +153,7 @@ export async function setupWebServer(
     }
   );
 
-  // (3) Serve uploaded files
+  // Serve uploaded files
   app.use(
     "/api/files",
     express.static(uploadedFilesDir, {
@@ -140,7 +165,7 @@ export async function setupWebServer(
 
   const lock = new AsyncLock();
 
-  // (4) Add an endpoint to generate tokens from already uploaded files
+  // Add an endpoint to generate tokens from already uploaded files
   app.get<{ filename: string; size: string; zoom: string }>(
     "/api/token-image/:filename/:size",
     async (req, res, next) => {
@@ -231,7 +256,7 @@ export async function setupWebServer(
     }
   );
 
-  // (5) Add end endpoint that generates a random image suitable for a token
+  // Add end endpoint that generates a random image suitable for a token
   const ctx = require.context("../third-party/game-icons.net", true, /\.svg$/);
   const icons = ctx
     .keys()
@@ -277,8 +302,8 @@ export async function setupWebServer(
     }
   });
 
-  // (6) Serve the client code to the browser
-  if (process.env.NODE_ENV !== "production") {
+  // Serve the client code to the browser
+  if (process.env.NODE_ENV === "development") {
     // In development, simply redirect all non-api requests to the webpack dev
     // server, which serves the client code on its own.
     app.get("*", (req, res, next) => {
@@ -337,7 +362,7 @@ export async function setupWebServer(
   // Spin up the Express JS instance.
   const http = app.listen(httpPort, httpHost);
 
-  // (7) Now also spin up a websocket server.
+  // Now also spin up a websocket server.
   // In development, we need to allow CORS access since the client code is
   // running on a different port.
   const io = new SocketIOServer(http, {

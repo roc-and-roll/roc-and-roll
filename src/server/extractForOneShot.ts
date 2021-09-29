@@ -84,6 +84,7 @@ export async function extractForOneShot(
   };
 
   await writeFile(outputFilePath, JSON.stringify(exportedState), "utf-8");
+  console.log(`State extracted to ${outputFilePath}`);
 }
 
 function filterCharacters<T extends RRCharacter | RRCharacterTemplate>(
