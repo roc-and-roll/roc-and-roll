@@ -161,12 +161,11 @@ export function CharacterEditor({
     });
 
   useEffect(() => {
-    //TODO Fix this somehow?
-    if (fileInput.current === null) return;
+    if (fileInput.current === null || nameInput.current === null) return;
 
     fileInput.current.value = "";
-    nameInput.current!.focus();
-    if (wasJustCreated) nameInput.current!.select();
+    nameInput.current.focus();
+    if (wasJustCreated) nameInput.current.select();
   }, [character.id, wasJustCreated]);
 
   useEffect(() => {
