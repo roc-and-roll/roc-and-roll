@@ -11,6 +11,16 @@ export default class extends AbstractMigration {
         (condition) => !condition.includes("cover")
       );
     });
+    Object.values(
+      state.characterTemplates.entities as Record<
+        string,
+        { conditions: string[] }
+      >
+    ).forEach((character) => {
+      character.conditions = character.conditions.filter(
+        (condition) => !condition.includes("cover")
+      );
+    });
     return state;
   };
 }
