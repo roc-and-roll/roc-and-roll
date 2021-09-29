@@ -4,6 +4,7 @@ import {
   faUserFriends,
   faUsers,
   faUser,
+  faPlusCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
@@ -75,10 +76,18 @@ export function Auras({
     ]);
   }
 
+  function updateSize(size: number, index: number, aura: RRAura) {
+    setAuras([
+      ...character.auras.slice(0, index),
+      { ...aura, size: size },
+      ...character.auras.slice(index + 1),
+    ]);
+  }
+
   return (
-    <ul>
+    <>
       {character.auras.map((aura, i) => (
-        <li key={i}>
+        <div key={i}>
           <div>
             <label>
               Size in feet{" "}
@@ -86,13 +95,7 @@ export function Auras({
                 type="number"
                 min={0}
                 value={aura.size}
-                onChange={(e) => {
-                  setAuras([
-                    ...character.auras.slice(0, i),
-                    { ...aura, size: e.target.valueAsNumber },
-                    ...character.auras.slice(i + 1),
-                  ]);
-                }}
+                onChange={(e) => updateSize(e.target.valueAsNumber, i, aura)}
               />
             </label>
           </div>
@@ -190,28 +193,28 @@ export function Auras({
               ]);
             }}
           >
-            delete aura
+            Delete Aura
           </Button>
-        </li>
+          <hr style={{ marginBottom: 0 }} />
+        </div>
       ))}
-      <li>
-        <Button
-          onClick={() => {
-            setAuras((old) => [
-              ...old,
-              {
-                color: randomColor(),
-                shape: "circle",
-                size: 10,
-                visibileWhen: "always",
-                visibility: "everyone",
-              },
-            ]);
-          }}
-        >
-          add aura
-        </Button>
-      </li>
-    </ul>
+      <Button
+        style={{ minWidth: "60px", display: "block", margin: "0 auto" }}
+        onClick={() => {
+          setAuras((old) => [
+            ...old,
+            {
+              color: randomColor(),
+              shape: "circle",
+              size: 10,
+              visibileWhen: "always",
+              visibility: "everyone",
+            },
+          ]);
+        }}
+      >
+        <FontAwesomeIcon icon={faPlusCircle} />
+      </Button>
+    </>
   );
 }
