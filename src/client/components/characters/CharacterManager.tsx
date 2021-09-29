@@ -37,6 +37,7 @@ async function makeNewCharacter(
     scale: 1,
     visibility: "everyone",
     attributes: {},
+    stats: {},
     name: await randomName(),
     tokenImage: tokenImage ?? (await generateRandomToken()),
     tokenBorderColor: randomColor(),

@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import React, { useState } from "react";
 import useLocalState from "../useLocalState";
 import { CollapseButton } from "./CollapseButton";
@@ -54,14 +55,20 @@ function CollapsibleImpl(
 ) {
   return (
     <div>
-      <div className="collapsible-header">
-        <h2>{props.title}</h2>
-        <CollapseButton
-          collapsed={props.collapsed}
-          setCollapsed={props.setCollapsed}
-        />
+      <div
+        className={clsx("collapsible-header", {
+          collapsed: !props.collapsed,
+        })}
+        onClick={() => {
+          props.setCollapsed((collapsed) => !collapsed);
+        }}
+      >
+        <CollapseButton collapsed={props.collapsed} setCollapsed={() => {}} />
+        <h4>{props.title}</h4>
       </div>
-      {!props.collapsed && <ErrorBoundary>{props.children}</ErrorBoundary>}
+      <div className={"collapsible-content"}>
+        {!props.collapsed && <ErrorBoundary>{props.children}</ErrorBoundary>}
+      </div>
     </div>
   );
 }

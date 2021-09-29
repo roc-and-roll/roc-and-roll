@@ -6,10 +6,7 @@ export const globalSettingsReducer = createReducer(
   initialSyncedState.globalSettings,
   (builder) => {
     builder.addCase(globalSettingsUpdate, (state, action) => {
-      console.log(action);
-      for (const key in action.payload) {
-        (state as any)[key] = (action as any)[key];
-      }
+      Object.assign(state, action.payload);
     });
   }
 );

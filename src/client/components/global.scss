@@ -52,6 +52,10 @@ label {
   display: block;
 }
 
+.radio-label {
+  display: inline-block;
+}
+
 .root {
   background: #111;
   color: white;
@@ -150,7 +154,7 @@ a {
     padding: 1rem;
 
     div {
-      border-width:  0.5rem;
+      border-width: 0.5rem;
     }
   }
 }
@@ -194,11 +198,7 @@ a {
 }
 
 .token-image {
-  $size: 32px;
   background-color: #555;
-  width: $size;
-  height: $size;
-  border-radius: $size;
   background-position: center center;
   background-size: cover;
 
@@ -275,10 +275,6 @@ a {
 }
 
 .token-hp-editor {
-  border: 1px solid #757575;
-  padding: 0.25rem 0.5rem;
-  margin: 1rem 0;
-
   .top-row {
     display: flex;
   }
@@ -287,14 +283,15 @@ a {
 // log
 .log {
   padding: 5px;
-  width: 30vw;
-  min-width: 300px;
+  margin: -0.75rem;
   background-color: $bottom-float-background;
 }
 
 .log-text {
   overflow-y: auto;
-  max-height: 40vh;
+  height: 40vh;
+  max-height: 150px;
+  margin-top: 0;
   font-size: 0.8rem;
   padding-left: 17px;
 
@@ -337,11 +334,17 @@ a {
 .collapse-button {
   padding: 0px;
   border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 32px;
-  line-height: 32px;
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  line-height: 10px;
   cursor: pointer;
+  background: transparent;
+  color: inherit;
+
+  &:hover {
+    background: transparent;
+  }
 
   &.size-20 {
     width: 20px;
@@ -354,7 +357,29 @@ a {
 .collapsible-header {
   padding: 0.5rem 0;
   display: flex;
-  justify-content: space-between;
+  cursor: pointer;
+
+  .collapse-button {
+    margin: 0.19rem 0.7rem 0 0;
+  }
+}
+
+.collapsed {
+  background-color: #888;
+  margin: 0 -1rem;
+  padding: 0.5rem 1rem;
+}
+
+.collapsible-content {
+  padding: 0 1.35rem;
+
+  & > * {
+    padding: 0.25rem 0;
+  }
+}
+
+.checkbox {
+  margin: 0 0.5rem 0 0;
 }
 
 .bottom-floats-wrapper {
@@ -408,59 +433,54 @@ $dice-templates-height: 200px;
 }
 
 .dice-templates {
-  pointer-events: auto;
-
   $panel-background: rgb(59, 28, 6);
   $animation-duration: 200ms;
 
-  height: 0;
-  background: $panel-background;
-  box-shadow: inset 0 0 30px black;
-  border-top: 1px solid black;
-  border-left: 1px solid black;
   width: 100%;
   transition: $animation-duration height;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   padding-left: 8px;
-  position: relative;
-  user-select: none;
-
-  &.opened {
-    height: $dice-templates-height;
-  }
 
   .dice-templates-container {
-    overflow-y: auto;
     display: flex;
     flex-wrap: wrap;
     height: 100%;
     width: 100%;
-    align-items: flex-start;
+    // We need a minimum height so that we have space to drop new templates in.
+    min-height: 4rem;
+    align-items: stretch;
     justify-content: flex-start;
+
+    & > * {
+      flex: 0 0 50%;
+    }
   }
 
   .dice-template-outer {
-    flex-grow: 0;
+    align-items: stretch;
+    align-content: flex-start;
+    display: flex;
   }
 
   .dice-template {
     min-height: 60px;
-    max-width: 140px;
+    max-width: 170px;
     border: 1px solid rgba(255, 255, 255, 0.3);
-    margin: 0.2rem;
+    margin: 0.3rem;
     position: relative;
-    padding: 0.1rem;
+    padding: 0.2rem;
     display: flex;
     flex-wrap: wrap;
-    flex-grow: 0;
     cursor: pointer;
-    align-items: center;
+    align-items: flex-start;
     background: $panel-background;
+    width: 100%;
 
     & > p {
       width: 100%;
+      font-size: 0.8em;
     }
 
     &.selected {
@@ -503,28 +523,19 @@ $dice-templates-height: 200px;
     }
   }
 
-  $dice-picker-height: 400px;
+  $dice-picker-height: 250px;
   .dice-picker {
-    position: absolute;
-    left: 12px;
-    width: 270px;
-    height: 0;
     transition: $animation-duration $animation-duration;
-    top: 0;
-    background: #333;
-    border-radius: 5px 5px 0 0;
-    overflow-y: auto;
+    background: #555;
+    border-radius: 5px;
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
     justify-content: flex-start;
     align-content: flex-start;
     padding: 0.5rem;
-  }
-
-  &.opened .dice-picker {
-    height: $dice-picker-height;
-    top: -$dice-picker-height;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
   }
 
   .dice-holder {
@@ -738,15 +749,29 @@ $gmAreaColor: #ab62c0;
   background: orange;
 }
 
+.player-toolbar {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+
+  display: flex;
+
+  & > * {
+    padding: 0.5rem;
+    cursor: pointer;
+  }
+}
+
 .map-toolbar {
   position: absolute;
   right: 1rem;
-  top: 1rem;
+  top: 40%;
   max-width: 40vw;
 
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
+  flex-direction: column;
 
   button.active {
     font-weight: bold;
@@ -755,6 +780,32 @@ $gmAreaColor: #ab62c0;
   label {
     background: rgb(239, 239, 239);
     color: black;
+  }
+
+  .map-toolbar-combined {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+
+    button {
+      padding: 0.2rem;
+      margin: 0.1rem;
+      min-width: 36px;
+      &.active {
+        background: #ff9900;
+      }
+    }
+
+    & > button {
+      width: 36px;
+    }
+  }
+  .map-toolbar-submenu {
+    display: none;
+  }
+
+  &:hover .map-toolbar-submenu {
+    display: block;
   }
 }
 
@@ -1259,7 +1310,7 @@ aside.emoji-picker-react {
 .map-music-indicator {
   position: absolute;
   top: 0.5rem;
-  left: 0.5rem;
+  left: 1.7rem;
 
   display: flex;
   align-items: center;
@@ -1417,5 +1468,111 @@ aside.emoji-picker-react {
     &:hover {
       background: #333;
     }
+  }
+}
+
+.toolbar-container {
+  // Otherwise you cannot interact with the map, even if the entire toolbar is
+  // collapsed.
+  pointer-events: none;
+
+  display: flex;
+  position: fixed;
+  top: 0;
+  height: calc(100% - 6rem);
+  margin-top: 3rem;
+  align-items: flex-start;
+}
+.toolbar {
+  pointer-events: all;
+
+  margin-left: 1rem;
+  display: flex;
+  flex-direction: column;
+
+  background: #333;
+  border-radius: 5px;
+
+  svg {
+    margin: 5px;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 999px;
+    font-size: 38px;
+    display: block;
+
+    &:hover {
+      background: #000000;
+    }
+
+    &.gm-only {
+      background: $gmAreaColor;
+    }
+
+    &.active {
+      background: #ff9900;
+    }
+  }
+}
+.toolbar-panel {
+  margin: 0.5rem 0.5rem;
+  padding: 0.75rem;
+  background: #333;
+  &:first-child {
+    margin-top: 0;
+  }
+}
+.toolbar-tools {
+  pointer-events: all;
+
+  $sidebar-width: 420px;
+  width: $sidebar-width;
+  overflow-y: auto;
+  max-height: 100%;
+}
+.tab:not(.active) {
+  display: none;
+}
+.tab-buttons {
+  display: flex;
+  margin-bottom: 0.2rem;
+  .tab-button {
+    padding: 0.1rem 0.4rem;
+    margin: 0.1rem;
+    background: #666;
+    border-radius: 2px;
+
+    &.active {
+      background: #ff9900;
+    }
+  }
+}
+
+.stat-editor {
+  outline-style: solid;
+  outline-width: 1px;
+  outline-color: #999;
+  padding: 0.2rem;
+  margin: 0.2rem;
+
+  text-align: center;
+  font-weight: bold;
+}
+.stat-change-icon {
+  font-size: 20px;
+  padding: 0;
+  margin: 0;
+}
+.stat-input {
+  width: 40px;
+  margin: 0.1rem;
+  font-size: 14px;
+}
+
+.aura-active {
+  background: #ff9900;
+
+  &:hover {
+    background: #ffbb22;
   }
 }

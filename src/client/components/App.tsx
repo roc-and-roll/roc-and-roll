@@ -1,7 +1,6 @@
 import "modern-css-reset";
 import "./global.scss";
 import React, { Suspense, useRef } from "react";
-import { Sidebar } from "./Sidebar";
 import { useLoginLogout } from "../myself";
 import { JoinGame as PlayerList } from "./JoinGame";
 import { BottomFloats } from "./BottomFloats";
@@ -91,9 +90,6 @@ function CampaignContent({
   return (
     <div className="app-wrapper">
       <ActiveMusicPlayer />
-      <ErrorBoundary>
-        <Sidebar logout={logout} />
-      </ErrorBoundary>
       <Suspense fallback="Map is loading...">
         <main className="app-map">
           <ErrorBoundary>

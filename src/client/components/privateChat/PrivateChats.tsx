@@ -35,7 +35,13 @@ export default function PrivateChats() {
   );
 }
 
-function Chat({ id, close }: { id: RRPrivateChatID; close: () => void }) {
+export function Chat({
+  id,
+  close,
+}: {
+  id: RRPrivateChatID;
+  close?: () => void;
+}) {
   const dispatch = useServerDispatch();
   const chat = useServerState((state) => state.privateChats.entities[id]);
   const myself = useMyself();
@@ -88,7 +94,7 @@ function Chat({ id, close }: { id: RRPrivateChatID; close: () => void }) {
     <div className="private-chat">
       <div className="private-chat-header">
         <h3>{otherPlayer.name}</h3>
-        <Button onClick={() => close()}>back</Button>
+        {close !== undefined && <Button onClick={() => close()}>back</Button>}
       </div>
       <ul ref={scrollRef} role="list" className="private-chat-messages">
         {entries(chat.messages).map((message) => (

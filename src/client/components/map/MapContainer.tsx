@@ -75,6 +75,8 @@ import { useAlert, useDialog } from "../../dialog-boxes";
 import { DropIndicator } from "../DropIndicator";
 import { DialogActions, DialogContent, DialogTitle } from "../Dialog";
 import { Button } from "../ui/Button";
+import { Toolbar } from "./Toolbar";
+import { PlayerToolbar } from "./PlayerToolbar";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -724,6 +726,8 @@ export default function MapContainer() {
         toolOverlay={toolOverlay}
       />
       <MapMusicIndicator mapBackgroundColor={map.settings.backgroundColor} />
+      <Toolbar />
+      <PlayerToolbar myself={myself} players={players} />
       <MapToolbar
         mapId={map.id}
         mapSettings={map.settings}

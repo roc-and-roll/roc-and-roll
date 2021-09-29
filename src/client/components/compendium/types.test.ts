@@ -37,13 +37,13 @@ describe("text entry schema", () => {
     ).toBe(false);
 
     expect(errors).toMatchInlineSnapshot(`
-      Array [
-        ".#1: Expected a string (got {\\"type\\":\\"list\\",\\"items\\":[\\"foo\\",false]})",
-        ".#2.type: Expected a literal (got \\"entries\\")",
-        ".#3.items[1]#1: Expected a string (got false)",
-        ".#4.type: Expected a literal (got \\"table\\")",
-        ".#5.type: Expected a literal (got \\"cell\\")",
-      ]
-    `);
+Array [
+  ".#1: Expected a string (got {\\"type\\":\\"list\\",\\"items\\":[\\"foo\\",false]})",
+  ".#2.type: Expected a literal (got \\"list\\")",
+  ".#3.items[1]#1: Expected a string (got false)",
+  ".#4.type: Expected a literal (got \\"list\\")",
+  ".#5.type: Expected a literal (got \\"list\\")",
+]
+`);
   });
 });

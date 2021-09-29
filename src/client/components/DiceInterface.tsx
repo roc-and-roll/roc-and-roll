@@ -11,7 +11,7 @@ import { useMyself } from "../myself";
 import { useServerDispatch } from "../state";
 import { roll } from "../roll";
 import { rrid } from "../../shared/util";
-import { useAlert } from "../dialog-boxes";
+import { useAlert, usePrompt } from "../dialog-boxes";
 
 export function DiceInterface() {
   const [diceTypes, setDiceTypes] = useState<string[]>([]);
@@ -19,6 +19,7 @@ export function DiceInterface() {
   const myself = useMyself();
   const dispatch = useServerDispatch();
   const alert = useAlert();
+  const prompt = usePrompt();
 
   const doRoll = async (addTemplate: boolean) => {
     const boniString = boni >= 0 ? "+" + boni.toString() : boni.toString();
@@ -62,11 +63,15 @@ export function DiceInterface() {
 
     if (dice.length) {
       if (addTemplate) {
+        const name =
+          (await prompt("Name of the new dice template"))?.trim() ?? "";
         dispatch(
           diceTemplateAdd({
             id: rrid<RRDiceTemplate>(),
-            name: "",
+            name,
             notes: "",
+            // FIXME should allow to select
+            categoryIndex: 0,
             parts: dice.flatMap<RRDiceTemplatePart>((d) =>
               d.type === "modifier"
                 ? {

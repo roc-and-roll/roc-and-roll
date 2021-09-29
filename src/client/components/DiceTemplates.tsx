@@ -1,3 +1,5 @@
+import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
@@ -28,14 +30,16 @@ import {
   RRModifier,
   RRMultipleRoll,
   SyncedStateAction,
+  characterStatNames,
 } from "../../shared/state";
-import { assertNever, empty2Null, rrid } from "../../shared/util";
+import { assertNever, clamp, empty2Null, rrid } from "../../shared/util";
 import { useMyself } from "../myself";
 import { roll } from "../roll";
 import { useRRSettings } from "../settings";
 import { useServerDispatch, useServerState, useServerStateRef } from "../state";
 import useLocalState from "../useLocalState";
 import { contrastColor } from "../util";
+import { diceCategories } from "./DicePanel";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { Select } from "./ui/Select";
@@ -47,27 +51,41 @@ import {
 
 type SelectionPair = { id: RRDiceTemplateID; modified: RRMultipleRoll };
 
-export function DiceTemplates({ open }: { open: boolean }) {
+export const DiceTemplates = React.memo(function DiceTemplates({
+  categoryIndex,
+}: {
+  categoryIndex: number;
+}) {
   const [templatesEditable, setTemplatesEditable] = useState(false);
   const myself = useMyself();
 
   const allTemplates = entries(
     useServerState((state) => state.diceTemplates)
   ).filter((t) => t.playerId === myself.id);
-  const hasNested = (
-    template: RRDiceTemplate,
-    find: RRDiceTemplateID
+
+  const isNestedTemplateOf = (
+    topTemplate: RRDiceTemplate | undefined,
+    childTemplateId: RRDiceTemplateID
   ): boolean =>
-    template.parts.some(
+    topTemplate?.parts.some(
       (p) =>
         p.type === "template" &&
-        (p.templateId === find ||
-          hasNested(allTemplates.find((t) => t.id === p.templateId)!, find))
-    );
+        (p.templateId === childTemplateId ||
+          isNestedTemplateOf(
+            allTemplates.find((t) => t.id === p.templateId),
+            childTemplateId
+          ))
+    ) ?? false;
 
-  const templates = allTemplates.filter(
+  const allTemplatesInCategory = allTemplates.filter(
+    (t) => t.categoryIndex === categoryIndex
+  );
+
+  // Get all top-level templates in this category (= all templates that are not
+  // nested as part of another template)
+  const allTopLevelTemplatesInCategory = allTemplatesInCategory.filter(
     (templateCandidate) =>
-      !allTemplates.some((t) => hasNested(t, templateCandidate.id))
+      !allTemplates.some((t) => isNestedTemplateOf(t, templateCandidate.id))
   );
 
   const dispatch = useServerDispatch();
@@ -94,6 +112,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
         dispatch(
           diceTemplateAdd({
             id,
+            categoryIndex,
             playerId: myself.id,
             name: "",
             notes: "",
@@ -104,7 +123,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
       },
       canDrop: (_item, monitor) => monitor.isOver({ shallow: true }),
     }),
-    [dispatch, myself.id]
+    [categoryIndex, dispatch, myself.id]
   );
 
   function evaluateDiceTemplatePart(
@@ -141,6 +160,16 @@ export function DiceTemplates({ open }: { open: boolean }) {
             damageType: part.damage,
           },
         ];
+      case "linkedStat":
+        return [
+          {
+            type: "modifier",
+            modifier: !selectedCharacter?.stats[part.name]
+              ? 0
+              : Math.floor((selectedCharacter.stats[part.name]! - 10) / 2),
+            damageType: part.damage,
+          },
+        ];
       case "modifier":
         return [
           {
@@ -150,13 +179,17 @@ export function DiceTemplates({ open }: { open: boolean }) {
           },
         ];
       case "template": {
-        return (
-          templates
-            .find((t) => t.id === part.templateId)
-            ?.parts.flatMap((part) =>
-              evaluateDiceTemplatePart(part, modified, crit)
-            ) ?? []
-        );
+        // Do not evaluate nested templates, since they are evaluated separately
+        // if they are selected.
+        //
+        // return (
+        //   allTemplates
+        //     .find((t) => t.id === part.templateId)
+        //     ?.parts.flatMap((part) =>
+        //       evaluateDiceTemplatePart(part, modified, crit)
+        //     ) ?? []
+        // );
+        return [];
       }
       default:
         assertNever(part);
@@ -164,17 +197,17 @@ export function DiceTemplates({ open }: { open: boolean }) {
   }
 
   const doRoll = (crit: boolean = false) => {
-    const parts = selectedTemplates.flatMap(({ id, modified }) =>
-      allTemplates
-        .find((t) => t.id === id)!
-        .parts.flatMap((p) => {
-          return evaluateDiceTemplatePart(p, modified, crit);
-        })
+    const parts = selectedTemplates.flatMap(
+      ({ id, modified }) =>
+        allTemplates
+          .find((t) => t.id === id)
+          ?.parts.flatMap((p) => evaluateDiceTemplatePart(p, modified, crit)) ??
+        []
     );
     if (parts.length < 1) return;
 
     const templates = selectedTemplates.flatMap(
-      ({ id }) => allTemplates.find((t) => t.id === id)!
+      ({ id }) => allTemplates.find((t) => t.id === id) ?? []
     );
     const rollName = empty2Null(
       templates
@@ -244,7 +277,7 @@ export function DiceTemplates({ open }: { open: boolean }) {
 
   return (
     <div
-      className={clsx("dice-templates", { opened: open })}
+      className={clsx("dice-templates")}
       onContextMenu={(e) => {
         e.preventDefault();
         doRoll();
@@ -277,50 +310,57 @@ export function DiceTemplates({ open }: { open: boolean }) {
           </div>,
           document.body
         )}
-      {templatesEditable && <DicePicker />}
-      <div className="dice-templates-container" ref={dropRef}>
-        <Button onClick={() => setTemplatesEditable((b) => !b)}>
-          Edit
-          <br />
-          Templates
-        </Button>
-        {templates.map((t) => (
-          <DiceTemplatePartMenuWrapper
-            key={t.id}
-            template={t}
-            part={{
-              id: rrid<RRDiceTemplatePart>(),
-              type: "template",
-              templateId: t.id,
+      <div>
+        <div style={{ display: "flex" }}>
+          <Select
+            value={selectedCharacterId ?? ""}
+            options={[
+              { label: "", value: "" },
+              ...characters.map((c) => ({ label: c.name, value: c.id })),
+            ]}
+            onChange={(v) => {
+              setSelectedCharacterId(empty2Null(v));
             }}
+            style={{ margin: "0.15rem" }}
+          ></Select>
+          <Button
+            style={{ width: "28px" }}
+            onClick={() => setTemplatesEditable((b) => !b)}
           >
-            <DiceTemplate
-              onRoll={(templates, modified, event) =>
-                clickedTemplates(templates, event, modified)
-              }
-              newIds={newIds}
-              templateId={t.id}
-              selectedCharacter={selectedCharacter}
-              selectedTemplateIds={selectedTemplates}
-              editable={templatesEditable}
-              isChildTemplate={false}
-            />
-          </DiceTemplatePartMenuWrapper>
-        ))}
-        <Select
-          value={selectedCharacterId ?? ""}
-          options={[
-            { label: "", value: "" },
-            ...characters.map((c) => ({ label: c.name, value: c.id })),
-          ]}
-          onChange={(v) => {
-            setSelectedCharacterId(empty2Null(v));
-          }}
-        ></Select>
+            <FontAwesomeIcon icon={faEdit} />
+          </Button>
+        </div>
+        {templatesEditable && <DicePicker />}
+
+        <div className="dice-templates-container" ref={dropRef}>
+          {allTopLevelTemplatesInCategory.map((t) => (
+            <DiceTemplatePartMenuWrapper
+              key={t.id}
+              template={t}
+              part={{
+                id: rrid<RRDiceTemplatePart>(),
+                type: "template",
+                templateId: t.id,
+              }}
+            >
+              <DiceTemplate
+                onRoll={(templates, modified, event) =>
+                  clickedTemplates(templates, event, modified)
+                }
+                newIds={newIds}
+                templateId={t.id}
+                selectedCharacter={selectedCharacter}
+                selectedTemplateIds={selectedTemplates}
+                editable={templatesEditable}
+                isChildTemplate={false}
+              />
+            </DiceTemplatePartMenuWrapper>
+          ))}
+        </div>
       </div>
     </div>
   );
-}
+});
 
 function DicePicker() {
   const makeDicePart = (faces: number) =>
@@ -374,6 +414,21 @@ function DicePicker() {
         const part = {
           id: rrid<RRDiceTemplatePart>(),
           type: "linkedModifier" as const,
+          damage: { type: null, modifiers: [] },
+          name,
+        };
+        return (
+          <PickerDiceTemplatePart
+            key={name}
+            part={part}
+            onClick={() => setDiceHolder([...diceHolder, part])}
+          />
+        );
+      })}
+      {characterStatNames.map((name) => {
+        const part = {
+          id: rrid<RRDiceTemplatePart>(),
+          type: "linkedStat" as const,
           damage: { type: null, modifiers: [] },
           name,
         };
@@ -548,6 +603,7 @@ function DiceTemplateInner({
             const action = diceTemplateAdd({
               playerId: myself.id,
               name: "",
+              categoryIndex: -1,
               notes: "",
               parts: [],
               rollType: "attack",
@@ -637,8 +693,10 @@ function DiceTemplateInner({
     else if (b.type === "template") typeResult = -1;
     else if (a.type === "dice") typeResult = -1;
     else if (b.type === "dice") typeResult = 1;
-    else if (a.type === "linkedModifier") typeResult = -1;
-    else if (b.type === "linkedModifier") typeResult = 1;
+    else if (a.type === "linkedModifier" || a.type === "linkedStat")
+      typeResult = -1;
+    else if (b.type === "linkedModifier" || b.type === "linkedStat")
+      typeResult = 1;
 
     //lastly sort the dice and modifiers by value
     let valueResult = 0;
@@ -911,22 +969,58 @@ function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
   }
 
   return (
-    <label>
-      Notes:
-      <SmartTextareaInput
-        value={template.notes}
-        onChange={(notes) =>
-          dispatch({
-            actions: [
-              diceTemplateUpdate({ id: templateId, changes: { notes } }),
-            ],
-            optimisticKey: "notes",
-            syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-          })
-        }
-        className="dice-template-notes"
-      />
-    </label>
+    <div>
+      {template.categoryIndex !== -1 && (
+        <label>
+          Category:
+          {diceCategories.map((category, categoryIndex) => (
+            <label key={categoryIndex} className="radio-label">
+              <input
+                type="radio"
+                name="categoryIndex"
+                value={categoryIndex}
+                checked={categoryIndex === template.categoryIndex}
+                onChange={(e) =>
+                  dispatch({
+                    actions: [
+                      diceTemplateUpdate({
+                        id: templateId,
+                        changes: {
+                          categoryIndex: clamp(
+                            0,
+                            categoryIndex,
+                            diceCategories.length - 1
+                          ),
+                        },
+                      }),
+                    ],
+                    optimisticKey: "categoryIndex",
+                    syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+                  })
+                }
+              />
+              <FontAwesomeIcon icon={category} fixedWidth />
+            </label>
+          ))}
+        </label>
+      )}
+      <label>
+        Notes:
+        <SmartTextareaInput
+          value={template.notes}
+          onChange={(notes) =>
+            dispatch({
+              actions: [
+                diceTemplateUpdate({ id: templateId, changes: { notes } }),
+              ],
+              optimisticKey: "notes",
+              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+            })
+          }
+          className="dice-template-notes"
+        />
+      </label>
+    </div>
   );
 }
 
@@ -965,6 +1059,7 @@ const DiceTemplatePartMenuWrapper: React.FC<{
         <div onClick={(e) => e.stopPropagation()}>
           {(part.type === "dice" ||
             part.type === "linkedModifier" ||
+            part.type === "linkedStat" ||
             part.type === "modifier") && (
             <DamageTypeEditor part={part} templateId={template.id} />
           )}
@@ -1053,6 +1148,20 @@ const DiceTemplatePart = React.forwardRef<
         <div className="dice-option" style={styleFor(part)}>
           <div className="dice-option-linked-modifier">
             {selectedCharacter?.attributes[part.name] ?? null}
+          </div>
+          <div className="dice-option-linked-modifier-name">
+            {part.name[0]!.toUpperCase() + part.name.substring(1, 4)}
+          </div>
+        </div>
+      );
+      break;
+    case "linkedStat":
+      content = (
+        <div className="dice-option" style={styleFor(part)}>
+          <div className="dice-option-linked-modifier">
+            {!selectedCharacter?.stats[part.name]
+              ? null
+              : Math.floor((selectedCharacter.stats[part.name]! - 10) / 2)}
           </div>
           <div className="dice-option-linked-modifier-name">
             {part.name[0]!.toUpperCase() + part.name.substring(1, 4)}

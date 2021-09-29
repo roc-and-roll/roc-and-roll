@@ -24,6 +24,22 @@ import { SmartTextInput } from "./ui/TextInput";
 import EmojiPicker from "emoji-picker-react";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import { mapSetImmutably, mapDeleteImmutably } from "../immutable-helpers";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowsAlt,
+  faEye,
+  faFlushed,
+  faDrawPolygon,
+  faPencilAlt,
+  faRuler,
+  faCircle,
+  faFont,
+  faImage,
+  faVectorSquare,
+  faBezierCurve,
+  faGripLines,
+  faCog,
+} from "@fortawesome/free-solid-svg-icons";
 // TODO: Lazy loding the emoji picker does not play nicely with Tippy :/
 // const EmojiPicker = React.lazy(
 //   () => import(/* webpackPrefetch: true */ "emoji-picker-react")
@@ -248,192 +264,232 @@ export const MapToolbar = React.memo<{
     );
   };
 
-  return (
-    <div className="map-toolbar">
-      <Button
-        onClick={() => setTool("move")}
-        className={tool === "move" ? "active" : undefined}
-      >
-        select / move
-      </Button>
-      <Button
-        onClick={() => setTool("draw")}
-        className={tool === "draw" ? "active" : undefined}
-      >
-        draw
-      </Button>
-      <Button
-        onClick={() => setTool("measure")}
-        className={tool === "measure" ? "active" : undefined}
-      >
-        measure
-      </Button>
-      {myself.isGM && (
+  function buildDrawButtons() {
+    return (
+      <div className="map-toolbar-submenu">
         <Button
-          onClick={() => setTool("reveal")}
-          className={clsx(
-            tool === "reveal" ? "active" : undefined,
-            "gm-button"
-          )}
+          onClick={() => setDrawType("freehand")}
+          title="draw freehand"
+          className={drawType === "freehand" ? "active" : undefined}
         >
-          reveal
+          <FontAwesomeIcon icon={faBezierCurve} />
         </Button>
-      )}
-      <Button
-        onClick={() => setTool("react")}
-        className={tool === "react" ? "active" : undefined}
-      >
-        react
-      </Button>
-      {tool === "move" && selectedMapObjectIds.length > 0 && (
+        <Button
+          onClick={() => setDrawType("line")}
+          title="draw line"
+          className={drawType === "line" ? "active" : undefined}
+        >
+          <FontAwesomeIcon icon={faGripLines} />
+        </Button>
+        <Button
+          onClick={() => setDrawType("polygon")}
+          title="draw polygon"
+          className={drawType === "polygon" ? "active" : undefined}
+        >
+          <FontAwesomeIcon icon={faDrawPolygon} />
+        </Button>
+        <Button
+          onClick={() => setDrawType("rectangle")}
+          title="draw rectangle"
+          className={drawType === "rectangle" ? "active" : undefined}
+        >
+          <FontAwesomeIcon icon={faVectorSquare} />
+        </Button>
+        <Button
+          onClick={() => setDrawType("ellipse")}
+          title="draw ellipse"
+          className={drawType === "ellipse" ? "active" : undefined}
+        >
+          <FontAwesomeIcon icon={faCircle} />
+        </Button>
+        <Button
+          onClick={() => setDrawType("text")}
+          title="write text"
+          className={drawType === "text" ? "active" : undefined}
+        >
+          <FontAwesomeIcon icon={faFont} />
+        </Button>
+        <Button
+          onClick={() => setDrawType("image")}
+          title="add background image"
+          className={drawType === "image" ? "active" : undefined}
+        >
+          <FontAwesomeIcon icon={faImage} />
+        </Button>
         <>
           <ColorInput value={drawColor} onChange={setDrawColor} />
-          {locked.widget(selectedMapObjectIds)}
-          {hidden.widget(selectedMapObjectIds)}
-        </>
-      )}
-      {tool === "react" && (
-        <>
-          <Popover
-            className="popover-no-padding"
-            content={
-              <EmojiPicker
-                native={true}
-                onEmojiClick={(_, { emoji }) => {
-                  setEmojiPickerVisible(false);
-                  setReactionCode(emoji);
-                }}
-              />
-            }
-            visible={emojiPickerVisible}
-            onClickOutside={() => setEmojiPickerVisible(false)}
-            interactive
-            placement="bottom"
-          >
-            <Button
-              onClick={() => setEmojiPickerVisible((t) => !t)}
-              className={emojiPickerVisible ? "active" : undefined}
-            >
-              select
-            </Button>
-          </Popover>
-          <Button
-            onClick={() =>
-              setFavoritedReactions((l) =>
-                l.includes(reactionCode)
-                  ? l.filter((e) => e !== reactionCode)
-                  : [reactionCode, ...l]
-              )
-            }
-          >
-            {favoritedReactions.includes(reactionCode) ? "unfav" : "fav"}
-            {reactionCode}
-          </Button>
-          {favoritedReactions.map((code) => (
-            <Button
-              key={code}
-              className={reactionCode === code ? "active" : undefined}
-              onClick={() => setReactionCode(code)}
-            >
-              {code}
-            </Button>
-          ))}
-        </>
-      )}
-      {tool === "reveal" && (
-        <>
-          <Button
-            className={revealType === "show" ? "active" : undefined}
-            onClick={() => setRevealType("show")}
-          >
-            Show
-          </Button>
-          <Button
-            className={revealType === "hide" ? "active" : undefined}
-            onClick={() => setRevealType("hide")}
-          >
-            Hide
-          </Button>
-          <Button onClick={hideAll}>Hide all</Button>
-          <Button onClick={revealAll}>Reveal all</Button>
-        </>
-      )}
-      {tool === "draw" && (
-        <>
-          <Button
-            onClick={() => setDrawType("freehand")}
-            className={drawType === "freehand" ? "active" : undefined}
-          >
-            draw freehand
-          </Button>
-          <Button
-            onClick={() => setDrawType("line")}
-            className={drawType === "line" ? "active" : undefined}
-          >
-            draw line
-          </Button>
-          <Button
-            onClick={() => setDrawType("polygon")}
-            className={drawType === "polygon" ? "active" : undefined}
-          >
-            draw polygon
-          </Button>
-          <Button
-            onClick={() => setDrawType("rectangle")}
-            className={drawType === "rectangle" ? "active" : undefined}
-          >
-            draw rectangle
-          </Button>
-          <Button
-            onClick={() => setDrawType("ellipse")}
-            className={drawType === "ellipse" ? "active" : undefined}
-          >
-            draw ellipse
-          </Button>
-          <Button
-            onClick={() => setDrawType("text")}
-            className={drawType === "text" ? "active" : undefined}
-          >
-            write text
-          </Button>
-          <Button
-            onClick={() => setDrawType("image")}
-            className={drawType === "image" ? "active" : undefined}
-          >
-            add background image
-          </Button>
-          <>
-            <ColorInput value={drawColor} onChange={setDrawColor} />
+          <label>
+            Default Visibility
+            <Select
+              value={defaultVisibility}
+              onChange={setDefaultVisibility}
+              options={[
+                { value: "gmOnly", label: "GM only" },
+                { value: "everyone", label: "Everyone" },
+              ]}
+            />
+          </label>
+          {drawType !== "freehand" && drawType !== "text" && (
             <label>
-              Default Visibility
+              snap to grid{" "}
               <Select
-                value={defaultVisibility}
-                onChange={setDefaultVisibility}
+                value={snap}
+                onChange={(snap) => setSnap(snap)}
                 options={[
-                  { value: "gmOnly", label: "GM only" },
-                  { value: "everyone", label: "Everyone" },
+                  { value: "none", label: "none" },
+                  { value: "grid", label: "grid center and corners" },
+                  { value: "grid-center", label: "grid center" },
+                  { value: "grid-corner", label: "grid corners" },
                 ]}
               />
             </label>
-            {drawType !== "freehand" && drawType !== "text" && (
-              <label>
-                snap to grid{" "}
-                <Select
-                  value={snap}
-                  onChange={(snap) => setSnap(snap)}
-                  options={[
-                    { value: "none", label: "none" },
-                    { value: "grid", label: "grid center and corners" },
-                    { value: "grid-center", label: "grid center" },
-                    { value: "grid-corner", label: "grid corners" },
-                  ]}
-                />
-              </label>
-            )}
-          </>
+          )}
         </>
+      </div>
+    );
+  }
+
+  function buildRevealButtons() {
+    return (
+      <div className="map-toolbar-submenu">
+        <Button
+          className={revealType === "show" ? "active" : undefined}
+          onClick={() => setRevealType("show")}
+        >
+          Show
+        </Button>
+        <Button
+          className={revealType === "hide" ? "active" : undefined}
+          onClick={() => setRevealType("hide")}
+        >
+          Hide
+        </Button>
+        <Button onClick={hideAll}>Hide all</Button>
+        <Button onClick={revealAll}>Reveal all</Button>
+      </div>
+    );
+  }
+
+  function buildReactButtons() {
+    return (
+      <div className="map-toolbar-submenu">
+        <Popover
+          className="popover-no-padding"
+          content={
+            <EmojiPicker
+              native={true}
+              onEmojiClick={(_, { emoji }) => {
+                setEmojiPickerVisible(false);
+                setReactionCode(emoji);
+              }}
+            />
+          }
+          visible={emojiPickerVisible}
+          onClickOutside={() => setEmojiPickerVisible(false)}
+          interactive
+          placement="bottom"
+        >
+          <Button
+            onClick={() => setEmojiPickerVisible((t) => !t)}
+            className={emojiPickerVisible ? "active" : undefined}
+          >
+            select
+          </Button>
+        </Popover>
+        <Button
+          onClick={() =>
+            setFavoritedReactions((l) =>
+              l.includes(reactionCode)
+                ? l.filter((e) => e !== reactionCode)
+                : [reactionCode, ...l]
+            )
+          }
+        >
+          {favoritedReactions.includes(reactionCode) ? "unfav" : "fav"}
+          {reactionCode}
+        </Button>
+        {favoritedReactions.map((code) => (
+          <Button
+            key={code}
+            className={reactionCode === code ? "active" : undefined}
+            onClick={() => setReactionCode(code)}
+          >
+            {code}
+          </Button>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="map-toolbar">
+      <div className="map-toolbar-combined">
+        <div className="map-toolbar-submenu">
+          {tool === "move" && selectedMapObjectIds.length > 0 && (
+            <>
+              <ColorInput value={drawColor} onChange={setDrawColor} />
+              {locked.widget(selectedMapObjectIds)}
+              {hidden.widget(selectedMapObjectIds)}
+            </>
+          )}
+        </div>
+        <Button
+          onClick={() => setTool("move")}
+          title="select / move"
+          className={tool === "move" ? "active" : undefined}
+        >
+          <FontAwesomeIcon icon={faArrowsAlt} />
+        </Button>
+      </div>
+      <div className="map-toolbar-combined">
+        {tool === "draw" && buildDrawButtons()}
+        <Button
+          onClick={() => setTool("draw")}
+          title="Draw Tools"
+          className={tool === "draw" ? "active" : undefined}
+        >
+          <FontAwesomeIcon icon={faPencilAlt} />
+        </Button>
+      </div>
+      <div className="map-toolbar-combined">
+        <Button
+          onClick={() => setTool("measure")}
+          title="Measure"
+          className={tool === "measure" ? "active" : undefined}
+        >
+          <FontAwesomeIcon icon={faRuler} />
+        </Button>
+      </div>
+      {myself.isGM && (
+        <div className="map-toolbar-combined">
+          {tool === "reveal" && buildRevealButtons()}
+          <Button
+            onClick={() => setTool("reveal")}
+            title="Reveal"
+            className={clsx(
+              tool === "reveal" ? "active" : undefined,
+              "gm-button"
+            )}
+          >
+            <FontAwesomeIcon icon={faEye} />
+          </Button>
+        </div>
       )}
-      {myself.isGM && <MapSettings mapId={mapId} mapSettings={mapSettings} />}
+      <div className="map-toolbar-combined">
+        {tool === "react" && buildReactButtons()}
+        <Button
+          onClick={() => setTool("react")}
+          title="Reactions"
+          className={tool === "react" ? "active" : undefined}
+        >
+          <FontAwesomeIcon icon={faFlushed} />
+        </Button>
+      </div>
+      {myself.isGM && (
+        <div className="map-toolbar-combined">
+          <MapSettings mapId={mapId} mapSettings={mapSettings} />
+        </div>
+      )}
     </div>
   );
 });
@@ -569,7 +625,7 @@ function MapSettings({
       visible={visible}
     >
       <Button className="gm-button" onClick={() => setVisible(true)}>
-        map settings
+        <FontAwesomeIcon icon={faCog} />
       </Button>
     </Popover>
   );

@@ -18,9 +18,9 @@ import { MapLink } from "./MapLink";
 import { MapObjectThatIsNotAToken } from "./MapObjectThatIsNotAToken";
 import { MapToken } from "./MapToken";
 
-const HURT_SHADOW_BLUR_SIZE = 8;
+const HURT_SHADOW_BLUR_SIZE = 0.2;
 // If this is too low, then the shadow is cut off inside a too small square.
-const HURT_SHADOW_CLIPPING_PERCENTAGE = 25;
+const HURT_SHADOW_CLIPPING_PERCENTAGE = 50;
 
 function makeBlinkingCharacterFilter(
   name: string,
@@ -32,6 +32,7 @@ function makeBlinkingCharacterFilter(
       id={name}
       x={`-${HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
       y={`-${HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
+      primitiveUnits="objectBoundingBox"
       width={`${100 + 2 * HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
       height={`${100 + 2 * HURT_SHADOW_CLIPPING_PERCENTAGE}%`}
     >
