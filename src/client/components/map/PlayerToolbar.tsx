@@ -29,8 +29,13 @@ const ToolbarPlayer = React.memo<{
   const [selected, setSelected] = useState(false);
   const { logout } = useLoginLogout();
 
-  if (player.characterIds.length < 1) return null;
-  const character = characters.entities[player.characterIds[0]!];
+  let character;
+  for (const characterId of player.characterIds) {
+    character = characters.entities[characterId];
+    if (character) {
+      break;
+    }
+  }
   if (!character) return null;
 
   return (
