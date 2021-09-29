@@ -62,12 +62,14 @@ export function Toolbar() {
 
   const wrap = (el: JSX.Element) => <div className="toolbar-panel">{el}</div>;
 
-  const initiativeTracker = useServerState((state) => state.initiativeTracker);
+  const initiativeTrackerVisible = useServerState(
+    (state) => state.initiativeTracker.visible
+  );
   const myself = useMyself();
 
   useEffect(() => {
-    setIntiativeActive(initiativeTracker.visible);
-  }, [initiativeTracker.visible, setIntiativeActive]);
+    setIntiativeActive(initiativeTrackerVisible);
+  }, [initiativeTrackerVisible, setIntiativeActive]);
 
   return (
     <div className="toolbar-container">
@@ -95,7 +97,7 @@ export function Toolbar() {
             icon={faDiceD20}
           />
         </RRTooltip>
-        {(initiativeTracker.visible || myself.isGM) && (
+        {(initiativeTrackerVisible || myself.isGM) && (
           <RRTooltip
             content="Initiative"
             {...tooltipProps}
@@ -104,7 +106,7 @@ export function Toolbar() {
             <RRFontAwesomeIcon
               fixedWidth
               className={clsx(
-                !initiativeTracker.visible && myself.isGM ? "gm-only" : "",
+                !initiativeTrackerVisible && myself.isGM ? "gm-only" : "",
                 initiativeActive ? "active" : ""
               )}
               onClick={() => setIntiativeActive((a) => !a)}

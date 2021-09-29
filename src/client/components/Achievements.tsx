@@ -6,7 +6,7 @@ import { Players } from "./Players";
 import { RRPlayerID } from "../../shared/state";
 import { Button } from "./ui/Button";
 
-export function Achievements() {
+export const Achievements = React.memo(function Achievements() {
   const dispatch = useServerDispatch();
   const [filterText, setFilterText] = useState("");
   const [selectedAchievement, setSelectedAchievement] =
@@ -61,4 +61,4 @@ export function Achievements() {
         ))}
     </div>
   );
-}
+});
