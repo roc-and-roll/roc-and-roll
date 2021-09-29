@@ -198,6 +198,7 @@ function SoundSet({
           collapsed={collapsed}
           setCollapsed={setCollapsed}
           size={20}
+          side="right"
         />
       </div>
       {!collapsed && (

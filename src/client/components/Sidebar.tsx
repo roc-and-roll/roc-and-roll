@@ -59,10 +59,6 @@ export function Sidebar({ logout }: { logout: () => void }) {
           </Collapsible>
         )}
 
-        {/* <Collapsible title="Players" defaultCollapsed>
-          <Players />
-        </Collapsible> */}
-
         <Collapsible title="Music" defaultCollapsed>
           {musicIsGMOnly ? (
             myselfIsGM && (

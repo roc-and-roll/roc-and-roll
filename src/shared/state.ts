@@ -203,15 +203,15 @@ export type RRLogEntryAchievement = Extract<
 
 export type RRDiceTemplate = ECE<SyncedState["diceTemplates"]>;
 
-export const characterAttributeNames = [
+export const characterAttributeNames = ["initiative", "proficiency"] as const;
+
+export const characterStatNames = [
   "STR",
   "DEX",
   "CON",
   "INT",
   "WIS",
   "CHA",
-  "initiative",
-  "proficiency",
 ] as const;
 
 export type RRDiceTemplatePartTemplate = Extract<
@@ -232,6 +232,13 @@ export type RRDiceTemplatePartLinkedModifier = Extract<
   IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
   {
     type: "linkedModifier";
+  }
+>;
+
+export type RRDiceTemplatePartLinkedStat = Extract<
+  IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
+  {
+    type: "linkedStat";
   }
 >;
 
@@ -325,6 +332,11 @@ export type RRDice = Extract<
 export type RRModifier = Extract<
   IterableElement<RRLogEntryDiceRoll["payload"]["dice"]>,
   { type: "modifier" }
+>;
+
+export type RRStat = Extract<
+  IterableElement<RRLogEntryDiceRoll["payload"]["dice"]>,
+  { type: "stat" }
 >;
 
 export type RRLogEntryDiceRoll = Extract<

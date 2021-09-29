@@ -275,10 +275,6 @@ a {
 }
 
 .token-hp-editor {
-  border: 1px solid #757575;
-  padding: 0.25rem 0.5rem;
-  margin: 1rem 0;
-
   .top-row {
     display: flex;
   }
@@ -337,11 +333,17 @@ a {
 .collapse-button {
   padding: 0px;
   border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 32px;
-  line-height: 32px;
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  line-height: 10px;
   cursor: pointer;
+  background: transparent;
+  color: inherit;
+
+  &:hover {
+    background: transparent;
+  }
 
   &.size-20 {
     width: 20px;
@@ -354,7 +356,29 @@ a {
 .collapsible-header {
   padding: 0.5rem 0;
   display: flex;
-  justify-content: space-between;
+  cursor: pointer;
+
+  .collapse-button {
+    margin: 0.19rem 0.7rem 0 0;
+  }
+}
+
+.collapsed {
+  background-color: #888;
+  margin: 0 -1rem;
+  padding: 0.5rem 1rem;
+}
+
+.collapsible-content {
+  padding: 0 1.35rem;
+
+  & > * {
+    padding: 0.25rem 0;
+  }
+}
+
+.checkbox {
+  margin: 0 0.5rem 0 0;
 }
 
 .bottom-floats-wrapper {
@@ -1500,5 +1524,34 @@ aside.emoji-picker-react {
     &.active {
       background: #ff9900;
     }
+  }
+}
+
+.stat-editor {
+  outline-style: solid;
+  outline-width: 1px;
+  outline-color: #999;
+  padding: 0.2rem;
+  margin: 0.2rem;
+
+  text-align: center;
+  font-weight: bold;
+}
+.stat-change-icon {
+  font-size: 20px;
+  padding: 0;
+  margin: 0;
+}
+.stat-input {
+  width: 40px;
+  margin: 0.1rem;
+  font-size: 14px;
+}
+
+.aura-active {
+  background: #ff9900;
+
+  &:hover {
+    background: #ffbb22;
   }
 }

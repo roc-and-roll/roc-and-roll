@@ -30,6 +30,7 @@ import {
   RRModifier,
   RRMultipleRoll,
   SyncedStateAction,
+  characterStatNames,
 } from "../../shared/state";
 import { assertNever, clamp, empty2Null, rrid } from "../../shared/util";
 import { useMyself } from "../myself";
@@ -158,6 +159,16 @@ export const DiceTemplates = React.memo(function DiceTemplates({
           {
             type: "modifier",
             modifier: selectedCharacter?.attributes[part.name] ?? 0,
+            damageType: part.damage,
+          },
+        ];
+      case "linkedStat":
+        return [
+          {
+            type: "modifier",
+            modifier: !selectedCharacter?.stats[part.name]
+              ? 0
+              : Math.floor((selectedCharacter.stats[part.name]! - 10) / 2),
             damageType: part.damage,
           },
         ];
@@ -405,6 +416,21 @@ function DicePicker() {
         const part = {
           id: rrid<RRDiceTemplatePart>(),
           type: "linkedModifier" as const,
+          damage: { type: null, modifiers: [] },
+          name,
+        };
+        return (
+          <PickerDiceTemplatePart
+            key={name}
+            part={part}
+            onClick={() => setDiceHolder([...diceHolder, part])}
+          />
+        );
+      })}
+      {characterStatNames.map((name) => {
+        const part = {
+          id: rrid<RRDiceTemplatePart>(),
+          type: "linkedStat" as const,
           damage: { type: null, modifiers: [] },
           name,
         };
@@ -669,8 +695,10 @@ function DiceTemplateInner({
     else if (b.type === "template") typeResult = -1;
     else if (a.type === "dice") typeResult = -1;
     else if (b.type === "dice") typeResult = 1;
-    else if (a.type === "linkedModifier") typeResult = -1;
-    else if (b.type === "linkedModifier") typeResult = 1;
+    else if (a.type === "linkedModifier" || a.type === "linkedStat")
+      typeResult = -1;
+    else if (b.type === "linkedModifier" || b.type === "linkedStat")
+      typeResult = 1;
 
     //lastly sort the dice and modifiers by value
     let valueResult = 0;
@@ -1033,6 +1061,7 @@ const DiceTemplatePartMenuWrapper: React.FC<{
         <div onClick={(e) => e.stopPropagation()}>
           {(part.type === "dice" ||
             part.type === "linkedModifier" ||
+            part.type === "linkedStat" ||
             part.type === "modifier") && (
             <DamageTypeEditor part={part} templateId={template.id} />
           )}
@@ -1121,6 +1150,20 @@ const DiceTemplatePart = React.forwardRef<
         <div className="dice-option" style={styleFor(part)}>
           <div className="dice-option-linked-modifier">
             {selectedCharacter?.attributes[part.name] ?? null}
+          </div>
+          <div className="dice-option-linked-modifier-name">
+            {part.name[0]!.toUpperCase() + part.name.substring(1, 4)}
+          </div>
+        </div>
+      );
+      break;
+    case "linkedStat":
+      content = (
+        <div className="dice-option" style={styleFor(part)}>
+          <div className="dice-option-linked-modifier">
+            {!selectedCharacter?.stats[part.name]
+              ? null
+              : Math.floor((selectedCharacter.stats[part.name]! - 10) / 2)}
           </div>
           <div className="dice-option-linked-modifier-name">
             {part.name[0]!.toUpperCase() + part.name.substring(1, 4)}

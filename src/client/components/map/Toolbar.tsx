@@ -189,12 +189,12 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
     <Dialog open={true} onClose={onClose}>
       <DialogTitle>Settings</DialogTitle>
       <DialogContent>
-        <Collapsible title="Compendium" defaultCollapsed>
-          <Compendium />
+        <Collapsible title="User Settings" defaultCollapsed>
+          <Settings />
         </Collapsible>
 
-        <Collapsible title="Settings" defaultCollapsed>
-          <Settings />
+        <Collapsible title="Compendium" defaultCollapsed>
+          <Compendium />
         </Collapsible>
 
         <Collapsible title="Modding" defaultCollapsed>
