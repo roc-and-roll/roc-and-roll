@@ -6,7 +6,7 @@ export const SVGBlurHashImage = React.forwardRef<
   HTMLImageElement,
   {
     image: RRFileImage | { blurhash: string; url: string };
-    tokenSize: number;
+    tokenSize?: number;
     x: number;
     y: number;
     width: number;
@@ -15,9 +15,11 @@ export const SVGBlurHashImage = React.forwardRef<
     Omit<ImgHTMLAttributes<HTMLImageElement>, "width" | "height" | "src">
   >
 >(function SVGBlurHashImage(
-  { x, y, tokenSize, width, height, style, ...rest },
+  { x, y, tokenSize: rawTokenSize, width, height, style, ...rest },
   ref
 ) {
+  const tokenSize = rawTokenSize ?? 0;
+
   return (
     <foreignObject
       x={x}
