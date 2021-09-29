@@ -85,9 +85,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
   // nested as part of another template)
   const allTopLevelTemplatesInCategory = allTemplatesInCategory.filter(
     (templateCandidate) =>
-      !allTemplatesInCategory.some((t) =>
-        isNestedTemplateOf(t, templateCandidate.id)
-      )
+      !allTemplates.some((t) => isNestedTemplateOf(t, templateCandidate.id))
   );
 
   const dispatch = useServerDispatch();
