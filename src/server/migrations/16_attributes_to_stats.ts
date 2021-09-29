@@ -10,8 +10,8 @@ export default class extends AbstractMigration {
         { attributes: Record<string, number>; stats: any }
       >
     ).forEach((character) => {
+      character.stats ??= {};
       Object.entries(character.attributes).forEach(([key, value]) => {
-        character.stats ??= {};
         if (key === "proficiency" || key === "initiative") return;
         character.stats[key] = value * 2 + 10;
         delete character.attributes[key];
@@ -23,8 +23,8 @@ export default class extends AbstractMigration {
         { attributes: Record<string, number>; stats: any }
       >
     ).forEach((character) => {
+      character.stats ??= {};
       Object.entries(character.attributes).forEach(([key, value]) => {
-        character.stats ??= {};
         if (key === "proficiency" || key === "initiative") return;
         character.stats[key] = value * 2 + 10;
         delete character.attributes[key];
