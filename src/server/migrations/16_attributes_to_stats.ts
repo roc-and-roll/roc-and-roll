@@ -10,8 +10,9 @@ export default class extends AbstractMigration {
         { attributes: Record<string, number>; stats: any }
       >
     ).forEach((character) => {
+      character.stats ??= {};
       Object.entries(character.attributes).forEach(([key, value]) => {
-        if (key === "profiency" || key === "initiative") return;
+        if (key === "proficiency" || key === "initiative") return;
         character.stats[key] = value * 2 + 10;
         delete character.attributes[key];
       });
@@ -22,12 +23,29 @@ export default class extends AbstractMigration {
         { attributes: Record<string, number>; stats: any }
       >
     ).forEach((character) => {
+      character.stats ??= {};
       Object.entries(character.attributes).forEach(([key, value]) => {
-        if (key === "profiency" || key === "initiative") return;
+        if (key === "proficiency" || key === "initiative") return;
         character.stats[key] = value * 2 + 10;
         delete character.attributes[key];
       });
     });
+
+    Object.values(
+      state.diceTemplates.entities as Record<
+        string,
+        { parts: { type: string; name: string }[] }
+      >
+    ).forEach((template) => {
+      template.parts.forEach((part) => {
+        if (
+          part.type === "linkedModifier" &&
+          !["proficiency", "initiative"].includes(part.name)
+        )
+          part.type = "linkedStat";
+      });
+    });
+
     return state;
   };
 }

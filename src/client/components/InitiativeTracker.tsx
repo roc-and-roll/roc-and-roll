@@ -202,7 +202,7 @@ const InitiativeEntry = React.memo<{
   );
 });
 
-export function InitiativeTracker() {
+export const InitiativeTracker = React.memo(function InitiativeTracker() {
   const myself = useMyself();
   const initiativeTracker = useServerState((state) => state.initiativeTracker);
 
@@ -216,7 +216,7 @@ export function InitiativeTracker() {
       myself={myself}
     />
   );
-}
+});
 
 function InitiativeTrackerInner({
   initiativeTracker,

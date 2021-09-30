@@ -23,7 +23,7 @@ export const diceCategories = [
   faBroom,
 ];
 
-export function DicePanel() {
+export const DicePanel = React.memo(function DicePanel() {
   const [active, setActive] = useState(0);
 
   return (
@@ -54,4 +54,4 @@ export function DicePanel() {
       ))}
     </div>
   );
-}
+});

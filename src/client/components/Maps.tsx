@@ -19,7 +19,7 @@ import { GMArea } from "./GMArea";
 import { Button } from "./ui/Button";
 import { SmartTextInput } from "./ui/TextInput";
 
-export function Maps() {
+export const Maps = React.memo(function Maps() {
   const dispatch = useServerDispatch();
   const myself = useMyself();
   const mapIds = useServerState((state) => state.maps.ids);
@@ -67,7 +67,7 @@ export function Maps() {
       </ul>
     </GMArea>
   );
-}
+});
 
 export function MapListEntry({
   mapId,

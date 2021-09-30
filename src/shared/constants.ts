@@ -14,7 +14,7 @@ export const FORCE_COMMIT_FIELD_VALUE_AFTER = 5 * 1000;
 
 export const STORE_SUBSCRIPTION_THROTTLE = 100;
 
-export const LAST_MIGRATION_VERSION = 17;
+export const LAST_MIGRATION_VERSION = 16;
 
 export const SYNC_MY_MOUSE_POSITION = true as boolean;
 

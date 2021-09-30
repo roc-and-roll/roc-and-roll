@@ -56,7 +56,7 @@ function LogEntry({ logEntry }: { logEntry: RRLogEntry }) {
   return <div title={formatTimestamp(logEntry.timestamp)}>{content}</div>;
 }
 
-export function Log() {
+export const Log = React.memo(function Log() {
   const logEntriesCollection = useServerState((state) => state.logEntries);
   const myself = useMyself();
   const dispatch = useServerDispatch();
@@ -124,4 +124,4 @@ export function Log() {
       </Button>
     </div>
   );
-}
+});
