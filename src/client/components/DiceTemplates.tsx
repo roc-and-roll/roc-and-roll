@@ -310,7 +310,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
           </div>,
           document.body
         )}
-      <div>
+      <div style={{ width: "100%" }}>
         <div style={{ display: "flex" }}>
           <Select
             value={selectedCharacterId ?? ""}
