@@ -8,11 +8,7 @@ import {
   initiativeTrackerEntryCharacterUpdate,
   initiativeTrackerEntryLairActionUpdate,
 } from "../actions";
-import {
-  initialSyncedState,
-  InitiativeTrackerSyncedState,
-  RRInitiativeTrackerEntry,
-} from "../state";
+import { initialSyncedState, RRInitiativeTrackerEntry } from "../state";
 
 // Automatically sort all entries by their initiative
 const config = {
@@ -47,11 +43,12 @@ const initiativeTrackerEntriesReducer = createReducer(
       .addCase(
         initiativeTrackerEntryLairActionUpdate,
         initiativeTrackerEntryAdapter.updateOne
-      )
-      .addCase(
-        initiativeTrackerEntryRemove,
-        initiativeTrackerEntryAdapter.removeOne
       );
+    // This case is handled below, since it needs access to currentEntryId.
+    // .addCase(
+    //   initiativeTrackerEntryRemove,
+    //   initiativeTrackerEntryAdapter.removeOne
+    // );
   }
 );
 
@@ -65,9 +62,32 @@ export const initiativeTrackerReducer = createReducer(
       .addCase(initiativeTrackerSetCurrentEntry, (state, action) => {
         state.currentEntryId = action.payload;
       })
+      .addCase(initiativeTrackerEntryRemove, (state, action) => {
+        // If we're removing the current entry, we make the next entry the
+        // current entry.
+        const { payload: id } = action;
+
+        if (state.currentEntryId === id) {
+          let idx = state.entries.ids.indexOf(id);
+          if (idx !== -1) {
+            if (state.entries.ids.length === 1) {
+              state.currentEntryId = null;
+            } else {
+              idx = (idx + 1) % state.entries.ids.length;
+
+              state.currentEntryId = state.entries.ids[idx]!;
+            }
+          }
+        }
+
+        state.entries = initiativeTrackerEntryAdapter.removeOne(
+          state.entries,
+          action
+        );
+      })
       .addDefaultCase((state, action) => {
         state.entries = initiativeTrackerEntriesReducer(
-          original(state.entries) as InitiativeTrackerSyncedState["entries"],
+          original(state.entries),
           action
         );
       });
