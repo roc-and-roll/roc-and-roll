@@ -1,3 +1,5 @@
+import { faUserCircle, faCircle } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useState } from "react";
 import { privateChatAdd } from "../../../shared/actions";
 import { EntityCollection, RRPlayer, entries } from "../../../shared/state";
@@ -30,13 +32,8 @@ const ToolbarPlayer = React.memo<{
   const { logout } = useLoginLogout();
 
   let character;
-  for (const characterId of player.characterIds) {
-    character = characters.entities[characterId];
-    if (character) {
-      break;
-    }
-  }
-  if (!character) return null;
+  if (!player.mainCharacterId) character = null;
+  else character = characters.entities[player.mainCharacterId];
 
   return (
     <Popover
@@ -53,7 +50,26 @@ const ToolbarPlayer = React.memo<{
       placement="bottom"
     >
       <div onClick={() => setSelected(!selected)}>
-        <CharacterPreview character={character} title={player.name} size={64} />
+        {character ? (
+          <CharacterPreview
+            character={character}
+            title={player.name}
+            size={64}
+          />
+        ) : (
+          <FontAwesomeIcon
+            icon={faUserCircle}
+            title={player.name}
+            style={{
+              fontSize: "64px",
+              backgroundColor: player.color,
+              borderColor: player.color,
+              borderStyle: "solid",
+              borderRadius: "200px",
+              borderWidth: "3px",
+            }}
+          />
+        )}
       </div>
     </Popover>
   );

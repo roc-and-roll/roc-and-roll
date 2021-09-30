@@ -206,6 +206,7 @@ export const isSyncedState = t.isObject({
       isGM: t.isBoolean(),
       currentMap: isRRID<RRMapID>(),
       characterIds: t.isArray(isRRID<RRCharacterID>()),
+      mainCharacterId: t.isNullable(isRRID<RRCharacterID>()),
       favoritedAssetIds: t.isArray(isRRID<RRAssetID>()),
     })
   ),
