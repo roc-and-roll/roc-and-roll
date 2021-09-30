@@ -15,14 +15,15 @@ import { useAlert, usePrompt } from "../dialog-boxes";
 
 export function DiceInterface() {
   const [diceTypes, setDiceTypes] = useState<string[]>([]);
-  const [boni, setBoni] = useState<number>(0);
+  const [boni, setBoni] = useState<number | null>(null);
   const myself = useMyself();
   const dispatch = useServerDispatch();
   const alert = useAlert();
   const prompt = usePrompt();
 
   const doRoll = async (addTemplate: boolean) => {
-    const boniString = boni >= 0 ? "+" + boni.toString() : boni.toString();
+    const boniString =
+      boni === null ? "" : boni >= 0 ? "+" + boni.toString() : boni.toString();
     const rollString = diceTypes.join("+") + boniString;
 
     const regex = /(^| *[+-] *)(?:(\d*)(d|a|i)(\d+)|(\d+))/g;
@@ -104,7 +105,7 @@ export function DiceInterface() {
         );
       }
       setDiceTypes([]);
-      setBoni(0);
+      setBoni(null);
     } else {
       await alert("Please follow the regex: " + regex.toString());
     }
@@ -142,11 +143,11 @@ export function DiceInterface() {
   }
 
   function addBonus(bonus: number) {
-    setBoni((boni) => boni + bonus);
+    setBoni((boni) => (boni ?? 0) + bonus);
   }
 
   function clear() {
-    setBoni(0);
+    setBoni(null);
     setDiceTypes([]);
   }
 
@@ -199,40 +200,42 @@ export function DiceInterface() {
                 </td>
                 <td className="buttons-half-width">
                   <div>
+                    <Button onClick={() => addBonus(-2)}>-2</Button>
                     <Button onClick={() => addBonus(-1)}>-1</Button>
                     <Button onClick={() => addBonus(1)}>+1</Button>
                     <Button onClick={() => addBonus(2)}>+2</Button>
                     <Button onClick={() => addBonus(3)}>+3</Button>
                     <Button onClick={() => addBonus(4)}>+4</Button>
-                    <Button onClick={() => addBonus(10)}>+10</Button>
                   </div>
                   <div>
-                    {[5, 6, 7, 8, 9].map((bonus) => (
+                    {[5, 6, 7, 8, 9, 10].map((bonus) => (
                       <Button key={bonus} onClick={() => addBonus(bonus)}>
                         +{bonus}
                       </Button>
                     ))}
-                    <Button onClick={() => clear()}>DEL</Button>
                   </div>
                 </td>
 
-                <td>
-                  <Button
-                    className="add-template-button"
-                    onClick={() => doRoll(true)}
-                  >
+                <td className="buttons-full-width">
+                  <Button onClick={() => doRoll(true)}>
                     <p>Template</p>
                   </Button>
                   <Button
                     className="roll-it-button"
                     onClick={() => doRoll(false)}
+                    disabled={boni === null && diceTypes.length === 0}
                   >
                     <p>ROLL IT</p>
                     <p>{diceTypes.join(" + ")}</p>
                     <div>
-                      {boni >= 0 ? "+" + boni.toString() : boni.toString()}
+                      {boni === null
+                        ? ""
+                        : boni >= 0
+                        ? "+" + boni.toString()
+                        : boni.toString()}
                     </div>
                   </Button>
+                  <Button onClick={() => clear()}>Clear Input</Button>
                 </td>
               </tr>
             </tbody>

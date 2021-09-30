@@ -732,6 +732,19 @@ $gmAreaColor: #ab62c0;
   }
 }
 
+.initiative-value {
+  align-self: end;
+  display: flex;
+  justify-content: end;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.vertically-centered-text {
+  display: flex;
+  align-items: center;
+}
+
 .your-turn {
   text-align: center;
   font-size: 2rem;
@@ -1085,11 +1098,7 @@ button.color-picker-color {
 }
 
 .roll-it-button {
-  width: 100%;
-  height: 150px;
-}
-.add-template-button {
-  width: 100%;
+  height: 120px;
 }
 
 .maps {

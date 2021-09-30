@@ -36,7 +36,7 @@ import {
   highlightedCharactersFamily,
   selectedMapObjectIdsAtom,
 } from "./map/recoil";
-import { EMPTY_ARRAY, withDo } from "../../shared/util";
+import { EMPTY_ARRAY } from "../../shared/util";
 import ReactDOM from "react-dom";
 import { NotificationTopAreaPortal } from "./Notifications";
 import { SmartIntegerInput } from "./ui/TextInput";
@@ -89,7 +89,7 @@ const InitiativeEntry = React.memo<{
       <>
         {/* Add an empty TokenStack for correct padding */}
         <CharacterStack characters={[]} />
-        <p>{entry.description}</p>
+        <p className="vertically-centered-text">{entry.description}</p>
       </>
     );
   } else {
@@ -104,7 +104,7 @@ const InitiativeEntry = React.memo<{
         <CharacterStack
           characters={characters.flatMap((character) => character ?? [])}
         />
-        <p>{[...names].join(", ")}</p>
+        <p className="vertically-centered-text">{[...names].join(", ")}</p>
       </>
     );
 
@@ -166,26 +166,34 @@ const InitiativeEntry = React.memo<{
           <Button
             onClick={() => onRemoveEntry()}
             className={!canEdit && myself.isGM ? "gm-button" : undefined}
+            style={{ marginRight: "0.25rem" }}
           >
             remove
           </Button>
         )}
-        <SmartIntegerInput
-          value={entry.initiative}
-          disabled={!(myself.isGM || canEdit)}
-          onChange={(initiative) =>
-            dispatch(
-              (entry.type === "character"
-                ? initiativeTrackerEntryCharacterUpdate
-                : initiativeTrackerEntryLairActionUpdate)({
-                id: entry.id,
-                changes: { initiative },
-              })
-            )
-          }
-        />
+        {canEdit || myself.isGM ? (
+          <SmartIntegerInput
+            value={entry.initiative}
+            onChange={(initiative) =>
+              dispatch(
+                (entry.type === "character"
+                  ? initiativeTrackerEntryCharacterUpdate
+                  : initiativeTrackerEntryLairActionUpdate)({
+                  id: entry.id,
+                  changes: { initiative },
+                })
+              )
+            }
+          />
+        ) : (
+          <p className="initiative-value">{entry.initiative}</p>
+        )}
         {myself.isGM && (
-          <Button className="gm-button" onClick={() => onSetCurrentEntry()}>
+          <Button
+            className="gm-button"
+            onClick={() => onSetCurrentEntry()}
+            style={{ marginLeft: "0.25rem" }}
+          >
             jump here
           </Button>
         )}
@@ -280,6 +288,11 @@ function InitiativeTrackerInner({
 
   return (
     <div className="initiative-tracker">
+      <RollInitiative
+        initiativeTracker={initiativeTracker}
+        characterCollection={characterCollection}
+        myselfId={myself.id}
+      />
       <Flipper flipKey={sortedRows.map((row) => row.id).join("-")}>
         <ul role="list">
           {sortedRows.map((entry, idx) => (
@@ -296,11 +309,6 @@ function InitiativeTrackerInner({
         </ul>
       </Flipper>
       {endTurnButton}
-      <RollInitiative
-        initiativeTracker={initiativeTracker}
-        characterCollection={characterCollection}
-        myselfId={myself.id}
-      />
       {myself.isGM && (
         <GMArea>
           <Button
