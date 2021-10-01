@@ -87,7 +87,7 @@ const InitiativeEntry = React.memo<{
   if (entry.type === "lairAction") {
     content = (
       <>
-        {/* Add an empty TokenStack for correct padding */}
+        {/* Add an empty CharacterStack for correct padding */}
         <CharacterStack characters={[]} />
         <p className="vertically-centered-text">{entry.description}</p>
       </>
@@ -97,7 +97,7 @@ const InitiativeEntry = React.memo<{
       (id) => characterCollection.entities[id]
     );
     const names = new Set(
-      characters.map((character) => character?.name ?? "Unknown Token")
+      characters.map((character) => character?.name ?? "Unknown Character")
     );
     content = (
       <>
