@@ -18,7 +18,6 @@ import {
   entries,
   RRActiveSong,
   RRActiveSongOrSoundSet,
-  RRAsset,
   RRAssetSong,
   RRSoundSet,
 } from "../../shared/state";
@@ -55,9 +54,7 @@ export const Music = React.memo(function Music() {
   const [filter, setFilter] = useState("");
 
   const assets = useServerState((state) => state.assets);
-  const allSongs = entries(assets).flatMap(
-    (a) => /*(a.type === "song" ? a : [])*/ a
-  );
+  const allSongs = entries(assets).flatMap((a) => (a.type === "song" ? a : []));
 
   const [tabletopaudioSongs, ownSongs] = partition(allSongs, (song) =>
     isTabletopAudioAsset(song)
@@ -201,7 +198,10 @@ export const Music = React.memo(function Music() {
       <div>
         <strong>- Favorites -</strong>
         {showSongList(
-          myself.favoritedAssetIds.flatMap((id) => assets.entities[id] ?? [])
+          myself.favoritedAssetIds.flatMap((id) => {
+            const asset = assets.entities[id];
+            return asset?.type === "song" ? asset : [];
+          })
         )}
       </div>
       <div>
@@ -238,11 +238,14 @@ function UploadAudio({ onUploaded }: { onUploaded: () => void }) {
         dispatch(
           uploadedFiles.map((f) =>
             assetSongAdd({
-              id: rrid<RRAsset>(),
               name: f.originalFilename,
               description: null,
-              filenameOrUrl: f.filename,
-              external: false,
+              location: {
+                type: "local",
+                filename: f.filename,
+                originalFilename: f.originalFilename,
+                mimeType: f.mimeType,
+              },
               type: "song",
               playerId: myself.id,
               tags: [],
@@ -279,12 +282,12 @@ const ActiveSong = React.memo(function ActiveSong({
   activeSong: RRActiveSong;
   actions: MusicActions;
 }) {
-  const song = useServerState(
+  const asset = useServerState(
     (state) => state.assets.entities[activeSong.songId]
   );
 
-  return song ? (
-    <Song audio={song} active={activeSong} filterText="" actions={actions} />
+  return asset?.type === "song" ? (
+    <Song audio={asset} active={activeSong} filterText="" actions={actions} />
   ) : null;
 });
 

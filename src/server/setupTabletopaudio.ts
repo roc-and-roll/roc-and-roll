@@ -1,12 +1,8 @@
 import path from "path";
 import fs from "fs";
-import {
-  assetSongAdd,
-  assetSongUpdate,
-  assetSongRemove,
-} from "../shared/actions";
-import { entries, RRAssetSong } from "../shared/state";
-import { partition, rrid } from "../shared/util";
+import { assetRemove, assetSongAdd, assetSongUpdate } from "../shared/actions";
+import { entries } from "../shared/state";
+import { partition } from "../shared/util";
 import { MyStore } from "./setupReduxStore";
 import fetch from "node-fetch";
 import {
@@ -105,14 +101,15 @@ async function updateTabletopAudioTracks(store: MyStore, workspaceDir: string) {
       ...newKeys.map((newKey) => {
         const newTrack = newTrackMap.get(newKey)!;
         return assetSongAdd({
-          id: rrid<RRAssetSong>(),
           type: "song",
           name: newTrack.track_title,
           description: newTrack.flavor_text,
           duration: 10 /* min */ * 60 /* sec */ * 1000 /* ms */,
           tags: newTrack.tags,
-          external: true,
-          filenameOrUrl: newTrack.link,
+          location: {
+            type: "external",
+            url: newTrack.link,
+          },
           playerId: null,
           extra: {
             tabletopAudioKey: newKey,
@@ -129,13 +126,16 @@ async function updateTabletopAudioTracks(store: MyStore, workspaceDir: string) {
             name: updatedTrack.track_title,
             description: updatedTrack.flavor_text,
             tags: updatedTrack.tags,
-            filenameOrUrl: updatedTrack.link,
+            location: {
+              type: "external",
+              url: updatedTrack.link,
+            },
           },
         });
       }),
 
       ...removedKeys.map((key) =>
-        assetSongRemove(existingTabletopAudioAssetMap.get(key)!.id)
+        assetRemove(existingTabletopAudioAssetMap.get(key)!.id)
       ),
     ])
   );

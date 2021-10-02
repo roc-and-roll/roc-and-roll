@@ -353,7 +353,12 @@ export type RRAssetImage = Extract<
   { type: "image" }
 >;
 
-export type RRAsset = RRAssetSong | RRAssetImage;
+export type RRAssetOther = Extract<
+  ECE<SyncedState["assets"]>,
+  { type: "other" }
+>;
+
+export type RRAsset = RRAssetSong | RRAssetImage | RRAssetOther;
 
 // This must resemble the EntityState type from @reduxjs/toolkit to work with
 // createEntityAdapter

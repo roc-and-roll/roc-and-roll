@@ -1,10 +1,17 @@
 import { useCallback, useState } from "react";
 import { AllowedFileTypes, AllowedFileTypesToObject } from "../shared/files";
-import { RRAsset, RRCharacter, RRFileImage } from "../shared/state";
+import {
+  RRAsset,
+  RRAssetImage,
+  RRCharacter,
+  RRFileImage,
+} from "../shared/state";
 import { fittingTokenSize } from "../shared/util";
 
-export function fileUrl(file: RRFileImage) {
-  return _fileUrl(file.filename);
+export function fileUrl(asset: RRAsset) {
+  return asset.location.type === "local"
+    ? _fileUrl(asset.location.filename)
+    : asset.location.url;
 }
 
 function _fileUrl(filename: string) {
@@ -12,21 +19,25 @@ function _fileUrl(filename: string) {
 }
 
 export function assetUrl(a: RRAsset) {
-  return a.external ? a.filenameOrUrl : _fileUrl(a.filenameOrUrl);
+  return a.location.type === "local"
+    ? a.location.filename
+    : _fileUrl(a.location.url);
 }
 
 export function tokenImageUrl(
   token: {
-    tokenImage: NonNullable<RRCharacter["tokenImage"]>;
     tokenBorderColor: RRCharacter["tokenBorderColor"];
   },
+  image: RRAssetImage,
   size: number
 ) {
-  return `/api/token-image/${encodeURIComponent(
-    token.tokenImage.filename
-  )}/${encodeURIComponent(
-    fittingTokenSize(size)
-  )}?borderColor=${encodeURIComponent(token.tokenBorderColor)}`;
+  return image.location.type === "external"
+    ? image.location.url
+    : `/api/token-image/${encodeURIComponent(
+        image.location.filename
+      )}/${encodeURIComponent(
+        fittingTokenSize(size)
+      )}?borderColor=${encodeURIComponent(token.tokenBorderColor)}`;
 }
 
 export async function generateRandomToken(): Promise<RRFileImage> {

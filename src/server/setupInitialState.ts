@@ -141,7 +141,11 @@ async function loadAndMigrateState(
         throw new StateInvalidError(
           `An error occurred while trying to migrate the state to version ${
             migration.version
-          }${err instanceof Error ? `:\n${err.toString()}` : "."}`,
+          }${
+            err instanceof Error
+              ? `:\n${err.toString()}\n${err.stack ?? ""}`
+              : "."
+          }`,
           err
         );
       }

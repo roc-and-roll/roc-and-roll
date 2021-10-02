@@ -41,6 +41,7 @@ import {
   highlightedCharactersFamily,
   selectedMapObjectsFamily,
   characterFamily,
+  assetFamily,
 } from "./recoil";
 import { Popover } from "../Popover";
 import { CharacterEditor, conditionIcons } from "../characters/CharacterEditor";
@@ -338,6 +339,11 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
     [character, tokenSize, canControl]
   );
 
+  const asset = useRecoilValue(assetFamily(character.tokenImageAssetId));
+  if (asset?.type !== "image") {
+    return null;
+  }
+
   return (
     <>
       <SVGBlurHashImage
@@ -350,8 +356,8 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
         width={tokenSize + extraSpace * 2}
         height={tokenSize + extraSpace * 2}
         image={{
-          url: tokenImageUrl(character, tokenSize * zoom),
-          blurhash: character.tokenImage.blurhash,
+          url: tokenImageUrl(character, asset, tokenSize * zoom),
+          blurhash: asset.blurhash,
         }}
       />
 

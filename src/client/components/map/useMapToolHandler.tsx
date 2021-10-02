@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 import {
+  assetImageAdd,
   mapObjectAdd,
   mapObjectRemove,
   mapObjectUpdate,
@@ -371,18 +372,43 @@ export function useMapToolHandler(
             if (files === null) {
               return;
             }
-            const image = files[0]!;
+            const image = files[0];
+            if (!image) {
+              return;
+            }
 
-            const action = mapObjectAdd(mapId, {
+            const assetImageAddAction = assetImageAdd({
+              name: image.originalFilename,
+              description: null,
+              tags: [],
+              extra: {},
+
+              location: {
+                type: "local",
+                filename: image.filename,
+                mimeType: image.mimeType,
+                originalFilename: image.originalFilename,
+              },
+
+              type: "image",
+              originalFunction: "map",
+              blurhash: image.blurhash,
+              width: image.width,
+              height: image.height,
+
+              playerId: myself.id,
+            });
+
+            const mapObjectAddAction = mapObjectAdd(mapId, {
               type: "image",
               height: DEFAULT_BACKGROUND_IMAGE_HEIGHT,
-              image,
+              imageAssetId: assetImageAddAction.payload.id,
               ...create(p),
             });
 
             dispatch({
-              actions: [action],
-              optimisticKey: `MapToolHandler/add/${action.payload.mapObject.id}`,
+              actions: [assetImageAddAction, mapObjectAddAction],
+              optimisticKey: `MapToolHandler/add/${mapObjectAddAction.payload.mapObject.id}`,
               syncToServerThrottle: SERVER_SYNC_THROTTLE_TIME,
             });
           },

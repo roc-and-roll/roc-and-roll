@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, {
+  ImgHTMLAttributes,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
   GRID_SIZE,
@@ -25,7 +31,7 @@ import { assertNever } from "../../../shared/util";
 import { useMyself } from "../../myself";
 import { useRecoilValue } from "recoil";
 import { hoveredMapObjectsFamily } from "./Map";
-import { selectedMapObjectsFamily } from "./recoil";
+import { assetFamily, selectedMapObjectsFamily } from "./recoil";
 import { Popover } from "../Popover";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
@@ -134,14 +140,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
           ...imageProps
         } = sharedProps;
 
-        return (
-          <SVGBlurHashImage
-            image={object.image}
-            width={(object.image.width / object.image.height) * object.height}
-            height={object.height}
-            {...imageProps}
-          />
-        );
+        return <MapObjectImage object={object} {...imageProps} />;
       }
       default:
         assertNever(object);
@@ -165,6 +164,26 @@ export const MapObjectThatIsNotAToken = React.memo<{
     </Popover>
   );
 });
+
+function MapObjectImage({
+  object,
+  ...rest
+}: {
+  object: RRMapDrawingImage;
+  x: number;
+  y: number;
+} & Omit<ImgHTMLAttributes<HTMLImageElement>, "width" | "height" | "src">) {
+  const asset = useRecoilValue(assetFamily(object.imageAssetId));
+
+  return asset?.type === "image" && asset.location.type === "local" ? (
+    <SVGBlurHashImage
+      image={asset}
+      width={(asset.width / asset.height) * object.height}
+      height={object.height}
+      {...rest}
+    />
+  ) : null;
+}
 
 function ObjectEditOptions({
   object,

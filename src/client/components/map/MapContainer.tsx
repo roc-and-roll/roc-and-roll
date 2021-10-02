@@ -8,6 +8,7 @@ import {
   characterUpdate,
   characterAdd,
   mapSettingsUpdate,
+  assetImageAdd,
 } from "../../../shared/actions";
 import {
   entries,
@@ -146,9 +147,30 @@ export default function MapContainer() {
       const uploadedFiles = await uploadFiles(files, "image");
 
       dispatch(
-        await Promise.all(
-          uploadedFiles.map(async (uploadedFile, i) => {
-            return mapObjectAdd(mapId, {
+        uploadedFiles.flatMap((uploadedFile, i) => {
+          const assetAddAction = assetImageAdd({
+            name: uploadedFile.filename,
+            description: null,
+            tags: [],
+            location: {
+              type: "local",
+              filename: uploadedFile.filename,
+              originalFilename: uploadedFile.originalFilename,
+              mimeType: uploadedFile.mimeType,
+            },
+            playerId: myself.id,
+            extra: {},
+
+            type: "image",
+            blurhash: uploadedFile.blurhash,
+            width: uploadedFile.width,
+            height: uploadedFile.height,
+            originalFunction: "map",
+          });
+
+          return [
+            assetAddAction,
+            mapObjectAdd(mapId, {
               playerId: myself.id,
               color: "black",
               position: pointAdd(point, pointScale(makePoint(GRID_SIZE), i)),
@@ -158,10 +180,10 @@ export default function MapContainer() {
 
               type: "image",
               height: DEFAULT_BACKGROUND_IMAGE_HEIGHT,
-              image: uploadedFile,
-            });
-          })
-        )
+              imageAssetId: assetAddAction.payload.id,
+            }),
+          ];
+        })
       );
     } catch (err) {
       console.error(err);

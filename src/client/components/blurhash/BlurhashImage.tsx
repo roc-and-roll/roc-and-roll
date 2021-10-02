@@ -1,7 +1,7 @@
 import composeRefs from "@seznam/compose-react-refs";
 import { decode } from "blurhash";
 import React, { ImgHTMLAttributes, useEffect, useState } from "react";
-import { RRFileImage } from "../../../shared/state";
+import { RRAssetImage } from "../../../shared/state";
 import { fileUrl } from "../../files";
 
 const CANVAS_SIZE = 32;
@@ -9,7 +9,7 @@ const CANVAS_SIZE = 32;
 export const BlurhashImage = React.forwardRef<
   HTMLImageElement,
   {
-    image: RRFileImage | { blurhash: string; url: string };
+    image: RRAssetImage | { blurhash: string; url: string };
     width: number;
     height: number;
     offset?: number;
