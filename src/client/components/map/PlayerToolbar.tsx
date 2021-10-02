@@ -1,4 +1,4 @@
-import { faUserCircle, faCircle } from "@fortawesome/free-solid-svg-icons";
+import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useState } from "react";
 import { privateChatAdd } from "../../../shared/actions";
@@ -55,6 +55,7 @@ const ToolbarPlayer = React.memo<{
             character={character}
             title={player.name}
             size={64}
+            shouldDisplayShadow={false}
           />
         ) : (
           <FontAwesomeIcon

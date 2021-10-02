@@ -14,10 +14,12 @@ export function CharacterPreview({
   character,
   title,
   size,
+  shouldDisplayShadow = true,
 }: {
   character: RRCharacter;
   title?: string;
   size?: number;
+  shouldDisplayShadow?: boolean;
 }) {
   const hurt = isCharacterHurt(character);
   const unconsciousOrDead = isCharacterUnconsciousOrDead(character);
@@ -33,11 +35,10 @@ export function CharacterPreview({
       width={currentSize}
       height={currentSize}
       loading="lazy"
-      className={clsx("token-image", {
-        hurt,
-        unconsciousOrDead,
-        overhealed,
-      })}
+      className={clsx(
+        "token-image",
+        shouldDisplayShadow && { hurt, unconsciousOrDead, overhealed }
+      )}
       style={{
         width: currentSize,
         height: currentSize,
