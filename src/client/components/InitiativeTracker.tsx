@@ -36,7 +36,7 @@ import {
   highlightedCharactersFamily,
   selectedMapObjectIdsAtom,
 } from "./map/recoil";
-import { EMPTY_ARRAY } from "../../shared/util";
+import { EMPTY_ARRAY, isCharacterDead } from "../../shared/util";
 import ReactDOM from "react-dom";
 import { NotificationTopAreaPortal } from "./Notifications";
 import { SmartIntegerInput } from "./ui/TextInput";
@@ -260,10 +260,6 @@ function InitiativeTrackerInner({
     (row) => row.id === initiativeTracker.currentEntryId
   );
   const currentRow = currentRowIndex >= 0 ? rows[currentRowIndex] : undefined;
-  const nextRow =
-    currentRowIndex >= 0
-      ? rows[(currentRowIndex + 1) % rows.length]
-      : undefined;
 
   const sortedRows =
     currentRowIndex >= 0
@@ -273,11 +269,38 @@ function InitiativeTrackerInner({
   const canEdit =
     !!currentRow && canEditEntry(currentRow, myself, characterCollection);
 
+  function findNextRow() {
+    if (currentRowIndex < 0) {
+      return;
+    }
+
+    let rowIndex = (currentRowIndex + 1) % rows.length;
+    while (rowIndex !== currentRowIndex) {
+      const nextRow = rows[rowIndex]!;
+      if (nextRow.type === "lairAction") {
+        return nextRow;
+      }
+
+      if (
+        nextRow.characterIds.some((characterId) => {
+          const character = characterCollection.entities[characterId];
+          return character && !isCharacterDead(character);
+        })
+      ) {
+        return nextRow;
+      }
+
+      rowIndex++;
+    }
+    return;
+  }
+
   const endTurnButton = currentRow && (
     <EndTurnButton
       myself={myself}
       canEdit={canEdit}
       onClick={() => {
+        const nextRow = findNextRow();
         if (!nextRow) {
           return;
         }

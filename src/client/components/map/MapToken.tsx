@@ -27,6 +27,7 @@ import tinycolor from "tinycolor2";
 import {
   assertNever,
   clamp,
+  isCharacterDead,
   isCharacterHurt,
   isCharacterOverhealed,
   isCharacterUnconsciousOrDead,
@@ -241,7 +242,7 @@ function MapTokenInner({
       {healthbarArea &&
         ReactDOM.createPortal(
           <>
-            {character.conditions.includes("dead") && (
+            {isCharacterDead(character) && (
               <DeadMarker x={x} y={y} scale={character.scale} />
             )}
             {canControl && character.maxHP > 0 && (

@@ -197,50 +197,61 @@ a {
   justify-content: center;
 }
 
-.token-image {
-  background-color: #555;
-  background-position: center center;
-  background-size: cover;
+.character-image {
+  position: relative;
 
-  &.hurt {
-    animation-name: hurt;
-    animation-duration: 2s;
-  }
+  img {
+    background-color: #555;
+    background-position: center center;
+    background-size: cover;
 
-  &.unconsciousOrDead {
-    animation-name: hurt;
-    animation-duration: 0.2s;
-  }
-
-  &.overhealed {
-    animation-name: overhealed;
-    animation-duration: 2s;
-  }
-
-  &.hurt,
-  &.unconsciousOrDead,
-  &.overhealed {
-    animation-direction: alternate;
-    animation-iteration-count: infinite;
-    animation-timing-function: ease-in-out;
-  }
-
-  @keyframes hurt {
-    from {
-      box-shadow: none;
+    &.hurt {
+      animation-name: hurt;
+      animation-duration: 2s;
     }
-    to {
-      box-shadow: 0 0 4px 2px red;
+
+    &.unconsciousOrDead {
+      animation-name: hurt;
+      animation-duration: 0.2s;
+    }
+
+    &.overhealed {
+      animation-name: overhealed;
+      animation-duration: 2s;
+    }
+
+    &.hurt,
+    &.unconsciousOrDead,
+    &.overhealed {
+      animation-direction: alternate;
+      animation-iteration-count: infinite;
+      animation-timing-function: ease-in-out;
+    }
+
+    @keyframes hurt {
+      from {
+        box-shadow: none;
+      }
+      to {
+        box-shadow: 0 0 4px 2px red;
+      }
+    }
+
+    @keyframes overhealed {
+      from {
+        box-shadow: none;
+      }
+      to {
+        box-shadow: 0 0 4px 2px green;
+      }
     }
   }
 
-  @keyframes overhealed {
-    from {
-      box-shadow: none;
-    }
-    to {
-      box-shadow: 0 0 4px 2px green;
-    }
+  .dead-marker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: #9b111c;
   }
 }
 
