@@ -1,3 +1,4 @@
+import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import clsx from "clsx";
 import React, { useEffect, useState } from "react";
 import { RRCharacter } from "../../../shared/state";
@@ -6,9 +7,11 @@ import {
   isCharacterHurt,
   isCharacterUnconsciousOrDead,
   isCharacterOverhealed,
+  isCharacterDead,
 } from "../../../shared/util";
 import { tokenImageUrl } from "../../files";
 import { BlurhashImage } from "../blurhash/BlurhashImage";
+import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 
 export function CharacterPreview({
   character,
@@ -23,29 +26,41 @@ export function CharacterPreview({
 }) {
   const hurt = isCharacterHurt(character);
   const unconsciousOrDead = isCharacterUnconsciousOrDead(character);
+  const dead = isCharacterDead(character);
   const overhealed = isCharacterOverhealed(character);
 
   const currentSize = size ?? 32;
   return (
-    <BlurhashImage
-      image={{
-        blurhash: character.tokenImage.blurhash,
-        url: tokenImageUrl(character, currentSize),
-      }}
-      width={currentSize}
-      height={currentSize}
-      loading="lazy"
-      className={clsx(
-        "token-image",
-        shouldDisplayShadow && { hurt, unconsciousOrDead, overhealed }
+    <span className="character-image">
+      <BlurhashImage
+        image={{
+          blurhash: character.tokenImage.blurhash,
+          url: tokenImageUrl(character, currentSize),
+        }}
+        className={clsx(
+          shouldDisplayShadow && { hurt, unconsciousOrDead, overhealed }
+        )}
+        width={currentSize}
+        height={currentSize}
+        loading="lazy"
+        style={{
+          width: currentSize,
+          height: currentSize,
+          borderRadius: currentSize,
+        }}
+        title={title ?? character.name}
+      />
+      {dead && shouldDisplayShadow && (
+        <RRFontAwesomeIcon
+          icon={faTimes}
+          className="dead-marker"
+          style={{
+            width: currentSize,
+            height: currentSize,
+          }}
+        />
       )}
-      style={{
-        width: currentSize,
-        height: currentSize,
-        borderRadius: currentSize,
-      }}
-      title={title ?? character.name}
-    />
+    </span>
   );
 }
 

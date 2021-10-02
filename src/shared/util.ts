@@ -100,8 +100,12 @@ export function isCharacterUnconsciousOrDead(character: RRCharacter) {
   return (
     (character.maxHP > 0 && character.hp + character.temporaryHP === 0) ||
     character.conditions.includes("unconscious") ||
-    character.conditions.includes("dead")
+    isCharacterDead(character)
   );
+}
+
+export function isCharacterDead(character: RRCharacter) {
+  return character.conditions.includes("dead");
 }
 
 export function isCharacterHurt(character: RRCharacter) {
