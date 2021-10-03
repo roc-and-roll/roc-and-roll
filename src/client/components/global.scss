@@ -1435,6 +1435,7 @@ aside.emoji-picker-react {
 .dialog-modal {
   margin: 20vh auto;
   width: 60vw;
+  max-width: 1000px;
   max-height: 70vh;
 
   display: flex;
