@@ -16,7 +16,7 @@ export default class extends AbstractMigration {
   ) {
     const asset = {
       id: rrid<any>(),
-      name: image.filename,
+      name: image.originalFilename,
       description: null,
       tags: [],
       extra: {},
