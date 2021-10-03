@@ -1,7 +1,6 @@
 import {
   faPlay,
   faPlus,
-  faPlusCircle,
   faSpinner,
   faStar,
   faStop,
@@ -17,6 +16,7 @@ import {
   ephemeralMusicUpdate,
   playerUpdateAddFavoritedAssetId,
   playerUpdateRemoveFavoritedAssetId,
+  soundSetAdd,
 } from "../../shared/actions";
 import {
   DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
@@ -34,14 +34,14 @@ import { isTabletopAudioAsset } from "../../shared/tabletopaudio";
 import { partition, rrid, timestamp } from "../../shared/util";
 import { useFileUpload } from "../files";
 import { useMyself } from "../myself";
-import { useAlert } from "../dialog-boxes";
+import { useAlert, usePrompt } from "../dialog-boxes";
 import { useServerDispatch, useServerState } from "../state";
 import { formatDuration, highlightMatching } from "../util";
 import { ActiveSoundSet, SoundSets as SoundSets } from "./SoundSets";
 import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
 import { VolumeSlider } from "./VolumeSlider";
-import clsx from "clsx";
+import { Collapsible, CollapsibleWithButton } from "./Collapsible";
 
 export type MusicActions = {
   onAdd: (songOrSoundSet: RRAssetSong | RRSoundSet) => void;
@@ -155,6 +155,24 @@ export const Music = React.memo(function Music() {
     [onAdd, onFavorite, onReplace, onSetVolume, onStop]
   );
 
+  const prompt = usePrompt();
+  const createSoundSet = async () => {
+    const name = (await prompt("Enter a name for the sound set"))?.trim();
+
+    if (name === "" || name === undefined) {
+      return;
+    }
+
+    dispatch(
+      soundSetAdd({
+        name,
+        description: null,
+        playlists: [],
+        playerId: myself.id,
+      })
+    );
+  };
+
   const showSongList = (songs: RRAssetSong[]) =>
     matchSorter(songs, filter, {
       keys: ["name", "description", "tags.*"],
@@ -186,49 +204,51 @@ export const Music = React.memo(function Music() {
         placeholder="search music..."
       />
       <UploadAudio onUploaded={() => setFilter("")} />
-      <div>
-        <strong>- Playing -</strong>
-        {activeMusic.map((activeSongOrSoundSet) => {
-          if (activeSongOrSoundSet.type === "soundSet") {
+      {activeMusic.length > 0 && (
+        <Collapsible title="Playing">
+          {activeMusic.map((activeSongOrSoundSet) => {
+            if (activeSongOrSoundSet.type === "soundSet") {
+              return (
+                <ActiveSoundSet
+                  key={activeSongOrSoundSet.id}
+                  activeSoundSet={activeSongOrSoundSet}
+                  actions={actions}
+                />
+              );
+            }
             return (
-              <ActiveSoundSet
+              <ActiveSong
                 key={activeSongOrSoundSet.id}
-                activeSoundSet={activeSongOrSoundSet}
+                activeSong={activeSongOrSoundSet}
                 actions={actions}
               />
             );
-          }
-          return (
-            <ActiveSong
-              key={activeSongOrSoundSet.id}
-              activeSong={activeSongOrSoundSet}
-              actions={actions}
-            />
-          );
-        })}
-      </div>
-      <div>
-        <strong>- Favorites -</strong>
+          })}
+        </Collapsible>
+      )}
+      <Collapsible title="Favourites" defaultCollapsed={true}>
         {showSongList(
           myself.favoritedAssetIds.flatMap((id) => assets.entities[id] ?? [])
         )}
-      </div>
-      <div>
-        <strong>- Sound Sets -</strong>
+      </Collapsible>
+      <CollapsibleWithButton
+        title="Sound Sets"
+        defaultCollapsed={true}
+        buttonIcon={faPlus}
+        buttonOnClick={() => createSoundSet()}
+      >
         <SoundSets
           filterText={filter}
           actions={actions}
           activeMusic={activeMusic}
         />
-      </div>
-      <div>
-        <strong>- Uploaded Audio -</strong>
-        {showSongList(ownSongs)}
-      </div>
-      <div>
-        <strong>- Tabletop Audio -</strong>
+      </CollapsibleWithButton>
+      <Collapsible title="Uploaded Audio" defaultCollapsed={true}>
+        {showSongList(ownSongs)}{" "}
+      </Collapsible>
+      <Collapsible title="Tabletop Audio" defaultCollapsed={true}>
         {showSongList(tabletopaudioSongs)}
-      </div>
+      </Collapsible>
     </>
   );
 });

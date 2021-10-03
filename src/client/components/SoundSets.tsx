@@ -45,38 +45,7 @@ export const SoundSets = React.memo<{
   actions: MusicActions;
   activeMusic: RRActiveSongOrSoundSet[];
 }>(function SoundSets({ filterText, actions, activeMusic }) {
-  const myself = useMyself();
-  const dispatch = useServerDispatch();
   const soundSets = useServerState((state) => state.soundSets);
-  const prompt = usePrompt();
-
-  const createSoundSet = async () => {
-    const name = (await prompt("Enter a name for the sound set"))?.trim();
-
-    if (name === "" || name === undefined) {
-      return;
-    }
-
-    dispatch(
-      soundSetAdd({
-        name,
-        description: null,
-        playlists: [],
-        playerId: myself.id,
-      })
-    );
-  };
-
-  const createNewSoundSetButton = (
-    <div className="music-row">
-      <Button
-        className="music-button no-margin-left"
-        onClick={() => createSoundSet()}
-      >
-        create new sound set
-      </Button>
-    </div>
-  );
 
   const filteredSoundSets = matchSorter(entries(soundSets), filterText, {
     keys: ["name", "description"],
@@ -86,7 +55,6 @@ export const SoundSets = React.memo<{
   if (filteredSoundSets.length === 0) {
     return (
       <>
-        {createNewSoundSetButton}
         <div className="music-row">
           <em>
             no sound sets{" "}
@@ -99,7 +67,6 @@ export const SoundSets = React.memo<{
 
   return (
     <>
-      {createNewSoundSetButton}
       {filteredSoundSets.map((soundSet) => {
         const activeSongOrSoundSet = activeMusic.find(
           (activeSongOrSoundSet) =>
@@ -167,6 +134,12 @@ function SoundSet({
     <>
       <div className="music-row">
         <div className="music-label">
+          <CollapseButton
+            collapsed={collapsed}
+            setCollapsed={setCollapsed}
+            size={20}
+            side="left"
+          />
           {highlightMatching(soundSet.name, filterText)}{" "}
           <em>
             - {numEntries} {numEntries === 1 ? "entry" : "entries"}
@@ -201,12 +174,6 @@ function SoundSet({
             </Button>
           </>
         )}
-        <CollapseButton
-          collapsed={collapsed}
-          setCollapsed={setCollapsed}
-          size={20}
-          side="right"
-        />
       </div>
       {!collapsed && (
         <SoundSetDetails soundSet={soundSet} activeSoundSet={activeSoundSet} />
@@ -417,17 +384,20 @@ function Playlist({
         return (
           <div key={playlistEntry.id} className="music-row">
             <div className="music-label">
-              <span className="ascii-art">│ ├ {trackNum} </span>
-              {isCurrent && "> "}
-              {playlistEntry.type === "song" ? (
-                song ? (
-                  song.name
+              <div className="music-title">
+                <span className="ascii-art">│ ├ {trackNum} </span>
+                {isCurrent && "> "}
+
+                {playlistEntry.type === "song" ? (
+                  song ? (
+                    song.name
+                  ) : (
+                    <em>song not found</em>
+                  )
                 ) : (
-                  <em>song not found</em>
-                )
-              ) : (
-                <em>~ silence ~</em>
-              )}
+                  <em>~ silence ~</em>
+                )}
+              </div>
             </div>
             <Button
               disabled={playlistEntryIdx === 0}
