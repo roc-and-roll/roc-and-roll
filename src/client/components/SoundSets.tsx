@@ -321,11 +321,13 @@ function Playlist({
         <small>
           {formatDuration(
             playlist.entries
-              .map((playlistEntry) =>
-                playlistEntry.type === "silence"
-                  ? playlistEntry.duration
-                  : assets.entities[playlistEntry.songId]?.duration ?? 0
-              )
+              .map((playlistEntry) => {
+                if (playlistEntry.type === "silence") {
+                  return playlistEntry.duration;
+                }
+                const asset = assets.entities[playlistEntry.songId];
+                return asset?.type === "song" ? asset.duration : 0;
+              })
               .reduce((sum, duration) => sum + duration, 0)
           )}
         </small>
@@ -371,10 +373,12 @@ function Playlist({
       {playlist.entries.map((playlistEntry, playlistEntryIdx) => {
         const isCurrent =
           playlistEntry.id === currentlyPlaying?.playlistEntry.id;
-        const song =
+        const asset =
           playlistEntry.type === "song"
             ? assets.entities[playlistEntry.songId]
             : undefined;
+        const song = asset?.type === "song" ? asset : undefined;
+
         const duration =
           song?.duration ??
           (playlistEntry.type === "silence" && playlistEntry.duration);
@@ -431,7 +435,7 @@ function Playlist({
             >
               ↓
             </Button>
-            {duration && (
+            {typeof duration === "number" && (
               <small>
                 {formatDuration(
                   isCurrent ? currentlyPlaying.timeRemaining : duration
@@ -541,8 +545,8 @@ function SongSelectionDialog({
     }
   }, [open]);
 
-  const filteredSongs = assets.filter(
-    (song) => !existingSongIds.includes(song.id)
+  const filteredSongs = assets.flatMap((asset) =>
+    asset.type === "song" && !existingSongIds.includes(asset.id) ? asset : []
   );
 
   const selectAll = () => {

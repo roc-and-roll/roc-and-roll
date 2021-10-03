@@ -3,12 +3,15 @@ import {
   playerUpdateAddCharacterId,
   characterAdd,
   characterTemplateAdd,
+  assetImageAdd,
 } from "../../../shared/actions";
 import {
   entries,
   RRCharacter,
   RRCharacterID,
   RRCharacterTemplate,
+  RRFileImage,
+  RRPlayerID,
 } from "../../../shared/state";
 import { generateRandomToken, uploadFiles } from "../../files";
 import { useServerDispatch, useServerState } from "../../state";
@@ -25,9 +28,34 @@ import { NativeTypes } from "react-dnd-html5-backend";
 import { DropIndicator } from "../DropIndicator";
 
 async function makeNewCharacter(
-  tokenImage?: RRCharacter["tokenImage"]
-): Promise<Parameters<typeof characterAdd>[0]> {
-  return {
+  actionCreator: typeof characterAdd | typeof characterTemplateAdd,
+  myId: RRPlayerID,
+  tokenImage?: RRFileImage
+) {
+  const image = tokenImage ?? (await generateRandomToken());
+  const assetImageAddAction = assetImageAdd({
+    name: image.originalFilename,
+    description: null,
+    tags: [],
+    extra: {},
+
+    location: {
+      type: "local",
+      filename: image.filename,
+      originalFilename: image.originalFilename,
+      mimeType: image.mimeType,
+    },
+
+    type: "image",
+    originalFunction: "token",
+    blurhash: image.blurhash,
+    width: image.width,
+    height: image.height,
+
+    playerId: myId,
+  });
+
+  const addAction = actionCreator({
     auras: [],
     conditions: [],
     hp: 0,
@@ -39,9 +67,14 @@ async function makeNewCharacter(
     attributes: {},
     stats: {},
     name: await randomName(),
-    tokenImage: tokenImage ?? (await generateRandomToken()),
+    tokenImageAssetId: assetImageAddAction.payload.id,
     tokenBorderColor: randomColor(),
     localToMap: null,
+  });
+
+  return {
+    id: addAction.payload.id,
+    actions: [assetImageAddAction, addAction],
   };
 }
 
@@ -55,15 +88,16 @@ export const CharacterManager = React.memo(function CharacterManager() {
   const [isAddingToken, setIsAddingToken] = useState(false);
 
   const addCharacter = useCallback(
-    async (tokenImage?: RRCharacter["tokenImage"]) => {
+    async (tokenImage?: RRFileImage) => {
       setIsAddingToken(true);
       try {
-        const characterAddAction = characterAdd(
-          await makeNewCharacter(tokenImage)
+        const { id: newCharacterId, actions } = await makeNewCharacter(
+          characterAdd,
+          myself.id,
+          tokenImage
         );
-        const newCharacterId = characterAddAction.payload.id;
         dispatch([
-          characterAddAction,
+          ...actions,
           playerUpdateAddCharacterId({
             id: myself.id,
             characterId: newCharacterId,
@@ -112,20 +146,22 @@ export const CharacterManager = React.memo(function CharacterManager() {
 
 const TemplateEditor = React.memo(function TemplateEditor() {
   const [newCharacterIds, setNewCharacterIds] = useState<RRCharacterID[]>([]);
+  const myself = useMyself();
 
   const dispatch = useServerDispatch();
 
   const [isAddingToken, setIsAddingToken] = useState(false);
 
-  const addTemplate = async (tokenImage?: RRCharacter["tokenImage"]) => {
+  const addTemplate = async (tokenImage?: RRFileImage) => {
     setIsAddingToken(true);
     try {
-      const characterAddAction = characterTemplateAdd(
-        await makeNewCharacter(tokenImage)
+      const { id: newCharacterId, actions } = await makeNewCharacter(
+        characterTemplateAdd,
+        myself.id,
+        tokenImage
       );
-      const newCharacter = characterAddAction.payload;
-      dispatch(characterAddAction);
-      setNewCharacterIds((l) => [...l, newCharacter.id]);
+      dispatch(actions);
+      setNewCharacterIds((l) => [...l, newCharacterId]);
     } finally {
       setIsAddingToken(false);
     }
@@ -169,7 +205,7 @@ function CharacterList({
   newCharacterIds: RRCharacterID[];
   setNewCharacterIds: React.Dispatch<React.SetStateAction<RRCharacterID[]>>;
   isTemplate?: boolean;
-  addCharacter: ((tokenImage?: RRCharacter["tokenImage"]) => void) | false;
+  addCharacter: ((tokenImage?: RRFileImage) => void) | false;
 }) {
   const [dropProps, dropRef] = useDrop<
     { files: File[] },

@@ -1,12 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "./ui/Button";
 import { diceTemplateAdd, logEntryDiceRollAdd } from "../../shared/actions";
-import {
-  RRDice,
-  RRDiceTemplate,
-  RRDiceTemplatePart,
-  RRModifier,
-} from "../../shared/state";
+import { RRDice, RRDiceTemplatePart, RRModifier } from "../../shared/state";
 import { useMyself } from "../myself";
 import { useServerDispatch } from "../state";
 import { roll } from "../roll";
@@ -68,7 +63,6 @@ export function DiceInterface() {
           (await prompt("Name of the new dice template"))?.trim() ?? "";
         dispatch(
           diceTemplateAdd({
-            id: rrid<RRDiceTemplate>(),
             name,
             notes: "",
             // FIXME should allow to select

@@ -107,19 +107,16 @@ export const DiceTemplates = React.memo(function DiceTemplates({
             return { ...part, id: rrid<RRDiceTemplatePart>() };
           });
         }
-        const id = rrid<RRDiceTemplate>();
-        newIds.current.push(id);
-        dispatch(
-          diceTemplateAdd({
-            id,
-            categoryIndex,
-            playerId: myself.id,
-            name: "",
-            notes: "",
-            rollType: "attack",
-            parts: Array.isArray(item) ? item : [item],
-          })
-        );
+        const action = diceTemplateAdd({
+          categoryIndex,
+          playerId: myself.id,
+          name: "",
+          notes: "",
+          rollType: "attack",
+          parts: Array.isArray(item) ? item : [item],
+        });
+        newIds.current.push(action.payload.id);
+        dispatch(action);
       },
       canDrop: (_item, monitor) => monitor.isOver({ shallow: true }),
     }),
@@ -607,7 +604,6 @@ function DiceTemplateInner({
               notes: "",
               parts: [],
               rollType: "attack",
-              id: rrid<RRDiceTemplate>(),
             });
             dispatch(action);
 

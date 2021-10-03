@@ -311,12 +311,12 @@ export const ActiveMusicPlayer = React.memo(function ActiveSongsPlayer() {
 });
 
 function ActiveSongPlayer({ activeSong }: { activeSong: RRActiveSong }) {
-  const song = useServerState(
+  const asset = useServerState(
     (state) => state.assets.entities[activeSong.songId]
   );
 
-  return song ? (
-    <ActiveSongPlayerImpl activeSong={activeSong} song={song} />
+  return asset?.type === "song" ? (
+    <ActiveSongPlayerImpl activeSong={activeSong} song={asset} />
   ) : null;
 }
 
@@ -445,13 +445,13 @@ export function useCurrentlyPlayingPlaylistEntryAndSong(
           };
         }
 
-        const song = assets.entities[playlistEntry.songId];
-        return song
+        const asset = assets.entities[playlistEntry.songId];
+        return asset?.type === "song"
           ? {
               type: "song" as const,
               playlistEntry,
-              duration: song.duration,
-              song,
+              duration: asset.duration,
+              song: asset,
             }
           : [];
       }

@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 
 export function Dialog({
@@ -12,14 +12,25 @@ export function Dialog({
   onClose: () => void;
   className?: string;
 }>) {
+  // Focus the dialog when it is opened.
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (open) {
+      ref.current?.focus();
+    }
+  }, [open]);
+
   if (!open) {
     return null;
   }
 
   return ReactDOM.createPortal(
     <div
+      ref={ref}
       className={clsx("dialog-backdrop", className)}
       onClick={(e) => e.currentTarget === e.target && onClose()}
+      // tabIndex = -1 allows us to set focus on the div.
+      tabIndex={-1}
     >
       <div className="dialog-modal">{children}</div>
     </div>,

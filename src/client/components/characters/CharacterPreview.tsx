@@ -10,6 +10,7 @@ import {
   isCharacterDead,
 } from "../../../shared/util";
 import { tokenImageUrl } from "../../files";
+import { useServerState } from "../../state";
 import { BlurhashImage } from "../blurhash/BlurhashImage";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 
@@ -29,13 +30,21 @@ export function CharacterPreview({
   const dead = isCharacterDead(character);
   const overhealed = isCharacterOverhealed(character);
 
+  const asset = useServerState(
+    (state) => state.assets.entities[character.tokenImageAssetId]
+  );
+
+  if (asset?.type !== "image") {
+    return null;
+  }
+
   const currentSize = size ?? 32;
   return (
     <span className="character-image">
       <BlurhashImage
         image={{
-          blurhash: character.tokenImage.blurhash,
-          url: tokenImageUrl(character, currentSize),
+          blurhash: asset.blurhash,
+          url: tokenImageUrl(character, asset, currentSize),
         }}
         className={clsx(
           shouldDisplayShadow && { hurt, unconsciousOrDead, overhealed }

@@ -4,6 +4,7 @@ import {
   characterRemove,
   characterTemplateUpdate,
   characterTemplateRemove,
+  assetImageUpdate,
 } from "../../../shared/actions";
 import {
   conditionNames,
@@ -122,14 +123,33 @@ export function CharacterEditor({
   const removeFunc = isTemplate ? characterTemplateRemove : characterRemove;
 
   const updateImage = async () => {
-    const uploadedFiles = await upload(fileInput.current!.files, "image");
-    dispatch(
-      updateFunc({
-        id: character.id,
-        changes: { tokenImage: uploadedFiles[0]! },
-      })
-    );
-    fileInput.current!.value = "";
+    if (!fileInput.current) {
+      return;
+    }
+
+    const uploadedFiles = await upload(fileInput.current.files, "image");
+
+    const image = uploadedFiles[0];
+    if (image) {
+      dispatch(
+        assetImageUpdate({
+          id: character.tokenImageAssetId,
+          changes: {
+            blurhash: image.blurhash,
+            width: image.width,
+            height: image.height,
+            location: {
+              type: "local",
+              filename: image.filename,
+              originalFilename: image.originalFilename,
+              mimeType: image.mimeType,
+            },
+          },
+        })
+      );
+    }
+
+    fileInput.current.value = "";
   };
 
   const setConditions = (

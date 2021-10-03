@@ -72,12 +72,6 @@ function isColor() {
   ]);
 }
 
-const sharedRRFileValidators = {
-  originalFilename: t.isString(),
-  filename: t.isString(),
-  mimeType: t.isString(),
-};
-
 const isBlurhash = <T extends string>() =>
   t.makeValidator<T>({
     test: (value, state) => {
@@ -91,27 +85,6 @@ const isBlurhash = <T extends string>() =>
       return true;
     },
   });
-
-const isRRFileImage = t.isObject({
-  ...sharedRRFileValidators,
-  type: t.isLiteral("image"),
-  width: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
-  height: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
-  blurhash: t.applyCascade(t.isString(), [isBlurhash()]),
-});
-
-const isRRFileAudio = t.isObject({
-  ...sharedRRFileValidators,
-  type: t.isLiteral("audio"),
-  duration: t.applyCascade(t.isNumber(), [t.isAtLeast(1)]),
-});
-
-const isRRFileOther = t.isObject({
-  ...sharedRRFileValidators,
-  type: t.isLiteral("other"),
-});
-
-const isRRFile = t.isOneOf([isRRFileImage, isRRFileAudio, isRRFileOther]);
 
 const isRRPoint = t.isObject({
   x: t.isNumber(),
@@ -137,8 +110,24 @@ const sharedAssetValidators = {
   id: isRRID<RRAssetID>(),
   name: t.isString(),
   description: t.isNullable(t.isString()),
-  external: t.isBoolean(),
-  filenameOrUrl: t.isString(),
+  tags: t.isArray(t.isString()),
+
+  location: t.isOneOf(
+    [
+      t.isObject({
+        type: t.isLiteral("external"),
+        url: t.isString(),
+      }),
+      t.isObject({
+        type: t.isLiteral("local"),
+        filename: t.isString(),
+        originalFilename: t.isString(),
+        mimeType: t.isString(),
+      }),
+    ],
+    { exclusive: true }
+  ),
+
   playerId: t.isNullable(isRRID<RRPlayerID>()),
   extra: t.isObject({}, { extra: t.isUnknown() }),
 };
@@ -146,14 +135,26 @@ const sharedAssetValidators = {
 const isRRAssetSong = t.isObject({
   ...sharedAssetValidators,
   type: t.isLiteral("song"),
-  tags: t.isArray(t.isString()),
   duration: t.applyCascade(t.isNumber(), [t.isAtLeast(1)]),
 });
 
 const isRRAssetImage = t.isObject({
   ...sharedAssetValidators,
   type: t.isLiteral("image"),
-  originalFunction: t.isEnum(["token", "map"] as const),
+  width: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
+  height: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
+  blurhash: t.applyCascade(t.isString(), [isBlurhash()]),
+
+  originalFunction: t.isEnum(["token", "map", "unknown"] as const),
+});
+
+const isRRAssetOther = t.isObject({
+  ...sharedAssetValidators,
+  type: t.isLiteral("other"),
+});
+
+const isRRAsset = t.isOneOf([isRRAssetSong, isRRAssetImage, isRRAssetOther], {
+  exclusive: true,
 });
 
 const isVolume = t.applyCascade(t.isNumber(), [t.isInInclusiveRange(0, 1)]);
@@ -217,7 +218,7 @@ export const isSyncedState = t.isObject({
           id: isRRID<RRCharacterID>(),
           name: t.isString(),
 
-          tokenImage: isRRFileImage,
+          tokenImageAssetId: isRRID<RRAssetID>(),
           tokenBorderColor: isColor(),
           scale: t.applyCascade(t.isNumber(), [t.isAtLeast(1)]),
 
@@ -304,7 +305,7 @@ export const isSyncedState = t.isObject({
                   t.isObject({
                     ...sharedValidators,
                     type: t.isLiteral("image"),
-                    image: isRRFileImage,
+                    imageAssetId: isRRID<RRAssetID>(),
                     height: t.applyCascade(t.isNumber(), [
                       t.isInteger(),
                       t.isPositive(),
@@ -501,16 +502,7 @@ export const isSyncedState = t.isObject({
       rollType: t.isEnum(["initiative", "hit", "attack", null] as const),
     })
   ),
-  assets: isEntityCollection(
-    t.isOneOf(
-      [
-        isRRAssetSong,
-        // TODO: Asset images are not yet used
-        // isRRAssetImage,
-      ],
-      { exclusive: true }
-    )
-  ),
+  assets: isEntityCollection(isRRAsset),
   soundSets: isEntityCollection(
     t.isObject({
       id: isRRID<RRSoundSetID>(),

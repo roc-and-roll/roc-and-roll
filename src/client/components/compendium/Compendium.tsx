@@ -9,6 +9,7 @@ import {
   CompendiumSourceID,
   isCompendiumData,
 } from "./types";
+import sjson from "secure-json-parse";
 
 const CompendiumContext = React.createContext<{
   sources: CompendiumSource[];
@@ -86,7 +87,7 @@ export function Compendium() {
               const jsons = await Promise.all(
                 files.map(async (file) => {
                   try {
-                    const json = JSON.parse(await file.text());
+                    const json = sjson.parse(await file.text());
                     return [file.name, json] as const;
                   } catch (err) {
                     await alert(

@@ -245,7 +245,7 @@ export async function setupWebServer(
         throw new Error();
       }
 
-      const filename = `generated-${nanoid()}.svg`;
+      const filename = `generated-${nanoid()}.png`;
       const background = randomColor();
       const outputPath = path.join(uploadedFilesDir, filename);
 

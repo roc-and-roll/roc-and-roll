@@ -37,6 +37,7 @@ import {
   RRSoundSet,
   RRPlaylistID,
   RRPlaylistEntry,
+  RRAsset,
 } from "./state";
 import { rrid, timestamp } from "./util";
 
@@ -409,7 +410,12 @@ export const ephemeralMusicRemove = createAction<RRActiveSongOrSoundSet["id"]>(
 // Dice template state
 ////////////////////////////////////////////////////////////////////////////////
 
-export const diceTemplateAdd = createAction<RRDiceTemplate>("diceTemplate/add");
+export const diceTemplateAdd = createAction(
+  "diceTemplate/add",
+  (diceTemplate: Omit<RRDiceTemplate, "id">): { payload: RRDiceTemplate } => ({
+    payload: { id: rrid<RRDiceTemplate>(), ...diceTemplate },
+  })
+);
 
 export const diceTemplateUpdate = createAction<Update<RRDiceTemplate>>(
   "diceTemplate/update"
@@ -432,9 +438,19 @@ export const diceTemplatePartRemove = createAction<{
 // Asset state
 ////////////////////////////////////////////////////////////////////////////////
 
-export const assetSongAdd = createAction<RRAssetSong>("asset/song/add");
+export const assetSongAdd = createAction(
+  "asset/song/add",
+  (asset: Omit<RRAssetSong, "id">): { payload: RRAssetSong } => ({
+    payload: { id: rrid<RRAssetSong>(), ...asset },
+  })
+);
 
-export const assetImageAdd = createAction<RRAssetImage>("asset/image/add");
+export const assetImageAdd = createAction(
+  "asset/image/add",
+  (asset: Omit<RRAssetImage, "id">): { payload: RRAssetImage } => ({
+    payload: { id: rrid<RRAssetImage>(), ...asset },
+  })
+);
 
 export const assetSongUpdate =
   createAction<Update<RRAssetSong>>("asset/song/update");
@@ -442,11 +458,7 @@ export const assetSongUpdate =
 export const assetImageUpdate =
   createAction<Update<RRAssetImage>>("asset/image/update");
 
-export const assetSongRemove =
-  createAction<RRAssetSong["id"]>("asset/song/remove");
-
-export const assetImageRemove =
-  createAction<RRAssetImage["id"]>("asset/image/remove");
+export const assetRemove = createAction<RRAsset["id"]>("asset/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
 // Sound Sets

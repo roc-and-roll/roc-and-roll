@@ -4,6 +4,7 @@ import {
   faDiceD20,
   faMapSigns,
   faMusic,
+  faPhotoVideo,
   faSortNumericDown,
   faStream,
   faStreetView,
@@ -30,6 +31,7 @@ import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 import { Settings } from "../Settings";
 import { RRTooltip, RRTooltipProps } from "../RRTooltip";
 import clsx from "clsx";
+import { AssetLibrary } from "../assetLibrary/AssetLibrary";
 
 const tooltipProps: RRTooltipProps = {
   placement: "right",
@@ -54,6 +56,10 @@ export function Toolbar() {
   const [diceActive, setDiceActive] = useLocalState("diceActive", false);
   const [logActive, setLogActive] = useLocalState("logActive", false);
   const [musicActive, setMusicActive] = useLocalState("musicActive", false);
+  const [assetLibraryActive, setAssetLibraryActive] = useLocalState(
+    "assetLibrary",
+    false
+  );
   const [achievementsActive, setAchievementsActive] = useLocalState(
     "achievementsActive",
     false
@@ -137,6 +143,18 @@ export function Toolbar() {
             />
           </RRTooltip>
         )}
+        <RRTooltip
+          content="Asset Library"
+          {...tooltipProps}
+          disabled={musicActive}
+        >
+          <RRFontAwesomeIcon
+            fixedWidth
+            icon={faPhotoVideo}
+            className={clsx(assetLibraryActive ? "active" : "")}
+            onClick={() => setAssetLibraryActive((a) => !a)}
+          />
+        </RRTooltip>
         <RRTooltip content="Log" {...tooltipProps} disabled={logActive}>
           <RRFontAwesomeIcon
             fixedWidth
@@ -179,6 +197,7 @@ export function Toolbar() {
                 </GMArea>
               )
             : wrap(<Music />))}
+        {assetLibraryActive && wrap(<AssetLibrary />)}
         {logActive && wrap(<Log />)}
         {achievementsActive && wrap(<Achievements />)}
       </div>

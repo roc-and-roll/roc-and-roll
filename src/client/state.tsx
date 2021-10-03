@@ -28,6 +28,7 @@ import {
 import { mergeDeep, rrid } from "../shared/util";
 import { useGuranteedMemo } from "./useGuranteedMemo";
 import { useLatest } from "./useLatest";
+import sjson from "secure-json-parse";
 
 type DeduplicationKey = Opaque<string, "optimisticDeduplicationKey">;
 
@@ -360,7 +361,7 @@ export function ServerStateProvider({
       state: string;
       finishedOptimisticUpdateIds: OptimisticUpdateID[];
     }) => {
-      const state = (internalServerStateRef.current = JSON.parse(
+      const state = (internalServerStateRef.current = sjson.parse(
         msg.state
       ) as SyncedState);
 
@@ -380,7 +381,7 @@ export function ServerStateProvider({
       patch: string;
       finishedOptimisticUpdateIds: OptimisticUpdateID[];
     }) => {
-      const patch = JSON.parse(msg.patch) as StatePatch<SyncedState>;
+      const patch = sjson.parse(msg.patch) as StatePatch<SyncedState>;
       process.env.NODE_ENV === "development" &&
         DEBUG &&
         console.log(

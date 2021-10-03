@@ -7,6 +7,8 @@ import {
   RRCharacterID,
   EntityCollection,
   RRID,
+  RRAssetID,
+  RRAsset,
 } from "../../../shared/state";
 import {
   atomFamily,
@@ -63,6 +65,16 @@ export const characterTemplateFamily = atomFamily<
 
 export const characterTemplateIdsAtom = atom<ReadonlyArray<RRCharacterID>>({
   key: "CharacterTemplateIds",
+  default: [],
+});
+
+export const assetFamily = atomFamily<RRAsset | null, RRAssetID>({
+  key: "Asset",
+  default: null,
+});
+
+export const assetIdsAtom = atom<ReadonlyArray<RRAssetID>>({
+  key: "AssetIds",
   default: [],
 });
 
@@ -137,6 +149,12 @@ export const ReduxToRecoilBridge = React.memo(function ReduxToRecoilBridge({
     useServerState((s) => s.characterTemplates),
     characterTemplateIdsAtom,
     characterTemplateFamily
+  );
+  useReduxToRecoilBridge(
+    "assets",
+    useServerState((s) => s.assets),
+    assetIdsAtom,
+    assetFamily
   );
   useReduxToRecoilBridge(
     "ephemeral players",
