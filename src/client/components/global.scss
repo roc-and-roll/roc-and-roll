@@ -1016,7 +1016,17 @@ button.color-picker-color {
 
   .music-label {
     flex-grow: 1;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    margin-right: 0.25rem;
+
+    .music-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
+
   .music-description {
     font-size: 0.7rem;
   }

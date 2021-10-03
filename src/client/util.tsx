@@ -118,7 +118,13 @@ export function formatDuration(duration: number) {
   const minutes = Math.floor(totalSeconds / 60) % 60;
   const hours = Math.floor(totalSeconds / 60 / 60);
 
-  return `${hours.toString().padStart(2, "0")}:${minutes
-    .toString()
-    .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  const hoursString =
+    hours === 0 ? "" : `${hours.toString().padStart(2, "0")}:`;
+
+  return (
+    hoursString +
+    `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`
+  );
 }

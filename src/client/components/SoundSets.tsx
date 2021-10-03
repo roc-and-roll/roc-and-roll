@@ -32,6 +32,13 @@ import { SmartTextInput } from "./ui/TextInput";
 import { VolumeSlider } from "./VolumeSlider";
 import { useCurrentlyPlayingPlaylistEntryAndSong } from "../sound";
 import { useConfirm, usePrompt } from "../dialog-boxes";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPlay,
+  faPlus,
+  faStop,
+  faTimes,
+} from "@fortawesome/free-solid-svg-icons";
 
 export const SoundSets = React.memo<{
   filterText: string;
@@ -178,19 +185,19 @@ function SoundSet({
               className="music-button"
               onClick={() => onStop(activeSoundSet)}
             >
-              stop
+              <FontAwesomeIcon icon={faStop} />
             </Button>
           </>
         ) : (
           <>
             <Button className="music-button" onClick={() => onAdd(soundSet)}>
-              add
+              <FontAwesomeIcon icon={faPlus} />
             </Button>
             <Button
               className="music-button"
               onClick={() => onReplace(soundSet)}
             >
-              play
+              <FontAwesomeIcon icon={faPlay} />
             </Button>
           </>
         )}
@@ -391,7 +398,7 @@ function Playlist({
               );
           }}
         >
-          DEL
+          <FontAwesomeIcon icon={faTimes} />
         </Button>
       </div>
       {playlist.entries.map((playlistEntry, playlistEntryIdx) => {
@@ -506,7 +513,7 @@ function Playlist({
                   );
               }}
             >
-              DEL
+              <FontAwesomeIcon icon={faTimes} />
             </Button>
           </div>
         );

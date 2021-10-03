@@ -1,4 +1,12 @@
-import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPlay,
+  faPlus,
+  faPlusCircle,
+  faSpinner,
+  faStar,
+  faStop,
+} from "@fortawesome/free-solid-svg-icons";
+import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { matchSorter } from "match-sorter";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -33,6 +41,7 @@ import { ActiveSoundSet, SoundSets as SoundSets } from "./SoundSets";
 import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
 import { VolumeSlider } from "./VolumeSlider";
+import clsx from "clsx";
 
 export type MusicActions = {
   onAdd: (songOrSoundSet: RRAssetSong | RRSoundSet) => void;
@@ -284,7 +293,13 @@ const ActiveSong = React.memo(function ActiveSong({
   );
 
   return song ? (
-    <Song audio={song} active={activeSong} filterText="" actions={actions} />
+    <Song
+      audio={song}
+      active={activeSong}
+      filterText=""
+      actions={actions}
+      inPlayingRow={true}
+    />
   ) : null;
 });
 
@@ -294,12 +309,14 @@ const Song = React.memo(function Song({
   filterText,
   actions: { onAdd, onReplace, onStop, onFavorite, onSetVolume },
   isFavorite,
+  inPlayingRow = false,
 }: {
   audio: RRAssetSong;
   active?: RRActiveSong;
   filterText: string;
   actions: MusicActions;
   isFavorite?: boolean;
+  inPlayingRow?: boolean;
 }) {
   const showTagsAndDescription = filterText.length > 0;
 
@@ -329,7 +346,9 @@ const Song = React.memo(function Song({
   return (
     <div className="music-row">
       <div className="music-label">
-        {highlightMatching(audio.name, filterText)}
+        <div className="music-title">
+          {highlightMatching(audio.name, filterText)}
+        </div>
         {showTagsAndDescription && audio.description && (
           <div className="music-description">
             {highlightMatching(audio.description, filterText)}
@@ -344,24 +363,26 @@ const Song = React.memo(function Song({
       <small>{formatDuration(active ? timeRemaining : audio.duration)}</small>
       {active ? (
         <>
-          <VolumeSlider
-            volume={active.volume}
-            onChange={(volume) => onSetVolume(active, volume)}
-          />
+          {inPlayingRow && (
+            <VolumeSlider
+              volume={active.volume}
+              onChange={(volume) => onSetVolume(active, volume)}
+            />
+          )}
           <Button className="music-button" onClick={() => onStop(active)}>
-            stop
+            <FontAwesomeIcon icon={faStop} />
           </Button>
         </>
       ) : (
         <>
           <Button className="music-button" onClick={() => onFavorite(audio)}>
-            {isFavorite === true ? "unfav" : "fav"}
+            <FontAwesomeIcon icon={isFavorite ? faStar : faStarRegular} />
           </Button>
           <Button className="music-button" onClick={() => onAdd(audio)}>
-            add
+            <FontAwesomeIcon icon={faPlus} />
           </Button>
           <Button className="music-button" onClick={() => onReplace(audio)}>
-            play
+            <FontAwesomeIcon icon={faPlay} />
           </Button>
         </>
       )}
