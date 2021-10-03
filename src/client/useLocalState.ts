@@ -6,8 +6,9 @@ import { useState, useCallback, Dispatch, SetStateAction } from "react";
 import { JsonValue } from "type-fest";
 import { useLatest } from "./useLatest";
 import { isBrowser, noop } from "./util";
+import sjson from "secure-json-parse";
 
-const deserializer = JSON.parse;
+const deserializer = sjson.parse;
 
 const serializer = JSON.stringify;
 

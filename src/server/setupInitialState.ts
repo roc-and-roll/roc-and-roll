@@ -6,6 +6,7 @@ import readline from "readline";
 import { isStateVersion, isSyncedState } from "../shared/validation";
 import { migrations } from "./migrations";
 import { LAST_MIGRATION_VERSION } from "../shared/constants";
+import sjson from "secure-json-parse";
 
 async function ask(question: string): Promise<string> {
   const rl = readline.createInterface({
@@ -80,7 +81,7 @@ async function loadAndMigrateState(
 ): Promise<SyncedState | undefined> {
   let state;
   try {
-    state = JSON.parse(fs.readFileSync(statePath, { encoding: "utf-8" }));
+    state = sjson.parse(fs.readFileSync(statePath, { encoding: "utf-8" }));
   } catch (err) {
     throw new StateInvalidError(
       `Error while parsing the JSON file at ${statePath}.`,
