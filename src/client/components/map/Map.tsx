@@ -772,7 +772,8 @@ transform,
 
   const bind = useGesture({
     onDrag: (e) => {
-      setTransform((t) => compose(translate(e.delta[0], e.delta[1]), t));
+      if (e.touches > 1)
+        setTransform((t) => compose(translate(e.delta[0], e.delta[1]), t));
     },
     onPinch: (e) => {
       const delta = e.delta[0];
