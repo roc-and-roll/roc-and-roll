@@ -18,6 +18,17 @@ import { useServerDispatch, useServerState } from "../state";
 import { GMArea } from "./GMArea";
 import { Button } from "./ui/Button";
 import { SmartTextInput } from "./ui/TextInput";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faMapMarkerAlt,
+  faMapSigns,
+  faUser,
+  faUsers,
+} from "@fortawesome/free-solid-svg-icons";
+import { RRMessage, useServerMessages } from "../serverMessages";
+import { rrid } from "../../shared/util";
+import { mapTransformAtom } from "./map/Map";
+import { useRecoilCallback } from "recoil";
 
 export const Maps = React.memo(function Maps() {
   const dispatch = useServerDispatch();
@@ -113,6 +124,17 @@ export function MapListEntry({
     [dispatch, mapId, players]
   );
 
+  const { send } = useServerMessages();
+
+  const sendSnapView = useRecoilCallback(({ snapshot }) => () => {
+    send({
+      type: "snap_view",
+      transform: snapshot.getLoadable(mapTransformAtom).getValue(),
+      mapId,
+      id: rrid<RRMessage>(),
+    });
+  });
+
   if (!mapSettings) {
     return null;
   }
@@ -142,7 +164,9 @@ export function MapListEntry({
             title="Drag to create link"
             className="maps-drag-handle"
             ref={dragRef}
-          ></div>
+          >
+            <FontAwesomeIcon icon={faMapSigns} />
+          </div>
         )}
       </h3>
       <div
@@ -170,8 +194,9 @@ export function MapListEntry({
                 )
               )
             }
+            title="move everyone here"
           >
-            move everyone here
+            <FontAwesomeIcon icon={faUsers} />
           </Button>
         )}
         {!isMyCurrentMap && (
@@ -184,8 +209,17 @@ export function MapListEntry({
                 })
               )
             }
+            title="move myself here"
           >
-            go here
+            <FontAwesomeIcon icon={faUser} />
+          </Button>
+        )}
+        {isMyCurrentMap && (
+          <Button
+            onClick={() => sendSnapView()}
+            title="snap all players' view to my view"
+          >
+            <FontAwesomeIcon icon={faMapMarkerAlt} />
           </Button>
         )}
       </div>

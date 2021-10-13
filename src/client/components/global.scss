@@ -1194,13 +1194,15 @@ button.color-picker-color {
   }
 
   .maps-drag-handle {
-    $size: 20px;
+    $size: 30px;
+    text-align: center;
+    color: white;
     margin-left: 0.5rem;
     border-radius: $size;
     width: $size;
     height: $size;
-    background: #f00;
     cursor: pointer;
+    color: #ccc;
     border: 2px solid black;
     flex-shrink: 0;
   }

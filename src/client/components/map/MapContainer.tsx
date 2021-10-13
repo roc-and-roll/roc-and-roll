@@ -35,11 +35,11 @@ import {
   CURSOR_POSITION_SYNC_DEBOUNCE,
   CURSOR_POSITION_SYNC_HISTORY_STEPS,
   globalToLocal,
+  mapTransformAtom,
   RRMapView,
   RRMapViewRef,
 } from "./Map";
 import composeRefs from "@seznam/compose-react-refs";
-import { identity } from "transformation-matrix";
 import { MapToolbar } from "../MapToolbar";
 import {
   DEFAULT_BACKGROUND_IMAGE_HEIGHT,
@@ -192,6 +192,14 @@ export default function MapContainer() {
   };
   const addBackgroundImagesRef = useLatest(addBackgroundImages);
 
+  const getTransform = useRecoilCallback(
+    ({ snapshot }) =>
+      () => {
+        return snapshot.getLoadable(mapTransformAtom).getValue();
+      },
+    []
+  );
+
   const [dropProps, dropRef1] = useDrop<
     { id: RRCharacterID | RRMapID } | { files: File[] },
     void,
@@ -204,13 +212,10 @@ export default function MapContainer() {
         const dropPosition = monitor.getClientOffset();
         const x = dropPosition!.x - topLeft.x;
         const y = dropPosition!.y - topLeft.y;
-        const point = globalToLocal(
-          mapViewRef.current?.transform ?? identity(),
-          {
-            x,
-            y,
-          }
-        );
+        const point = globalToLocal(getTransform(), {
+          x,
+          y,
+        });
 
         if ("files" in item) {
           void addBackgroundImagesRef.current(item.files, point);
@@ -280,6 +285,7 @@ export default function MapContainer() {
       getCharacter,
       getOwnerOfCharacter,
       getTemplateCharacter,
+      getTransform,
       mapId,
       myself,
     ]

@@ -53,17 +53,17 @@ import {
 import { MapMouseHandler } from "./useMapToolHandler";
 import { MapGrid } from "./MapGrid";
 import { MapObjects } from "./MapObjects";
-import { atom, atomFamily, useRecoilCallback } from "recoil";
+import { atom, atomFamily, useRecoilCallback, useRecoilState } from "recoil";
 import { useRRSettings } from "../../settings";
 import { assertNever } from "../../../shared/util";
 import { FogOfWar } from "./FogOfWar";
 import { MapReactions } from "./MapReactions";
-import useLocalState from "../../useLocalState";
 import { useContrastColor } from "../../util";
 import { MeasurePaths } from "./MeasurePaths";
 import { MouseCursors } from "./MouseCursors";
 import { useLatest } from "../../useLatest";
 import { useGesture } from "react-use-gesture";
+import { RRMessage, useServerMessages } from "../../serverMessages";
 
 type Rectangle = [number, number, number, number];
 
@@ -121,6 +121,11 @@ export const hoveredMapObjectsFamily = atomFamily<boolean, RRMapObjectID>({
 export const hoveredMapObjectIdsAtom = atom<RRMapObjectID[]>({
   key: "HoveredMapObjectIds",
   default: [],
+});
+
+export const mapTransformAtom = atom<Matrix>({
+  key: "mapTransform",
+  default: identity(),
 });
 
 const withSelectionAreaDo = <T extends any>(
@@ -206,12 +211,22 @@ const RRMapViewWithRef = React.forwardRef<
   // because we want transformRef to reflect the currently rendered transform,
   // instead of the committed (using setTransform), but potentially not yet
   // rendered transform.
-  const [transform, setTransform] = useLocalState<Matrix>(
-    `map/${mapId}/transform`,
-    () => identity(),
-    sessionStorage
-  );
+  const [transform, setTransform] = useRecoilState(mapTransformAtom);
   const transformRef = useLatest(transform);
+
+  const { subscribe, unsubscribe } = useServerMessages();
+  useEffect(() => {
+    const onMessage = (message: RRMessage) => {
+      if (message.type === "snap_view" && message.mapId === mapId) {
+        setTransform(message.transform);
+      }
+    };
+    subscribe(onMessage);
+
+    return () => {
+      unsubscribe(onMessage);
+    };
+  }, [mapId, setTransform, subscribe, unsubscribe]);
 
   useImperativeHandle(
     ref,
