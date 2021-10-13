@@ -25,6 +25,8 @@ import {
   RRPlaylistEntryID,
   RRPlaylistID,
   characterStatNames,
+  skillNames,
+  proficiencyValues,
 } from "./state";
 import { withDo } from "./util";
 import tinycolor from "tinycolor2";
@@ -256,6 +258,12 @@ export const isSyncedState = t.isObject({
             { keys: t.isEnum(characterStatNames) }
           ),
           conditions: t.isArray(t.isEnum(conditionNames)),
+          skills: t.isDict(t.isEnum(proficiencyValues), {
+            keys: t.isEnum(skillNames),
+          }),
+          savingThrows: t.isDict(t.isEnum(proficiencyValues), {
+            keys: t.isEnum(characterStatNames),
+          }),
 
           visibility: t.isEnum(["gmOnly", "everyone"] as const),
           localToMap: t.isNullable(isRRID<RRMapID>()),

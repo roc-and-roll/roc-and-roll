@@ -205,6 +205,53 @@ export type RRDiceTemplate = ECE<SyncedState["diceTemplates"]>;
 
 export const characterAttributeNames = ["initiative", "proficiency"] as const;
 
+export const proficiencyValues = [0, 0.5, 1, 2] as const;
+
+export const skillMap: Record<
+  typeof skillNames[number],
+  typeof characterStatNames[number]
+> = {
+  Athletics: "STR",
+  Acrobatics: "DEX",
+  "Sleight of Hand": "DEX",
+  Stealth: "DEX",
+  Arcana: "INT",
+  History: "INT",
+  Investigation: "INT",
+  Nature: "INT",
+  Religion: "INT",
+  "Animal Handling": "WIS",
+  Insight: "WIS",
+  Medicine: "WIS",
+  Perception: "WIS",
+  Survival: "WIS",
+  Deception: "CHA",
+  Intimidation: "CHA",
+  Performance: "CHA",
+  Persuasion: "CHA",
+};
+
+export const skillNames = [
+  "Athletics",
+  "Acrobatics",
+  "Sleight of Hand",
+  "Stealth",
+  "Arcana",
+  "History",
+  "Investigation",
+  "Nature",
+  "Religion",
+  "Animal Handling",
+  "Insight",
+  "Medicine",
+  "Perception",
+  "Survival",
+  "Deception",
+  "Intimidation",
+  "Performance",
+  "Persuasion",
+] as const;
+
 export const characterStatNames = [
   "STR",
   "DEX",

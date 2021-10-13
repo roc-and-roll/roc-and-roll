@@ -66,6 +66,8 @@ async function makeNewCharacter(
     visibility: "everyone",
     attributes: {},
     stats: {},
+    savingThrows: {},
+    skills: {},
     name: await randomName(),
     tokenImageAssetId: assetImageAddAction.payload.id,
     tokenBorderColor: randomColor(),

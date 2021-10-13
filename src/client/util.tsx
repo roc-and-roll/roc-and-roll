@@ -128,3 +128,7 @@ export function formatDuration(duration: number) {
       .padStart(2, "0")}`
   );
 }
+
+export function modifierFromStat(statValue: number) {
+  return Math.floor((statValue - 10) / 2);
+}

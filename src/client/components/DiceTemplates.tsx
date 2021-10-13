@@ -38,7 +38,7 @@ import { roll } from "../roll";
 import { useRRSettings } from "../settings";
 import { useServerDispatch, useServerState, useServerStateRef } from "../state";
 import useLocalState from "../useLocalState";
-import { contrastColor } from "../util";
+import { contrastColor, modifierFromStat } from "../util";
 import { diceCategories } from "./DicePanel";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
@@ -163,7 +163,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
             type: "modifier",
             modifier: !selectedCharacter?.stats[part.name]
               ? 0
-              : Math.floor((selectedCharacter.stats[part.name]! - 10) / 2),
+              : modifierFromStat(selectedCharacter.stats[part.name]!),
             damageType: part.damage,
           },
         ];
@@ -1157,7 +1157,7 @@ const DiceTemplatePart = React.forwardRef<
           <div className="dice-option-linked-modifier">
             {!selectedCharacter?.stats[part.name]
               ? null
-              : Math.floor((selectedCharacter.stats[part.name]! - 10) / 2)}
+              : modifierFromStat(selectedCharacter.stats[part.name]!)}
           </div>
           <div className="dice-option-linked-modifier-name">
             {part.name[0]!.toUpperCase() + part.name.substring(1, 4)}
