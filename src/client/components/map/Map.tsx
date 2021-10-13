@@ -63,6 +63,7 @@ import { useContrastColor } from "../../util";
 import { MeasurePaths } from "./MeasurePaths";
 import { MouseCursors } from "./MouseCursors";
 import { useLatest } from "../../useLatest";
+import { useGesture } from "react-use-gesture";
 
 type Rectangle = [number, number, number, number];
 
@@ -147,7 +148,7 @@ function matrixRotationDEG(matrix: Matrix): number {
 
 const localCoords = (
   svg: SVGSVGElement | null,
-  e: MouseEvent | React.MouseEvent
+  e: { clientX: number; clientY: number }
 ) => {
   if (!svg) return { x: 0, y: 0 };
   const rect = svg.getBoundingClientRect();
@@ -754,15 +755,39 @@ transform,
     return () => resizeObserver.disconnect();
   }, []);
 
+  const bind = useGesture({
+    onDrag: (e) => {
+      setTransform((t) => compose(translate(e.delta[0], e.delta[1]), t));
+    },
+    onPinch: (e) => {
+      const delta = e.delta[0];
+      const { x, y } = localCoords(svgRef.current, {
+        clientX: e.origin[0],
+        clientY: e.origin[1],
+      });
+
+      setTransform((t) =>
+        compose(
+          translate(x, y),
+          scale(Math.pow(1.003, delta)),
+          translate(-x, -y),
+          t
+        )
+      );
+    },
+  });
+
   return (
     <RoughContextProvider enabled={roughEnabled}>
       <svg
+        {...bind()}
         ref={svgRef}
         className="map-svg"
         onContextMenu={(e) => e.preventDefault()}
         onMouseDown={handleMouseDown}
         style={{
           backgroundColor,
+          touchAction: "none",
           cursor: toolButtonState === "tool" ? "crosshair" : "inherit",
         }}
         onMouseMove={handleMapMouseMove}
