@@ -1621,3 +1621,30 @@ aside.emoji-picker-react {
     background: #ffbb22;
   }
 }
+
+.proficiencies {
+  display: flex;
+  align-items: center;
+  padding: 0.2rem 0;
+
+  .stat {
+    width: 40px;
+    text-align: center;
+  }
+
+  .button {
+    margin-left: 0.2rem;
+  }
+
+  .finalModifier {
+    font-size: large;
+    justify-content: end;
+    display: flex;
+    flex-grow: 1;
+    margin-right: 0.4rem;
+  }
+
+  &:nth-child(even) {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}

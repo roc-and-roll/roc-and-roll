@@ -144,6 +144,19 @@ function ProficienyEditor({
       : faPlusCircle;
   }
 
+  function calculateModifierWithProficiency(
+    baseStat: string,
+    proficiency: number | undefined
+  ) {
+    return character.stats[baseStat] === null ||
+      character.stats[baseStat] === undefined
+      ? 0
+      : modifierFromStat(character.stats[baseStat]!) +
+          Math.floor(
+            (character.attributes["proficiency"] ?? 0) * (proficiency ?? 0)
+          );
+  }
+
   function changeProficiencyInSavingThrow(
     proficiency: 0 | 0.5 | 1 | 2 | undefined,
     stat: string
@@ -214,31 +227,19 @@ function ProficienyEditor({
         const proficiency: 0 | 0.5 | 1 | 2 | undefined =
           character.savingThrows[stat];
         return (
-          <div
-            key={stat}
-            style={{
-              display: "flex",
-            }}
-          >
-            <p>{`${stat} Saving Throw: ${
-              character.stats[stat] === null ||
-              character.stats[stat] === undefined
-                ? 0
-                : modifierFromStat(character.stats[stat]!) +
-                  Math.floor(
-                    (character.attributes["proficiency"] ?? 0) *
-                      (proficiency ?? 0)
-                  )
-            }`}</p>
-            <Button>
-              <FontAwesomeIcon
-                onClick={() =>
-                  changeProficiencyInSavingThrow(proficiency, stat)
-                }
-                title={getTitle(proficiency)}
-                icon={getIcon(proficiency)}
-              />
+          <div key={stat} className="proficiencies">
+            <Button
+              className="button"
+              onClick={() => changeProficiencyInSavingThrow(proficiency, stat)}
+              title={getTitle(proficiency)}
+            >
+              <FontAwesomeIcon icon={getIcon(proficiency)} />
             </Button>
+            <p className="stat">{stat}</p>
+            <p>Saving Throw</p>
+            <b className="finalModifier">
+              {calculateModifierWithProficiency(stat, proficiency)}
+            </b>
           </div>
         );
       })}
@@ -248,28 +249,22 @@ function ProficienyEditor({
           character.skills[skill];
         const stat = skillMap[skill];
         return (
-          <div
-            key={skill}
-            style={{
-              display: "flex",
-            }}
-          >
-            <p>{`${skill} (${stat}): ${
-              character.stats[stat] === null ||
-              character.stats[stat] === undefined
-                ? 0
-                : modifierFromStat(character.stats[stat]!) +
-                  Math.floor(
-                    (character.skills["proficiency"] ?? 0) * (proficiency ?? 0)
-                  )
-            }`}</p>
-            <Button>
-              <FontAwesomeIcon
-                onClick={() => changeProficiencyInSkill(proficiency, skill)}
-                title={getTitle(proficiency)}
-                icon={getIcon(proficiency)}
-              />
+          <div key={skill} className="proficiencies">
+            <Button
+              onClick={() => changeProficiencyInSkill(proficiency, skill)}
+              title={getTitle(proficiency)}
+              className="button"
+            >
+              <FontAwesomeIcon icon={getIcon(proficiency)} />
             </Button>
+            <p className="stat">{stat}</p>
+            <p>{skill}</p>
+            <b className="finalModifier">
+              {calculateModifierWithProficiency(stat, proficiency) > 0
+                ? "+"
+                : ""}
+              {calculateModifierWithProficiency(stat, proficiency)}
+            </b>
           </div>
         );
       })}
