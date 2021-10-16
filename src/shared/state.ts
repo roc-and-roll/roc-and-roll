@@ -10,6 +10,7 @@ import {
   faBroom,
   faCat,
   faComments,
+  faDiceD20,
   faDragon,
   faDungeon,
   faFeather,
@@ -357,7 +358,10 @@ export const categoryIcons = [
   "wrench",
 ] as const;
 
-export const iconMap: Record<typeof categoryIcons[number], IconDefinition> = {
+export const iconMap: Record<
+  typeof categoryIcons[number] | "d20",
+  IconDefinition
+> = {
   book: faBook,
   broom: faBroom,
   cat: faCat,
@@ -380,6 +384,7 @@ export const iconMap: Record<typeof categoryIcons[number], IconDefinition> = {
   scroll: faScroll,
   shield: faShieldAlt,
   wrench: faWrench,
+  d20: faDiceD20,
 };
 
 export const damageTypes = [

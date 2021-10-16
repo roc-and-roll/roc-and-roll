@@ -31,6 +31,7 @@ import {
   RRMultipleRoll,
   SyncedStateAction,
   characterStatNames,
+  iconMap,
 } from "../../shared/state";
 import { assertNever, clamp, empty2Null, rrid } from "../../shared/util";
 import { useMyself } from "../myself";
@@ -39,7 +40,6 @@ import { useRRSettings } from "../settings";
 import { useServerDispatch, useServerState, useServerStateRef } from "../state";
 import useLocalState from "../useLocalState";
 import { contrastColor, modifierFromStat } from "../util";
-import { diceCategories } from "./DicePanel";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { Select } from "./ui/Select";
@@ -959,18 +959,25 @@ function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
   const template = useServerState(
     (state) => state.diceTemplates.entities[templateId]
   );
+  const myself = useMyself();
 
   if (!template) {
     return null;
   }
+
+  const diceCategories = myself.diceTemplateCategories;
 
   return (
     <div>
       {template.categoryIndex !== -1 && (
         <label>
           Category:
-          {diceCategories.map((category, categoryIndex) => (
-            <label key={categoryIndex} className="radio-label">
+          {diceCategories.map(({ icon, categoryName }, categoryIndex) => (
+            <label
+              key={categoryIndex}
+              className="radio-label"
+              title={categoryName}
+            >
               <input
                 type="radio"
                 name="categoryIndex"
@@ -995,7 +1002,7 @@ function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
                   })
                 }
               />
-              <FontAwesomeIcon icon={category} fixedWidth />
+              <FontAwesomeIcon icon={iconMap[icon]} fixedWidth />
             </label>
           ))}
         </label>
