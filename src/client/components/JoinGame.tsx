@@ -1,6 +1,6 @@
 import React from "react";
 import { playerAdd } from "../../shared/actions";
-import { entries, RRPlayerID } from "../../shared/state";
+import { defaultCategories, entries, RRPlayerID } from "../../shared/state";
 import { randomColor } from "../../shared/colors";
 import { useServerDispatch, useServerState } from "../state";
 import "./JoinGame.scss";
@@ -29,6 +29,7 @@ export const JoinGame = React.memo(function JoinGame({
       characterIds: [],
       favoritedAssetIds: [],
       mainCharacterId: null,
+      diceTemplateCategories: defaultCategories,
     });
     dispatch(action);
     login(action.payload.id);

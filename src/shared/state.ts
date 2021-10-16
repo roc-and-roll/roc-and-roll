@@ -4,6 +4,31 @@ import type { IterableElement, ValueOf } from "type-fest";
 import { assertNever, rrid } from "./util";
 import { isDamageType, isSyncedState } from "./validation";
 import { LAST_MIGRATION_VERSION } from "./constants";
+import {
+  faBalanceScale,
+  faBook,
+  faBroom,
+  faCat,
+  faComments,
+  faDragon,
+  faDungeon,
+  faFeather,
+  faFire,
+  faFistRaised,
+  faFlask,
+  faHandHoldingMedical,
+  faHandPaper,
+  faHatWizard,
+  faHeart,
+  faHiking,
+  faHorse,
+  faMagic,
+  faPrayingHands,
+  faScroll,
+  faShieldAlt,
+  faWrench,
+  IconDefinition,
+} from "@fortawesome/free-solid-svg-icons";
 
 export type MakeRRID<K extends string> = `RRID/${K}/${string}`;
 
@@ -307,6 +332,56 @@ export type RRDiceTemplatePart = IterableElement<
   ECE<SyncedState["diceTemplates"]>["parts"]
 >;
 
+export const categoryIcons = [
+  "book",
+  "broom",
+  "cat",
+  "comments",
+  "dragon",
+  "dungeon",
+  "feather",
+  "fire",
+  "fist",
+  "flask",
+  "handHoldingMedical",
+  "handPaper",
+  "hatWizard",
+  "heart",
+  "hiking",
+  "horse",
+  "magic",
+  "prayingHands",
+  "scales",
+  "scroll",
+  "shield",
+  "wrench",
+] as const;
+
+export const iconMap: Record<typeof categoryIcons[number], IconDefinition> = {
+  book: faBook,
+  broom: faBroom,
+  cat: faCat,
+  comments: faComments,
+  dragon: faDragon,
+  dungeon: faDungeon,
+  feather: faFeather,
+  fire: faFire,
+  fist: faFistRaised,
+  flask: faFlask,
+  handHoldingMedical: faHandHoldingMedical,
+  handPaper: faHandPaper,
+  hatWizard: faHatWizard,
+  heart: faHeart,
+  hiking: faHiking,
+  horse: faHorse,
+  magic: faMagic,
+  prayingHands: faPrayingHands,
+  scales: faBalanceScale,
+  scroll: faScroll,
+  shield: faShieldAlt,
+  wrench: faWrench,
+};
+
 export const damageTypes = [
   null,
   "slashing",
@@ -477,7 +552,25 @@ export function makeDefaultMap() {
   };
 }
 
+function makeDefaultDiceTemplateCategories(): {
+  icon: typeof categoryIcons[number];
+  categoryName: string;
+}[] {
+  return [
+    {
+      categoryName: "Saving Throws",
+      icon: "shield",
+    },
+    {
+      categoryName: "Skills",
+      icon: "handPaper",
+    },
+  ];
+}
+
 export const defaultMap: RRMap = makeDefaultMap();
+
+export const defaultCategories = makeDefaultDiceTemplateCategories();
 
 export const initialSyncedState: SyncedState = {
   version: LAST_MIGRATION_VERSION,

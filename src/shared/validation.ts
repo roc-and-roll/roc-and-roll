@@ -27,6 +27,7 @@ import {
   characterStatNames,
   skillNames,
   proficiencyValues,
+  categoryIcons,
 } from "./state";
 import { withDo } from "./util";
 import tinycolor from "tinycolor2";
@@ -211,6 +212,12 @@ export const isSyncedState = t.isObject({
       characterIds: t.isArray(isRRID<RRCharacterID>()),
       mainCharacterId: t.isNullable(isRRID<RRCharacterID>()),
       favoritedAssetIds: t.isArray(isRRID<RRAssetID>()),
+      diceTemplateCategories: t.isArray(
+        t.isObject({
+          icon: t.isEnum(categoryIcons),
+          categoryName: t.isString(),
+        })
+      ),
     })
   ),
   ...withDo(
