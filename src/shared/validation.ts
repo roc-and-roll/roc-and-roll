@@ -484,8 +484,14 @@ export const isSyncedState = t.isObject({
                 t.isObject({
                   ...sharedValidators,
                   type: t.isLiteral("linkedModifier"),
-                  name: t.isEnum(characterAttributeNames),
+                  name: t.isLiteral("initiative"),
                   damage: isDamageType,
+                }),
+                t.isObject({
+                  ...sharedValidators,
+                  type: t.isLiteral("linkedProficiency"),
+                  damage: isDamageType,
+                  proficiency: t.isEnum(proficiencyValues),
                 }),
                 t.isObject({
                   ...sharedValidators,

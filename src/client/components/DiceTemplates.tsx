@@ -32,6 +32,9 @@ import {
   SyncedStateAction,
   characterStatNames,
   iconMap,
+  RRDiceTemplatePartLinkedProficiency,
+  RRDiceTemplatePartLinkedModifier,
+  proficiencyValues,
 } from "../../shared/state";
 import { assertNever, clamp, empty2Null, rrid } from "../../shared/util";
 import { useMyself } from "../myself";
@@ -39,7 +42,11 @@ import { roll } from "../roll";
 import { useRRSettings } from "../settings";
 import { useServerDispatch, useServerState, useServerStateRef } from "../state";
 import useLocalState from "../useLocalState";
-import { contrastColor, modifierFromStat } from "../util";
+import {
+  contrastColor,
+  getProficiencyValueString,
+  modifierFromStat,
+} from "../util";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { Select } from "./ui/Select";
@@ -154,6 +161,16 @@ export const DiceTemplates = React.memo(function DiceTemplates({
           {
             type: "modifier",
             modifier: selectedCharacter?.attributes[part.name] ?? 0,
+            damageType: part.damage,
+          },
+        ];
+      case "linkedProficiency":
+        return [
+          {
+            type: "modifier",
+            modifier:
+              (selectedCharacter?.attributes["proficiency"] ?? 0) *
+              part.proficiency,
             damageType: part.damage,
           },
         ];
@@ -373,6 +390,20 @@ function DicePicker() {
   const [diceHolder, setDiceHolder] = useState<RRDiceTemplatePart[]>([]);
   const diceParts = [4, 6, 8, 10, 12, 20].map((faces) => makeDicePart(faces));
 
+  const proficiencyPart: RRDiceTemplatePartLinkedProficiency = {
+    id: rrid<RRDiceTemplatePart>(),
+    type: "linkedProficiency" as const,
+    damage: { type: null, modifiers: [] },
+    proficiency: 1,
+  };
+
+  const initiativePart: RRDiceTemplatePartLinkedModifier = {
+    id: rrid<RRDiceTemplatePart>(),
+    type: "linkedModifier" as const,
+    damage: { type: null, modifiers: [] },
+    name: "initiative",
+  };
+
   return (
     <div className="dice-picker">
       {diceParts.map((part) => {
@@ -407,21 +438,14 @@ function DicePicker() {
       <hr className="solid"></hr>
       <PickerDiceTemplateNested />
       <hr className="solid"></hr>
-      {characterAttributeNames.map((name) => {
-        const part = {
-          id: rrid<RRDiceTemplatePart>(),
-          type: "linkedModifier" as const,
-          damage: { type: null, modifiers: [] },
-          name,
-        };
-        return (
-          <PickerDiceTemplatePart
-            key={name}
-            part={part}
-            onClick={() => setDiceHolder([...diceHolder, part])}
-          />
-        );
-      })}
+      <PickerDiceTemplatePart
+        part={initiativePart}
+        onClick={() => setDiceHolder([...diceHolder, initiativePart])}
+      />
+      <PickerDiceTemplatePart
+        part={proficiencyPart}
+        onClick={() => setDiceHolder([...diceHolder, proficiencyPart])}
+      />
       {characterStatNames.map((name) => {
         const part = {
           id: rrid<RRDiceTemplatePart>(),
@@ -954,6 +978,46 @@ function ModifierNumberEditor({
   );
 }
 
+function ProficiencyValueEditor({
+  part,
+  templateId,
+}: {
+  part: RRDiceTemplatePartLinkedProficiency;
+  templateId: RRDiceTemplateID;
+}) {
+  const dispatch = useServerDispatch();
+
+  return (
+    <label>
+      Proficiency:
+      <Select
+        options={proficiencyValues.map((t) => ({
+          value: t.toString(),
+          label: getProficiencyValueString(t),
+        }))}
+        value={part.proficiency.toString()}
+        onChange={(newValue: string) =>
+          dispatch({
+            actions: [
+              diceTemplatePartUpdate({
+                templateId,
+                id: part.id,
+                changes: {
+                  proficiency: parseFloat(
+                    newValue
+                  ) as typeof proficiencyValues[number],
+                },
+              }),
+            ],
+            optimisticKey: "count",
+            syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+          })
+        }
+      />
+    </label>
+  );
+}
+
 function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
   const dispatch = useServerDispatch();
   const template = useServerState(
@@ -1062,6 +1126,7 @@ const DiceTemplatePartMenuWrapper: React.FC<{
         <div onClick={(e) => e.stopPropagation()}>
           {(part.type === "dice" ||
             part.type === "linkedModifier" ||
+            part.type === "linkedProficiency" ||
             part.type === "linkedStat" ||
             part.type === "modifier") && (
             <DamageTypeEditor part={part} templateId={template.id} />
@@ -1074,6 +1139,9 @@ const DiceTemplatePartMenuWrapper: React.FC<{
           )}
           {part.type === "modifier" && (
             <ModifierNumberEditor part={part} templateId={template.id} />
+          )}
+          {part.type === "linkedProficiency" && (
+            <ProficiencyValueEditor part={part} templateId={template.id} />
           )}
           {part.type === "template" && (
             <TemplateNoteEditor templateId={part.templateId} />
@@ -1155,6 +1223,20 @@ const DiceTemplatePart = React.forwardRef<
           <div className="dice-option-linked-modifier-name">
             {part.name[0]!.toUpperCase() + part.name.substring(1, 4)}
           </div>
+        </div>
+      );
+      break;
+    case "linkedProficiency":
+      content = (
+        <div className="dice-option" style={styleFor(part)}>
+          <div className="dice-option-linked-modifier">
+            {
+              //TODO this shows incorrect value in editor, others show no value
+              (selectedCharacter?.attributes["proficiency"] ?? 0) *
+                part.proficiency
+            }
+          </div>
+          <div className="dice-option-linked-modifier-name">{"Prof"}</div>
         </div>
       );
       break;

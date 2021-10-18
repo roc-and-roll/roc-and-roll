@@ -2,7 +2,12 @@ import React, { useMemo } from "react";
 import tinycolor from "tinycolor2";
 import { applyToPoint, inverse, Matrix } from "transformation-matrix";
 import { makePoint } from "../shared/point";
-import { RRCharacter, RRPoint, RRTimestamp } from "../shared/state";
+import {
+  proficiencyValues,
+  RRCharacter,
+  RRPoint,
+  RRTimestamp,
+} from "../shared/state";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export const noop = () => {};
@@ -131,4 +136,16 @@ export function formatDuration(duration: number) {
 
 export function modifierFromStat(statValue: number) {
   return Math.floor((statValue - 10) / 2);
+}
+
+export function getProficiencyValueString(
+  proficiency: keyof typeof proficiencyValues | undefined
+) {
+  return proficiency === 0 || proficiency === undefined
+    ? "Not Proficient"
+    : proficiency === 0.5
+    ? "Half Proficient"
+    : proficiency === 1
+    ? "Proficient"
+    : "Expertise";
 }

@@ -229,7 +229,7 @@ export type RRLogEntryAchievement = Extract<
 
 export type RRDiceTemplate = ECE<SyncedState["diceTemplates"]>;
 
-export const characterAttributeNames = ["initiative", "proficiency"] as const;
+export const characterAttributeNames = ["proficiency", "initiative"] as const;
 
 export const proficiencyValues = [0, 0.5, 1, 2] as const;
 
@@ -308,6 +308,13 @@ export type RRDiceTemplatePartLinkedModifier = Extract<
   }
 >;
 
+export type RRDiceTemplatePartLinkedProficiency = Extract<
+  IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
+  {
+    type: "linkedProficiency";
+  }
+>;
+
 export type RRDiceTemplatePartLinkedStat = Extract<
   IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
   {
@@ -333,7 +340,10 @@ export type RRDiceTemplatePart = IterableElement<
   ECE<SyncedState["diceTemplates"]>["parts"]
 >;
 
-export const categoryIcons = [
+// Default categories that can't be changed by the user
+export const fixedCategoryIcons = ["hand", "shield", "d20"] as const;
+
+export const userCategoryIcons = [
   "book",
   "broom",
   "cat",
@@ -345,7 +355,6 @@ export const categoryIcons = [
   "fist",
   "flask",
   "handHoldingMedical",
-  "handPaper",
   "hatWizard",
   "heart",
   "hiking",
@@ -354,14 +363,12 @@ export const categoryIcons = [
   "prayingHands",
   "scales",
   "scroll",
-  "shield",
   "wrench",
 ] as const;
 
-export const iconMap: Record<
-  typeof categoryIcons[number] | "d20",
-  IconDefinition
-> = {
+export const categoryIcons = [...userCategoryIcons, ...fixedCategoryIcons];
+
+export const iconMap: Record<typeof categoryIcons[number], IconDefinition> = {
   book: faBook,
   broom: faBroom,
   cat: faCat,
@@ -373,7 +380,7 @@ export const iconMap: Record<
   fist: faFistRaised,
   flask: faFlask,
   handHoldingMedical: faHandHoldingMedical,
-  handPaper: faHandPaper,
+  hand: faHandPaper,
   hatWizard: faHatWizard,
   heart: faHeart,
   hiking: faHiking,
@@ -568,7 +575,7 @@ function makeDefaultDiceTemplateCategories(): {
     },
     {
       categoryName: "Skills",
-      icon: "handPaper",
+      icon: "hand",
     },
   ];
 }
