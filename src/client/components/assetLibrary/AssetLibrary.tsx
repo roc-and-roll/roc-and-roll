@@ -8,7 +8,7 @@ import {
 } from "../../../shared/state";
 import { isTabletopAudioAsset } from "../../../shared/tabletopaudio";
 import { useConfirm } from "../../dialog-boxes";
-import { fileUrl } from "../../files";
+import { assetUrl } from "../../files";
 import { mapDeleteImmutably, mapSetImmutably } from "../../immutable-helpers";
 import { useMyself } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
@@ -172,7 +172,7 @@ function Asset({
 }) {
   const dispatch = useServerDispatch();
   const confirm = useConfirm();
-  const download = () => window.open(fileUrl(asset), "_blank")?.focus();
+  const download = () => window.open(assetUrl(asset), "_blank")?.focus();
 
   return (
     <li>

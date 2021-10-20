@@ -388,7 +388,7 @@ function Playlist({
         return (
           <div key={playlistEntry.id} className="music-row">
             <div className="music-label">
-              <div className="music-title">
+              <div className="music-title" title={song?.name}>
                 <span className="ascii-art">│ ├ {trackNum} </span>
                 {isCurrent && "> "}
 
