@@ -20,8 +20,8 @@ function _fileUrl(filename: string) {
 
 export function assetUrl(a: RRAsset) {
   return a.location.type === "local"
-    ? a.location.filename
-    : _fileUrl(a.location.url);
+    ? _fileUrl(a.location.filename)
+    : a.location.url;
 }
 
 export function tokenImageUrl(
