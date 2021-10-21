@@ -5,6 +5,7 @@
   "description": "",
   "main": "dist/server.roc-and-roll.js",
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "dev": "concurrently --handle-input --kill-others --names server,client --prefix-colors green,blue yarn:dev:server yarn:dev:client",
     "dev:client": "webpack serve   --config webpack.client.js --env development",
