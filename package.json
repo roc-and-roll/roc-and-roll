@@ -197,7 +197,7 @@
     ]
   },
   "engines": {
-    "node": ">=14",
+    "node": ">=14 <=16",
     "yarn": ">=3"
   },
   "resolutions": {
