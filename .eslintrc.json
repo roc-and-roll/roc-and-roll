@@ -24,7 +24,7 @@
       "./tsconfig.json"
     ]
   },
-  "plugins": ["react", "react-hooks", "@typescript-eslint", "prettier"],
+  "plugins": ["react", "react-hooks", "@typescript-eslint", "prettier", "unused-imports"],
   "rules": {
     "no-alert": "warn",
     "prettier/prettier": "warn",
@@ -43,10 +43,12 @@
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/no-inferrable-types": ["error", { "ignoreParameters": true }],
-    "@typescript-eslint/no-unused-vars": ["warn", {
+    "@typescript-eslint/no-unused-vars": "off",
+    "unused-imports/no-unused-vars": ["warn", {
       "args": "none",
       "varsIgnorePattern": "_\\d*"
     }],
+    "unused-imports/no-unused-imports": "error",
     "no-constant-condition": ["error", { "checkLoops": false }],
     "@typescript-eslint/no-misused-promises": ["error", { "checksVoidReturn": false }],
     "@typescript-eslint/unbound-method": "off",

@@ -1,5 +1,4 @@
 import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useState } from "react";
 import { privateChatAdd } from "../../../shared/actions";
 import { EntityCollection, RRPlayer, entries } from "../../../shared/state";
@@ -9,6 +8,8 @@ import { CharacterPreview } from "../characters/CharacterPreview";
 import { Player } from "../Player";
 import { Popover } from "../Popover";
 import { Chat } from "../privateChat/PrivateChats";
+import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
+import { RRTooltip } from "../RRTooltip";
 
 export const PlayerToolbar = React.memo<{
   myself: RRPlayer;
@@ -50,27 +51,28 @@ const ToolbarPlayer = React.memo<{
       placement="bottom"
     >
       <div onClick={() => setSelected(!selected)}>
-        {character ? (
-          <CharacterPreview
-            character={character}
-            title={player.name}
-            size={64}
-            shouldDisplayShadow={false}
-          />
-        ) : (
-          <FontAwesomeIcon
-            icon={faUserCircle}
-            title={player.name}
-            style={{
-              fontSize: "64px",
-              backgroundColor: player.color,
-              borderColor: player.color,
-              borderStyle: "solid",
-              borderRadius: "200px",
-              borderWidth: "3px",
-            }}
-          />
-        )}
+        <RRTooltip content={player.name} placement="bottom">
+          {character ? (
+            <CharacterPreview
+              character={character}
+              title=""
+              size={64}
+              shouldDisplayShadow={false}
+            />
+          ) : (
+            <RRFontAwesomeIcon
+              icon={faUserCircle}
+              style={{
+                fontSize: "64px",
+                backgroundColor: player.color,
+                borderColor: player.color,
+                borderStyle: "solid",
+                borderRadius: "200px",
+                borderWidth: "3px",
+              }}
+            />
+          )}
+        </RRTooltip>
       </div>
     </Popover>
   );

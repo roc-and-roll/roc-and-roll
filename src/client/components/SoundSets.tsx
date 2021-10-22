@@ -1,7 +1,6 @@
 import { matchSorter } from "match-sorter";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  soundSetAdd,
   soundSetPlaylistAdd,
   soundSetPlaylistEntryAdd,
   soundSetPlaylistEntryMove,
@@ -21,7 +20,6 @@ import {
   RRAssetID,
   RRPlaylist,
 } from "../../shared/state";
-import { useMyself } from "../myself";
 import { useServerDispatch, useServerState } from "../state";
 import { formatDuration, highlightMatching } from "../util";
 import { CollapseButton } from "./CollapseButton";

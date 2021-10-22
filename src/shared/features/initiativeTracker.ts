@@ -1,4 +1,4 @@
-import { createEntityAdapter, createReducer, original } from "@reduxjs/toolkit";
+import { createEntityAdapter, createReducer } from "@reduxjs/toolkit";
 import {
   initiativeTrackerSetVisible,
   initiativeTrackerSetCurrentEntry,
@@ -86,10 +86,7 @@ export const initiativeTrackerReducer = createReducer(
         );
       })
       .addDefaultCase((state, action) => {
-        state.entries = initiativeTrackerEntriesReducer(
-          original(state.entries),
-          action
-        );
+        state.entries = initiativeTrackerEntriesReducer(state.entries, action);
       });
   }
 );

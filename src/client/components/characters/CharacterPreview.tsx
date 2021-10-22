@@ -14,17 +14,18 @@ import { useServerState } from "../../state";
 import { BlurhashImage } from "../blurhash/BlurhashImage";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 
-export function CharacterPreview({
-  character,
-  title,
-  size,
-  shouldDisplayShadow = true,
-}: {
-  character: RRCharacter;
-  title?: string;
-  size?: number;
-  shouldDisplayShadow?: boolean;
-}) {
+export const CharacterPreview = React.forwardRef<
+  HTMLSpanElement,
+  {
+    character: RRCharacter;
+    title?: string;
+    size?: number;
+    shouldDisplayShadow?: boolean;
+  }
+>(function CharacterPreview(
+  { character, title, size, shouldDisplayShadow = true },
+  ref
+) {
   const hurt = isCharacterHurt(character);
   const unconsciousOrDead = isCharacterUnconsciousOrDead(character);
   const dead = isCharacterDead(character);
@@ -40,7 +41,7 @@ export function CharacterPreview({
 
   const currentSize = size ?? 32;
   return (
-    <span className="character-image">
+    <span className="character-image" ref={ref}>
       <BlurhashImage
         image={{
           blurhash: asset.blurhash,
@@ -71,7 +72,7 @@ export function CharacterPreview({
       )}
     </span>
   );
-}
+});
 
 export function CharacterStack({ characters }: { characters: RRCharacter[] }) {
   const [topIdx, setTopIdx] = useState(0);
