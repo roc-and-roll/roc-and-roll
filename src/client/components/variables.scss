@@ -1,2 +1,78 @@
+@use "sass:color";
+@use "sass:map";
+
+$surface-color: #090c1b;
+
+
+
+// https://material.io/design/environment/elevation.html
+//
+// Component elevation values
+// 1. Nav drawer: 16dp
+// 2. App bar: 4dp
+// 3. Card: 1dp to 8dp
+// 4. FAB: 6dp
+// 5. Button: 2dp to 8dp
+// 6. Dialog: 24dp
+@mixin surface($elevation, $color: $surface-color) {
+  $elevationMap: (
+    0: 0,
+    1: 5%,
+    2: 7%,
+    3: 8%,
+    4: 9%,
+    6: 11%,
+    8: 12%,
+    12: 14%,
+    16: 15%,
+    24: 16%,
+  );
+
+  $whiteness: map.get($elevationMap, $elevation);
+
+  @if ($whiteness == null) {
+    @error "Invalid elevation level";
+  }
+
+  // TODO: Shadows
+  background-color: color.mix(white, $color, $weight: $whiteness);
+}
+
+$font-opacity-high: 1; // 0.87;
+$font-opacity-medium: 0.8; // 0.60;
+$font-opacity-disabled: 0.6; // 0.38;
+
+$font-high: rgba(255, 255, 255, $font-opacity-high);
+$font-medium: rgba(255, 255, 255, $font-opacity-medium);
+$font-disabled: rgba(255, 255, 255, $font-opacity-disabled);
+
+
+
+
+
+
+// TODO
+input, select {
+  color: rgba(0, 0, 0, 0.87);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// TODO: Old stuff
 $bottom-float-opacity: 0.6;
 $bottom-float-background: rgba(51, 51, 51, $bottom-float-opacity);

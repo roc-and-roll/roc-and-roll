@@ -1,4 +1,3 @@
-import "modern-css-reset";
 import "./global.scss";
 import React, { Suspense, useRef } from "react";
 import { useLoginLogout } from "../myself";

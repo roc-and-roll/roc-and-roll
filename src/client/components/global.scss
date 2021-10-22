@@ -1,51 +1,27 @@
 @use "sass:math";
 
+// Slightly opinionated CSS reset that we borrow from tailwindcss.
+@import "~tailwindcss/dist/base.min.css";
+
 @import "./variables";
-
-// Use the native sans serif fonts on every platform.
-//
-// Taken from:
-// https://getbootstrap.com/docs/5.0/content/reboot/#native-font-stack
-$font-family-sans-serif:
-  // Cross-platform generic font family (default user interface font)
-  system-ui,
-  // Safari for macOS and iOS (San Francisco)
-  -apple-system,
-  // Chrome < 56 for macOS (San Francisco)
-  BlinkMacSystemFont,
-  // Windows
-  "Segoe UI",
-  // Android
-  Roboto,
-  // Basic web fallback
-  "Helvetica Neue",
-  Arial,
-  // Linux
-  "Noto Sans",
-  "Liberation Sans",
-  // Sans serif fallback
-  sans-serif,
-  // Emoji fonts
-  "Apple Color Emoji",
-  "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-
-// END code from https://getbootstrap.com
-
-// We deliberately use a local copy of Google Web Fonts instead of linking them
-// directly, so that we avoid having to add a stupid cookie warning.
-@import "~@fontsource/architects-daughter/index.css";
-$font-family-handwritten: "Architects Daughter", cursive;
+@import "./fonts";
 
 body,
 html,
 .root {
-  font-family: $font-family-sans-serif;
   height: 100%;
   width: 100%;
+
+  font-family: $font-family-sans-serif;
+  color: $font-medium;
 }
 
-button {
-  background: rgb(239, 239, 239);
+.root {
+  @include surface(0);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @include font-headings;
 }
 
 label {
@@ -54,11 +30,6 @@ label {
 
 .radio-label {
   display: inline-block;
-}
-
-.root {
-  background: #111;
-  color: white;
 }
 
 .resize-handle {
@@ -1496,12 +1467,12 @@ aside.emoji-picker-react {
 
   padding: 1rem;
 
-  background: rgba(55, 55, 55, 0.95);
-  color: white;
+  @include surface(24);
 
   .dialog-title {
     font-size: 2rem;
     padding-bottom: 0.5rem;
+    color: $font-high;
   }
 
   .dialog-content {
@@ -1544,7 +1515,7 @@ aside.emoji-picker-react {
   display: flex;
   flex-direction: column;
 
-  background: #333;
+  @include surface(4);
   border-radius: 5px;
 
   svg {
@@ -1556,7 +1527,7 @@ aside.emoji-picker-react {
     display: block;
 
     &:hover {
-      background: #000000;
+      @include surface(0);
     }
 
     &.gm-only {
@@ -1564,14 +1535,14 @@ aside.emoji-picker-react {
     }
 
     &.active {
-      background: #ff9900;
+      background: orange;
     }
   }
 }
 .toolbar-panel {
   margin: 0.5rem 0.5rem;
   padding: 0.75rem;
-  background: #333;
+  @include surface(12);
   &:first-child {
     margin-top: 0;
   }
@@ -1628,5 +1599,30 @@ aside.emoji-picker-react {
 
   &:hover {
     background: #ffbb22;
+  }
+}
+
+.file-input {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+
+  border-radius: 0.25rem;
+
+  letter-spacing: 1px;
+  text-transform: capitalize;
+
+  color: white;
+  $background: rgb(23, 56, 128);
+
+  @include surface(2, $background);
+  &:hover, &:focus {
+    @include surface(6, $background);
+  }
+  &:active {
+    @include surface(8, $background);
+  }
+
+  input {
+    display: none;
   }
 }
