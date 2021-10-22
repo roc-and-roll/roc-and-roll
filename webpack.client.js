@@ -8,8 +8,19 @@ import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import WorkboxPlugin from 'workbox-webpack-plugin';
+import FaviconsWebpackPlugin from 'favicons-webpack-plugin';
 
 const gitRevisionPlugin = new GitRevisionPlugin();
+
+// Heroku deletes the .git folder, therefore this command fails.
+// We cannot use the Dyno Metadata lab feature, because those are
+// not available while building.
+// https://devcenter.heroku.com/articles/dyno-metadata
+// That is why we set a custom environment variable which IS available
+// during build time:
+// $ heroku config:set HEROKU=1
+const version = process.env.HEROKU ? "master" : gitRevisionPlugin.version()
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -100,15 +111,41 @@ export default (webpackEnv) => {
               }
             : undefined
       }),
+      isEnvProduction && new WorkboxPlugin.GenerateSW({
+        clientsClaim: true,
+        skipWaiting: true,
+
+        cacheId: "roc-and-roll",
+        navigateFallback: "/index.html",
+      }),
+      new FaviconsWebpackPlugin({
+        logo: './logo.png',
+        cache: true,
+        favicons: {
+          appName: 'Roc & Roll',
+          appShortName: 'Roc & Roll',
+          appDescription: 'A virtual tabletop for roleplaying games.',
+          developerName: null,
+          developerURL: null,
+          dir: "auto",
+          lang: "en-US",
+          background: "#FFFFFF",
+          theme_color: "#145CBF", // TODO: This is a random blueish color
+          appleStatusBarStyle: "black-translucent",
+          display: "minimal-ui",
+          orientation: "any",
+          scope: "/",
+          start_url: "/",
+          version: version,
+          logging: true,
+          pixel_art: false,
+          loadManifestWithCredentials: false,
+          // TODO: Not sure about this, revisit one we have proper icons.
+          manifestMaskable: false,
+        }
+      }),
       new webpack.DefinePlugin({
-        // Heroku deletes the .git folder, therefore this command fails.
-        // We cannot use the Dyno Metadata lab feature, because those are
-        // not available while building.
-        // https://devcenter.heroku.com/articles/dyno-metadata
-        // That is why we set a custom environment variable which IS available
-        // during build time:
-        // $ heroku config:set HEROKU=1
-        '__VERSION__': JSON.stringify(process.env.HEROKU ? "master" : gitRevisionPlugin.version()),
+        '__VERSION__': JSON.stringify(version),
       }),
       new webpack.ProvidePlugin({
         // https://github.com/browserify/node-util/issues/57

@@ -2,6 +2,19 @@ import { render } from "./render";
 import io from "socket.io-client";
 import { SOCKET_IO_PATH } from "../shared/constants";
 
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", async () => {
+    if (process.env.NODE_ENV === "production") {
+      await navigator.serviceWorker.register("/service-worker.js");
+    } else {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(
+        registrations.map((registration) => registration.unregister())
+      );
+    }
+  });
+}
+
 // Create a new socket, but do not connect yet
 const socket = io("/", {
   path: SOCKET_IO_PATH,
