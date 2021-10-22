@@ -1,4 +1,6 @@
 # Roc & Roll
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fcmfcmf%2Froc-and-roll.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fcmfcmf%2Froc-and-roll?ref=badge_shield)
+
 
 ## Demo
 
@@ -43,3 +45,6 @@ Then select one of the provided debug configurations:
 
 This will open a new browser that can be used to debug the client code.
 If you use Firefox, some breakpoints might only work after refreshing the page.
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fcmfcmf%2Froc-and-roll.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fcmfcmf%2Froc-and-roll?ref=badge_large)
