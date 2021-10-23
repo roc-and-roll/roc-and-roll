@@ -10,6 +10,7 @@ import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import WorkboxPlugin from 'workbox-webpack-plugin';
 import FaviconsWebpackPlugin from 'favicons-webpack-plugin';
+import BuildHashPlugin from 'build-hash-webpack-plugin';
 
 const gitRevisionPlugin = new GitRevisionPlugin();
 
@@ -89,6 +90,7 @@ export default (webpackEnv) => {
       }
     },
     plugins: [
+      new BuildHashPlugin(),
       new HtmlWebpackPlugin({
         title: "Roc & Roll",
         meta: {

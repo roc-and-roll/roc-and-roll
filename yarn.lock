@@ -4536,6 +4536,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"build-hash-webpack-plugin@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "build-hash-webpack-plugin@npm:1.0.4"
+  checksum: 64d4f2a77884a4cda6202a351733c4df4924948bd43b96eb2bde3711d464600afa968cb6aef1d24cdda17f9fbd7d4292a26f03b9d5dbab1308b7e1a9043621a9
+  languageName: node
+  linkType: hard
+
 "builtin-modules@npm:^3.1.0":
   version: 3.2.0
   resolution: "builtin-modules@npm:3.2.0"
@@ -4728,7 +4735,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chokidar@npm:>=3.0.0 <4.0.0, chokidar@npm:^3.2.2, chokidar@npm:^3.4.2, chokidar@npm:^3.5.1":
+"chokidar@npm:>=3.0.0 <4.0.0, chokidar@npm:^3.2.2, chokidar@npm:^3.4.2, chokidar@npm:^3.5.1, chokidar@npm:^3.5.2":
   version: 3.5.2
   resolution: "chokidar@npm:3.5.2"
   dependencies:
@@ -12477,6 +12484,8 @@ resolve@^2.0.0-next.3:
     babel-loader: ^8.2.2
     blurhash: ^1.1.4
     bufferutil: ^4.0.3
+    build-hash-webpack-plugin: ^1.0.4
+    chokidar: ^3.5.2
     clean-webpack-plugin: ^4.0.0
     clsx: ^1.1.1
     commander: ^8.1.0

@@ -12,8 +12,10 @@ import {
   SOCKET_SET_STATE,
   SOCKET_DISPATCH_ACTION,
   SOCKET_BROADCAST_MSG,
+  SOCKET_SERVER_INFO,
 } from "../shared/constants";
 import { batchActions } from "redux-batched-actions";
+import { ClientBuildHashSubject } from "./setupClientBuildHashSubject";
 
 type AdditionalSocketData = {
   finishedOptimisticUpdateIds: OptimisticUpdateID[];
@@ -36,6 +38,7 @@ const isREDUX_ACTION = t.isObject({
 export const setupStateSync = (
   io: SocketIOServer,
   store: MyStore,
+  clientBuildHashSubject: ClientBuildHashSubject,
   quiet: boolean
 ) => {
   const log = (...params: unknown[]) => !quiet && console.log(...params);
@@ -45,6 +48,10 @@ export const setupStateSync = (
     AdditionalSocketData
   >();
 
+  clientBuildHashSubject.subscribe(() => {
+    io.sockets.sockets.forEach(sendServerInfo);
+  });
+
   const patchCache = new WeakMap<
     SyncedState,
     {
@@ -52,6 +59,14 @@ export const setupStateSync = (
       currentState: SyncedState;
     }
   >();
+
+  const sendServerInfo = (socket: SocketIOSocket) => {
+    socket.emit(SOCKET_SERVER_INFO, {
+      clientBuildHash: clientBuildHashSubject.getValue(),
+      version: __VERSION__,
+      env: process.env.NODE_ENV,
+    });
+  };
 
   const sendStateUpdate = (
     socket: SocketIOSocket,
@@ -135,6 +150,7 @@ export const setupStateSync = (
     });
 
     log("A client connected");
+    sendServerInfo(socket);
     sendStateUpdate(socket, store.getState());
 
     socket.on("disconnect", () => {

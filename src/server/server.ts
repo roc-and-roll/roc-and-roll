@@ -13,6 +13,7 @@ import { setupTabletopAudioTrackSync } from "./setupTabletopaudio";
 import { batchActions } from "redux-batched-actions";
 import { assertFFprobeIsInstalled } from "./files";
 import { extractForOneShot } from "./extractForOneShot";
+import { setupClientBuildHashSubject } from "./setupClientBuildHashSubject";
 
 void (async () => {
   const {
@@ -69,7 +70,9 @@ This should not have happened!
     });
   }
 
-  setupStateSync(io, store, quiet);
+  const clientBuildHashSubject = await setupClientBuildHashSubject();
+
+  setupStateSync(io, store, clientBuildHashSubject, quiet);
 
   setupStatePersistence(store, statePath);
 
