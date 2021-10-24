@@ -290,7 +290,7 @@ function InitiativeTrackerInner({
         return nextRow;
       }
 
-      rowIndex++;
+      rowIndex = (rowIndex + 1) % rows.length;
     }
     return;
   }
