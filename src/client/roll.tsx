@@ -67,7 +67,7 @@ export function roll({
   modified?: RRMultipleRoll;
   negated?: boolean;
 }): RRDice {
-  if (modified !== "none" && count <= 1) {
+  if (modified !== undefined && modified !== "none" && count <= 1) {
     count = 2;
   }
   const results = Array.from({ length: count }, () =>

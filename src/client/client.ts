@@ -21,8 +21,6 @@ const socket = io("/", {
   autoConnect: false,
 });
 
-// test 12312
-
 // Auto refresh the page if the client code is rebuilt.
 socket.on(
   SOCKET_SERVER_INFO,
@@ -46,8 +44,7 @@ socket.on(
       serverInfo.clientBuildHash !== __webpack_hash__
     ) {
       // The client code has updated on the server, and the user has not
-      // refreshed the page. We also set the location hash to avoid endless
-      // redirects.
+      // refreshed the page.
       console.warn("The client code has been updated on the server.");
 
       if ("serviceWorker" in navigator) {

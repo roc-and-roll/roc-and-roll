@@ -20,7 +20,7 @@ import {
 } from "../../shared/actions";
 import {
   DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-  DEFAULT_VOLUME,
+  DEFAULT_VOLUME as DEFAULT_SONG_VOLUME,
 } from "../../shared/constants";
 import {
   entries,
@@ -96,17 +96,18 @@ export const Music = React.memo(function Music() {
 
   const onReplace = useCallback(
     (songOrSoundSet: RRAssetSong | RRSoundSet) => {
+      const isSoundSet = "playlists" in songOrSoundSet;
       dispatch((state) => [
         ...entries(state.ephemeral.activeMusic).map((activeSong) =>
           ephemeralMusicRemove(activeSong.id)
         ),
         ephemeralMusicAdd({
-          ...("playlists" in songOrSoundSet
+          ...(isSoundSet
             ? { type: "soundSet", soundSetId: songOrSoundSet.id }
             : { type: "song", songId: songOrSoundSet.id }),
           startedAt: timestamp(),
           id: rrid<RRActiveSongOrSoundSet>(),
-          volume: DEFAULT_VOLUME,
+          volume: isSoundSet ? 1 : DEFAULT_SONG_VOLUME,
           addedBy: myself.id,
         }),
       ]);
@@ -123,7 +124,7 @@ export const Music = React.memo(function Music() {
             : { type: "song", songId: songOrSoundSet.id }),
           startedAt: timestamp(),
           id: rrid<RRActiveSongOrSoundSet>(),
-          volume: DEFAULT_VOLUME,
+          volume: DEFAULT_SONG_VOLUME,
           addedBy: myself.id,
         })
       );
