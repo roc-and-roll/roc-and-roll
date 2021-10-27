@@ -20,6 +20,7 @@ import {
   InitiativeTrackerSyncedState,
   RRPlayerID,
   RRMapObject,
+  RRMultipleRoll,
 } from "../../shared/state";
 import { useMyself } from "../myself";
 import { canControlToken } from "../permissions";
@@ -444,12 +445,12 @@ const RollInitiativeDeferredImpl = React.memo<{
   const allHaveSameInitiative =
     allSelectedInitiatives.length === 1 && allSelectedInitiatives[0] !== null;
 
-  const roll = () => {
+  const roll = (modified: RRMultipleRoll) => {
     const mod = allHaveSameInitiative
       ? allSelectedInitiatives[0]!
       : parseInt(modifier);
     const action = logEntryDiceRollAdd(
-      rollInitiative(isNaN(mod) ? 0 : mod, "none", myselfId)
+      rollInitiative(isNaN(mod) ? 0 : mod, modified, myselfId)
     );
     dispatch([
       action,
@@ -464,7 +465,7 @@ const RollInitiativeDeferredImpl = React.memo<{
     <div className="initiative-tracker-roll">
       <Button
         disabled={selectionAlreadyInList || !hasSelection || mapObjectsOutdated}
-        onClick={roll}
+        onClick={() => roll("none")}
       >
         Roll Initiative
         {selectedCharacters.length > 0
@@ -472,6 +473,15 @@ const RollInitiativeDeferredImpl = React.memo<{
             ? ` for ${selectedCharacters.length} characters`
             : ` for ${selectedCharacters[0]!.name}`
           : ""}
+      </Button>
+      <Button className="initiative-modified" onClick={() => roll("advantage")}>
+        Adv
+      </Button>
+      <Button
+        className="initiative-modified"
+        onClick={() => roll("disadvantage")}
+      >
+        Dis
       </Button>
       <input
         value={allHaveSameInitiative ? allSelectedInitiatives[0]! : modifier}
