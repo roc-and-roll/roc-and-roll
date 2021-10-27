@@ -502,16 +502,23 @@ export function applyStatePatch(
  *                 piece of state from it that is of interest.
  * @returns The selected piece of server state.
  */
-export function useServerState<T>(selector: (state: SyncedState) => T): T {
+export function useServerState<T>(
+  selector: (state: SyncedState) => T,
+  equalityFn?: (left: T, right: T) => boolean
+): T {
   const setSelectedStateRef = useRef<((state: T) => void) | null>(null);
 
-  const selectedStateRef = useServerStateRef(selector, (selectedState) => {
-    if (!setSelectedStateRef.current) {
-      // Should never happen.
-      throw new Error();
-    }
-    return setSelectedStateRef.current(selectedState);
-  });
+  const selectedStateRef = useServerStateRef(
+    selector,
+    (selectedState) => {
+      if (!setSelectedStateRef.current) {
+        // Should never happen.
+        throw new Error();
+      }
+      return setSelectedStateRef.current(selectedState);
+    },
+    equalityFn
+  );
 
   const [selectedState, setSelectedState] = useState<T>(
     selectedStateRef.current
@@ -523,7 +530,8 @@ export function useServerState<T>(selector: (state: SyncedState) => T): T {
 
 export function useServerStateRef<T>(
   selector: (state: SyncedState) => T,
-  onChange?: (selectedState: T) => void
+  onChange?: (selectedState: T) => void,
+  equalityFn?: (left: T, right: T) => boolean
 ): React.MutableRefObject<T> {
   const { subscribe, unsubscribe, stateRef } = useContext(ServerStateContext);
 
@@ -535,14 +543,23 @@ export function useServerStateRef<T>(
   useEffect(() => {
     const subscriber = (newState: SyncedState) => {
       const newSelectedState = selectorRef.current(newState);
-      if (!Object.is(newSelectedState, selectedStateRef.current)) {
+      if (
+        !(equalityFn ?? Object.is)(newSelectedState, selectedStateRef.current)
+      ) {
         selectedStateRef.current = newSelectedState;
         onChangeRef.current?.(newSelectedState);
       }
     };
     subscribe(subscriber);
     return () => unsubscribe(subscriber);
-  }, [onChangeRef, selectedStateRef, selectorRef, subscribe, unsubscribe]);
+  }, [
+    equalityFn,
+    onChangeRef,
+    selectedStateRef,
+    selectorRef,
+    subscribe,
+    unsubscribe,
+  ]);
 
   useEffect(() => {
     const newSelectedState = selector(stateRef.current);

@@ -28,7 +28,6 @@ import { useServerDispatch } from "../../state";
 import { useLatest } from "../../useLatest";
 import tinycolor from "tinycolor2";
 import { assertNever } from "../../../shared/util";
-import { useMyself } from "../../myself";
 import { useRecoilValue } from "recoil";
 import { hoveredMapObjectsFamily } from "./Map";
 import { assetFamily, selectedMapObjectsFamily } from "./recoil";
@@ -36,6 +35,7 @@ import { Popover } from "../Popover";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import { SVGBlurHashImage } from "../blurhash/SVGBlurhashImage";
+import { useMyId } from "../../myself";
 
 export const MapObjectThatIsNotAToken = React.memo<{
   object: Exclude<RRMapObject, RRToken | RRMapLink>;
@@ -54,10 +54,10 @@ export const MapObjectThatIsNotAToken = React.memo<{
 
   const [editorVisible, setEditorVisible] = useState(false);
 
-  const myself = useMyself();
+  const myId = useMyId();
 
   const canControl =
-    !object.locked && canStartMoving && object.playerId === myself.id;
+    !object.locked && canStartMoving && object.playerId === myId;
   const style = useMemo(
     () => (canControl ? { cursor: "move" } : {}),
     [canControl]

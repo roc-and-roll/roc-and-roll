@@ -11,7 +11,6 @@ import React, { useState } from "react";
 import {
   characterTemplateUpdate,
   characterUpdate,
-  diceTemplateAdd,
 } from "../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import {
@@ -19,7 +18,6 @@ import {
   characterStatNames,
   proficiencyValues,
   RRCharacter,
-  RRDiceTemplatePart,
   skillMap,
   skillNames,
 } from "../../../shared/state";
@@ -27,8 +25,6 @@ import { useServerDispatch } from "../../state";
 import { Button } from "../ui/Button";
 import { SmartIntegerInput } from "../ui/TextInput";
 import { getProficiencyValueString, modifierFromStat } from "../../util";
-import { rrid } from "../../../shared/util";
-import { useMyself } from "../../myself";
 
 export const CharacterSheetEditor = React.memo<{
   character: RRCharacter;
@@ -127,48 +123,6 @@ function ProficienyEditor({
 }) {
   const dispatch = useServerDispatch();
   const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
-  const myself = useMyself();
-
-  function generateTemplates() {
-    characterStatNames.map((statName: typeof characterStatNames[number]) => {
-      const proficiency = character.savingThrows[statName] ?? 0;
-
-      const parts: RRDiceTemplatePart[] = [
-        {
-          id: rrid<RRDiceTemplatePart>(),
-          type: "dice",
-          faces: 20,
-          count: 1,
-          negated: false,
-          modified: "none",
-          damage: { type: null, modifiers: [] },
-        },
-        {
-          id: rrid<RRDiceTemplatePart>(),
-          type: "linkedStat",
-          name: statName,
-          damage: { type: null, modifiers: [] },
-        },
-      ];
-
-      if (proficiency !== 0)
-        parts.push({
-          id: rrid<RRDiceTemplatePart>(),
-          type: "linkedProficiency",
-          damage: { type: null, modifiers: [] },
-          proficiency,
-        });
-
-      diceTemplateAdd({
-        name: `${statName} Saving Throw`,
-        notes: "",
-        categoryIndex: 0,
-        parts,
-        playerId: myself.id,
-        rollType: null,
-      });
-    });
-  }
 
   function getIcon(proficiency: keyof typeof proficiencyValues | undefined) {
     return proficiency === 0 || proficiency === undefined

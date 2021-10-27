@@ -10,7 +10,7 @@ import { isTabletopAudioAsset } from "../../../shared/tabletopaudio";
 import { useConfirm } from "../../dialog-boxes";
 import { fileUrl } from "../../files";
 import { mapDeleteImmutably, mapSetImmutably } from "../../immutable-helpers";
-import { useMyself } from "../../myself";
+import { useMyProps } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import { BlurhashImage } from "../blurhash/BlurhashImage";
 import { GMArea } from "../GMArea";
@@ -20,7 +20,7 @@ import { Select } from "../ui/Select";
 export const AssetLibrary = React.memo(function AssetLibrary() {
   const assets = useServerState((state) => state.assets);
   const players = useServerState((state) => state.players);
-  const myself = useMyself();
+  const myself = useMyProps("isGM", "id");
 
   const [assetTypeFilter, setAssetTypeFilter] = useState<
     RRAsset["type"] | "all"

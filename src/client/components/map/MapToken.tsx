@@ -32,7 +32,7 @@ import {
   isCharacterOverhealed,
   isCharacterUnconsciousOrDead,
 } from "../../../shared/util";
-import { useMyself } from "../../myself";
+import { useMyProps } from "../../myself";
 import ReactDOM from "react-dom";
 import { HPInlineEdit } from "./HPInlineEdit";
 import { useRecoilValue } from "recoil";
@@ -81,7 +81,7 @@ export const MapToken = React.memo<{
   contrastColor,
   smartSetTotalHP,
 }) {
-  const myself = useMyself();
+  const myself = useMyProps("id", "isGM", "characterIds");
   const character = useRecoilValue(characterFamily(object.characterId));
 
   if (!character || !canViewTokenOnMap(character, myself)) {
@@ -120,7 +120,7 @@ function MapTokenInner({
 }: {
   mapId: RRMapID;
   character: RRCharacter;
-  myself: RRPlayer;
+  myself: Pick<RRPlayer, "id" | "isGM" | "characterIds">;
   object: RRToken;
   canStartMoving: boolean;
   onStartMove: (o: RRMapObject, e: React.MouseEvent) => void;
@@ -545,7 +545,7 @@ function Aura({
   y: number;
   character: RRCharacter;
   aura: RRAura;
-  myself: RRPlayer;
+  myself: Pick<RRPlayer, "id" | "isGM" | "characterIds">;
 }) {
   if (
     (aura.visibility === "playerOnly" &&

@@ -12,7 +12,7 @@ import {
   RRPlayerID,
 } from "../../shared/state";
 import { EMPTY_ENTITY_COLLECTION } from "../../shared/state";
-import { useMyself } from "../myself";
+import { useMyProps } from "../myself";
 import { usePrompt } from "../dialog-boxes";
 import { useServerDispatch, useServerState } from "../state";
 import { GMArea } from "./GMArea";
@@ -21,7 +21,6 @@ import { SmartTextInput } from "./ui/TextInput";
 
 export const Maps = React.memo(function Maps() {
   const dispatch = useServerDispatch();
-  const myself = useMyself();
   const mapIds = useServerState((state) => state.maps.ids);
   const players = useServerState((state) => state.players);
   const prompt = usePrompt();
@@ -33,7 +32,6 @@ export const Maps = React.memo(function Maps() {
           <MapListEntry
             key={mapId}
             mapId={mapId}
-            myself={myself}
             players={players}
             showDragHandle
           />
@@ -71,12 +69,10 @@ export const Maps = React.memo(function Maps() {
 
 export function MapListEntry({
   mapId,
-  myself,
   players: allPlayers,
   showDragHandle,
 }: {
   mapId: RRMapID;
-  myself: RRPlayer;
   players: EntityCollection<RRPlayer>;
   showDragHandle?: boolean;
 }) {
@@ -87,6 +83,7 @@ export function MapListEntry({
   const mapSettings = useServerState(
     (state) => state.maps.entities[mapId]?.settings
   );
+  const myself = useMyProps("currentMap", "id");
   const isMyCurrentMap = myself.currentMap === mapId;
 
   const [, dragRef] = useDrag<{ id: RRMapID }, void, null>(() => ({

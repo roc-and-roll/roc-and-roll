@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { entries, RRPrivateChatMessageID } from "../../../shared/state";
-import { useMyself } from "../../myself";
+import { useMyId } from "../../myself";
 import { useServerState } from "../../state";
 import { Collapsible } from "../Collapsible";
 import { wasSentByMe } from "./privateChatUtil";
@@ -29,7 +29,7 @@ export function PrivateChatsWrapper() {
 }
 
 function useHasUnreadMessages() {
-  const myself = useMyself();
+  const myId = useMyId();
   const chats = useServerState((state) => state.privateChats);
   const [play] = useRRSimpleSound(newMessageSound);
 
@@ -39,9 +39,9 @@ function useHasUnreadMessages() {
 
   useEffect(() => {
     const newMessages = entries(chats).flatMap((chat) =>
-      chat.idA === myself.id || chat.idB === myself.id
+      chat.idA === myId || chat.idB === myId
         ? entries(chat.messages).filter(
-            (message) => !message.read && !wasSentByMe(chat, message, myself.id)
+            (message) => !message.read && !wasSentByMe(chat, message, myId)
           )
         : []
     );
@@ -56,7 +56,7 @@ function useHasUnreadMessages() {
         notifiedMessageIds.current.add(newMessage.id)
       );
     }
-  }, [chats, myself.id, play]);
+  }, [chats, myId, play]);
 
   return hasUnreadMessages;
 }

@@ -9,9 +9,10 @@ import { CharacterPreview } from "../characters/CharacterPreview";
 import { Player } from "../Player";
 import { Popover } from "../Popover";
 import { Chat } from "../privateChat/PrivateChats";
+import { RRPlayerToolProps } from "./MapContainer";
 
 export const PlayerToolbar = React.memo<{
-  myself: RRPlayer;
+  myself: RRPlayerToolProps;
   players: EntityCollection<RRPlayer>;
 }>(function PlayerToolbar({ myself, players }) {
   return (
@@ -25,7 +26,7 @@ export const PlayerToolbar = React.memo<{
 
 const ToolbarPlayer = React.memo<{
   player: RRPlayer;
-  myself: RRPlayer;
+  myself: RRPlayerToolProps;
 }>(function ToolbarPlayer({ player, myself }) {
   const characters = useServerState((state) => state.characters);
   const [selected, setSelected] = useState(false);
@@ -35,13 +36,32 @@ const ToolbarPlayer = React.memo<{
   if (!player.mainCharacterId) character = null;
   else character = characters.entities[player.mainCharacterId];
 
+  const { ids: chatIds, entities: chats } = useServerState(
+    (state) => state.privateChats
+  );
+  const dispatch = useServerDispatch();
+  const myChats = chatIds
+    .map((id) => chats[id]!)
+    .filter(
+      (chat) =>
+        (chat.idA === myself.id && chat.idB === player.id) ||
+        (chat.idA === player.id && chat.idB === myself.id)
+    );
+
+  useEffect(() => {
+    if (myChats.length < 1) {
+      const action = privateChatAdd(myself.id, player.id);
+      dispatch(action);
+    }
+  }, [dispatch, myChats, myself.id, player.id]);
+
   return (
     <Popover
       content={
         player.id === myself.id ? (
           <Player logout={logout} />
         ) : (
-          <ToolbarChat player={player} myself={myself} />
+          myChats[0] !== undefined && <Chat id={myChats[0]!.id} />
         )
       }
       visible={selected}
@@ -50,6 +70,18 @@ const ToolbarPlayer = React.memo<{
       placement="bottom"
     >
       <div onClick={() => setSelected(!selected)}>
+        {player.id !== myself.id && (
+          <div
+            style={{
+              width: "12px",
+              height: "12px",
+              position: "absolute",
+              backgroundColor: "red",
+              borderRadius: "12px",
+              marginLeft: "52px",
+            }}
+          ></div>
+        )}
         {character ? (
           <CharacterPreview
             character={character}
@@ -75,34 +107,3 @@ const ToolbarPlayer = React.memo<{
     </Popover>
   );
 });
-
-function ToolbarChat({
-  player,
-  myself,
-}: {
-  player: RRPlayer;
-  myself: RRPlayer;
-}) {
-  const { ids: chatIds, entities: chats } = useServerState(
-    (state) => state.privateChats
-  );
-  const dispatch = useServerDispatch();
-
-  const myChats = chatIds
-    .map((id) => chats[id]!)
-    .filter(
-      (chat) =>
-        (chat.idA === myself.id && chat.idB === player.id) ||
-        (chat.idA === player.id && chat.idB === myself.id)
-    );
-
-  useEffect(() => {
-    if (myChats.length < 1) {
-      const action = privateChatAdd(myself.id, player.id);
-      dispatch(action);
-    }
-  }, [dispatch, myChats, myself.id, player.id]);
-
-  if (myChats.length < 1) return null;
-  return <Chat id={myChats[0]!.id}></Chat>;
-}

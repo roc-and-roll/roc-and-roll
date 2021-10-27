@@ -21,7 +21,7 @@ import {
   RRPlayerID,
   RRMapObject,
 } from "../../shared/state";
-import { useMyself } from "../myself";
+import { useMyProps } from "../myself";
 import { canControlToken } from "../permissions";
 import { diceResult, rollInitiative } from "../roll";
 import { useServerDispatch, useServerState } from "../state";
@@ -44,7 +44,7 @@ import { usePrompt } from "../dialog-boxes";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
-  myself: RRPlayer,
+  myself: Pick<RRPlayer, "id" | "isGM" | "characterIds">,
   characterCollection: EntityCollection<RRCharacter>
 ) {
   if (entry.type === "lairAction") {
@@ -66,7 +66,7 @@ const InitiativeEntry = React.memo<{
   characterCollection: EntityCollection<RRCharacter>;
   playerCollection: EntityCollection<RRPlayer>;
   isCurrentEntry: boolean;
-  myself: RRPlayer;
+  myself: RRPlayerMapProps;
   inverseIdx: number;
 }>(function InitiativeEntry({
   entry,
@@ -202,8 +202,11 @@ const InitiativeEntry = React.memo<{
   );
 });
 
+const myMapProps = ["id", "isGM", "currentMap", "characterIds"] as const;
+type RRPlayerMapProps = Pick<RRPlayer, typeof myMapProps[number]>;
+
 export const InitiativeTracker = React.memo(function InitiativeTracker() {
-  const myself = useMyself();
+  const myself = useMyProps(...myMapProps);
   const initiativeTracker = useServerState((state) => state.initiativeTracker);
 
   if (!initiativeTracker.visible && !myself.isGM) {
@@ -223,7 +226,7 @@ function InitiativeTrackerInner({
   myself,
 }: {
   initiativeTracker: InitiativeTrackerSyncedState;
-  myself: RRPlayer;
+  myself: RRPlayerMapProps;
 }) {
   const dispatch = useServerDispatch();
   const characterCollection = useServerState((state) => state.characters);
@@ -371,7 +374,7 @@ function RollInitiative({
   characterCollection: EntityCollection<RRCharacter>;
   myselfId: RRPlayerID;
 }) {
-  const myself = useMyself();
+  const myself = useMyProps(...myMapProps);
   // Avoid re-rendering the RollInitiative component repeatedly when people are
   // moving map objects around the map.
   const upToDateMapObjects = useServerState(
@@ -494,7 +497,7 @@ function EndTurnButton({
   onClick,
 }: {
   canEdit: boolean;
-  myself: RRPlayer;
+  myself: RRPlayerMapProps;
   onClick: () => void;
 }) {
   return (

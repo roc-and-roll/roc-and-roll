@@ -1,6 +1,6 @@
 import React from "react";
 import { globalSettingsUpdate } from "../../shared/actions";
-import { useMyself } from "../myself";
+import { useMyProps } from "../myself";
 import { RRSettings, useRRSettings } from "../settings";
 import { useServerDispatch, useServerState } from "../state";
 import { GMArea } from "./GMArea";
@@ -9,7 +9,7 @@ import { VolumeSlider } from "./VolumeSlider";
 
 export function Settings() {
   const [settings, setSettings] = useRRSettings();
-  const myself = useMyself();
+  const myself = useMyProps("isGM");
   const musicIsGMOnly = useServerState(
     (state) => state.globalSettings.musicIsGMOnly
   );

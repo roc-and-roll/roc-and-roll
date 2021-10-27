@@ -32,7 +32,7 @@ import {
 import { isTabletopAudioAsset } from "../../shared/tabletopaudio";
 import { partition, rrid, timestamp } from "../../shared/util";
 import { useFileUpload } from "../files";
-import { useMyself } from "../myself";
+import { useMyProps } from "../myself";
 import { useAlert, usePrompt } from "../dialog-boxes";
 import { useServerDispatch, useServerState } from "../state";
 import { formatDuration, highlightMatching } from "../util";
@@ -54,7 +54,7 @@ export type MusicActions = {
 };
 
 export const Music = React.memo(function Music() {
-  const myself = useMyself();
+  const myself = useMyProps("favoritedAssetIds", "id");
   const dispatch = useServerDispatch();
   const activeMusic = entries(
     useServerState((state) => state.ephemeral.activeMusic)
@@ -256,7 +256,7 @@ export const Music = React.memo(function Music() {
 function UploadAudio({ onUploaded }: { onUploaded: () => void }) {
   const [isUploading, upload] = useFileUpload();
   const dispatch = useServerDispatch();
-  const myself = useMyself();
+  const myself = useMyProps("id");
   const alert = useAlert();
 
   const doUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

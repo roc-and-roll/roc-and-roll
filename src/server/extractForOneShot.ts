@@ -74,7 +74,6 @@ export async function extractForOneShot(
     },
     privateChats: EMPTY_ENTITY_COLLECTION,
     logEntries: EMPTY_ENTITY_COLLECTION,
-    diceTemplates: state.diceTemplates,
     assets: state.assets,
     soundSets: state.soundSets,
     ephemeral: {

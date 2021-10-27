@@ -5,15 +5,24 @@ import {
   RRPlayerID,
 } from "../shared/state";
 
-export const canControlToken = (character: RRCharacter, player: RRPlayer) => {
+export const canControlToken = (
+  character: RRCharacter,
+  player: Pick<RRPlayer, "id" | "isGM" | "characterIds">
+) => {
   return player.isGM || player.characterIds.includes(character.id);
 };
 
-export const canControlMapObject = (object: RRMapObject, player: RRPlayer) => {
+export const canControlMapObject = (
+  object: RRMapObject,
+  player: Pick<RRPlayer, "id" | "isGM">
+) => {
   return object.playerId === player.id || player.isGM;
 };
 
-export const canViewTokenOnMap = (character: RRCharacter, player: RRPlayer) => {
+export const canViewTokenOnMap = (
+  character: RRCharacter,
+  player: Pick<RRPlayer, "id" | "isGM" | "characterIds">
+) => {
   return (
     character.visibility === "everyone" || canControlToken(character, player)
   );

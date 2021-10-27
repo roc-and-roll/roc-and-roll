@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { GRID_SIZE } from "../../../shared/constants";
 import { RRMapLink, RRMapObject } from "../../../shared/state";
-import { useMyself } from "../../myself";
+import { useMyId } from "../../myself";
 import { useServerState } from "../../state";
 import { useLatest } from "../../useLatest";
 import { MapListEntry } from "../Maps";
@@ -19,9 +19,8 @@ export function MapLink({
   canStartMoving: boolean;
   onStartMove: (object: RRMapObject, event: React.MouseEvent) => void;
 }) {
-  const myself = useMyself();
-  const canControl =
-    !link.locked && canStartMoving && link.playerId === myself.id;
+  const myId = useMyId();
+  const canControl = !link.locked && canStartMoving && link.playerId === myId;
   const style = useMemo(
     () => (canControl ? { cursor: "move" } : {}),
     [canControl]
@@ -53,7 +52,7 @@ export function MapLink({
     <Popover
       content={
         <div onMouseDown={(e) => e.stopPropagation()}>
-          <MapListEntry players={players} mapId={link.mapId} myself={myself} />
+          <MapListEntry players={players} mapId={link.mapId} />
         </div>
       }
       visible={menuVisible}

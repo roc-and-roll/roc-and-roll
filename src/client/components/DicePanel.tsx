@@ -1,17 +1,37 @@
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
+import {
+  faDiceD20,
+  faHandPaper,
+  faPlus,
+  faShieldAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React, { useState } from "react";
-import { playerUpdate } from "../../shared/actions";
+import {
+  playerAddDiceTemplateCategory,
+  playerUpdateDiceTemplateCategory,
+  playerDeleteDiceTemplateCategory,
+  playerUpdateDiceTemplate,
+} from "../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import {
   categoryIcons,
+  characterStatNames,
   fixedCategoryIcons,
   iconMap,
+  RRDiceTemplatePart,
+  RRDiceTemplatePartDice,
+  skillMap,
+  skillNames,
   userCategoryIcons,
 } from "../../shared/state";
-import { useMyself } from "../myself";
-import { useServerDispatch } from "../state";
+import { rrid } from "../../shared/util";
+import {
+  RRDiceTemplate,
+  RRDiceTemplateCategory,
+} from "../../shared/validation";
+import { useMyProps } from "../myself";
+import { useServerDispatch, useServerState } from "../state";
 import { DiceInput } from "./DiceInput";
 import { DiceInterface } from "./DiceInterface";
 import { DiceTemplates } from "./DiceTemplates";
@@ -20,24 +40,28 @@ import { Button } from "./ui/Button";
 import { SmartTextInput } from "./ui/TextInput";
 
 export const DicePanel = React.memo(function DicePanel() {
-  const [active, setActive] = useState(0);
-  const myself = useMyself();
+  const [active, setActive] = useState("Input");
+  const myself = useMyProps("diceTemplateCategories", "id", "mainCharacterId");
   const dispatch = useServerDispatch();
 
   function addTemplateCategory() {
+    const freeIcon = userCategoryIcons.find((userIcon) => {
+      return !myself.diceTemplateCategories
+        .map(({ icon }: { icon: typeof categoryIcons[number] }) => icon)
+        .includes(userIcon);
+    });
+
+    if (!freeIcon) return;
+
     dispatch({
       actions: [
-        playerUpdate({
+        playerAddDiceTemplateCategory({
           id: myself.id,
-          changes: {
-            diceTemplateCategories: [
-              ...myself.diceTemplateCategories,
-              {
-                //TODO we do not allow doubles anymore, pick first free icon
-                icon: "book",
-                categoryName: "",
-              },
-            ],
+          category: {
+            id: rrid<RRDiceTemplateCategory>(),
+            icon: freeIcon,
+            categoryName: "",
+            templates: [],
           },
         }),
       ],
@@ -46,70 +70,173 @@ export const DicePanel = React.memo(function DicePanel() {
     });
   }
 
+  const d20Part: RRDiceTemplatePartDice = {
+    id: rrid<RRDiceTemplatePart>(),
+    type: "dice",
+    faces: 20,
+    count: 1,
+    negated: false,
+    modified: "none",
+    damage: { type: null },
+  };
+  const characters = useServerState((state) => state.characters);
+  const character = characters.entities[myself.mainCharacterId!];
+
+  function getSavingThrowTemplates() {
+    const templates = [];
+
+    templates.push(
+      ...characterStatNames.map(
+        (statName: typeof characterStatNames[number]) => {
+          const proficiency =
+            character === undefined ? 0 : character.savingThrows[statName] ?? 0;
+
+          const parts: RRDiceTemplatePart[] = [
+            d20Part,
+            {
+              id: rrid<RRDiceTemplatePart>(),
+              type: "linkedStat",
+              name: statName,
+              damage: { type: null },
+            },
+          ];
+
+          if (proficiency !== 0)
+            parts.push({
+              id: rrid<RRDiceTemplatePart>(),
+              type: "linkedProficiency",
+              damage: { type: null },
+              proficiency,
+            });
+
+          return {
+            id: rrid<RRDiceTemplate>(),
+            name: `${statName} Saving Throw`,
+            notes: "",
+            parts,
+            rollType: null,
+          };
+        }
+      )
+    );
+    return templates;
+  }
+
+  function getSkillTemplates() {
+    const templates: RRDiceTemplate[] = [];
+
+    templates.push(
+      ...skillNames.map((skill) => {
+        const proficiency =
+          character === undefined ? 0 : character.skills[skill] ?? 0;
+        const parts: RRDiceTemplatePart[] = [
+          d20Part,
+          {
+            id: rrid<RRDiceTemplatePart>(),
+            type: "linkedStat",
+            name: skillMap[skill],
+            damage: { type: null },
+          },
+        ];
+        if (proficiency !== 0)
+          parts.push({
+            id: rrid<RRDiceTemplatePart>(),
+            type: "linkedProficiency",
+            damage: { type: null },
+            proficiency,
+          });
+
+        return {
+          id: rrid<RRDiceTemplate>(),
+          name: skill,
+          notes: "",
+          parts,
+          rollType: null,
+        };
+      })
+    );
+    return templates;
+  }
+
+  function renderContent(active: string) {
+    switch (active) {
+      case "Input":
+        return (
+          <>
+            <DiceInterface />
+            <DiceInput />
+          </>
+        );
+      case "Skills":
+        <DiceTemplates templates={getSavingThrowTemplates()} />;
+        break;
+      case "STs":
+        <DiceTemplates templates={getSkillTemplates()} />;
+        break;
+      default:
+        return (
+          <DiceTemplates
+            category={myself.diceTemplateCategories.find(
+              (cat) => cat.id === active
+            )}
+          />
+        );
+    }
+  }
+
   return (
     <div className="tabs">
       <div className="tab-buttons">
-        {[
-          {
-            icon: "d20" as typeof categoryIcons[number],
-            categoryName: "Input",
-          },
-          ...myself.diceTemplateCategories,
-        ].map(
-          (
-            {
-              icon,
-              categoryName,
-            }: { icon: typeof categoryIcons[number]; categoryName: string },
-            index
-          ) => (
-            <DiceTemplateButton
-              key={index}
-              index={index}
-              categoryName={categoryName}
-              icon={icon}
-              active={active === index}
-              onSetActive={() => setActive(index)}
-            />
-          )
-        )}
         <div
-          className={"tab-button"}
-          onClick={() => {
-            addTemplateCategory();
-          }}
-          title="Add Category"
+          className={clsx("tab-button", active === "Input" ? "active" : "")}
+          onClick={() => setActive("Input")}
         >
-          <FontAwesomeIcon icon={faPlus} fixedWidth />
+          <FontAwesomeIcon icon={faDiceD20} name={"Input"} />
         </div>
+        <div
+          className={clsx("tab-button", active === "STs" ? "active" : "")}
+          onClick={() => setActive("STs")}
+        >
+          <FontAwesomeIcon icon={faShieldAlt} name={"Saving Throws"} />
+        </div>
+        <div
+          className={clsx("tab-button", active === "Skills" ? "active" : "")}
+          onClick={() => setActive("Skills")}
+        >
+          <FontAwesomeIcon icon={faHandPaper} name={"Skills"} />
+        </div>
+        {myself.diceTemplateCategories.map((category) => (
+          <DiceTemplateButton
+            key={category.id}
+            category={category}
+            active={active === category.id}
+            onSetActive={() => setActive(category.id)}
+          />
+        ))}
+        {myself.diceTemplateCategories.length < userCategoryIcons.length && (
+          <div
+            className={"tab-button"}
+            onClick={() => {
+              addTemplateCategory();
+            }}
+            title="Add Category"
+          >
+            <FontAwesomeIcon icon={faPlus} fixedWidth />
+          </div>
+        )}
       </div>
 
-      <div className={clsx("tab", active === 0 ? "active" : "")}>
-        <DiceInterface />
-        <DiceInput />
-      </div>
-      {myself.diceTemplateCategories.map((_category, index) => (
-        <div
-          key={index}
-          className={clsx("tab", active === index + 1 ? "active" : "")}
-        >
-          <DiceTemplates categoryIndex={index} />
-        </div>
-      ))}
+      {renderContent(active)}
     </div>
   );
 });
 
 function DiceTemplateButton({
-  index,
-  categoryName,
-  icon,
+  category,
   active,
   onSetActive,
 }: {
-  index: number;
-  categoryName: string;
-  icon: typeof categoryIcons[number];
+  category: RRDiceTemplateCategory;
   active: boolean;
   onSetActive: () => void;
 }) {
@@ -118,10 +245,10 @@ function DiceTemplateButton({
   return (
     <Popover
       interactive
-      onClickOutside={(_i, e) => setAddMenuVisible(false)}
+      onClickOutside={() => setAddMenuVisible(false)}
       visible={addMenuVisible}
       placement="bottom"
-      content={<DiceTemplateCategoryEditor index={index - 1} />}
+      content={<DiceTemplateCategoryEditor category={category} />}
     >
       <div
         className={clsx("tab-button", active ? "active" : "")}
@@ -136,33 +263,35 @@ function DiceTemplateButton({
           e.stopPropagation();
           e.preventDefault();
           if (
-            fixedCategoryIcons.findIndex((fixedIcon) => fixedIcon === icon) > -1
+            fixedCategoryIcons.findIndex(
+              (fixedIcon) => fixedIcon === category.icon
+            ) > -1
           )
             return;
           setAddMenuVisible(true);
         }}
-        title={categoryName}
+        title={category.categoryName}
       >
-        <FontAwesomeIcon icon={iconMap[icon]} fixedWidth />
+        <FontAwesomeIcon icon={iconMap[category.icon]} fixedWidth />
       </div>
     </Popover>
   );
 }
 
-function DiceTemplateCategoryEditor({ index }: { index: number }) {
-  const myself = useMyself();
+function DiceTemplateCategoryEditor({
+  category,
+}: {
+  category: RRDiceTemplateCategory;
+}) {
+  const myself = useMyProps("diceTemplateCategories", "id");
   const dispatch = useServerDispatch();
 
   function deleteCategory() {
     dispatch({
       actions: [
-        playerUpdate({
+        playerDeleteDiceTemplateCategory({
           id: myself.id,
-          changes: {
-            diceTemplateCategories: myself.diceTemplateCategories.filter(
-              (_c, i) => i !== index
-            ),
-          },
+          categoryId: category.id,
         }),
       ],
       optimisticKey: "diceTemplateCategories",
@@ -171,33 +300,20 @@ function DiceTemplateCategoryEditor({ index }: { index: number }) {
   }
 
   function updateCategory(
+    category: RRDiceTemplateCategory,
     newIcon?: typeof categoryIcons[number],
     newName?: string
   ) {
     dispatch({
       actions: [
-        playerUpdate({
+        playerUpdateDiceTemplateCategory({
           id: myself.id,
-          changes: {
-            diceTemplateCategories: myself.diceTemplateCategories.map(
-              (
-                {
-                  categoryName,
-                  icon,
-                }: {
-                  categoryName: string;
-                  icon: typeof categoryIcons[number];
-                },
-                i: number
-              ) => {
-                if (index === i)
-                  return {
-                    icon: newIcon ?? icon,
-                    categoryName: newName ?? categoryName,
-                  };
-                else return { icon, categoryName };
-              }
-            ),
+          category: {
+            id: category.id,
+            changes: {
+              icon: newIcon ?? category.icon,
+              categoryName: newName ?? category.categoryName,
+            },
           },
         }),
       ],
@@ -215,8 +331,8 @@ function DiceTemplateCategoryEditor({ index }: { index: number }) {
       style={{ width: "170px" }}
     >
       <SmartTextInput
-        value={myself.diceTemplateCategories[index]!.categoryName}
-        onChange={(name) => updateCategory(undefined, name)}
+        value={category.categoryName}
+        onChange={(name) => updateCategory(category, undefined, name)}
         style={{ marginBottom: "0.6rem" }}
       />
       <div>
@@ -236,7 +352,7 @@ function DiceTemplateCategoryEditor({ index }: { index: number }) {
               }}
               onClick={() => {
                 if (alreadyUsed) return;
-                updateCategory(icon);
+                updateCategory(category, icon);
               }}
               fixedWidth
             />

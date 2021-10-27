@@ -32,7 +32,6 @@ function modifier(
   modifier: number,
   damageType: RRDamageType = {
     type: null,
-    modifiers: [],
   }
 ): RRModifier {
   return {
@@ -49,7 +48,6 @@ function rollD20(multiple: RRMultipleRoll = "none") {
     modified: multiple,
     damage: {
       type: null,
-      modifiers: [],
     },
   });
 }
@@ -247,9 +245,7 @@ export function DiceResultWithTypes({
         assertNever(part);
     }
 
-    const key = `${part.damageType.type ?? ""}:${part.damageType.modifiers.join(
-      ":"
-    )}`;
+    const key = `${part.damageType.type ?? ""}`;
     damageTypeSums.set(key, {
       type: part.damageType,
       sum: (damageTypeSums.get(key)?.sum ?? 0) + subSum,

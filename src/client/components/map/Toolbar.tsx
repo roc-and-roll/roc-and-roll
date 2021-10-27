@@ -10,7 +10,7 @@ import {
   faStreetView,
 } from "@fortawesome/free-solid-svg-icons";
 import React, { useEffect, useState } from "react";
-import { useIsGM, useMyself } from "../../myself";
+import { useIsGM, useMyProps } from "../../myself";
 import { useServerState } from "../../state";
 import useLocalState from "../../useLocalState";
 import { About } from "../About";
@@ -71,7 +71,7 @@ export function Toolbar() {
   const initiativeTrackerVisible = useServerState(
     (state) => state.initiativeTracker.visible
   );
-  const myself = useMyself();
+  const myself = useMyProps("isGM");
 
   useEffect(() => {
     setIntiativeActive(initiativeTrackerVisible);

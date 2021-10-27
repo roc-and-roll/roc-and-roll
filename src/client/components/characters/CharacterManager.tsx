@@ -16,7 +16,7 @@ import {
 import { generateRandomToken, uploadFiles } from "../../files";
 import { useServerDispatch, useServerState } from "../../state";
 import { useDrag, useDrop } from "react-dnd";
-import { useMyself } from "../../myself";
+import { useMyId, useMyProps } from "../../myself";
 import { GMArea } from "../GMArea";
 import { Popover } from "../Popover";
 import { Button } from "../ui/Button";
@@ -81,7 +81,7 @@ async function makeNewCharacter(
 }
 
 export const CharacterManager = React.memo(function CharacterManager() {
-  const myself = useMyself();
+  const myself = useMyProps("id", "isGM", "characterIds");
   const characters = useServerState((s) => s.characters);
   const [newCharacterIds, setNewCharacterIds] = useState<RRCharacterID[]>([]);
 
@@ -148,7 +148,7 @@ export const CharacterManager = React.memo(function CharacterManager() {
 
 const TemplateEditor = React.memo(function TemplateEditor() {
   const [newCharacterIds, setNewCharacterIds] = useState<RRCharacterID[]>([]);
-  const myself = useMyself();
+  const myId = useMyId();
 
   const dispatch = useServerDispatch();
 
@@ -159,7 +159,7 @@ const TemplateEditor = React.memo(function TemplateEditor() {
     try {
       const { id: newCharacterId, actions } = await makeNewCharacter(
         characterTemplateAdd,
-        myself.id,
+        myId,
         tokenImage
       );
       dispatch(actions);

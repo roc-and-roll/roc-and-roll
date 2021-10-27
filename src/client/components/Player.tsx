@@ -3,7 +3,7 @@ import { playerUpdate } from "../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import { RRCharacterID } from "../../shared/state";
 import { empty2Null } from "../../shared/util";
-import { useMyself } from "../myself";
+import { useMyProps } from "../myself";
 import { useServerDispatch, useServerState } from "../state";
 import { Button } from "./ui/Button";
 import { SmartColorInput } from "./ui/ColorInput";
@@ -12,7 +12,14 @@ import { SmartTextInput } from "./ui/TextInput";
 
 export function Player({ logout }: { logout: () => void }) {
   const dispatch = useServerDispatch();
-  const myself = useMyself();
+  const myself = useMyProps(
+    "characterIds",
+    "name",
+    "id",
+    "isGM",
+    "color",
+    "mainCharacterId"
+  );
   const characters = useServerState((s) => s.characters);
 
   const options: { value: RRCharacterID | ""; label: string }[] =

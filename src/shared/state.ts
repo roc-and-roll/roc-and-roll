@@ -2,7 +2,7 @@ import * as t from "typanion";
 import type { Dispatch } from "redux";
 import type { IterableElement, ValueOf } from "type-fest";
 import { assertNever, rrid } from "./util";
-import { isDamageType, isSyncedState } from "./validation";
+import { isDamageType, isSyncedState, RRDiceTemplate } from "./validation";
 import { LAST_MIGRATION_VERSION } from "./constants";
 import {
   faBalanceScale,
@@ -65,6 +65,8 @@ export type RRCapPoint = { readonly X: number; readonly Y: number };
 export type RRDiceTemplateID = MakeRRID<"diceTemplate">;
 
 export type RRDiceTemplatePartID = MakeRRID<"diceTemplatePart">;
+
+export type RRDiceTemplateCategoryID = MakeRRID<"diceTemplateCategory">;
 
 export type RRActiveMusicID = MakeRRID<"activeMusic">;
 
@@ -227,8 +229,6 @@ export type RRLogEntryAchievement = Extract<
   { type: "achievement" }
 >;
 
-export type RRDiceTemplate = ECE<SyncedState["diceTemplates"]>;
-
 export const characterAttributeNames = ["proficiency", "initiative"] as const;
 
 export const proficiencyValues = [0, 0.5, 1, 2] as const;
@@ -288,57 +288,55 @@ export const characterStatNames = [
 ] as const;
 
 export type RRDiceTemplatePartTemplate = Extract<
-  IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
+  IterableElement<RRDiceTemplate["parts"]>,
   {
     type: "template";
   }
 >;
 
 export type RRDiceTemplatePartModifier = Extract<
-  IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
+  IterableElement<RRDiceTemplate["parts"]>,
   {
     type: "modifier";
   }
 >;
 
 export type RRDiceTemplatePartLinkedModifier = Extract<
-  IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
+  IterableElement<RRDiceTemplate["parts"]>,
   {
     type: "linkedModifier";
   }
 >;
 
 export type RRDiceTemplatePartLinkedProficiency = Extract<
-  IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
+  IterableElement<RRDiceTemplate["parts"]>,
   {
     type: "linkedProficiency";
   }
 >;
 
 export type RRDiceTemplatePartLinkedStat = Extract<
-  IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
+  IterableElement<RRDiceTemplate["parts"]>,
   {
     type: "linkedStat";
   }
 >;
 
 export type RRDiceTemplatePartDice = Extract<
-  IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
+  IterableElement<RRDiceTemplate["parts"]>,
   {
     type: "dice";
   }
 >;
 
 export type RRDiceTemplatePartWithDamage = Extract<
-  IterableElement<ECE<SyncedState["diceTemplates"]>["parts"]>,
+  IterableElement<RRDiceTemplate["parts"]>,
   {
     damage: RRDamageType;
   }
 >;
 
-export type RRDiceTemplatePart = IterableElement<
-  ECE<SyncedState["diceTemplates"]>["parts"]
->;
+export type RRDiceTemplatePart = IterableElement<RRDiceTemplate["parts"]>;
 
 // Default categories that can't be changed by the user
 export const fixedCategoryIcons = ["hand", "shield", "d20"] as const;
@@ -445,8 +443,6 @@ export const colorForDamageType = (type: RRDamageType["type"]) => {
       assertNever(type);
   }
 };
-
-export const damageTypeModifiers = ["magical", "silver", "adamantine"] as const;
 
 export type RRDamageType = t.InferType<typeof isDamageType>;
 
@@ -564,25 +560,7 @@ export function makeDefaultMap() {
   };
 }
 
-function makeDefaultDiceTemplateCategories(): {
-  icon: typeof categoryIcons[number];
-  categoryName: string;
-}[] {
-  return [
-    {
-      categoryName: "Saving Throws",
-      icon: "shield",
-    },
-    {
-      categoryName: "Skills",
-      icon: "hand",
-    },
-  ];
-}
-
 export const defaultMap: RRMap = makeDefaultMap();
-
-export const defaultCategories = makeDefaultDiceTemplateCategories();
 
 export const initialSyncedState: SyncedState = {
   version: LAST_MIGRATION_VERSION,
@@ -597,7 +575,6 @@ export const initialSyncedState: SyncedState = {
   players: EMPTY_ENTITY_COLLECTION,
   characters: EMPTY_ENTITY_COLLECTION,
   characterTemplates: EMPTY_ENTITY_COLLECTION,
-  diceTemplates: EMPTY_ENTITY_COLLECTION,
   maps: {
     entities: { [defaultMap.id]: defaultMap },
     ids: [defaultMap.id],

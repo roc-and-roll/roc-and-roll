@@ -2,6 +2,7 @@ import React, { useContext, useLayoutEffect } from "react";
 import { useRecoilValue } from "recoil";
 import { useSetRecoilState } from "recoil";
 import { atom } from "recoil";
+import { IterableElement } from "type-fest";
 import { RRPlayer, RRPlayerID } from "../shared/state";
 import { useAutoDispatchPlayerIdOnChange, useServerState } from "./state";
 import { useGuranteedMemo } from "./useGuranteedMemo";
@@ -76,16 +77,26 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useMyself(allowNull?: false): RRPlayer;
+// export function useMyself(allowNull?: false): RRPlayer;
+//
+// export function useMyself(allowNull = false): RRPlayer | null {
+//   const myself = useContext(MyselfContext).player;
+//
+//   if (!myself && !allowNull) {
+//     throw new Error("myself is not provided");
+//   }
+//
+//   return myself;
+// }
 
-export function useMyself(allowNull = false): RRPlayer | null {
-  const myself = useContext(MyselfContext).player;
-
-  if (!myself && !allowNull) {
-    throw new Error("myself is not provided");
-  }
-
-  return myself;
+export function useMyProps<T extends (keyof RRPlayer)[]>(
+  ...fields: T
+): Pick<RRPlayer, IterableElement<T>> {
+  const id = useMyId();
+  return useServerState(
+    (state) => state.players.entities[id]!,
+    (left, right) => fields.every((field) => left[field] === right[field])
+  );
 }
 
 export function useLoginLogout() {
