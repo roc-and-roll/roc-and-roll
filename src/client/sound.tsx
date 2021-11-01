@@ -19,6 +19,7 @@ import { atom, useRecoilValue, useSetRecoilState } from "recoil";
 import { nanoid } from "@reduxjs/toolkit";
 import { volumeLinear2Log } from "./components/VolumeSlider";
 import { setAddImmutably, setDeleteImmutably } from "./immutable-helpers";
+import { useEventCallback } from "./useEventCallback";
 
 const lockedSoundsAtom = atom<string[]>({
   key: "lockedSounds",
@@ -57,22 +58,20 @@ export function useRRSimpleSound(url: string): [() => void, () => void] {
   const howlRef = useRef<Howl | null>(null);
 
   const [{ volume: globalVolume, mute: globalMute }] = useRRSettings();
-  const globalVolumeRef = useLatest(globalVolume);
-  const globalMuteRef = useLatest(globalMute);
 
-  const play = useCallback(() => {
+  const play = useEventCallback(() => {
     if (!howlRef.current) {
       howlRef.current = new Howl({
         src: url,
         // We need to initialize mute and volume both here and in the effect
         // below, because howlRef.current is null when the effect is executed
         // before calling play for the first time.
-        mute: globalMuteRef.current,
-        volume: globalVolumeRef.current,
+        mute: globalMute,
+        volume: globalVolume,
       });
     }
     howlRef.current.play();
-  }, [globalMuteRef, globalVolumeRef, url]);
+  });
 
   useEffect(() => {
     howlRef.current?.volume(globalVolume);
@@ -80,7 +79,7 @@ export function useRRSimpleSound(url: string): [() => void, () => void] {
   }, [globalVolume, globalMute]);
 
   const pause = useCallback(() => {
-    if (howlRef.current) howlRef.current.pause();
+    howlRef.current?.pause();
   }, []);
 
   return [play, pause];
