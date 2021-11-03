@@ -1,72 +1,64 @@
 import React, { useState } from "react";
 import { logEntryDiceRollAdd } from "../../shared/actions";
-import { RRDice, RRModifier } from "../../shared/state";
 import { useServerDispatch } from "../state";
-import { roll } from "../roll";
+import { parseDiceStringAndRoll } from "../dice-rolling/roll";
+import { parseDiceStringGetSyntaxError } from "../dice-rolling/grammar";
 import { Button } from "./ui/Button";
-import { useAlert } from "../dialog-boxes";
 import { useMyProps } from "../myself";
 
 export function DiceInput() {
   const [text, setText] = useState("");
+  // We want to only show a possible syntax error to the user after they press
+  // enter or blur the input field, and not while they are typing. This state
+  // variable tracks that.
+  const [showError, setShowError] = useState(false);
+  const [syntaxError, setSyntaxError] = useState<string | null>(null);
+
   const myself = useMyProps("id");
   const dispatch = useServerDispatch();
-  const alert = useAlert();
 
-  const doRoll = async () => {
-    const regex = /(^| *[+-] *)(?:(\d*)(d|a|i)(\d+)|(\d+))/g;
-    const dice = [...text.matchAll(regex)].map(
-      ([_, sign, diceCount, die, dieFaces, mod]): RRDice | RRModifier => {
-        const negated = sign?.trim() === "-";
-        if (diceCount !== undefined && dieFaces !== undefined) {
-          // die
-          const faces = parseInt(dieFaces);
-          const count =
-            diceCount === "" ? (die === "d" ? 1 : 2) : parseInt(diceCount);
-          return roll({
-            count,
-            faces,
-            modified:
-              die === "a" ? "advantage" : die === "i" ? "disadvantage" : "none",
-            negated,
-            damage: { type: null },
-          });
-        } else if (mod) {
-          // mod
-          const modifier = parseInt(mod) * (negated ? -1 : 1);
-          return {
-            type: "modifier",
-            damageType: { type: null },
-            modifier,
-          };
-        }
-        throw new Error();
-      }
+  const doRoll = () => {
+    const diceRollTree = parseDiceStringAndRoll(text);
+
+    dispatch(
+      logEntryDiceRollAdd({
+        silent: false,
+        playerId: myself.id,
+        payload: { diceRollTree, rollType: null, rollName: null },
+      })
     );
-
-    if (dice.length) {
-      dispatch(
-        logEntryDiceRollAdd({
-          silent: false,
-          playerId: myself.id,
-          payload: { dice, rollType: null, rollName: null },
-        })
-      );
-      setText("");
-    } else {
-      await alert("Please follow the regex: " + regex.toString());
-    }
+    setText("");
   };
 
   return (
-    <>
-      <input
-        value={text}
-        onKeyPress={(e) => e.key === "Enter" && doRoll()}
-        onChange={(evt) => setText(evt.target.value)}
-        type="text"
-      />
-      <Button onClick={doRoll}>roll</Button>
-    </>
+    <div className="dice-input">
+      <div className="input-row">
+        <input
+          value={text}
+          onKeyPress={(e) => {
+            if (e.key === "Enter") {
+              if (syntaxError) {
+                setShowError(true);
+              } else {
+                doRoll();
+              }
+            }
+          }}
+          onChange={({ target: { value } }) => {
+            const error = parseDiceStringGetSyntaxError(value);
+            setText(value);
+            setSyntaxError(error?.message ?? null);
+          }}
+          onBlur={() => setShowError(!!syntaxError)}
+          type="text"
+        />
+        <Button onClick={doRoll} disabled={!!syntaxError}>
+          roll
+        </Button>
+      </div>
+      {syntaxError && showError && (
+        <div className="error-row">{syntaxError}</div>
+      )}
+    </div>
   );
 }

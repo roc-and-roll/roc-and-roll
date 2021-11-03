@@ -144,7 +144,14 @@ export const DiceTemplates = React.memo(function DiceTemplates({
         payload: {
           rollType: "attack", // TODO
           rollName,
-          dice: parts,
+          diceRollTree:
+            parts.length === 1
+              ? parts[0]!
+              : {
+                  type: "term",
+                  operator: "+",
+                  operands: parts,
+                },
         },
       })
     );
@@ -305,7 +312,14 @@ function GeneratedDiceTemplate({ template }: { template: RRDiceTemplate }) {
         payload: {
           rollType: "attack", // TODO
           rollName: template.name,
-          dice: parts,
+          diceRollTree:
+            parts.length === 1
+              ? parts[0]!
+              : {
+                  type: "term",
+                  operator: "+",
+                  operands: parts,
+                },
         },
       })
     );

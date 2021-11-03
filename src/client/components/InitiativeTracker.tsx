@@ -24,7 +24,7 @@ import {
 } from "../../shared/state";
 import { useMyProps } from "../myself";
 import { canControlToken } from "../permissions";
-import { diceResult, rollInitiative } from "../roll";
+import { diceResult, rollInitiative } from "../dice-rolling/roll";
 import { useServerDispatch, useServerState } from "../state";
 import { useLatest } from "../useLatest";
 import useLocalState from "../useLocalState";
@@ -458,7 +458,7 @@ const RollInitiativeDeferredImpl = React.memo<{
     dispatch([
       action,
       initiativeTrackerEntryCharacterAdd({
-        initiative: diceResult(action.payload),
+        initiative: diceResult(action.payload.payload.diceRollTree),
         characterIds: selectedCharacterIds,
       }),
     ]);

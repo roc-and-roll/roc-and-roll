@@ -14,7 +14,7 @@ import {
   RRLogEntryMessage,
 } from "../../shared/state";
 import { assertNever } from "../../shared/util";
-import { DiceResultWithTypes } from "../roll";
+import { diceResultString, DiceResultWithTypes } from "../dice-rolling/roll";
 import { useRRSimpleSound } from "../sound";
 import { useServerState } from "../state";
 import tada from "../../third-party/freesound.org/60443__jobro__tada1.mp3";
@@ -168,6 +168,11 @@ function Notification({
           />
         </ErrorBoundary>
       </Suspense>
+      <small style={{ display: "block", paddingTop: 16 }}>
+        {notificationReady
+          ? diceResultString(notification.payload.diceRollTree)
+          : " "}
+      </small>
     </>
   );
 

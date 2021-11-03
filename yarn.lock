@@ -1589,6 +1589,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jest/create-cache-key-function@npm:^27.3.1":
+  version: 27.3.1
+  resolution: "@jest/create-cache-key-function@npm:27.3.1"
+  dependencies:
+    "@jest/types": ^27.2.5
+  checksum: cc431761ccee06a2346eae11d92ccec438c17718cb4b8386e1d9f2571767479ac1fa4fc80045d370d7d2a2f2ff80d49cdbea2b6289c27bee3ea32bc37f7de698
+  languageName: node
+  linkType: hard
+
 "@jest/environment@npm:^27.1.0":
   version: 27.1.0
   resolution: "@jest/environment@npm:27.1.0"
@@ -1721,16 +1730,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jest/types@npm:^27.1.0":
-  version: 27.1.0
-  resolution: "@jest/types@npm:27.1.0"
+"@jest/types@npm:^27.1.0, @jest/types@npm:^27.2.5":
+  version: 27.2.5
+  resolution: "@jest/types@npm:27.2.5"
   dependencies:
     "@types/istanbul-lib-coverage": ^2.0.0
     "@types/istanbul-reports": ^3.0.0
     "@types/node": "*"
     "@types/yargs": ^16.0.0
     chalk: ^4.0.0
-  checksum: 11899aba8103e00332baab35eb7ed435e4e06b270d02ca75fc6ccf08e41f36abae7b25d623377da47596c3e817c102e79e99caf717e6ec8eb78a85fdaa439ee8
+  checksum: 322603c24354a5333b5b7a670464422a46e0244a5a96a35552a7018eb4ac2e84c3b7657336b0ea6aa114963f9b6d0da8b8f6f963cb044fea9e7bc04d464b0ab1
   languageName: node
   linkType: hard
 
@@ -2347,6 +2356,19 @@ __metadata:
     react-redux:
       optional: true
   checksum: 04f0ee6d1147ce9aa8199b14fd786461541f51619b3b63730f7a9e92bc247d47669b85df74c462b0a42725414f6ba6ad2a58e79f90ecd60e2299d564c640a95a
+  languageName: node
+  linkType: hard
+
+"@rocket.chat/peggy-loader@npm:^0.30.1":
+  version: 0.30.1
+  resolution: "@rocket.chat/peggy-loader@npm:0.30.1"
+  dependencies:
+    loader-utils: ^2.0.0
+    tslib: ^2.3.0
+  peerDependencies:
+    peggy: "*"
+    webpack: "*"
+  checksum: 10aeccfd9da18fee1e594a6fd88c86d7fc62554d8073eaa0df2b990591d334e2db63a29aa1c86ec6161fe19b3054f0367d95b9ef407ad4b9df0b0fc42772a600
   languageName: node
   linkType: hard
 
@@ -3158,7 +3180,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-test-renderer@npm:>=16.9.0":
+"@types/react-test-renderer@npm:>=16.9.0, @types/react-test-renderer@npm:^17":
   version: 17.0.1
   resolution: "@types/react-test-renderer@npm:17.0.1"
   dependencies:
@@ -11389,6 +11411,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"peggy@npm:1.2.0":
+  version: 1.2.0
+  resolution: "peggy@npm:1.2.0"
+  bin:
+    peggy: bin/peggy
+  checksum: 658c985df8175cb7e90990f663ec5f84d25db6d05adb7f2ffcbcc86c7cddc8de0b818c8d1eb64e78c84ae848e921ff54acabb39da4fb5e497c1dcfdcbfc50b47
+  languageName: node
+  linkType: hard
+
+"peggy@patch:peggy@npm:1.2.0#.yarn/patches/peggy-npm-1.2.0-dcccbe8690::locator=roc-and-roll%40workspace%3A.":
+  version: 1.2.0
+  resolution: "peggy@patch:peggy@npm%3A1.2.0#.yarn/patches/peggy-npm-1.2.0-dcccbe8690::version=1.2.0&hash=07a1a6&locator=roc-and-roll%40workspace%3A."
+  bin:
+    peggy: bin/peggy
+  checksum: e6c13d8b9b1cc61dd4b1fa55f98f1ea70893628dee19c5619e60ce3fb9bada843090488d3c1a9b30d71b8cf0980ecd38cfcc499390c99ba57ef2b07853d96c3b
+  languageName: node
+  linkType: hard
+
 "performance-now@npm:^2.1.0":
   version: 2.1.0
   resolution: "performance-now@npm:2.1.0"
@@ -12066,17 +12106,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-is@npm:18.0.0-beta-149b420f6-20211119":
+  version: 18.0.0-beta-149b420f6-20211119
+  resolution: "react-is@npm:18.0.0-beta-149b420f6-20211119"
+  checksum: 21973a0949224e3cf42fb8fd39ecca1f97148e3ce769979ad1ee7d20b3e2cfaa48fec373148a4228d9fe2f5ab89d44246c234285fd7d755b8c8785e3abfdabba
+  languageName: node
+  linkType: hard
+
+"react-is@npm:^16.12.0 || ^17.0.0, react-is@npm:^17.0.0, react-is@npm:^17.0.1":
+  version: 17.0.2
+  resolution: "react-is@npm:17.0.2"
+  checksum: 9d6d111d8990dc98bc5402c1266a808b0459b5d54830bbea24c12d908b536df7883f268a7868cfaedde3dd9d4e0d574db456f84d2e6df9c4526f99bb4b5344d8
+  languageName: node
+  linkType: hard
+
 "react-is@npm:^16.7.0, react-is@npm:^16.8.1":
   version: 16.13.1
   resolution: "react-is@npm:16.13.1"
   checksum: f7a19ac3496de32ca9ae12aa030f00f14a3d45374f1ceca0af707c831b2a6098ef0d6bdae51bd437b0a306d7f01d4677fcc8de7c0d331eb47ad0f46130e53c5f
-  languageName: node
-  linkType: hard
-
-"react-is@npm:^17.0.0, react-is@npm:^17.0.1":
-  version: 17.0.2
-  resolution: "react-is@npm:17.0.2"
-  checksum: 9d6d111d8990dc98bc5402c1266a808b0459b5d54830bbea24c12d908b536df7883f268a7868cfaedde3dd9d4e0d574db456f84d2e6df9c4526f99bb4b5344d8
   languageName: node
   linkType: hard
 
@@ -12139,6 +12186,32 @@ __metadata:
   version: 0.10.0
   resolution: "react-refresh@npm:0.10.0"
   checksum: 089b8ea9ad8038046c0467a2476595eedab9e30620f50daa50e844c81d626de43a44a6a628256ae58e68885d5fe1d7e05074ddfd99ece3808b013d043f0c6030
+  languageName: node
+  linkType: hard
+
+"react-shallow-renderer@npm:^16.13.1":
+  version: 16.14.1
+  resolution: "react-shallow-renderer@npm:16.14.1"
+  dependencies:
+    object-assign: ^4.1.1
+    react-is: ^16.12.0 || ^17.0.0
+  peerDependencies:
+    react: ^16.0.0 || ^17.0.0
+  checksum: f344c663c48720d19559b4198b1f63ad47a3f11bedc92ede053a6c0706b5209e6110086f3ccc6db04eda9f0d1a415845956ddfb6ce09a922167d4831fcba9314
+  languageName: node
+  linkType: hard
+
+"react-test-renderer@npm:beta":
+  version: 18.0.0-beta-149b420f6-20211119
+  resolution: "react-test-renderer@npm:18.0.0-beta-149b420f6-20211119"
+  dependencies:
+    object-assign: ^4.1.1
+    react-is: 18.0.0-beta-149b420f6-20211119
+    react-shallow-renderer: ^16.13.1
+    scheduler: 0.21.0-beta-149b420f6-20211119
+  peerDependencies:
+    react: 18.0.0-beta-149b420f6-20211119
+  checksum: ee5a6dd9ca3d517e029281d2f9324f27f96828423a24d74f9c966967914df82b7f10c0b8690d026f9bd6e1a96a291b591a8d875fdf662e74b61d2c57001647ef
   languageName: node
   linkType: hard
 
@@ -12750,9 +12823,11 @@ resolve@^2.0.0-next.3:
     "@fortawesome/free-regular-svg-icons": ^5.15.4
     "@fortawesome/free-solid-svg-icons": ^5.15.4
     "@fortawesome/react-fontawesome": ^0.1.15
+    "@jest/create-cache-key-function": ^27.3.1
     "@pmmmwh/react-refresh-webpack-plugin": ^0.5.1
     "@react-three/fiber": ^7.0.6
     "@reduxjs/toolkit": ^1.6.1
+    "@rocket.chat/peggy-loader": ^0.30.1
     "@seznam/compose-react-refs": ^1.0.6
     "@swc/core": ^1.2.84
     "@swc/jest": ^0.2.2
@@ -12773,6 +12848,7 @@ resolve@^2.0.0-next.3:
     "@types/prompts": ^2.0.14
     "@types/react": ^17.0.19
     "@types/react-dom": ^17.0.9
+    "@types/react-test-renderer": ^17
     "@types/sharp": ^0.28.6
     "@types/socket.io": ^3.0.2
     "@types/socket.io-client": ^3.0.0
@@ -12830,6 +12906,7 @@ resolve@^2.0.0-next.3:
     nodemon: ^2.0.12
     nodemon-webpack-plugin: ^4.5.2
     p-limit: ^4.0.0
+    peggy: ^1.2.0
     postcss: ^8.3.11
     postcss-loader: ^6.2.0
     prettier: ^2.3.2
@@ -12845,6 +12922,7 @@ resolve@^2.0.0-next.3:
     react-lag-radar: ^1.0.0
     react-markdown: ^7.0.1
     react-refresh: ^0.10.0
+    react-test-renderer: beta
     react-use-gesture: ^9.1.3
     recoil: ^0.4.1
     redux: ^4.1.1
@@ -12868,7 +12946,7 @@ resolve@^2.0.0-next.3:
     transformation-matrix: ^2.9.0
     ts-loader: ^9.2.5
     ts-node: ^10.2.1
-    typanion: ^3.5.0
+    typanion: ^3.7.1
     type-fest: ^2.3.4
     typescript: ^4.4.3
     utf-8-validate: ^5.0.5
@@ -13015,6 +13093,16 @@ resolve@^2.0.0-next.3:
     loose-envify: ^1.1.0
     object-assign: ^4.1.1
   checksum: d488dd3c0a06e3e65ba45e80afb959d67cc0ca4ada652c816c876d16c440ae3d4847f4c3820ed931c90da629b1e802fb906ea6e95e9e1ab5e6f421b8151468c5
+  languageName: node
+  linkType: hard
+
+"scheduler@npm:0.21.0-beta-149b420f6-20211119":
+  version: 0.21.0-beta-149b420f6-20211119
+  resolution: "scheduler@npm:0.21.0-beta-149b420f6-20211119"
+  dependencies:
+    loose-envify: ^1.1.0
+    object-assign: ^4.1.1
+  checksum: 775bb53053014dba779838ca16120bfe56a32968141bda3c026fc3e50d45a07b646dedd2c51907a6391d1b6dc12df8e026b9128fe70dbad24c12d54ee2ffd2b0
   languageName: node
   linkType: hard
 
@@ -14478,10 +14566,10 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.0.3":
-  version: 2.3.0
-  resolution: "tslib@npm:2.3.0"
-  checksum: 8869694c26e4a7b56d449662fd54a4f9ba872c889d991202c74462bd99f10e61d5bd63199566c4284c0f742277736292a969642cc7b590f98727a7cae9529122
+"tslib@npm:^2.0.3, tslib@npm:^2.3.0":
+  version: 2.3.1
+  resolution: "tslib@npm:2.3.1"
+  checksum: de17a98d4614481f7fcb5cd53ffc1aaf8654313be0291e1bfaee4b4bb31a20494b7d218ff2e15017883e8ea9626599b3b0e0229c18383ba9dce89da2adf15cb9
   languageName: node
   linkType: hard
 
@@ -14512,10 +14600,10 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"typanion@npm:^3.5.0":
-  version: 3.5.0
-  resolution: "typanion@npm:3.5.0"
-  checksum: 9d9c7e7ba99f61a9bce3d02c486c264c1071bf946623d43c47b317450e37978bbb5c0dcab0aa31b8eb867a45417bc3ffbef3d1e59a32b92c3b932e4af488c77b
+"typanion@npm:^3.7.1":
+  version: 3.7.1
+  resolution: "typanion@npm:3.7.1"
+  checksum: 79f396a960167956999b585eb9f0baa61c79455c680778dd950261e73bf6465f5a38779cc176142099c7fbf440d578b44664632bb1e3e41769199278751d7d92
   languageName: node
   linkType: hard
 

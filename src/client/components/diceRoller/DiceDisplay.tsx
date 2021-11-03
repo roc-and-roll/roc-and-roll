@@ -1,22 +1,26 @@
 import React, { Suspense, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
-import {
-  colorForDamageType,
-  RRDamageType,
-  RRLogEntryDiceRoll,
-} from "../../../shared/state";
+import { colorForDamageType, RRLogEntryDiceRoll } from "../../../shared/state";
 import { Dice } from "./Dice";
 import clsx from "clsx";
 import { contrastColor } from "../../util";
 import { USE_CONCURRENT_MODE } from "../../../shared/constants";
+import {
+  DRTPartDice,
+  DRTPartNegated,
+  DRTPartNum,
+  DRTPartParens,
+  DRTPartTerm,
+  RRDamageType,
+} from "../../../shared/dice-roll-tree-types-and-validation";
+import { DRTVisitor } from "../../dice-rolling/grammar";
 
 const SLOT_SIZE = 50;
 const COLUMNS = 7;
 export const DICE_DISPLAY_COLUMNS = COLUMNS;
 
 interface DisplayPart {
-  type: string;
   damageType: RRDamageType;
 }
 interface DisplayModifier extends DisplayPart {
@@ -144,37 +148,54 @@ function ModifierContainer({ slots }: { slots: RollSlots }) {
   );
 }
 
-const calculateSlots = (diceRoll: RRLogEntryDiceRoll) => {
-  const slots: RollSlots = [];
-  for (const part of diceRoll.payload.dice) {
-    if (part.type === "modifier") slots.push(part);
-    else {
-      for (const result of part.diceResults) {
-        slots.push({
-          type: [4, 6, 8, 10, 12, 20].includes(part.faces) ? "die" : "weirdDie",
-          damageType: part.damageType,
-          faces: part.faces,
-          result: result,
-          color:
-            part.faces !== 20
-              ? colorForDamageType(part.damageType.type)
-              : result === 1
-              ? "darkred"
-              : result === 20
-              ? "green"
-              : "orange",
-          used:
-            part.modified === "none"
-              ? true
-              : part.modified === "advantage"
-              ? result === Math.max(...part.diceResults)
-              : result === Math.min(...part.diceResults),
-        });
-      }
-    }
+class SlotsVisitor extends DRTVisitor<RollSlots, true> {
+  protected override visitNum(expression: DRTPartNum): RollSlots {
+    return [
+      {
+        type: "modifier",
+        modifier: expression.value,
+        damageType: expression.damage,
+      },
+    ];
   }
-  return slots;
-};
+
+  protected override visitDice(expression: DRTPartDice<true>): RollSlots {
+    return expression.results.map((result) => ({
+      type: [4, 6, 8, 10, 12, 20].includes(expression.faces)
+        ? "die"
+        : "weirdDie",
+      damageType: expression.damage,
+      faces: expression.faces,
+      result: result,
+      color:
+        expression.faces !== 20
+          ? colorForDamageType(expression.damage.type)
+          : result === 1
+          ? "darkred"
+          : result === 20
+          ? "green"
+          : "orange",
+      used:
+        expression.modified === "none"
+          ? true
+          : expression.modified === "advantage"
+          ? result === Math.max(...expression.results)
+          : result === Math.min(...expression.results),
+    }));
+  }
+
+  protected override visitTerm(expression: DRTPartTerm<true>): RollSlots {
+    return expression.operands.flatMap((operand) => this.visit(operand));
+  }
+
+  protected override visitParens(expression: DRTPartParens<true>): RollSlots {
+    return this.visit(expression.inner);
+  }
+
+  protected override visitNegated(expression: DRTPartNegated<true>): RollSlots {
+    return this.visit(expression.inner);
+  }
+}
 
 export default function DiceDisplay({
   diceRoll,
@@ -183,7 +204,7 @@ export default function DiceDisplay({
   diceRoll: RRLogEntryDiceRoll;
   onAnimationFinished: () => void;
 }) {
-  const slots = calculateSlots(diceRoll);
+  const slots = new SlotsVisitor().visit(diceRoll.payload.diceRollTree);
   const numRows = Math.ceil(slots.length / COLUMNS);
 
   return (

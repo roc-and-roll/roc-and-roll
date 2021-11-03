@@ -47,6 +47,11 @@ declare module "*.glb" {
   export = glb;
 }
 
+declare module "*.peggy" {
+  const parser: import("peggy").Parser;
+  export = parser;
+}
+
 declare namespace NodeJS {
   interface ProcessEnv {
     readonly NODE_ENV: "development" | "production" | "test";
