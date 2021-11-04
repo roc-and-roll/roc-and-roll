@@ -24,12 +24,6 @@ const anglesToQuaternion = (angles: [number, number, number][]) =>
 export const descriptorMap = ([d4, d6, d8, d10, d12, d20]: GLTF[]): {
   [faces: string]: DiceDescriptor;
 } => {
-  const r = (x: number, y: number, z: number, d: number) =>
-    new THREE.Matrix4().makeRotationAxis(
-      new THREE.Vector3(x, y, z),
-      THREE.MathUtils.degToRad(d)
-    );
-
   // TODO: can be arbitrary die or d100
   const descriptors: { [id: string]: DiceDescriptor } = {
     4: {
