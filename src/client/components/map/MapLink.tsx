@@ -1,9 +1,8 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { GRID_SIZE } from "../../../shared/constants";
 import { RRMapLink, RRMapObject } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import { useServerState } from "../../state";
-import { useLatest } from "../../useLatest";
 import { MapListEntry } from "../Maps";
 import { Popover } from "../Popover";
 import { RoughCircle, RoughText } from "../rough";
@@ -21,7 +20,9 @@ export function MapLink({
 }) {
   const myself = useMyself();
   const canControl =
-    !link.locked && canStartMoving && link.playerId === myself.id;
+    !link.locked &&
+    canStartMoving &&
+    (link.playerId === myself.id || myself.isGM);
   const style = useMemo(
     () => (canControl ? { cursor: "move" } : {}),
     [canControl]
@@ -32,18 +33,14 @@ export function MapLink({
   const players = useServerState((state) => state.players);
   const [menuVisible, setMenuVisible] = useState(false);
 
-  const ref = useLatest({ link, onStartMove });
-  const onMouseDown = useCallback(
-    (e: React.MouseEvent<SVGElement>) => {
-      if (e.button === 2) {
-        setMenuVisible(true);
-        return;
-      }
+  const onMouseDown = (e: React.MouseEvent<SVGElement>) => {
+    if (e.button === 2) {
+      setMenuVisible(true);
+      return;
+    }
 
-      ref.current.onStartMove(ref.current.link, e);
-    },
-    [ref]
-  );
+    onStartMove(link, e);
+  };
 
   if (!mapName) {
     return null;

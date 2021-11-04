@@ -1,7 +1,7 @@
 import React from "react";
 import { logEntryMessageAdd } from "../../shared/actions";
 import { entries, RRLogEntry } from "../../shared/state";
-import { assertNever, withDo } from "../../shared/util";
+import { assertNever } from "../../shared/util";
 import { useMyself } from "../myself";
 import { usePrompt } from "../dialog-boxes";
 import { diceResultString, DiceResultWithTypes } from "../roll";
@@ -11,10 +11,13 @@ import { formatTimestamp, linkify } from "../util";
 import { achievements } from "./achievementList";
 import { Button } from "./ui/Button";
 
-function LogEntry({ logEntry }: { logEntry: RRLogEntry }) {
-  const { entities: players } = useServerState((state) => state.players);
-  const player = logEntry.playerId ? players[logEntry.playerId] : null;
-  const playerName = player?.name ?? "Unknown Player";
+const LogEntry = React.memo<{ logEntry: RRLogEntry }>(function LogEntry({
+  logEntry,
+}) {
+  const playerName =
+    useServerState((state) =>
+      logEntry.playerId ? state.players.entities[logEntry.playerId]?.name : null
+    ) ?? "Unknown Player";
 
   let content;
 
@@ -54,7 +57,7 @@ function LogEntry({ logEntry }: { logEntry: RRLogEntry }) {
   }
 
   return <div title={formatTimestamp(logEntry.timestamp)}>{content}</div>;
-}
+});
 
 export const Log = React.memo(function Log() {
   const logEntriesCollection = useServerState((state) => state.logEntries);
@@ -66,42 +69,40 @@ export const Log = React.memo(function Log() {
   return (
     <div className="log">
       <ul ref={scrollRef} className="log-text">
-        {withDo(entries(logEntriesCollection), (logEntries) =>
-          logEntries.flatMap((logEntry, i) => {
-            const lastLogEntry = logEntries[i - 1] ?? null;
-            const diff = logEntry.timestamp - (lastLogEntry?.timestamp ?? 0);
+        {entries(logEntriesCollection).flatMap((logEntry, i, logEntries) => {
+          const lastLogEntry = logEntries[i - 1] ?? null;
+          const diff = logEntry.timestamp - (lastLogEntry?.timestamp ?? 0);
 
-            const elements = [];
+          const elements = [];
 
-            if (diff >= 1000 * 60 * 60 * 3) {
-              // >=3 hours distance
-              elements.push(
-                <li
-                  key={`${logEntry.id} ${lastLogEntry?.id ?? "---"}`}
-                  className="log-divider-timestamp"
-                >
-                  {formatTimestamp(logEntry.timestamp)}
-                </li>
-              );
-            } else if (diff >= 1000 * 90) {
-              // >=90 seconds distance
-              elements.push(
-                <li
-                  key={`${logEntry.id} ${lastLogEntry?.id ?? "--"}`}
-                  className="log-divider-small"
-                />
-              );
-            }
-
+          if (diff >= 1000 * 60 * 60 * 3) {
+            // >=3 hours distance
             elements.push(
-              <li key={logEntry.id}>
-                <LogEntry logEntry={logEntry} />
+              <li
+                key={`${logEntry.id} ${lastLogEntry?.id ?? "---"}`}
+                className="log-divider-timestamp"
+              >
+                {formatTimestamp(logEntry.timestamp)}
               </li>
             );
+          } else if (diff >= 1000 * 90) {
+            // >=90 seconds distance
+            elements.push(
+              <li
+                key={`${logEntry.id} ${lastLogEntry?.id ?? "--"}`}
+                className="log-divider-small"
+              />
+            );
+          }
 
-            return elements;
-          })
-        )}
+          elements.push(
+            <li key={logEntry.id}>
+              <LogEntry logEntry={logEntry} />
+            </li>
+          );
+
+          return elements;
+        })}
       </ul>
       <Button
         onClick={async () => {

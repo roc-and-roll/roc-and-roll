@@ -1,7 +1,12 @@
 import { buildPatch, isEmptyObject } from "./util";
 import { MyStore } from "./setupReduxStore";
 import { Server as SocketIOServer, Socket as SocketIOSocket } from "socket.io";
-import { OptimisticUpdateID, RRPlayerID, SyncedState } from "../shared/state";
+import {
+  OptimisticUpdateID,
+  RRPlayer,
+  RRPlayerID,
+  SyncedState,
+} from "../shared/state";
 import { ephemeralPlayerAdd, ephemeralPlayerRemove } from "../shared/actions";
 import { throttled } from "../shared/util";
 import * as t from "typanion";
@@ -70,7 +75,8 @@ export const setupStateSync = (
 
   const sendStateUpdate = (
     socket: SocketIOSocket,
-    currentState: SyncedState
+    currentState: SyncedState,
+    player: RRPlayer | null
   ) => {
     const data = additionalSocketData.get(socket.id);
     if (!data) {
@@ -80,6 +86,11 @@ export const setupStateSync = (
     }
 
     if (data.lastState === null) {
+      log(
+        `[${Date.now() / 1000}] sending state to ${socket.id} (${
+          player?.name ?? "not logged in"
+        })`
+      );
       socket.emit(SOCKET_SET_STATE, {
         state: JSON.stringify(currentState),
         version: __VERSION__,
@@ -99,6 +110,11 @@ export const setupStateSync = (
         patch.deletedKeys.length > 0 ||
         data.finishedOptimisticUpdateIds.length > 0
       ) {
+        log(
+          `[${Date.now() / 1000}] sending state to ${socket.id} (${
+            player?.name ?? "not logged in"
+          })`
+        );
         socket.emit(SOCKET_PATCH_STATE, {
           patch: JSON.stringify(patch),
           finishedOptimisticUpdateIds: data.finishedOptimisticUpdateIds,
@@ -151,7 +167,7 @@ export const setupStateSync = (
 
     log("A client connected");
     sendServerInfo(socket);
-    sendStateUpdate(socket, store.getState());
+    sendStateUpdate(socket, store.getState(), null);
 
     socket.on("disconnect", () => {
       log("A client disconnected");
@@ -229,12 +245,7 @@ export const setupStateSync = (
           ? state.players.entities[data.playerId] ?? null
           : null;
 
-        log(
-          `[${Date.now() / 1000}] sending state to ${socket.id} (${
-            player?.name ?? "not logged in"
-          })`
-        );
-        sendStateUpdate(socket, state);
+        sendStateUpdate(socket, state, player);
       });
     }, 100)
   );

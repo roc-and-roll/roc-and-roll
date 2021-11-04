@@ -57,7 +57,7 @@ export function linkify(text: string) {
     result.push(text.substring(i, start));
     const url = text.substring(start, end);
     result.push(
-      <a href={url} target="_blank" rel="noreferrer">
+      <a key={i} href={url} target="_blank" rel="noreferrer">
         {url}
       </a>
     );
