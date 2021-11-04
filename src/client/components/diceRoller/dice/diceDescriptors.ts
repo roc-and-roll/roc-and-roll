@@ -33,12 +33,27 @@ export const descriptorMap = ([d4, d6, d8, d10, d12, d20]: GLTF[]): {
   // TODO: can be arbitrary die or d100
   const descriptors: { [id: string]: DiceDescriptor } = {
     4: {
-      rotations: anglesToQuaternion([
-        [0, 80, 0],
-        [90, -30, -90],
-        [30, -90, 120],
-        [-120, 20, 30],
-      ]),
+      rotations: [
+        new THREE.Quaternion(),
+        new THREE.Quaternion(
+          0.7124677300453186,
+          0.29332807660102844,
+          -0.4051455557346344,
+          0.4921437203884125
+        ),
+        new THREE.Quaternion(
+          0.7085079550743103,
+          0.28753891587257385,
+          -0.40955063700675964,
+          -0.4976005554199219
+        ),
+        new THREE.Quaternion(
+          0.00023272153339348733,
+          -0.29141682386398315,
+          -0.8161157369613647,
+          0.49903035163879395
+        ),
+      ],
       geometry: () => geometryFrom(d4),
     },
     6: {
