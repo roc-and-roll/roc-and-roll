@@ -67,7 +67,6 @@ export function ModApi() {
   const { sources: compendiumSources, addSource: addCompendiumSource } =
     useCompendium();
   const compendiumSourcesRef = useLatest(compendiumSources);
-  const addCompendiumSourceRef = useLatest(addCompendiumSource);
 
   useEffect(() => {
     const modInterface: MODDING = {
@@ -76,7 +75,7 @@ export function ModApi() {
         addSource: (source: unknown) => {
           const errors: string[] = [];
           if (isCompendiumSource(source, { errors })) {
-            addCompendiumSourceRef.current(source);
+            addCompendiumSource(source);
             return errors;
           }
           return errors;
@@ -91,7 +90,7 @@ export function ModApi() {
     return () => {
       delete window.MODDING;
     };
-  }, [compendiumSourcesRef, addCompendiumSourceRef]);
+  }, [compendiumSourcesRef, addCompendiumSource]);
 
   return null;
 }

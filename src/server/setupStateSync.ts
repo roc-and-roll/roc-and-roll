@@ -1,7 +1,12 @@
 import { buildPatch, isEmptyObject } from "./util";
 import { MyStore } from "./setupReduxStore";
 import { Server as SocketIOServer, Socket as SocketIOSocket } from "socket.io";
-import { OptimisticUpdateID, RRPlayerID, SyncedState } from "../shared/state";
+import {
+  OptimisticUpdateID,
+  RRPlayer,
+  RRPlayerID,
+  SyncedState,
+} from "../shared/state";
 import { ephemeralPlayerAdd, ephemeralPlayerRemove } from "../shared/actions";
 import { throttled } from "../shared/util";
 import * as t from "typanion";
@@ -12,8 +17,10 @@ import {
   SOCKET_SET_STATE,
   SOCKET_DISPATCH_ACTION,
   SOCKET_BROADCAST_MSG,
+  SOCKET_SERVER_INFO,
 } from "../shared/constants";
 import { batchActions } from "redux-batched-actions";
+import { ClientBuildHashSubject } from "./setupClientBuildHashSubject";
 
 type AdditionalSocketData = {
   finishedOptimisticUpdateIds: OptimisticUpdateID[];
@@ -36,6 +43,7 @@ const isREDUX_ACTION = t.isObject({
 export const setupStateSync = (
   io: SocketIOServer,
   store: MyStore,
+  clientBuildHashSubject: ClientBuildHashSubject,
   quiet: boolean
 ) => {
   const log = (...params: unknown[]) => !quiet && console.log(...params);
@@ -45,6 +53,10 @@ export const setupStateSync = (
     AdditionalSocketData
   >();
 
+  clientBuildHashSubject.subscribe(() => {
+    io.sockets.sockets.forEach(sendServerInfo);
+  });
+
   const patchCache = new WeakMap<
     SyncedState,
     {
@@ -53,9 +65,18 @@ export const setupStateSync = (
     }
   >();
 
+  const sendServerInfo = (socket: SocketIOSocket) => {
+    socket.emit(SOCKET_SERVER_INFO, {
+      clientBuildHash: clientBuildHashSubject.getValue(),
+      version: __VERSION__,
+      env: process.env.NODE_ENV,
+    });
+  };
+
   const sendStateUpdate = (
     socket: SocketIOSocket,
-    currentState: SyncedState
+    currentState: SyncedState,
+    player: RRPlayer | null
   ) => {
     const data = additionalSocketData.get(socket.id);
     if (!data) {
@@ -65,6 +86,11 @@ export const setupStateSync = (
     }
 
     if (data.lastState === null) {
+      log(
+        `[${Date.now() / 1000}] sending state to ${socket.id} (${
+          player?.name ?? "not logged in"
+        })`
+      );
       socket.emit(SOCKET_SET_STATE, {
         state: JSON.stringify(currentState),
         version: __VERSION__,
@@ -84,6 +110,11 @@ export const setupStateSync = (
         patch.deletedKeys.length > 0 ||
         data.finishedOptimisticUpdateIds.length > 0
       ) {
+        log(
+          `[${Date.now() / 1000}] sending state to ${socket.id} (${
+            player?.name ?? "not logged in"
+          })`
+        );
         socket.emit(SOCKET_PATCH_STATE, {
           patch: JSON.stringify(patch),
           finishedOptimisticUpdateIds: data.finishedOptimisticUpdateIds,
@@ -135,7 +166,8 @@ export const setupStateSync = (
     });
 
     log("A client connected");
-    sendStateUpdate(socket, store.getState());
+    sendServerInfo(socket);
+    sendStateUpdate(socket, store.getState(), null);
 
     socket.on("disconnect", () => {
       log("A client disconnected");
@@ -213,12 +245,7 @@ export const setupStateSync = (
           ? state.players.entities[data.playerId] ?? null
           : null;
 
-        log(
-          `[${Date.now() / 1000}] sending state to ${socket.id} (${
-            player?.name ?? "not logged in"
-          })`
-        );
-        sendStateUpdate(socket, state);
+        sendStateUpdate(socket, state, player);
       });
     }, 100)
   );

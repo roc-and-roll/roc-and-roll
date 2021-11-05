@@ -30,4 +30,6 @@ export const SOCKET_DISPATCH_ACTION = "REDUX_ACTION";
 
 export const SOCKET_BROADCAST_MSG = "MESSAGE";
 
+export const SOCKET_SERVER_INFO = "SERVER_INFO";
+
 export const DEFAULT_VOLUME = 0.5;

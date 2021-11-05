@@ -1,13 +1,14 @@
 import React, { useCallback, useContext, useEffect, useRef } from "react";
 import { Socket } from "socket.io-client";
+import { Matrix } from "transformation-matrix";
 import { SOCKET_BROADCAST_MSG } from "../shared/constants";
 import { MakeRRID, RRMapID, RRPoint } from "../shared/state";
 
 // TODO: reuse other as soon as you need a new message type, this is just to
 //       make the linter happy as the type is otherwise a constant
-type RRMessageType = "reaction" | "other";
+type RRMessageType = "reaction" | "snap_view" | "other";
 
-export type RRMessage = RRMessageReaction | RRMessageOther;
+export type RRMessage = RRMessageReaction | RRMessageSnapView | RRMessageOther;
 
 type RRMessageID = MakeRRID<"serverMessage">;
 
@@ -20,6 +21,12 @@ export interface RRMessageReaction extends RRMessageBase {
   type: "reaction";
   code: string;
   point: RRPoint;
+  mapId: RRMapID;
+}
+
+export interface RRMessageSnapView extends RRMessageBase {
+  type: "snap_view";
+  transform: Matrix;
   mapId: RRMapID;
 }
 

@@ -8,20 +8,10 @@ import {
 } from "../shared/state";
 import { fittingTokenSize } from "../shared/util";
 
-export function fileUrl(asset: RRAsset) {
+export function assetUrl(asset: RRAsset) {
   return asset.location.type === "local"
-    ? _fileUrl(asset.location.filename)
+    ? `/api/files/${encodeURIComponent(asset.location.filename)}`
     : asset.location.url;
-}
-
-function _fileUrl(filename: string) {
-  return `/api/files/${encodeURIComponent(filename)}`;
-}
-
-export function assetUrl(a: RRAsset) {
-  return a.location.type === "local"
-    ? a.location.filename
-    : _fileUrl(a.location.url);
 }
 
 export function tokenImageUrl(

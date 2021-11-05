@@ -1,9 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { RRMapID } from "../../../shared/state";
 import {
   RRMessage,
@@ -53,7 +48,7 @@ const MapReaction = React.memo(function MapReaction({
   reaction: RRMessageReaction;
   onExpired: (reaction: RRMessageReaction) => void;
 }) {
-  useLayoutEffect(() => {
+  useEffect(() => {
     const id = setTimeout(() => {
       onExpired(reaction);
     }, 700);

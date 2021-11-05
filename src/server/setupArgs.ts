@@ -1,8 +1,5 @@
 import { Command, InvalidOptionArgumentError } from "commander";
-import packageJson from "../../package.json";
 import path from "path";
-
-const { version } = packageJson;
 
 function myParseInt(value: string): number {
   const parsedValue = parseInt(value, 10);
@@ -34,7 +31,7 @@ export async function setupArgs() {
   const program = new Command();
 
   program
-    .version(version)
+    .version(__VERSION__)
     .requiredOption(
       "-w, --workspace <folder>",
       "workspace directory",

@@ -22,12 +22,15 @@ export function Player({ logout }: { logout: () => void }) {
   );
   const characters = useServerState((s) => s.characters);
 
-  const options: { value: RRCharacterID | ""; label: string }[] =
-    myself.characterIds.map((c: RRCharacterID) => {
+  const mainCharacterOptions: { value: RRCharacterID | ""; label: string }[] =
+    myself.characterIds.flatMap((c: RRCharacterID) => {
       const character = characters.entities[c];
-      return { value: c, label: character?.name ?? "" };
+      if (!character) {
+        return [];
+      }
+      return { value: c, label: character.name };
     });
-  options.unshift({ value: "", label: "" });
+  mainCharacterOptions.unshift({ value: "", label: "none" });
 
   return (
     <>
@@ -88,7 +91,7 @@ export function Player({ logout }: { logout: () => void }) {
         />
       </label>
       <label>
-        Main Character
+        Main Character:{" "}
         <Select
           value={myself.mainCharacterId ?? ""}
           onChange={(mainCharacterId) =>
@@ -103,7 +106,7 @@ export function Player({ logout }: { logout: () => void }) {
               syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
             })
           }
-          options={options}
+          options={mainCharacterOptions}
         />
       </label>
       <Button onClick={logout}>logout</Button>

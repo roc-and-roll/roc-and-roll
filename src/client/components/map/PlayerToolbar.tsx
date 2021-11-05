@@ -1,5 +1,4 @@
 import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useState } from "react";
 import { privateChatAdd } from "../../../shared/actions";
 import { EntityCollection, RRPlayer, entries } from "../../../shared/state";
@@ -10,6 +9,8 @@ import { Player } from "../Player";
 import { Popover } from "../Popover";
 import { Chat } from "../privateChat/PrivateChats";
 import { RRPlayerToolProps } from "./MapContainer";
+import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
+import { RRTooltip } from "../RRTooltip";
 
 export const PlayerToolbar = React.memo<{
   myself: RRPlayerToolProps;
@@ -70,39 +71,28 @@ const ToolbarPlayer = React.memo<{
       placement="bottom"
     >
       <div onClick={() => setSelected(!selected)}>
-        {player.id !== myself.id && (
-          <div
-            style={{
-              width: "12px",
-              height: "12px",
-              position: "absolute",
-              backgroundColor: "red",
-              borderRadius: "12px",
-              marginLeft: "52px",
-            }}
-          ></div>
-        )}
-        {character ? (
-          <CharacterPreview
-            character={character}
-            title={player.name}
-            size={64}
-            shouldDisplayShadow={false}
-          />
-        ) : (
-          <FontAwesomeIcon
-            icon={faUserCircle}
-            title={player.name}
-            style={{
-              fontSize: "64px",
-              backgroundColor: player.color,
-              borderColor: player.color,
-              borderStyle: "solid",
-              borderRadius: "200px",
-              borderWidth: "3px",
-            }}
-          />
-        )}
+        <RRTooltip content={player.name} placement="bottom">
+          {character ? (
+            <CharacterPreview
+              character={character}
+              title=""
+              size={64}
+              shouldDisplayShadow={false}
+            />
+          ) : (
+            <RRFontAwesomeIcon
+              icon={faUserCircle}
+              style={{
+                fontSize: "64px",
+                backgroundColor: player.color,
+                borderColor: player.color,
+                borderStyle: "solid",
+                borderRadius: "200px",
+                borderWidth: "3px",
+              }}
+            />
+          )}
+        </RRTooltip>
       </div>
     </Popover>
   );

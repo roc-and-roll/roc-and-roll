@@ -199,6 +199,7 @@ a {
 
 .character-image {
   position: relative;
+  display: inline-block;
 
   img {
     background-color: #555;
@@ -768,6 +769,12 @@ $gmAreaColor: #ab62c0;
       width: 100%;
     }
 
+    .initiative-modified {
+      width: 42px;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+
     input {
       width: 3rem;
     }
@@ -1194,13 +1201,15 @@ button.color-picker-color {
   }
 
   .maps-drag-handle {
-    $size: 20px;
+    $size: 30px;
+    text-align: center;
+    color: white;
     margin-left: 0.5rem;
     border-radius: $size;
     width: $size;
     height: $size;
-    background: #f00;
     cursor: pointer;
+    color: #ccc;
     border: 2px solid black;
     flex-shrink: 0;
   }
