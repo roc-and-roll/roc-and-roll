@@ -28,13 +28,13 @@ const ToolbarPlayer = React.memo<{
   player: RRPlayer;
   myself: RRPlayer;
 }>(function ToolbarPlayer({ player, myself }) {
-  const characters = useServerState((state) => state.characters);
+  const character = useServerState((state) =>
+    player.mainCharacterId
+      ? state.characters.entities[player.mainCharacterId] ?? null
+      : null
+  );
   const [selected, setSelected] = useState(false);
   const { logout } = useLoginLogout();
-
-  let character;
-  if (!player.mainCharacterId) character = null;
-  else character = characters.entities[player.mainCharacterId];
 
   return (
     <Popover

@@ -29,6 +29,7 @@ import { mergeDeep, rrid } from "../shared/util";
 import { useGuranteedMemo } from "./useGuranteedMemo";
 import { useLatest } from "./useLatest";
 import sjson from "secure-json-parse";
+import { measureTime } from "./debug";
 
 type DeduplicationKey = Opaque<string, "optimisticDeduplicationKey">;
 
@@ -268,19 +269,22 @@ export function ServerStateProvider({
 
   const propagateStateChange = useCallback((forceSync: boolean) => {
     const update = () => {
-      const state = (externalStateRef.current = internalStateRef.current);
-      const finishedOptimisticUpdateIds =
-        finishedOptimisticUpdateIdsRef.current;
-      finishedOptimisticUpdateIdsRef.current = [];
+      measureTime("STATE_UPDATE_PROPAGATION", () => {
+        console.countReset("STATE_UPDATE_SUBSCRIBER_UPDATE_COUNT");
+        const state = (externalStateRef.current = internalStateRef.current);
+        const finishedOptimisticUpdateIds =
+          finishedOptimisticUpdateIdsRef.current;
+        finishedOptimisticUpdateIdsRef.current = [];
 
-      batchUpdatesIfNotConcurrentMode(() =>
-        subscribers.current.forEach((subscriber) => subscriber(state))
-      );
-      batchUpdatesIfNotConcurrentMode(() =>
-        subscribersToOptimisticUpdatesExecuted.current.forEach((subscriber) =>
-          subscriber(finishedOptimisticUpdateIds)
-        )
-      );
+        batchUpdatesIfNotConcurrentMode(() =>
+          subscribers.current.forEach((subscriber) => subscriber(state))
+        );
+        batchUpdatesIfNotConcurrentMode(() =>
+          subscribersToOptimisticUpdatesExecuted.current.forEach((subscriber) =>
+            subscriber(finishedOptimisticUpdateIds)
+          )
+        );
+      });
     };
     if (process.env.NODE_ENV === "test" || forceSync) {
       update();
@@ -361,42 +365,46 @@ export function ServerStateProvider({
       state: string;
       finishedOptimisticUpdateIds: OptimisticUpdateID[];
     }) => {
-      const state = (internalServerStateRef.current = sjson.parse(
-        msg.state
-      ) as SyncedState);
+      measureTime("SET_STATE", () => {
+        const state = (internalServerStateRef.current = sjson.parse(
+          msg.state
+        ) as SyncedState);
 
-      process.env.NODE_ENV === "development" &&
-        DEBUG &&
-        console.log(
-          "Server -> Client | SET_STATE | state = ",
-          state,
-          "finishedOptimisticUpdateIds = ",
-          msg.finishedOptimisticUpdateIds
-        );
+        process.env.NODE_ENV === "development" &&
+          DEBUG &&
+          console.log(
+            "Server -> Client | SET_STATE | state = ",
+            state,
+            "finishedOptimisticUpdateIds = ",
+            msg.finishedOptimisticUpdateIds
+          );
 
-      updateState(msg.finishedOptimisticUpdateIds);
+        updateState(msg.finishedOptimisticUpdateIds);
+      });
     };
 
     const onPatchState = (msg: {
       patch: string;
       finishedOptimisticUpdateIds: OptimisticUpdateID[];
     }) => {
-      const patch = sjson.parse(msg.patch) as StatePatch<SyncedState>;
-      process.env.NODE_ENV === "development" &&
-        DEBUG &&
-        console.log(
-          "Server -> Client | PATCH_STATE | patch = ",
-          patch,
-          "finishedOptimisticUpdateIds = ",
-          msg.finishedOptimisticUpdateIds
+      measureTime("PATCH_STATE", () => {
+        const patch = sjson.parse(msg.patch) as StatePatch<SyncedState>;
+        process.env.NODE_ENV === "development" &&
+          DEBUG &&
+          console.log(
+            "Server -> Client | PATCH_STATE | patch = ",
+            patch,
+            "finishedOptimisticUpdateIds = ",
+            msg.finishedOptimisticUpdateIds
+          );
+
+        internalServerStateRef.current = applyStatePatch(
+          internalServerStateRef.current,
+          patch
         );
 
-      internalServerStateRef.current = applyStatePatch(
-        internalServerStateRef.current,
-        patch
-      );
-
-      updateState(msg.finishedOptimisticUpdateIds);
+        updateState(msg.finishedOptimisticUpdateIds);
+      });
     };
 
     socket.on(SOCKET_SET_STATE, onSetState);

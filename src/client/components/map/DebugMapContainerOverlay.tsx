@@ -8,6 +8,7 @@ import {
 import { identityHash } from "../../../shared/util";
 import { useDEBUG__serverState, useServerState } from "../../state";
 import { CollapsibleWithLocalState } from "../Collapsible";
+import { Button } from "../ui/Button";
 
 export function DebugMapContainerOverlay({
   mapId,
@@ -231,6 +232,35 @@ export function DebugMapContainerOverlay({
             ))}
           </tbody>
         </table>
+      </CollapsibleWithLocalState>
+      <CollapsibleWithLocalState
+        localStateKey="map/debug/overlay/performance"
+        title="Performance Metrics"
+      >
+        <Button
+          onClick={() => {
+            const measurements = performance.getEntriesByType("measure");
+
+            console.log(
+              measurements.reduce((obj, measurement) => {
+                obj[measurement.name] ??= [];
+                obj[measurement.name]!.push(measurement.duration);
+                return obj;
+              }, {} as Record<string, number[]>)
+            );
+          }}
+        >
+          log measurements to console
+        </Button>
+        <br />
+        <Button
+          onClick={() => {
+            performance.clearMarks();
+            performance.clearMeasures();
+          }}
+        >
+          clear measurements
+        </Button>
       </CollapsibleWithLocalState>
     </div>
   );

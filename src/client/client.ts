@@ -136,9 +136,11 @@ socket.connect();
 if (module.hot) {
   module.hot.addStatusHandler((status) => {
     if (status === "prepare") {
+      performance.clearMarks();
+      performance.clearMeasures();
       console.clear();
       console.log(
-        "Console has been cleared due to hot reload. To adjust this behavior, see src/client/client.ts"
+        "Console and performance metrics have been cleared due to hot reload. To adjust this behavior, see src/client/client.ts"
       );
     }
   });
