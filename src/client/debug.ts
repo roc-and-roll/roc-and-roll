@@ -10,6 +10,8 @@ export function measureTime(measureName: string, fn: () => void) {
     } finally {
       performance.measure(measureName, markerName);
     }
+  } else {
+    fn();
   }
 }
 
