@@ -7,6 +7,7 @@ import {
   makeDefaultMap,
   RRCharacter,
   RRCharacterTemplate,
+  RRInventory,
   RRPlayer,
   RRPlayerID,
   SyncedState,
@@ -56,7 +57,7 @@ export async function extractForOneShot(
       visible: false,
     },
     players: {
-      entities: Object.fromEntries(
+      entities: fromEntries(
         players.map((player) => [
           player.id,
           { ...player, currentMap: defaultMap.id },
@@ -64,6 +65,7 @@ export async function extractForOneShot(
       ),
       ids: [...playerIds],
     },
+    inventories: filterInventories(state.inventories, players),
     characters: filterCharacters(state.characters, players),
     characterTemplates: EMPTY_ENTITY_COLLECTION,
     maps: {
@@ -85,6 +87,13 @@ export async function extractForOneShot(
   await writeFile(outputFilePath, JSON.stringify(exportedState), "utf-8");
 }
 
+function fromEntries<K extends string, V>(
+  entries: Array<[K, V]>
+): Record<K, V> {
+  // @ts-expect-error Object.fromEntries types keys as string
+  return Object.fromEntries(entries);
+}
+
 function filterCharacters<T extends RRCharacter | RRCharacterTemplate>(
   entityCollection: EntityCollection<T>,
   players: RRPlayer[]
@@ -93,12 +102,19 @@ function filterCharacters<T extends RRCharacter | RRCharacterTemplate>(
     players.some((player) => player.characterIds.includes(entity.id))
   );
 
-  function fromEntries<K extends string, V>(
-    entries: Array<[K, V]>
-  ): Record<K, V> {
-    // @ts-expect-error Object.fromEntries types keys as string
-    return Object.fromEntries(entries);
-  }
+  return {
+    entities: fromEntries(entities.map((entity) => [entity.id, entity])),
+    ids: entities.map((entity) => entity.id),
+  };
+}
+
+function filterInventories(
+  entityCollection: EntityCollection<RRInventory>,
+  players: RRPlayer[]
+): EntityCollection<RRInventory> {
+  const entities = entries(entityCollection).filter((entity) =>
+    players.some((player) => player.inventoryIds.includes(entity.id))
+  );
 
   return {
     entities: fromEntries(entities.map((entity) => [entity.id, entity])),

@@ -14,6 +14,7 @@ import { assetsReducer } from "../shared/features/assets";
 import { characterTemplatesReducer } from "../shared/features/charactersTemplates";
 import { globalSettingsReducer } from "../shared/features/globalSettings";
 import { soundSetsReducer } from "./features/soundSets";
+import { inventoriesReducer } from "./features/inventories";
 
 export const reducer = combineReducers({
   // Add new slices of state here.
@@ -23,6 +24,7 @@ export const reducer = combineReducers({
   globalSettings: globalSettingsReducer,
   initiativeTracker: initiativeTrackerReducer,
   players: playersReducer,
+  inventories: inventoriesReducer,
   characters: charactersReducer,
   characterTemplates: characterTemplatesReducer,
   maps: mapsReducer,

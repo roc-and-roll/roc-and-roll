@@ -12,6 +12,10 @@ export type RRID = MakeRRID<string>;
 
 export type RRPlayerID = MakeRRID<"player">;
 
+export type RRInventoryID = MakeRRID<"inventory">;
+
+export type RRInventoryItemID = MakeRRID<"inventoryItem">;
+
 export type RRCharacterID = MakeRRID<"character">;
 
 export type RRMapID = MakeRRID<"map">;
@@ -135,6 +139,10 @@ export type RRInitiativeTrackerEntry = ECE<
 >;
 
 export type RRPlayer = ECE<SyncedState["players"]>;
+
+export type RRInventory = ECE<SyncedState["inventories"]>;
+
+export type RRInventoryItem = ECE<RRInventory["items"]>;
 
 export type RRObjectVisibility = "gmOnly" | "everyone";
 
@@ -505,6 +513,7 @@ export const initialSyncedState: SyncedState = {
     entries: EMPTY_ENTITY_COLLECTION,
   },
   players: EMPTY_ENTITY_COLLECTION,
+  inventories: EMPTY_ENTITY_COLLECTION,
   characters: EMPTY_ENTITY_COLLECTION,
   characterTemplates: EMPTY_ENTITY_COLLECTION,
   maps: {

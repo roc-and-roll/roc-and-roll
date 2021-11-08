@@ -30,6 +30,7 @@ export const JoinGame = React.memo(function JoinGame({
       isGM: false,
       characterIds: [],
       favoritedAssetIds: [],
+      inventoryIds: [],
       mainCharacterId: null,
       diceTemplateCategories: [
         {

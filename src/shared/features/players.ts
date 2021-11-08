@@ -15,6 +15,8 @@ import {
   playerAddDiceTemplateCategory,
   playerUpdateDiceTemplateCategory,
   playerDeleteDiceTemplateCategory,
+  playerUpdateAddInventoryId,
+  playerUpdateRemoveInventoryId,
 } from "../actions";
 import {
   EntityCollection,
@@ -125,6 +127,18 @@ export const playersReducer = createReducer(
         );
         if (index >= 0) {
           template.parts.splice(index, 1);
+        }
+      })
+
+      .addCase(playerUpdateAddInventoryId, (state, action) => {
+        const player = state.entities[action.payload.id];
+        player?.inventoryIds.push(action.payload.inventoryId);
+      })
+      .addCase(playerUpdateRemoveInventoryId, (state, action) => {
+        const player = state.entities[action.payload.id];
+        const index = player?.inventoryIds.indexOf(action.payload.inventoryId);
+        if (index !== undefined && index >= 0) {
+          player?.inventoryIds.splice(index, 1);
         }
       });
   }

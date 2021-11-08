@@ -27,6 +27,8 @@ import {
   proficiencyValues,
   categoryIcons,
   RRDiceTemplateCategoryID,
+  RRInventoryID,
+  RRInventoryItemID,
 } from "./state";
 import { withDo } from "./util";
 import tinycolor from "tinycolor2";
@@ -331,6 +333,7 @@ export const isSyncedState = t.isObject({
       mainCharacterId: t.isNullable(isRRID<RRCharacterID>()),
       favoritedAssetIds: t.isArray(isRRID<RRAssetID>()),
       diceTemplateCategories: t.isArray(isDiceTemplateCategory),
+      inventoryIds: t.isArray(isRRID<RRInventoryID>()),
     })
   ),
   ...withDo(
@@ -392,6 +395,28 @@ export const isSyncedState = t.isObject({
     (makeValidator) => ({
       characters: makeValidator(),
       characterTemplates: makeValidator(),
+    })
+  ),
+  inventories: isEntityCollection(
+    t.isObject({
+      id: isRRID<RRInventoryID>(),
+      name: t.isString(),
+      visibility: t.isEnum(["myself", "everyone"] as const),
+      carriedBy: t.isNullable(isRRID<RRCharacterID>()),
+      ownedBy: t.isNullable(isRRID<RRCharacterID>()),
+      items: isEntityCollection(
+        t.isObject({
+          id: isRRID<RRInventoryItemID>(),
+          amount: t.isNumber(),
+          name: t.isString(),
+          weight: t.isString(),
+          cost: t.isString(),
+          attunedBy: t.isNullable(isRRID<RRCharacterID>()),
+          isInventory: t.isNullable(isRRID<RRInventoryID>()),
+          notes: t.isNullable(t.isString()),
+          addedAt: isTimestamp,
+        })
+      ),
     })
   ),
   maps: isEntityCollection(

@@ -39,6 +39,10 @@ import {
   RRDiceTemplateID,
   RRDiceTemplatePart,
   RRDiceTemplatePartID,
+  RRInventory,
+  RRInventoryID,
+  RRInventoryItem,
+  RRInventoryItemID,
 } from "./state";
 import { rrid, timestamp } from "./util";
 import { RRDiceTemplate, RRDiceTemplateCategory } from "./validation";
@@ -136,7 +140,92 @@ export const playerUpdateRemoveFavoritedAssetId = createAction<{
   assetId: RRAssetID;
 }>("player/update/assetid/remove");
 
+export const playerUpdateAddInventoryId = createAction<{
+  id: RRPlayer["id"];
+  inventoryId: RRInventoryID;
+}>("player/update/inventoryId/add");
+
+export const playerUpdateRemoveInventoryId = createAction<{
+  id: RRPlayer["id"];
+  inventoryId: RRInventoryID;
+}>("player/update/inventoryId/remove");
+
 export const playerRemove = createAction<RRPlayer["id"]>("player/remove");
+
+////////////////////////////////////////////////////////////////////////////////
+// Inventories
+////////////////////////////////////////////////////////////////////////////////
+
+export const inventoryAdd = createAction(
+  "inventory/add",
+  (inventory: Omit<RRInventory, "id">): { payload: RRInventory } => ({
+    payload: { id: rrid<RRInventory>(), ...inventory },
+  })
+);
+
+export const inventoryUpdate =
+  createAction<Update<RRInventory>>("inventory/update");
+
+export const inventoryItemAdd = createAction(
+  "inventory/update/item/add",
+  (
+    inventoryId: RRInventoryID,
+    item: Omit<RRInventoryItem, "id" | "addedAt">
+  ): {
+    payload: { inventoryId: RRInventoryID; item: RRInventoryItem };
+  } => {
+    return {
+      payload: {
+        inventoryId,
+        item: {
+          ...item,
+          id: rrid<RRInventoryItem>(),
+          addedAt: timestamp(),
+        },
+      },
+    };
+  }
+);
+
+export const inventoryItemUpdate = createAction<{
+  inventoryId: RRInventoryID;
+  update: Update<RRInventoryItem>;
+}>("intenvtory/update/item/update");
+
+export const inventoryItemRemove = createAction(
+  "inventory/update/item/remove",
+  (inventoryId: RRInventoryID, itemId: RRInventoryItemID) => {
+    return {
+      payload: {
+        inventoryId,
+        itemId,
+      },
+    };
+  }
+);
+
+export const inventoryItemMove = createAction(
+  "inventory/update/item/move",
+  (
+    fromInventoryId: RRInventoryID,
+    toInventoryId: RRInventoryID,
+    itemId: RRInventoryItemID,
+    // null = insert at the end
+    insertAfterItemId: RRInventoryItemID | null = null
+  ) => {
+    return {
+      payload: {
+        fromInventoryId,
+        toInventoryId,
+        itemId,
+        insertAfterItemId,
+      },
+    };
+  }
+);
+
+export const inventoryRemove =
+  createAction<RRInventory["id"]>("inventory/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
 // Characters

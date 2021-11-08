@@ -7,6 +7,7 @@ import {
   faMapSigns,
   faMusic,
   faPhotoVideo,
+  faShoppingBag,
   faStreetView,
   IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
@@ -31,6 +32,7 @@ import { Settings } from "../Settings";
 import { RRTooltip, RRTooltipProps } from "../RRTooltip";
 import { AssetLibrary } from "../assetLibrary/AssetLibrary";
 import { Player } from "../Player";
+import { Inventories } from "../inventory/Inventories";
 
 const tooltipProps: RRTooltipProps = {
   placement: "right",
@@ -110,6 +112,14 @@ export const HUDToolbar = React.memo(function Toolbar() {
       gmOnly: musicIsGMOnly,
       icon: faMusic,
       iconTooltip: "Music",
+    },
+    {
+      id: "inventories",
+      collapsed: true,
+      content: <Inventories />,
+      gmOnly: false,
+      icon: faShoppingBag,
+      iconTooltip: "Inventory",
     },
     {
       id: "characters",

@@ -949,6 +949,9 @@ export function useServerDispatch() {
         ).then(() => {}),
         discardPendingOptimisticActions: () => {
           for (const throttledOptimisticKey of throttledOptimisticKeys) {
+            if (!throttledSyncToServerRef.current.has(throttledOptimisticKey)) {
+              continue;
+            }
             const { timeoutId, discardLocalOptimisticActionAppliers } =
               throttledSyncToServerRef.current.get(throttledOptimisticKey)!;
             if (timeoutId !== null) {
@@ -960,6 +963,9 @@ export function useServerDispatch() {
         },
         commitPendingOptimisticActionsNow: () => {
           for (const throttledOptimisticKey of throttledOptimisticKeys) {
+            if (!throttledSyncToServerRef.current.has(throttledOptimisticKey)) {
+              continue;
+            }
             const { actions, optimisticUpdateId, timeoutId } =
               throttledSyncToServerRef.current.get(throttledOptimisticKey)!;
             if (timeoutId !== null) {
