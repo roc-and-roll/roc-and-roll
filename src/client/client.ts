@@ -51,56 +51,7 @@ socket.on(
         console.warn("Updating service workers.");
         const registrations = await navigator.serviceWorker.getRegistrations();
         await Promise.all(
-          registrations.map(async (registration) => {
-            await registration.update();
-            await Promise.all(
-              [
-                registration.installing,
-                registration.waiting,
-                registration.active,
-              ].map(
-                async (serviceWorker) =>
-                  new Promise<void>((resolve, reject) => {
-                    if (!serviceWorker || serviceWorker.state === "activated") {
-                      resolve();
-                      return;
-                    }
-
-                    const stateChangeHandler = (event: Event) => {
-                      if (
-                        (event.target as ServiceWorker).state === "activated"
-                      ) {
-                        serviceWorker.removeEventListener(
-                          "statechange",
-                          stateChangeHandler
-                        );
-                        serviceWorker.removeEventListener(
-                          "error",
-                          errorHandler
-                        );
-
-                        resolve();
-                      }
-                    };
-                    const errorHandler = () => {
-                      serviceWorker.removeEventListener(
-                        "statechange",
-                        stateChangeHandler
-                      );
-                      serviceWorker.removeEventListener("error", errorHandler);
-
-                      reject();
-                    };
-
-                    serviceWorker.addEventListener(
-                      "statechange",
-                      stateChangeHandler
-                    );
-                    serviceWorker.addEventListener("error", errorHandler);
-                  })
-              )
-            );
-          })
+          registrations.map((registration) => registration.unregister())
         );
       }
 
