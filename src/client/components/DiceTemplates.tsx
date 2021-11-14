@@ -1158,7 +1158,13 @@ const DiceTemplatePartMenuWrapper: React.FC<{
               template={part.template}
             />
           )}
-          <Button className="red" onClick={() => applyDelete(part)}>
+          <Button
+            className="red"
+            onClick={() => {
+              applyDelete(part);
+              setMenuVisible(false);
+            }}
+          >
             delete
           </Button>
         </div>
