@@ -65,8 +65,38 @@ export default class extends AbstractMigration {
       //TODO Corinna
       player.diceTemplateCategories ??= [
         {
-          categoryName: "Templates",
-          icon: "book",
+          categoryName: "Templates 1",
+          icon: "fire",
+          templates: [],
+          id: rrid<any>(),
+        },
+        {
+          categoryName: "Templates 2",
+          icon: "scales",
+          templates: [],
+          id: rrid<any>(),
+        },
+        {
+          categoryName: "Templates 3",
+          icon: "wrench",
+          templates: [],
+          id: rrid<any>(),
+        },
+        {
+          categoryName: "Templates 4",
+          icon: "magic",
+          templates: [],
+          id: rrid<any>(),
+        },
+        {
+          categoryName: "Templates 5",
+          icon: "dragon",
+          templates: [],
+          id: rrid<any>(),
+        },
+        {
+          categoryName: "Templates 6",
+          icon: "broom",
           templates: [],
           id: rrid<any>(),
         },
@@ -85,9 +115,11 @@ export default class extends AbstractMigration {
           { id: string; diceTemplateCategories: { templates: any[] }[] }
         >
       ).find((player: { id: string }) => player.id === diceTemplate.playerId)!;
-      delete diceTemplate.categoryIndex;
       delete diceTemplate.playerId;
-      player.diceTemplateCategories[0]!.templates.push(diceTemplate);
+      player.diceTemplateCategories[
+        diceTemplate.categoryIndex!
+      ]!.templates.push(diceTemplate);
+      delete diceTemplate.categoryIndex;
     });
 
     delete state.diceTemplates;
