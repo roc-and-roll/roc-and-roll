@@ -11,7 +11,6 @@ import {
   playerAddDiceTemplateCategory,
   playerUpdateDiceTemplateCategory,
   playerDeleteDiceTemplateCategory,
-  playerUpdateDiceTemplate,
 } from "../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import {
@@ -34,7 +33,7 @@ import { useMyProps } from "../myself";
 import { useServerDispatch, useServerState } from "../state";
 import { DiceInput } from "./DiceInput";
 import { DiceInterface } from "./DiceInterface";
-import { DiceTemplates } from "./DiceTemplates";
+import { DiceTemplates, GeneratedDiceTemplates } from "./DiceTemplates";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { SmartTextInput } from "./ui/TextInput";
@@ -168,17 +167,25 @@ export const DicePanel = React.memo(function DicePanel() {
           </>
         );
       case "Skills":
-        <DiceTemplates templates={getSavingThrowTemplates()} />;
-        break;
+        return (
+          <GeneratedDiceTemplates
+            templates={getSkillTemplates()}
+            character={character!}
+          />
+        );
       case "STs":
-        <DiceTemplates templates={getSkillTemplates()} />;
-        break;
+        return (
+          <GeneratedDiceTemplates
+            templates={getSavingThrowTemplates()}
+            character={character!}
+          />
+        );
       default:
         return (
           <DiceTemplates
-            category={myself.diceTemplateCategories.find(
-              (cat) => cat.id === active
-            )}
+            category={
+              myself.diceTemplateCategories.find((cat) => cat.id === active)!
+            }
           />
         );
     }
