@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { GRID_SIZE } from "../../../shared/constants";
-import { RRMapLink, RRMapObject } from "../../../shared/state";
 import { useMyProps } from "../../myself";
+import { RRMapID, RRMapLink, RRMapObject } from "../../../shared/state";
 import { useServerState } from "../../state";
 import { MapListEntry } from "../Maps";
 import { Popover } from "../Popover";
@@ -30,7 +30,6 @@ export function MapLink({
   const mapName = useServerState(
     (state) => state.maps.entities[link.mapId]?.settings.name
   );
-  const players = useServerState((state) => state.players);
   const [menuVisible, setMenuVisible] = useState(false);
 
   const onMouseDown = (e: React.MouseEvent<SVGElement>) => {
@@ -48,11 +47,7 @@ export function MapLink({
 
   return (
     <Popover
-      content={
-        <div onMouseDown={(e) => e.stopPropagation()}>
-          <MapListEntry players={players} mapId={link.mapId} />
-        </div>
-      }
+      content={<MapLinkPopover mapId={link.mapId} />}
       visible={menuVisible}
       onClickOutside={() => setMenuVisible(false)}
       interactive
@@ -79,5 +74,15 @@ export function MapLink({
         />
       </g>
     </Popover>
+  );
+}
+
+function MapLinkPopover({ mapId }: { mapId: RRMapID }) {
+  const players = useServerState((state) => state.players);
+
+  return (
+    <div onMouseDown={(e) => e.stopPropagation()}>
+      <MapListEntry players={players} mapId={mapId} />
+    </div>
   );
 }

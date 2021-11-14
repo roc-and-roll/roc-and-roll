@@ -19,6 +19,7 @@ import {
 import { useLayoutEffect } from "react";
 import { useServerState } from "../../state";
 import React from "react";
+import { measureTime } from "../../debug";
 
 export const selectedMapObjectsFamily = atomFamily<boolean, RRMapObjectID>({
   key: "SelectedMapObject",
@@ -123,8 +124,10 @@ function useReduxToRecoilBridge<E extends { id: RRID }>(
   );
 
   useLayoutEffect(() => {
-    updateRecoilObjects(entities);
-  }, [entities, updateRecoilObjects]);
+    measureTime(`recoil-bridge/${debugIdentifier}`, () =>
+      updateRecoilObjects(entities)
+    );
+  }, [debugIdentifier, entities, updateRecoilObjects]);
 }
 
 export const ReduxToRecoilBridge = React.memo(function ReduxToRecoilBridge({

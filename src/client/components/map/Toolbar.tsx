@@ -38,7 +38,7 @@ const tooltipProps: RRTooltipProps = {
   offset: [0, 16],
 };
 
-export function Toolbar() {
+export const Toolbar = React.memo(function Toolbar() {
   const myselfIsGM = useIsGM();
   const musicIsGMOnly = useServerState(
     (state) => state.globalSettings.musicIsGMOnly
@@ -203,7 +203,7 @@ export function Toolbar() {
       </div>
     </div>
   );
-}
+});
 
 export function SettingsDialog({ onClose }: { onClose: () => void }) {
   return (
