@@ -100,9 +100,15 @@ export function getModifierForTemplate(
     if (part.type === "linkedProficiency")
       returnValue +=
         part.proficiency * (character.attributes["proficiency"] ?? 0);
-    if (part.type === "modifier") returnValue += part.number;
-    if (part.type === "linkedStat")
-      returnValue += modifierFromStat(character.stats[part.name] ?? 0);
+    else if (part.type === "modifier") returnValue += part.number;
+    else if (part.type === "linkedStat") {
+      if (
+        character.stats[part.name] === null ||
+        character.stats[part.name] === undefined
+      )
+        return;
+      returnValue += modifierFromStat(character.stats[part.name]!);
+    }
   });
   return returnValue;
 }

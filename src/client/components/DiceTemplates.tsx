@@ -350,7 +350,7 @@ function GeneratedDiceTemplate({
       title="Click to Roll"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMoueLeave}
-      className="generated-dice-templates"
+      className={clsx("generated-dice-templates", isHovered ? "hovered" : "")}
     >
       <p className="template-name">{template.name}</p>
       <p className="modifier-value">{modifierString}</p>

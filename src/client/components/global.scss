@@ -494,6 +494,11 @@ $dice-templates-height: 200px;
     align-content: flex-start;
     position: relative;
     height: 66px;
+    cursor: pointer;
+
+    &.hovered {
+      background-color: #676767;
+    }
 
     .template-name {
       flex-grow: 1;
@@ -520,11 +525,13 @@ $dice-templates-height: 200px;
     .advantage {
       color: green;
       right: 32px;
+      cursor: pointer;
     }
 
     .disadvantage {
       color: red;
       right: 2px;
+      cursor: pointer;
     }
   }
 }
