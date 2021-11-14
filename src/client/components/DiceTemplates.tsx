@@ -119,12 +119,10 @@ export const DiceTemplates = React.memo(function DiceTemplates({
   const selectedCharacter =
     characters.find((c) => c.id === selectedCharacterId) ?? null;
 
-  const templates = category.templates;
-
   const doRoll = (crit: boolean = false) => {
     const parts = selectedTemplates.flatMap(
       ({ id, modified }) =>
-        templates
+        category.templates
           .find((t) => t.id === id)
           ?.parts.flatMap((p) =>
             evaluateDiceTemplatePart(p, modified, crit, selectedCharacter!)
@@ -133,7 +131,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
     if (parts.length < 1) return;
 
     const rollTemplates = selectedTemplates.flatMap(
-      ({ id }) => templates.find((t) => t.id === id) ?? []
+      ({ id }) => category.templates.find((t) => t.id === id) ?? []
     );
     const rollName = empty2Null(
       rollTemplates
@@ -249,15 +247,15 @@ export const DiceTemplates = React.memo(function DiceTemplates({
         {templatesEditable && <DicePicker />}
 
         <div className="dice-templates-container" ref={dropRef}>
-          {templates.map((t) => (
+          {category.templates.map((template) => (
             <DiceTemplatePartMenuWrapper
               categoryId={category.id}
-              key={t.id}
-              template={t}
+              key={template.id}
+              template={template}
               part={{
                 id: rrid<RRDiceTemplatePart>(),
                 type: "template",
-                template: t,
+                template,
               }}
             >
               <DiceTemplate
@@ -266,7 +264,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
                   clickedTemplates(templates, event, modified)
                 }
                 newIds={newIds}
-                template={t}
+                template={template}
                 selectedCharacter={selectedCharacter}
                 selectedTemplateIds={selectedTemplates}
                 editable={templatesEditable}

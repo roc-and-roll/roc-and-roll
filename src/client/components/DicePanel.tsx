@@ -6,7 +6,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   playerAddDiceTemplateCategory,
   playerUpdateDiceTemplateCategory,
@@ -42,6 +42,17 @@ export const DicePanel = React.memo(function DicePanel() {
   const [active, setActive] = useState("Input");
   const myself = useMyProps("diceTemplateCategories", "id", "mainCharacterId");
   const dispatch = useServerDispatch();
+
+  useEffect(() => {
+    if (
+      active !== "Skills" &&
+      active !== "STs" &&
+      myself.diceTemplateCategories.find((cat) => cat.id === active) ===
+        undefined
+    ) {
+      setActive("Input");
+    }
+  }, [myself.diceTemplateCategories, active]);
 
   function addTemplateCategory() {
     const freeIcon = userCategoryIcons.find((userIcon) => {
@@ -158,6 +169,11 @@ export const DicePanel = React.memo(function DicePanel() {
   }
 
   function renderContent(active: string) {
+    const category = myself.diceTemplateCategories.find(
+      (cat) => cat.id === active
+    );
+    if (active !== "Skills" && active !== "STs" && category === undefined)
+      active = "Input";
     switch (active) {
       case "Input":
         return (
@@ -181,13 +197,7 @@ export const DicePanel = React.memo(function DicePanel() {
           />
         );
       default:
-        return (
-          <DiceTemplates
-            category={
-              myself.diceTemplateCategories.find((cat) => cat.id === active)!
-            }
-          />
-        );
+        return <DiceTemplates category={category!} />;
     }
   }
 
@@ -330,13 +340,7 @@ function DiceTemplateCategoryEditor({
   }
 
   return (
-    <div
-      onClick={(e) => {
-        e.stopPropagation();
-        console.log("test");
-      }}
-      style={{ width: "170px" }}
-    >
+    <div onClick={(e) => e.stopPropagation()} style={{ width: "170px" }}>
       <SmartTextInput
         value={category.categoryName}
         onChange={(name) => updateCategory(category, undefined, name)}
