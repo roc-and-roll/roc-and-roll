@@ -66,50 +66,50 @@ export const playerAdd = createAction(
 export const playerUpdate = createAction<Update<RRPlayer>>("player/update");
 
 export const playerUpdateAddCharacterId = createAction<{
-  id: RRPlayer["id"];
+  id: RRPlayerID;
   characterId: RRCharacterID;
 }>("player/update/characterid");
 
 export const playerAddDiceTemplateCategory = createAction<{
-  id: RRPlayer["id"];
+  id: RRPlayerID;
   category: RRDiceTemplateCategory;
 }>("player/diceTemplateCategories/add");
 
 export const playerUpdateDiceTemplateCategory = createAction<{
-  id: RRPlayer["id"];
+  id: RRPlayerID;
   category: Update<RRDiceTemplateCategory>;
 }>("player/diceTemplateCategories/update");
 
 export const playerDeleteDiceTemplateCategory = createAction<{
-  id: RRPlayer["id"];
+  id: RRPlayerID;
   categoryId: RRDiceTemplateCategoryID;
 }>("player/diceTemplateCategories/delete");
 
 export const playerRemoveDiceTemplate = createAction<{
-  id: RRPlayer["id"];
+  id: RRPlayerID;
   categoryId: RRDiceTemplateCategoryID;
   templateId: RRDiceTemplateID;
 }>("player/diceTemplateCategories/template/remove");
 
 export const playerUpdateDiceTemplate = createAction<{
-  id: RRPlayer["id"];
+  id: RRPlayerID;
   categoryId: RRDiceTemplateCategoryID;
   template: Update<RRDiceTemplate>;
 }>("player/diceTemplateCategories/template/update");
 
 export const playerAddDiceTemplate = createAction<{
-  id: RRPlayer["id"];
+  id: RRPlayerID;
   categoryId: RRDiceTemplateCategoryID;
   template: RRDiceTemplate;
 }>("player/diceTemplateCategories/template/add");
 
 export const playerUpdateAddFavoritedAssetId = createAction<{
-  id: RRPlayer["id"];
+  id: RRPlayerID;
   assetId: RRAssetID;
 }>("player/update/assetid/add");
 
 export const playerUpdateRemoveFavoritedAssetId = createAction<{
-  id: RRPlayer["id"];
+  id: RRPlayerID;
   assetId: RRAssetID;
 }>("player/update/assetid/remove");
 
