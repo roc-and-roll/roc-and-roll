@@ -6,11 +6,11 @@ import { useGuranteedMemo } from "./useGuranteedMemo";
 import useLocalState from "./useLocalState";
 
 const MyselfContext = React.createContext<{
-  player: RRPlayer | null;
+  playerId: RRPlayerID | null;
   setMyPlayerId: (id: RRPlayerID) => void;
   forgetMyPlayerId: () => void;
 }>({
-  player: null,
+  playerId: null,
   setMyPlayerId: () => {},
   forgetMyPlayerId: () => {},
 });
@@ -30,11 +30,11 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
 
   const ctx = useGuranteedMemo(
     () => ({
-      player: myself,
+      playerId: myself?.id ?? null,
       setMyPlayerId,
       forgetMyPlayerId,
     }),
-    [myself, setMyPlayerId, forgetMyPlayerId]
+    [myself?.id, setMyPlayerId, forgetMyPlayerId]
   );
 
   return (
@@ -45,11 +45,11 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
 export function useMyProps<T extends (keyof RRPlayer)[]>(
   ...fields: T
 ): Pick<RRPlayer, IterableElement<T>> {
-  const myself = useContext(MyselfContext).player;
-  if (!myself) throw new Error("myself is not provided");
+  const myId = useContext(MyselfContext).playerId;
+  if (!myId) throw new Error("myself is not provided");
 
   return useServerState(
-    (state) => state.players.entities[myself.id]!,
+    (state) => state.players.entities[myId]!,
     (left, right) => fields.every((field) => left[field] === right[field])
   );
 }
@@ -58,8 +58,8 @@ export function useLoginLogout() {
   const {
     setMyPlayerId: login,
     forgetMyPlayerId: logout,
-    player,
+    playerId,
   } = useContext(MyselfContext);
 
-  return { login, logout, loggedIn: !!player };
+  return { login, logout, loggedIn: !!playerId };
 }
