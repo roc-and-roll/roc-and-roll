@@ -1,7 +1,4 @@
-import React, { useContext, useLayoutEffect } from "react";
-import { useRecoilValue } from "recoil";
-import { useSetRecoilState } from "recoil";
-import { atom } from "recoil";
+import React, { useContext } from "react";
 import { IterableElement } from "type-fest";
 import { RRPlayer, RRPlayerID } from "../shared/state";
 import { useAutoDispatchPlayerIdOnChange, useServerState } from "./state";
@@ -20,46 +17,14 @@ const MyselfContext = React.createContext<{
 
 MyselfContext.displayName = "MyselfContext";
 
-export const myIdAtom = atom<RRPlayerID | null>({
-  key: "MyId",
-  default: null,
-});
-
-export const isGMAtom = atom<boolean>({
-  key: "isGM",
-  default: false,
-});
-
-export function useMyId() {
-  const id = useRecoilValue(myIdAtom);
-  if (!id) {
-    throw new Error("unset player");
-  }
-  return id;
-}
-
-export function useIsGM() {
-  return useRecoilValue(isGMAtom);
-}
-
 export function MyselfProvider({ children }: { children: React.ReactNode }) {
   const [myPlayerId, setMyPlayerId, forgetMyPlayerId] =
     useLocalState<RRPlayerID | null>("myPlayerId", null);
 
-  // Important: Use useMyself everywhere else!
+  // Important: Use useMyProps everywhere else!
   const myself = useServerState(
     (state) => (myPlayerId && state.players.entities[myPlayerId]) ?? null
   );
-
-  const setId = useSetRecoilState(myIdAtom);
-  useLayoutEffect(() => {
-    setId(myPlayerId);
-  }, [myPlayerId, setId]);
-
-  const setIsGM = useSetRecoilState(isGMAtom);
-  useLayoutEffect(() => {
-    setIsGM(myself?.isGM ?? false);
-  }, [myself?.isGM, setIsGM]);
 
   useAutoDispatchPlayerIdOnChange(myself?.id ?? null);
 
@@ -77,24 +42,14 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// export function useMyself(allowNull?: false): RRPlayer;
-//
-// export function useMyself(allowNull = false): RRPlayer | null {
-//   const myself = useContext(MyselfContext).player;
-//
-//   if (!myself && !allowNull) {
-//     throw new Error("myself is not provided");
-//   }
-//
-//   return myself;
-// }
-
 export function useMyProps<T extends (keyof RRPlayer)[]>(
   ...fields: T
 ): Pick<RRPlayer, IterableElement<T>> {
-  const id = useMyId();
+  const myself = useContext(MyselfContext).player;
+  if (!myself) throw new Error("myself is not provided");
+
   return useServerState(
-    (state) => state.players.entities[id]!,
+    (state) => state.players.entities[myself.id]!,
     (left, right) => fields.every((field) => left[field] === right[field])
   );
 }

@@ -2,7 +2,7 @@ import React from "react";
 import { logEntryMessageAdd } from "../../shared/actions";
 import { entries, RRLogEntry } from "../../shared/state";
 import { assertNever } from "../../shared/util";
-import { useMyId } from "../myself";
+import { useMyProps } from "../myself";
 import { usePrompt } from "../dialog-boxes";
 import { diceResultString, DiceResultWithTypes } from "../roll";
 import { useServerDispatch, useServerState } from "../state";
@@ -61,7 +61,7 @@ const LogEntry = React.memo<{ logEntry: RRLogEntry }>(function LogEntry({
 
 export const Log = React.memo(function Log() {
   const logEntriesCollection = useServerState((state) => state.logEntries);
-  const myId = useMyId();
+  const myself = useMyProps("id");
   const dispatch = useServerDispatch();
   const [scrollRef] = useScrollToBottom<HTMLUListElement>([false]);
   const prompt = usePrompt();
@@ -112,7 +112,7 @@ export const Log = React.memo(function Log() {
           }
           dispatch(
             logEntryMessageAdd({
-              playerId: myId,
+              playerId: myself.id,
               silent: false,
               payload: {
                 text,

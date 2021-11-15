@@ -1,12 +1,12 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { entries, RRPrivateChatMessageID } from "../../../shared/state";
-import { useMyId } from "../../myself";
 import { useServerState } from "../../state";
 import { Collapsible } from "../Collapsible";
 import { wasSentByMe } from "./privateChatUtil";
 // update acknowledgements if changed
 import newMessageSound from "../../../third-party/freesound.org/545373__stwime__up3.mp3";
 import { useRRSimpleSound } from "../../sound";
+import { useMyProps } from "../../myself";
 
 // Import PrivateChats laziy to reduce the bundle size.
 const PrivateChats = React.lazy(() => import("./PrivateChats"));
@@ -29,7 +29,7 @@ export function PrivateChatsWrapper() {
 }
 
 function useHasUnreadMessages() {
-  const myId = useMyId();
+  const myself = useMyProps("id");
   const chats = useServerState((state) => state.privateChats);
   const [play] = useRRSimpleSound(newMessageSound);
 
@@ -39,9 +39,9 @@ function useHasUnreadMessages() {
 
   useEffect(() => {
     const newMessages = entries(chats).flatMap((chat) =>
-      chat.idA === myId || chat.idB === myId
+      chat.idA === myself.id || chat.idB === myself.id
         ? entries(chat.messages).filter(
-            (message) => !message.read && !wasSentByMe(chat, message, myId)
+            (message) => !message.read && !wasSentByMe(chat, message, myself.id)
           )
         : []
     );
@@ -56,7 +56,7 @@ function useHasUnreadMessages() {
         notifiedMessageIds.current.add(newMessage.id)
       );
     }
-  }, [chats, myId, play]);
+  }, [chats, myself.id, play]);
 
   return hasUnreadMessages;
 }

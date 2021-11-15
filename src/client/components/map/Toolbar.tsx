@@ -10,7 +10,7 @@ import {
   faStreetView,
 } from "@fortawesome/free-solid-svg-icons";
 import React, { useEffect, useState } from "react";
-import { useIsGM, useMyProps } from "../../myself";
+import { useMyProps } from "../../myself";
 import { useServerState } from "../../state";
 import useLocalState from "../../useLocalState";
 import { About } from "../About";
@@ -39,7 +39,6 @@ const tooltipProps: RRTooltipProps = {
 };
 
 export const Toolbar = React.memo(function Toolbar() {
-  const myselfIsGM = useIsGM();
   const musicIsGMOnly = useServerState(
     (state) => state.globalSettings.musicIsGMOnly
   );
@@ -120,7 +119,7 @@ export const Toolbar = React.memo(function Toolbar() {
             />
           </RRTooltip>
         )}
-        {myselfIsGM && (
+        {myself.isGM && (
           <RRTooltip content="Maps" {...tooltipProps} disabled={mapsActive}>
             <RRFontAwesomeIcon
               fixedWidth
@@ -130,7 +129,7 @@ export const Toolbar = React.memo(function Toolbar() {
             />
           </RRTooltip>
         )}
-        {(myselfIsGM || !musicIsGMOnly) && (
+        {(myself.isGM || !musicIsGMOnly) && (
           <RRTooltip content="Music" {...tooltipProps} disabled={musicActive}>
             <RRFontAwesomeIcon
               fixedWidth
@@ -188,10 +187,10 @@ export const Toolbar = React.memo(function Toolbar() {
         {charactersActive && wrap(<CharacterManager />)}
         {diceActive && wrap(<DicePanel />)}
         {initiativeActive && wrap(<InitiativeTracker />)}
-        {mapsActive && myselfIsGM && wrap(<Maps />)}
+        {mapsActive && myself.isGM && wrap(<Maps />)}
         {musicActive &&
           (musicIsGMOnly
-            ? myselfIsGM && (
+            ? myself.isGM && (
                 <GMArea>
                   <Music />
                 </GMArea>

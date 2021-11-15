@@ -42,7 +42,7 @@ import {
   RRDiceTemplate,
   RRDiceTemplateCategory,
 } from "../../shared/validation";
-import { useMyId, useMyProps } from "../myself";
+import { useMyProps } from "../myself";
 import { useRRSettings } from "../settings";
 import { useServerDispatch, useServerState } from "../state";
 import useLocalState from "../useLocalState";
@@ -309,7 +309,7 @@ function GeneratedDiceTemplate({
   template: RRDiceTemplate;
   character: RRCharacter;
 }) {
-  const myId = useMyId();
+  const myself = useMyProps("id");
   const dispatch = useServerDispatch();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -322,7 +322,7 @@ function GeneratedDiceTemplate({
     dispatch(
       logEntryDiceRollAdd({
         silent: false,
-        playerId: myId,
+        playerId: myself.id,
         payload: {
           rollType: "attack", // TODO
           rollName: template.name,
@@ -564,7 +564,7 @@ const DiceTemplate = React.memo(function DiceTemplate({
   editable: boolean;
   isChildTemplate: boolean;
 }) {
-  const myId = useMyId();
+  const myself = useMyProps("id");
   const dispatch = useServerDispatch();
 
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -614,7 +614,7 @@ const DiceTemplate = React.memo(function DiceTemplate({
 
         dispatch(
           playerUpdateDiceTemplate({
-            id: myId,
+            id: myself.id,
             categoryId,
             template: {
               id: template.id,
@@ -629,7 +629,7 @@ const DiceTemplate = React.memo(function DiceTemplate({
       },
       canDrop: (_item, monitor) => monitor.isOver({ shallow: true }),
     }),
-    [categoryId, dispatch, myId, template.id, template.parts]
+    [categoryId, dispatch, myself.id, template.id, template.parts]
   );
 
   useEffect(() => {
@@ -724,7 +724,7 @@ const DiceTemplate = React.memo(function DiceTemplate({
                 dispatch({
                   actions: [
                     playerUpdateDiceTemplate({
-                      id: myId,
+                      id: myself.id,
                       categoryId: categoryId,
                       template: { id: template.id, changes: { name } },
                     }),
@@ -814,7 +814,7 @@ function DamageTypeEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const myId = useMyId();
+  const myself = useMyProps("id");
 
   return (
     <label>
@@ -824,7 +824,7 @@ function DamageTypeEditor({
         onChange={(damageType) =>
           dispatch({
             actions: [
-              updatePartAction(myId, part.id, categoryId, template, {
+              updatePartAction(myself.id, part.id, categoryId, template, {
                 damage: { type: empty2Null(damageType) },
               }),
             ],
@@ -885,7 +885,7 @@ function DiceMultipleRollEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const myId = useMyId();
+  const myself = useMyProps("id");
 
   return (
     <label>
@@ -895,7 +895,7 @@ function DiceMultipleRollEditor({
         onChange={(modified) =>
           dispatch({
             actions: [
-              updatePartAction(myId, part.id, categoryId, template, {
+              updatePartAction(myself.id, part.id, categoryId, template, {
                 modified,
               }),
             ],
@@ -922,7 +922,7 @@ function DiceCountEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const myId = useMyId();
+  const myself = useMyProps("id");
 
   return (
     <label>
@@ -932,7 +932,7 @@ function DiceCountEditor({
         onChange={(count) =>
           dispatch({
             actions: [
-              updatePartAction(myId, part.id, categoryId, template, {
+              updatePartAction(myself.id, part.id, categoryId, template, {
                 count,
               }),
             ],
@@ -955,7 +955,7 @@ function ModifierNumberEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const myId = useMyId();
+  const myself = useMyProps("id");
 
   return (
     <label>
@@ -965,7 +965,7 @@ function ModifierNumberEditor({
         onChange={(number) =>
           dispatch({
             actions: [
-              updatePartAction(myId, part.id, categoryId, template, {
+              updatePartAction(myself.id, part.id, categoryId, template, {
                 number,
               }),
             ],
@@ -988,7 +988,7 @@ function ProficiencyValueEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const myId = useMyId();
+  const myself = useMyProps("id");
 
   return (
     <label>
@@ -1002,7 +1002,7 @@ function ProficiencyValueEditor({
         onChange={(newValue: string) =>
           dispatch({
             actions: [
-              updatePartAction(myId, part.id, categoryId, template, {
+              updatePartAction(myself.id, part.id, categoryId, template, {
                 proficiency: parseFloat(
                   newValue
                 ) as typeof proficiencyValues[number],
@@ -1103,10 +1103,10 @@ const DiceTemplatePartMenuWrapper: React.FC<{
 }> = ({ part, template, children, categoryId }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const dispatch = useServerDispatch();
-  const myId = useMyId();
+  const myself = useMyProps("id");
 
   const applyDelete = (part: RRDiceTemplatePart) => {
-    dispatch([removePartAction(myId, part.id, categoryId, template)]);
+    dispatch([removePartAction(myself.id, part.id, categoryId, template)]);
   };
 
   return (

@@ -35,7 +35,7 @@ import { Popover } from "../Popover";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import { SVGBlurHashImage } from "../blurhash/SVGBlurhashImage";
-import { useMyId } from "../../myself";
+import { useMyProps } from "../../myself";
 
 export const MapObjectThatIsNotAToken = React.memo<{
   object: Exclude<RRMapObject, RRToken | RRMapLink>;
@@ -54,10 +54,10 @@ export const MapObjectThatIsNotAToken = React.memo<{
 
   const [editorVisible, setEditorVisible] = useState(false);
 
-  const myId = useMyId();
+  const myself = useMyProps("id");
 
   const canControl =
-    !object.locked && canStartMoving && object.playerId === myId;
+    !object.locked && canStartMoving && object.playerId === myself.id;
   const style = useMemo(
     () => (canControl ? { cursor: "move" } : {}),
     [canControl]

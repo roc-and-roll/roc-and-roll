@@ -4,7 +4,6 @@ import {
   RRPrivateChatID,
   RRPrivateChatMessage,
 } from "../../../shared/state";
-import { useMyId } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import "./PrivateChats.scss";
 import {
@@ -22,6 +21,7 @@ import { chatRecipient, wasSentByMe } from "./privateChatUtil";
 import clsx from "clsx";
 import { PrivateChatInput } from "./PrivateChatInput";
 import { Button } from "../ui/Button";
+import { useMyProps } from "../../myself";
 
 export default function PrivateChats() {
   const [selectedChatId, setSelectedChatId] = useState<RRPrivateChatID | null>(
@@ -44,8 +44,8 @@ export function Chat({
 }) {
   const dispatch = useServerDispatch();
   const chat = useServerState((state) => state.privateChats.entities[id]);
-  const myId = useMyId();
-  const otherId = chat ? chatRecipient(chat, myId) : null;
+  const myself = useMyProps("id");
+  const otherId = chat ? chatRecipient(chat, myself.id) : null;
   const otherPlayer = useServerState((state) =>
     otherId ? state.players.entities[otherId] : null
   );
@@ -59,7 +59,7 @@ export function Chat({
   useEffect(() => {
     if (chat && tabFocused) {
       const messagesToMarkAsRead = entries(chat.messages).filter(
-        (message) => !wasSentByMe(chat, message, myId) && !message.read
+        (message) => !wasSentByMe(chat, message, myself.id) && !message.read
       );
       if (messagesToMarkAsRead.length > 0) {
         dispatch(
@@ -74,7 +74,7 @@ export function Chat({
         );
       }
     }
-  }, [chat, chat?.messages, dispatch, myId, tabFocused]);
+  }, [chat, chat?.messages, dispatch, myself.id, tabFocused]);
 
   if (!chat || !otherId || !otherPlayer) {
     return <>Loading...</>;
@@ -84,7 +84,7 @@ export function Chat({
     dispatch(
       privateChatMessageAdd(chat.id, {
         text: message,
-        direction: chat.idA === myId ? "a2b" : "b2a",
+        direction: chat.idA === myself.id ? "a2b" : "b2a",
       })
     );
     scrollDownNow();
@@ -101,7 +101,7 @@ export function Chat({
           <ChatMessage
             key={message.id}
             message={message}
-            mine={wasSentByMe(chat, message, myId)}
+            mine={wasSentByMe(chat, message, myself.id)}
           />
         ))}
       </ul>
@@ -140,18 +140,18 @@ function ContactList({
   setSelectedChatId: (id: RRPrivateChatID) => void;
 }) {
   const dispatch = useServerDispatch();
-  const myId = useMyId();
+  const myself = useMyProps("id");
   const { ids: chatIds, entities: chats } = useServerState(
     (state) => state.privateChats
   );
   const playerCollection = useServerState((state) => state.players);
   const otherPlayers = entries(playerCollection).filter(
-    (player) => player.id !== myId
+    (player) => player.id !== myself.id
   );
 
   const myChats = chatIds
     .map((id) => chats[id]!)
-    .filter((chat) => chat.idA === myId || chat.idB === myId);
+    .filter((chat) => chat.idA === myself.id || chat.idB === myself.id);
 
   return (
     <ul role="list" className="private-chats-contact-list">
@@ -161,7 +161,8 @@ function ContactList({
         );
         const numUnread = chat
           ? entries(chat.messages).filter(
-              (message) => !wasSentByMe(chat, message, myId) && !message.read
+              (message) =>
+                !wasSentByMe(chat, message, myself.id) && !message.read
             ).length
           : 0;
         return (
@@ -171,7 +172,7 @@ function ContactList({
               if (chat) {
                 setSelectedChatId(chat.id);
               } else {
-                const action = privateChatAdd(myId, player.id);
+                const action = privateChatAdd(myself.id, player.id);
                 dispatch(action);
                 setSelectedChatId(action.payload.id);
               }

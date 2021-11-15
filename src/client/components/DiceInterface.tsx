@@ -20,7 +20,6 @@ export function DiceInterface() {
   const [diceTypes, setDiceTypes] = useState<string[]>([]);
   const [boni, setBoni] = useState<number | null>(null);
   const myself = useMyProps("id", "diceTemplateCategories");
-  const myId = myself.id;
   const dispatch = useServerDispatch();
   const alert = useAlert();
   const prompt = usePrompt();
@@ -67,7 +66,7 @@ export function DiceInterface() {
         if (myself.diceTemplateCategories.length < 1) {
           dispatch(
             playerAddDiceTemplateCategory({
-              id: myId,
+              id: myself.id,
               category: {
                 categoryName: "Generated Templates",
                 id: rrid<RRDiceTemplateCategory>(),
@@ -79,7 +78,7 @@ export function DiceInterface() {
         }
         dispatch(
           playerAddDiceTemplate({
-            id: myId,
+            id: myself.id,
             // FIXME should allow to select
             categoryId: myself.diceTemplateCategories[0]!.id,
             template: {
@@ -112,7 +111,7 @@ export function DiceInterface() {
         dispatch(
           logEntryDiceRollAdd({
             silent: false,
-            playerId: myId,
+            playerId: myself.id,
             payload: { dice, rollType: null, rollName: null },
           })
         );

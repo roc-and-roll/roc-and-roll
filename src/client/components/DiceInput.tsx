@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { logEntryDiceRollAdd } from "../../shared/actions";
 import { RRDice, RRModifier } from "../../shared/state";
-import { useMyId } from "../myself";
 import { useServerDispatch } from "../state";
 import { roll } from "../roll";
 import { Button } from "./ui/Button";
 import { useAlert } from "../dialog-boxes";
+import { useMyProps } from "../myself";
 
 export function DiceInput() {
   const [text, setText] = useState("");
-  const myId = useMyId();
+  const myself = useMyProps("id");
   const dispatch = useServerDispatch();
   const alert = useAlert();
 
@@ -48,7 +48,7 @@ export function DiceInput() {
       dispatch(
         logEntryDiceRollAdd({
           silent: false,
-          playerId: myId,
+          playerId: myself.id,
           payload: { dice, rollType: null, rollName: null },
         })
       );

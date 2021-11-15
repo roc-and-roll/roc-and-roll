@@ -4,7 +4,7 @@ import { Collapsible } from "./Collapsible";
 import { Resizable } from "re-resizable";
 import useLocalState from "../useLocalState";
 import { InitiativeTracker } from "./InitiativeTracker";
-import { useIsGM } from "../myself";
+import { useMyProps } from "../myself";
 import { Maps } from "./Maps";
 import { Achievements } from "./Achievements";
 import { Music } from "./Music";
@@ -14,7 +14,7 @@ import { DicePanel } from "./DicePanel";
 
 export function Sidebar({ logout }: { logout: () => void }) {
   const [sidebarWidth, setSidebarWidth] = useLocalState("sidebarWidth", 450);
-  const myselfIsGM = useIsGM();
+  const myself = useMyProps("isGM");
   const musicIsGMOnly = useServerState(
     (state) => state.globalSettings.musicIsGMOnly
   );
@@ -53,7 +53,7 @@ export function Sidebar({ logout }: { logout: () => void }) {
           <DicePanel />
         </Collapsible>
 
-        {myselfIsGM && (
+        {myself.isGM && (
           <Collapsible title="Maps" defaultCollapsed>
             <Maps />
           </Collapsible>
@@ -61,7 +61,7 @@ export function Sidebar({ logout }: { logout: () => void }) {
 
         <Collapsible title="Music" defaultCollapsed>
           {musicIsGMOnly ? (
-            myselfIsGM && (
+            myself.isGM && (
               <GMArea>
                 <Music />
               </GMArea>

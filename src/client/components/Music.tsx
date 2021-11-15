@@ -32,7 +32,7 @@ import {
 import { isTabletopAudioAsset } from "../../shared/tabletopaudio";
 import { partition, rrid, timestamp } from "../../shared/util";
 import { useFileUpload } from "../files";
-import { useMyId, useMyProps } from "../myself";
+import { useMyProps } from "../myself";
 import { useAlert, usePrompt } from "../dialog-boxes";
 import { useServerDispatch, useServerState } from "../state";
 import { formatDuration, highlightMatching } from "../util";
@@ -257,7 +257,7 @@ export const Music = React.memo(function Music() {
 function UploadAudio({ onUploaded }: { onUploaded: () => void }) {
   const [isUploading, upload] = useFileUpload();
   const dispatch = useServerDispatch();
-  const myId = useMyId();
+  const myself = useMyProps("id");
   const alert = useAlert();
 
   const doUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -277,7 +277,7 @@ function UploadAudio({ onUploaded }: { onUploaded: () => void }) {
                 mimeType: f.mimeType,
               },
               type: "song",
-              playerId: myId,
+              playerId: myself.id,
               tags: [],
               duration: f.duration,
               extra: {},
