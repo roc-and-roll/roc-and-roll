@@ -135,8 +135,8 @@ function ProficienyEditor({
   }
 
   function calculateModifierWithProficiency(
-    baseStat: string,
-    proficiency: number | undefined
+    baseStat: typeof characterStatNames[number],
+    proficiency: typeof proficiencyValues[number] | undefined
   ) {
     return character.stats[baseStat] === null ||
       character.stats[baseStat] === undefined
@@ -148,8 +148,8 @@ function ProficienyEditor({
   }
 
   function changeProficiencyInSavingThrow(
-    proficiency: 0 | 0.5 | 1 | 2 | undefined,
-    stat: string
+    proficiency: typeof proficiencyValues[number] | undefined,
+    stat: typeof characterStatNames[number]
   ) {
     const newValue =
       proficiency === undefined
@@ -180,9 +180,8 @@ function ProficienyEditor({
     });
   }
   function changeProficiencyInSkill(
-    //proficiency: keyof typeof proficiencyValues | undefined,
-    proficiency: 0 | 0.5 | 1 | 2 | undefined,
-    skill: string
+    proficiency: typeof proficiencyValues[number] | undefined,
+    skill: typeof skillNames[number]
   ) {
     const newValue =
       proficiencyValues[(proficiencyValues.indexOf(proficiency ?? 0) + 1) % 4]!;
@@ -235,7 +234,7 @@ function ProficienyEditor({
       })}
       <hr />
       {skillNames.map((skill) => {
-        const proficiency: 0 | 0.5 | 1 | 2 | undefined =
+        const proficiency: typeof proficiencyValues[number] | undefined =
           character.skills[skill];
         const stat = skillMap[skill];
         return (

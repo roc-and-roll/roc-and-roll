@@ -18,6 +18,7 @@ import {
   characterStatNames,
   fixedCategoryIcons,
   iconMap,
+  RRDiceTemplateCategoryID,
   RRDiceTemplatePart,
   RRDiceTemplatePartDice,
   skillMap,
@@ -39,7 +40,9 @@ import { Button } from "./ui/Button";
 import { SmartTextInput } from "./ui/TextInput";
 
 export const DicePanel = React.memo(function DicePanel() {
-  const [active, setActive] = useState("Input");
+  const [active, setActive] = useState<
+    "Input" | "Skills" | "STs" | RRDiceTemplateCategoryID
+  >("Input");
   const myself = useMyProps("diceTemplateCategories", "id", "mainCharacterId");
   const dispatch = useServerDispatch();
 
