@@ -83,74 +83,36 @@ export const DicePanel = React.memo(function DicePanel() {
     });
   }
 
-  const d20Part: RRDiceTemplatePartDice = {
-    id: rrid<RRDiceTemplatePart>(),
-    type: "dice",
-    faces: 20,
-    count: 1,
-    negated: false,
-    modified: "none",
-    damage: { type: null },
-  };
+  function createD20Part(): RRDiceTemplatePartDice {
+    return {
+      id: rrid<RRDiceTemplatePart>(),
+      type: "dice",
+      faces: 20,
+      count: 1,
+      negated: false,
+      modified: "none",
+      damage: { type: null },
+    };
+  }
   const characters = useServerState((state) => state.characters);
   const character = characters.entities[myself.mainCharacterId!];
 
   function getSavingThrowTemplates() {
-    const templates = [];
-
-    templates.push(
-      ...characterStatNames.map(
-        (statName: typeof characterStatNames[number]) => {
-          const proficiency =
-            character === undefined ? 0 : character.savingThrows[statName] ?? 0;
-
-          const parts: RRDiceTemplatePart[] = [
-            d20Part,
-            {
-              id: rrid<RRDiceTemplatePart>(),
-              type: "linkedStat",
-              name: statName,
-              damage: { type: null },
-            },
-          ];
-
-          if (proficiency !== 0)
-            parts.push({
-              id: rrid<RRDiceTemplatePart>(),
-              type: "linkedProficiency",
-              damage: { type: null },
-              proficiency,
-            });
-
-          return {
-            id: rrid<RRDiceTemplate>(),
-            name: `${statName} Saving Throw`,
-            notes: "",
-            parts,
-            rollType: null,
-          };
-        }
-      )
-    );
-    return templates;
-  }
-
-  function getSkillTemplates() {
-    const templates: RRDiceTemplate[] = [];
-
-    templates.push(
-      ...skillNames.map((skill) => {
+    return characterStatNames.map(
+      (statName: typeof characterStatNames[number]) => {
         const proficiency =
-          character === undefined ? 0 : character.skills[skill] ?? 0;
+          character === undefined ? 0 : character.savingThrows[statName] ?? 0;
+
         const parts: RRDiceTemplatePart[] = [
-          d20Part,
+          createD20Part(),
           {
             id: rrid<RRDiceTemplatePart>(),
             type: "linkedStat",
-            name: skillMap[skill],
+            name: statName,
             damage: { type: null },
           },
         ];
+
         if (proficiency !== 0)
           parts.push({
             id: rrid<RRDiceTemplatePart>(),
@@ -161,14 +123,44 @@ export const DicePanel = React.memo(function DicePanel() {
 
         return {
           id: rrid<RRDiceTemplate>(),
-          name: skill,
+          name: `${statName} Saving Throw`,
           notes: "",
           parts,
           rollType: null,
         };
-      })
+      }
     );
-    return templates;
+  }
+
+  function getSkillTemplates() {
+    return skillNames.map((skill) => {
+      const proficiency =
+        character === undefined ? 0 : character.skills[skill] ?? 0;
+      const parts: RRDiceTemplatePart[] = [
+        createD20Part(),
+        {
+          id: rrid<RRDiceTemplatePart>(),
+          type: "linkedStat",
+          name: skillMap[skill],
+          damage: { type: null },
+        },
+      ];
+      if (proficiency !== 0)
+        parts.push({
+          id: rrid<RRDiceTemplatePart>(),
+          type: "linkedProficiency",
+          damage: { type: null },
+          proficiency,
+        });
+
+      return {
+        id: rrid<RRDiceTemplate>(),
+        name: skill,
+        notes: "",
+        parts,
+        rollType: null,
+      };
+    });
   }
 
   function renderContent(active: string) {
