@@ -372,19 +372,25 @@ function DicePicker() {
   const [diceHolder, setDiceHolder] = useState<RRDiceTemplatePart[]>([]);
   const diceParts = [4, 6, 8, 10, 12, 20].map((faces) => makeDicePart(faces));
 
-  const proficiencyPart: RRDiceTemplatePartLinkedProficiency = {
-    id: rrid<RRDiceTemplatePart>(),
-    type: "linkedProficiency" as const,
-    damage: { type: null },
-    proficiency: 1,
-  };
+  function generateProficiencyPart(): RRDiceTemplatePartLinkedProficiency {
+    return {
+      id: rrid<RRDiceTemplatePart>(),
+      type: "linkedProficiency" as const,
+      damage: { type: null },
+      proficiency: 1,
+    };
+  }
+  const proficiencyPart = generateProficiencyPart();
 
-  const initiativePart: RRDiceTemplatePartLinkedModifier = {
-    id: rrid<RRDiceTemplatePart>(),
-    type: "linkedModifier" as const,
-    damage: { type: null },
-    name: "initiative",
-  };
+  function generateInitiativePart(): RRDiceTemplatePartLinkedModifier {
+    return {
+      id: rrid<RRDiceTemplatePart>(),
+      type: "linkedModifier" as const,
+      damage: { type: null },
+      name: "initiative",
+    };
+  }
+  const initiativePart = generateInitiativePart();
 
   return (
     <div className="dice-picker">
@@ -993,7 +999,7 @@ function ProficiencyValueEditor({
   );
 }
 
-function TemplateNoteEditor({
+function TemplateSettingsEditor({
   categoryId,
   template,
 }: {
@@ -1129,7 +1135,7 @@ const DiceTemplatePartMenuWrapper: React.FC<{
             />
           )}
           {part.type === "template" && (
-            <TemplateNoteEditor
+            <TemplateSettingsEditor
               categoryId={categoryId}
               template={part.template}
             />
