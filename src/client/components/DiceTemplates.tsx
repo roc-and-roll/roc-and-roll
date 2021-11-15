@@ -18,9 +18,7 @@ import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import {
   colorForDamageType,
   damageTypes,
-  entries,
   multipleRollValues,
-  RRCharacter,
   RRDiceTemplateID,
   RRDiceTemplatePart,
   RRDiceTemplatePartDice,
@@ -36,6 +34,7 @@ import {
   RRDiceTemplateCategoryID,
   RRDiceTemplatePartID,
   RRPlayerID,
+  RRCharacter,
 } from "../../shared/state";
 import { assertNever, empty2Null, rrid } from "../../shared/util";
 import {
@@ -45,7 +44,6 @@ import {
 import { useMyProps } from "../myself";
 import { useRRSettings } from "../settings";
 import { useServerDispatch, useServerState } from "../state";
-import useLocalState from "../useLocalState";
 import {
   contrastColor,
   getProficiencyValueString,
@@ -69,12 +67,23 @@ export const DiceTemplates = React.memo(function DiceTemplates({
   category: RRDiceTemplateCategory;
 }) {
   const [templatesEditable, setTemplatesEditable] = useState(false);
-  const myself = useMyProps("id", "characterIds", "diceTemplateCategories");
+  const myself = useMyProps(
+    "id",
+    "characterIds",
+    "diceTemplateCategories",
+    "mainCharacterId"
+  );
 
   const dispatch = useServerDispatch();
   const newIds = useRef<RRDiceTemplateID[]>([]);
   const [selectedTemplates, setSelectedTemplates] = useState<SelectionPair[]>(
     []
+  );
+
+  const character: RRCharacter | null = useServerState((state) =>
+    myself.mainCharacterId
+      ? state.characters.entities[myself.mainCharacterId] ?? null
+      : null
   );
 
   const [, dropRef] = useDrop<
@@ -109,23 +118,13 @@ export const DiceTemplates = React.memo(function DiceTemplates({
     [category, dispatch, myself.id]
   );
 
-  const characters = entries(
-    useServerState((state) => state.characters)
-  ).filter((c) => myself.characterIds.includes(c.id));
-  const [selectedCharacterId, setSelectedCharacterId, _] = useLocalState(
-    "dice-templates-selected-character-id",
-    characters[0]?.id ?? null
-  );
-  const selectedCharacter =
-    characters.find((c) => c.id === selectedCharacterId) ?? null;
-
   const doRoll = (crit: boolean = false) => {
     const parts = selectedTemplates.flatMap(
       ({ id, modified }) =>
         category.templates
           .find((t) => t.id === id)
           ?.parts.flatMap((p) =>
-            evaluateDiceTemplatePart(p, modified, crit, selectedCharacter!)
+            evaluateDiceTemplatePart(p, modified, crit, character)
           ) ?? []
     );
     if (parts.length < 1) return;
@@ -226,17 +225,6 @@ export const DiceTemplates = React.memo(function DiceTemplates({
         )}
       <div style={{ width: "100%" }}>
         <div style={{ display: "flex" }}>
-          <Select
-            value={selectedCharacterId ?? ""}
-            options={[
-              { label: "", value: "" },
-              ...characters.map((c) => ({ label: c.name, value: c.id })),
-            ]}
-            onChange={(v) => {
-              setSelectedCharacterId(empty2Null(v));
-            }}
-            style={{ margin: "0.15rem" }}
-          ></Select>
           <Button
             style={{ width: "28px" }}
             onClick={() => setTemplatesEditable((b) => !b)}
@@ -265,7 +253,6 @@ export const DiceTemplates = React.memo(function DiceTemplates({
                 }
                 newIds={newIds}
                 template={template}
-                selectedCharacter={selectedCharacter}
                 selectedTemplateIds={selectedTemplates}
                 editable={templatesEditable}
                 isChildTemplate={false}
@@ -281,20 +268,14 @@ export const DiceTemplates = React.memo(function DiceTemplates({
 export const GeneratedDiceTemplates = React.memo(
   function GeneratedDiceTemplates({
     templates,
-    character,
   }: {
     templates: RRDiceTemplate[];
-    character: RRCharacter;
   }) {
     return (
       <div className="generated-dice-templates-container">
         {templates.map((template) => {
           return (
-            <GeneratedDiceTemplate
-              key={template.id}
-              template={template}
-              character={character}
-            />
+            <GeneratedDiceTemplate key={template.id} template={template} />
           );
         })}
       </div>
@@ -302,16 +283,15 @@ export const GeneratedDiceTemplates = React.memo(
   }
 );
 
-function GeneratedDiceTemplate({
-  template,
-  character,
-}: {
-  template: RRDiceTemplate;
-  character: RRCharacter;
-}) {
-  const myself = useMyProps("id");
+function GeneratedDiceTemplate({ template }: { template: RRDiceTemplate }) {
+  const myself = useMyProps("id", "mainCharacterId");
   const dispatch = useServerDispatch();
   const [isHovered, setIsHovered] = useState(false);
+  const character: RRCharacter | null = useServerState((state) =>
+    myself.mainCharacterId
+      ? state.characters.entities[myself.mainCharacterId] ?? null
+      : null
+  );
 
   const doRoll = (template: RRDiceTemplate, modified: RRMultipleRoll) => {
     const parts = template.parts.flatMap((p) =>
@@ -533,7 +513,6 @@ function PickerDiceTemplatePart({
       selectedTemplateIds={[]}
       ref={dragRef}
       onClick={onClick}
-      selectedCharacter={null}
       newIds={newIds}
       part={part}
       editable={false}
@@ -547,14 +526,12 @@ const DiceTemplate = React.memo(function DiceTemplate({
   newIds,
   onRoll,
   selectedTemplateIds,
-  selectedCharacter,
   editable,
   isChildTemplate,
 }: {
   template: RRDiceTemplate;
   categoryId: RRDiceTemplateCategoryID;
   newIds: React.MutableRefObject<RRDiceTemplateID[]>;
-  selectedCharacter: RRCharacter | null;
   onRoll: (
     templates: RRDiceTemplate[],
     modified: RRMultipleRoll,
@@ -746,7 +723,6 @@ const DiceTemplate = React.memo(function DiceTemplate({
             >
               <DiceTemplatePart
                 categoryId={categoryId}
-                selectedCharacter={selectedCharacter}
                 selectedTemplateIds={selectedTemplateIds}
                 onRoll={(templates, modified, event) =>
                   onRoll([template, ...templates], modified, event)
@@ -1200,22 +1176,12 @@ const DiceTemplatePart = React.forwardRef<
       event: React.MouseEvent
     ) => void;
     selectedTemplateIds: SelectionPair[];
-    selectedCharacter: RRCharacter | null;
     categoryId: RRDiceTemplateCategoryID;
     onClick?: () => void;
     editable: boolean;
   }
 >(function DiceTemplatePart(
-  {
-    part,
-    newIds,
-    onRoll,
-    categoryId,
-    selectedTemplateIds,
-    selectedCharacter,
-    onClick,
-    editable,
-  },
+  { part, newIds, onRoll, categoryId, selectedTemplateIds, onClick, editable },
   ref
 ) {
   let content: JSX.Element;
@@ -1224,6 +1190,13 @@ const DiceTemplatePart = React.forwardRef<
     background: colorForDamageType(part.damage.type),
     color: contrastColor(colorForDamageType(part.damage.type)),
   });
+
+  const myself = useMyProps("mainCharacterId");
+  const character: RRCharacter | null = useServerState((state) =>
+    myself.mainCharacterId
+      ? state.characters.entities[myself.mainCharacterId] ?? null
+      : null
+  );
 
   switch (part.type) {
     case "modifier":
@@ -1238,7 +1211,7 @@ const DiceTemplatePart = React.forwardRef<
       content = (
         <div className="dice-option" style={styleFor(part)}>
           <div className="dice-option-linked-modifier">
-            {selectedCharacter?.attributes[part.name] ?? null}
+            {character?.attributes[part.name] ?? null}
           </div>
           <div className="dice-option-linked-modifier-name">
             {part.name[0]!.toUpperCase() + part.name.substring(1, 4)}
@@ -1252,8 +1225,9 @@ const DiceTemplatePart = React.forwardRef<
           <div className="dice-option-linked-modifier">
             {
               //TODO this shows incorrect value in editor, others show no value
-              (selectedCharacter?.attributes["proficiency"] ?? 0) *
-                part.proficiency
+              character?.attributes["proficiency"]
+                ? character.attributes["proficiency"] * part.proficiency
+                : null
             }
           </div>
           <div className="dice-option-linked-modifier-name">{"Prof"}</div>
@@ -1264,9 +1238,9 @@ const DiceTemplatePart = React.forwardRef<
       content = (
         <div className="dice-option" style={styleFor(part)}>
           <div className="dice-option-linked-modifier">
-            {!selectedCharacter?.stats[part.name]
-              ? null
-              : modifierFromStat(selectedCharacter.stats[part.name]!)}
+            {character?.stats[part.name]
+              ? modifierFromStat(character.stats[part.name]!)
+              : null}
           </div>
           <div className="dice-option-linked-modifier-name">
             {part.name[0]!.toUpperCase() + part.name.substring(1, 4)}
@@ -1287,7 +1261,6 @@ const DiceTemplatePart = React.forwardRef<
           onRoll={(templates, modified, event) =>
             onRoll(templates, modified, event)
           }
-          selectedCharacter={selectedCharacter}
           template={part.template}
           categoryId={categoryId}
           newIds={newIds}

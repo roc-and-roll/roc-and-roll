@@ -134,7 +134,7 @@ export function formatDuration(duration: number) {
   );
 }
 
-export function modifierFromStat(statValue: number) {
+export function modifierFromStat(statValue: number): number {
   return Math.floor((statValue - 10) / 2);
 }
 

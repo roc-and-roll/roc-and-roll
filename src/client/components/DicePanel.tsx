@@ -18,6 +18,7 @@ import {
   characterStatNames,
   fixedCategoryIcons,
   iconMap,
+  RRCharacter,
   RRDiceTemplateCategoryID,
   RRDiceTemplatePart,
   RRDiceTemplatePartDice,
@@ -94,14 +95,17 @@ export const DicePanel = React.memo(function DicePanel() {
       damage: { type: null },
     };
   }
-  const characters = useServerState((state) => state.characters);
-  const character = characters.entities[myself.mainCharacterId!];
+  const character: RRCharacter | null = useServerState((state) =>
+    myself.mainCharacterId
+      ? state.characters.entities[myself.mainCharacterId] ?? null
+      : null
+  );
 
   function getSavingThrowTemplates() {
     return characterStatNames.map(
       (statName: typeof characterStatNames[number]) => {
         const proficiency =
-          character === undefined ? 0 : character.savingThrows[statName] ?? 0;
+          character === null ? 0 : character.savingThrows[statName] ?? 0;
 
         const parts: RRDiceTemplatePart[] = [
           createD20Part(),
@@ -134,8 +138,7 @@ export const DicePanel = React.memo(function DicePanel() {
 
   function getSkillTemplates() {
     return skillNames.map((skill) => {
-      const proficiency =
-        character === undefined ? 0 : character.skills[skill] ?? 0;
+      const proficiency = character === null ? 0 : character.skills[skill] ?? 0;
       const parts: RRDiceTemplatePart[] = [
         createD20Part(),
         {
@@ -178,19 +181,9 @@ export const DicePanel = React.memo(function DicePanel() {
           </>
         );
       case "Skills":
-        return (
-          <GeneratedDiceTemplates
-            templates={getSkillTemplates()}
-            character={character!}
-          />
-        );
+        return <GeneratedDiceTemplates templates={getSkillTemplates()} />;
       case "STs":
-        return (
-          <GeneratedDiceTemplates
-            templates={getSavingThrowTemplates()}
-            character={character!}
-          />
-        );
+        return <GeneratedDiceTemplates templates={getSavingThrowTemplates()} />;
       default:
         return <DiceTemplates category={category!} />;
     }
