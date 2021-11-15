@@ -1088,7 +1088,7 @@ const DiceTemplatePartMenuWrapper: React.FC<{
   const myself = useMyProps("id");
 
   const applyDelete = (part: RRDiceTemplatePart) => {
-    dispatch([removePartAction(myself.id, part.id, categoryId, template)]);
+    dispatch(removePartAction(myself.id, part.id, categoryId, template));
   };
 
   return (

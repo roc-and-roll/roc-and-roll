@@ -62,7 +62,6 @@ export default class extends AbstractMigration {
         }
       >
     ).forEach((player) => {
-      //TODO Corinna
       player.diceTemplateCategories ??= [
         {
           categoryName: "Templates 1",

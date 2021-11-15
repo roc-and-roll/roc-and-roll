@@ -80,7 +80,7 @@ export const DicePanel = React.memo(function DicePanel() {
         }),
       ],
       optimisticKey: "diceTemplateCategories",
-      syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+      syncToServerThrottle: 0,
     });
   }
 
@@ -300,7 +300,7 @@ function DiceTemplateCategoryEditor({
         }),
       ],
       optimisticKey: "diceTemplateCategories",
-      syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+      syncToServerThrottle: 0,
     });
   }
 
