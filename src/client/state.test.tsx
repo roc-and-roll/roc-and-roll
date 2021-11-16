@@ -7,6 +7,7 @@ import {
   OptimisticActionAppliers,
   OptimisticActionApplier,
   OptimisticActionApplierDispatcherKey,
+  useServerDispatch,
 } from "./state";
 import {
   defaultMap,
@@ -21,6 +22,7 @@ import {
 import { rrid } from "../shared/util";
 import { MockClientSocket } from "./test-utils";
 import { Socket } from "socket.io-client";
+import { SOCKET_DISPATCH_ACTION } from "../shared/constants";
 
 function setup<A extends Record<string, unknown>, H>(
   initialProps: A,
@@ -259,6 +261,56 @@ describe("useServerState", () => {
     });
 
     expect(result.current).toEqual({ id: B });
+  });
+});
+
+describe("useServerDispatch", () => {
+  it("can dispatch non-optimistic actions", () => {
+    const { result, rerender, mockSocket } = setup({}, () =>
+      useServerDispatch()
+    );
+
+    rerender({});
+
+    const action = { type: "TEST_ACTION", payload: {} };
+
+    const socketMessageSent = jest.fn();
+    mockSocket.__onEmitToServerSubscriberAdd(socketMessageSent);
+
+    result.current(action);
+    expect(socketMessageSent).toHaveBeenCalledWith(SOCKET_DISPATCH_ACTION, {
+      optimisticUpdateId: null,
+      actions: [action],
+    });
+
+    rerender({});
+    // The identity of the dispatch function should never change.
+    for (const dispatch of result.all) {
+      expect(dispatch).toBe(result.current);
+    }
+  });
+
+  it("can dispatch optimistic actions", () => {
+    const { result, mockSocket } = setup({}, () => useServerDispatch());
+
+    const action = { type: "TEST_ACTION", payload: {} };
+    const OPTIMISTIC_KEY = rrid<{ id: OptimisticUpdateID }>();
+
+    const socketMessageSent = jest.fn();
+    mockSocket.__onEmitToServerSubscriberAdd(socketMessageSent);
+
+    result.current({
+      actions: [action],
+      optimisticKey: OPTIMISTIC_KEY,
+      syncToServerThrottle: 0,
+    });
+    expect(socketMessageSent).toHaveBeenCalledWith(
+      SOCKET_DISPATCH_ACTION,
+      expect.objectContaining({
+        optimisticUpdateId: expect.any(String),
+        actions: [action],
+      })
+    );
   });
 });
 
