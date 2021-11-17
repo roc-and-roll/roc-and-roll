@@ -37,6 +37,7 @@ import {
   RRAsset,
   RRDiceTemplateCategoryID,
   RRDiceTemplateID,
+  RRDiceTemplatePart,
 } from "./state";
 import { rrid, timestamp } from "./util";
 import { RRDiceTemplate, RRDiceTemplateCategory } from "./validation";
@@ -96,6 +97,13 @@ export const playerUpdateDiceTemplate = createAction<{
   categoryId: RRDiceTemplateCategoryID;
   template: Update<RRDiceTemplate>;
 }>("player/diceTemplateCategories/template/update");
+
+export const playerUpdateDiceTemplatePart = createAction<{
+  id: RRPlayerID;
+  categoryId: RRDiceTemplateCategoryID;
+  templateId: RRDiceTemplateID;
+  part: Update<RRDiceTemplatePart>;
+}>("player/diceTemplateCategories/template/part/update");
 
 export const playerAddDiceTemplate = createAction<{
   id: RRPlayerID;

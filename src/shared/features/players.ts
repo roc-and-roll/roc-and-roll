@@ -9,6 +9,7 @@ import {
   playerAddDiceTemplate,
   playerRemoveDiceTemplate,
   playerUpdateDiceTemplate,
+  playerUpdateDiceTemplatePart,
   playerAddDiceTemplateCategory,
   playerUpdateDiceTemplateCategory,
   playerDeleteDiceTemplateCategory,
@@ -57,6 +58,7 @@ export const playersReducer = createReducer(
         const category = player?.diceTemplateCategories.find(
           (c) => c.id === action.payload.category.id
         );
+        if (!category) return;
         Object.assign(category, action.payload.category.changes);
       })
 
@@ -71,7 +73,6 @@ export const playersReducer = createReducer(
       })
 
       .addCase(playerRemoveDiceTemplate, (state, action) => {
-        // TODO go recursive
         const player = state.entities[action.payload.id];
         const templates = player?.diceTemplateCategories.find(
           (c) => c.id === action.payload.categoryId
@@ -89,7 +90,21 @@ export const playersReducer = createReducer(
         const template = player?.diceTemplateCategories
           .find((c) => c.id === action.payload.categoryId)
           ?.templates.find((t) => t.id === action.payload.template.id);
+        if (!template) return;
         Object.assign(template, action.payload.template.changes);
+      })
+
+      .addCase(playerUpdateDiceTemplatePart, (state, action) => {
+        const player = state.entities[action.payload.id];
+        const template = player?.diceTemplateCategories
+          .find((c) => c.id === action.payload.categoryId)
+          ?.templates.find((t) => t.id === action.payload.templateId);
+        const part = template?.parts.find(
+          (p) => p.id === action.payload.part.id
+        );
+
+        if (!part) return;
+        Object.assign(part, action.payload.part.changes);
       });
   }
 );
