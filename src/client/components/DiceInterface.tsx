@@ -63,24 +63,28 @@ export function DiceInterface() {
       if (addTemplate) {
         const name =
           (await prompt("Name of the new dice template"))?.trim() ?? "";
+        let categoryId;
         if (myself.diceTemplateCategories.length < 1) {
-          dispatch(
-            playerAddDiceTemplateCategory({
-              id: myself.id,
-              category: {
-                categoryName: "Generated Templates",
-                id: rrid<RRDiceTemplateCategory>(),
-                icon: "wrench",
-                templates: [],
-              },
-            })
-          );
+          const newTemplateCategoryAction = playerAddDiceTemplateCategory({
+            id: myself.id,
+            category: {
+              categoryName: "Generated Templates",
+              id: rrid<RRDiceTemplateCategory>(),
+              icon: "wrench",
+              templates: [],
+            },
+          });
+
+          dispatch(newTemplateCategoryAction);
+          categoryId = newTemplateCategoryAction.payload.category.id;
+        } else {
+          categoryId = myself.diceTemplateCategories[0]!.id;
         }
         dispatch(
           playerAddDiceTemplate({
             id: myself.id,
             // FIXME should allow to select
-            categoryId: myself.diceTemplateCategories[0]!.id,
+            categoryId,
             template: {
               id: rrid<RRDiceTemplate>(),
               name,
