@@ -4,32 +4,6 @@ import type { IterableElement, ValueOf } from "type-fest";
 import { assertNever, rrid } from "./util";
 import { isDamageType, isSyncedState, RRDiceTemplate } from "./validation";
 import { LAST_MIGRATION_VERSION } from "./constants";
-import {
-  faBalanceScale,
-  faBook,
-  faBroom,
-  faCat,
-  faComments,
-  faDiceD20,
-  faDragon,
-  faDungeon,
-  faFeather,
-  faFire,
-  faFistRaised,
-  faFlask,
-  faHandHoldingMedical,
-  faHandPaper,
-  faHatWizard,
-  faHeart,
-  faHiking,
-  faHorse,
-  faMagic,
-  faPrayingHands,
-  faScroll,
-  faShieldAlt,
-  faWrench,
-  IconDefinition,
-} from "@fortawesome/free-solid-svg-icons";
 
 export type MakeRRID<K extends string> = `RRID/${K}/${string}`;
 
@@ -365,32 +339,6 @@ export const userCategoryIcons = [
 ] as const;
 
 export const categoryIcons = [...userCategoryIcons, ...fixedCategoryIcons];
-
-export const iconMap: Record<typeof categoryIcons[number], IconDefinition> = {
-  book: faBook,
-  broom: faBroom,
-  cat: faCat,
-  comments: faComments,
-  dragon: faDragon,
-  dungeon: faDungeon,
-  feather: faFeather,
-  fire: faFire,
-  fist: faFistRaised,
-  flask: faFlask,
-  handHoldingMedical: faHandHoldingMedical,
-  hand: faHandPaper,
-  hatWizard: faHatWizard,
-  heart: faHeart,
-  hiking: faHiking,
-  horse: faHorse,
-  magic: faMagic,
-  prayingHands: faPrayingHands,
-  scales: faBalanceScale,
-  scroll: faScroll,
-  shield: faShieldAlt,
-  wrench: faWrench,
-  d20: faDiceD20,
-};
 
 export const damageTypes = [
   null,

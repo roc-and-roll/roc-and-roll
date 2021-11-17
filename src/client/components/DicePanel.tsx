@@ -1,8 +1,29 @@
 import {
+  faBalanceScale,
+  faBook,
+  faBroom,
+  faCat,
+  faComments,
   faDiceD20,
+  faDragon,
+  faDungeon,
+  faFeather,
+  faFire,
+  faFistRaised,
+  faFlask,
+  faHandHoldingMedical,
   faHandPaper,
+  faHatWizard,
+  faHeart,
+  faHiking,
+  faHorse,
+  faMagic,
   faPlus,
+  faPrayingHands,
+  faScroll,
   faShieldAlt,
+  faWrench,
+  IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
@@ -17,7 +38,6 @@ import {
   categoryIcons,
   characterStatNames,
   fixedCategoryIcons,
-  iconMap,
   RRCharacter,
   RRDiceTemplateCategoryID,
   RRDiceTemplatePart,
@@ -40,6 +60,32 @@ import { DiceTemplates, GeneratedDiceTemplates } from "./DiceTemplates";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { SmartTextInput } from "./ui/TextInput";
+
+export const iconMap: Record<typeof categoryIcons[number], IconDefinition> = {
+  book: faBook,
+  broom: faBroom,
+  cat: faCat,
+  comments: faComments,
+  dragon: faDragon,
+  dungeon: faDungeon,
+  feather: faFeather,
+  fire: faFire,
+  fist: faFistRaised,
+  flask: faFlask,
+  handHoldingMedical: faHandHoldingMedical,
+  hand: faHandPaper,
+  hatWizard: faHatWizard,
+  heart: faHeart,
+  hiking: faHiking,
+  horse: faHorse,
+  magic: faMagic,
+  prayingHands: faPrayingHands,
+  scales: faBalanceScale,
+  scroll: faScroll,
+  shield: faShieldAlt,
+  wrench: faWrench,
+  d20: faDiceD20,
+};
 
 export const DicePanel = React.memo(function DicePanel() {
   const [active, setActive] = useState<

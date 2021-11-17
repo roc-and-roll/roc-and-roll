@@ -26,7 +26,6 @@ import {
   RRDiceTemplatePartWithDamage,
   RRMultipleRoll,
   characterStatNames,
-  iconMap,
   RRDiceTemplatePartLinkedProficiency,
   RRDiceTemplatePartLinkedModifier,
   proficiencyValues,
@@ -58,6 +57,7 @@ import {
   SmartTextInput,
 } from "./ui/TextInput";
 import { evaluateDiceTemplatePart, getModifierForTemplate } from "../diceUtils";
+import { iconMap } from "./DicePanel";
 
 type SelectionPair = { id: RRDiceTemplateID; modified: RRMultipleRoll };
 
