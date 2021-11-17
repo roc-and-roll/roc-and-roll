@@ -1,10 +1,19 @@
 import React from "react";
 import { act, renderHook } from "@testing-library/react-hooks";
-import { ServerStateProvider, applyStatePatch, useServerState } from "./state";
+import {
+  ServerStateProvider,
+  applyStatePatch,
+  useServerState,
+  OptimisticActionAppliers,
+  OptimisticActionApplier,
+  OptimisticActionApplierDispatcherKey,
+  useServerDispatch,
+} from "./state";
 import {
   defaultMap,
   EMPTY_ENTITY_COLLECTION,
   initialSyncedState,
+  OptimisticUpdateID,
   RRMap,
   RRMapObject,
   RRPlayer,
@@ -13,6 +22,9 @@ import {
 import { rrid } from "../shared/util";
 import { MockClientSocket } from "./test-utils";
 import { Socket } from "socket.io-client";
+import { SOCKET_DISPATCH_ACTION } from "../shared/constants";
+import util from "util";
+import { setImmediate as realSetImmediate } from "timers";
 
 function setup<A extends Record<string, unknown>, H>(
   initialProps: A,
@@ -251,5 +263,255 @@ describe("useServerState", () => {
     });
 
     expect(result.current).toEqual({ id: B });
+  });
+});
+
+async function promiseIsStillPending(p: Promise<unknown>) {
+  // Run all pending promises recursively.
+  await new Promise((res) => realSetImmediate(res));
+  // Hack to check whether the promise is still pending.
+  return util.inspect(p).includes("<pending>");
+}
+
+describe("useServerDispatch", () => {
+  it("can dispatch non-optimistic actions", async () => {
+    const { result, rerender, mockSocket } = setup({}, () =>
+      useServerDispatch()
+    );
+
+    rerender({});
+
+    const action = { type: "TEST_ACTION", payload: {} };
+
+    const socketMessageSent = jest.fn();
+    mockSocket.__onEmitToServerSubscriberAdd(socketMessageSent);
+
+    const { optimisticActionsDoneOrDiscarded } = result.current(action);
+    expect(socketMessageSent).toHaveBeenCalledWith(SOCKET_DISPATCH_ACTION, {
+      optimisticUpdateId: null,
+      actions: [action],
+    });
+
+    expect(await promiseIsStillPending(optimisticActionsDoneOrDiscarded)).toBe(
+      false
+    );
+
+    rerender({});
+    // The identity of the dispatch function should never change.
+    for (const dispatch of result.all) {
+      expect(dispatch).toBe(result.current);
+    }
+  });
+
+  it("dispatches optimistic actions with syncToServerThrottle = 0 immediately", async () => {
+    const { result, mockSocket } = setup({}, () => useServerDispatch());
+
+    const action = { type: "TEST_ACTION", payload: {} };
+    const OPTIMISTIC_KEY = rrid<{ id: OptimisticUpdateID }>();
+
+    let optimisticUpdateId: OptimisticUpdateID | null = null;
+    const socketMessageSent = jest.fn((name, payload) => {
+      expect(name).toBe(SOCKET_DISPATCH_ACTION);
+      expect(payload).toEqual(
+        expect.objectContaining({
+          optimisticUpdateId: expect.any(String),
+          actions: [action],
+        })
+      );
+      optimisticUpdateId = payload.optimisticUpdateId;
+    });
+    mockSocket.__onEmitToServerSubscriberAdd(socketMessageSent);
+
+    const { optimisticActionsDoneOrDiscarded } = result.current({
+      actions: [action],
+      optimisticKey: OPTIMISTIC_KEY,
+      syncToServerThrottle: 0,
+    });
+    expect(socketMessageSent).toHaveBeenCalled();
+    expect(await promiseIsStillPending(optimisticActionsDoneOrDiscarded)).toBe(
+      true
+    );
+
+    expect(optimisticUpdateId).not.toBeNull();
+    mockSocket.__receivePatchState({ patch: {}, deletedKeys: [] }, [
+      optimisticUpdateId!,
+    ]);
+
+    expect(await promiseIsStillPending(optimisticActionsDoneOrDiscarded)).toBe(
+      false
+    );
+  });
+
+  it.each([["commit"], ["discard"]] as const)(
+    "never automatically dispatches optimistic actions with syncToServerThrottle = Infinity",
+    async (type) => {
+      const { result, mockSocket } = setup({}, () => useServerDispatch());
+
+      const action = { type: "TEST_ACTION", payload: {} };
+      const OPTIMISTIC_KEY = rrid<{ id: OptimisticUpdateID }>();
+
+      let optimisticUpdateId: OptimisticUpdateID | null = null;
+      const socketMessageSent = jest.fn((name, payload) => {
+        expect(name).toBe(SOCKET_DISPATCH_ACTION);
+        expect(payload).toEqual(
+          expect.objectContaining({
+            optimisticUpdateId: expect.any(String),
+            actions: [action],
+          })
+        );
+        optimisticUpdateId = payload.optimisticUpdateId;
+      });
+      mockSocket.__onEmitToServerSubscriberAdd(socketMessageSent);
+
+      const {
+        optimisticActionsDoneOrDiscarded,
+        commitPendingOptimisticActionsNow,
+        discardPendingOptimisticActions,
+      } = result.current({
+        actions: [action],
+        optimisticKey: OPTIMISTIC_KEY,
+        syncToServerThrottle: Infinity,
+      });
+
+      jest.runAllTimers();
+
+      expect(socketMessageSent).not.toHaveBeenCalled();
+      expect(
+        await promiseIsStillPending(optimisticActionsDoneOrDiscarded)
+      ).toBe(true);
+
+      if (type === "commit") {
+        commitPendingOptimisticActionsNow();
+        expect(socketMessageSent).toHaveBeenCalled();
+
+        expect(optimisticUpdateId).not.toBeNull();
+        mockSocket.__receivePatchState({ patch: {}, deletedKeys: [] }, [
+          optimisticUpdateId!,
+        ]);
+      } else {
+        discardPendingOptimisticActions();
+        expect(socketMessageSent).not.toHaveBeenCalled();
+      }
+
+      expect(
+        await promiseIsStillPending(optimisticActionsDoneOrDiscarded)
+      ).toBe(false);
+    }
+  );
+});
+
+describe("OptimisticActionAppliers", () => {
+  it("calculates deduplication keys correctly", () => {
+    const applier: OptimisticActionApplier = {
+      dispatcherKey: "dkey" as OptimisticActionApplierDispatcherKey,
+      key: "key",
+      optimisticUpdateId: "oui" as OptimisticUpdateID,
+      actions: [],
+    };
+    expect(OptimisticActionAppliers.getDeduplicationKey(applier)).toBe(
+      `dkey/key`
+    );
+  });
+
+  it("works", () => {
+    const oAA = new OptimisticActionAppliers();
+
+    expect(oAA.appliers()).toHaveLength(0);
+
+    expect(
+      oAA.deleteByOptimisticUpdateId(rrid<{ id: OptimisticUpdateID }>())
+    ).toBe(false);
+
+    const applier1: OptimisticActionApplier = {
+      dispatcherKey: rrid<{ id: OptimisticActionApplierDispatcherKey }>(),
+      key: "key",
+      optimisticUpdateId: rrid<{ id: OptimisticUpdateID }>(),
+      actions: [],
+    };
+    const whenDoneOrDiscarded1 = jest.fn();
+    oAA.add(applier1, whenDoneOrDiscarded1);
+
+    {
+      const appliers = oAA.appliers();
+      expect(appliers).toHaveLength(1);
+      expect(appliers[0]).toBe(applier1);
+    }
+
+    const applier2: OptimisticActionApplier = {
+      dispatcherKey: rrid<{ id: OptimisticActionApplierDispatcherKey }>(),
+      key: "key",
+      optimisticUpdateId: rrid<{ id: OptimisticUpdateID }>(),
+      actions: [],
+    };
+    const whenDoneOrDiscarded2 = jest.fn();
+    oAA.add(applier2, whenDoneOrDiscarded2);
+
+    {
+      const appliers = oAA.appliers();
+      expect(appliers).toHaveLength(2);
+      expect(appliers[0]).toBe(applier1);
+      expect(appliers[1]).toBe(applier2);
+    }
+
+    const applier3: OptimisticActionApplier = {
+      dispatcherKey: rrid<{ id: OptimisticActionApplierDispatcherKey }>(),
+      key: "key",
+      optimisticUpdateId: rrid<{ id: OptimisticUpdateID }>(),
+      actions: [],
+    };
+    const whenDoneOrDiscarded3 = jest.fn();
+    oAA.add(applier3, whenDoneOrDiscarded3);
+
+    {
+      const appliers = oAA.appliers();
+      expect(appliers).toHaveLength(3);
+      expect(appliers[0]).toBe(applier1);
+      expect(appliers[1]).toBe(applier2);
+      expect(appliers[2]).toBe(applier3);
+    }
+
+    // Add another applier that has the same deduplication key as applier2.
+    const applier4 = { ...applier2 };
+    const whenDoneOrDiscarded4 = jest.fn();
+    oAA.add(applier4, whenDoneOrDiscarded4);
+
+    {
+      const appliers = oAA.appliers();
+      expect(appliers).toHaveLength(3);
+      expect(appliers[0]).toBe(applier1);
+      expect(appliers[1]).toBe(applier3);
+      expect(appliers[2]).toBe(applier4);
+    }
+
+    expect(whenDoneOrDiscarded1).not.toHaveBeenCalled();
+    expect(whenDoneOrDiscarded2).toHaveBeenCalledTimes(1);
+    expect(whenDoneOrDiscarded3).not.toHaveBeenCalled();
+    expect(whenDoneOrDiscarded4).not.toHaveBeenCalled();
+
+    // Delete all appliers with the optimistic update id of applier3.
+    oAA.deleteByOptimisticUpdateId(applier3.optimisticUpdateId);
+    {
+      const appliers = oAA.appliers();
+      expect(appliers).toHaveLength(2);
+      expect(appliers[0]).toBe(applier1);
+      expect(appliers[1]).toBe(applier4);
+    }
+
+    expect(whenDoneOrDiscarded1).not.toHaveBeenCalled();
+    expect(whenDoneOrDiscarded2).toHaveBeenCalledTimes(1);
+    expect(whenDoneOrDiscarded3).toHaveBeenCalledTimes(1);
+    expect(whenDoneOrDiscarded4).not.toHaveBeenCalled();
+
+    oAA.deleteApplier(applier1);
+    {
+      const appliers = oAA.appliers();
+      expect(appliers).toHaveLength(1);
+      expect(appliers[0]).toBe(applier4);
+    }
+
+    expect(whenDoneOrDiscarded1).toHaveBeenCalledTimes(1);
+    expect(whenDoneOrDiscarded2).toHaveBeenCalledTimes(1);
+    expect(whenDoneOrDiscarded3).toHaveBeenCalledTimes(1);
+    expect(whenDoneOrDiscarded4).not.toHaveBeenCalled();
   });
 });

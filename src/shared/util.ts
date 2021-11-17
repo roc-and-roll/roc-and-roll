@@ -160,8 +160,8 @@ export function partition<E, A extends E = E, B extends E = E>(
   arr: Iterable<E>,
   fn: (each: E) => boolean
 ) {
-  const a = [] as A[];
-  const b = [] as B[];
+  const a: A[] = [];
+  const b: B[] = [];
 
   for (const each of arr) {
     if (fn(each)) {
@@ -172,4 +172,16 @@ export function partition<E, A extends E = E, B extends E = E>(
   }
 
   return [a, b] as const;
+}
+
+export function mapGetAndSetIfMissing<K, V>(
+  map: Map<K, V>,
+  key: K,
+  fn: () => V
+): V {
+  if (!map.has(key)) {
+    map.set(key, fn());
+  }
+
+  return map.get(key)!;
 }
