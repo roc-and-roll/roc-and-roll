@@ -6,7 +6,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   playerAddDiceTemplateCategory,
   playerUpdateDiceTemplateCategory,
@@ -31,6 +31,7 @@ import {
   RRDiceTemplate,
   RRDiceTemplateCategory,
 } from "../../shared/validation";
+import { useConfirm } from "../dialog-boxes";
 import { useMyProps } from "../myself";
 import { useServerDispatch, useServerState } from "../state";
 import { DiceInput } from "./DiceInput";
@@ -101,11 +102,13 @@ export const DicePanel = React.memo(function DicePanel() {
       : null
   );
 
-  function getSavingThrowTemplates() {
-    return characterStatNames.map(
-      (statName: typeof characterStatNames[number]) => {
-        const proficiency =
-          character === null ? 0 : character.savingThrows[statName] ?? 0;
+  const isCharacterNull = character === null;
+  const savingThrowTemplates = useMemo(
+    () =>
+      characterStatNames.map((statName: typeof characterStatNames[number]) => {
+        const proficiency = isCharacterNull
+          ? 0
+          : character.savingThrows[statName] ?? 0;
 
         const parts: RRDiceTemplatePart[] = [
           createD20Part(),
@@ -132,39 +135,41 @@ export const DicePanel = React.memo(function DicePanel() {
           parts,
           rollType: null,
         };
-      }
-    );
-  }
+      }),
+    [isCharacterNull, character?.savingThrows]
+  );
 
-  function getSkillTemplates() {
-    return skillNames.map((skill) => {
-      const proficiency = character === null ? 0 : character.skills[skill] ?? 0;
-      const parts: RRDiceTemplatePart[] = [
-        createD20Part(),
-        {
-          id: rrid<RRDiceTemplatePart>(),
-          type: "linkedStat",
-          name: skillMap[skill],
-          damage: { type: null },
-        },
-      ];
-      if (proficiency !== 0)
-        parts.push({
-          id: rrid<RRDiceTemplatePart>(),
-          type: "linkedProficiency",
-          damage: { type: null },
-          proficiency,
-        });
+  const skillTemplates = useMemo(
+    () =>
+      skillNames.map((skill) => {
+        const proficiency = isCharacterNull ? 0 : character.skills[skill] ?? 0;
+        const parts: RRDiceTemplatePart[] = [
+          createD20Part(),
+          {
+            id: rrid<RRDiceTemplatePart>(),
+            type: "linkedStat",
+            name: skillMap[skill],
+            damage: { type: null },
+          },
+        ];
+        if (proficiency !== 0)
+          parts.push({
+            id: rrid<RRDiceTemplatePart>(),
+            type: "linkedProficiency",
+            damage: { type: null },
+            proficiency,
+          });
 
-      return {
-        id: rrid<RRDiceTemplate>(),
-        name: skill,
-        notes: "",
-        parts,
-        rollType: null,
-      };
-    });
-  }
+        return {
+          id: rrid<RRDiceTemplate>(),
+          name: skill,
+          notes: "",
+          parts,
+          rollType: null,
+        };
+      }),
+    [isCharacterNull, character?.skills]
+  );
 
   function renderContent(active: string) {
     const category = myself.diceTemplateCategories.find(
@@ -181,9 +186,9 @@ export const DicePanel = React.memo(function DicePanel() {
           </>
         );
       case "Skills":
-        return <GeneratedDiceTemplates templates={getSkillTemplates()} />;
+        return <GeneratedDiceTemplates templates={skillTemplates} />;
       case "STs":
-        return <GeneratedDiceTemplates templates={getSavingThrowTemplates()} />;
+        return <GeneratedDiceTemplates templates={savingThrowTemplates} />;
       default:
         return <DiceTemplates category={category!} />;
     }
@@ -290,18 +295,24 @@ function DiceTemplateCategoryEditor({
 }) {
   const myself = useMyProps("diceTemplateCategories", "id");
   const dispatch = useServerDispatch();
+  const confirm = useConfirm();
 
-  function deleteCategory() {
-    dispatch({
-      actions: [
-        playerDeleteDiceTemplateCategory({
-          id: myself.id,
-          categoryId: category.id,
-        }),
-      ],
-      optimisticKey: "diceTemplateCategories",
-      syncToServerThrottle: 0,
-    });
+  async function deleteCategory() {
+    if (
+      await confirm(
+        `Do you really want to delete this category forever? All templates in this category will also be deleted.`
+      )
+    )
+      dispatch({
+        actions: [
+          playerDeleteDiceTemplateCategory({
+            id: myself.id,
+            categoryId: category.id,
+          }),
+        ],
+        optimisticKey: "diceTemplateCategories",
+        syncToServerThrottle: 0,
+      });
   }
 
   function updateCategory(
