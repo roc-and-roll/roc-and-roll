@@ -13,6 +13,7 @@ import {
   playerAddDiceTemplate,
   playerRemoveDiceTemplate,
   playerUpdateDiceTemplate,
+  playerUpdateDiceTemplatePart,
 } from "../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import {
@@ -844,16 +845,13 @@ const updatePartAction = (
   diceTemplate: RRDiceTemplate,
   changes: Partial<RRDiceTemplatePart>
 ) =>
-  playerUpdateDiceTemplate({
+  playerUpdateDiceTemplatePart({
     id: myId,
     categoryId,
-    template: {
-      id: diceTemplate.id,
-      changes: {
-        parts: diceTemplate.parts.map((p) =>
-          p.id === partId ? { ...p, changes } : p
-        ),
-      },
+    templateId: diceTemplate.id,
+    part: {
+      id: partId,
+      changes,
     },
   });
 
@@ -1023,15 +1021,13 @@ function TemplateSettingsEditor({
               type="radio"
               name="icon"
               value={category.id}
-              //TODO how was this working?
               checked={categoryId === category.id}
               onChange={(e) =>
                 dispatch({
                   actions: [
-                    //TODO does this work?
                     playerRemoveDiceTemplate({
                       id: myself.id,
-                      categoryId: category.id,
+                      categoryId: categoryId,
                       templateId: template.id,
                     }),
                     playerAddDiceTemplate({
@@ -1088,7 +1084,15 @@ const DiceTemplatePartMenuWrapper: React.FC<{
   const myself = useMyProps("id");
 
   const applyDelete = (part: RRDiceTemplatePart) => {
-    dispatch(removePartAction(myself.id, part.id, categoryId, template));
+    part.type === "template"
+      ? dispatch(
+          playerRemoveDiceTemplate({
+            id: myself.id,
+            categoryId,
+            templateId: template.id,
+          })
+        )
+      : dispatch(removePartAction(myself.id, part.id, categoryId, template));
   };
 
   return (
