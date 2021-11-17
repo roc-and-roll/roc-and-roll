@@ -23,6 +23,8 @@ import { rrid } from "../shared/util";
 import { MockClientSocket } from "./test-utils";
 import { Socket } from "socket.io-client";
 import { SOCKET_DISPATCH_ACTION } from "../shared/constants";
+import util from "util";
+import { setImmediate as realSetImmediate } from "timers";
 
 function setup<A extends Record<string, unknown>, H>(
   initialProps: A,
@@ -264,8 +266,15 @@ describe("useServerState", () => {
   });
 });
 
+async function promiseIsStillPending(p: Promise<unknown>) {
+  // Run all pending promises recursively.
+  await new Promise((res) => realSetImmediate(res));
+  // Hack to check whether the promise is still pending.
+  return util.inspect(p).includes("<pending>");
+}
+
 describe("useServerDispatch", () => {
-  it("can dispatch non-optimistic actions", () => {
+  it("can dispatch non-optimistic actions", async () => {
     const { result, rerender, mockSocket } = setup({}, () =>
       useServerDispatch()
     );
@@ -277,11 +286,15 @@ describe("useServerDispatch", () => {
     const socketMessageSent = jest.fn();
     mockSocket.__onEmitToServerSubscriberAdd(socketMessageSent);
 
-    result.current(action);
+    const { optimisticActionsDoneOrDiscarded } = result.current(action);
     expect(socketMessageSent).toHaveBeenCalledWith(SOCKET_DISPATCH_ACTION, {
       optimisticUpdateId: null,
       actions: [action],
     });
+
+    expect(await promiseIsStillPending(optimisticActionsDoneOrDiscarded)).toBe(
+      false
+    );
 
     rerender({});
     // The identity of the dispatch function should never change.
@@ -290,28 +303,101 @@ describe("useServerDispatch", () => {
     }
   });
 
-  it("can dispatch optimistic actions", () => {
+  it("dispatches optimistic actions with syncToServerThrottle = 0 immediately", async () => {
     const { result, mockSocket } = setup({}, () => useServerDispatch());
 
     const action = { type: "TEST_ACTION", payload: {} };
     const OPTIMISTIC_KEY = rrid<{ id: OptimisticUpdateID }>();
 
-    const socketMessageSent = jest.fn();
+    let optimisticUpdateId: OptimisticUpdateID | null = null;
+    const socketMessageSent = jest.fn((name, payload) => {
+      expect(name).toBe(SOCKET_DISPATCH_ACTION);
+      expect(payload).toEqual(
+        expect.objectContaining({
+          optimisticUpdateId: expect.any(String),
+          actions: [action],
+        })
+      );
+      optimisticUpdateId = payload.optimisticUpdateId;
+    });
     mockSocket.__onEmitToServerSubscriberAdd(socketMessageSent);
 
-    result.current({
+    const { optimisticActionsDoneOrDiscarded } = result.current({
       actions: [action],
       optimisticKey: OPTIMISTIC_KEY,
       syncToServerThrottle: 0,
     });
-    expect(socketMessageSent).toHaveBeenCalledWith(
-      SOCKET_DISPATCH_ACTION,
-      expect.objectContaining({
-        optimisticUpdateId: expect.any(String),
-        actions: [action],
-      })
+    expect(socketMessageSent).toHaveBeenCalled();
+    expect(await promiseIsStillPending(optimisticActionsDoneOrDiscarded)).toBe(
+      true
+    );
+
+    expect(optimisticUpdateId).not.toBeNull();
+    mockSocket.__receivePatchState({ patch: {}, deletedKeys: [] }, [
+      optimisticUpdateId!,
+    ]);
+
+    expect(await promiseIsStillPending(optimisticActionsDoneOrDiscarded)).toBe(
+      false
     );
   });
+
+  it.each([["commit"], ["discard"]] as const)(
+    "never automatically dispatches optimistic actions with syncToServerThrottle = Infinity",
+    async (type) => {
+      const { result, mockSocket } = setup({}, () => useServerDispatch());
+
+      const action = { type: "TEST_ACTION", payload: {} };
+      const OPTIMISTIC_KEY = rrid<{ id: OptimisticUpdateID }>();
+
+      let optimisticUpdateId: OptimisticUpdateID | null = null;
+      const socketMessageSent = jest.fn((name, payload) => {
+        expect(name).toBe(SOCKET_DISPATCH_ACTION);
+        expect(payload).toEqual(
+          expect.objectContaining({
+            optimisticUpdateId: expect.any(String),
+            actions: [action],
+          })
+        );
+        optimisticUpdateId = payload.optimisticUpdateId;
+      });
+      mockSocket.__onEmitToServerSubscriberAdd(socketMessageSent);
+
+      const {
+        optimisticActionsDoneOrDiscarded,
+        commitPendingOptimisticActionsNow,
+        discardPendingOptimisticActions,
+      } = result.current({
+        actions: [action],
+        optimisticKey: OPTIMISTIC_KEY,
+        syncToServerThrottle: Infinity,
+      });
+
+      jest.runAllTimers();
+
+      expect(socketMessageSent).not.toHaveBeenCalled();
+      expect(
+        await promiseIsStillPending(optimisticActionsDoneOrDiscarded)
+      ).toBe(true);
+
+      if (type === "commit") {
+        commitPendingOptimisticActionsNow();
+        expect(socketMessageSent).toHaveBeenCalled();
+
+        expect(optimisticUpdateId).not.toBeNull();
+        mockSocket.__receivePatchState({ patch: {}, deletedKeys: [] }, [
+          optimisticUpdateId!,
+        ]);
+      } else {
+        discardPendingOptimisticActions();
+        expect(socketMessageSent).not.toHaveBeenCalled();
+      }
+
+      expect(
+        await promiseIsStillPending(optimisticActionsDoneOrDiscarded)
+      ).toBe(false);
+    }
+  );
 });
 
 describe("OptimisticActionAppliers", () => {

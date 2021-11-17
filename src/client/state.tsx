@@ -706,9 +706,9 @@ function isAction(
 }
 
 type DispatchActionResult = {
-  doneOrDiscarded: Promise<void>;
-  discardPendingActions: () => void;
-  commitPendingActionsNow: () => void;
+  optimisticActionsDoneOrDiscarded: Promise<void>;
+  discardPendingOptimisticActions: () => void;
+  commitPendingOptimisticActionsNow: () => void;
 };
 
 /**
@@ -778,9 +778,9 @@ export function useServerDispatch() {
 
       if (allActions.length === 0) {
         return {
-          doneOrDiscarded: Promise.resolve(),
-          discardPendingActions: () => {},
-          commitPendingActionsNow: () => {},
+          optimisticActionsDoneOrDiscarded: Promise.resolve(),
+          discardPendingOptimisticActions: () => {},
+          commitPendingOptimisticActionsNow: () => {},
         };
       }
 
@@ -929,10 +929,10 @@ export function useServerDispatch() {
       }
 
       return {
-        doneOrDiscarded: Promise.all(
+        optimisticActionsDoneOrDiscarded: Promise.all(
           optimisticApplierDoneOrDiscardedPromises
         ).then(() => {}),
-        discardPendingActions: () => {
+        discardPendingOptimisticActions: () => {
           for (const throttledOptimisticKey of throttledOptimisticKeys) {
             const { timeoutId, discardLocalOptimisticActionAppliers } =
               throttledSyncToServerRef.current.get(throttledOptimisticKey)!;
@@ -943,7 +943,7 @@ export function useServerDispatch() {
             discardLocalOptimisticActionAppliers();
           }
         },
-        commitPendingActionsNow: () => {
+        commitPendingOptimisticActionsNow: () => {
           for (const throttledOptimisticKey of throttledOptimisticKeys) {
             const { actions, optimisticUpdateId, timeoutId } =
               throttledSyncToServerRef.current.get(throttledOptimisticKey)!;
