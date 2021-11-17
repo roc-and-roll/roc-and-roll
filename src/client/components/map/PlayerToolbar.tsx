@@ -8,9 +8,9 @@ import { CharacterPreview } from "../characters/CharacterPreview";
 import { Player } from "../Player";
 import { Popover } from "../Popover";
 import { Chat } from "../privateChat/PrivateChats";
-import { RRPlayerToolProps } from "./MapContainer";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 import { RRTooltip } from "../RRTooltip";
+import { RRPlayerToolProps } from "./MapContainer";
 
 export const PlayerToolbar = React.memo<{
   myself: RRPlayerToolProps;
@@ -37,32 +37,13 @@ const ToolbarPlayer = React.memo<{
   const [selected, setSelected] = useState(false);
   const { logout } = useLoginLogout();
 
-  const { ids: chatIds, entities: chats } = useServerState(
-    (state) => state.privateChats
-  );
-  const dispatch = useServerDispatch();
-  const myChats = chatIds
-    .map((id) => chats[id]!)
-    .filter(
-      (chat) =>
-        (chat.idA === myself.id && chat.idB === player.id) ||
-        (chat.idA === player.id && chat.idB === myself.id)
-    );
-
-  useEffect(() => {
-    if (myChats.length < 1) {
-      const action = privateChatAdd(myself.id, player.id);
-      dispatch(action);
-    }
-  }, [dispatch, myChats, myself.id, player.id]);
-
   return (
     <Popover
       content={
         player.id === myself.id ? (
           <Player logout={logout} />
         ) : (
-          myChats[0] !== undefined && <Chat id={myChats[0]!.id} />
+          <ToolbarChat player={player} myself={myself} />
         )
       }
       visible={selected}
@@ -97,3 +78,34 @@ const ToolbarPlayer = React.memo<{
     </Popover>
   );
 });
+
+function ToolbarChat({
+  player,
+  myself,
+}: {
+  player: RRPlayer;
+  myself: RRPlayerToolProps;
+}) {
+  const { ids: chatIds, entities: chats } = useServerState(
+    (state) => state.privateChats
+  );
+  const dispatch = useServerDispatch();
+
+  const myChats = chatIds
+    .map((id) => chats[id]!)
+    .filter(
+      (chat) =>
+        (chat.idA === myself.id && chat.idB === player.id) ||
+        (chat.idA === player.id && chat.idB === myself.id)
+    );
+
+  useEffect(() => {
+    if (myChats.length < 1) {
+      const action = privateChatAdd(myself.id, player.id);
+      dispatch(action);
+    }
+  }, [dispatch, myChats, myself.id, player.id]);
+
+  if (myChats.length < 1) return null;
+  return <Chat id={myChats[0]!.id}></Chat>;
+}
