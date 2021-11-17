@@ -28,13 +28,13 @@ import {
   RRMultipleRoll,
   characterStatNames,
   RRDiceTemplatePartLinkedProficiency,
-  RRDiceTemplatePartLinkedModifier,
   proficiencyValues,
   RRDiceTemplatePartTemplate,
   RRDiceTemplateCategoryID,
   RRDiceTemplatePartID,
   RRPlayerID,
   RRCharacter,
+  RRDiceTemplatePartLinkedModifier,
 } from "../../shared/state";
 import { assertNever, empty2Null, rrid } from "../../shared/util";
 import {
@@ -373,25 +373,19 @@ function DicePicker() {
   const [diceHolder, setDiceHolder] = useState<RRDiceTemplatePart[]>([]);
   const diceParts = [4, 6, 8, 10, 12, 20].map((faces) => makeDicePart(faces));
 
-  function generateProficiencyPart(): RRDiceTemplatePartLinkedProficiency {
-    return {
-      id: rrid<RRDiceTemplatePart>(),
-      type: "linkedProficiency" as const,
-      damage: { type: null },
-      proficiency: 1,
-    };
-  }
-  const proficiencyPart = generateProficiencyPart();
+  const proficiencyPart: RRDiceTemplatePartLinkedProficiency = {
+    id: rrid<RRDiceTemplatePart>(),
+    type: "linkedProficiency" as const,
+    damage: { type: null },
+    proficiency: 1,
+  };
 
-  function generateInitiativePart(): RRDiceTemplatePartLinkedModifier {
-    return {
-      id: rrid<RRDiceTemplatePart>(),
-      type: "linkedModifier" as const,
-      damage: { type: null },
-      name: "initiative",
-    };
-  }
-  const initiativePart = generateInitiativePart();
+  const initiativePart: RRDiceTemplatePartLinkedModifier = {
+    id: rrid<RRDiceTemplatePart>(),
+    type: "linkedModifier" as const,
+    damage: { type: null },
+    name: "initiative",
+  };
 
   return (
     <div className="dice-picker">
