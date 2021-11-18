@@ -102,24 +102,90 @@ export default class extends AbstractMigration {
       ];
     });
 
-    Object.values(
+    const allTemplates = Object.values(
       state.diceTemplates.entities as Record<
         string,
-        { categoryIndex?: number; playerId?: string }
+        {
+          id: string;
+          playerId?: string;
+          categoryIndex?: number;
+          parts: {
+            type: string;
+            templateId: string;
+            template: any;
+          }[];
+        }
       >
-    ).forEach((diceTemplate) => {
-      const player = Object.values(
-        state.players.entities as Record<
-          string,
-          { id: string; diceTemplateCategories: { templates: any[] }[] }
-        >
-      ).find((player: { id: string }) => player.id === diceTemplate.playerId)!;
-      delete diceTemplate.playerId;
-      player.diceTemplateCategories[
-        diceTemplate.categoryIndex!
-      ]!.templates.push(diceTemplate);
-      delete diceTemplate.categoryIndex;
-    });
+    );
+
+    const isNestedTemplateOf = (
+      topTemplate:
+        | {
+            id: string;
+            playerId?: string;
+            categoryIndex?: number;
+            parts: { type: string; templateId: string; template?: any }[];
+          }
+        | undefined,
+      childTemplateId: string
+    ): boolean =>
+      topTemplate?.parts.some(
+        (p) =>
+          p.type === "template" &&
+          (p.templateId === childTemplateId ||
+            isNestedTemplateOf(
+              allTemplates.find((t) => t.id === p.templateId),
+              childTemplateId
+            ))
+      ) ?? false;
+
+    const isNestedTemplate = (templateId: string) => {
+      return allTemplates.some((template) =>
+        isNestedTemplateOf(template, templateId)
+      );
+    };
+
+    const inlineNestedTemplates = (template: {
+      parts: {
+        type: string;
+        template: any;
+        templateId?: string;
+      }[];
+    }) => {
+      for (const part of template.parts) {
+        if (part.type === "template") {
+          part.template = allTemplates.find((t) => t.id === part.templateId);
+          inlineNestedTemplates(part.template);
+          delete part.templateId;
+          delete part.template.playerId;
+          delete part.template.categoryIndex;
+        }
+      }
+    };
+
+    for (const diceTemplate of allTemplates) {
+      if (
+        !isNestedTemplate(diceTemplate.id) &&
+        diceTemplate.categoryIndex !== -1 &&
+        diceTemplate.categoryIndex !== undefined
+      ) {
+        const player = Object.values(
+          state.players.entities as Record<
+            string,
+            { id: string; diceTemplateCategories: { templates: any[] }[] }
+          >
+        ).find(
+          (player: { id: string }) => player.id === diceTemplate.playerId
+        )!;
+        delete diceTemplate.playerId;
+        player.diceTemplateCategories[
+          diceTemplate.categoryIndex
+        ]!.templates.push(diceTemplate);
+        delete diceTemplate.categoryIndex;
+
+        inlineNestedTemplates(diceTemplate);
+      }
+    }
 
     delete state.diceTemplates;
 
