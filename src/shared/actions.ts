@@ -38,6 +38,7 @@ import {
   RRDiceTemplateCategoryID,
   RRDiceTemplateID,
   RRDiceTemplatePart,
+  RRDiceTemplatePartID,
 } from "./state";
 import { rrid, timestamp } from "./util";
 import { RRDiceTemplate, RRDiceTemplateCategory } from "./validation";
@@ -104,6 +105,20 @@ export const playerUpdateDiceTemplatePart = createAction<{
   templateId: RRDiceTemplateID;
   part: Update<RRDiceTemplatePart>;
 }>("player/diceTemplateCategories/template/part/update");
+
+export const playerAddDiceTemplatePart = createAction<{
+  id: RRPlayerID;
+  categoryId: RRDiceTemplateCategoryID;
+  templateId: RRDiceTemplateID;
+  part: RRDiceTemplatePart;
+}>("player/diceTemplateCategories/template/part/add");
+
+export const playerRemoveDiceTemplatePart = createAction<{
+  id: RRPlayerID;
+  categoryId: RRDiceTemplateCategoryID;
+  templateId: RRDiceTemplateID;
+  partId: RRDiceTemplatePartID;
+}>("player/diceTemplateCategories/template/part/remove");
 
 export const playerAddDiceTemplate = createAction<{
   id: RRPlayerID;

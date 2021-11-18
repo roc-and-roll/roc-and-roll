@@ -13,6 +13,7 @@ import {
   playerAddDiceTemplate,
   playerRemoveDiceTemplate,
   playerUpdateDiceTemplate,
+  playerAddDiceTemplatePart,
   playerUpdateDiceTemplatePart,
 } from "../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
@@ -29,7 +30,6 @@ import {
   characterStatNames,
   RRDiceTemplatePartLinkedProficiency,
   proficiencyValues,
-  RRDiceTemplatePartTemplate,
   RRDiceTemplateCategoryID,
   RRDiceTemplatePartID,
   RRPlayerID,
@@ -60,7 +60,7 @@ import {
 import { evaluateDiceTemplatePart, getModifierForTemplate } from "../diceUtils";
 import { iconMap } from "./DicePanel";
 
-type SelectionPair = { id: RRDiceTemplateID; modified: RRMultipleRoll };
+type SelectionPair = { template: RRDiceTemplate; modified: RRMultipleRoll };
 
 export const DiceTemplates = React.memo(function DiceTemplates({
   category,
@@ -93,7 +93,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
     never
   >(
     () => ({
-      accept: ["diceTemplatePart", "diceTemplate"],
+      accept: ["diceTemplatePart"],
       drop: (item, monitor) => {
         if (Array.isArray(item)) {
           item = item.map((part) => {
@@ -120,18 +120,15 @@ export const DiceTemplates = React.memo(function DiceTemplates({
   );
 
   const doRoll = (crit: boolean = false) => {
-    const parts = selectedTemplates.flatMap(
-      ({ id, modified }) =>
-        category.templates
-          .find((t) => t.id === id)
-          ?.parts.flatMap((p) =>
-            evaluateDiceTemplatePart(p, modified, crit, character)
-          ) ?? []
+    const parts = selectedTemplates.flatMap(({ template, modified }) =>
+      template.parts.flatMap((p) =>
+        evaluateDiceTemplatePart(p, modified, crit, character)
+      )
     );
     if (parts.length < 1) return;
 
     const rollTemplates = selectedTemplates.flatMap(
-      ({ id }) => category.templates.find((t) => t.id === id) ?? []
+      ({ template }) => category.templates.find((t) => t === template) ?? []
     );
     const rollName = empty2Null(
       rollTemplates
@@ -159,31 +156,31 @@ export const DiceTemplates = React.memo(function DiceTemplates({
     modified: RRMultipleRoll
   ) => {
     setSelectedTemplates((current): SelectionPair[] => {
-      const currentIds = current.map(({ id }) => id);
-      const countForTemplate = (tid: RRDiceTemplateID) =>
-        selectedTemplates.filter(({ id }) => tid === id).length;
+      const currentTemplates = current.map(({ template }) => template);
+      const countForTemplate = (tid: RRDiceTemplate) =>
+        selectedTemplates.filter(({ template }) => tid === template).length;
 
       const clicked = templates[templates.length - 1]!;
 
       if (event.ctrlKey) {
         // add parents if my count is bigger than their count
-        const myCount = countForTemplate(clicked.id) + 1;
+        const myCount = countForTemplate(clicked) + 1;
         const parents = templates.slice(0, templates.length - 1);
         const parentsToAdd = parents.flatMap<SelectionPair>((p) =>
-          countForTemplate(p.id) >= myCount ? [] : { id: p.id, modified }
+          countForTemplate(p) >= myCount ? [] : { template: p, modified }
         );
-        return [...current, ...parentsToAdd, { id: clicked.id, modified }];
+        return [...current, ...parentsToAdd, { template: clicked, modified }];
       }
       if (event.shiftKey) {
-        return [...current, { id: clicked.id, modified }];
+        return [...current, { template: clicked, modified }];
       }
 
-      return currentIds.includes(clicked.id)
-        ? current.filter(({ id }) => id !== clicked.id)
+      return currentTemplates.includes(clicked)
+        ? current.filter(({ template }) => template !== clicked)
         : [
             ...current,
             ...templates.flatMap<SelectionPair>((t) =>
-              currentIds.includes(t.id) ? [] : { id: t.id, modified }
+              currentTemplates.includes(t) ? [] : { template: t, modified }
             ),
           ];
     });
@@ -445,12 +442,15 @@ function DicePicker() {
         );
       })}
       <hr className="solid"></hr>
-      <DiceHolder diceTemplateParts={diceHolder} />
+      {
+        //<DiceHolder diceTemplateParts={diceHolder} />
+      }
       <Button onClick={() => setDiceHolder([])}>EMPTY</Button>
     </div>
   );
 }
 
+//TODO: this was broken before as well, and needs to be fixed or removed
 function DiceHolder({
   diceTemplateParts,
 }: {
@@ -558,13 +558,13 @@ const DiceTemplate = React.memo(function DiceTemplate({
     never
   >(
     () => ({
-      accept: ["diceTemplatePart", "diceTemplateNested", "diceTemplate"],
+      accept: ["diceTemplatePart", "diceTemplateNested"],
       drop: (item, monitor) => {
         switch (monitor.getItemType()) {
           case "diceTemplateNested": {
             item = {
-              ...(item as RRDiceTemplatePartTemplate),
               id: rrid<RRDiceTemplatePart>(),
+              type: "template",
               template: {
                 id: rrid<RRDiceTemplate>(),
                 name: "",
@@ -572,42 +572,36 @@ const DiceTemplate = React.memo(function DiceTemplate({
                 parts: [],
                 rollType: "attack",
               },
-            };
+            } as RRDiceTemplatePart;
             break;
           }
           case "diceTemplatePart":
             item = {
               ...item,
               id: rrid<RRDiceTemplatePart>(),
-            };
+            } as RRDiceTemplatePart;
             break;
-          case "diceTemplate":
-            item = (item as RRDiceTemplatePart[]).map((part) => {
-              return { ...part, id: rrid<RRDiceTemplatePart>() };
-            });
-            break;
+          //case "diceTemplate":
+          //item = (item as RRDiceTemplatePart[]).map((part) => {
+          //return { ...part, id: rrid<RRDiceTemplatePart>() };
+          //});
+          //break;
           default:
             throw new Error("Unsupported Drop Type!");
         }
 
         dispatch(
-          playerUpdateDiceTemplate({
+          playerAddDiceTemplatePart({
             id: myself.id,
             categoryId,
-            template: {
-              id: template.id,
-              changes: {
-                parts: Array.isArray(item)
-                  ? [...template.parts, ...item] // TODO: Create new nested Template?
-                  : [...template.parts, item],
-              },
-            },
+            templateId: template.id,
+            part: item,
           })
         );
       },
       canDrop: (_item, monitor) => monitor.isOver({ shallow: true }),
     }),
-    [categoryId, dispatch, myself.id, template.id, template.parts]
+    [categoryId, dispatch, myself.id, template.id]
   );
 
   useEffect(() => {
@@ -634,7 +628,7 @@ const DiceTemplate = React.memo(function DiceTemplate({
     : "none";
 
   const selectionCount = selectedTemplateIds.filter(
-    ({ id }) => template.id === id
+    ({ template: t }) => template === t
   ).length;
 
   function sortTemplateParts(a: RRDiceTemplatePart, b: RRDiceTemplatePart) {
