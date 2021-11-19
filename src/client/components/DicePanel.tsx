@@ -363,20 +363,13 @@ function DiceTemplateCategoryEditor({
 
   function updateCategory(
     category: RRDiceTemplateCategory,
-    newIcon?: typeof categoryIcons[number],
-    newName?: string
+    changes: Partial<Pick<RRDiceTemplateCategory, "icon" | "categoryName">>
   ) {
     dispatch({
       actions: [
         playerUpdateDiceTemplateCategory({
           id: myself.id,
-          category: {
-            id: category.id,
-            changes: {
-              icon: newIcon ?? category.icon,
-              categoryName: newName ?? category.categoryName,
-            },
-          },
+          category: { id: category.id, changes },
         }),
       ],
       optimisticKey: "diceTemplateCategories",
@@ -388,7 +381,7 @@ function DiceTemplateCategoryEditor({
     <div onClick={(e) => e.stopPropagation()} style={{ width: "170px" }}>
       <SmartTextInput
         value={category.categoryName}
-        onChange={(name) => updateCategory(category, undefined, name)}
+        onChange={(categoryName) => updateCategory(category, { categoryName })}
         style={{ marginBottom: "0.6rem" }}
       />
       <div>
@@ -408,7 +401,7 @@ function DiceTemplateCategoryEditor({
               }}
               onClick={() => {
                 if (alreadyUsed) return;
-                updateCategory(category, icon);
+                updateCategory(category, { icon });
               }}
               fixedWidth
             />
