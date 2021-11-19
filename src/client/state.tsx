@@ -512,7 +512,7 @@ export function applyStatePatch(
  */
 export function useServerState<T>(
   selector: (state: SyncedState) => T,
-  equalityFn?: (left: T, right: T) => boolean
+  equalityFn?: (current: T, next: T) => boolean
 ): T {
   const setSelectedStateRef = useRef<((state: T) => void) | null>(null);
 
@@ -539,7 +539,7 @@ export function useServerState<T>(
 export function useServerStateRef<T>(
   selector: (state: SyncedState) => T,
   onChange?: (selectedState: T) => void,
-  equalityFn?: (left: T, right: T) => boolean
+  equalityFn: (current: T, next: T) => boolean = Object.is
 ): React.MutableRefObject<T> {
   const { subscribe, unsubscribe, stateRef } = useContext(ServerStateContext);
 
@@ -547,13 +547,12 @@ export function useServerStateRef<T>(
 
   const onChangeRef = useLatest(onChange);
   const selectorRef = useLatest(selector);
+  const equalityFnRef = useLatest(equalityFn);
 
   useEffect(() => {
     const subscriber = (newState: SyncedState) => {
       const newSelectedState = selectorRef.current(newState);
-      if (
-        !(equalityFn ?? Object.is)(newSelectedState, selectedStateRef.current)
-      ) {
+      if (!equalityFnRef.current(selectedStateRef.current, newSelectedState)) {
         selectedStateRef.current = newSelectedState;
         onChangeRef.current?.(newSelectedState);
       }
@@ -561,7 +560,7 @@ export function useServerStateRef<T>(
     subscribe(subscriber);
     return () => unsubscribe(subscriber);
   }, [
-    equalityFn,
+    equalityFnRef,
     onChangeRef,
     selectedStateRef,
     selectorRef,
@@ -571,11 +570,11 @@ export function useServerStateRef<T>(
 
   useEffect(() => {
     const newSelectedState = selector(stateRef.current);
-    if (!Object.is(newSelectedState, selectedStateRef.current)) {
+    if (!equalityFn(newSelectedState, selectedStateRef.current)) {
       selectedStateRef.current = newSelectedState;
       onChangeRef.current?.(newSelectedState);
     }
-  }, [onChangeRef, selectedStateRef, selector, stateRef]);
+  }, [onChangeRef, selectedStateRef, selector, stateRef, equalityFn]);
 
   return selectedStateRef;
 }

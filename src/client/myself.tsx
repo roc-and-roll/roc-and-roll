@@ -61,7 +61,7 @@ export function useMyProps<T extends (keyof RRPlayer)[]>(
 
   return useServerState(
     (state) => state.players.entities[myId]!,
-    (left, right) => fields.every((field) => left[field] === right[field])
+    (current, next) => fields.every((field) => current[field] === next[field])
   );
 }
 
