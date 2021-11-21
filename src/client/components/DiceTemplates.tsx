@@ -243,6 +243,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
                 type: "template",
                 template,
               }}
+              isTopLevel={true}
             >
               <DiceTemplate
                 categoryId={category.id}
@@ -985,6 +986,56 @@ function ProficiencyValueEditor({
   );
 }
 
+function CategoryEditor({
+  categoryId,
+  template,
+}: {
+  categoryId: RRDiceTemplateCategoryID;
+  template: RRDiceTemplate;
+}) {
+  const dispatch = useServerDispatch();
+  const myself = useMyProps("diceTemplateCategories", "id");
+
+  return (
+    <label>
+      Category:
+      {myself.diceTemplateCategories.map((category) => (
+        <label
+          key={category.id}
+          className="radio-label"
+          title={category.categoryName}
+        >
+          <input
+            type="radio"
+            name="icon"
+            value={category.id}
+            checked={categoryId === category.id}
+            onChange={(e) =>
+              dispatch({
+                actions: [
+                  playerRemoveDiceTemplate({
+                    id: myself.id,
+                    categoryId: categoryId,
+                    templateId: template.id,
+                  }),
+                  playerAddDiceTemplate({
+                    id: myself.id,
+                    categoryId: category.id,
+                    template: template,
+                  }),
+                ],
+                optimisticKey: "diceTemplate",
+                syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+              })
+            }
+          />
+          <FontAwesomeIcon icon={iconMap[category.icon]} fixedWidth />
+        </label>
+      ))}
+    </label>
+  );
+}
+
 function TemplateSettingsEditor({
   categoryId,
   template,
@@ -997,42 +1048,6 @@ function TemplateSettingsEditor({
 
   return (
     <div>
-      <label>
-        Category:
-        {myself.diceTemplateCategories.map((category) => (
-          <label
-            key={category.id}
-            className="radio-label"
-            title={category.categoryName}
-          >
-            <input
-              type="radio"
-              name="icon"
-              value={category.id}
-              checked={categoryId === category.id}
-              onChange={(e) =>
-                dispatch({
-                  actions: [
-                    playerRemoveDiceTemplate({
-                      id: myself.id,
-                      categoryId: categoryId,
-                      templateId: template.id,
-                    }),
-                    playerAddDiceTemplate({
-                      id: myself.id,
-                      categoryId: category.id,
-                      template: template,
-                    }),
-                  ],
-                  optimisticKey: "diceTemplate",
-                  syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-                })
-              }
-            />
-            <FontAwesomeIcon icon={iconMap[category.icon]} fixedWidth />
-          </label>
-        ))}
-      </label>
       <label>
         Notes:
         <SmartTextareaInput
@@ -1066,13 +1081,14 @@ const DiceTemplatePartMenuWrapper: React.FC<{
   part: RRDiceTemplatePart;
   template: RRDiceTemplate;
   categoryId: RRDiceTemplateCategoryID;
-}> = ({ part, template, children, categoryId }) => {
+  isTopLevel?: boolean;
+}> = ({ part, template, children, categoryId, isTopLevel }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const dispatch = useServerDispatch();
   const myself = useMyProps("id");
 
   const applyDelete = (part: RRDiceTemplatePart) => {
-    part.type === "template"
+    isTopLevel
       ? dispatch(
           playerRemoveDiceTemplate({
             id: myself.id,
@@ -1125,6 +1141,9 @@ const DiceTemplatePartMenuWrapper: React.FC<{
               template={template}
               categoryId={categoryId}
             />
+          )}
+          {part.type === "template" && isTopLevel && (
+            <CategoryEditor categoryId={categoryId} template={part.template} />
           )}
           {part.type === "template" && (
             <TemplateSettingsEditor

@@ -280,7 +280,9 @@ const isDiceTemplateCategory = t.isObject({
   id: isRRID<RRDiceTemplateCategoryID>(),
   icon: t.isEnum(categoryIcons),
   categoryName: t.isString(),
-  templates: t.isArray(isDiceTemplate),
+  templates: t.applyCascade(t.isArray(isDiceTemplate), [
+    t.hasUniqueItems({ map: (diceTemplate) => diceTemplate.id }),
+  ]),
 });
 export type RRDiceTemplateCategory = t.InferType<typeof isDiceTemplateCategory>;
 

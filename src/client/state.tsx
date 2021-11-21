@@ -570,7 +570,7 @@ export function useServerStateRef<T>(
 
   useEffect(() => {
     const newSelectedState = selector(stateRef.current);
-    if (!equalityFn(newSelectedState, selectedStateRef.current)) {
+    if (!equalityFn(selectedStateRef.current, newSelectedState)) {
       selectedStateRef.current = newSelectedState;
       onChangeRef.current?.(newSelectedState);
     }
