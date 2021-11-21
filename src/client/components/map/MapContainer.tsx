@@ -81,11 +81,15 @@ import { PlayerToolbar } from "./PlayerToolbar";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
-export type ToolButtonState = "select" | "tool" | "measure";
+export type ToolButtonState =
+  | "select"
+  | "tool"
+  | "measure_direct"
+  | "measure_tiles";
 
 export type MapEditState =
   | { tool: "move"; updateColor: RRColor }
-  | { tool: "measure"; snap: MapSnap }
+  | { tool: "measure"; snap: MapSnap; measureType: "direct" | "tiles" }
   | { tool: "reveal"; revealType: "show" | "hide" }
   | { tool: "react"; reactionCode: string }
   | {
@@ -490,7 +494,8 @@ export default function MapContainer() {
       case "react":
         return "tool";
       case "measure":
-        return "measure";
+        if (editState.measureType === "direct") return "measure_direct";
+        return "measure_tiles";
       default:
         assertNever(editState);
     }

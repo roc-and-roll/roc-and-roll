@@ -86,7 +86,17 @@ const MapMeasurePathInner = React.memo<{
   const diagonals = overlappingPairsSum(path, (a, b) =>
     a.x === b.x || a.y === b.y ? 0 : 1
   );
-  const length = path.length - 1 + Math.floor(diagonals / 2);
+
+  const firstPoint = path[0]!;
+  const lastPoint = path[path.length - 1]!;
+  const actualLength = Math.hypot(
+    firstPoint.x - lastPoint.x,
+    firstPoint.y - lastPoint.y
+  );
+  const length =
+    path.length === 2
+      ? Math.floor(actualLength)
+      : path.length - 1 + Math.floor(diagonals / 2);
 
   const FONT_SIZE = 14;
   const PADDING = 5;

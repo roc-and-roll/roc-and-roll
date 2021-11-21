@@ -105,7 +105,8 @@ enum MouseAction {
   SELECTION_AREA,
   MOVE_MAP_OBJECT,
   USE_TOOL,
-  MEASURE,
+  MEASURE_TILES,
+  MEASURE_DIRECT,
 }
 
 export const globalToLocal = (transform: Matrix, p: RRPoint) => {
@@ -401,11 +402,12 @@ const RRMapViewWithRef = React.forwardRef<
             );
             break;
           }
-          case MouseAction.MEASURE: {
+          case MouseAction.MEASURE_TILES: {
             const innerLocal = globalToLocal(transformRef.current, {
               x,
               y,
             });
+
             const pointsInPath = (from: RRPoint, to: RRPoint) => {
               const points: RRPoint[] = [from];
               while (!pointEquals(from, to)) {
@@ -421,6 +423,20 @@ const RRMapViewWithRef = React.forwardRef<
                 measurePath[0]!,
                 pointScale(snapPointToGrid(innerLocal), 1 / GRID_SIZE)
               );
+            });
+            break;
+          }
+          case MouseAction.MEASURE_DIRECT: {
+            const innerLocal = globalToLocal(transformRef.current, {
+              x,
+              y,
+            });
+            onUpdateMeasurePath((measurePath) => {
+              if (measurePath.length === 0) return measurePath;
+              return [
+                measurePath[0]!,
+                pointScale(snapPointToGrid(innerLocal), 1 / GRID_SIZE),
+              ];
             });
             break;
           }
@@ -464,8 +480,10 @@ const RRMapViewWithRef = React.forwardRef<
           : e.button === TOOL_BUTTON
           ? toolButtonState === "select"
             ? MouseAction.SELECTION_AREA
-            : toolButtonState === "measure"
-            ? MouseAction.MEASURE
+            : toolButtonState === "measure_tiles"
+            ? MouseAction.MEASURE_TILES
+            : toolButtonState === "measure_direct"
+            ? MouseAction.MEASURE_DIRECT
             : MouseAction.USE_TOOL
           : MouseAction.NONE;
 
@@ -491,7 +509,10 @@ const RRMapViewWithRef = React.forwardRef<
         ]);
       } else if (newMouseAction === MouseAction.USE_TOOL) {
         toolHandler.onMouseDown(innerLocal);
-      } else if (newMouseAction === MouseAction.MEASURE) {
+      } else if (
+        newMouseAction === MouseAction.MEASURE_DIRECT ||
+        newMouseAction === MouseAction.MEASURE_TILES
+      ) {
         onUpdateMeasurePath([
           pointScale(snapPointToGrid(innerLocal), 1 / GRID_SIZE),
         ]);
@@ -598,7 +619,8 @@ const RRMapViewWithRef = React.forwardRef<
               )
             );
             break;
-          case MouseAction.MEASURE:
+          case MouseAction.MEASURE_DIRECT:
+          case MouseAction.MEASURE_TILES:
             onUpdateMeasurePath([]);
             break;
           case MouseAction.PAN:

@@ -39,6 +39,8 @@ import {
   faBezierCurve,
   faGripLines,
   faCog,
+  faLongArrowAltUp,
+  faLevelUpAlt,
 } from "@fortawesome/free-solid-svg-icons";
 // TODO: Lazy loding the emoji picker does not play nicely with Tippy :/
 // const EmojiPicker = React.lazy(
@@ -172,6 +174,7 @@ export const MapToolbar = React.memo<{
   const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
 
   const [revealType, setRevealType] = useState<"show" | "hide">("show");
+  const [measureType, setMeasureType] = useState<"direct" | "tiles">("tiles");
 
   const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom);
   const dispatch = useServerDispatch();
@@ -212,7 +215,7 @@ export const MapToolbar = React.memo<{
         case "move":
           return { tool, updateColor: drawColor };
         case "measure":
-          return { tool, snap };
+          return { tool, snap, measureType };
         case "reveal":
           return { tool, revealType };
         case "draw":
@@ -236,7 +239,7 @@ export const MapToolbar = React.memo<{
           assertNever(tool);
       }
     });
-  }, [tool, drawColor, drawType, snap, setEditState, revealType, defaultVisibility, reactionCode]);
+  }, [tool, drawColor, drawType, snap, setEditState, revealType, defaultVisibility, reactionCode, measureType]);
 
   const locked = useIndeterminateBoolean({
     mapId,
@@ -370,6 +373,27 @@ export const MapToolbar = React.memo<{
     );
   }
 
+  function buildMeasureButtons() {
+    return (
+      <div className="map-toolbar-submenu">
+        <Button
+          onClick={() => setMeasureType("tiles")}
+          title="measure tiles"
+          className={measureType === "tiles" ? "active" : undefined}
+        >
+          <FontAwesomeIcon icon={faLevelUpAlt} />
+        </Button>
+        <Button
+          onClick={() => setMeasureType("direct")}
+          title="measure direct path"
+          className={measureType === "direct" ? "active" : undefined}
+        >
+          <FontAwesomeIcon icon={faLongArrowAltUp} />
+        </Button>
+      </div>
+    );
+  }
+
   function buildReactButtons() {
     return (
       <div className="map-toolbar-submenu">
@@ -452,6 +476,7 @@ export const MapToolbar = React.memo<{
         </Button>
       </div>
       <div className="map-toolbar-combined">
+        {tool === "measure" && buildMeasureButtons()}
         <Button
           onClick={() => setTool("measure")}
           title="Measure"
