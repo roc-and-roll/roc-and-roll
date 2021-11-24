@@ -55,12 +55,12 @@ export const CharacterSheetEditor = React.memo<{
       </div>
       <div style={{ display: "flex" }}>
         <StatEditor
-          name={"WIS"}
+          name={"INT"}
           character={character}
           isTemplate={isTemplate}
         />
         <StatEditor
-          name={"INT"}
+          name={"WIS"}
           character={character}
           isTemplate={isTemplate}
         />
