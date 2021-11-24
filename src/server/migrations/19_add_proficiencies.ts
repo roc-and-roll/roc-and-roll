@@ -152,6 +152,7 @@ export default class extends AbstractMigration {
         templateId?: string;
       }[];
     }) => {
+      template.parts = template.parts.filter(p => p.type !== 'template' || !!allTemplates.find((t) => t.id === p.templateId));
       for (const part of template.parts) {
         if (part.type === "template") {
           part.template = allTemplates.find((t) => t.id === part.templateId);
