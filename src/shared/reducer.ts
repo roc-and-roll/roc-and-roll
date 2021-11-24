@@ -10,7 +10,6 @@ import {
   ephemeralPlayersReducer,
   ephemeralMusicReducer,
 } from "../shared/features/ephemeral";
-import { diceTemplatesReducer } from "../shared/features/diceTemplate";
 import { assetsReducer } from "../shared/features/assets";
 import { characterTemplatesReducer } from "../shared/features/charactersTemplates";
 import { globalSettingsReducer } from "../shared/features/globalSettings";
@@ -29,7 +28,6 @@ export const reducer = combineReducers({
   maps: mapsReducer,
   privateChats: privateChatsReducer,
   logEntries: logEntriesReducer,
-  diceTemplates: diceTemplatesReducer,
   assets: assetsReducer,
   soundSets: soundSetsReducer,
   ephemeral: combineReducers({

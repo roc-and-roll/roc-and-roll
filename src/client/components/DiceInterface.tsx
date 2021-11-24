@@ -1,17 +1,25 @@
 import React, { useState } from "react";
 import { Button } from "./ui/Button";
-import { diceTemplateAdd, logEntryDiceRollAdd } from "../../shared/actions";
+import {
+  logEntryDiceRollAdd,
+  playerAddDiceTemplate,
+  playerAddDiceTemplateCategory,
+} from "../../shared/actions";
 import { RRDice, RRDiceTemplatePart, RRModifier } from "../../shared/state";
-import { useMyself } from "../myself";
+import { useMyProps } from "../myself";
 import { useServerDispatch } from "../state";
 import { roll } from "../roll";
 import { rrid } from "../../shared/util";
 import { useAlert, usePrompt } from "../dialog-boxes";
+import {
+  RRDiceTemplate,
+  RRDiceTemplateCategory,
+} from "../../shared/validation";
 
 export function DiceInterface() {
   const [diceTypes, setDiceTypes] = useState<string[]>([]);
   const [boni, setBoni] = useState<number | null>(null);
-  const myself = useMyself();
+  const myself = useMyProps("id", "diceTemplateCategories");
   const dispatch = useServerDispatch();
   const alert = useAlert();
   const prompt = usePrompt();
@@ -36,20 +44,14 @@ export function DiceInterface() {
             modified:
               die === "a" ? "advantage" : die === "i" ? "disadvantage" : "none",
             negated,
-            damage: {
-              type: null,
-              modifiers: [],
-            },
+            damage: { type: null },
           });
         } else if (mod) {
           // mod
           const modifier = parseInt(mod) * (negated ? -1 : 1);
           return {
             type: "modifier",
-            damageType: {
-              type: null,
-              modifiers: [],
-            },
+            damageType: { type: null },
             modifier,
           };
         }
@@ -61,32 +63,52 @@ export function DiceInterface() {
       if (addTemplate) {
         const name =
           (await prompt("Name of the new dice template"))?.trim() ?? "";
+        let categoryId;
+        if (myself.diceTemplateCategories.length < 1) {
+          const newTemplateCategoryAction = playerAddDiceTemplateCategory({
+            id: myself.id,
+            category: {
+              categoryName: "Generated Templates",
+              id: rrid<RRDiceTemplateCategory>(),
+              icon: "wrench",
+              templates: [],
+            },
+          });
+
+          dispatch(newTemplateCategoryAction);
+          categoryId = newTemplateCategoryAction.payload.category.id;
+        } else {
+          categoryId = myself.diceTemplateCategories[0]!.id;
+        }
         dispatch(
-          diceTemplateAdd({
-            name,
-            notes: "",
+          playerAddDiceTemplate({
+            id: myself.id,
             // FIXME should allow to select
-            categoryIndex: 0,
-            parts: dice.flatMap<RRDiceTemplatePart>((d) =>
-              d.type === "modifier"
-                ? {
-                    id: rrid<RRDiceTemplatePart>(),
-                    type: "modifier",
-                    number: d.modifier,
-                    damage: d.damageType,
-                  }
-                : {
-                    id: rrid<RRDiceTemplatePart>(),
-                    type: "dice",
-                    count: d.diceResults.length,
-                    faces: d.faces,
-                    modified: d.modified,
-                    negated: d.negated,
-                    damage: d.damageType,
-                  }
-            ),
-            playerId: myself.id,
-            rollType: "attack",
+            categoryId,
+            template: {
+              id: rrid<RRDiceTemplate>(),
+              name,
+              notes: "",
+              parts: dice.flatMap<RRDiceTemplatePart>((d) =>
+                d.type === "modifier"
+                  ? {
+                      id: rrid<RRDiceTemplatePart>(),
+                      type: "modifier",
+                      number: d.modifier,
+                      damage: d.damageType,
+                    }
+                  : {
+                      id: rrid<RRDiceTemplatePart>(),
+                      type: "dice",
+                      count: d.diceResults.length,
+                      faces: d.faces,
+                      modified: d.modified,
+                      negated: d.negated,
+                      damage: d.damageType,
+                    }
+              ),
+              rollType: "attack",
+            },
           })
         );
       } else {

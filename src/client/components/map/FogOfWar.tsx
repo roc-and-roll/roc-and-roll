@@ -1,7 +1,7 @@
 import React, { useDeferredValue, useMemo } from "react";
 import { RRMapRevealedAreas, RRPoint } from "../../../shared/state";
 import Shape from "@doodle3d/clipper-js";
-import { useIsGM } from "../../myself";
+import { useMyProps } from "../../myself";
 import { Matrix } from "transformation-matrix";
 import { toCap } from "../../../shared/point";
 import { getViewportCorners } from "../../util";
@@ -15,9 +15,11 @@ export const FogOfWar = React.memo(function FogOfWar({
   transform: Matrix;
   viewportSize: RRPoint;
 }) {
-  const isGM = useIsGM();
+  const myself = useMyProps("isGM");
   const deferredRevealedAreas = useDeferredValue(upToDateRevealedAreas);
-  const revealedAreas = isGM ? upToDateRevealedAreas : deferredRevealedAreas;
+  const revealedAreas = myself.isGM
+    ? upToDateRevealedAreas
+    : deferredRevealedAreas;
 
   if (revealedAreas === null) {
     return null;
@@ -28,7 +30,7 @@ export const FogOfWar = React.memo(function FogOfWar({
       revealedAreas={revealedAreas}
       transform={transform}
       viewportSize={viewportSize}
-      isGM={isGM}
+      isGM={myself.isGM}
     />
   );
 });

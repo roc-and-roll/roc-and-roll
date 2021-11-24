@@ -1,14 +1,30 @@
-import { faMinusSquare, faPlusSquare } from "@fortawesome/free-solid-svg-icons";
+import {
+  faAdjust,
+  faCircle,
+  faMinusSquare,
+  faPlusCircle,
+  faPlusSquare,
+} from "@fortawesome/free-solid-svg-icons";
+import { faCircle as faEmptyCircle } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React from "react";
+import React, { useState } from "react";
 import {
   characterTemplateUpdate,
   characterUpdate,
 } from "../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
-import { characterAttributeNames, RRCharacter } from "../../../shared/state";
+import {
+  characterAttributeNames,
+  characterStatNames,
+  proficiencyValues,
+  RRCharacter,
+  skillMap,
+  skillNames,
+} from "../../../shared/state";
 import { useServerDispatch } from "../../state";
+import { Button } from "../ui/Button";
 import { SmartIntegerInput } from "../ui/TextInput";
+import { getProficiencyValueString, modifierFromStat } from "../../util";
 
 export const CharacterSheetEditor = React.memo<{
   character: RRCharacter;
@@ -16,6 +32,7 @@ export const CharacterSheetEditor = React.memo<{
 }>(function CharacterSheetEditor({ character, isTemplate }) {
   const dispatch = useServerDispatch();
   const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
+  const [showProficiencyEditor, setShowProficiencyEditor] = useState(false);
 
   return (
     <div>
@@ -87,9 +104,162 @@ export const CharacterSheetEditor = React.memo<{
           />
         ))}
       </div>
+      <Button onClick={() => setShowProficiencyEditor(!showProficiencyEditor)}>
+        Edit Proficiencies
+      </Button>
+      {showProficiencyEditor && (
+        <ProficienyEditor character={character} isTemplate={isTemplate} />
+      )}
     </div>
   );
 });
+
+function ProficienyEditor({
+  character,
+  isTemplate,
+}: {
+  character: RRCharacter;
+  isTemplate: boolean | undefined;
+}) {
+  const dispatch = useServerDispatch();
+  const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
+
+  function getIcon(proficiency: keyof typeof proficiencyValues | undefined) {
+    return proficiency === 0 || proficiency === undefined
+      ? faEmptyCircle
+      : proficiency === 0.5
+      ? faAdjust
+      : proficiency === 1
+      ? faCircle
+      : faPlusCircle;
+  }
+
+  function calculateModifierWithProficiency(
+    baseStat: typeof characterStatNames[number],
+    proficiency: typeof proficiencyValues[number] | undefined
+  ) {
+    return character.stats[baseStat] === null ||
+      character.stats[baseStat] === undefined
+      ? 0
+      : modifierFromStat(character.stats[baseStat]!) +
+          Math.floor(
+            (character.attributes["proficiency"] ?? 0) * (proficiency ?? 0)
+          );
+  }
+
+  function changeProficiencyInSavingThrow(
+    proficiency: typeof proficiencyValues[number] | undefined,
+    stat: typeof characterStatNames[number]
+  ) {
+    const newValue =
+      proficiency === undefined
+        ? 0.5
+        : proficiencyValues[(proficiencyValues.indexOf(proficiency) + 1) % 4]!;
+    dispatch((state) => {
+      const oldSavingThrows = (
+        isTemplate ? state.characterTemplates : state.characters
+      ).entities[character.id]?.savingThrows;
+      if (!oldSavingThrows) {
+        return [];
+      }
+      return {
+        actions: [
+          updateFunc({
+            id: character.id,
+            changes: {
+              savingThrows: {
+                ...oldSavingThrows,
+                [stat]: newValue,
+              },
+            },
+          }),
+        ],
+        optimisticKey: `savingThrows/${String(stat)}`,
+        syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+      };
+    });
+  }
+  function changeProficiencyInSkill(
+    proficiency: typeof proficiencyValues[number] | undefined,
+    skill: typeof skillNames[number]
+  ) {
+    const newValue =
+      proficiencyValues[(proficiencyValues.indexOf(proficiency ?? 0) + 1) % 4]!;
+    dispatch((state) => {
+      const oldSkills = (
+        isTemplate ? state.characterTemplates : state.characters
+      ).entities[character.id]?.skills;
+      if (!oldSkills) {
+        return [];
+      }
+      return {
+        actions: [
+          updateFunc({
+            id: character.id,
+            changes: {
+              skills: {
+                ...oldSkills,
+                [skill]: newValue,
+              },
+            },
+          }),
+        ],
+        optimisticKey: `skills/${String(skill)}`,
+        syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+      };
+    });
+  }
+
+  return (
+    <div>
+      {characterStatNames.map((stat) => {
+        const proficiency: 0 | 0.5 | 1 | 2 | undefined =
+          character.savingThrows[stat];
+        return (
+          <div key={stat} className="proficiencies">
+            <Button
+              className="button"
+              onClick={() => changeProficiencyInSavingThrow(proficiency, stat)}
+              title={getProficiencyValueString(proficiency)}
+            >
+              <FontAwesomeIcon icon={getIcon(proficiency)} />
+            </Button>
+            <p className="stat">{stat}</p>
+            <p>Saving Throw</p>
+            <b className="finalModifier">
+              {calculateModifierWithProficiency(stat, proficiency)}
+            </b>
+          </div>
+        );
+      })}
+      <hr />
+      {skillNames.map((skill) => {
+        const proficiency: typeof proficiencyValues[number] | undefined =
+          character.skills[skill];
+        const stat = skillMap[skill];
+        return (
+          <div key={skill} className="proficiencies">
+            <Button
+              onClick={() => changeProficiencyInSkill(proficiency, skill)}
+              title={getProficiencyValueString(proficiency)}
+              className="button"
+            >
+              <FontAwesomeIcon icon={getIcon(proficiency)} />
+            </Button>
+            <p className="stat">{stat}</p>
+            <p>{skill}</p>
+            <b className="finalModifier">
+              {calculateModifierWithProficiency(stat, proficiency) > 0
+                ? "+"
+                : ""}
+              {calculateModifierWithProficiency(stat, proficiency)}
+            </b>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function StatEditor({
   name,

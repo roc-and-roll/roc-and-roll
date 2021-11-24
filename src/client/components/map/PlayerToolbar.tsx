@@ -10,9 +10,10 @@ import { Popover } from "../Popover";
 import { Chat } from "../privateChat/PrivateChats";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 import { RRTooltip } from "../RRTooltip";
+import { RRPlayerToolProps } from "./MapContainer";
 
 export const PlayerToolbar = React.memo<{
-  myself: RRPlayer;
+  myself: RRPlayerToolProps;
   players: EntityCollection<RRPlayer>;
 }>(function PlayerToolbar({ myself, players }) {
   return (
@@ -26,7 +27,7 @@ export const PlayerToolbar = React.memo<{
 
 const ToolbarPlayer = React.memo<{
   player: RRPlayer;
-  myself: RRPlayer;
+  myself: RRPlayerToolProps;
 }>(function ToolbarPlayer({ player, myself }) {
   const character = useServerState((state) =>
     player.mainCharacterId
@@ -83,7 +84,7 @@ function ToolbarChat({
   myself,
 }: {
   player: RRPlayer;
-  myself: RRPlayer;
+  myself: RRPlayerToolProps;
 }) {
   const { ids: chatIds, entities: chats } = useServerState(
     (state) => state.privateChats

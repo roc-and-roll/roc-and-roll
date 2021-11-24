@@ -1,12 +1,12 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { entries, RRPrivateChatMessageID } from "../../../shared/state";
-import { useMyself } from "../../myself";
 import { useServerState } from "../../state";
 import { Collapsible } from "../Collapsible";
 import { wasSentByMe } from "./privateChatUtil";
 // update acknowledgements if changed
 import newMessageSound from "../../../third-party/freesound.org/545373__stwime__up3.mp3";
 import { useRRSimpleSound } from "../../sound";
+import { useMyProps } from "../../myself";
 
 // Import PrivateChats laziy to reduce the bundle size.
 const PrivateChats = React.lazy(() => import("./PrivateChats"));
@@ -29,7 +29,7 @@ export function PrivateChatsWrapper() {
 }
 
 function useHasUnreadMessages() {
-  const myself = useMyself();
+  const myself = useMyProps("id");
   const chats = useServerState((state) => state.privateChats);
   const [play] = useRRSimpleSound(newMessageSound);
 

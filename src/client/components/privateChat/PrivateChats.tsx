@@ -4,7 +4,6 @@ import {
   RRPrivateChatID,
   RRPrivateChatMessage,
 } from "../../../shared/state";
-import { useMyself } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import "./PrivateChats.scss";
 import {
@@ -22,6 +21,7 @@ import { chatRecipient, wasSentByMe } from "./privateChatUtil";
 import clsx from "clsx";
 import { PrivateChatInput } from "./PrivateChatInput";
 import { Button } from "../ui/Button";
+import { useMyProps } from "../../myself";
 
 export default function PrivateChats() {
   const [selectedChatId, setSelectedChatId] = useState<RRPrivateChatID | null>(
@@ -44,7 +44,7 @@ export function Chat({
 }) {
   const dispatch = useServerDispatch();
   const chat = useServerState((state) => state.privateChats.entities[id]);
-  const myself = useMyself();
+  const myself = useMyProps("id");
   const otherId = chat ? chatRecipient(chat, myself.id) : null;
   const otherPlayer = useServerState((state) =>
     otherId ? state.players.entities[otherId] : null
@@ -140,7 +140,7 @@ function ContactList({
   setSelectedChatId: (id: RRPrivateChatID) => void;
 }) {
   const dispatch = useServerDispatch();
-  const myself = useMyself();
+  const myself = useMyProps("id");
   const { ids: chatIds, entities: chats } = useServerState(
     (state) => state.privateChats
   );

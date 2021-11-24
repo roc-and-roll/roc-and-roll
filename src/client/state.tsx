@@ -621,16 +621,23 @@ export function applyStatePatch(
  *                 piece of state from it that is of interest.
  * @returns The selected piece of server state.
  */
-export function useServerState<T>(selector: (state: SyncedState) => T): T {
+export function useServerState<T>(
+  selector: (state: SyncedState) => T,
+  equalityFn?: (current: T, next: T) => boolean
+): T {
   const setSelectedStateRef = useRef<((state: T) => void) | null>(null);
 
-  const selectedStateRef = useServerStateRef(selector, (selectedState) => {
-    if (!setSelectedStateRef.current) {
-      // Should never happen.
-      throw new Error();
-    }
-    return setSelectedStateRef.current(selectedState);
-  });
+  const selectedStateRef = useServerStateRef(
+    selector,
+    (selectedState) => {
+      if (!setSelectedStateRef.current) {
+        // Should never happen.
+        throw new Error();
+      }
+      return setSelectedStateRef.current(selectedState);
+    },
+    equalityFn
+  );
 
   const [selectedState, setSelectedState] = useState<T>(
     selectedStateRef.current
@@ -642,7 +649,8 @@ export function useServerState<T>(selector: (state: SyncedState) => T): T {
 
 export function useServerStateRef<T>(
   selector: (state: SyncedState) => T,
-  onChange?: (selectedState: T) => void
+  onChange?: (selectedState: T) => void,
+  equalityFn: (current: T, next: T) => boolean = Object.is
 ): React.MutableRefObject<T> {
   const { subscribe, unsubscribe, stateRef } = useContext(ServerStateContext);
 
@@ -650,26 +658,34 @@ export function useServerStateRef<T>(
 
   const onChangeRef = useLatest(onChange);
   const selectorRef = useLatest(selector);
+  const equalityFnRef = useLatest(equalityFn);
 
   useEffect(() => {
     const subscriber = (newState: SyncedState) => {
       const newSelectedState = selectorRef.current(newState);
-      if (!Object.is(newSelectedState, selectedStateRef.current)) {
+      if (!equalityFnRef.current(selectedStateRef.current, newSelectedState)) {
         selectedStateRef.current = newSelectedState;
         onChangeRef.current?.(newSelectedState);
       }
     };
     subscribe(subscriber);
     return () => unsubscribe(subscriber);
-  }, [onChangeRef, selectedStateRef, selectorRef, subscribe, unsubscribe]);
+  }, [
+    equalityFnRef,
+    onChangeRef,
+    selectedStateRef,
+    selectorRef,
+    subscribe,
+    unsubscribe,
+  ]);
 
   useEffect(() => {
     const newSelectedState = selector(stateRef.current);
-    if (!Object.is(newSelectedState, selectedStateRef.current)) {
+    if (!equalityFn(selectedStateRef.current, newSelectedState)) {
       selectedStateRef.current = newSelectedState;
       onChangeRef.current?.(newSelectedState);
     }
-  }, [onChangeRef, selectedStateRef, selector, stateRef]);
+  }, [onChangeRef, selectedStateRef, selector, stateRef, equalityFn]);
 
   return selectedStateRef;
 }

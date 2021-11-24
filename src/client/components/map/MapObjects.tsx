@@ -9,7 +9,7 @@ import {
   RRMapID,
 } from "../../../shared/state";
 import { assertNever } from "../../../shared/util";
-import { useIsGM, useMyId } from "../../myself";
+import { useMyProps } from "../../myself";
 import { canViewObjectOnMap } from "../../permissions";
 import { MapAreas } from "./Map";
 import { ToolButtonState } from "./MapContainer";
@@ -123,9 +123,8 @@ const MapObjectWrapper = React.memo<{
   smartSetTotalHP,
 }) {
   const mapObject = useRecoilValue(mapObjectsFamily(mapObjectId));
-  const myId = useMyId();
-  const isGM = useIsGM();
-  if (!mapObject || !canViewObjectOnMap(mapObject, myId, isGM)) {
+  const myself = useMyProps("id", "isGM");
+  if (!mapObject || !canViewObjectOnMap(mapObject, myself.id, myself.isGM)) {
     return null;
   }
 

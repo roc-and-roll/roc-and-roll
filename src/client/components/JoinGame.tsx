@@ -5,6 +5,8 @@ import { randomColor } from "../../shared/colors";
 import { useServerDispatch, useServerState } from "../state";
 import "./JoinGame.scss";
 import { usePrompt } from "../dialog-boxes";
+import { rrid } from "../../shared/util";
+import { RRDiceTemplateCategory } from "../../shared/validation";
 
 export const JoinGame = React.memo(function JoinGame({
   login,
@@ -29,6 +31,14 @@ export const JoinGame = React.memo(function JoinGame({
       characterIds: [],
       favoritedAssetIds: [],
       mainCharacterId: null,
+      diceTemplateCategories: [
+        {
+          id: rrid<RRDiceTemplateCategory>(),
+          categoryName: "Templates",
+          icon: "book",
+          templates: [],
+        },
+      ],
     });
     dispatch(action);
     login(action.payload.id);
