@@ -153,6 +153,7 @@ export const setupStateSync = (
           isOnline: true,
           mapMouse: null,
           measurePath: [],
+          area: null,
         })
       );
     }

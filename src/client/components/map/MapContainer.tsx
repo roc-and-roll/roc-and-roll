@@ -20,6 +20,8 @@ import {
   RRMapRevealedAreas,
   RRCharacter,
   RRPlayer,
+  areaTypes,
+  RRMapAreaOfEffect,
 } from "../../../shared/state";
 import { useMyProps } from "../../myself";
 import {
@@ -82,7 +84,7 @@ import { PlayerToolbar } from "./PlayerToolbar";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
-export type ToolButtonState = "select" | "tool" | "measure";
+export type ToolButtonState = "select" | "tool" | "measure" | "area";
 
 export type MapEditState =
   | { tool: "move"; updateColor: RRColor }
@@ -101,6 +103,10 @@ export type MapEditState =
       type: "text" | "freehand";
       color: RRColor;
       visibility: RRObjectVisibility;
+    }
+  | {
+      tool: "area";
+      type: typeof areaTypes[number];
     };
 
 const playerToolProps = ["id", "currentMap", "color", "isGM"] as const;
@@ -454,6 +460,31 @@ export default function MapContainer() {
     true
   );
 
+  const updateAreaOfEffect = useCallback(
+    (updater: React.SetStateAction<RRMapAreaOfEffect>) =>
+      dispatch((state) => {
+        const oldArea =
+          state.ephemeral.players.entities[myself.id]?.area ?? null;
+        const newArea =
+          typeof updater === "function" ? updater(oldArea) : updater;
+        return {
+          actions: [
+            ephemeralPlayerUpdate({
+              id: myself.id,
+              changes: {
+                area: newArea,
+              },
+            }),
+          ],
+          optimisticKey: "areaOfEffect",
+          //See comment with measure paths
+          syncToServerThrottle: syncedDebounceMakerRef.current.getTime(),
+        };
+      }),
+
+    [dispatch, myself.id]
+  );
+
   const updateMeasurePath = useCallback(
     (updater: React.SetStateAction<RRPoint[]>) =>
       dispatch((state) => {
@@ -495,6 +526,8 @@ export default function MapContainer() {
         return "tool";
       case "measure":
         return "measure";
+      case "area":
+        return "area";
       default:
         assertNever(editState);
     }
@@ -749,6 +782,7 @@ export default function MapContainer() {
         onMousePositionChanged={sendMousePositionToServer}
         players={players}
         onUpdateMeasurePath={updateMeasurePath}
+        onUpdateAreaOfEffect={updateAreaOfEffect}
         // map objects
         onMoveMapObjects={onMoveMapObjects}
         onStopMoveMapObjects={onStopMoveMapObjects}

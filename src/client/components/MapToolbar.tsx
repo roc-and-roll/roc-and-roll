@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import { mapObjectUpdate, mapSettingsUpdate } from "../../shared/actions";
 import {
+  areaTypes,
   RRMap,
   RRMapID,
   RRMapObject,
@@ -38,6 +39,8 @@ import {
   faBezierCurve,
   faGripLines,
   faCog,
+  faSquare,
+  faShapes,
 } from "@fortawesome/free-solid-svg-icons";
 // TODO: Lazy loding the emoji picker does not play nicely with Tippy :/
 // const EmojiPicker = React.lazy(
@@ -172,6 +175,20 @@ export const MapToolbar = React.memo<{
 
   const [revealType, setRevealType] = useState<"show" | "hide">("show");
 
+  const [areaType, setAreaType] = useState<typeof areaTypes[number]>("circle");
+
+  //TODO find or design icons for cones and lines
+  function iconForAreaType(type: typeof areaTypes[number]) {
+    switch (type) {
+      case "circle":
+        return faCircle;
+      case "square":
+        return faSquare;
+      default:
+        return faDrawPolygon;
+    }
+  }
+
   const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom);
   const dispatch = useServerDispatch();
 
@@ -231,11 +248,13 @@ export const MapToolbar = React.memo<{
               };
         case "react":
           return { tool, reactionCode };
+        case "area":
+          return { tool, type: areaType };
         default:
           assertNever(tool);
       }
     });
-  }, [tool, drawColor, drawType, snap, setEditState, revealType, defaultVisibility, reactionCode]);
+  }, [tool, drawColor, drawType, snap, setEditState, revealType, defaultVisibility, reactionCode, areaType]);
 
   const locked = useIndeterminateBoolean({
     mapId,
@@ -420,6 +439,25 @@ export const MapToolbar = React.memo<{
     );
   }
 
+  function buildAreaButtons() {
+    return (
+      <div className="map-toolbar-submenu">
+        {areaTypes.map((type) => {
+          return (
+            <Button
+              key={type}
+              title={type}
+              className={areaType === type ? "active" : undefined}
+              onClick={() => setAreaType(type)}
+            >
+              <FontAwesomeIcon icon={iconForAreaType(type)} />
+            </Button>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className="map-toolbar">
       <div className="map-toolbar-combined">
@@ -482,6 +520,16 @@ export const MapToolbar = React.memo<{
           className={tool === "react" ? "active" : undefined}
         >
           <FontAwesomeIcon icon={faFlushed} />
+        </Button>
+      </div>
+      <div className="map-toolbar-combined">
+        {tool === "area" && buildAreaButtons()}
+        <Button
+          onClick={() => setTool("area")}
+          title="Effect Areas"
+          className={tool === "area" ? "active" : undefined}
+        >
+          <FontAwesomeIcon icon={faShapes} />
         </Button>
       </div>
       {myself.isGM && (

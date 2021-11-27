@@ -29,6 +29,7 @@ import {
   categoryIcons,
   RRDiceTemplateCategoryID,
   RRDamageType,
+  areaTypes,
 } from "./state";
 import { withDo } from "./util";
 import tinycolor from "tinycolor2";
@@ -621,6 +622,13 @@ export const isSyncedState = t.isObject({
           })
         ),
         measurePath: t.isArray(isRRPoint),
+        area: t.isNullable(
+          t.isObject({
+            startPoint: isRRPoint,
+            endPoint: isRRPoint,
+            areaType: t.isEnum(areaTypes),
+          })
+        ),
       })
     ),
     activeMusic: isEntityCollection(

@@ -29,6 +29,7 @@ import {
   RRPoint,
   RRCharacterID,
   RRMapRevealedAreas,
+  RRMapAreaOfEffect,
 } from "../../../shared/state";
 import { canControlMapObject } from "../../permissions";
 import { RRPlayerToolProps, ToolButtonState } from "./MapContainer";
@@ -64,6 +65,7 @@ import { MouseCursors } from "./MouseCursors";
 import { useLatest } from "../../useLatest";
 import { useGesture } from "react-use-gesture";
 import { RRMessage, useServerMessages } from "../../serverMessages";
+import { AreasOfEffect } from "./AreasOfEffect";
 
 type Rectangle = [number, number, number, number];
 
@@ -106,6 +108,7 @@ enum MouseAction {
   MOVE_MAP_OBJECT,
   USE_TOOL,
   MEASURE,
+  MEASURE_AREA,
 }
 
 export const globalToLocal = (transform: Matrix, p: RRPoint) => {
@@ -177,6 +180,9 @@ const RRMapViewWithRef = React.forwardRef<
     handleKeyDown: (event: KeyboardEvent) => void;
     players: EntityCollection<RRPlayer>;
     onUpdateMeasurePath: React.Dispatch<React.SetStateAction<RRPoint[]>>;
+    onUpdateAreaOfEffect: React.Dispatch<
+      React.SetStateAction<RRMapAreaOfEffect>
+    >;
     onMousePositionChanged: (position: RRPoint) => void;
     toolHandler: MapMouseHandler;
     toolButtonState: ToolButtonState;
@@ -196,6 +202,7 @@ const RRMapViewWithRef = React.forwardRef<
     onStopMoveMapObjects,
     players,
     onUpdateMeasurePath,
+    onUpdateAreaOfEffect,
     onMousePositionChanged,
     toolButtonState,
     toolHandler,
@@ -430,6 +437,24 @@ const RRMapViewWithRef = React.forwardRef<
             );
             break;
           }
+          case MouseAction.MEASURE_AREA: {
+            const innerLocal = globalToLocal(transformRef.current, {
+              x,
+              y,
+            });
+            onUpdateAreaOfEffect((oldArea) => {
+              //there must be a more elegant way to do this
+
+              return {
+                ...oldArea!,
+                endPoint: pointScale(
+                  snapPointToGrid(innerLocal),
+                  1 / GRID_SIZE
+                ),
+              };
+            });
+            break;
+          }
           default:
             assertNever(mouseAction);
         }
@@ -443,6 +468,7 @@ const RRMapViewWithRef = React.forwardRef<
       onMoveMapObjects,
       onUpdateMeasurePath,
       toolHandler,
+      onUpdateAreaOfEffect,
     ]
   );
 
@@ -458,6 +484,7 @@ const RRMapViewWithRef = React.forwardRef<
       (document.activeElement as HTMLElement | null)?.blur();
       e.preventDefault();
       e.stopPropagation();
+      //Enter new mouse action
       const newMouseAction =
         e.button === PANNING_BUTTON
           ? MouseAction.PAN
@@ -466,6 +493,8 @@ const RRMapViewWithRef = React.forwardRef<
             ? MouseAction.SELECTION_AREA
             : toolButtonState === "measure"
             ? MouseAction.MEASURE
+            : toolButtonState === "area"
+            ? MouseAction.MEASURE_AREA
             : MouseAction.USE_TOOL
           : MouseAction.NONE;
 
@@ -495,9 +524,17 @@ const RRMapViewWithRef = React.forwardRef<
         onUpdateMeasurePath([
           pointScale(snapPointToGrid(innerLocal), 1 / GRID_SIZE),
         ]);
+      } else if (newMouseAction === MouseAction.MEASURE_AREA) {
+        onUpdateAreaOfEffect({
+          startPoint: pointScale(snapPointToGrid(innerLocal), 1 / GRID_SIZE),
+          endPoint: pointScale(snapPointToGrid(innerLocal), 1 / GRID_SIZE),
+          //TODO get actual areatype
+          areaType: "circle",
+        });
       }
     },
     [
+      onUpdateAreaOfEffect,
       onUpdateMeasurePath,
       settings.renderMode,
       toolButtonState,
@@ -606,6 +643,9 @@ const RRMapViewWithRef = React.forwardRef<
               setRoughEnabled(true);
             }
             break;
+          case MouseAction.MEASURE_AREA:
+            onUpdateAreaOfEffect(null);
+            break;
           case MouseAction.NONE:
             break;
           default:
@@ -615,12 +655,13 @@ const RRMapViewWithRef = React.forwardRef<
         mouseActionRef.current = MouseAction.NONE;
       },
     [
-      settings.renderMode,
+      onStopMoveMapObjects,
       onUpdateMeasurePath,
-      setSelectedMapObjectIds,
       toolHandler,
       transformRef,
-      onStopMoveMapObjects,
+      settings.renderMode,
+      onUpdateAreaOfEffect,
+      setSelectedMapObjectIds,
     ]
   );
 
@@ -867,6 +908,12 @@ transform,
             viewPortSize={viewPortSize}
             contrastColor={contrastColor}
             players={players}
+          />
+          <AreasOfEffect
+            mapId={mapId}
+            players={players}
+            zoom={transform.a}
+            backgroundColor={backgroundColor}
           />
           {toolOverlay}
         </g>

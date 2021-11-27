@@ -187,6 +187,14 @@ export type RRMap = ECE<SyncedState["maps"]>;
 
 export type RRMapRevealedAreas = RRMap["settings"]["revealedAreas"];
 
+export const areaTypes = [
+  "circle",
+  "square",
+  "cone",
+  "line",
+  "broad line",
+] as const;
+
 export type RRPrivateChatMessage = ECE<
   ECE<SyncedState["privateChats"]>["messages"]
 >;
@@ -475,6 +483,8 @@ export type RRPlaylistEntrySilence = Extract<
 >;
 
 export type EphemeralPlayer = ECE<SyncedState["ephemeral"]["players"]>;
+
+export type RRMapAreaOfEffect = EphemeralPlayer["area"];
 
 export type RRActiveSongOrSoundSet = ValueOf<
   SyncedState["ephemeral"]["activeMusic"]["entities"]
