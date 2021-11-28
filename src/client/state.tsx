@@ -365,7 +365,6 @@ export function ServerStateProvider({
   const propagateStateChange = useCallback((forceSync: boolean) => {
     const update = () => {
       measureTime("STATE_UPDATE_PROPAGATION", () => {
-        console.countReset("STATE_UPDATE_SUBSCRIBER_UPDATE_COUNT");
         const state = (externalStateRef.current = internalStateRef.current);
         const finishedOptimisticUpdateIds =
           finishedOptimisticUpdateIdsRef.current;
