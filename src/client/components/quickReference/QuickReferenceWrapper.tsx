@@ -15,20 +15,27 @@ export default function QuickReferenceWrapper() {
         return;
       }
 
-      if (e.key === "Shift" && !e.repeat) {
+      if (
+        e.key === "Shift" &&
+        !e.repeat &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !e.metaKey
+      ) {
         if (lastShiftPressRef.current !== 0) {
-          if (Date.now() - lastShiftPressRef.current < 200) {
-            startTransition(() => setOpen((open) => !open));
+          if (Date.now() - lastShiftPressRef.current < 400) {
+            startTransition(() => setOpen(true));
           }
         }
         lastShiftPressRef.current = Date.now();
       }
     };
-    window.addEventListener("keyup", listener, {
+    const options = {
       capture: true,
       passive: true,
-    });
-    return () => window.removeEventListener("keyup", listener);
+    };
+    window.addEventListener("keyup", listener, options);
+    return () => window.removeEventListener("keyup", listener, options);
   }, [startTransition]);
 
   return open ? (
