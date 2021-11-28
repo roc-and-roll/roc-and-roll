@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { ReactNode, useMemo } from "react";
 import tinycolor from "tinycolor2";
 import { applyToPoint, inverse, Matrix } from "transformation-matrix";
 import { makePoint } from "../shared/point";
@@ -48,6 +48,13 @@ export function getViewportCorners(transform: Matrix, viewportSize: RRPoint) {
     applyToPoint(inverseTransform, viewportSize),
     applyToPoint(inverseTransform, makePoint(viewportSize.x, 0)),
   ] as const;
+}
+
+export function nl2br(text: string) {
+  const result: ReactNode[] = [];
+  text.split("\n").forEach((line, i) => result.push(line, <br key={i} />));
+
+  return result.slice(0, -1);
 }
 
 export function linkify(text: string) {

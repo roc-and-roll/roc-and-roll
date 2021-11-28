@@ -7,7 +7,7 @@ import { usePrompt } from "../dialog-boxes";
 import { diceResultString, DiceResultWithTypes } from "../roll";
 import { useServerDispatch, useServerState } from "../state";
 import { useScrollToBottom } from "../useScrollToBottom";
-import { formatTimestamp, linkify } from "../util";
+import { formatTimestamp, linkify, nl2br } from "../util";
 import { achievements } from "./achievementList";
 import { Button } from "./ui/Button";
 
@@ -48,7 +48,10 @@ const LogEntry = React.memo<{ logEntry: RRLogEntry }>(function LogEntry({
     case "message":
       content = (
         <>
-          {playerName}: {linkify(logEntry.payload.text)}
+          {playerName}:{" "}
+          {linkify(logEntry.payload.text).map((text) =>
+            typeof text !== "string" ? text : nl2br(text)
+          )}
         </>
       );
       break;
@@ -106,8 +109,8 @@ export const Log = React.memo(function Log() {
       </ul>
       <Button
         onClick={async () => {
-          const text = await prompt("Type your message");
-          if (text === null) {
+          const text = (await prompt("Type your message", "", true))?.trim();
+          if (text === undefined || text.length === 0) {
             return;
           }
           dispatch(

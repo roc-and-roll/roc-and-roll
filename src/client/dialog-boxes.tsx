@@ -5,8 +5,9 @@ import { MakeRRID } from "../shared/state";
 import { rrid } from "../shared/util";
 import { Dialog, DialogActions } from "./components/Dialog";
 import { Button } from "./components/ui/Button";
-import { SmartTextInput } from "./components/ui/TextInput";
+import { SmartTextareaInput, SmartTextInput } from "./components/ui/TextInput";
 import { mapSetImmutably, mapDeleteImmutably } from "./immutable-helpers";
+import { nl2br } from "./util";
 
 type AlertID = MakeRRID<"popup/alert">;
 
@@ -69,6 +70,7 @@ type PromptID = MakeRRID<"popup/prompt">;
 type PromptData = {
   message: ReactNode;
   initialValue: string | undefined;
+  multiline: boolean;
   onClose: (result: string | null) => void;
 };
 
@@ -81,7 +83,7 @@ export function usePrompt() {
   const setPrompts = useSetRecoilState(promptAtom);
 
   return useCallback(
-    (message: ReactNode, initialValue?: string) => {
+    (message: ReactNode, initialValue?: string, multiline: boolean = false) => {
       const id = rrid<{ id: PromptID }>();
       return new Promise<string | null>((resolve) =>
         setPrompts((prompts) =>
@@ -89,6 +91,7 @@ export function usePrompt() {
             message,
             onClose: resolve,
             initialValue,
+            multiline,
           })
         )
       );
@@ -157,11 +160,12 @@ export function DialogBoxes() {
         />
       ))}
       {[...prompts.entries()].map(
-        ([id, { message, onClose, initialValue }]) => (
+        ([id, { message, onClose, initialValue, multiline }]) => (
           <Prompt
             key={id}
             message={message}
             initialValue={initialValue}
+            multiline={multiline}
             onClose={(result) => {
               setPrompts((prompts) => mapDeleteImmutably(prompts, id));
               onClose(result);
@@ -181,13 +185,6 @@ export function DialogBoxes() {
       ))}
     </>
   );
-}
-
-function nl2br(text: string) {
-  const result: ReactNode[] = [];
-  text.split("\n").forEach((line, i) => result.push(line, <br key={i} />));
-
-  return result.slice(0, -1);
 }
 
 function formatMessage(message: ReactNode) {
@@ -217,9 +214,9 @@ function Confirm({ message, onClose }: ConfirmData) {
   );
 }
 
-function Prompt({ message, onClose, initialValue }: PromptData) {
+function Prompt({ message, onClose, initialValue, multiline }: PromptData) {
   const [value, setValue] = useState(initialValue ?? "");
-  const ref = useRef<HTMLInputElement>(null);
+  const ref = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
 
   useEffect(() => {
     ref.current?.focus();
@@ -228,17 +225,25 @@ function Prompt({ message, onClose, initialValue }: PromptData) {
   return (
     <Dialog open onClose={() => onClose(null)}>
       {formatMessage(message)}
-      <SmartTextInput
-        type="text"
-        value={value}
-        onChange={(value) => setValue(value)}
-        onKeyPress={(e) => {
-          if (e.key === "Enter") {
-            onClose(value);
-          }
-        }}
-        ref={ref}
-      />
+      {multiline ? (
+        <SmartTextareaInput
+          value={value}
+          onChange={(value) => setValue(value)}
+          ref={ref}
+        />
+      ) : (
+        <SmartTextInput
+          type="text"
+          value={value}
+          onChange={(value) => setValue(value)}
+          onKeyPress={(e) => {
+            if (e.key === "Enter") {
+              onClose(value);
+            }
+          }}
+          ref={ref}
+        />
+      )}
       <DialogActions>
         <Button onClick={() => onClose(null)}>cancel</Button>
         <Button onClick={() => onClose(value)}>confirm</Button>
