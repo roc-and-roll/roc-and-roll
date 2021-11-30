@@ -16,7 +16,7 @@ import {
 import { generateRandomToken, uploadFiles } from "../../files";
 import { useServerDispatch, useServerState } from "../../state";
 import { useDrag, useDrop } from "react-dnd";
-import { useMyself } from "../../myself";
+import { useMyProps } from "../../myself";
 import { GMArea } from "../GMArea";
 import { Popover } from "../Popover";
 import { Button } from "../ui/Button";
@@ -66,6 +66,8 @@ async function makeNewCharacter(
     visibility: "everyone",
     attributes: {},
     stats: {},
+    savingThrows: {},
+    skills: {},
     name: await randomName(),
     tokenImageAssetId: assetImageAddAction.payload.id,
     tokenBorderColor: randomColor(),
@@ -79,7 +81,7 @@ async function makeNewCharacter(
 }
 
 export const CharacterManager = React.memo(function CharacterManager() {
-  const myself = useMyself();
+  const myself = useMyProps("id", "isGM", "characterIds");
   const characters = useServerState((s) => s.characters);
   const [newCharacterIds, setNewCharacterIds] = useState<RRCharacterID[]>([]);
 
@@ -146,7 +148,7 @@ export const CharacterManager = React.memo(function CharacterManager() {
 
 const TemplateEditor = React.memo(function TemplateEditor() {
   const [newCharacterIds, setNewCharacterIds] = useState<RRCharacterID[]>([]);
-  const myself = useMyself();
+  const myself = useMyProps("id");
 
   const dispatch = useServerDispatch();
 

@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { logEntryDiceRollAdd } from "../../shared/actions";
 import { RRDice, RRModifier } from "../../shared/state";
-import { useMyself } from "../myself";
 import { useServerDispatch } from "../state";
 import { roll } from "../roll";
 import { Button } from "./ui/Button";
 import { useAlert } from "../dialog-boxes";
+import { useMyProps } from "../myself";
 
 export function DiceInput() {
   const [text, setText] = useState("");
-  const myself = useMyself();
+  const myself = useMyProps("id");
   const dispatch = useServerDispatch();
   const alert = useAlert();
 
@@ -29,20 +29,14 @@ export function DiceInput() {
             modified:
               die === "a" ? "advantage" : die === "i" ? "disadvantage" : "none",
             negated,
-            damage: {
-              type: null,
-              modifiers: [],
-            },
+            damage: { type: null },
           });
         } else if (mod) {
           // mod
           const modifier = parseInt(mod) * (negated ? -1 : 1);
           return {
             type: "modifier",
-            damageType: {
-              type: null,
-              modifiers: [],
-            },
+            damageType: { type: null },
             modifier,
           };
         }

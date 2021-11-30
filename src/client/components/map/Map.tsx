@@ -31,7 +31,7 @@ import {
   RRMapRevealedAreas,
 } from "../../../shared/state";
 import { canControlMapObject } from "../../permissions";
-import { ToolButtonState } from "./MapContainer";
+import { RRPlayerToolProps, ToolButtonState } from "./MapContainer";
 import {
   mapObjectIdsAtom,
   mapObjectsFamily,
@@ -166,7 +166,7 @@ export type RRMapViewRef = { transform: Matrix };
 const RRMapViewWithRef = React.forwardRef<
   RRMapViewRef,
   {
-    myself: RRPlayer;
+    myself: RRPlayerToolProps;
     mapId: RRMapID;
     gridEnabled: boolean;
     gridColor: RRColor;

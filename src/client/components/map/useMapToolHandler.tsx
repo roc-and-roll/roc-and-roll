@@ -12,7 +12,6 @@ import {
   RRMapObject,
   RRMapObjectID,
   RRMapRevealedAreas,
-  RRPlayer,
   RRPoint,
 } from "../../../shared/state";
 import { useServerDispatch } from "../../state";
@@ -28,7 +27,7 @@ import {
   pointSubtract,
   toCap,
 } from "../../../shared/point";
-import { MapEditState } from "./MapContainer";
+import { MapEditState, RRPlayerToolProps } from "./MapContainer";
 import Shape from "@doodle3d/clipper-js";
 import tinycolor from "tinycolor2";
 import { RRMessage, useServerMessages } from "../../serverMessages";
@@ -69,7 +68,7 @@ export function thin(points: ReadonlyArray<RRPoint>, squareSize: number) {
 
 // note: this is not actually a component but we're just tricking the linter >:)
 export function useMapToolHandler(
-  myself: RRPlayer,
+  myself: RRPlayerToolProps,
   {
     mapId,
     mapBackgroundColor,

@@ -19,8 +19,9 @@ import {
   RRObjectVisibility,
   RRMapRevealedAreas,
   RRCharacter,
+  RRPlayer,
 } from "../../../shared/state";
-import { useMyself } from "../../myself";
+import { useMyProps } from "../../myself";
 import {
   useServerDispatch,
   useServerState,
@@ -106,8 +107,11 @@ export type MapEditState =
       visibility: RRObjectVisibility;
     };
 
+const playerToolProps = ["id", "currentMap", "color", "isGM"] as const;
+export type RRPlayerToolProps = Pick<RRPlayer, typeof playerToolProps[number]>;
+
 export default function MapContainer() {
-  const myself = useMyself();
+  const myself: RRPlayerToolProps = useMyProps(...playerToolProps);
   const map = useServerState((s) => s.maps.entities[myself.currentMap]!);
   const mapId = map.id;
   const dispatch = useServerDispatch();

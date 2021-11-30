@@ -8,12 +8,11 @@ import {
   RRMapObject,
   RRMapObjectID,
   RRObjectVisibility,
-  RRPlayer,
 } from "../../shared/state";
 import { assertNever } from "../../shared/util";
 import { useServerDispatch } from "../state";
 import useLocalState from "../useLocalState";
-import { MapEditState, MapSnap } from "./map/MapContainer";
+import { MapEditState, MapSnap, RRPlayerToolProps } from "./map/MapContainer";
 import { mapObjectsFamily, selectedMapObjectIdsAtom } from "./map/recoil";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
@@ -147,7 +146,7 @@ function useIndeterminateBoolean<K extends keyof NonTokenMapObject>({
 export const MapToolbar = React.memo<{
   mapId: RRMapID;
   mapSettings: RRMap["settings"];
-  myself: RRPlayer;
+  myself: RRPlayerToolProps;
   setEditState: React.Dispatch<React.SetStateAction<MapEditState>>;
 }>(function MapToolbar({ mapId, mapSettings, myself, setEditState }) {
   const [tool, setTool] = useState<MapEditState["tool"]>("move");

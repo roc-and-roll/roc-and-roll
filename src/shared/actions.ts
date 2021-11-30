@@ -20,7 +20,6 @@ import {
   RRPrivateChatMessage,
   RRCharacter,
   RRCharacterID,
-  RRDiceTemplate,
   RRLogEntryAchievement,
   RRActiveSongOrSoundSet,
   RRAssetImage,
@@ -29,8 +28,6 @@ import {
   RRMapObjectID,
   RRAssetID,
   RRGlobalSettings,
-  RRDiceTemplatePart,
-  RRDiceTemplateID,
   EMPTY_ENTITY_COLLECTION,
   RRPlaylist,
   RRPlaylistEntryID,
@@ -38,8 +35,13 @@ import {
   RRPlaylistID,
   RRPlaylistEntry,
   RRAsset,
+  RRDiceTemplateCategoryID,
+  RRDiceTemplateID,
+  RRDiceTemplatePart,
+  RRDiceTemplatePartID,
 } from "./state";
 import { rrid, timestamp } from "./util";
+import { RRDiceTemplate, RRDiceTemplateCategory } from "./validation";
 
 type Update<T extends { id: RRID }> = OriginalUpdate<T, T["id"]>;
 
@@ -66,17 +68,71 @@ export const playerAdd = createAction(
 export const playerUpdate = createAction<Update<RRPlayer>>("player/update");
 
 export const playerUpdateAddCharacterId = createAction<{
-  id: RRPlayer["id"];
+  id: RRPlayerID;
   characterId: RRCharacterID;
 }>("player/update/characterid");
 
+export const playerAddDiceTemplateCategory = createAction<{
+  id: RRPlayerID;
+  category: RRDiceTemplateCategory;
+}>("player/diceTemplateCategories/add");
+
+export const playerUpdateDiceTemplateCategory = createAction<{
+  id: RRPlayerID;
+  category: Update<RRDiceTemplateCategory>;
+}>("player/diceTemplateCategories/update");
+
+export const playerDeleteDiceTemplateCategory = createAction<{
+  id: RRPlayerID;
+  categoryId: RRDiceTemplateCategoryID;
+}>("player/diceTemplateCategories/delete");
+
+export const playerRemoveDiceTemplate = createAction<{
+  id: RRPlayerID;
+  categoryId: RRDiceTemplateCategoryID;
+  templateId: RRDiceTemplateID;
+}>("player/diceTemplateCategories/template/remove");
+
+export const playerUpdateDiceTemplate = createAction<{
+  id: RRPlayerID;
+  categoryId: RRDiceTemplateCategoryID;
+  template: Update<RRDiceTemplate>;
+}>("player/diceTemplateCategories/template/update");
+
+export const playerUpdateDiceTemplatePart = createAction<{
+  id: RRPlayerID;
+  categoryId: RRDiceTemplateCategoryID;
+  templateId: RRDiceTemplateID;
+  part: Update<RRDiceTemplatePart>;
+}>("player/diceTemplateCategories/template/part/update");
+
+export const playerAddDiceTemplatePart = createAction<{
+  id: RRPlayerID;
+  categoryId: RRDiceTemplateCategoryID;
+  templateId: RRDiceTemplateID;
+  part: RRDiceTemplatePart;
+}>("player/diceTemplateCategories/template/part/add");
+
+export const playerRemoveDiceTemplatePart = createAction<{
+  id: RRPlayerID;
+  categoryId: RRDiceTemplateCategoryID;
+  templateId: RRDiceTemplateID;
+  partId: RRDiceTemplatePartID;
+}>("player/diceTemplateCategories/template/part/remove");
+
+export const playerAddDiceTemplate = createAction<{
+  id: RRPlayerID;
+  categoryId: RRDiceTemplateCategoryID;
+  template: RRDiceTemplate;
+}>("player/diceTemplateCategories/template/add");
+
 export const playerUpdateAddFavoritedAssetId = createAction<{
-  id: RRPlayer["id"];
+  id: RRPlayerID;
   assetId: RRAssetID;
 }>("player/update/assetid/add");
 
 export const playerUpdateRemoveFavoritedAssetId = createAction<{
-  id: RRPlayer["id"];
+  id: RRPlayerID;
   assetId: RRAssetID;
 }>("player/update/assetid/remove");
 
@@ -405,34 +461,6 @@ export const ephemeralMusicUpdate = createAction<
 export const ephemeralMusicRemove = createAction<RRActiveSongOrSoundSet["id"]>(
   "ephemeral/music/remove"
 );
-
-////////////////////////////////////////////////////////////////////////////////
-// Dice template state
-////////////////////////////////////////////////////////////////////////////////
-
-export const diceTemplateAdd = createAction(
-  "diceTemplate/add",
-  (diceTemplate: Omit<RRDiceTemplate, "id">): { payload: RRDiceTemplate } => ({
-    payload: { id: rrid<RRDiceTemplate>(), ...diceTemplate },
-  })
-);
-
-export const diceTemplateUpdate = createAction<Update<RRDiceTemplate>>(
-  "diceTemplate/update"
-);
-
-export const diceTemplatePartUpdate = createAction<
-  Update<RRDiceTemplatePart> & { templateId: RRDiceTemplateID }
->("diceTemplate/part/update");
-
-export const diceTemplateRemove = createAction<RRDiceTemplate["id"]>(
-  "diceTemplate/remove"
-);
-
-export const diceTemplatePartRemove = createAction<{
-  id: RRDiceTemplatePart["id"];
-  templateId: RRDiceTemplateID;
-}>("diceTemplate/part/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
 // Asset state

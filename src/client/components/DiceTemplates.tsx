@@ -1,45 +1,54 @@
-import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import {
+  faEdit,
+  faMinusCircle,
+  faPlusCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import ReactDOM from "react-dom";
 import {
-  diceTemplateAdd,
-  diceTemplatePartRemove,
-  diceTemplatePartUpdate,
-  diceTemplateRemove,
-  diceTemplateUpdate,
   logEntryDiceRollAdd,
+  playerAddDiceTemplate,
+  playerRemoveDiceTemplate,
+  playerUpdateDiceTemplate,
+  playerAddDiceTemplatePart,
+  playerUpdateDiceTemplatePart,
 } from "../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import {
   colorForDamageType,
   damageTypes,
-  entries,
-  characterAttributeNames,
   multipleRollValues,
-  RRCharacter,
-  RRDice,
-  RRDiceTemplate,
   RRDiceTemplateID,
   RRDiceTemplatePart,
   RRDiceTemplatePartDice,
   RRDiceTemplatePartModifier,
   RRDiceTemplatePartWithDamage,
-  RRModifier,
   RRMultipleRoll,
-  SyncedStateAction,
   characterStatNames,
+  RRDiceTemplatePartLinkedProficiency,
+  proficiencyValues,
+  RRDiceTemplateCategoryID,
+  RRDiceTemplatePartID,
+  RRPlayerID,
+  RRCharacter,
+  RRDiceTemplatePartLinkedModifier,
 } from "../../shared/state";
-import { assertNever, clamp, empty2Null, rrid } from "../../shared/util";
-import { useMyself } from "../myself";
-import { roll } from "../roll";
+import { assertNever, empty2Null, rrid } from "../../shared/util";
+import {
+  RRDiceTemplate,
+  RRDiceTemplateCategory,
+} from "../../shared/validation";
+import { useMyProps } from "../myself";
 import { useRRSettings } from "../settings";
-import { useServerDispatch, useServerState, useServerStateRef } from "../state";
-import useLocalState from "../useLocalState";
-import { contrastColor } from "../util";
-import { diceCategories } from "./DicePanel";
+import { useServerDispatch, useServerState } from "../state";
+import {
+  contrastColor,
+  getProficiencyValueString,
+  modifierFromStat,
+} from "../util";
 import { Popover } from "./Popover";
 import { Button } from "./ui/Button";
 import { Select } from "./ui/Select";
@@ -48,44 +57,22 @@ import {
   SmartTextareaInput,
   SmartTextInput,
 } from "./ui/TextInput";
+import { evaluateDiceTemplatePart, getModifierForTemplate } from "../diceUtils";
+import { iconMap } from "./DicePanel";
 
-type SelectionPair = { id: RRDiceTemplateID; modified: RRMultipleRoll };
+type SelectionPair = { template: RRDiceTemplate; modified: RRMultipleRoll };
 
 export const DiceTemplates = React.memo(function DiceTemplates({
-  categoryIndex,
+  category,
 }: {
-  categoryIndex: number;
+  category: RRDiceTemplateCategory;
 }) {
   const [templatesEditable, setTemplatesEditable] = useState(false);
-  const myself = useMyself();
-
-  const allTemplates = entries(
-    useServerState((state) => state.diceTemplates)
-  ).filter((t) => t.playerId === myself.id);
-
-  const isNestedTemplateOf = (
-    topTemplate: RRDiceTemplate | undefined,
-    childTemplateId: RRDiceTemplateID
-  ): boolean =>
-    topTemplate?.parts.some(
-      (p) =>
-        p.type === "template" &&
-        (p.templateId === childTemplateId ||
-          isNestedTemplateOf(
-            allTemplates.find((t) => t.id === p.templateId),
-            childTemplateId
-          ))
-    ) ?? false;
-
-  const allTemplatesInCategory = allTemplates.filter(
-    (t) => t.categoryIndex === categoryIndex
-  );
-
-  // Get all top-level templates in this category (= all templates that are not
-  // nested as part of another template)
-  const allTopLevelTemplatesInCategory = allTemplatesInCategory.filter(
-    (templateCandidate) =>
-      !allTemplates.some((t) => isNestedTemplateOf(t, templateCandidate.id))
+  const myself = useMyProps(
+    "id",
+    "characterIds",
+    "diceTemplateCategories",
+    "mainCharacterId"
   );
 
   const dispatch = useServerDispatch();
@@ -94,120 +81,57 @@ export const DiceTemplates = React.memo(function DiceTemplates({
     []
   );
 
+  const character: RRCharacter | null = useServerState((state) =>
+    myself.mainCharacterId
+      ? state.characters.entities[myself.mainCharacterId] ?? null
+      : null
+  );
+
   const [, dropRef] = useDrop<
     RRDiceTemplatePart | RRDiceTemplatePart[],
     void,
     never
   >(
     () => ({
-      accept: ["diceTemplatePart", "diceTemplate"],
+      accept: ["diceTemplatePart"],
       drop: (item, monitor) => {
         if (Array.isArray(item)) {
           item = item.map((part) => {
             return { ...part, id: rrid<RRDiceTemplatePart>() };
           });
         }
-        const action = diceTemplateAdd({
-          categoryIndex,
-          playerId: myself.id,
-          name: "",
-          notes: "",
-          rollType: "attack",
-          parts: Array.isArray(item) ? item : [item],
+        const action = playerAddDiceTemplate({
+          categoryId: category.id,
+          id: myself.id,
+          template: {
+            id: rrid<RRDiceTemplate>(),
+            name: "",
+            notes: "",
+            rollType: "attack",
+            parts: Array.isArray(item) ? item : [item],
+          },
         });
-        newIds.current.push(action.payload.id);
+        newIds.current.push(action.payload.template.id);
         dispatch(action);
       },
       canDrop: (_item, monitor) => monitor.isOver({ shallow: true }),
     }),
-    [categoryIndex, dispatch, myself.id]
+    [category, dispatch, myself.id]
   );
 
-  function evaluateDiceTemplatePart(
-    part: RRDiceTemplatePart,
-    modified: RRMultipleRoll,
-    crit: boolean = false
-  ): Array<RRDice | RRModifier> {
-    switch (part.type) {
-      case "dice": {
-        const res = [
-          roll({
-            ...part,
-            // click on none, is advantage --> none
-            // click on disadvatage, is none --> disadvantage
-            // click on none, is none --> none
-            modified: part.faces !== 20 ? "none" : modified,
-          }),
-        ];
-        if (crit) {
-          res.push(
-            roll({
-              ...part,
-              modified: part.faces !== 20 ? "none" : modified,
-            })
-          );
-        }
-        return res;
-      }
-      case "linkedModifier":
-        return [
-          {
-            type: "modifier",
-            modifier: selectedCharacter?.attributes[part.name] ?? 0,
-            damageType: part.damage,
-          },
-        ];
-      case "linkedStat":
-        return [
-          {
-            type: "modifier",
-            modifier: !selectedCharacter?.stats[part.name]
-              ? 0
-              : Math.floor((selectedCharacter.stats[part.name]! - 10) / 2),
-            damageType: part.damage,
-          },
-        ];
-      case "modifier":
-        return [
-          {
-            type: "modifier",
-            modifier: part.number,
-            damageType: part.damage,
-          },
-        ];
-      case "template": {
-        // Do not evaluate nested templates, since they are evaluated separately
-        // if they are selected.
-        //
-        // return (
-        //   allTemplates
-        //     .find((t) => t.id === part.templateId)
-        //     ?.parts.flatMap((part) =>
-        //       evaluateDiceTemplatePart(part, modified, crit)
-        //     ) ?? []
-        // );
-        return [];
-      }
-      default:
-        assertNever(part);
-    }
-  }
-
   const doRoll = (crit: boolean = false) => {
-    const parts = selectedTemplates.flatMap(
-      ({ id, modified }) =>
-        allTemplates
-          .find((t) => t.id === id)
-          ?.parts.flatMap((p) => evaluateDiceTemplatePart(p, modified, crit)) ??
-        []
+    const parts = selectedTemplates.flatMap(({ template, modified }) =>
+      template.parts.flatMap((p) =>
+        evaluateDiceTemplatePart(p, modified, crit, character)
+      )
     );
     if (parts.length < 1) return;
 
-    const templates = selectedTemplates.flatMap(
-      ({ id }) => allTemplates.find((t) => t.id === id) ?? []
+    const rollTemplates = selectedTemplates.flatMap(
+      ({ template }) => category.templates.find((t) => t === template) ?? []
     );
     const rollName = empty2Null(
-      templates
+      rollTemplates
         .map((template) => template.name)
         .join(" ")
         .trim()
@@ -232,45 +156,35 @@ export const DiceTemplates = React.memo(function DiceTemplates({
     modified: RRMultipleRoll
   ) => {
     setSelectedTemplates((current): SelectionPair[] => {
-      const currentIds = current.map(({ id }) => id);
-      const countForTemplate = (tid: RRDiceTemplateID) =>
-        selectedTemplates.filter(({ id }) => tid === id).length;
+      const currentTemplates = current.map(({ template }) => template);
+      const countForTemplate = (tid: RRDiceTemplate) =>
+        selectedTemplates.filter(({ template }) => tid === template).length;
 
       const clicked = templates[templates.length - 1]!;
 
       if (event.ctrlKey) {
         // add parents if my count is bigger than their count
-        const myCount = countForTemplate(clicked.id) + 1;
+        const myCount = countForTemplate(clicked) + 1;
         const parents = templates.slice(0, templates.length - 1);
         const parentsToAdd = parents.flatMap<SelectionPair>((p) =>
-          countForTemplate(p.id) >= myCount ? [] : { id: p.id, modified }
+          countForTemplate(p) >= myCount ? [] : { template: p, modified }
         );
-        return [...current, ...parentsToAdd, { id: clicked.id, modified }];
+        return [...current, ...parentsToAdd, { template: clicked, modified }];
       }
       if (event.shiftKey) {
-        return [...current, { id: clicked.id, modified }];
+        return [...current, { template: clicked, modified }];
       }
 
-      return currentIds.includes(clicked.id)
-        ? current.filter(({ id }) => id !== clicked.id)
+      return currentTemplates.includes(clicked)
+        ? current.filter(({ template }) => template !== clicked)
         : [
             ...current,
             ...templates.flatMap<SelectionPair>((t) =>
-              currentIds.includes(t.id) ? [] : { id: t.id, modified }
+              currentTemplates.includes(t) ? [] : { template: t, modified }
             ),
           ];
     });
   };
-
-  const characters = entries(
-    useServerState((state) => state.characters)
-  ).filter((c) => myself.characterIds.includes(c.id));
-  const [selectedCharacterId, setSelectedCharacterId, _] = useLocalState(
-    "dice-templates-selected-character-id",
-    characters[0]?.id ?? null
-  );
-  const selectedCharacter =
-    characters.find((c) => c.id === selectedCharacterId) ?? null;
 
   return (
     <div
@@ -309,17 +223,6 @@ export const DiceTemplates = React.memo(function DiceTemplates({
         )}
       <div style={{ width: "100%" }}>
         <div style={{ display: "flex" }}>
-          <Select
-            value={selectedCharacterId ?? ""}
-            options={[
-              { label: "", value: "" },
-              ...characters.map((c) => ({ label: c.name, value: c.id })),
-            ]}
-            onChange={(v) => {
-              setSelectedCharacterId(empty2Null(v));
-            }}
-            style={{ margin: "0.15rem" }}
-          ></Select>
           <Button
             style={{ width: "28px" }}
             onClick={() => setTemplatesEditable((b) => !b)}
@@ -330,23 +233,25 @@ export const DiceTemplates = React.memo(function DiceTemplates({
         {templatesEditable && <DicePicker />}
 
         <div className="dice-templates-container" ref={dropRef}>
-          {allTopLevelTemplatesInCategory.map((t) => (
+          {category.templates.map((template) => (
             <DiceTemplatePartMenuWrapper
-              key={t.id}
-              template={t}
+              categoryId={category.id}
+              key={template.id}
+              template={template}
               part={{
                 id: rrid<RRDiceTemplatePart>(),
                 type: "template",
-                templateId: t.id,
+                template,
               }}
+              isTopLevel={true}
             >
               <DiceTemplate
+                categoryId={category.id}
                 onRoll={(templates, modified, event) =>
                   clickedTemplates(templates, event, modified)
                 }
                 newIds={newIds}
-                templateId={t.id}
-                selectedCharacter={selectedCharacter}
+                template={template}
                 selectedTemplateIds={selectedTemplates}
                 editable={templatesEditable}
                 isChildTemplate={false}
@@ -359,11 +264,104 @@ export const DiceTemplates = React.memo(function DiceTemplates({
   );
 });
 
+export const GeneratedDiceTemplates = React.memo(
+  function GeneratedDiceTemplates({
+    templates,
+  }: {
+    templates: RRDiceTemplate[];
+  }) {
+    return (
+      <div className="generated-dice-templates-container">
+        {templates.map((template) => {
+          return (
+            <GeneratedDiceTemplate key={template.id} template={template} />
+          );
+        })}
+      </div>
+    );
+  }
+);
+
+function GeneratedDiceTemplate({ template }: { template: RRDiceTemplate }) {
+  const myself = useMyProps("id", "mainCharacterId");
+  const dispatch = useServerDispatch();
+  const [isHovered, setIsHovered] = useState(false);
+  const character: RRCharacter | null = useServerState((state) =>
+    myself.mainCharacterId
+      ? state.characters.entities[myself.mainCharacterId] ?? null
+      : null
+  );
+
+  const doRoll = (template: RRDiceTemplate, modified: RRMultipleRoll) => {
+    const parts = template.parts.flatMap((p) =>
+      evaluateDiceTemplatePart(p, modified, false, character)
+    );
+    if (parts.length < 1) return;
+
+    dispatch(
+      logEntryDiceRollAdd({
+        silent: false,
+        playerId: myself.id,
+        payload: {
+          rollType: "attack", // TODO
+          rollName: template.name,
+          dice: parts,
+        },
+      })
+    );
+  };
+  function handleMoueLeave() {
+    setIsHovered(false);
+  }
+  function handleMouseEnter() {
+    setIsHovered(true);
+  }
+
+  let modifierString = "";
+  if (getModifierForTemplate(template, character) > 0) modifierString += "+";
+  modifierString += getModifierForTemplate(template, character);
+
+  return (
+    <div
+      onClick={() => doRoll(template, "none")}
+      title="Click to Roll"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMoueLeave}
+      className={clsx("generated-dice-templates", isHovered ? "hovered" : "")}
+    >
+      <p className="template-name">{template.name}</p>
+      <p className="modifier-value">{modifierString}</p>
+      {isHovered && (
+        <div
+          className="modifier-button disadvantage"
+          onClick={(event) => {
+            event.stopPropagation();
+            doRoll(template, "disadvantage");
+          }}
+        >
+          <FontAwesomeIcon icon={faMinusCircle} />
+        </div>
+      )}
+      {isHovered && (
+        <div
+          className="modifier-button advantage"
+          onClick={(event) => {
+            event.stopPropagation();
+            doRoll(template, "advantage");
+          }}
+        >
+          <FontAwesomeIcon icon={faPlusCircle} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DicePicker() {
   const makeDicePart = (faces: number) =>
     ({
       id: rrid<RRDiceTemplatePart>(),
-      damage: { type: null, modifiers: [] },
+      damage: { type: null },
       type: "dice",
       faces,
       count: 1,
@@ -372,6 +370,20 @@ function DicePicker() {
     } as const);
   const [diceHolder, setDiceHolder] = useState<RRDiceTemplatePart[]>([]);
   const diceParts = [4, 6, 8, 10, 12, 20].map((faces) => makeDicePart(faces));
+
+  const proficiencyPart: RRDiceTemplatePartLinkedProficiency = {
+    id: rrid<RRDiceTemplatePart>(),
+    type: "linkedProficiency" as const,
+    damage: { type: null },
+    proficiency: 1,
+  };
+
+  const initiativePart: RRDiceTemplatePartLinkedModifier = {
+    id: rrid<RRDiceTemplatePart>(),
+    type: "linkedModifier" as const,
+    damage: { type: null },
+    name: "initiative",
+  };
 
   return (
     <div className="dice-picker">
@@ -391,7 +403,7 @@ function DicePicker() {
           const part = {
             id: rrid<RRDiceTemplatePart>(),
             type: "modifier" as const,
-            damage: { type: null, modifiers: [] },
+            damage: { type: null },
             number: i - 5,
           };
           return (
@@ -407,26 +419,19 @@ function DicePicker() {
       <hr className="solid"></hr>
       <PickerDiceTemplateNested />
       <hr className="solid"></hr>
-      {characterAttributeNames.map((name) => {
-        const part = {
-          id: rrid<RRDiceTemplatePart>(),
-          type: "linkedModifier" as const,
-          damage: { type: null, modifiers: [] },
-          name,
-        };
-        return (
-          <PickerDiceTemplatePart
-            key={name}
-            part={part}
-            onClick={() => setDiceHolder([...diceHolder, part])}
-          />
-        );
-      })}
+      <PickerDiceTemplatePart
+        part={initiativePart}
+        onClick={() => setDiceHolder([...diceHolder, initiativePart])}
+      />
+      <PickerDiceTemplatePart
+        part={proficiencyPart}
+        onClick={() => setDiceHolder([...diceHolder, proficiencyPart])}
+      />
       {characterStatNames.map((name) => {
         const part = {
           id: rrid<RRDiceTemplatePart>(),
           type: "linkedStat" as const,
-          damage: { type: null, modifiers: [] },
+          damage: { type: null },
           name,
         };
         return (
@@ -438,12 +443,15 @@ function DicePicker() {
         );
       })}
       <hr className="solid"></hr>
-      <DiceHolder diceTemplateParts={diceHolder} />
+      {
+        //<DiceHolder diceTemplateParts={diceHolder} />
+      }
       <Button onClick={() => setDiceHolder([])}>EMPTY</Button>
     </div>
   );
 }
 
+//TODO: this was broken before as well, and needs to be fixed or removed
 function DiceHolder({
   diceTemplateParts,
 }: {
@@ -502,11 +510,11 @@ function PickerDiceTemplatePart({
 
   return (
     <DiceTemplatePart
+      categoryId={"" as RRDiceTemplateCategoryID}
       onRoll={() => {}}
       selectedTemplateIds={[]}
       ref={dragRef}
       onClick={onClick}
-      selectedCharacter={null}
       newIds={newIds}
       part={part}
       editable={false}
@@ -515,59 +523,17 @@ function PickerDiceTemplatePart({
 }
 
 const DiceTemplate = React.memo(function DiceTemplate({
-  templateId,
-  newIds,
-  onRoll,
-  selectedCharacter,
-  selectedTemplateIds,
-  editable,
-  isChildTemplate,
-}: {
-  templateId: RRDiceTemplateID;
-  newIds: React.MutableRefObject<RRDiceTemplateID[]>;
-  selectedCharacter: RRCharacter | null;
-  onRoll: (
-    template: RRDiceTemplate[],
-    modified: RRMultipleRoll,
-    event: React.MouseEvent
-  ) => void;
-  selectedTemplateIds: SelectionPair[];
-  editable: boolean;
-  isChildTemplate: boolean;
-}) {
-  const template = useServerState(
-    (state) => state.diceTemplates.entities[templateId]
-  );
-
-  if (!template) {
-    return null;
-  }
-
-  return (
-    <DiceTemplateInner
-      onRoll={onRoll}
-      template={template}
-      newIds={newIds}
-      selectedTemplateIds={selectedTemplateIds}
-      selectedCharacter={selectedCharacter}
-      editable={editable}
-      isChildTemplate={isChildTemplate}
-    />
-  );
-});
-
-function DiceTemplateInner({
   template,
+  categoryId,
   newIds,
   onRoll,
   selectedTemplateIds,
-  selectedCharacter,
   editable,
   isChildTemplate,
 }: {
   template: RRDiceTemplate;
+  categoryId: RRDiceTemplateCategoryID;
   newIds: React.MutableRefObject<RRDiceTemplateID[]>;
-  selectedCharacter: RRCharacter | null;
   onRoll: (
     templates: RRDiceTemplate[],
     modified: RRMultipleRoll,
@@ -577,7 +543,7 @@ function DiceTemplateInner({
   editable: boolean;
   isChildTemplate: boolean;
 }) {
-  const myself = useMyself();
+  const myself = useMyProps("id");
   const dispatch = useServerDispatch();
 
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -593,56 +559,50 @@ function DiceTemplateInner({
     never
   >(
     () => ({
-      accept: ["diceTemplatePart", "diceTemplateNested", "diceTemplate"],
+      accept: ["diceTemplatePart", "diceTemplateNested"],
       drop: (item, monitor) => {
         switch (monitor.getItemType()) {
           case "diceTemplateNested": {
-            const action = diceTemplateAdd({
-              playerId: myself.id,
-              name: "",
-              categoryIndex: -1,
-              notes: "",
-              parts: [],
-              rollType: "attack",
-            });
-            dispatch(action);
-
             item = {
               id: rrid<RRDiceTemplatePart>(),
               type: "template",
-              templateId: action.payload.id,
-            };
+              template: {
+                id: rrid<RRDiceTemplate>(),
+                name: "",
+                notes: "",
+                parts: [],
+                rollType: "attack",
+              },
+            } as RRDiceTemplatePart;
             break;
           }
           case "diceTemplatePart":
             item = {
               ...item,
               id: rrid<RRDiceTemplatePart>(),
-            };
+            } as RRDiceTemplatePart;
             break;
-          case "diceTemplate":
-            item = (item as RRDiceTemplatePart[]).map((part) => {
-              return { ...part, id: rrid<RRDiceTemplatePart>() };
-            });
-            break;
+          //case "diceTemplate":
+          //item = (item as RRDiceTemplatePart[]).map((part) => {
+          //return { ...part, id: rrid<RRDiceTemplatePart>() };
+          //});
+          //break;
           default:
             throw new Error("Unsupported Drop Type!");
         }
 
         dispatch(
-          diceTemplateUpdate({
-            id: template.id,
-            changes: {
-              parts: Array.isArray(item)
-                ? [...template.parts, ...item] // TODO: Create new nested Template?
-                : [...template.parts, item],
-            },
+          playerAddDiceTemplatePart({
+            id: myself.id,
+            categoryId,
+            templateId: template.id,
+            part: item,
           })
         );
       },
       canDrop: (_item, monitor) => monitor.isOver({ shallow: true }),
     }),
-    [dispatch, myself.id, template.id, template.parts]
+    [categoryId, dispatch, myself.id, template.id]
   );
 
   useEffect(() => {
@@ -669,7 +629,7 @@ function DiceTemplateInner({
     : "none";
 
   const selectionCount = selectedTemplateIds.filter(
-    ({ id }) => template.id === id
+    ({ template: t }) => template === t
   ).length;
 
   function sortTemplateParts(a: RRDiceTemplatePart, b: RRDiceTemplatePart) {
@@ -736,9 +696,10 @@ function DiceTemplateInner({
               onChange={(name) =>
                 dispatch({
                   actions: [
-                    diceTemplateUpdate({
-                      id: template.id,
-                      changes: { name },
+                    playerUpdateDiceTemplate({
+                      id: myself.id,
+                      categoryId: categoryId,
+                      template: { id: template.id, changes: { name } },
                     }),
                   ],
                   optimisticKey: "name",
@@ -754,9 +715,10 @@ function DiceTemplateInner({
               template={template}
               key={i}
               part={part}
+              categoryId={categoryId}
             >
               <DiceTemplatePart
-                selectedCharacter={selectedCharacter}
+                categoryId={categoryId}
                 selectedTemplateIds={selectedTemplateIds}
                 onRoll={(templates, modified, event) =>
                   onRoll([template, ...templates], modified, event)
@@ -812,16 +774,19 @@ function DiceTemplateInner({
       {!expanded && <p>{template.name}</p>}
     </div>
   );
-}
+});
 
 function DamageTypeEditor({
   part,
-  templateId,
+  template,
+  categoryId,
 }: {
   part: RRDiceTemplatePartWithDamage;
-  templateId: RRDiceTemplateID;
+  template: RRDiceTemplate;
+  categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
+  const myself = useMyProps("id");
 
   return (
     <label>
@@ -831,17 +796,8 @@ function DamageTypeEditor({
         onChange={(damageType) =>
           dispatch({
             actions: [
-              diceTemplatePartUpdate({
-                templateId,
-                id: part.id,
-                changes: {
-                  damage: {
-                    type: empty2Null(damageType),
-                    // FIXME: This currently overwrites the modifiers, but it is
-                    // fine because we don't use them yet.
-                    modifiers: [],
-                  },
-                },
+              updatePartAction(myself.id, part.id, categoryId, template, {
+                damage: { type: empty2Null(damageType) },
               }),
             ],
             optimisticKey: "damageType",
@@ -854,14 +810,51 @@ function DamageTypeEditor({
   );
 }
 
+const removePartAction = (
+  myId: RRPlayerID,
+  partId: RRDiceTemplatePartID,
+  categoryId: RRDiceTemplateCategoryID,
+  diceTemplate: RRDiceTemplate
+) =>
+  playerUpdateDiceTemplate({
+    id: myId,
+    categoryId,
+    template: {
+      id: diceTemplate.id,
+      changes: {
+        parts: diceTemplate.parts.filter((p) => p.id !== partId),
+      },
+    },
+  });
+
+const updatePartAction = (
+  myId: RRPlayerID,
+  partId: RRDiceTemplatePartID,
+  categoryId: RRDiceTemplateCategoryID,
+  diceTemplate: RRDiceTemplate,
+  changes: Partial<RRDiceTemplatePart>
+) =>
+  playerUpdateDiceTemplatePart({
+    id: myId,
+    categoryId,
+    templateId: diceTemplate.id,
+    part: {
+      id: partId,
+      changes,
+    },
+  });
+
 function DiceMultipleRollEditor({
   part,
-  templateId,
+  template,
+  categoryId,
 }: {
   part: RRDiceTemplatePartDice;
-  templateId: RRDiceTemplateID;
+  template: RRDiceTemplate;
+  categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
+  const myself = useMyProps("id");
 
   return (
     <label>
@@ -871,10 +864,8 @@ function DiceMultipleRollEditor({
         onChange={(modified) =>
           dispatch({
             actions: [
-              diceTemplatePartUpdate({
-                templateId,
-                id: part.id,
-                changes: { modified },
+              updatePartAction(myself.id, part.id, categoryId, template, {
+                modified,
               }),
             ],
             optimisticKey: "modified",
@@ -892,12 +883,15 @@ function DiceMultipleRollEditor({
 
 function DiceCountEditor({
   part,
-  templateId,
+  template,
+  categoryId,
 }: {
   part: RRDiceTemplatePartDice;
-  templateId: RRDiceTemplateID;
+  template: RRDiceTemplate;
+  categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
+  const myself = useMyProps("id");
 
   return (
     <label>
@@ -907,10 +901,8 @@ function DiceCountEditor({
         onChange={(count) =>
           dispatch({
             actions: [
-              diceTemplatePartUpdate({
-                templateId,
-                id: part.id,
-                changes: { count },
+              updatePartAction(myself.id, part.id, categoryId, template, {
+                count,
               }),
             ],
             optimisticKey: "count",
@@ -924,12 +916,15 @@ function DiceCountEditor({
 
 function ModifierNumberEditor({
   part,
-  templateId,
+  template,
+  categoryId,
 }: {
   part: RRDiceTemplatePartModifier;
-  templateId: RRDiceTemplateID;
+  template: RRDiceTemplate;
+  categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
+  const myself = useMyProps("id");
 
   return (
     <label>
@@ -939,13 +934,11 @@ function ModifierNumberEditor({
         onChange={(number) =>
           dispatch({
             actions: [
-              diceTemplatePartUpdate({
-                templateId,
-                id: part.id,
-                changes: { number },
+              updatePartAction(myself.id, part.id, categoryId, template, {
+                number,
               }),
             ],
-            optimisticKey: "count",
+            optimisticKey: "number",
             syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
           })
         }
@@ -954,52 +947,107 @@ function ModifierNumberEditor({
   );
 }
 
-function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
+function ProficiencyValueEditor({
+  part,
+  template,
+  categoryId,
+}: {
+  part: RRDiceTemplatePartLinkedProficiency;
+  template: RRDiceTemplate;
+  categoryId: RRDiceTemplateCategoryID;
+}) {
   const dispatch = useServerDispatch();
-  const template = useServerState(
-    (state) => state.diceTemplates.entities[templateId]
-  );
+  const myself = useMyProps("id");
 
-  if (!template) {
-    return null;
-  }
+  return (
+    <label>
+      Proficiency:
+      <Select
+        options={proficiencyValues.map((t) => ({
+          value: t.toString(),
+          label: getProficiencyValueString(t),
+        }))}
+        value={part.proficiency.toString()}
+        onChange={(newValue: string) =>
+          dispatch({
+            actions: [
+              updatePartAction(myself.id, part.id, categoryId, template, {
+                proficiency: parseFloat(
+                  newValue
+                ) as typeof proficiencyValues[number],
+              }),
+            ],
+            optimisticKey: "proficiency",
+            syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+          })
+        }
+      />
+    </label>
+  );
+}
+
+function CategoryEditor({
+  categoryId,
+  template,
+}: {
+  categoryId: RRDiceTemplateCategoryID;
+  template: RRDiceTemplate;
+}) {
+  const dispatch = useServerDispatch();
+  const myself = useMyProps("diceTemplateCategories", "id");
+
+  return (
+    <label>
+      Category:
+      {myself.diceTemplateCategories.map((category) => (
+        <label
+          key={category.id}
+          className="radio-label"
+          title={category.categoryName}
+        >
+          <input
+            type="radio"
+            name="icon"
+            value={category.id}
+            checked={categoryId === category.id}
+            onChange={(e) =>
+              dispatch({
+                actions: [
+                  playerRemoveDiceTemplate({
+                    id: myself.id,
+                    categoryId: categoryId,
+                    templateId: template.id,
+                  }),
+                  playerAddDiceTemplate({
+                    id: myself.id,
+                    categoryId: category.id,
+                    template: template,
+                  }),
+                ],
+                optimisticKey: "diceTemplate",
+                syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+              })
+            }
+          />
+          <FontAwesomeIcon icon={iconMap[category.icon]} fixedWidth />
+        </label>
+      ))}
+    </label>
+  );
+}
+
+function TemplateSettingsEditor({
+  categoryId,
+  template,
+}: {
+  categoryId: RRDiceTemplateCategoryID;
+  template: RRDiceTemplate;
+}) {
+  const dispatch = useServerDispatch();
+  const myself = useMyProps("diceTemplateCategories", "id");
 
   return (
     <div>
-      {template.categoryIndex !== -1 && (
-        <label>
-          Category:
-          {diceCategories.map((category, categoryIndex) => (
-            <label key={categoryIndex} className="radio-label">
-              <input
-                type="radio"
-                name="categoryIndex"
-                value={categoryIndex}
-                checked={categoryIndex === template.categoryIndex}
-                onChange={(e) =>
-                  dispatch({
-                    actions: [
-                      diceTemplateUpdate({
-                        id: templateId,
-                        changes: {
-                          categoryIndex: clamp(
-                            0,
-                            categoryIndex,
-                            diceCategories.length - 1
-                          ),
-                        },
-                      }),
-                    ],
-                    optimisticKey: "categoryIndex",
-                    syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-                  })
-                }
-              />
-              <FontAwesomeIcon icon={category} fixedWidth />
-            </label>
-          ))}
-        </label>
-      )}
       <label>
         Notes:
         <SmartTextareaInput
@@ -1007,7 +1055,16 @@ function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
           onChange={(notes) =>
             dispatch({
               actions: [
-                diceTemplateUpdate({ id: templateId, changes: { notes } }),
+                playerUpdateDiceTemplate({
+                  id: myself.id,
+                  categoryId,
+                  template: {
+                    id: template.id,
+                    changes: {
+                      notes,
+                    },
+                  },
+                }),
               ],
               optimisticKey: "notes",
               syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
@@ -1023,30 +1080,23 @@ function TemplateNoteEditor({ templateId }: { templateId: RRDiceTemplateID }) {
 const DiceTemplatePartMenuWrapper: React.FC<{
   part: RRDiceTemplatePart;
   template: RRDiceTemplate;
-}> = ({ part, template, children }) => {
+  categoryId: RRDiceTemplateCategoryID;
+  isTopLevel?: boolean;
+}> = ({ part, template, children, categoryId, isTopLevel }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const dispatch = useServerDispatch();
-
-  const templateParts = useServerStateRef((state) => {
-    return state.diceTemplates.entities;
-  });
-
-  const deleteActions = (part: RRDiceTemplatePart): SyncedStateAction[] => {
-    return [
-      diceTemplatePartRemove({
-        id: part.id,
-        templateId: template.id,
-      }),
-      part.type === "template" && diceTemplateRemove(part.templateId),
-      part.type === "template" &&
-        templateParts.current[part.templateId]?.parts.flatMap((p) =>
-          deleteActions(p)
-        ),
-    ].flatMap((a) => (a ? a : []));
-  };
+  const myself = useMyProps("id");
 
   const applyDelete = (part: RRDiceTemplatePart) => {
-    dispatch(deleteActions(part));
+    isTopLevel
+      ? dispatch(
+          playerRemoveDiceTemplate({
+            id: myself.id,
+            categoryId,
+            templateId: template.id,
+          })
+        )
+      : dispatch(removePartAction(myself.id, part.id, categoryId, template));
   };
 
   return (
@@ -1055,23 +1105,59 @@ const DiceTemplatePartMenuWrapper: React.FC<{
         <div onClick={(e) => e.stopPropagation()}>
           {(part.type === "dice" ||
             part.type === "linkedModifier" ||
+            part.type === "linkedProficiency" ||
             part.type === "linkedStat" ||
             part.type === "modifier") && (
-            <DamageTypeEditor part={part} templateId={template.id} />
+            <DamageTypeEditor
+              part={part}
+              template={template}
+              categoryId={categoryId}
+            />
           )}
           {part.type === "dice" && (
-            <DiceCountEditor part={part} templateId={template.id} />
+            <DiceCountEditor
+              part={part}
+              template={template}
+              categoryId={categoryId}
+            />
           )}
           {part.type === "dice" && (
-            <DiceMultipleRollEditor part={part} templateId={template.id} />
+            <DiceMultipleRollEditor
+              part={part}
+              template={template}
+              categoryId={categoryId}
+            />
           )}
           {part.type === "modifier" && (
-            <ModifierNumberEditor part={part} templateId={template.id} />
+            <ModifierNumberEditor
+              part={part}
+              template={template}
+              categoryId={categoryId}
+            />
+          )}
+          {part.type === "linkedProficiency" && (
+            <ProficiencyValueEditor
+              part={part}
+              template={template}
+              categoryId={categoryId}
+            />
+          )}
+          {part.type === "template" && isTopLevel && (
+            <CategoryEditor categoryId={categoryId} template={part.template} />
           )}
           {part.type === "template" && (
-            <TemplateNoteEditor templateId={part.templateId} />
+            <TemplateSettingsEditor
+              categoryId={categoryId}
+              template={part.template}
+            />
           )}
-          <Button className="red" onClick={() => applyDelete(part)}>
+          <Button
+            className="red"
+            onClick={() => {
+              applyDelete(part);
+              setMenuVisible(false);
+            }}
+          >
             delete
           </Button>
         </div>
@@ -1107,20 +1193,12 @@ const DiceTemplatePart = React.forwardRef<
       event: React.MouseEvent
     ) => void;
     selectedTemplateIds: SelectionPair[];
-    selectedCharacter: RRCharacter | null;
+    categoryId: RRDiceTemplateCategoryID;
     onClick?: () => void;
     editable: boolean;
   }
 >(function DiceTemplatePart(
-  {
-    part,
-    newIds,
-    onRoll,
-    selectedTemplateIds,
-    selectedCharacter,
-    onClick,
-    editable,
-  },
+  { part, newIds, onRoll, categoryId, selectedTemplateIds, onClick, editable },
   ref
 ) {
   let content: JSX.Element;
@@ -1129,6 +1207,13 @@ const DiceTemplatePart = React.forwardRef<
     background: colorForDamageType(part.damage.type),
     color: contrastColor(colorForDamageType(part.damage.type)),
   });
+
+  const myself = useMyProps("mainCharacterId");
+  const character: RRCharacter | null = useServerState((state) =>
+    myself.mainCharacterId
+      ? state.characters.entities[myself.mainCharacterId] ?? null
+      : null
+  );
 
   switch (part.type) {
     case "modifier":
@@ -1143,7 +1228,7 @@ const DiceTemplatePart = React.forwardRef<
       content = (
         <div className="dice-option" style={styleFor(part)}>
           <div className="dice-option-linked-modifier">
-            {selectedCharacter?.attributes[part.name] ?? null}
+            {character?.attributes[part.name] ?? null}
           </div>
           <div className="dice-option-linked-modifier-name">
             {part.name[0]!.toUpperCase() + part.name.substring(1, 4)}
@@ -1151,13 +1236,28 @@ const DiceTemplatePart = React.forwardRef<
         </div>
       );
       break;
+    case "linkedProficiency":
+      content = (
+        <div className="dice-option" style={styleFor(part)}>
+          <div className="dice-option-linked-modifier">
+            {
+              //TODO this shows incorrect value in editor, others show no value
+              character?.attributes["proficiency"]
+                ? character.attributes["proficiency"] * part.proficiency
+                : null
+            }
+          </div>
+          <div className="dice-option-linked-modifier-name">{"Prof"}</div>
+        </div>
+      );
+      break;
     case "linkedStat":
       content = (
         <div className="dice-option" style={styleFor(part)}>
           <div className="dice-option-linked-modifier">
-            {!selectedCharacter?.stats[part.name]
-              ? null
-              : Math.floor((selectedCharacter.stats[part.name]! - 10) / 2)}
+            {character?.stats[part.name]
+              ? modifierFromStat(character.stats[part.name]!)
+              : null}
           </div>
           <div className="dice-option-linked-modifier-name">
             {part.name[0]!.toUpperCase() + part.name.substring(1, 4)}
@@ -1178,8 +1278,8 @@ const DiceTemplatePart = React.forwardRef<
           onRoll={(templates, modified, event) =>
             onRoll(templates, modified, event)
           }
-          selectedCharacter={selectedCharacter}
-          templateId={part.templateId}
+          template={part.template}
+          categoryId={categoryId}
           newIds={newIds}
           selectedTemplateIds={selectedTemplateIds}
           editable={editable}

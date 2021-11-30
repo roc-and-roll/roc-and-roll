@@ -478,6 +478,64 @@ $dice-templates-height: 200px;
   }
 }
 
+.generated-dice-templates-container {
+  display: flex;
+  flex-wrap: wrap;
+
+  .generated-dice-templates {
+    display: flex;
+    border-color: white;
+    border-width: 1px;
+    border-style: solid;
+    align-items: center;
+    padding: 0.5rem;
+    margin: 0.5rem;
+    width: 165px;
+    align-content: flex-start;
+    position: relative;
+    height: 66px;
+    cursor: pointer;
+
+    &.hovered {
+      background-color: #676767;
+    }
+
+    .template-name {
+      flex-grow: 1;
+    }
+
+    .modifier-value {
+      font-size: 24px;
+      font-weight: bold;
+      margin-left: 0.5rem;
+    }
+
+    .modifier-button {
+      background: white;
+      width: 26px;
+      height: 26px;
+      font-size: 26px;
+      position: absolute;
+      border-radius: 999px;
+      align-content: center;
+      display: flex;
+      top: -12px;
+    }
+
+    .advantage {
+      color: green;
+      right: 32px;
+      cursor: pointer;
+    }
+
+    .disadvantage {
+      color: red;
+      right: 2px;
+      cursor: pointer;
+    }
+  }
+}
+
 .dice-templates {
   $panel-background: rgb(59, 28, 6);
   $animation-duration: 200ms;
@@ -1595,6 +1653,7 @@ aside.emoji-picker-react {
     margin: 0.1rem;
     background: #666;
     border-radius: 2px;
+    cursor: pointer;
 
     &.active {
       background: #ff9900;
@@ -1628,5 +1687,32 @@ aside.emoji-picker-react {
 
   &:hover {
     background: #ffbb22;
+  }
+}
+
+.proficiencies {
+  display: flex;
+  align-items: center;
+  padding: 0.2rem 0;
+
+  .stat {
+    width: 40px;
+    text-align: center;
+  }
+
+  .button {
+    margin-left: 0.2rem;
+  }
+
+  .finalModifier {
+    font-size: large;
+    justify-content: end;
+    display: flex;
+    flex-grow: 1;
+    margin-right: 0.4rem;
+  }
+
+  &:nth-child(even) {
+    background: rgba(255, 255, 255, 0.1);
   }
 }
