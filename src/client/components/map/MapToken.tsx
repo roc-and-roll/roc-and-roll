@@ -60,6 +60,9 @@ import useRafLoop from "../../useRafLoop";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { SVGBlurHashImage } from "../blurhash/SVGBlurhashImage";
 
+const GHOST_TIMEOUT = 6 * 1000;
+const GHOST_OPACITY = 0.3;
+
 export const MapToken = React.memo<{
   mapId: RRMapID;
   object: RRToken;
@@ -146,15 +149,28 @@ function MapTokenInner({
     [smartSetTotalHP, character.id]
   );
 
+  // The previous position of this token before it was moved. Used to display
+  // a ghostly image of the token for some time after the move.
+  const [ghostPosition, setGhostPosition] = useState<{
+    position: RRPoint;
+    fade: boolean;
+  } | null>(null);
+
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
+      setGhostPosition({ position: objectRef.current.position, fade: false });
       onStartMove(objectRef.current, e);
       firstMouseDownPos.current = { x: e.clientX, y: e.clientY };
     },
     [onStartMove, objectRef]
   );
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    if (
+    if (e.button === 0) {
+      // Start fading the ghost image after the token movement ends.
+      setGhostPosition((ghostPosition) =>
+        ghostPosition === null ? null : { ...ghostPosition, fade: true }
+      );
+    } else if (
       e.button === 2 &&
       firstMouseDownPos.current &&
       pointEquals(firstMouseDownPos.current, { x: e.clientX, y: e.clientY })
@@ -204,25 +220,72 @@ function MapTokenInner({
   const canControl = canStartMoving && canControlToken(character, myself);
 
   const fullTokenRepresenation = (
+    position: RRPoint,
+    isGhost = false,
+    ref: React.LegacyRef<SVGGElement> | undefined = undefined
+  ) => (
     <g
-      transform={`translate(${x}, ${y}), rotate(${object.rotation}, ${
-        tokenSize / 2
-      }, ${tokenSize / 2})`}
+      ref={ref}
+      transform={`translate(${position.x}, ${position.y}), rotate(${
+        object.rotation
+      }, ${tokenSize / 2}, ${tokenSize / 2})`}
     >
-      <TokenImageOrPlaceholder
-        zoom={zoom}
-        contrastColor={contrastColor}
-        character={character}
-        canControl={canControl}
-        isSelectedOrHovered={isSelectedOrHovered}
-        handleMouseDown={handleMouseDown}
-        handleMouseUp={handleMouseUp}
-      />
+      {isGhost ? (
+        <TokenImageOrPlaceholder
+          isGhost={true}
+          zoom={zoom}
+          contrastColor={contrastColor}
+          character={character}
+        />
+      ) : (
+        <TokenImageOrPlaceholder
+          isGhost={false}
+          zoom={zoom}
+          contrastColor={contrastColor}
+          character={character}
+          canControl={canControl}
+          isSelectedOrHovered={isSelectedOrHovered}
+          handleMouseDown={handleMouseDown}
+          handleMouseUp={handleMouseUp}
+        />
+      )}
     </g>
   );
 
+  const [startAnimation, stopAnimation] = useRafLoop();
+  useEffect(() => {
+    if (ghostPosition === null) {
+      return;
+    }
+    if (!ghostPosition.fade) {
+      if (ghostTokenRef.current) {
+        ghostTokenRef.current.style.opacity = GHOST_OPACITY.toString();
+      }
+      return;
+    }
+
+    startAnimation((amount) => {
+      if (ghostTokenRef.current) {
+        ghostTokenRef.current.style.opacity = (
+          GHOST_OPACITY *
+          (1 - amount ** 3)
+        ).toString();
+      }
+      if (amount === 1) {
+        setGhostPosition(null);
+      }
+    }, GHOST_TIMEOUT);
+    return () => {
+      stopAnimation();
+    };
+  }, [ghostPosition, startAnimation, stopAnimation]);
+
+  const ghostTokenRef = useRef<SVGGElement>(null);
+
   return (
     <>
+      {ghostPosition &&
+        fullTokenRepresenation(ghostPosition.position, true, ghostTokenRef)}
       {auraArea &&
         // we need to render the auras as the very first thing in the SVG so
         // that they are located in the background and still allow users to
@@ -295,10 +358,10 @@ function MapTokenInner({
           interactive
           placement="right"
         >
-          <g>{fullTokenRepresenation}</g>
+          <g>{fullTokenRepresenation({ x, y })}</g>
         </Popover>
       ) : (
-        fullTokenRepresenation
+        fullTokenRepresenation({ x, y })
       )}
     </>
   );
@@ -308,25 +371,31 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
   zoom,
   contrastColor,
   character,
-  canControl,
-  isSelectedOrHovered,
-  handleMouseDown,
-  handleMouseUp,
+  ...props
 }: {
   zoom: number;
   contrastColor: RRColor;
   character: RRCharacter;
-  canControl: boolean;
-  isSelectedOrHovered: boolean;
-  handleMouseDown: (e: React.MouseEvent) => void;
-  handleMouseUp: (e: React.MouseEvent) => void;
-}) {
+} & (
+  | {
+      isGhost: false;
+      canControl: boolean;
+      isSelectedOrHovered: boolean;
+      handleMouseDown: (e: React.MouseEvent) => void;
+      handleMouseUp: (e: React.MouseEvent) => void;
+    }
+  | { isGhost: true }
+)) {
   const tokenSize = GRID_SIZE * character.scale;
   const extraSpace = tokenSize / 2;
+  const canControl = props.isGhost ? false : props.canControl;
 
   const tokenStyle = useMemo(
     () => ({
-      ...(isCharacterUnconsciousOrDead(character)
+      ...(props.isGhost
+        ? // Do not show any shadows for ghosts and ignore pointer events
+          ({ pointerEvents: "none" } as const)
+        : isCharacterUnconsciousOrDead(character)
         ? { filter: "url(#tokenUnconsciousOrDeadShadow)" }
         : isCharacterHurt(character)
         ? { filter: "url(#tokenHurtShadow)" }
@@ -336,7 +405,7 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
       ...(canControl ? { cursor: "move" } : {}),
       borderRadius: tokenSize / 2,
     }),
-    [character, tokenSize, canControl]
+    [character, tokenSize, canControl, props.isGhost]
   );
 
   const asset = useRecoilValue(assetFamily(character.tokenImageAssetId));
@@ -347,8 +416,8 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
   return (
     <>
       <SVGBlurHashImage
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
+        onMouseDown={!props.isGhost ? props.handleMouseDown : undefined}
+        onMouseUp={!props.isGhost ? props.handleMouseUp : undefined}
         tokenSize={extraSpace}
         x={-extraSpace}
         y={-extraSpace}
@@ -361,7 +430,7 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
         }}
       />
 
-      {isSelectedOrHovered && (
+      {!props.isGhost && props.isSelectedOrHovered && (
         <circle
           // do not block pointer events
           pointerEvents="none"
@@ -374,7 +443,7 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
         />
       )}
 
-      {character.visibility !== "everyone" && (
+      {!props.isGhost && character.visibility !== "everyone" && (
         <>
           <title>only visible to GMs</title>
           <RoughText
