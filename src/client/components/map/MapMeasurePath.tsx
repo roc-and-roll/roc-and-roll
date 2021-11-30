@@ -11,17 +11,8 @@ import {
 import { RoughLine, RoughText } from "../rough";
 import { ephemeralPlayersFamily } from "./recoil";
 import { useContrastColor } from "../../util";
+import { shortestDistance } from "./mapHelpers";
 
-const overlappingPairsSum = <T extends any>(
-  a: T[],
-  f: (a: T, b: T) => number
-) => {
-  let sum = 0;
-  for (let i = 0; i < a.length - 1; i++) {
-    sum += f(a[i]!, a[i + 1]!);
-  }
-  return sum;
-};
 const overlappingPairsMap = <T extends any, U extends any>(
   a: T[],
   f: (a: T, b: T, i: number) => U
@@ -83,20 +74,12 @@ const MapMeasurePathInner = React.memo<{
     x: GRID_SIZE * 1.5,
     y: GRID_SIZE * 0.5,
   });
-  const diagonals = overlappingPairsSum(path, (a, b) =>
-    a.x === b.x || a.y === b.y ? 0 : 1
-  );
 
   const firstPoint = path[0]!;
   const lastPoint = path[path.length - 1]!;
-  const actualLength = Math.hypot(
-    firstPoint.x - lastPoint.x,
-    firstPoint.y - lastPoint.y
-  );
+
   const length =
-    path.length === 2
-      ? Math.floor(actualLength)
-      : path.length - 1 + Math.floor(diagonals / 2);
+    path.length === 2 ? shortestDistance(firstPoint, lastPoint) : path.length;
 
   const FONT_SIZE = 14;
   const PADDING = 5;

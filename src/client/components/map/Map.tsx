@@ -43,11 +43,7 @@ import tinycolor from "tinycolor2";
 import {
   makePoint,
   pointAdd,
-  pointDistance,
-  pointEquals,
   pointScale,
-  pointSign,
-  pointSubtract,
   snapPointToGrid,
 } from "../../../shared/point";
 import { MapMouseHandler } from "./useMapToolHandler";
@@ -64,6 +60,7 @@ import { MouseCursors } from "./MouseCursors";
 import { useLatest } from "../../useLatest";
 import { useGesture } from "react-use-gesture";
 import { RRMessage, useServerMessages } from "../../serverMessages";
+import { getPathWithNewPoint } from "./mapHelpers";
 
 type Rectangle = [number, number, number, number];
 
@@ -302,51 +299,8 @@ const RRMapViewWithRef = React.forwardRef<
   );
 
   const addPointToPath = useCallback(
-    (p: RRPoint) => {
-      onUpdateMeasurePath((path) => {
-        const gridPosition = pointScale(snapPointToGrid(p), 1 / GRID_SIZE);
-        if (path.length < 1) return [gridPosition];
-
-        // to make moving along a diagonal easier, we only count hits that are not on the corners
-        const radius = (GRID_SIZE * 0.8) / 2;
-        const isInCenter =
-          pointDistance(
-            pointScale(pointAdd(gridPosition, makePoint(0.5)), GRID_SIZE),
-            p
-          ) < radius;
-
-        const pointsToReach = (from: RRPoint, to: RRPoint) => {
-          const points: RRPoint[] = [];
-          while (!pointEquals(from, to)) {
-            const step = pointSign(pointSubtract(to, from));
-            from = pointAdd(from, step);
-            points.push(from);
-          }
-          return points;
-        };
-
-        if (
-          isInCenter &&
-          (path.length < 1 ||
-            !pointEquals(path[path.length - 1]!, gridPosition))
-        ) {
-          if (
-            path.length > 1 &&
-            path.slice(1).some((p) => pointEquals(p, gridPosition))
-          ) {
-            return path.slice(
-              0,
-              path.findIndex((p) => pointEquals(p, gridPosition))!
-            );
-          } else {
-            return [
-              ...path,
-              ...pointsToReach(path[path.length - 1]!, gridPosition),
-            ];
-          }
-        }
-        return path;
-      });
+    (newPoint: RRPoint) => {
+      onUpdateMeasurePath((path) => getPathWithNewPoint(path, newPoint));
     },
     [onUpdateMeasurePath]
   );
@@ -403,27 +357,10 @@ const RRMapViewWithRef = React.forwardRef<
             break;
           }
           case MouseAction.MEASURE_TILES: {
-            const innerLocal = globalToLocal(transformRef.current, {
-              x,
-              y,
-            });
-
-            const pointsInPath = (from: RRPoint, to: RRPoint) => {
-              const points: RRPoint[] = [from];
-              while (!pointEquals(from, to)) {
-                const step = pointSign(pointSubtract(to, from));
-                from = pointAdd(from, step);
-                points.push(from);
-              }
-              return points;
-            };
-            onUpdateMeasurePath((measurePath) => {
-              if (measurePath.length === 0) return measurePath;
-              return pointsInPath(
-                measurePath[0]!,
-                pointScale(snapPointToGrid(innerLocal), 1 / GRID_SIZE)
-              );
-            });
+            const innerLocal = globalToLocal(transformRef.current, { x, y });
+            onUpdateMeasurePath((measurePath) =>
+              getPathWithNewPoint(measurePath, innerLocal)
+            );
             break;
           }
           case MouseAction.MEASURE_DIRECT: {
