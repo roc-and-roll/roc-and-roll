@@ -14,8 +14,6 @@ import { RRPoint } from "../../../shared/state";
 export function getPathWithNewPoint(path: RRPoint[], newPoint: RRPoint) {
   const gridPosition = pointScale(snapPointToGrid(newPoint), 1 / GRID_SIZE);
   if (path.length < 1) return [gridPosition];
-  console.log(newPoint);
-  console.log(gridPosition);
 
   // to make moving along a diagonal easier, we only count hits that are not on the corners
   const radius = (GRID_SIZE * 0.8) / 2;
@@ -24,12 +22,6 @@ export function getPathWithNewPoint(path: RRPoint[], newPoint: RRPoint) {
       pointScale(pointAdd(gridPosition, makePoint(0.5)), GRID_SIZE),
       newPoint
     ) < radius;
-  console.log(
-    pointDistance(
-      pointScale(pointAdd(gridPosition, makePoint(0.5)), GRID_SIZE),
-      newPoint
-    )
-  );
 
   const pointsToReach = (from: RRPoint, to: RRPoint) => {
     const points: RRPoint[] = [];
@@ -71,6 +63,13 @@ const overlappingPairsSum = <T extends any>(
   return sum;
 };
 
+export function pathLength(path: RRPoint[]) {
+  const diagonals = overlappingPairsSum(path, (a, b) =>
+    a.x === b.x || a.y === b.y ? 0 : 1
+  );
+  return path.length - 1 + Math.floor(diagonals / 2);
+}
+
 export function shortestDistance(from: RRPoint, to: RRPoint) {
   const points: RRPoint[] = [from];
   while (!pointEquals(from, to)) {
@@ -78,9 +77,5 @@ export function shortestDistance(from: RRPoint, to: RRPoint) {
     from = pointAdd(from, step);
     points.push(from);
   }
-
-  const diagonals = overlappingPairsSum(points, (a, b) =>
-    a.x === b.x || a.y === b.y ? 0 : 1
-  );
-  return points.length - 1 + Math.floor(diagonals / 2);
+  return pathLength(points);
 }

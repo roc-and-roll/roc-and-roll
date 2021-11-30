@@ -11,7 +11,7 @@ import {
 import { RoughLine, RoughText } from "../rough";
 import { ephemeralPlayersFamily } from "./recoil";
 import { useContrastColor } from "../../util";
-import { shortestDistance } from "./mapHelpers";
+import { pathLength, shortestDistance } from "./mapHelpers";
 
 const overlappingPairsMap = <T extends any, U extends any>(
   a: T[],
@@ -79,7 +79,9 @@ const MapMeasurePathInner = React.memo<{
   const lastPoint = path[path.length - 1]!;
 
   const length =
-    path.length === 2 ? shortestDistance(firstPoint, lastPoint) : path.length;
+    path.length === 2
+      ? shortestDistance(firstPoint, lastPoint)
+      : pathLength(path);
 
   const FONT_SIZE = 14;
   const PADDING = 5;
