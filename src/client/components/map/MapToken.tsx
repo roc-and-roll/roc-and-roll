@@ -156,13 +156,18 @@ function MapTokenInner({
     fade: boolean;
   } | null>(null);
 
+  const canControl = canStartMoving && canControlToken(character, myself);
+  const canControlRef = useLatest(canControl);
+
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      setGhostPosition({ position: objectRef.current.position, fade: false });
+      if (canControlRef.current) {
+        setGhostPosition({ position: objectRef.current.position, fade: false });
+      }
       onStartMove(objectRef.current, e);
       firstMouseDownPos.current = { x: e.clientX, y: e.clientY };
     },
-    [onStartMove, objectRef]
+    [onStartMove, canControlRef, objectRef]
   );
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
     if (e.button === 0) {
@@ -216,8 +221,6 @@ function MapTokenInner({
   const tokenSize = GRID_SIZE * character.scale;
 
   const { x, y } = lerpedPosition;
-
-  const canControl = canStartMoving && canControlToken(character, myself);
 
   const fullTokenRepresenation = (
     position: RRPoint,
