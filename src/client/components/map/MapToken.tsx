@@ -35,13 +35,14 @@ import {
 import { useMyProps } from "../../myself";
 import ReactDOM from "react-dom";
 import { HPInlineEdit } from "./HPInlineEdit";
-import { useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import { CURSOR_POSITION_SYNC_DEBOUNCE, hoveredMapObjectsFamily } from "./Map";
 import {
   highlightedCharactersFamily,
   selectedMapObjectsFamily,
   characterFamily,
   assetFamily,
+  mapObjectGhostPositionsFamily,
 } from "./recoil";
 import { Popover } from "../Popover";
 import { CharacterEditor, conditionIcons } from "../characters/CharacterEditor";
@@ -151,31 +152,23 @@ function MapTokenInner({
 
   // The previous position of this token before it was moved. Used to display
   // a ghostly image of the token for some time after the move.
-  const [ghostPosition, setGhostPosition] = useState<{
-    position: RRPoint;
-    fade: boolean;
-  } | null>(null);
+  const [ghostPosition, setGhostPosition] = useRecoilState(
+    mapObjectGhostPositionsFamily(object.id)
+  );
 
   const canControl = canStartMoving && canControlToken(character, myself);
-  const canControlRef = useLatest(canControl);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (canControlRef.current) {
-        setGhostPosition({ position: objectRef.current.position, fade: false });
+      if (e.button === 0) {
+        onStartMove(objectRef.current, e);
+        firstMouseDownPos.current = { x: e.clientX, y: e.clientY };
       }
-      onStartMove(objectRef.current, e);
-      firstMouseDownPos.current = { x: e.clientX, y: e.clientY };
     },
-    [onStartMove, canControlRef, objectRef]
+    [onStartMove, objectRef]
   );
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    if (e.button === 0) {
-      // Start fading the ghost image after the token movement ends.
-      setGhostPosition((ghostPosition) =>
-        ghostPosition === null ? null : { ...ghostPosition, fade: true }
-      );
-    } else if (
+    if (
       e.button === 2 &&
       firstMouseDownPos.current &&
       pointEquals(firstMouseDownPos.current, { x: e.clientX, y: e.clientY })
@@ -281,7 +274,7 @@ function MapTokenInner({
     return () => {
       stopAnimation();
     };
-  }, [ghostPosition, startAnimation, stopAnimation]);
+  }, [ghostPosition, setGhostPosition, startAnimation, stopAnimation]);
 
   const ghostTokenRef = useRef<SVGGElement>(null);
 

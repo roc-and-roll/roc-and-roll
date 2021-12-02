@@ -20,6 +20,7 @@ import {
   RRMapRevealedAreas,
   RRCharacter,
   RRPlayer,
+  RRMapObjectID,
 } from "../../../shared/state";
 import { useMyProps } from "../../myself";
 import {
@@ -72,6 +73,7 @@ import {
   mapObjectsFamily,
   selectedMapObjectsFamily,
   ReduxToRecoilBridge,
+  mapObjectGhostPositionsFamily,
 } from "./recoil";
 import { useAlert, useDialog } from "../../dialog-boxes";
 import { DropIndicator } from "../DropIndicator";
@@ -651,6 +653,24 @@ export default function MapContainer() {
     [dispatch, dialog, myself.isGM]
   );
 
+  const onStartMoveMapObjects = useRecoilCallback(
+    ({ snapshot, set }) =>
+      (selectedMapObjectIds: ReadonlyArray<RRMapObjectID>) => {
+        for (const selectedMapObjectId of selectedMapObjectIds) {
+          const mapObject = snapshot
+            .getLoadable(mapObjectsFamily(selectedMapObjectId))
+            .getValue();
+          if (mapObject?.type === "token") {
+            set(mapObjectGhostPositionsFamily(selectedMapObjectId), {
+              position: mapObject.position,
+              fade: false,
+            });
+          }
+        }
+      },
+    []
+  );
+
   const onMoveMapObjects = useRecoilCallback(
     ({ snapshot }) =>
       (d: RRPoint) => {
@@ -686,7 +706,7 @@ export default function MapContainer() {
   );
 
   const onStopMoveMapObjects = useRecoilCallback(
-    ({ snapshot }) =>
+    ({ snapshot, set }) =>
       () =>
         dispatch((state) => {
           const map = state.maps.entities[mapId];
@@ -713,6 +733,20 @@ export default function MapContainer() {
                   }
                   return object.position;
                 });
+
+                if (object.type === "token") {
+                  // Start fading the ghost image after the token movement ends.
+                  set(
+                    mapObjectGhostPositionsFamily(object.id),
+                    (ghostPosition) =>
+                      ghostPosition === null
+                        ? null
+                        : {
+                            ...ghostPosition,
+                            fade: true,
+                          }
+                  );
+                }
 
                 return {
                   actions: [
@@ -755,6 +789,7 @@ export default function MapContainer() {
         players={players}
         onUpdateMeasurePath={updateMeasurePath}
         // map objects
+        onStartMoveMapObjects={onStartMoveMapObjects}
         onMoveMapObjects={onMoveMapObjects}
         onStopMoveMapObjects={onStopMoveMapObjects}
         onSmartSetTotalHP={onSmartSetTotalHP}

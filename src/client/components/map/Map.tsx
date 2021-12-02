@@ -169,6 +169,7 @@ const RRMapViewWithRef = React.forwardRef<
     gridColor: RRColor;
     backgroundColor: RRColor;
     revealedAreas: RRMapRevealedAreas;
+    onStartMoveMapObjects: (mapObjectIds: ReadonlyArray<RRMapObjectID>) => void;
     onMoveMapObjects: (d: RRPoint) => void;
     onStopMoveMapObjects: () => void;
     onSmartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
@@ -190,6 +191,7 @@ const RRMapViewWithRef = React.forwardRef<
     revealedAreas,
     onSmartSetTotalHP,
     handleKeyDown,
+    onStartMoveMapObjects,
     onMoveMapObjects,
     onStopMoveMapObjects,
     players,
@@ -621,18 +623,25 @@ const RRMapViewWithRef = React.forwardRef<
           event.stopPropagation();
           dragStartIdRef.current = object.id;
           dragLastMouseRef.current = local;
-          if (
-            !snapshot
-              .getLoadable(selectedMapObjectIdsAtom)
-              .getValue()
-              .includes(object.id)
-          ) {
+
+          let selectedMapObjectIds = snapshot
+            .getLoadable(selectedMapObjectIdsAtom)
+            .getValue();
+          if (!selectedMapObjectIds.includes(object.id)) {
+            selectedMapObjectIds = [object.id];
+            // This update will not be reflected in the snapshot, so we also
+            // need to update the local variable selectedMapObjectIds instead
+            // of using snapshot.getLoadable(selectedMapObjectIdsAtom) in the
+            // call to onStartMoveMapObjects below.
             setSelectedMapObjectIds([object.id]);
           }
+
+          onStartMoveMapObjects(selectedMapObjectIds);
+
           mouseActionRef.current = MouseAction.MOVE_MAP_OBJECT;
         }
       },
-    [myself, setSelectedMapObjectIds, toolButtonState]
+    [myself, onStartMoveMapObjects, setSelectedMapObjectIds, toolButtonState]
   );
 
   /* FIXME: doesn't actually feel that good. might have to do it only after we really

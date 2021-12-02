@@ -9,6 +9,7 @@ import {
   RRID,
   RRAssetID,
   RRAsset,
+  RRPoint,
 } from "../../../shared/state";
 import {
   atomFamily,
@@ -29,6 +30,17 @@ export const selectedMapObjectsFamily = atomFamily<boolean, RRMapObjectID>({
 export const selectedMapObjectIdsAtom = atom<ReadonlyArray<RRMapObjectID>>({
   key: "SelectedMapObjectIds",
   default: [],
+});
+
+export const mapObjectGhostPositionsFamily = atomFamily<
+  {
+    position: RRPoint;
+    fade: boolean;
+  } | null,
+  RRMapObjectID
+>({
+  key: "MapObjectGhostPosition",
+  default: null,
 });
 
 export const highlightedCharactersFamily = atomFamily<boolean, RRCharacterID>({
