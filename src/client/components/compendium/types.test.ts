@@ -39,10 +39,10 @@ describe("text entry schema", () => {
     expect(errors).toMatchInlineSnapshot(`
 Array [
   ".#1: Expected a string (got {\\"type\\":\\"list\\",\\"items\\":[\\"foo\\",false]})",
-  ".#2.type: Expected a literal (got \\"list\\")",
+  ".#2.type: Expected \\"entries\\" (got \\"list\\")",
   ".#3.items[1]#1: Expected a string (got false)",
-  ".#4.type: Expected a literal (got \\"list\\")",
-  ".#5.type: Expected a literal (got \\"list\\")",
+  ".#4.type: Expected \\"table\\" (got \\"list\\")",
+  ".#5.type: Expected \\"cell\\" (got \\"list\\")",
 ]
 `);
   });

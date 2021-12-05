@@ -1,13 +1,12 @@
+import { DRTPartExpression } from "../shared/dice-roll-tree-types-and-validation";
 import {
   RRDiceTemplatePart,
   RRMultipleRoll,
-  RRDice,
-  RRModifier,
   RRCharacter,
 } from "../shared/state";
 import { assertNever } from "../shared/util";
 import { RRDiceTemplate } from "../shared/validation";
-import { roll } from "./roll";
+import { roll } from "./dice-rolling/roll";
 import { modifierFromStat } from "./util";
 
 export function evaluateDiceTemplatePart(
@@ -15,7 +14,7 @@ export function evaluateDiceTemplatePart(
   modified: RRMultipleRoll,
   crit: boolean = false,
   character?: RRCharacter | null
-): Array<RRDice | RRModifier> {
+): DRTPartExpression<true>[] {
   switch (part.type) {
     case "dice": {
       const res = [
@@ -40,37 +39,36 @@ export function evaluateDiceTemplatePart(
     case "linkedModifier":
       return [
         {
-          type: "modifier",
-          modifier: character?.attributes[part.name] ?? 0,
-          damageType: part.damage,
+          type: "num",
+          value: character?.attributes[part.name] ?? 0,
+          damage: part.damage,
         },
       ];
     case "linkedProficiency":
       return [
         {
-          type: "modifier",
-          modifier:
-            character?.attributes["proficiency"] ?? 0 * part.proficiency,
-          damageType: part.damage,
+          type: "num",
+          value: character?.attributes["proficiency"] ?? 0 * part.proficiency,
+          damage: part.damage,
         },
       ];
     case "linkedStat":
       return [
         {
-          type: "modifier",
-          modifier:
+          type: "num",
+          value:
             character?.stats[part.name] === undefined
               ? 0
               : modifierFromStat(character.stats[part.name]!),
-          damageType: part.damage,
+          damage: part.damage,
         },
       ];
     case "modifier":
       return [
         {
-          type: "modifier",
-          modifier: part.number,
-          damageType: part.damage,
+          type: "num",
+          value: part.number,
+          damage: part.damage,
         },
       ];
     case "template": {

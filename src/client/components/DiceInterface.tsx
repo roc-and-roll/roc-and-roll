@@ -5,10 +5,12 @@ import {
   playerAddDiceTemplate,
   playerAddDiceTemplateCategory,
 } from "../../shared/actions";
-import { RRDice, RRDiceTemplatePart, RRModifier } from "../../shared/state";
 import { useMyProps } from "../myself";
 import { useServerDispatch } from "../state";
-import { roll } from "../roll";
+import { tryConvertDiceRollTreeToDiceTemplateParts } from "../dice-rolling/dice-template-interop";
+import { parseDiceString } from "../dice-rolling/grammar";
+import { DiceRollTree } from "../../shared/dice-roll-tree-types-and-validation";
+import { rollDiceRollTree } from "../dice-rolling/roll";
 import { rrid } from "../../shared/util";
 import { useAlert, usePrompt } from "../dialog-boxes";
 import {
@@ -29,102 +31,72 @@ export function DiceInterface() {
       boni === null ? "" : boni >= 0 ? "+" + boni.toString() : boni.toString();
     const rollString = diceTypes.join("+") + boniString;
 
-    const regex = /(^| *[+-] *)(?:(\d*)(d|a|i)(\d+)|(\d+))/g;
-    const dice = [...rollString.matchAll(regex)].map(
-      ([_, sign, diceCount, die, dieFaces, mod]): RRDice | RRModifier => {
-        const negated = sign?.trim() === "-";
-        if (diceCount !== undefined && dieFaces !== undefined) {
-          // die
-          const faces = parseInt(dieFaces);
-          const count =
-            diceCount === "" ? (die === "d" ? 1 : 2) : parseInt(diceCount);
-          return roll({
-            count,
-            faces,
-            modified:
-              die === "a" ? "advantage" : die === "i" ? "disadvantage" : "none",
-            negated,
-            damage: { type: null },
-          });
-        } else if (mod) {
-          // mod
-          const modifier = parseInt(mod) * (negated ? -1 : 1);
-          return {
-            type: "modifier",
-            damageType: { type: null },
-            modifier,
-          };
-        }
-        throw new Error();
-      }
-    );
-
-    if (dice.length) {
-      if (addTemplate) {
-        const name =
-          (await prompt("Name of the new dice template"))?.trim() ?? "";
-        let categoryId;
-        if (myself.diceTemplateCategories.length < 1) {
-          const newTemplateCategoryAction = playerAddDiceTemplateCategory({
-            id: myself.id,
-            category: {
-              categoryName: "Generated Templates",
-              id: rrid<RRDiceTemplateCategory>(),
-              icon: "wrench",
-              templates: [],
-            },
-          });
-
-          dispatch(newTemplateCategoryAction);
-          categoryId = newTemplateCategoryAction.payload.category.id;
-        } else {
-          categoryId = myself.diceTemplateCategories[0]!.id;
-        }
-        dispatch(
-          playerAddDiceTemplate({
-            id: myself.id,
-            // FIXME should allow to select
-            categoryId,
-            template: {
-              id: rrid<RRDiceTemplate>(),
-              name,
-              notes: "",
-              parts: dice.flatMap<RRDiceTemplatePart>((d) =>
-                d.type === "modifier"
-                  ? {
-                      id: rrid<RRDiceTemplatePart>(),
-                      type: "modifier",
-                      number: d.modifier,
-                      damage: d.damageType,
-                    }
-                  : {
-                      id: rrid<RRDiceTemplatePart>(),
-                      type: "dice",
-                      count: d.diceResults.length,
-                      faces: d.faces,
-                      modified: d.modified,
-                      negated: d.negated,
-                      damage: d.damageType,
-                    }
-              ),
-              rollType: "attack",
-            },
-          })
-        );
-      } else {
-        dispatch(
-          logEntryDiceRollAdd({
-            silent: false,
-            playerId: myself.id,
-            payload: { dice, rollType: null, rollName: null },
-          })
-        );
-      }
-      setDiceTypes([]);
-      setBoni(null);
-    } else {
-      await alert("Please follow the regex: " + regex.toString());
+    let diceRollTree: DiceRollTree<false>;
+    try {
+      diceRollTree = parseDiceString(rollString);
+    } catch (error) {
+      console.error({ rollString, error });
+      await alert("Invalid dice input.");
+      return;
     }
+
+    if (addTemplate) {
+      const parts = tryConvertDiceRollTreeToDiceTemplateParts(diceRollTree);
+      if (parts === false) {
+        await alert(
+          "Cannot convert dice roll to template (only simple additive templates are currently supported)."
+        );
+        return;
+      }
+
+      const name =
+        (await prompt("Name of the new dice template"))?.trim() ?? "";
+      let categoryId;
+      if (myself.diceTemplateCategories.length < 1) {
+        const newTemplateCategoryAction = playerAddDiceTemplateCategory({
+          id: myself.id,
+          category: {
+            categoryName: "Generated Templates",
+            id: rrid<RRDiceTemplateCategory>(),
+            icon: "wrench",
+            templates: [],
+          },
+        });
+
+        dispatch(newTemplateCategoryAction);
+        categoryId = newTemplateCategoryAction.payload.category.id;
+      } else {
+        categoryId = myself.diceTemplateCategories[0]!.id;
+      }
+      dispatch(
+        playerAddDiceTemplate({
+          id: myself.id,
+          // FIXME should allow to select
+          categoryId,
+          template: {
+            id: rrid<RRDiceTemplate>(),
+            name,
+            notes: "",
+            parts,
+            rollType: "attack",
+          },
+        })
+      );
+    } else {
+      dispatch(
+        logEntryDiceRollAdd({
+          silent: false,
+          playerId: myself.id,
+          payload: {
+            diceRollTree: rollDiceRollTree(diceRollTree),
+            rollType: null,
+            rollName: null,
+          },
+        })
+      );
+    }
+    setDiceTypes([]);
+    setBoni(null);
   };
 
   function addDiceType(diceType: string) {
@@ -151,10 +123,11 @@ export function DiceInterface() {
         newCount = 2;
       }
       const newDiceType = `${newCount}${splitLetter}${diceInfo[1]!}`;
-      diceTypes[index] = newDiceType;
-      setDiceTypes([...diceTypes]);
+      const newDiceTypes = [...diceTypes];
+      newDiceTypes[index] = newDiceType;
+      setDiceTypes(newDiceTypes);
     } else {
-      setDiceTypes([...diceTypes, diceType]);
+      setDiceTypes([...diceTypes, `1${diceType}`]);
     }
   }
 

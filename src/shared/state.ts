@@ -2,8 +2,9 @@ import * as t from "typanion";
 import type { Dispatch } from "redux";
 import type { IterableElement, ValueOf } from "type-fest";
 import { assertNever, rrid } from "./util";
-import { isDamageType, isSyncedState, RRDiceTemplate } from "./validation";
+import { isSyncedState, RRDiceTemplate } from "./validation";
 import { LAST_MIGRATION_VERSION } from "./constants";
+import { RRDamageType } from "./dice-roll-tree-types-and-validation";
 
 export type MakeRRID<K extends string> = `RRID/${K}/${string}`;
 
@@ -392,8 +393,6 @@ export const colorForDamageType = (type: RRDamageType["type"]) => {
   }
 };
 
-export type RRDamageType = t.InferType<typeof isDamageType>;
-
 export const multipleRollValues = [
   "advantage",
   "disadvantage",
@@ -401,21 +400,6 @@ export const multipleRollValues = [
 ] as const;
 
 export type RRMultipleRoll = IterableElement<typeof multipleRollValues>;
-
-export type RRDice = Extract<
-  IterableElement<RRLogEntryDiceRoll["payload"]["dice"]>,
-  { type: "dice" }
->;
-
-export type RRModifier = Extract<
-  IterableElement<RRLogEntryDiceRoll["payload"]["dice"]>,
-  { type: "modifier" }
->;
-
-export type RRStat = Extract<
-  IterableElement<RRLogEntryDiceRoll["payload"]["dice"]>,
-  { type: "stat" }
->;
 
 export type RRLogEntryDiceRoll = Extract<
   ECE<SyncedState["logEntries"]>,

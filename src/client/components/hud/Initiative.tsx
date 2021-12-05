@@ -48,7 +48,7 @@ import {
   faHouseDamage,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { rollInitiative, diceResult } from "../../roll";
+import { rollInitiative, diceResult } from "../../dice-rolling/roll";
 import useLocalState from "../../useLocalState";
 import { usePrompt } from "../../dialog-boxes";
 import ReactDOM from "react-dom";
@@ -510,7 +510,7 @@ const RollInitiativeDeferredImpl = React.memo<{
     dispatch([
       action,
       initiativeTrackerEntryCharacterAdd({
-        initiative: diceResult(action.payload),
+        initiative: diceResult(action.payload.payload.diceRollTree),
         characterIds: selectedCharacterIds,
       }),
     ]);

@@ -2,7 +2,6 @@ import * as t from "typanion";
 import { assert, IsExact } from "conditional-type-checks";
 import {
   conditionNames,
-  damageTypes,
   EntityCollection,
   characterAttributeNames,
   multipleRollValues,
@@ -28,11 +27,15 @@ import {
   proficiencyValues,
   categoryIcons,
   RRDiceTemplateCategoryID,
-  RRDamageType,
 } from "./state";
 import { withDo } from "./util";
 import tinycolor from "tinycolor2";
 import { isBlurhashValid } from "blurhash";
+import {
+  isDamageType,
+  isDiceRollTree,
+  RRDamageType,
+} from "./dice-roll-tree-types-and-validation";
 
 export function isRRID<ID extends RRID>() {
   return t.makeValidator({
@@ -99,10 +102,6 @@ const isTimestamp = t.applyCascade(t.isNumber(), [
   t.isInteger(),
   t.isPositive(),
 ]);
-
-export const isDamageType = t.isObject({
-  type: t.isEnum(damageTypes),
-});
 
 const sharedAssetValidators = {
   id: isRRID<RRAssetID>(),
@@ -538,29 +537,7 @@ export const isSyncedState = t.isObject({
                 null,
               ] as const),
               rollName: t.isNullable(t.isString()),
-              dice: t.isArray(
-                t.isOneOf(
-                  withDo({ damageType: isDamageType }, (sharedValidators) => [
-                    t.isObject({
-                      ...sharedValidators,
-                      type: t.isLiteral("modifier"),
-                      modifier: t.applyCascade(t.isNumber(), [t.isInteger()]),
-                    }),
-                    t.isObject({
-                      ...sharedValidators,
-                      type: t.isLiteral("dice"),
-                      faces: t.applyCascade(t.isNumber(), [
-                        t.isInteger(),
-                        t.isPositive(),
-                      ]),
-                      modified: t.isEnum(multipleRollValues),
-                      diceResults: t.isArray(t.isNumber()),
-                      negated: t.isBoolean(),
-                    }),
-                  ]),
-                  { exclusive: true }
-                )
-              ),
+              diceRollTree: isDiceRollTree(true),
             }),
           }),
         ]

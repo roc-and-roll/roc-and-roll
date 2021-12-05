@@ -6,8 +6,8 @@ import {
   damageTypes,
   MakeRRID,
   RRCharacterCondition,
-  RRDamageType,
 } from "../../../shared/state";
+import { RRDamageType } from "../../../shared/dice-roll-tree-types-and-validation";
 
 export type CompendiumTextEntry =
   | string

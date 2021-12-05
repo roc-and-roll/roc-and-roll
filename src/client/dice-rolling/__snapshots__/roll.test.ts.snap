@@ -1,0 +1,45 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`dice rolling displays dice results as string 1`] = `
+<React.Fragment>
+  <b>
+    3
+  </b>
+   
+  +
+   
+  <React.Fragment>
+    <React.Fragment>
+      <b>
+        [
+        20, 20, 20
+        ] (
+        3
+        d
+        20
+        )
+      </b>
+    </React.Fragment>
+     
+    *
+     
+    <b>
+      10
+    </b>
+  </React.Fragment>
+</React.Fragment>
+`;
+
+exports[`dice rolling displays dice results as string 2`] = `
+<React.Fragment>
+  <b>
+    1
+  </b>
+   
+  +
+   
+  <b>
+    2
+  </b>
+</React.Fragment>
+`;

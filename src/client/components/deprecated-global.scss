@@ -52,7 +52,7 @@ label {
   background: $color-button;
   transition: background 0.05s ease-in-out;
 
-  &:hover {
+  &:not(:disabled):hover {
     background: lighten($color-button, 15%);
   }
 
@@ -1668,5 +1668,26 @@ aside.emoji-picker-react {
 
   input {
     display: none;
+  }
+}
+
+.dice-input {
+  .input-row {
+    display: flex;
+    margin-top: 4px;
+
+    input {
+      flex-grow: 1;
+    }
+
+    button {
+      border-start-start-radius: 0;
+      border-end-start-radius: 0;
+    }
+  }
+
+  .error-row {
+    font-size: 0.95rem;
+    color: #f38425;
   }
 }

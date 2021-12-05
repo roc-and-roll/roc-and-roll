@@ -4,7 +4,7 @@ import { entries, RRLogEntry } from "../../shared/state";
 import { assertNever } from "../../shared/util";
 import { useMyProps } from "../myself";
 import { usePrompt } from "../dialog-boxes";
-import { diceResultString, DiceResultWithTypes } from "../roll";
+import { diceResultString, DiceResultWithTypes } from "../dice-rolling/roll";
 import { useServerDispatch, useServerState } from "../state";
 import { useScrollToBottom } from "../useScrollToBottom";
 import { formatTimestamp, linkify, nl2br } from "../util";
@@ -27,7 +27,7 @@ const LogEntry = React.memo<{ logEntry: RRLogEntry }>(function LogEntry({
         <>
           {playerName} rolled
           {logEntry.payload.rollName && ` ${logEntry.payload.rollName}`}:{" "}
-          {diceResultString(logEntry)} ={" "}
+          {diceResultString(logEntry.payload.diceRollTree)} ={" "}
           <u>
             <DiceResultWithTypes logEntry={logEntry} />
           </u>

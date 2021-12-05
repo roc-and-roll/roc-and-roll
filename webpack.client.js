@@ -52,6 +52,31 @@ export default (webpackEnv) => {
     },
   };
 
+  const babelLoader = {
+    loader: "babel-loader",
+    options: {
+      cacheDirectory: true,
+      cacheCompression: false,
+      compact: isEnvProduction,
+      babelrc: false,
+      plugins: [
+        "@babel/plugin-syntax-dynamic-import",
+        isEnvDevelopment && require.resolve('react-refresh/babel'),
+      ].filter(Boolean),
+      presets: [
+        [
+          "@babel/preset-env",
+          {
+            useBuiltIns: "entry",
+            corejs: 3
+          }
+        ],
+        ["@babel/preset-react", { development: isEnvDevelopment }],
+        "@babel/preset-typescript",
+      ]
+    }
+  };
+
   return {
     target: "web",
     mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
@@ -214,35 +239,18 @@ export default (webpackEnv) => {
           type: 'asset',
         },
         {
+          test: /\.peggy$/,
+          include: path.resolve("src"),
+          use: [babelLoader, {
+            loader: '@rocket.chat/peggy-loader',
+            options: {},
+          }],
+        },
+        {
           test: /\.tsx?$/,
           include: path.resolve("src"),
-          use: [
-            {
-              loader: "babel-loader",
-              options: {
-                cacheDirectory: true,
-                cacheCompression: false,
-                compact: isEnvProduction,
-                babelrc: false,
-                plugins: [
-                  "@babel/plugin-syntax-dynamic-import",
-                  isEnvDevelopment && require.resolve('react-refresh/babel'),
-                ].filter(Boolean),
-                presets: [
-                  [
-                    "@babel/preset-env",
-                    {
-                      useBuiltIns: "entry",
-                      corejs: 3
-                    }
-                  ],
-                  ["@babel/preset-react", { development: isEnvDevelopment }],
-                  "@babel/preset-typescript",
-                ]
-              }
-            }
-          ]
-        }
+          use: [babelLoader],
+        },
       ],
     },
     devServer: isEnvDevelopment ? {
