@@ -2,11 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
   pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [ master ]
-    
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,7 +13,7 @@ jobs:
       # https://stackoverflow.com/a/59522493/2560557
       run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
     - name: Checkout
-      uses: actions/checkout@master
+      uses: actions/checkout@v2
     - name: Use Node.js 14
       uses: actions/setup-node@v1
       with:

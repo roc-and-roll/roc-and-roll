@@ -182,7 +182,7 @@
       "<rootDir>/jest-setup.ts"
     ],
     "globals": {
-      "__VERSION__": "master"
+      "__VERSION__": "main"
     },
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
     "moduleFileExtensions": [

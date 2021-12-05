@@ -94,7 +94,7 @@ export default (webpackEnv) => {
         // That is why we set a custom environment variable which IS available
         // during build time:
         // $ heroku config:set HEROKU=1
-        '__VERSION__': JSON.stringify(process.env.HEROKU ? "master" : gitRevisionPlugin.version()),
+        '__VERSION__': JSON.stringify(process.env.HEROKU ? "main" : gitRevisionPlugin.version()),
       }),
       new CleanWebpackPlugin({
         cleanOnceBeforeBuildPatterns: ["**/*", "!client/**/*", "!client"],

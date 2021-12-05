@@ -23,7 +23,7 @@ const gitRevisionPlugin = new GitRevisionPlugin();
 // That is why we set a custom environment variable which IS available
 // during build time:
 // $ heroku config:set HEROKU=1
-const version = process.env.HEROKU ? "master" : gitRevisionPlugin.version()
+const version = process.env.HEROKU ? "main" : gitRevisionPlugin.version()
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

@@ -1,8 +1,11 @@
 # Roc & Roll
 
+[![CI](https://github.com/cmfcmf/roc-and-roll/actions/workflows/main.yml/badge.svg)](https://github.com/cmfcmf/roc-and-roll/actions/workflows/main.yml)
+[![CodeQL](https://github.com/cmfcmf/roc-and-roll/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/cmfcmf/roc-and-roll/actions/workflows/codeql-analysis.yml)
+
 ## Demo
 
-A live demo of the current master branch is deployed at https://roc-and-roll.herokuapp.com/.
+A live demo of the main branch is deployed at https://roc-and-roll.herokuapp.com/.
 Warning: All state is regularly reset.
 
 ## Development
