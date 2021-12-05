@@ -6,16 +6,21 @@ import clsx from "clsx";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   unstyled?: boolean;
+  small?: boolean;
 };
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  function Button({ onClick, className, unstyled, ...props }, ref) {
+  function Button({ onClick, className, unstyled, small, ...props }, ref) {
     const [play] = useRRSimpleSound(click);
 
     return (
       <button
         ref={ref}
-        className={clsx(unstyled !== true && "ui-button", className)}
+        className={clsx(
+          unstyled !== true && "ui-button",
+          className,
+          small && "w-6 h-6 flex items-center justify-center"
+        )}
         onClick={(e) => {
           play();
           return onClick?.(e);

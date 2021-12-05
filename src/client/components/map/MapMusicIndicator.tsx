@@ -94,7 +94,7 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
 
     return (
       <span
-        className="map-music-indicator"
+        className="map-music-indicator rounded"
         style={{ backgroundColor, color: textColor }}
         title={title}
         role="button"

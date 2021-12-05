@@ -1,13 +1,20 @@
-import React, { ReactNode, useMemo } from "react";
+import React, { ReactNode, useCallback, useMemo } from "react";
+import { characterUpdate } from "../shared/actions";
+import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../shared/constants";
 import tinycolor from "tinycolor2";
 import { applyToPoint, inverse, Matrix } from "transformation-matrix";
 import { makePoint } from "../shared/point";
 import {
   proficiencyValues,
   RRCharacter,
+  RRCharacterID,
   RRPoint,
   RRTimestamp,
 } from "../shared/state";
+import { DialogTitle, DialogContent, DialogActions } from "./components/Dialog";
+import { Button } from "./components/ui/Button";
+import { useDialog } from "./dialog-boxes";
+import { useServerDispatch } from "./state";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export const noop = () => {};
@@ -79,6 +86,115 @@ export function linkify(text: string) {
   result.push(text.substring(i));
 
   return result.filter((each) => each !== "");
+}
+
+export function useSmartChangeHP(myselfIsGM: boolean) {
+  const dispatch = useServerDispatch();
+  const dialog = useDialog();
+
+  return useCallback(
+    async (characterId: RRCharacterID, newTotalHP: number) => {
+      let changes: ReturnType<typeof changeHPSmartly> | undefined;
+      let character: RRCharacter | undefined;
+      dispatch((state) => {
+        character = state.characters.entities[characterId];
+        if (!character) {
+          return [];
+        }
+
+        changes = changeHPSmartly(character, newTotalHP);
+
+        return {
+          actions: [
+            characterUpdate({
+              id: characterId,
+              changes,
+            }),
+          ],
+          optimisticKey: `${characterId}/hp`,
+          syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+        };
+      });
+
+      if (!character || !changes) {
+        return;
+      }
+
+      let conditions = character.conditions;
+      const c = character;
+
+      if (character.hp > 0 && changes.hp <= 0) {
+        if (
+          !character.conditions.includes("unconscious") &&
+          !character.conditions.includes("dead")
+        ) {
+          if (myselfIsGM) {
+            const result = await dialog<"dead" | "unconscious">((onClose) => (
+              <>
+                <DialogTitle>
+                  Uh oh... looks like {c.name} had a rough time.
+                </DialogTitle>
+                <DialogContent>
+                  <p>
+                    Do you want to mark this character as dead or unconcious?
+                  </p>
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={() => onClose("dead")}>dead</Button>
+                  <Button onClick={() => onClose("unconscious")}>
+                    unconscious
+                  </Button>
+                </DialogActions>
+              </>
+            ));
+            if (result === null) {
+              return;
+            }
+            conditions = [...character.conditions, result];
+          } else {
+            conditions = [...character.conditions, "unconscious"];
+          }
+        }
+      } else if (character.hp <= 0 && changes.hp > 0) {
+        if (
+          character.conditions.includes("unconscious") &&
+          !character.conditions.includes("dead")
+        ) {
+          const result = await dialog<"yes">((onClose) => (
+            <>
+              <DialogTitle>
+                Nice work! {c.name} has regained some hit points.
+              </DialogTitle>
+              <DialogContent>
+                <p>
+                  Do you want to remove the <em>unconscious</em> condition?
+                </p>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => onClose(null)}>no</Button>
+                <Button onClick={() => onClose("yes")}>yes</Button>
+              </DialogActions>
+            </>
+          ));
+          if (result === null) {
+            return;
+          }
+          conditions = character.conditions.filter(
+            (condition) => condition !== "unconscious"
+          );
+        }
+      }
+      if (conditions !== character.conditions) {
+        dispatch(
+          characterUpdate({
+            id: characterId,
+            changes: { conditions },
+          })
+        );
+      }
+    },
+    [dialog, dispatch, myselfIsGM]
+  );
 }
 
 export function changeHPSmartly(

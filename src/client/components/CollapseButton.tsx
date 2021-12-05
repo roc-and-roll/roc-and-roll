@@ -19,6 +19,7 @@ export function CollapseButton(props: {
     <Button
       className={clsx("collapse-button", props.className, {
         "size-20": props.size === 20,
+        "size-32": props.size === 32,
       })}
       onClick={() => {
         props.setCollapsed((collapsed) => !collapsed);

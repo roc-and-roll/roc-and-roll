@@ -1,4 +1,10 @@
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, {
+  Suspense,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   entries,
   RRLogEntry,
@@ -22,16 +28,12 @@ const DiceDisplay = React.lazy(
 
 const NOTIFICATION_TIMEOUT = 6000;
 
-export const NotificationTopAreaPortal =
-  React.createContext<React.RefObject<HTMLDivElement> | null>(null);
+export const NotificationAreaPortal = React.createContext<
+  [HTMLDivElement | null, React.Dispatch<HTMLDivElement | null>]
+>([null, () => {}]);
 
-export function Notifications({
-  topAreaPortal,
-}: {
-  topAreaPortal: React.RefObject<HTMLDivElement>;
-}) {
-  const serverNotifications = useServerState((state) => state.logEntries);
-  const notifications = entries(serverNotifications);
+export function Notifications() {
+  const notifications = entries(useServerState((state) => state.logEntries));
   const [lastShownID, setLastShownID] = useState<RRLogEntryID>();
   const [newNotifications, setNewNotifications] = useState<RRLogEntry[]>([]);
   const [hovered, setHovered] = useState(false);
@@ -55,13 +57,14 @@ export function Notifications({
     }
   }, [lastShownID, notifications]);
 
+  const [_portal, setPortal] = useContext(NotificationAreaPortal);
+
   return (
     <div
-      className="notifications"
+      className="mb-2"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className="notitifactions-top-area" ref={topAreaPortal}></div>
       <Flipper flipKey={newNotifications.map((n) => n.id).join("")}>
         {newNotifications.map((notification) => (
           <Notification
@@ -76,9 +79,12 @@ export function Notifications({
           />
         ))}
       </Flipper>
+      <div ref={(element) => setPortal(element)} />
     </div>
   );
 }
+
+const PLAYER_NAME_CLASS = "inline-block bg-white px-1 rounded-full";
 
 function Notification({
   notification,
@@ -131,7 +137,7 @@ function Notification({
 
   const viewDiceRoll = (notification: RRLogEntryDiceRoll) => (
     <>
-      <span className="player-name" style={{ color: player!.color }}>
+      <span className={PLAYER_NAME_CLASS} style={{ color: player!.color }}>
         {player!.name}
       </span>
       {" rolled "}
@@ -167,7 +173,7 @@ function Notification({
 
   const viewMessage = (notification: RRLogEntryMessage) => (
     <>
-      <span className="player-name" style={{ color: player!.color }}>
+      <span className={PLAYER_NAME_CLASS} style={{ color: player!.color }}>
         {player!.name}
       </span>
       {" wrote: "}
@@ -222,7 +228,11 @@ function Notification({
 
   return (
     <Flipped flipId={notification.id}>
-      <div className="notification" style={style} onClick={onExpired}>
+      <div
+        className="p-4 bg-rr-800 bg-opacity-90 mt-2 rounded cursor-pointer"
+        style={style}
+        onClick={onExpired}
+      >
         {view(notification)}
       </div>
     </Flipped>

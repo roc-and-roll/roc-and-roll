@@ -3,14 +3,14 @@ import { playerUpdate } from "../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import { RRCharacterID } from "../../shared/state";
 import { empty2Null } from "../../shared/util";
-import { useMyProps } from "../myself";
+import { useLoginLogout, useMyProps } from "../myself";
 import { useServerDispatch, useServerState } from "../state";
 import { Button } from "./ui/Button";
 import { SmartColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
 import { SmartTextInput } from "./ui/TextInput";
 
-export function Player({ logout }: { logout: () => void }) {
+export function Player() {
   const dispatch = useServerDispatch();
   const myself = useMyProps(
     "characterIds",
@@ -31,6 +31,8 @@ export function Player({ logout }: { logout: () => void }) {
       return { value: c, label: character.name };
     });
   mainCharacterOptions.unshift({ value: "", label: "none" });
+
+  const { logout } = useLoginLogout();
 
   return (
     <>

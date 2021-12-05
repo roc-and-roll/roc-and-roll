@@ -14,13 +14,7 @@ export default function MyLagRadar() {
 
   return (
     <div
-      style={{
-        position: "fixed",
-        background: "rgba(255, 255, 255, 0.8)",
-        borderRadius: 60,
-        left: 4,
-        bottom: 4,
-      }}
+      className="fixed bottom-2 right-[450px] rounded-full bg-white bg-opacity-80"
       onClick={() => setHidden(true)}
     >
       <LagRadar size={120} />

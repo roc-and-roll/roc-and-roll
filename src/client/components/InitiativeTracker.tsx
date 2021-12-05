@@ -39,9 +39,9 @@ import {
 } from "./map/recoil";
 import { EMPTY_ARRAY, isCharacterDead } from "../../shared/util";
 import ReactDOM from "react-dom";
-import { NotificationTopAreaPortal } from "./Notifications";
 import { SmartIntegerInput } from "./ui/TextInput";
 import { usePrompt } from "../dialog-boxes";
+import { NotificationAreaPortal } from "./Notifications";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -524,11 +524,11 @@ function EndTurnButton({
 }
 
 function YourTurn({ endTurnButton }: { endTurnButton: React.ReactNode }) {
-  const portal = useContext(NotificationTopAreaPortal);
-  return portal?.current
+  const [portal] = useContext(NotificationAreaPortal);
+  return portal
     ? ReactDOM.createPortal(
         <div className="your-turn">It is your turn! {endTurnButton}</div>,
-        portal.current
+        portal
       )
     : null;
 }

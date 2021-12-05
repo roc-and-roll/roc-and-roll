@@ -5,7 +5,6 @@ import {
   mapObjectAdd,
   mapObjectRemove,
   mapObjectUpdate,
-  characterUpdate,
   characterAdd,
   mapSettingsUpdate,
   assetImageAdd,
@@ -18,7 +17,6 @@ import {
   RRMapID,
   RRObjectVisibility,
   RRMapRevealedAreas,
-  RRCharacter,
   RRPlayer,
   RRMapObjectID,
 } from "../../../shared/state";
@@ -45,7 +43,6 @@ import composeRefs from "@seznam/compose-react-refs";
 import { MapToolbar } from "../MapToolbar";
 import {
   DEFAULT_BACKGROUND_IMAGE_HEIGHT,
-  DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
   GRID_SIZE,
   SYNC_MY_MOUSE_POSITION,
 } from "../../../shared/constants";
@@ -61,8 +58,7 @@ import {
 import { useMapToolHandler } from "./useMapToolHandler";
 import { useRecoilCallback } from "recoil";
 import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";
-import { changeHPSmartly, isTriggeredByFormElement } from "../../util";
-import { MapMusicIndicator } from "./MapMusicIndicator";
+import { isTriggeredByFormElement, useSmartChangeHP } from "../../util";
 import { NativeTypes } from "react-dnd-html5-backend";
 import { uploadFiles } from "../../files";
 import { MAP_LINK_SIZE } from "./MapLink";
@@ -75,12 +71,9 @@ import {
   ReduxToRecoilBridge,
   mapObjectGhostPositionsFamily,
 } from "./recoil";
-import { useAlert, useDialog } from "../../dialog-boxes";
+import { useAlert } from "../../dialog-boxes";
 import { DropIndicator } from "../DropIndicator";
-import { DialogActions, DialogContent, DialogTitle } from "../Dialog";
-import { Button } from "../ui/Button";
-import { Toolbar } from "./Toolbar";
-import { PlayerToolbar } from "./PlayerToolbar";
+import { HUD } from "../hud/HUD";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -546,112 +539,7 @@ export default function MapContainer() {
     }
   );
 
-  const dialog = useDialog();
-
-  const onSmartSetTotalHP = useCallback(
-    async (characterId: RRCharacterID, newTotalHP: number) => {
-      let changes: ReturnType<typeof changeHPSmartly> | undefined;
-      let character: RRCharacter | undefined;
-
-      dispatch((state) => {
-        character = state.characters.entities[characterId];
-        if (!character) {
-          return [];
-        }
-
-        changes = changeHPSmartly(character, newTotalHP);
-
-        return {
-          actions: [
-            characterUpdate({
-              id: characterId,
-              changes,
-            }),
-          ],
-          optimisticKey: `${characterId}/hp`,
-          syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-        };
-      });
-
-      if (!character || !changes) {
-        return;
-      }
-
-      let conditions = character.conditions;
-      const c = character;
-
-      if (character.hp > 0 && changes.hp <= 0) {
-        if (
-          !character.conditions.includes("unconscious") &&
-          !character.conditions.includes("dead")
-        ) {
-          if (myself.isGM) {
-            const result = await dialog<"dead" | "unconscious">((onClose) => (
-              <>
-                <DialogTitle>
-                  Uh oh... looks like {c.name} had a rough time.
-                </DialogTitle>
-                <DialogContent>
-                  <p>
-                    Do you want to mark this character as dead or unconcious?
-                  </p>
-                </DialogContent>
-                <DialogActions>
-                  <Button onClick={() => onClose("dead")}>dead</Button>
-                  <Button onClick={() => onClose("unconscious")}>
-                    unconscious
-                  </Button>
-                </DialogActions>
-              </>
-            ));
-            if (result === null) {
-              return;
-            }
-            conditions = [...character.conditions, result];
-          } else {
-            conditions = [...character.conditions, "unconscious"];
-          }
-        }
-      } else if (character.hp <= 0 && changes.hp > 0) {
-        if (
-          character.conditions.includes("unconscious") &&
-          !character.conditions.includes("dead")
-        ) {
-          const result = await dialog<"yes">((onClose) => (
-            <>
-              <DialogTitle>
-                Nice work! {c.name} has regained some hit points.
-              </DialogTitle>
-              <DialogContent>
-                <p>
-                  Do you want to remove the <em>unconscious</em> condition?
-                </p>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={() => onClose(null)}>no</Button>
-                <Button onClick={() => onClose("yes")}>yes</Button>
-              </DialogActions>
-            </>
-          ));
-          if (result === null) {
-            return;
-          }
-          conditions = character.conditions.filter(
-            (condition) => condition !== "unconscious"
-          );
-        }
-      }
-      if (conditions !== character.conditions) {
-        dispatch(
-          characterUpdate({
-            id: characterId,
-            changes: { conditions },
-          })
-        );
-      }
-    },
-    [dispatch, dialog, myself.isGM]
-  );
+  const onSmartSetTotalHP = useSmartChangeHP(myself.isGM);
 
   const onStartMoveMapObjects = useRecoilCallback(
     ({ snapshot, set }) =>
@@ -797,15 +685,16 @@ export default function MapContainer() {
         handleKeyDown={handleKeyDown}
         toolOverlay={toolOverlay}
       />
-      <MapMusicIndicator mapBackgroundColor={map.settings.backgroundColor} />
-      <Toolbar />
-      <PlayerToolbar myself={myself} players={players} />
+      {
+        //<PlayerToolbar myself={myself} players={players} />
+      }
       <MapToolbar
         mapId={map.id}
         mapSettings={map.settings}
         myself={myself}
         setEditState={setEditState}
       />
+      <HUD mapBackgroundColor={map.settings.backgroundColor} />
       {dropProps.nativeFileHovered && (
         <DropIndicator>
           <p>drop background images here</p>

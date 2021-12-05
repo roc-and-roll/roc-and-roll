@@ -1,10 +1,10 @@
 import "./deprecated-global.scss";
 import "../global.css";
-import React, { Suspense, useRef } from "react";
+import React, { Suspense, useState } from "react";
 import { useLoginLogout } from "../myself";
 import { JoinGame } from "./JoinGame";
 import { BottomFloats } from "./BottomFloats";
-import { Notifications, NotificationTopAreaPortal } from "./Notifications";
+import { NotificationAreaPortal } from "./Notifications";
 import { ActiveMusicPlayer } from "../sound";
 import QuickReferenceWrapper from "./quickReference/QuickReferenceWrapper";
 import { ErrorBoundary } from "./ErrorBoundary";
@@ -28,18 +28,15 @@ if (process.env.NODE_ENV === "development") {
 
 export function App() {
   const { login, logout, loggedIn } = useLoginLogout();
-  const notificationTopAreaPortal = useRef<HTMLDivElement>(null);
+  const notificationAreaPortal = useState<HTMLDivElement | null>(null);
   const { connected } = useServerConnection();
 
   return (
-    <NotificationTopAreaPortal.Provider value={notificationTopAreaPortal}>
+    <NotificationAreaPortal.Provider value={notificationAreaPortal}>
       <ErrorBoundary>
         {connected ? (
           loggedIn ? (
-            <Game
-              logout={logout}
-              notificationTopAreaPortal={notificationTopAreaPortal}
-            />
+            <Game logout={logout} />
           ) : (
             <JoinGame login={login} />
           )
@@ -52,14 +49,13 @@ export function App() {
           <LagRadar />
         </Suspense>
       )}
-    </NotificationTopAreaPortal.Provider>
+    </NotificationAreaPortal.Provider>
   );
 }
 
 const Game = React.memo<{
   logout: () => void;
-  notificationTopAreaPortal: React.RefObject<HTMLDivElement>;
-}>(function Game({ logout, notificationTopAreaPortal }) {
+}>(function Game({ logout }) {
   return (
     <div className="app-wrapper">
       <ActiveMusicPlayer />
@@ -74,7 +70,6 @@ const Game = React.memo<{
           <QuickReferenceWrapper />
         </main>
       </Suspense>
-      <Notifications topAreaPortal={notificationTopAreaPortal} />
     </div>
   );
 });

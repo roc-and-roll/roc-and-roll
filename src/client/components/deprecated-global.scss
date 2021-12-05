@@ -258,11 +258,6 @@ a {
 }
 
 // log
-.log {
-  padding: 5px;
-  margin: -0.75rem;
-  background-color: $bottom-float-background;
-}
 
 .log-text {
   overflow-y: auto;
@@ -270,7 +265,6 @@ a {
   max-height: 150px;
   margin-top: 0;
   font-size: 0.8rem;
-  padding-left: 17px;
 
   li {
     overflow-wrap: anywhere;
@@ -281,11 +275,6 @@ a {
   margin: 0.5em 0;
   white-space: nowrap;
   overflow-x: hidden;
-}
-
-.log-title {
-  display: flex;
-  justify-content: space-between;
 }
 
 .log-divider-timestamp,
@@ -328,6 +317,13 @@ a {
     height: 20px;
     border-radius: 20px;
     line-height: 20px;
+  }
+
+  &.size-32 {
+    width: 32px;
+    height: 32px;
+    border-radius: 32px;
+    line-height: 32px;
   }
 }
 
@@ -824,7 +820,6 @@ $gmAreaColor: #ab62c0;
 .your-turn {
   text-align: center;
   font-size: 2rem;
-  margin-top: 1rem;
 
   @media (max-width: 1000px) {
     font-size: 1.5rem;
@@ -916,29 +911,6 @@ $gmAreaColor: #ab62c0;
 
   text-align: right;
   border: none;
-}
-
-.notifications {
-  $width: 400px - 18px;
-  position: fixed;
-  width: $width;
-  left: 50%;
-  margin-left: math.div($width, -2);
-
-  .notification {
-    padding: 1rem;
-    background: #333;
-    margin-top: 0.5rem;
-    border-radius: 3px;
-    cursor: pointer;
-
-    .player-name {
-      display: inline-block;
-      background: #fff;
-      padding: 0 0.5rem;
-      border-radius: 999px;
-    }
-  }
 }
 
 button.color-picker-color {
@@ -1404,17 +1376,12 @@ aside.emoji-picker-react {
 }
 
 .map-music-indicator {
-  position: absolute;
-  top: 0.5rem;
-  left: 1.7rem;
-
-  display: flex;
+  display: inline-flex;
   align-items: center;
   $gap: 0.5rem;
   gap: $gap;
 
   padding: 0.5rem;
-  border-radius: 0.25rem;
 
   font-size: 0.8rem;
   user-select: none;
@@ -1427,7 +1394,7 @@ aside.emoji-picker-react {
     overflow-x: hidden;
     text-overflow: ellipsis;
 
-    transition: opacity 1s ease-in-out, max-width 1s ease-in-out;
+    transition: opacity 1s ease-in-out, max-width 1s ease-in-out, margin-left 1s ease-in-out;
 
     &.is-timeouted {
       max-width: 0;
@@ -1554,16 +1521,13 @@ aside.emoji-picker-react {
   pointer-events: none;
 
   display: flex;
-  position: fixed;
-  top: 0;
+  bottom: 0;
   height: calc(100% - 6rem);
-  margin-top: 3rem;
-  align-items: flex-start;
+  align-items: flex-end;
 }
 .toolbar {
   pointer-events: all;
 
-  margin-left: 1rem;
   display: flex;
   flex-direction: column;
 
@@ -1595,8 +1559,8 @@ aside.emoji-picker-react {
   margin: 0.5rem 0.5rem;
   padding: 0.75rem;
   background: #333;
-  &:first-child {
-    margin-top: 0;
+  &:last-child {
+    margin-bottom: 0;
   }
 }
 .toolbar-tools {

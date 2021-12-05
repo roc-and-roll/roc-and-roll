@@ -14,6 +14,8 @@ import { useServerState } from "../../state";
 import { BlurhashImage } from "../blurhash/BlurhashImage";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 
+const DEFAULT_CHARACTER_SIZE = 32;
+
 export const CharacterPreview = React.forwardRef<
   HTMLSpanElement,
   {
@@ -39,7 +41,7 @@ export const CharacterPreview = React.forwardRef<
     return null;
   }
 
-  const currentSize = size ?? 32;
+  const currentSize = size ?? DEFAULT_CHARACTER_SIZE;
   return (
     <span className="character-image" ref={ref}>
       <BlurhashImage
@@ -74,7 +76,15 @@ export const CharacterPreview = React.forwardRef<
   );
 });
 
-export function CharacterStack({ characters }: { characters: RRCharacter[] }) {
+const STACK_FAN_OUT_SIZE = 24;
+
+export function CharacterStack({
+  characters,
+  size,
+}: {
+  characters: RRCharacter[];
+  size?: number;
+}) {
   const [topIdx, setTopIdx] = useState(0);
 
   // Allow to click through all characters
@@ -86,9 +96,14 @@ export function CharacterStack({ characters }: { characters: RRCharacter[] }) {
     setTopIdx((old) => clamp(0, old, characters.length - 1));
   }, [characters.length]);
 
+  size ??= DEFAULT_CHARACTER_SIZE;
   return (
     <div
-      className="token-stack"
+      className="relative"
+      style={{
+        width: size + (characters.length > 1 ? STACK_FAN_OUT_SIZE : 0),
+        height: size,
+      }}
       onClick={() =>
         setTopIdx((old) => (old === 0 ? characters.length - 1 : old - 1))
       }
@@ -96,16 +111,15 @@ export function CharacterStack({ characters }: { characters: RRCharacter[] }) {
       {sortedCharacters.map((character, i) => (
         <div
           key={character.id}
+          className="absolute"
           style={{
             left:
-              characters.length === 1
-                ? 24 / 2 // center token if there is just one in the stack
-                : i === 0
+              characters.length === 1 || i === 0
                 ? 0 // avoid division by 0
-                : i * (24 / (characters.length - 1)),
+                : i * (STACK_FAN_OUT_SIZE / (characters.length - 1)),
           }}
         >
-          <CharacterPreview character={character} />
+          <CharacterPreview character={character} size={size} />
         </div>
       ))}
     </div>

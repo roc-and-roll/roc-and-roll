@@ -2,7 +2,6 @@ import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
 import React, { useEffect, useState } from "react";
 import { privateChatAdd } from "../../../shared/actions";
 import { EntityCollection, RRPlayer, entries } from "../../../shared/state";
-import { useLoginLogout } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import { CharacterPreview } from "../characters/CharacterPreview";
 import { Player } from "../Player";
@@ -35,13 +34,12 @@ const ToolbarPlayer = React.memo<{
       : null
   );
   const [selected, setSelected] = useState(false);
-  const { logout } = useLoginLogout();
 
   return (
     <Popover
       content={
         player.id === myself.id ? (
-          <Player logout={logout} />
+          <Player />
         ) : (
           <ToolbarChat player={player} myself={myself} />
         )

@@ -62,6 +62,22 @@ const LogEntry = React.memo<{ logEntry: RRLogEntry }>(function LogEntry({
   return <div title={formatTimestamp(logEntry.timestamp)}>{content}</div>;
 });
 
+export function CollapsedLog() {
+  const lastLogEntry = useServerState((state) => {
+    const lastId = state.logEntries.ids[state.logEntries.ids.length - 1];
+    if (!lastId) {
+      return null;
+    }
+    return state.logEntries.entities[lastId];
+  });
+
+  return (
+    <div className="p-2">
+      {lastLogEntry ? <LogEntry logEntry={lastLogEntry} /> : null}
+    </div>
+  );
+}
+
 export const Log = React.memo(function Log() {
   const logEntriesCollection = useServerState((state) => state.logEntries);
   const myself = useMyProps("id");
@@ -70,8 +86,8 @@ export const Log = React.memo(function Log() {
   const prompt = usePrompt();
 
   return (
-    <div className="log">
-      <ul ref={scrollRef} className="log-text">
+    <div className="py-2">
+      <ul ref={scrollRef} className="log-text px-2 mb-2">
         {entries(logEntriesCollection).flatMap((logEntry, i, logEntries) => {
           const lastLogEntry = logEntries[i - 1] ?? null;
           const diff = logEntry.timestamp - (lastLogEntry?.timestamp ?? 0);
@@ -108,6 +124,7 @@ export const Log = React.memo(function Log() {
         })}
       </ul>
       <Button
+        className="mx-2"
         onClick={async () => {
           const text = (await prompt("Type your message", "", true))?.trim();
           if (text === undefined || text.length === 0) {
