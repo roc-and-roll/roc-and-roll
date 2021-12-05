@@ -1,51 +1,21 @@
 @use "sass:math";
 
 @import "./variables";
-
-// Use the native sans serif fonts on every platform.
-//
-// Taken from:
-// https://getbootstrap.com/docs/5.0/content/reboot/#native-font-stack
-$font-family-sans-serif:
-  // Cross-platform generic font family (default user interface font)
-  system-ui,
-  // Safari for macOS and iOS (San Francisco)
-  -apple-system,
-  // Chrome < 56 for macOS (San Francisco)
-  BlinkMacSystemFont,
-  // Windows
-  "Segoe UI",
-  // Android
-  Roboto,
-  // Basic web fallback
-  "Helvetica Neue",
-  Arial,
-  // Linux
-  "Noto Sans",
-  "Liberation Sans",
-  // Sans serif fallback
-  sans-serif,
-  // Emoji fonts
-  "Apple Color Emoji",
-  "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-
-// END code from https://getbootstrap.com
-
-// We deliberately use a local copy of Google Web Fonts instead of linking them
-// directly, so that we avoid having to add a stupid cookie warning.
-@import "~@fontsource/architects-daughter/index.css";
-$font-family-handwritten: "Architects Daughter", cursive;
+@import "./fonts";
 
 body,
 html,
 .root {
-  font-family: $font-family-sans-serif;
   height: 100%;
   width: 100%;
+
+  font-family: $font-family-sans-serif;
+  color: $font-medium;
 }
 
-button {
-  background: rgb(239, 239, 239);
+.root {
+  background: #111;
+  color: white;
 }
 
 label {
@@ -54,11 +24,6 @@ label {
 
 .radio-label {
   display: inline-block;
-}
-
-.root {
-  background: #111;
-  color: white;
 }
 
 .resize-handle {
@@ -1622,7 +1587,7 @@ aside.emoji-picker-react {
     }
 
     &.active {
-      background: #ff9900;
+      background: orange;
     }
   }
 }
@@ -1714,5 +1679,30 @@ aside.emoji-picker-react {
 
   &:nth-child(even) {
     background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.file-input {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+
+  border-radius: 0.25rem;
+
+  letter-spacing: 1px;
+  text-transform: capitalize;
+
+  color: white;
+  $background: rgb(23, 56, 128);
+
+  background: $background;
+  &:hover, &:focus {
+    background: darken($background, 5%);
+  }
+  &:active {
+    background: darken($background, 10%);
+  }
+
+  input {
+    display: none;
   }
 }

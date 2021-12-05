@@ -40,6 +40,18 @@ export default (webpackEnv) => {
     console.log("Running on GitHub Codespaces.");
   }
 
+  const postCSSLoader = {
+    loader: "postcss-loader",
+    options: {
+      postcssOptions: {
+        plugins: {
+          tailwindcss: {},
+          autoprefixer: {},
+        }
+      },
+    },
+  };
+
   return {
     target: "web",
     mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
@@ -180,11 +192,19 @@ export default (webpackEnv) => {
     module: {
       rules: [
         {
-          test: /\.(s[ac]|c)ss$/i,
+          test: /\.css$/i,
           use: [
             MiniCssExtractPlugin.loader,
-            // Translates CSS into CommonJS
             "css-loader",
+            postCSSLoader,
+          ],
+        },
+        {
+          test: /\.(s[ac])ss$/i,
+          use: [
+            MiniCssExtractPlugin.loader,
+            "css-loader",
+            postCSSLoader,
             // Compiles Sass to CSS
             "sass-loader",
           ],

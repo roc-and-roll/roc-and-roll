@@ -1,2 +1,13 @@
+@use "sass:color";
+@use "sass:map";
+
+$font-opacity-high: 1; // 0.87;
+$font-opacity-medium: 0.8; // 0.60;
+$font-opacity-disabled: 0.6; // 0.38;
+
+$font-high: rgba(255, 255, 255, $font-opacity-high);
+$font-medium: rgba(255, 255, 255, $font-opacity-medium);
+$font-disabled: rgba(255, 255, 255, $font-opacity-disabled);
+
 $bottom-float-opacity: 0.6;
 $bottom-float-background: rgba(51, 51, 51, $bottom-float-opacity);

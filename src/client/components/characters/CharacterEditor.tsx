@@ -58,6 +58,7 @@ import { CharacterPreview } from "./CharacterPreview";
 import { CharacterSheetEditor } from "./CharacterSheetEditor";
 import { Collapsible } from "../Collapsible";
 import { Auras } from "./Auras";
+import { FileInput } from "../FileInput";
 
 export interface ConditionWithIcon {
   name: RRCharacterCondition;
@@ -291,10 +292,9 @@ export function CharacterEditor({
         <div>
           <label>
             Image:{" "}
-            <input
+            <FileInput
               disabled={isUploading}
               onChange={updateImage}
-              type="file"
               ref={fileInput}
             />
           </label>

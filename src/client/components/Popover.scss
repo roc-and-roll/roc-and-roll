@@ -6,6 +6,9 @@
   &:not(.popover-no-padding) > .tippy-content {
     padding: 1rem;
   }
+  &.popover-no-padding > .tippy-content {
+    padding: 0;
+  }
 
   max-height: calc(100vh - 2rem);
   overflow-y: auto;

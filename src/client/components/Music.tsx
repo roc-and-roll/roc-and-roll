@@ -41,6 +41,7 @@ import { Button } from "./ui/Button";
 import { TextInput } from "./ui/TextInput";
 import { VolumeSlider } from "./VolumeSlider";
 import { Collapsible, CollapsibleWithButton } from "./Collapsible";
+import { FileInput } from "./FileInput";
 
 export type MusicActions = {
   onAdd: (songOrSoundSet: RRAssetSong | RRSoundSet) => void;
@@ -295,7 +296,7 @@ function UploadAudio({ onUploaded }: { onUploaded: () => void }) {
 
   return (
     <>
-      <input type="file" multiple onChange={doUpload} disabled={isUploading} />
+      <FileInput multiple onChange={doUpload} disabled={isUploading} />
       {isUploading && (
         <span>
           <FontAwesomeIcon icon={faSpinner} spin /> uploading...

@@ -1,5 +1,5 @@
-import "modern-css-reset";
-import "./global.scss";
+import "./deprecated-global.scss";
+import "../global.css";
 import React, { Suspense, useRef } from "react";
 import { useLoginLogout } from "../myself";
 import { JoinGame } from "./JoinGame";

@@ -14,15 +14,19 @@ type TextInputProps<T = string> = Omit<
   type?: "text" | "search" | "number";
   value: T;
   onChange: (value: T) => void;
+  unstyled?: boolean;
 };
 
 export const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
-  function TextInput({ className, type, value, onChange, ...props }, ref) {
+  function TextInput(
+    { className, type, value, onChange, unstyled, ...props },
+    ref
+  ) {
     return (
       <input
         ref={ref}
         type={type ?? "text"}
-        className={clsx(className, "ui-text-input")}
+        className={clsx(className, unstyled !== true && "ui-text-input")}
         value={value}
         onChange={({ target: { value } }) => onChange(value)}
         {...props}

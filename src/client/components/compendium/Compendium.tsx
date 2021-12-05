@@ -3,6 +3,7 @@ import { rrid } from "../../../shared/util";
 import { useAlert } from "../../dialog-boxes";
 import { useGuranteedMemo } from "../../useGuranteedMemo";
 import useLocalState from "../../useLocalState";
+import { FileInput } from "../FileInput";
 import { Button } from "../ui/Button";
 import {
   CompendiumSource,
@@ -78,48 +79,50 @@ export function Compendium() {
       </p>
       <ul>
         <li>
-          <p>upload new source</p>
-          <input
-            type="file"
-            multiple
-            onChange={async (e) => {
-              const files = Array.from(e.target.files ?? []);
-              const jsons = await Promise.all(
-                files.map(async (file) => {
-                  try {
-                    const json = sjson.parse(await file.text());
-                    return [file.name, json] as const;
-                  } catch (err) {
-                    await alert(
-                      `Error while parsing json in file ${
-                        file.name
-                      }\n\n${String(err)}`
-                    );
-                    throw err;
-                  }
-                })
-              );
+          <label>
+            upload new source:{" "}
+            <FileInput
+              multiple
+              onChange={async (e) => {
+                const files = Array.from(e.target.files ?? []);
+                const jsons = await Promise.all(
+                  files.map(async (file) => {
+                    try {
+                      const json = sjson.parse(await file.text());
+                      return [file.name, json] as const;
+                    } catch (err) {
+                      await alert(
+                        `Error while parsing json in file ${
+                          file.name
+                        }\n\n${String(err)}`
+                      );
+                      throw err;
+                    }
+                  })
+                );
 
-              await Promise.all(
-                jsons.map(async ([fileName, json]) => {
-                  const errors: string[] = [];
-                  if (isCompendiumData(json, { errors })) {
-                    addSource({
-                      id: rrid<CompendiumSource>(),
-                      title: fileName,
-                      data: json,
-                      meta: "",
-                    });
-                  } else {
-                    console.error({ json, errors });
-                    await alert(
-                      `Invalid data in file ${fileName}\n\n` + errors.join("\n")
-                    );
-                  }
-                })
-              );
-            }}
-          />
+                await Promise.all(
+                  jsons.map(async ([fileName, json]) => {
+                    const errors: string[] = [];
+                    if (isCompendiumData(json, { errors })) {
+                      addSource({
+                        id: rrid<CompendiumSource>(),
+                        title: fileName,
+                        data: json,
+                        meta: "",
+                      });
+                    } else {
+                      console.error({ json, errors });
+                      await alert(
+                        `Invalid data in file ${fileName}\n\n` +
+                          errors.join("\n")
+                      );
+                    }
+                  })
+                );
+              }}
+            />
+          </label>
         </li>
         {sources.map((source, i) => (
           <li key={i}>

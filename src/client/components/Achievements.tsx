@@ -5,6 +5,7 @@ import { useServerDispatch } from "../state";
 import { Players } from "./Players";
 import { RRPlayerID } from "../../shared/state";
 import { Button } from "./ui/Button";
+import { SmartTextInput } from "./ui/TextInput";
 
 export const Achievements = React.memo(function Achievements() {
   const dispatch = useServerDispatch();
@@ -43,9 +44,9 @@ export const Achievements = React.memo(function Achievements() {
           <Button onClick={() => setSelectedAchievement(null)}>Cancel</Button>
         </div>
       )}
-      <input
+      <SmartTextInput
         value={filterText}
-        onChange={(event) => setFilterText(event.target.value)}
+        onChange={(filterText) => setFilterText(filterText)}
       />
       {achievements
         .filter((a) => filterAchievement(a))

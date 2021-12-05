@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  input, select {
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: bold;
+  }
+}
+
+@layer components {
+  .list-row {
+    @apply even:bg-rr-700 hover:even:bg-rr-600 odd:bg-rr-700/50 hover:odd:bg-rr-600/50 border-t border-b border-rr-400;
+  }
+}

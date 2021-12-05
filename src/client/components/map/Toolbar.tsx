@@ -65,7 +65,9 @@ export const Toolbar = React.memo(function Toolbar() {
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const wrap = (el: JSX.Element) => <div className="toolbar-panel">{el}</div>;
+  const wrap = (el: JSX.Element) => (
+    <div className="toolbar-panel bg-rr-800">{el}</div>
+  );
 
   const initiativeTrackerVisible = useServerState(
     (state) => state.initiativeTracker.visible
