@@ -805,9 +805,9 @@ $gmAreaColor: #ab62c0;
 }
 
 .initiative-value {
-  align-self: end;
+  align-self: flex-end;
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
   font-weight: bold;
   font-size: 18px;
 }
@@ -1635,7 +1635,7 @@ aside.emoji-picker-react {
 
   .finalModifier {
     font-size: large;
-    justify-content: end;
+    justify-content: flex-end;
     display: flex;
     flex-grow: 1;
     margin-right: 0.4rem;
