@@ -369,6 +369,9 @@ export const isSyncedState = t.isObject({
           // Like from the Hero's Feast, which increases your hit point maximum.
           // Can also be used to decrease the hit point maximum temporarily.
           maxHPAdjustment: t.applyCascade(t.isNumber(), [t.isInteger()]),
+
+          AC: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
+
           attributes: t.isDict(
             t.isNullable(t.applyCascade(t.isNumber(), [t.isInteger()])),
             { keys: t.isEnum(characterAttributeNames) }

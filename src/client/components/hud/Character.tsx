@@ -41,7 +41,7 @@ function AC({ character }: { character: RRCharacter }) {
         className="text-white text-7xl opacity-70 absolute right-2"
       />
       <p className="text-4xl text-gray-800 font-bold absolute right-6 top-3">
-        22
+        {character.AC}
       </p>
     </div>
   );

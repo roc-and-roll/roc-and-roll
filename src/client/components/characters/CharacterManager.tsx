@@ -62,6 +62,7 @@ async function makeNewCharacter(
     maxHP: 0,
     temporaryHP: 0,
     maxHPAdjustment: 0,
+    AC: 0,
     scale: 1,
     visibility: "everyone",
     attributes: {},

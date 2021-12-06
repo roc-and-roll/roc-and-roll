@@ -103,18 +103,35 @@ export const CharacterSheetEditor = React.memo<{
             }
           />
         ))}
+        <AttributeEditor
+          value={character.AC}
+          label={"AC"}
+          onChange={(newAC) => {
+            if (!newAC) return;
+            dispatch(() => ({
+              actions: [
+                updateFunc({
+                  id: character.id,
+                  changes: { AC: newAC },
+                }),
+              ],
+              optimisticKey: `AC`,
+              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+            }));
+          }}
+        />
       </div>
       <Button onClick={() => setShowProficiencyEditor(!showProficiencyEditor)}>
         Edit Proficiencies
       </Button>
       {showProficiencyEditor && (
-        <ProficienyEditor character={character} isTemplate={isTemplate} />
+        <ProficiencyEditor character={character} isTemplate={isTemplate} />
       )}
     </div>
   );
 });
 
-function ProficienyEditor({
+function ProficiencyEditor({
   character,
   isTemplate,
 }: {
