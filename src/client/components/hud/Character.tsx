@@ -1,32 +1,39 @@
 import React, { useState } from "react";
 import { RRCharacter } from "../../../shared/state";
-import { useMyProps } from "../../myself";
+import { useMyProps, useMySelectedTokens } from "../../myself";
 import { useServerState } from "../../state";
 import { CharacterPreview } from "../characters/CharacterPreview";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCog, faShieldAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCog,
+  faShieldAlt,
+  faUserCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import { SettingsDialog } from "./Toolbar";
 import { HPInlineEdit } from "../map/HPInlineEdit";
 import { useSmartChangeHP } from "../../../client/util";
+import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 
 export function CharacterHUD() {
   const myself = useMyProps("mainCharacterId", "isGM");
 
-  const character = useServerState((state) =>
+  const selectedCharacter = useMySelectedTokens();
+  const mainCharacter = useServerState((state) =>
     myself.mainCharacterId
       ? state.characters.entities[myself.mainCharacterId] ?? null
       : null
   );
 
-  if (!character) return null;
+  const character =
+    selectedCharacter.length > 0 ? selectedCharacter[0]! : mainCharacter;
 
   return (
     <div className="absolute top-0 right-0">
       <div className="flex m-2">
-        <HealthBar character={character} isGM={myself.isGM} />
+        {character && <HealthBar character={character} isGM={myself.isGM} />}
         <div className="flex flex-col justify-center items-center">
           <CurrentCharacter character={character} />
-          <AC character={character} />
+          {character && <AC character={character} />}
         </div>
       </div>
     </div>
@@ -47,15 +54,29 @@ function AC({ character }: { character: RRCharacter }) {
   );
 }
 
-function CurrentCharacter({ character }: { character: RRCharacter }) {
+function CurrentCharacter({ character }: { character: RRCharacter | null }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const myself = useMyProps("color");
   return (
     <div>
       {settingsOpen && (
         <SettingsDialog onClose={() => setSettingsOpen(false)} />
       )}
       <div className="relative">
-        <CharacterPreview character={character} size={128} />
+        {character ? (
+          <CharacterPreview character={character} size={128} />
+        ) : (
+          <RRFontAwesomeIcon
+            icon={faUserCircle}
+            className="border-solid rounded-full border-4"
+            style={{
+              fontSize: "128px",
+              backgroundColor: myself.color,
+              borderColor: myself.color,
+            }}
+          />
+        )}
+
         <div
           className="bg-gray-900 rounded-full absolute top-0 right-0 text-lg w-8 h-8 flex justify-center items-center"
           onClick={() => setSettingsOpen(true)}
@@ -75,7 +96,6 @@ function HealthBar({
   isGM: boolean;
 }) {
   const healthPercentage = (character.hp / character.maxHP) * 100;
-
   const setHP = useSmartChangeHP(isGM);
 
   return (

@@ -1,7 +1,13 @@
 import React, { useContext, useLayoutEffect } from "react";
-import { atom, useSetRecoilState } from "recoil";
+import { atom, useRecoilValue, useSetRecoilState } from "recoil";
 import { IterableElement } from "type-fest";
-import { RRPlayer, RRPlayerID } from "../shared/state";
+import {
+  EMPTY_ENTITY_COLLECTION,
+  RRPlayer,
+  RRPlayerID,
+  entries,
+} from "../shared/state";
+import { selectedMapObjectIdsAtom } from "./components/map/recoil";
 import { useAutoDispatchPlayerIdOnChange, useServerState } from "./state";
 import { useGuranteedMemo } from "./useGuranteedMemo";
 import useLocalState from "./useLocalState";
@@ -51,6 +57,41 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
   return (
     <MyselfContext.Provider value={ctx}>{children}</MyselfContext.Provider>
   );
+}
+
+export function useMySelectedTokens() {
+  const myself = useMyProps("currentMap");
+
+  const characterCollection = useServerState((state) => state.characters);
+  const mapObjects = useServerState(
+    (state) =>
+      state.maps.entities[myself.currentMap]?.objects ??
+      EMPTY_ENTITY_COLLECTION,
+    (current, next) => {
+      const cl = entries(current);
+      const nl = entries(next);
+      return cl === nl && cl.every((c, i) => c.id === nl[i]!.id);
+    }
+  );
+
+  const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom).filter(
+    Boolean
+  );
+
+  const selectedCharacterIds = [
+    ...new Set(
+      selectedMapObjectIds.flatMap((mapObjectId) => {
+        const mapObject = mapObjects.entities[mapObjectId];
+        return mapObject?.type === "token" ? mapObject.characterId : [];
+      })
+    ),
+  ];
+
+  const selectedCharacters = selectedCharacterIds.flatMap(
+    (characterId) => characterCollection.entities[characterId] ?? []
+  );
+
+  return selectedCharacters;
 }
 
 export function useMyProps<T extends (keyof RRPlayer)[]>(
