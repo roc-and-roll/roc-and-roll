@@ -144,7 +144,8 @@ export const HUDToolbar = React.memo(function Toolbar() {
         </RRTooltip>
         {toolbarElements.map((toolbarElement) => {
           return (
-            (!collapsed || !toolbarElement.collapsed) && (
+            (!collapsed || !toolbarElement.collapsed) &&
+            (!toolbarElement.gmOnly || myself.isGM) && (
               <RRTooltip
                 key={toolbarElement.id}
                 content={toolbarElement.iconTooltip}
@@ -178,7 +179,8 @@ export const HUDToolbar = React.memo(function Toolbar() {
         {toolbarElements.map(
           (toolbarElement) =>
             (!collapsed || !toolbarElement.collapsed) &&
-            activeToolbarElements.includes(toolbarElement.id) && (
+            activeToolbarElements.includes(toolbarElement.id) &&
+            (!toolbarElement.gmOnly || myself.isGM) && (
               <div key={toolbarElement.id} className="toolbar-panel bg-rr-800">
                 {toolbarElement.content}
               </div>
