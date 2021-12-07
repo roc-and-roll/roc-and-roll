@@ -24,10 +24,10 @@ export function CharacterHUD() {
     <div className="absolute top-0 right-0">
       <div className="flex m-2">
         <HealthBar character={character} isGM={myself.isGM} />
-        <CurrentCharacter character={character} />
-      </div>
-      <div className="flex justify-end">
-        <AC character={character} />
+        <div className="flex flex-col justify-center items-center">
+          <CurrentCharacter character={character} />
+          <AC character={character} />
+        </div>
       </div>
     </div>
   );
@@ -38,9 +38,9 @@ function AC({ character }: { character: RRCharacter }) {
     <div className="relative">
       <FontAwesomeIcon
         icon={faShieldAlt}
-        className="text-white text-7xl opacity-70 absolute right-2"
+        className="text-white text-7xl opacity-50 right-2"
       />
-      <p className="text-4xl text-gray-800 font-bold absolute right-6 top-3">
+      <p className="text-4xl font-bold w-full absolute top-3 text-white left-0 text-center">
         {character.AC}
       </p>
     </div>
@@ -57,10 +57,10 @@ function CurrentCharacter({ character }: { character: RRCharacter }) {
       <div className="relative">
         <CharacterPreview character={character} size={128} />
         <div
-          className="bg-gray-900 rounded-full p-2 absolute top-0 right-0 text-lg"
+          className="bg-gray-900 rounded-full absolute top-0 right-0 text-lg w-8 h-8 flex justify-center items-center"
           onClick={() => setSettingsOpen(true)}
         >
-          <FontAwesomeIcon icon={faCog} className="" />
+          <FontAwesomeIcon icon={faCog} />
         </div>
       </div>
     </div>
