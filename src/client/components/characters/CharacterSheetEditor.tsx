@@ -107,7 +107,6 @@ export const CharacterSheetEditor = React.memo<{
           value={character.AC}
           label={"AC"}
           onChange={(newAC) => {
-            if (!newAC) return;
             dispatch(() => ({
               actions: [
                 updateFunc({
@@ -381,6 +380,7 @@ function AttributeEditor({
       <label>
         <div className="character-editor-attribute-label">{label}</div>
         <SmartIntegerInput
+          min={0}
           placeholder="Mod ..."
           value={value}
           nullable

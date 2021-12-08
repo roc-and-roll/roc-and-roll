@@ -5,15 +5,15 @@ export default class extends AbstractMigration {
 
   migrate = (state: any) => {
     Object.values(
-      state.characters.entities as Record<string, { AC: any }>
+      state.characters.entities as Record<string, { AC: null | number }>
     ).forEach((character) => {
-      character.AC ??= 0;
+      character.AC ??= null;
     });
 
     Object.values(
-      state.characterTemplates.entities as Record<string, { AC: any }>
+      state.characterTemplates.entities as Record<string, { AC: null | number }>
     ).forEach((character) => {
-      character.AC ??= 0;
+      character.AC ??= null;
     });
 
     return state;

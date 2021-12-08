@@ -371,7 +371,9 @@ export const isSyncedState = t.isObject({
           // Can also be used to decrease the hit point maximum temporarily.
           maxHPAdjustment: t.applyCascade(t.isNumber(), [t.isInteger()]),
 
-          AC: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
+          AC: t.isNullable(
+            t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()])
+          ),
 
           attributes: t.isDict(
             t.isNullable(t.applyCascade(t.isNumber(), [t.isInteger()])),

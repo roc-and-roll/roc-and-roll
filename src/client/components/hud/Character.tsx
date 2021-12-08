@@ -89,7 +89,7 @@ function AC({ character }: { character: RRCharacter }) {
         className="text-white text-7xl opacity-50 right-2"
       />
       <p className="text-4xl font-bold w-full absolute top-3 text-white left-0 text-center">
-        {character.AC}
+        {character.AC ?? "?"}
       </p>
     </div>
   );
