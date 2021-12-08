@@ -31,10 +31,10 @@ export function CharacterHUD() {
     selectedCharacter.length > 0 ? selectedCharacter[0]! : mainCharacter;
 
   return (
-    <div className="absolute top-0 right-0">
+    <div className="absolute top-0 right-0 pointer-events-none">
       <div className="flex m-2">
         {character && <HealthBar character={character} isGM={myself.isGM} />}
-        <div className="flex flex-col justify-center items-center">
+        <div className="flex flex-col justify-center items-center pointer-events-auto">
           <CurrentCharacter character={character} />
           {character && <AC character={character} />}
           {character && <SpellSave character={character} />}
@@ -159,7 +159,7 @@ function HealthBar({
 
   return (
     <div
-      className="flex h-8 rounded-md overflow-hidden bg-red-800"
+      className="flex h-8 rounded-md overflow-hidden bg-red-800 pointer-events-auto"
       style={{ width: "200px" }}
     >
       <HPInlineEdit

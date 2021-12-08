@@ -136,9 +136,9 @@ export function InitiativeHUD() {
   );
 
   return (
-    <div className="absolute inset-4 h-24">
+    <div className="absolute inset-2 h-24 pointer-events-none">
       <Flipper flipKey={sortedRows.map((row) => row.id).join("-")}>
-        <ul role="list" className="flex flex-wrap">
+        <ul role="list" className="inline-flex flex-wrap pointer-events-auto">
           {sortedRows.map((entry, idx) => (
             <InitiativeEntry
               key={entry.id}
@@ -194,7 +194,7 @@ function YourTurn({ endTurnButton }: { endTurnButton: React.ReactNode }) {
   const [portal] = useContext(NotificationAreaPortal);
   return portal
     ? ReactDOM.createPortal(
-        <div className="your-turn bg-yellow-500 bg-opacity-90 mt-2 rounded p-1">
+        <div className="your-turn bg-yellow-500/90 mt-2 p-1 hud-panel">
           It is your turn! {endTurnButton}
         </div>,
         portal

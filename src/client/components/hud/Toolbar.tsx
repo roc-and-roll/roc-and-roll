@@ -157,7 +157,7 @@ export const HUDToolbar = React.memo(function Toolbar() {
   // re-enable pointer events on all children.
   return (
     <div className="pointer-events-none absolute bottom-14 left-2 flex items-end h-[calc(100%-6rem)] z-10">
-      <div className="pointer-events-auto flex flex-col rounded bg-rr-800">
+      <div className="pointer-events-auto flex flex-col hud-panel">
         <RRTooltip
           content={collapsed ? "show more" : "show less"}
           {...tooltipProps}
@@ -213,7 +213,7 @@ export const HUDToolbar = React.memo(function Toolbar() {
             (!toolbarElement.gmOnly || myself.isGM) && (
               <div
                 key={toolbarElement.id}
-                className="m-2 last:mb-0 p-3 rounded bg-rr-800"
+                className="m-2 last:mb-0 p-3 hud-panel"
               >
                 {toolbarElement.content}
               </div>

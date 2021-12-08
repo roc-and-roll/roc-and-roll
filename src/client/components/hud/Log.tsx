@@ -36,7 +36,7 @@ function Log() {
           size={32}
         />
       </div>
-      <div className="flex-1 pointer-events-auto bg-rr-800 bg-opacity-90 rounded">
+      <div className="flex-1 pointer-events-auto hud-panel">
         {collapsed ? <CollapsedLog /> : <FullLog />}
       </div>
     </div>
