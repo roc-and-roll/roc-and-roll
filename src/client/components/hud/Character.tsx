@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCog,
   faDragon,
+  faMagic,
   faShieldAlt,
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
@@ -36,6 +37,7 @@ export function CharacterHUD() {
         <div className="flex flex-col justify-center items-center">
           <CurrentCharacter character={character} />
           {character && <AC character={character} />}
+          {character && <SpellSave character={character} />}
           {<HeroPoint />}
         </div>
       </div>
@@ -86,10 +88,26 @@ function AC({ character }: { character: RRCharacter }) {
     <div className="relative">
       <FontAwesomeIcon
         icon={faShieldAlt}
-        className="text-white text-7xl opacity-50 right-2"
+        fixedWidth
+        className="text-white text-7xl opacity-50 right-2 m-1"
       />
       <p className="text-4xl font-bold w-full absolute top-3 text-white left-0 text-center">
         {character.AC ?? "?"}
+      </p>
+    </div>
+  );
+}
+
+function SpellSave({ character }: { character: RRCharacter }) {
+  return (
+    <div className="relative">
+      <FontAwesomeIcon
+        icon={faMagic}
+        fixedWidth
+        className="text-white text-6xl opacity-50 right-2 m-1 "
+      />
+      <p className="text-4xl font-bold w-full absolute top-4 text-white left-0 text-center">
+        {character.spellSaveDC ?? "?"}
       </p>
     </div>
   );

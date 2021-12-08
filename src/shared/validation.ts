@@ -374,6 +374,9 @@ export const isSyncedState = t.isObject({
           AC: t.isNullable(
             t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()])
           ),
+          spellSaveDC: t.isNullable(
+            t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()])
+          ),
 
           attributes: t.isDict(
             t.isNullable(t.applyCascade(t.isNumber(), [t.isInteger()])),

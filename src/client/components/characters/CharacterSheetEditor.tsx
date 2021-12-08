@@ -119,6 +119,22 @@ export const CharacterSheetEditor = React.memo<{
             }));
           }}
         />
+        <AttributeEditor
+          value={character.spellSaveDC}
+          label={"Spell Save DC"}
+          onChange={(newDC) => {
+            dispatch(() => ({
+              actions: [
+                updateFunc({
+                  id: character.id,
+                  changes: { spellSaveDC: newDC },
+                }),
+              ],
+              optimisticKey: `spellSaveDC`,
+              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+            }));
+          }}
+        />
       </div>
       <Button onClick={() => setShowProficiencyEditor(!showProficiencyEditor)}>
         Edit Proficiencies
