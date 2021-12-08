@@ -47,7 +47,6 @@ import {
   SYNC_MY_MOUSE_POSITION,
 } from "../../../shared/constants";
 import { assertNever, timestamp, withDo } from "../../../shared/util";
-import { useRRSettings } from "../../settings";
 import {
   makePoint,
   pointAdd,
@@ -111,7 +110,6 @@ export default function MapContainer() {
   const map = useServerState((s) => s.maps.entities[myself.currentMap]!);
   const mapId = map.id;
   const dispatch = useServerDispatch();
-  const [settings] = useRRSettings();
   const syncedDebounceMakerRef = useRef(
     new SyncedDebounceMaker(CURSOR_POSITION_SYNC_DEBOUNCE)
   );

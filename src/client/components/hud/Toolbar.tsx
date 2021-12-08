@@ -67,15 +67,19 @@ export const HUDToolbar = React.memo(function Toolbar() {
   >("activeToolbarElements", []);
 
   const toolbarElements: ToolbarElement[] = [
-    {
-      id: "debug",
-      collapsed: false,
-      content: <DebugSettings />,
-      gmOnly: false,
-      icon: faBug,
-      iconTooltip: "Debug",
-      iconClassName: "border-2 border-red-500",
-    },
+    ...(process.env.NODE_ENV === "development"
+      ? [
+          {
+            id: "debug",
+            collapsed: false,
+            content: <DebugSettings />,
+            gmOnly: false,
+            icon: faBug,
+            iconTooltip: "Debug",
+            iconClassName: "border-2 border-red-500",
+          },
+        ]
+      : []),
     {
       id: "settings",
       collapsed: true,

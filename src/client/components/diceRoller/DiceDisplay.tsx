@@ -6,43 +6,12 @@ import { Dice } from "./Dice";
 import clsx from "clsx";
 import { contrastColor } from "../../util";
 import { USE_CONCURRENT_MODE } from "../../../shared/constants";
-import {
-  DRTPartDice,
-  DRTPartNegated,
-  DRTPartNum,
-  DRTPartParens,
-  DRTPartTerm,
-  RRDamageType,
-} from "../../../shared/dice-roll-tree-types-and-validation";
-import { DRTVisitor } from "../../dice-rolling/grammar";
+import { RRDamageType } from "../../../shared/dice-roll-tree-types-and-validation";
+import { RollSlots, SlotsVisitor } from "./SlotsVisitor";
 
 const SLOT_SIZE = 50;
 const COLUMNS = 7;
 export const DICE_DISPLAY_COLUMNS = COLUMNS;
-
-interface DisplayPart {
-  damageType: RRDamageType;
-}
-interface DisplayModifier extends DisplayPart {
-  type: "modifier";
-  modifier: number;
-}
-interface DisplayDie extends DisplayPart {
-  type: "die";
-  faces: number;
-  result: number;
-  used: boolean;
-  color: string;
-}
-interface DisplayWeirdDie extends DisplayPart {
-  type: "weirdDie";
-  faces: number;
-  result: number;
-  used: boolean;
-  color: string;
-}
-
-type RollSlots = (DisplayDie | DisplayModifier | DisplayWeirdDie)[];
 
 const indexToXY = (i: number) => ({
   x: i % COLUMNS,
@@ -146,55 +115,6 @@ function ModifierContainer({ slots }: { slots: RollSlots }) {
       )}
     </div>
   );
-}
-
-class SlotsVisitor extends DRTVisitor<RollSlots, true> {
-  protected override visitNum(expression: DRTPartNum): RollSlots {
-    return [
-      {
-        type: "modifier",
-        modifier: expression.value,
-        damageType: expression.damage,
-      },
-    ];
-  }
-
-  protected override visitDice(expression: DRTPartDice<true>): RollSlots {
-    return expression.results.map((result) => ({
-      type: [4, 6, 8, 10, 12, 20].includes(expression.faces)
-        ? "die"
-        : "weirdDie",
-      damageType: expression.damage,
-      faces: expression.faces,
-      result: result,
-      color:
-        expression.faces !== 20
-          ? colorForDamageType(expression.damage.type)
-          : result === 1
-          ? "darkred"
-          : result === 20
-          ? "green"
-          : "orange",
-      used:
-        expression.modified === "none"
-          ? true
-          : expression.modified === "advantage"
-          ? result === Math.max(...expression.results)
-          : result === Math.min(...expression.results),
-    }));
-  }
-
-  protected override visitTerm(expression: DRTPartTerm<true>): RollSlots {
-    return expression.operands.flatMap((operand) => this.visit(operand));
-  }
-
-  protected override visitParens(expression: DRTPartParens<true>): RollSlots {
-    return this.visit(expression.inner);
-  }
-
-  protected override visitNegated(expression: DRTPartNegated<true>): RollSlots {
-    return this.visit(expression.inner);
-  }
 }
 
 export default function DiceDisplay({

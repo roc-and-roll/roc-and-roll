@@ -1,0 +1,120 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SlotsVisitor correctly handles negative numbers in all cases -(5) 1`] = `
+Array [
+  Object {
+    "damageType": Object {
+      "type": null,
+    },
+    "modifier": -5,
+    "type": "modifier",
+  },
+]
+`;
+
+exports[`SlotsVisitor correctly handles negative numbers in all cases --5 1`] = `
+Array [
+  Object {
+    "damageType": Object {
+      "type": null,
+    },
+    "modifier": 5,
+    "type": "modifier",
+  },
+]
+`;
+
+exports[`SlotsVisitor correctly handles negative numbers in all cases -5 1`] = `
+Array [
+  Object {
+    "damageType": Object {
+      "type": null,
+    },
+    "modifier": -5,
+    "type": "modifier",
+  },
+]
+`;
+
+exports[`SlotsVisitor correctly handles negative numbers in all cases 1-(2-3) 1`] = `
+Array [
+  Object {
+    "damageType": Object {
+      "type": null,
+    },
+    "modifier": 1,
+    "type": "modifier",
+  },
+  Object {
+    "damageType": Object {
+      "type": null,
+    },
+    "modifier": -2,
+    "type": "modifier",
+  },
+  Object {
+    "damageType": Object {
+      "type": null,
+    },
+    "modifier": 3,
+    "type": "modifier",
+  },
+]
+`;
+
+exports[`SlotsVisitor correctly handles negative numbers in all cases 10+-5 1`] = `
+Array [
+  Object {
+    "damageType": Object {
+      "type": null,
+    },
+    "modifier": 10,
+    "type": "modifier",
+  },
+  Object {
+    "damageType": Object {
+      "type": null,
+    },
+    "modifier": -5,
+    "type": "modifier",
+  },
+]
+`;
+
+exports[`SlotsVisitor correctly handles negative numbers in all cases 10-(5) 1`] = `
+Array [
+  Object {
+    "damageType": Object {
+      "type": null,
+    },
+    "modifier": 10,
+    "type": "modifier",
+  },
+  Object {
+    "damageType": Object {
+      "type": null,
+    },
+    "modifier": -5,
+    "type": "modifier",
+  },
+]
+`;
+
+exports[`SlotsVisitor correctly handles negative numbers in all cases 10-5 1`] = `
+Array [
+  Object {
+    "damageType": Object {
+      "type": null,
+    },
+    "modifier": 10,
+    "type": "modifier",
+  },
+  Object {
+    "damageType": Object {
+      "type": null,
+    },
+    "modifier": -5,
+    "type": "modifier",
+  },
+]
+`;
