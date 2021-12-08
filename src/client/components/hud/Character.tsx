@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { RRCharacter } from "../../../shared/state";
 import { useMyProps, useMySelectedTokens } from "../../myself";
-import { useServerState } from "../../state";
+import { useServerDispatch, useServerState } from "../../state";
 import { CharacterPreview } from "../characters/CharacterPreview";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCog,
+  faDragon,
   faShieldAlt,
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
@@ -13,6 +14,7 @@ import { SettingsDialog } from "./Toolbar";
 import { HPInlineEdit } from "../map/HPInlineEdit";
 import { useSmartChangeHP } from "../../../client/util";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
+import { playerUpdate } from "../../../shared/actions";
 
 export function CharacterHUD() {
   const myself = useMyProps("mainCharacterId", "isGM");
@@ -34,8 +36,47 @@ export function CharacterHUD() {
         <div className="flex flex-col justify-center items-center">
           <CurrentCharacter character={character} />
           {character && <AC character={character} />}
+          {<HeroPoint />}
         </div>
       </div>
+    </div>
+  );
+}
+
+function HeroPoint() {
+  const myself = useMyProps("id", "hasHeroPoint");
+  const dispatch = useServerDispatch();
+
+  return (
+    <div
+      className="border-solid rounded-md w-10 h-10 flex justify-center items-center border-white opacity-80 m-2"
+      style={{
+        borderWidth: "5px",
+        boxShadow: myself.hasHeroPoint ? "0 0 5px 1px #fff" : "",
+        opacity: myself.hasHeroPoint ? "1" : "0.5",
+      }}
+      title={myself.hasHeroPoint ? "You Have a Hero Point!" : "No Hero Point"}
+      onClick={() =>
+        dispatch({
+          actions: [
+            playerUpdate({
+              id: myself.id,
+              changes: { hasHeroPoint: !myself.hasHeroPoint },
+            }),
+          ],
+          optimisticKey: "hasHeroPoint",
+          syncToServerThrottle: 0,
+        })
+      }
+    >
+      <FontAwesomeIcon
+        icon={faDragon}
+        fixedWidth
+        style={{
+          opacity: myself.hasHeroPoint ? 1 : 0.8,
+          color: myself.hasHeroPoint ? "lightyellow" : "white",
+        }}
+      />
     </div>
   );
 }

@@ -31,6 +31,7 @@ export const JoinGame = React.memo(function JoinGame({
       characterIds: [],
       favoritedAssetIds: [],
       mainCharacterId: null,
+      hasHeroPoint: false,
       diceTemplateCategories: [
         {
           id: rrid<RRDiceTemplateCategory>(),

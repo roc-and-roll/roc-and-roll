@@ -18,7 +18,8 @@ export function Player() {
     "id",
     "isGM",
     "color",
-    "mainCharacterId"
+    "mainCharacterId",
+    "hasHeroPoint"
   );
   const characters = useServerState((s) => s.characters);
 
@@ -55,6 +56,25 @@ export function Player() {
         />
       </label>
 
+      <label>
+        Has A Hero Point:{" "}
+        <input
+          type="checkbox"
+          checked={myself.hasHeroPoint}
+          onChange={(e) =>
+            dispatch({
+              actions: [
+                playerUpdate({
+                  id: myself.id,
+                  changes: { hasHeroPoint: e.target.checked },
+                }),
+              ],
+              optimisticKey: "hasHeroPoint",
+              syncToServerThrottle: 0,
+            })
+          }
+        />
+      </label>
       <label>
         Is GM:{" "}
         <input
