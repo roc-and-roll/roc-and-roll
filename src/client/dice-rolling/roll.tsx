@@ -184,15 +184,11 @@ class FormatDiceRollVisitor extends DRTVisitor<React.ReactElement, true> {
             if (r === boldValue) {
               return (
                 <>
-                  <b>{r}</b> (d{expression.faces})
+                  <b>{r}</b>
                 </>
               );
             } else {
-              return (
-                <>
-                  {r} (d{expression.faces})
-                </>
-              );
+              return <>{r}</>;
             }
           })
           .reduce((prev, curr) => {
@@ -202,7 +198,7 @@ class FormatDiceRollVisitor extends DRTVisitor<React.ReactElement, true> {
               </>
             );
           })}
-        )
+        ) (d{expression.faces})
       </>
     );
   }

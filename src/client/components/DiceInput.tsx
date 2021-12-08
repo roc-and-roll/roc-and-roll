@@ -37,9 +37,8 @@ export function DiceInput() {
           value={text}
           onKeyPress={(e) => {
             if (e.key === "Enter") {
-              if (syntaxError) {
-                setShowError(true);
-              } else {
+              setShowError(!!syntaxError);
+              if (!syntaxError) {
                 doRoll();
               }
             }

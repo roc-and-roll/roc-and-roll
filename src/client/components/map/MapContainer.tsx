@@ -47,7 +47,6 @@ import {
   SYNC_MY_MOUSE_POSITION,
 } from "../../../shared/constants";
 import { assertNever, timestamp, withDo } from "../../../shared/util";
-import { useRRSettings } from "../../settings";
 import {
   makePoint,
   pointAdd,
@@ -74,6 +73,7 @@ import {
 import { useAlert } from "../../dialog-boxes";
 import { DropIndicator } from "../DropIndicator";
 import { HUD } from "../hud/HUD";
+import { useDebugSettings } from "../hud/DebugSettings";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -110,7 +110,6 @@ export default function MapContainer() {
   const map = useServerState((s) => s.maps.entities[myself.currentMap]!);
   const mapId = map.id;
   const dispatch = useServerDispatch();
-  const [settings] = useRRSettings();
   const syncedDebounceMakerRef = useRef(
     new SyncedDebounceMaker(CURSOR_POSITION_SYNC_DEBOUNCE)
   );
@@ -656,6 +655,8 @@ export default function MapContainer() {
 
   const players = useServerState((state) => state.players);
 
+  const { mapDebugOverlayActive, noHUD } = useDebugSettings();
+
   return (
     <div ref={dropRef} className="map-container">
       <ReduxToRecoilBridge mapObjects={map.objects} />
@@ -694,19 +695,18 @@ export default function MapContainer() {
         myself={myself}
         setEditState={setEditState}
       />
-      <HUD mapBackgroundColor={map.settings.backgroundColor} />
+      {!noHUD && <HUD mapBackgroundColor={map.settings.backgroundColor} />}
       {dropProps.nativeFileHovered && (
         <DropIndicator>
           <p>drop background images here</p>
         </DropIndicator>
       )}
-      {process.env.NODE_ENV === "development" &&
-        settings.debug.mapTokenPositions && (
-          <DebugMapContainerOverlay
-            mapId={map.id}
-            mapObjects={entries(map.objects)}
-          />
-        )}
+      {process.env.NODE_ENV === "development" && mapDebugOverlayActive && (
+        <DebugMapContainerOverlay
+          mapId={map.id}
+          mapObjects={entries(map.objects)}
+        />
+      )}
     </div>
   );
 }

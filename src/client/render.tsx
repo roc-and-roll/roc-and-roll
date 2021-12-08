@@ -17,6 +17,7 @@ import { ModApi } from "./components/Modding";
 import { ServerMessagesProvider } from "./serverMessages";
 import { Socket } from "socket.io-client";
 import { DialogBoxes } from "./dialog-boxes";
+import { DebugSettingsContextProvider } from "./components/hud/DebugSettings";
 
 export function render(socket: Socket) {
   // Create a new div element, add it to the DOM, and render our app into it.
@@ -37,21 +38,23 @@ function Root({ socket }: { socket: Socket }) {
   return (
     <StrictMode>
       <RecoilRoot>
-        <SettingsProvider>
-          <ServerStateProvider socket={socket}>
-            <ServerMessagesProvider socket={socket}>
-              <MyselfProvider>
-                <CompendiumProvider>
-                  <DndProvider backend={HTML5Backend}>
-                    <ModApi />
-                    <App />
-                    <DialogBoxes />
-                  </DndProvider>
-                </CompendiumProvider>
-              </MyselfProvider>
-            </ServerMessagesProvider>
-          </ServerStateProvider>
-        </SettingsProvider>
+        <DebugSettingsContextProvider>
+          <SettingsProvider>
+            <ServerStateProvider socket={socket}>
+              <ServerMessagesProvider socket={socket}>
+                <MyselfProvider>
+                  <CompendiumProvider>
+                    <DndProvider backend={HTML5Backend}>
+                      <ModApi />
+                      <App />
+                      <DialogBoxes />
+                    </DndProvider>
+                  </CompendiumProvider>
+                </MyselfProvider>
+              </ServerMessagesProvider>
+            </ServerStateProvider>
+          </SettingsProvider>
+        </DebugSettingsContextProvider>
       </RecoilRoot>
     </StrictMode>
   );

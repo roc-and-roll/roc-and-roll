@@ -4,16 +4,13 @@ import { ReadonlyDeep } from "type-fest";
 import useLocalState from "./useLocalState";
 
 // increase this whenever the Settings type changes
-const CURRENT_SETTINGS_VERSION = 4;
+const CURRENT_SETTINGS_VERSION = 5;
 
 export type RRSettings = ReadonlyDeep<{
   version: number;
   volume: number;
   mute: boolean;
   renderMode: "fast" | "mostly-fancy" | "fancy";
-  debug: {
-    mapTokenPositions: boolean;
-  };
   enableExperimental25D: boolean;
   collapseDiceTemplates: boolean;
 }>;
@@ -23,9 +20,6 @@ const initialSettings: RRSettings = {
   volume: 1,
   mute: false,
   renderMode: "fancy",
-  debug: {
-    mapTokenPositions: false,
-  },
   enableExperimental25D: false,
   collapseDiceTemplates: false,
 };

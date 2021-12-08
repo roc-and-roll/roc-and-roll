@@ -1515,62 +1515,6 @@ aside.emoji-picker-react {
   }
 }
 
-.toolbar-container {
-  // Otherwise you cannot interact with the map, even if the entire toolbar is
-  // collapsed.
-  pointer-events: none;
-
-  display: flex;
-  bottom: 0;
-  height: calc(100% - 6rem);
-  align-items: flex-end;
-}
-.toolbar {
-  pointer-events: all;
-
-  display: flex;
-  flex-direction: column;
-
-  background: #333;
-  border-radius: 5px;
-
-  svg {
-    margin: 5px;
-    padding: 10px;
-    cursor: pointer;
-    border-radius: 999px;
-    font-size: 38px;
-    display: block;
-
-    &:hover {
-      background: #000000;
-    }
-
-    &.gm-only {
-      background: $gmAreaColor;
-    }
-
-    &.active {
-      background: orange;
-    }
-  }
-}
-.toolbar-panel {
-  margin: 0.5rem 0.5rem;
-  padding: 0.75rem;
-  background: #333;
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
-.toolbar-tools {
-  pointer-events: all;
-
-  $sidebar-width: 420px;
-  width: $sidebar-width;
-  overflow-y: auto;
-  max-height: 100%;
-}
 .tab:not(.active) {
   display: none;
 }

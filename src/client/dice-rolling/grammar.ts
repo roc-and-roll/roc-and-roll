@@ -46,27 +46,39 @@ export const parseDiceStringGetSyntaxError = (
 // node to iteratively create a result T. The second template parameter
 // indicates whether the visitor handles a dice roll tree with or without the
 // dice already having been rolled.
-export abstract class DRTVisitor<T, WithResults extends boolean> {
-  public visit(expression: DRTPartExpression<WithResults>): T {
+export abstract class DRTVisitor<T, WithResults extends boolean, D = never> {
+  public visit(expression: DRTPartExpression<WithResults>, data?: D): T {
     switch (expression.type) {
       case "num":
-        return this.visitNum(expression);
+        return this.visitNum(expression, data);
       case "dice":
-        return this.visitDice(expression);
+        return this.visitDice(expression, data);
       case "term":
-        return this.visitTerm(expression);
+        return this.visitTerm(expression, data);
       case "parens":
-        return this.visitParens(expression);
+        return this.visitParens(expression, data);
       case "negated":
-        return this.visitNegated(expression);
+        return this.visitNegated(expression, data);
       default:
         assertNever(expression);
     }
   }
 
-  protected abstract visitNum(expression: DRTPartNum): T;
-  protected abstract visitDice(expression: DRTPartDice<WithResults>): T;
-  protected abstract visitTerm(expression: DRTPartTerm<WithResults>): T;
-  protected abstract visitParens(expression: DRTPartParens<WithResults>): T;
-  protected abstract visitNegated(expression: DRTPartNegated<WithResults>): T;
+  protected abstract visitNum(expression: DRTPartNum, data?: D): T;
+  protected abstract visitDice(
+    expression: DRTPartDice<WithResults>,
+    data?: D
+  ): T;
+  protected abstract visitTerm(
+    expression: DRTPartTerm<WithResults>,
+    data?: D
+  ): T;
+  protected abstract visitParens(
+    expression: DRTPartParens<WithResults>,
+    data?: D
+  ): T;
+  protected abstract visitNegated(
+    expression: DRTPartNegated<WithResults>,
+    data?: D
+  ): T;
 }
