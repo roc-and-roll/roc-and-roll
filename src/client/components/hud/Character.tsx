@@ -91,7 +91,7 @@ function AC({ character }: { character: RRCharacter }) {
         fixedWidth
         className="text-white text-7xl opacity-50 right-2 m-1"
       />
-      <p className="text-4xl font-bold w-full absolute top-3 text-white left-0 text-center">
+      <p className="text-4xl font-bold w-full absolute top-4 text-white left-0 text-center">
         {character.AC ?? "?"}
       </p>
     </div>

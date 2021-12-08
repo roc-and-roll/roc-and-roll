@@ -106,6 +106,7 @@ export const CharacterSheetEditor = React.memo<{
         <AttributeEditor
           value={character.AC}
           label={"AC"}
+          minimum={0}
           onChange={(newAC) => {
             dispatch(() => ({
               actions: [
@@ -122,6 +123,7 @@ export const CharacterSheetEditor = React.memo<{
         <AttributeEditor
           value={character.spellSaveDC}
           label={"Spell Save DC"}
+          minimum={0}
           onChange={(newDC) => {
             dispatch(() => ({
               actions: [
@@ -365,6 +367,7 @@ function StatEditor({
           ></FontAwesomeIcon>
         </div>
         <SmartIntegerInput
+          min={0}
           className="stat-input"
           value={value}
           nullable
@@ -385,10 +388,12 @@ function StatEditor({
 function AttributeEditor({
   label,
   value,
+  minimum,
   onChange,
 }: {
   label: string;
   value: number | null;
+  minimum?: number;
   onChange: (newValue: number | null) => void;
 }) {
   return (
@@ -396,7 +401,7 @@ function AttributeEditor({
       <label>
         <div className="character-editor-attribute-label">{label}</div>
         <SmartIntegerInput
-          min={0}
+          min={minimum}
           placeholder="Mod ..."
           value={value}
           nullable
