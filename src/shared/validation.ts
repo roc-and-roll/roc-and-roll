@@ -358,7 +358,7 @@ export const isSyncedState = t.isObject({
                 "playerAndGM",
                 "everyone",
               ] as const),
-              visibileWhen: t.isEnum(["always", "onTurn", "hover"] as const),
+              visibleWhen: t.isEnum(["always", "onTurn", "hover"] as const),
             })
           ),
           hp: t.applyCascade(t.isNumber(), [t.isInteger()]),

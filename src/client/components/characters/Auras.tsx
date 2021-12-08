@@ -164,13 +164,13 @@ export function Auras({
               <label>
                 Visible when{" "}
                 <Select
-                  value={aura.visibileWhen}
-                  onChange={(visibileWhen) => {
+                  value={aura.visibleWhen}
+                  onChange={(visibleWhen) => {
                     setAuras([
                       ...character.auras.slice(0, i),
                       {
                         ...aura,
-                        visibileWhen,
+                        visibleWhen,
                       },
                       ...character.auras.slice(i + 1),
                     ]);
@@ -207,7 +207,7 @@ export function Auras({
               color: randomColor(),
               shape: "circle",
               size: 10,
-              visibileWhen: "always",
+              visibleWhen: "always",
               visibility: "everyone",
             },
           ]);
