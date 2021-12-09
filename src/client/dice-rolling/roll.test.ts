@@ -23,6 +23,8 @@ describe("dice rolling", () => {
     ["foo", false],
 
     ["42", true],
+    ["+42", true],
+    ["+ 42", true],
     ["1d3", true],
     ["d4", true],
     ["1d20", true],

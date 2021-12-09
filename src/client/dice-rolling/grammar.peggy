@@ -72,7 +72,7 @@ Dice
   }
 
 Num
-  = _ [0-9]+("."[0-9]+)? _ {
+  = (_ "+")? _ [0-9]+("."[0-9]+)? _ {
     return {
   	  type: 'num',
       value: parseFloat(text(), 10),
