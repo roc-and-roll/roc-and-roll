@@ -16,6 +16,7 @@ import { HPInlineEdit } from "../map/HPInlineEdit";
 import { useSmartChangeHP } from "../../../client/util";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 import { playerUpdate } from "../../../shared/actions";
+import { conditionIcons } from "../characters/CharacterEditor";
 
 export function CharacterHUD() {
   const myself = useMyProps("mainCharacterId", "isGM");
@@ -33,7 +34,10 @@ export function CharacterHUD() {
   return (
     <div className="absolute top-0 right-0 pointer-events-none">
       <div className="flex m-2">
-        {character && <HealthBar character={character} isGM={myself.isGM} />}
+        <div>
+          {character && <HealthBar character={character} isGM={myself.isGM} />}
+          {character && <ConditionsBar character={character} />}
+        </div>
         <div className="flex flex-col justify-center items-center pointer-events-auto">
           <CurrentCharacter character={character} />
           {character && <AC character={character} />}
@@ -41,6 +45,38 @@ export function CharacterHUD() {
           {<HeroPoint />}
         </div>
       </div>
+    </div>
+  );
+}
+
+function ConditionsBar({ character }: { character: RRCharacter }) {
+  return (
+    <div className="flex flex-wrap flex-row-reverse" style={{ width: "200px" }}>
+      {character.conditions.map((condition) => {
+        const icon = conditionIcons[condition];
+        return typeof icon === "string" ? (
+          <img key={condition} src={icon} className="h-8 w-8 m-1"></img>
+        ) : (
+          //<title>{condition}</title>
+          <React.Fragment key={condition}>
+            <FontAwesomeIcon
+              icon={icon}
+              className="h-8 w-8"
+              symbol={`${character.id}/condition-icon/${condition}`}
+            />
+            <use
+              xlinkHref={`#${character.id}/condition-icon/${condition}`}
+              color="black"
+              style={{
+                stroke: "white",
+                strokeWidth: 18,
+              }}
+            >
+              <title>{condition}</title>
+            </use>
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 }
@@ -123,7 +159,11 @@ function CurrentCharacter({ character }: { character: RRCharacter | null }) {
       )}
       <div className="relative">
         {character ? (
-          <CharacterPreview character={character} size={128} />
+          <CharacterPreview
+            character={character}
+            size={128}
+            shouldDisplayShadow={false}
+          />
         ) : (
           <RRFontAwesomeIcon
             icon={faUserCircle}
