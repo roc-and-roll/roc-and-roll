@@ -13,7 +13,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { SettingsDialog } from "./Toolbar";
 import { HPInlineEdit } from "../map/HPInlineEdit";
-import { useSmartChangeHP } from "../../../client/util";
+import {
+  useSmartChangeHP,
+  useHealthbarMeasurements,
+} from "../../../client/util";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 import { playerUpdate } from "../../../shared/actions";
 
@@ -27,13 +30,23 @@ export function CharacterHUD() {
       : null
   );
 
+  const healthWidth = 250;
   const character =
     selectedCharacter.length > 0 ? selectedCharacter[0]! : mainCharacter;
 
   return (
     <div className="absolute top-0 right-0">
       <div className="flex m-2">
-        {character && <HealthBar character={character} isGM={myself.isGM} />}
+        {character && (
+          <div style={{ width: healthWidth }} className="m-4 flex flex-col">
+            <HealthBar
+              character={character}
+              isGM={myself.isGM}
+              width={healthWidth}
+            />
+            CONDITIONS COME HERE
+          </div>
+        )}
         <div className="flex flex-col justify-center items-center">
           <CurrentCharacter character={character} />
           {character && <AC character={character} />}
@@ -150,26 +163,58 @@ function CurrentCharacter({ character }: { character: RRCharacter | null }) {
 function HealthBar({
   character,
   isGM,
+  width,
 }: {
   character: RRCharacter;
   isGM: boolean;
+  width: number;
 }) {
-  const healthPercentage = (character.hp / character.maxHP) * 100;
   const setHP = useSmartChangeHP(isGM);
+  const {
+    temporaryHPBarWidth,
+    hpBarWidth,
+    hpColor,
+    temporaryHPColor,
+    totalMaxHP,
+  } = useHealthbarMeasurements(character, width);
 
   return (
     <div
-      className="flex h-8 rounded-md overflow-hidden bg-red-800"
-      style={{ width: "200px" }}
+      className="flex h-8 rounded-md overflow-hidden bg-white relative"
+      style={{ width }}
     >
-      <HPInlineEdit
-        hp={character.hp + character.temporaryHP}
-        setHP={(total) => setHP(character.id, total)}
-      />
-      <div
-        className="bg-red-600 "
-        style={{ width: `${healthPercentage}%` }}
-      ></div>
+      {character.maxHP > 0 && (
+        <>
+          <div
+            className="h-full absolute left-0 top-0"
+            style={{
+              width: hpBarWidth,
+              height: "100%",
+              backgroundColor: hpColor,
+            }}
+          ></div>
+          {character.temporaryHP > 0 && temporaryHPBarWidth > 0 && (
+            <div
+              className="h-full absolute top-0"
+              style={{
+                width: temporaryHPBarWidth,
+                left: hpBarWidth,
+                backgroundColor: temporaryHPColor,
+              }}
+            ></div>
+          )}
+        </>
+      )}
+      <div className="absolute h-full flex items-center justify-end right-4">
+        <div className="text-black rough-text">
+          <HPInlineEdit
+            className="inline-block w-12"
+            hp={character.hp + character.temporaryHP}
+            setHP={(total) => setHP(character.id, total)}
+          />{" "}
+          / {totalMaxHP}
+        </div>
+      </div>
     </div>
   );
 }

@@ -26,7 +26,6 @@ import { RoughLine, RoughRectangle, RoughText } from "../rough";
 import tinycolor from "tinycolor2";
 import {
   assertNever,
-  clamp,
   isCharacterDead,
   isCharacterHurt,
   isCharacterOverhealed,
@@ -60,6 +59,7 @@ import { SmartIntegerInput } from "../ui/TextInput";
 import useRafLoop from "../../useRafLoop";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { SVGBlurHashImage } from "../blurhash/SVGBlurhashImage";
+import { useHealthbarMeasurements } from "../../util";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
@@ -671,19 +671,13 @@ const Healthbar = React.memo(function Healthbar({
   setHP: (hp: number) => void;
 }) {
   const tokenSize = GRID_SIZE * character.scale;
-
-  const adjustedMaxHP = character.maxHP + character.maxHPAdjustment;
-  const totalMaxHP = adjustedMaxHP + character.temporaryHP;
-
-  const hpColor = "#c5d87c";
-  const temporaryHPColor = "#67ac19";
-
-  const hpBarWidth =
-    tokenSize *
-    clamp(0, character.hp / adjustedMaxHP, 1) *
-    (adjustedMaxHP / totalMaxHP);
-
-  const temporaryHPBarWidth = tokenSize * (character.temporaryHP / totalMaxHP);
+  const {
+    temporaryHPBarWidth,
+    hpBarWidth,
+    hpColor,
+    temporaryHPColor,
+    totalMaxHP,
+  } = useHealthbarMeasurements(character, tokenSize);
 
   return (
     <>
