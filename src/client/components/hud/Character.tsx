@@ -35,7 +35,7 @@ export function CharacterHUD() {
     selectedCharacter.length > 0 ? selectedCharacter[0]! : mainCharacter;
 
   return (
-    <div className="absolute top-0 right-0">
+    <div className="absolute top-0 right-0 pointer-events-none">
       <div className="flex m-2">
         {character && (
           <div style={{ width: healthWidth }} className="m-4 flex flex-col">
@@ -47,7 +47,7 @@ export function CharacterHUD() {
             CONDITIONS COME HERE
           </div>
         )}
-        <div className="flex flex-col justify-center items-center">
+        <div className="flex flex-col justify-center items-center pointer-events-auto">
           <CurrentCharacter character={character} />
           {character && <AC character={character} />}
           {character && <SpellSave character={character} />}
@@ -180,7 +180,7 @@ function HealthBar({
 
   return (
     <div
-      className="flex h-8 rounded-md overflow-hidden bg-white relative"
+      className="flex h-8 rounded-md overflow-hidden bg-white relative pointer-events-auto"
       style={{ width }}
     >
       {character.maxHP > 0 && (

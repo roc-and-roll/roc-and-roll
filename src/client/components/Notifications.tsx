@@ -234,7 +234,7 @@ function Notification({
   return (
     <Flipped flipId={notification.id}>
       <div
-        className="p-4 bg-rr-800 bg-opacity-90 mt-2 rounded cursor-pointer"
+        className="p-4 mt-2 cursor-pointer hud-panel"
         style={style}
         onClick={onExpired}
       >

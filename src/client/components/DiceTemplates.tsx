@@ -459,8 +459,8 @@ function DicePicker() {
       <hr className="solid"></hr>
       {
         //<DiceHolder diceTemplateParts={diceHolder} />
+        //<Button onClick={() => setDiceHolder([])}>EMPTY</Button>
       }
-      <Button onClick={() => setDiceHolder([])}>EMPTY</Button>
     </div>
   );
 }

@@ -6,7 +6,7 @@ import {
 } from "../actions";
 import { initialSyncedState, RRCharacter } from "../state";
 
-export const characterTemplatesAdapter = createEntityAdapter<RRCharacter>();
+const characterTemplatesAdapter = createEntityAdapter<RRCharacter>();
 
 export const characterTemplatesReducer = createReducer(
   initialSyncedState.characterTemplates,

@@ -1,6 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
-import { ReactNode, useCallback } from "react";
-import { atom, useRecoilState, useSetRecoilState } from "recoil";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  ReactNode,
+  useCallback,
+  useContext,
+} from "react";
 import { MakeRRID } from "../shared/state";
 import { rrid } from "../shared/util";
 import { Dialog, DialogActions } from "./components/Dialog";
@@ -9,17 +14,25 @@ import { SmartTextareaInput, SmartTextInput } from "./components/ui/TextInput";
 import { mapSetImmutably, mapDeleteImmutably } from "./immutable-helpers";
 import { nl2br } from "./util";
 
+function makeContexts<ID, Data>() {
+  return {
+    get: React.createContext<Map<ID, Data>>(new Map()),
+    set: React.createContext<
+      React.Dispatch<React.SetStateAction<Map<ID, Data>>>
+    >(() => {
+      throw new Error("Context not initialized");
+    }),
+  };
+}
+
 type AlertID = MakeRRID<"popup/alert">;
 
 type AlertData = { message: ReactNode; onClose: () => void };
 
-const alertAtom = atom<Map<AlertID, AlertData>>({
-  default: new Map(),
-  key: "popup/alerts",
-});
+const alertCtxs = makeContexts<AlertID, AlertData>();
 
 export function useAlert() {
-  const setAlerts = useSetRecoilState(alertAtom);
+  const setAlerts = useContext(alertCtxs.set);
 
   return useCallback(
     (message: ReactNode) => {
@@ -41,13 +54,10 @@ type ConfirmData = {
   onClose: (confirmed: boolean) => void;
 };
 
-const confirmAtom = atom<Map<ConfirmID, ConfirmData>>({
-  default: new Map(),
-  key: "popup/confirm",
-});
+const confirmCtxs = makeContexts<ConfirmID, ConfirmData>();
 
 export function useConfirm() {
-  const setConfirms = useSetRecoilState(confirmAtom);
+  const setConfirms = useContext(confirmCtxs.set);
 
   return useCallback(
     (message: ReactNode) => {
@@ -74,13 +84,10 @@ type PromptData = {
   onClose: (result: string | null) => void;
 };
 
-const promptAtom = atom<Map<PromptID, PromptData>>({
-  default: new Map(),
-  key: "popup/prompt",
-});
+const promptCtxs = makeContexts<PromptID, PromptData>();
 
 export function usePrompt() {
-  const setPrompts = useSetRecoilState(promptAtom);
+  const setPrompts = useContext(promptCtxs.set);
 
   return useCallback(
     (message: ReactNode, initialValue?: string, multiline: boolean = false) => {
@@ -107,13 +114,10 @@ type DialogData<T> = {
   onClose: (result: T | null) => void;
 };
 
-const dialogAtom = atom<Map<DialogID, DialogData<any>>>({
-  default: new Map(),
-  key: "popup/dialog",
-});
+const dialogCtxs = makeContexts<DialogID, DialogData<any>>();
 
 export function useDialog() {
-  const setDialogs = useSetRecoilState(dialogAtom);
+  const setDialogs = useContext(dialogCtxs.set);
 
   return useCallback(
     function <T>(content: DialogData<T>["content"]) {
@@ -131,11 +135,54 @@ export function useDialog() {
   );
 }
 
+export function DialogProvider({ children }: { children: ReactNode }) {
+  const [alerts, setAlerts] = useState<Map<AlertID, AlertData>>(new Map());
+  const [confirms, setConfirms] = useState<Map<ConfirmID, ConfirmData>>(
+    new Map()
+  );
+  const [prompts, setPrompts] = useState<Map<PromptID, PromptData>>(new Map());
+  const [dialogs, setDialogs] = useState<Map<DialogID, DialogData<any>>>(
+    new Map()
+  );
+
+  return (
+    <alertCtxs.set.Provider value={setAlerts}>
+      <alertCtxs.get.Provider value={alerts}>
+        <confirmCtxs.set.Provider value={setConfirms}>
+          <confirmCtxs.get.Provider value={confirms}>
+            <promptCtxs.set.Provider value={setPrompts}>
+              <promptCtxs.get.Provider value={prompts}>
+                <dialogCtxs.set.Provider value={setDialogs}>
+                  <dialogCtxs.get.Provider value={dialogs}>
+                    {children}
+                  </dialogCtxs.get.Provider>
+                </dialogCtxs.set.Provider>
+              </promptCtxs.get.Provider>
+            </promptCtxs.set.Provider>
+          </confirmCtxs.get.Provider>
+        </confirmCtxs.set.Provider>
+      </alertCtxs.get.Provider>
+    </alertCtxs.set.Provider>
+  );
+}
+
 export function DialogBoxes() {
-  const [alerts, setAlerts] = useRecoilState(alertAtom);
-  const [confirms, setConfirms] = useRecoilState(confirmAtom);
-  const [prompts, setPrompts] = useRecoilState(promptAtom);
-  const [dialogs, setDialogs] = useRecoilState(dialogAtom);
+  const [alerts, setAlerts] = [
+    useContext(alertCtxs.get),
+    useContext(alertCtxs.set),
+  ];
+  const [confirms, setConfirms] = [
+    useContext(confirmCtxs.get),
+    useContext(confirmCtxs.set),
+  ];
+  const [prompts, setPrompts] = [
+    useContext(promptCtxs.get),
+    useContext(promptCtxs.set),
+  ];
+  const [dialogs, setDialogs] = [
+    useContext(dialogCtxs.get),
+    useContext(dialogCtxs.set),
+  ];
 
   return (
     <>

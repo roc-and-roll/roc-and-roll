@@ -16,7 +16,7 @@ import { CompendiumProvider } from "./components/compendium/Compendium";
 import { ModApi } from "./components/Modding";
 import { ServerMessagesProvider } from "./serverMessages";
 import { Socket } from "socket.io-client";
-import { DialogBoxes } from "./dialog-boxes";
+import { DialogBoxes, DialogProvider } from "./dialog-boxes";
 import { DebugSettingsContextProvider } from "./components/hud/DebugSettings";
 
 export function render(socket: Socket) {
@@ -38,23 +38,25 @@ function Root({ socket }: { socket: Socket }) {
   return (
     <StrictMode>
       <RecoilRoot>
-        <DebugSettingsContextProvider>
-          <SettingsProvider>
-            <ServerStateProvider socket={socket}>
-              <ServerMessagesProvider socket={socket}>
-                <MyselfProvider>
-                  <CompendiumProvider>
-                    <DndProvider backend={HTML5Backend}>
-                      <ModApi />
-                      <App />
-                      <DialogBoxes />
-                    </DndProvider>
-                  </CompendiumProvider>
-                </MyselfProvider>
-              </ServerMessagesProvider>
-            </ServerStateProvider>
-          </SettingsProvider>
-        </DebugSettingsContextProvider>
+        <DialogProvider>
+          <DebugSettingsContextProvider>
+            <SettingsProvider>
+              <ServerStateProvider socket={socket}>
+                <ServerMessagesProvider socket={socket}>
+                  <MyselfProvider>
+                    <CompendiumProvider>
+                      <DndProvider backend={HTML5Backend}>
+                        <ModApi />
+                        <App />
+                        <DialogBoxes />
+                      </DndProvider>
+                    </CompendiumProvider>
+                  </MyselfProvider>
+                </ServerMessagesProvider>
+              </ServerStateProvider>
+            </SettingsProvider>
+          </DebugSettingsContextProvider>
+        </DialogProvider>
       </RecoilRoot>
     </StrictMode>
   );
