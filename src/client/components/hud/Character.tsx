@@ -13,7 +13,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { SettingsDialog } from "./Toolbar";
 import { HPInlineEdit } from "../map/HPInlineEdit";
-import { useSmartChangeHP } from "../../../client/util";
+import {
+  useSmartChangeHP,
+  useHealthbarMeasurements,
+} from "../../../client/util";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 import { playerUpdate } from "../../../shared/actions";
 import { conditionIcons } from "../characters/CharacterEditor";
@@ -28,16 +31,23 @@ export function CharacterHUD() {
       : null
   );
 
+  const healthWidth = 250;
   const character =
     selectedCharacter.length > 0 ? selectedCharacter[0]! : mainCharacter;
 
   return (
     <div className="absolute top-0 right-0 pointer-events-none">
       <div className="flex m-2">
-        <div>
-          {character && <HealthBar character={character} isGM={myself.isGM} />}
-          {character && <ConditionsBar character={character} />}
-        </div>
+        {character && (
+          <div style={{ width: healthWidth }} className="m-4 flex flex-col">
+            <HealthBar
+              character={character}
+              isGM={myself.isGM}
+              width={healthWidth}
+            />
+            <ConditionsBar character={character} />
+          </div>
+        )}
         <div className="flex flex-col justify-center items-center pointer-events-auto">
           <CurrentCharacter character={character} />
           {character && <AC character={character} />}
@@ -51,30 +61,25 @@ export function CharacterHUD() {
 
 function ConditionsBar({ character }: { character: RRCharacter }) {
   return (
-    <div className="flex flex-wrap flex-row-reverse" style={{ width: "200px" }}>
+    <div className="flex flex-wrap flex-row-reverse pointer-events-auto">
       {character.conditions.map((condition) => {
         const icon = conditionIcons[condition];
-        return typeof icon === "string" ? (
-          <img key={condition} src={icon} className="h-8 w-8 m-1"></img>
-        ) : (
-          //<title>{condition}</title>
-          <React.Fragment key={condition}>
-            <FontAwesomeIcon
-              icon={icon}
-              className="h-8 w-8"
-              symbol={`${character.id}/condition-icon/${condition}`}
-            />
-            <use
-              xlinkHref={`#${character.id}/condition-icon/${condition}`}
-              color="black"
-              style={{
-                stroke: "white",
-                strokeWidth: 18,
-              }}
-            >
-              <title>{condition}</title>
-            </use>
-          </React.Fragment>
+        return (
+          <div key={condition} title={condition} className="h-8 w-8 m-1 my-2">
+            {typeof icon === "string" ? (
+              <img src={icon}></img>
+            ) : (
+              <FontAwesomeIcon
+                icon={icon}
+                color="black"
+                size={"2x"}
+                style={{
+                  stroke: "white",
+                  strokeWidth: 18,
+                }}
+              />
+            )}
+          </div>
         );
       })}
     </div>
@@ -190,26 +195,58 @@ function CurrentCharacter({ character }: { character: RRCharacter | null }) {
 function HealthBar({
   character,
   isGM,
+  width,
 }: {
   character: RRCharacter;
   isGM: boolean;
+  width: number;
 }) {
-  const healthPercentage = (character.hp / character.maxHP) * 100;
   const setHP = useSmartChangeHP(isGM);
+  const {
+    temporaryHPBarWidth,
+    hpBarWidth,
+    hpColor,
+    temporaryHPColor,
+    totalMaxHP,
+  } = useHealthbarMeasurements(character, width);
 
   return (
     <div
-      className="flex h-8 rounded-md overflow-hidden bg-red-800 pointer-events-auto"
-      style={{ width: "200px" }}
+      className="flex h-8 rounded-md overflow-hidden bg-white relative pointer-events-auto"
+      style={{ width }}
     >
-      <HPInlineEdit
-        hp={character.hp + character.temporaryHP}
-        setHP={(total) => setHP(character.id, total)}
-      />
-      <div
-        className="bg-red-600 "
-        style={{ width: `${healthPercentage}%` }}
-      ></div>
+      {character.maxHP > 0 && (
+        <>
+          <div
+            className="h-full absolute left-0 top-0"
+            style={{
+              width: hpBarWidth,
+              height: "100%",
+              backgroundColor: hpColor,
+            }}
+          ></div>
+          {character.temporaryHP > 0 && temporaryHPBarWidth > 0 && (
+            <div
+              className="h-full absolute top-0"
+              style={{
+                width: temporaryHPBarWidth,
+                left: hpBarWidth,
+                backgroundColor: temporaryHPColor,
+              }}
+            ></div>
+          )}
+        </>
+      )}
+      <div className="absolute h-full flex items-center justify-end right-4">
+        <div className="text-black rough-text">
+          <HPInlineEdit
+            className="inline-block w-12"
+            hp={character.hp + character.temporaryHP}
+            setHP={(total) => setHP(character.id, total)}
+          />{" "}
+          / {totalMaxHP}
+        </div>
+      </div>
     </div>
   );
 }

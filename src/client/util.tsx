@@ -15,6 +15,7 @@ import { DialogTitle, DialogContent, DialogActions } from "./components/Dialog";
 import { Button } from "./components/ui/Button";
 import { useDialog } from "./dialog-boxes";
 import { useServerDispatch } from "./state";
+import { clamp } from "../shared/util";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export const noop = () => {};
@@ -195,6 +196,32 @@ export function useSmartChangeHP(myselfIsGM: boolean) {
     },
     [dialog, dispatch, myselfIsGM]
   );
+}
+
+export function useHealthbarMeasurements(
+  character: RRCharacter,
+  width: number
+) {
+  const adjustedMaxHP = character.maxHP + character.maxHPAdjustment;
+  const totalMaxHP = adjustedMaxHP + character.temporaryHP;
+
+  const hpColor = "#c5d87c";
+  const temporaryHPColor = "#67ac19";
+
+  const hpBarWidth =
+    width *
+    clamp(0, character.hp / adjustedMaxHP, 1) *
+    (adjustedMaxHP / totalMaxHP);
+
+  const temporaryHPBarWidth = width * (character.temporaryHP / totalMaxHP);
+
+  return {
+    temporaryHPBarWidth,
+    temporaryHPColor,
+    hpBarWidth,
+    hpColor,
+    totalMaxHP,
+  };
 }
 
 export function changeHPSmartly(

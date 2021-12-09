@@ -4,9 +4,11 @@ import { SmartTextInput } from "../ui/TextInput";
 export function HPInlineEdit({
   hp,
   setHP,
+  className,
 }: {
   hp: number;
   setHP: (hp: number) => void;
+  className?: string;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const [localHP, setLocalHP] = useState(hp.toString());
@@ -43,7 +45,7 @@ export function HPInlineEdit({
   return (
     <SmartTextInput
       ref={ref}
-      className="hp-inline-edit"
+      className={"hp-inline-edit " + (className ?? "")}
       placeholder="HP"
       type="text"
       value={localHP}
