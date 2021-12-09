@@ -58,7 +58,7 @@ import {
   SmartTextInput,
 } from "./ui/TextInput";
 import { evaluateDiceTemplatePart, getModifierForTemplate } from "../diceUtils";
-import { iconMap } from "./DicePanel";
+import { iconMap } from "./hud/Actions";
 
 type SelectionPair = { template: RRDiceTemplate; modified: RRMultipleRoll };
 

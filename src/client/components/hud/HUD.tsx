@@ -4,6 +4,7 @@ import { LogHUD } from "./Log";
 import { InitiativeHUD } from "./Initiative";
 import { HUDToolbar } from "./Toolbar";
 import { RRColor } from "../../../shared/state";
+import { ActionsHUD } from "./Actions";
 
 export function HUD({ mapBackgroundColor }: { mapBackgroundColor: RRColor }) {
   return (
@@ -12,6 +13,7 @@ export function HUD({ mapBackgroundColor }: { mapBackgroundColor: RRColor }) {
       <InitiativeHUD />
       <CharacterHUD />
       <LogHUD mapBackgroundColor={mapBackgroundColor} />
+      <ActionsHUD />
     </>
   );
 }

@@ -156,7 +156,7 @@ export const HUDToolbar = React.memo(function Toolbar() {
   // with the map, even if the entire toolbar is collapsed. Make sure to
   // re-enable pointer events on all children.
   return (
-    <div className="pointer-events-none absolute bottom-2 left-2 flex items-end h-[calc(100%-6rem)]">
+    <div className="pointer-events-none absolute bottom-14 left-2 flex items-end h-[calc(100%-6rem)] z-10">
       <div className="pointer-events-auto flex flex-col rounded bg-rr-800">
         <RRTooltip
           content={collapsed ? "show more" : "show less"}
