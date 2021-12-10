@@ -40,6 +40,7 @@ export const JoinGame = React.memo(function JoinGame({
           templates: [],
         },
       ],
+      achievements: [],
     });
     dispatch(action);
     login(action.payload.id);

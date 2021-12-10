@@ -1003,30 +1003,6 @@ button.color-picker-color {
   }
 }
 
-.achievement-button {
-  border: 1px solid #999;
-  border-radius: 4px;
-  margin: 0.25rem;
-  padding: 0.25rem;
-  cursor: pointer;
-}
-
-.achievements {
-  position: relative;
-}
-.achievement-player-select {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  background: rgba(0, 0, 0, 0.9);
-  padding: 0.5rem;
-}
-
 .join-audio-popup {
   position: fixed;
   width: 300px;
@@ -1394,7 +1370,8 @@ aside.emoji-picker-react {
     overflow-x: hidden;
     text-overflow: ellipsis;
 
-    transition: opacity 1s ease-in-out, max-width 1s ease-in-out, margin-left 1s ease-in-out;
+    transition: opacity 1s ease-in-out, max-width 1s ease-in-out,
+      margin-left 1s ease-in-out;
 
     &.is-timeouted {
       max-width: 0;
@@ -1603,7 +1580,8 @@ aside.emoji-picker-react {
   $background: rgb(23, 56, 128);
 
   background: $background;
-  &:hover, &:focus {
+  &:hover,
+  &:focus {
     background: darken($background, 5%);
   }
   &:active {

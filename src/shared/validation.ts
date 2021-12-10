@@ -332,6 +332,12 @@ export const isSyncedState = t.isObject({
       favoritedAssetIds: t.isArray(isRRID<RRAssetID>()),
       diceTemplateCategories: t.isArray(isDiceTemplateCategory),
       hasHeroPoint: t.isBoolean(),
+      achievements: t.isArray(
+        t.isObject({
+          id: t.isNumber(),
+          achievedAt: isTimestamp,
+        })
+      ),
     })
   ),
   ...withDo(
