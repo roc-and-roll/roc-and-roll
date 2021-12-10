@@ -73,10 +73,6 @@ label {
   }
 }
 
-.selection-area-highlight {
-  stroke-width: 4px;
-}
-
 a {
   color: rgb(255, 166, 0);
 }
@@ -1394,7 +1390,8 @@ aside.emoji-picker-react {
     overflow-x: hidden;
     text-overflow: ellipsis;
 
-    transition: opacity 1s ease-in-out, max-width 1s ease-in-out, margin-left 1s ease-in-out;
+    transition: opacity 1s ease-in-out, max-width 1s ease-in-out,
+      margin-left 1s ease-in-out;
 
     &.is-timeouted {
       max-width: 0;
@@ -1603,7 +1600,8 @@ aside.emoji-picker-react {
   $background: rgb(23, 56, 128);
 
   background: $background;
-  &:hover, &:focus {
+  &:hover,
+  &:focus {
     background: darken($background, 5%);
   }
   &:active {

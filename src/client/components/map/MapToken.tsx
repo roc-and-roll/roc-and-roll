@@ -432,10 +432,10 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
           pointerEvents="none"
           cx={tokenSize / 2}
           cy={tokenSize / 2}
-          r={tokenSize / 2 - 2}
+          r={tokenSize / 2 - character.scale * 1.5}
           fill="transparent"
           stroke={contrastColor}
-          className="selection-area-highlight"
+          strokeWidth={`${character.scale * 2.5 + 2}px`}
         />
       )}
 
