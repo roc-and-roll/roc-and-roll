@@ -3168,6 +3168,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/proper-lockfile@npm:^4":
+  version: 4.1.2
+  resolution: "@types/proper-lockfile@npm:4.1.2"
+  dependencies:
+    "@types/retry": "*"
+  checksum: 9d8a100f96e6df3ce1213eea2696b86de4b75dce3ab5bbc1767226732976bf38d2d2ce1060d6942e76561e8617576547e83bb172e95375192a0b8df1fbca2331
+  languageName: node
+  linkType: hard
+
 "@types/qs@npm:*":
   version: 6.9.6
   resolution: "@types/qs@npm:6.9.6"
@@ -3229,7 +3238,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/retry@npm:^0.12.0":
+"@types/retry@npm:*, @types/retry@npm:^0.12.0":
   version: 0.12.1
   resolution: "@types/retry@npm:0.12.1"
   checksum: 5f46b2556053655f78262bb33040dc58417c900457cc63ff37d6c35349814471453ef511af0cec76a540c601296cd2b22f64bab1ab649c0dacc0223765ba876c
@@ -6172,6 +6181,13 @@ __metadata:
   version: 2.2.1
   resolution: "env-paths@npm:2.2.1"
   checksum: 65b5df55a8bab92229ab2b40dad3b387fad24613263d103a97f91c9fe43ceb21965cd3392b1ccb5d77088021e525c4e0481adb309625d0cb94ade1d1fb8dc17e
+  languageName: node
+  linkType: hard
+
+"env-paths@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "env-paths@npm:3.0.0"
+  checksum: b2b0a0d0d9931a13d279c22ed94d78648a1cc5f408f05d47ff3e0c1616f0aa0c38fb33deec5e5be50497225d500607d57f9c8652c4d39c2f2b7608cd45768128
   languageName: node
   linkType: hard
 
@@ -11858,6 +11874,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"proper-lockfile@npm:^4.1.2":
+  version: 4.1.2
+  resolution: "proper-lockfile@npm:4.1.2"
+  dependencies:
+    graceful-fs: ^4.2.4
+    retry: ^0.12.0
+    signal-exit: ^3.0.2
+  checksum: 00078ee6a61c216a56a6140c7d2a98c6c733b3678503002dc073ab8beca5d50ca271de4c85fca13b9b8ee2ff546c36674d1850509b84a04a5d0363bcb8638939
+  languageName: node
+  linkType: hard
+
 "property-information@npm:^6.0.0":
   version: 6.0.1
   resolution: "property-information@npm:6.0.1"
@@ -12858,6 +12885,7 @@ resolve@^2.0.0-next.3:
     "@types/node": ^14.17.14
     "@types/node-fetch": ^2.5.12
     "@types/prompts": ^2.0.14
+    "@types/proper-lockfile": ^4
     "@types/react": ^17.0.19
     "@types/react-dom": ^17.0.9
     "@types/react-test-renderer": ^17
@@ -12891,6 +12919,7 @@ resolve@^2.0.0-next.3:
     core-js: ^3.17.1
     css-loader: ^6.2.0
     emoji-picker-react: ^3.4.8
+    env-paths: ^3.0.0
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
     eslint-plugin-prettier: ^4.0.0
@@ -12924,6 +12953,7 @@ resolve@^2.0.0-next.3:
     prettier: ^2.3.2
     process: ^0.11.10
     prompts: ^2.4.1
+    proper-lockfile: ^4.1.2
     raw-loader: ^4.0.2
     re-resizable: ^6.9.0
     react: alpha

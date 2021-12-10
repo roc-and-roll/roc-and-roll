@@ -76,7 +76,7 @@ This should not have happened!
 
   setupStatePersistence(store, statePath);
 
-  await setupTabletopAudioTrackSync(store, workspaceDir);
+  await setupTabletopAudioTrackSync(store);
 
   // Delete mouse position if it has not changed for some time.
   const DELETE_MOUSE_POSITION_TIME_THRESHOLD = 60 * 1000;
