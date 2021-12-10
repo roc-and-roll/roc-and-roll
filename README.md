@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/cmfcmf/roc-and-roll/actions/workflows/main.yml/badge.svg)](https://github.com/cmfcmf/roc-and-roll/actions/workflows/main.yml)
 [![CodeQL](https://github.com/cmfcmf/roc-and-roll/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/cmfcmf/roc-and-roll/actions/workflows/codeql-analysis.yml)
+[![Heroku Deploy](https://heroku-badge.herokuapp.com/?app=roc-and-roll&svg=1)](https://roc-and-roll.herokuapp.com/)
 
 ## Demo
 
@@ -34,6 +35,16 @@ To run the application:
 To build the application:
 
 - execute `yarn build`
+
+### Executing end to end (e2e) tests
+
+- Install dependencies: `yarn playwright install-deps`
+- Run tests: `yarn test-e2e` (add `--debug` to debug tests)
+
+If you use WSL, you might need to also need to `sudo apt-get install xvfb` and
+run tests like this `xvfb-run yarn test-e2e`. If you want to visually step
+through tests, you will need to setup `vcxsrv.exe` or another way to forward X11
+from WSL to Windows.
 
 ### [Client] Debugging in VSCode
 

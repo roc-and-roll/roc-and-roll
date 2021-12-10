@@ -54,7 +54,11 @@ declare module "*.peggy" {
 
 declare namespace NodeJS {
   interface ProcessEnv {
-    readonly NODE_ENV: "development" | "production" | "test";
+    readonly NODE_ENV:
+      | "development"
+      | "production"
+      | "test" // Jest unit tests
+      | "e2e-test"; // Playwright end to end tests;
     readonly HEROKU?: string;
   }
 }

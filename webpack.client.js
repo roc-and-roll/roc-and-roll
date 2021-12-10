@@ -30,8 +30,18 @@ const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 
 export default (webpackEnv) => {
-  const isEnvDevelopment = webpackEnv.development === true;
-  const isEnvProduction = webpackEnv.production === true;
+  const isEnvDevelopment = webpackEnv.mode === "development";
+  const isEnvE2E = webpackEnv.mode === "e2e";
+  const isEnvProduction = webpackEnv.mode === "production";
+
+  if (!isEnvDevelopment && !isEnvE2E && !isEnvProduction) {
+    throw new Error("You must specify either '--env mode=development', '--env mode=production', or '--env mod=e2e'.");
+  }
+
+  const outputPath = isEnvProduction || isEnvE2E
+    ? path.join(__dirname, "dist", webpackEnv.mode, "client")
+    : undefined;
+
   const isCodeSpaces = !!process.env.CODESPACES;
 
   const DEV_SERVER_SOCK_PORT = isCodeSpaces ? 443 : 3001;
@@ -79,9 +89,9 @@ export default (webpackEnv) => {
 
   return {
     target: "web",
-    mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
-    bail: isEnvProduction,
-    devtool: isEnvProduction
+    mode: isEnvProduction ? 'production' : 'development',
+    bail: isEnvProduction || isEnvE2E,
+    devtool: isEnvProduction || isEnvE2E
       ? 'source-map'
       : isEnvDevelopment && 'cheap-module-source-map',
     entry: {
@@ -100,14 +110,14 @@ export default (webpackEnv) => {
     },
     output: {
       // The build folder.
-      path: isEnvProduction ? path.resolve(__dirname, "dist", "client") : undefined,
+      path: outputPath,
       // Add /* filename */ comments to generated require()s in the output.
-      pathinfo: isEnvDevelopment,
+      pathinfo: isEnvDevelopment || isEnvE2E,
       // There will be one main bundle, and one file per asynchronous chunk.
       // In development, it does not produce real files.
-      filename: isEnvProduction ? "[name].[contenthash:8].js" : isEnvDevelopment && '[name].bundle.js',
+      filename: isEnvProduction || isEnvE2E ? "[name].[contenthash:8].js" : '[name].bundle.js',
       publicPath: "/",
-      chunkFilename: isEnvProduction ? "[name].[contenthash:8].chunk.js" : isEnvDevelopment && "[name].chunk.js",
+      chunkFilename: isEnvProduction || isEnvE2E ? "[name].[contenthash:8].chunk.js" : "[name].chunk.js",
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
       globalObject: 'this',
@@ -120,6 +130,7 @@ export default (webpackEnv) => {
       runtimeChunk: {
         name: entrypoint => `runtime-${entrypoint.name}`,
       },
+      nodeEnv: isEnvE2E ? "e2e-test" : undefined,
     },
     resolve: {
       extensions: [".tsx", ".ts", ".js", ".jsx"],
@@ -152,7 +163,7 @@ export default (webpackEnv) => {
               }
             : undefined
       }),
-      isEnvProduction && new WorkboxPlugin.GenerateSW({
+      (isEnvProduction || isEnvE2E) && new WorkboxPlugin.GenerateSW({
         clientsClaim: true,
         skipWaiting: true,
 
@@ -210,9 +221,9 @@ export default (webpackEnv) => {
         async: isEnvDevelopment,
       }),
       new MiniCssExtractPlugin({
-        filename: isEnvProduction ? "[name].[contenthash:8].css" : isEnvDevelopment && "[name].css",
+        filename: isEnvProduction || isEnvE2E ? "[name].[contenthash:8].css" : "[name].css",
       }),
-      isEnvProduction && new CleanWebpackPlugin(),
+      (isEnvProduction || isEnvE2E) && new CleanWebpackPlugin(),
     ].filter(Boolean),
     module: {
       rules: [

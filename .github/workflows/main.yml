@@ -22,13 +22,34 @@ jobs:
       run: yarn install --immutable
     - name: Tests
       run: yarn test --forceExit
-    # - name: Cypress Tests
-    #   uses: cypress-io/github-action@v2
-    #   with:
-    #     install: false
-    #     start: yarn run e2e:ci
-    #     wait-on: "http://localhost:3003"
     - name: Lint
       run: yarn lint
     - name: Build
       run: yarn build
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+    - name: Increase available file watchers
+      # https://stackoverflow.com/a/59522493/2560557
+      run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Use Node.js 14
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14
+    - name: Install JavaScript Dependencies
+      run: yarn install --immutable
+    - name: Build for e2e tests
+      run: yarn e2e-build
+    - name: Install Roc & Roll Dependencies
+      run: sudo apt update && sudo apt install ffmpeg
+    - name: Install Playwright Dependencies
+      run: yarn playwright install-deps ${{ matrix.browser }}
+    - name: Run e2e tests
+      run: yarn test-e2e --browser=${{ matrix.browser }}
