@@ -1,12 +1,17 @@
 import React, { ReactNode, useCallback, useMemo } from "react";
 import { characterUpdate } from "../shared/actions";
-import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../shared/constants";
+import {
+  DEFAULT_BACKGROUND_IMAGE_HEIGHT,
+  DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+  GRID_SIZE,
+} from "../shared/constants";
 import tinycolor from "tinycolor2";
 import { applyToPoint, inverse, Matrix } from "transformation-matrix";
 import { makePoint } from "../shared/point";
 import {
   EntityCollection,
   proficiencyValues,
+  RRAssetImage,
   RRCharacter,
   RRCharacterID,
   RRPoint,
@@ -14,7 +19,7 @@ import {
 } from "../shared/state";
 import { DialogTitle, DialogContent, DialogActions } from "./components/Dialog";
 import { Button } from "./components/ui/Button";
-import { useDialog } from "./dialog-boxes";
+import { useDialog, usePrompt } from "./dialog-boxes";
 import { useServerDispatch } from "./state";
 import { clamp } from "../shared/util";
 
@@ -326,4 +331,31 @@ export function getLogRollName(
     : logNames === "characterName"
     ? characterNames
     : characterNames + " (" + playerName + ")";
+}
+
+export function useAskForDPI() {
+  const prompt = usePrompt();
+  return useCallback(
+    async (initialDPI?: number | null) => {
+      const dpi = parseFloat(
+        (
+          await prompt(
+            "How many pixels per inch/map square? Leave empty if unsure. This only affects the initial size of the image when dragging it onto the map. You can always modify the image size later.",
+            initialDPI?.toString()
+          )
+        )?.trim() ?? "0"
+      );
+      return !isNaN(dpi) && isFinite(dpi) && dpi > 0 ? dpi : null;
+    },
+    [prompt]
+  );
+}
+
+export function mapObjectImageHeightFromAsset({
+  height,
+  dpi,
+}: Pick<RRAssetImage, "height" | "dpi">) {
+  return dpi === null
+    ? DEFAULT_BACKGROUND_IMAGE_HEIGHT
+    : (height * GRID_SIZE) / dpi;
 }

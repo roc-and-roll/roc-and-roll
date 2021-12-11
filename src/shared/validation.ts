@@ -126,6 +126,7 @@ const isRRAssetImage = z.strictObject({
   type: z.literal("image"),
   width: z.number().int().min(0),
   height: z.number().int().min(0),
+  dpi: z.number().int().min(0).nullable(),
   blurHash: isBlurHash,
 
   originalFunction: z.enum(["token", "map", "unknown"] as const),
@@ -422,7 +423,7 @@ export const isSyncedState = z.strictObject({
             ...mapObjectDrawingSharedValidators,
             type: z.literal("image"),
             imageAssetId: isRRID<RRAssetID>(),
-            height: z.number().int().min(0),
+            height: z.number().min(0),
           }),
           z.strictObject({
             ...mapObjectDrawingSharedValidators,

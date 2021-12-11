@@ -15,7 +15,7 @@ export function Select<O extends string>({
   onChange,
   ...props
 }: PassedThroughProps & {
-  options: { value: O; label: string }[];
+  options: ReadonlyArray<{ value: O; label: string }>;
   value: O;
   onChange: (option: O) => void;
 }) {

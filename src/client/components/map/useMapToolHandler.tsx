@@ -15,10 +15,7 @@ import {
   RRPoint,
 } from "../../../shared/state";
 import { useServerDispatch } from "../../state";
-import {
-  DEFAULT_BACKGROUND_IMAGE_HEIGHT,
-  GRID_SIZE,
-} from "../../../shared/constants";
+import { GRID_SIZE } from "../../../shared/constants";
 import { assertNever, rrid, withDo } from "../../../shared/util";
 import { askAndUploadImages } from "../../files";
 import {
@@ -35,6 +32,7 @@ import { RRMapViewRef } from "./Map";
 import { usePrompt } from "../../dialog-boxes";
 import { PRectangle } from "./Primitives";
 import { colorValue } from "./pixi-utils";
+import { mapObjectImageHeightFromAsset, useAskForDPI } from "../../util";
 
 const SERVER_SYNC_THROTTLE_TIME = 100;
 
@@ -114,6 +112,7 @@ export function useMapToolHandler(
   const { send } = useServerMessages();
 
   const prompt = usePrompt();
+  const askForDPI = useAskForDPI();
 
   if (editState.tool === "draw") {
     const create = (p: RRPoint) => ({
@@ -379,6 +378,8 @@ export function useMapToolHandler(
               return;
             }
 
+            const dpi = await askForDPI();
+
             const assetImageAddAction = assetImageAdd({
               name: image.originalFilename,
               description: null,
@@ -397,13 +398,17 @@ export function useMapToolHandler(
               blurHash: image.blurHash,
               width: image.width,
               height: image.height,
+              dpi,
 
               playerId: myself.id,
             });
 
             const mapObjectAddAction = mapObjectAdd(mapId, {
               type: "image",
-              height: DEFAULT_BACKGROUND_IMAGE_HEIGHT,
+              height: mapObjectImageHeightFromAsset({
+                height: image.height,
+                dpi,
+              }),
               imageAssetId: assetImageAddAction.payload.id,
               ...create(p),
             });

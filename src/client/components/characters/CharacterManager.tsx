@@ -49,6 +49,7 @@ async function makeNewCharacter(
     blurHash: image.blurHash,
     width: image.width,
     height: image.height,
+    dpi: null,
 
     playerId: myId,
   });
