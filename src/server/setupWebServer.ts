@@ -309,7 +309,7 @@ export async function setupWebServer(
 
     // 1. In production, serve the client code and static assets.
 
-    // Serve the index.html file explicitly, instead of reyling on the express.static
+    // Serve the index.html file explicitly, instead of relying on the express.static
     // call below. This is necessary because it is the only file in the client folder
     // that does not include a content hash in its filename. We therefore must not
     // serve it with the maxAge and immutable headers configured in the express.static

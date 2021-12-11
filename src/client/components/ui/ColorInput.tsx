@@ -14,7 +14,7 @@ type ColorInputProps = Omit<
   onChange: (value: string) => void;
 };
 
-// Triggered errorneously for some reason:
+// Triggered erroneously for some reason:
 // eslint-disable-next-line react/display-name
 export const ColorInput = React.memo(
   React.forwardRef<HTMLInputElement, ColorInputProps>(function ColorInput(

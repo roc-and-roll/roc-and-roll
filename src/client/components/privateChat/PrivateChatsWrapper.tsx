@@ -4,11 +4,12 @@ import { useServerState } from "../../state";
 import { Collapsible } from "../Collapsible";
 import { wasSentByMe } from "./privateChatUtil";
 // update acknowledgements if changed
+//cspell: disable-next-line
 import newMessageSound from "../../../third-party/freesound.org/545373__stwime__up3.mp3";
 import { useRRSimpleSound } from "../../sound";
 import { useMyProps } from "../../myself";
 
-// Import PrivateChats laziy to reduce the bundle size.
+// Import PrivateChats lazily to reduce the bundle size.
 const PrivateChats = React.lazy(() => import("./PrivateChats"));
 
 export function PrivateChatsWrapper() {

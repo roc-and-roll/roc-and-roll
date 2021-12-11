@@ -1,48 +1,87 @@
 {
-    "editor.tabSize": 2,
-    "editor.rulers": [
-        80
-    ],
-    "search.exclude": {
-      "/.yarn": true,
-      "/dist": true
-    },
+  "editor.tabSize": 2,
+  "editor.rulers": [80],
+  "search.exclude": {
+    "/.yarn": true,
+    "/dist": true
+  },
 
-    "typescript.tsdk": "./node_modules/typescript/lib",
-    "typescript.preferences.importModuleSpecifier": "relative",
-    "typescript.preferences.quoteStyle": "double",
+  "typescript.tsdk": "./node_modules/typescript/lib",
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.preferences.quoteStyle": "double",
 
-    "coverage-gutters.showLineCoverage": false,
-    "coverage-gutters.showRulerCoverage": false,
-    "coverage-gutters.showGutterCoverage": true,
+  "coverage-gutters.showLineCoverage": false,
+  "coverage-gutters.showRulerCoverage": false,
+  "coverage-gutters.showGutterCoverage": true,
 
-    "browser-preview.startUrl": "http://localhost:3000",
+  "browser-preview.startUrl": "http://localhost:3000",
 
-    "jest.autoEnable": true,
-    "jest.debugCodeLens.showWhenTestStateIn": [
-      "fail"
-    ],
+  "jest.autoEnable": true,
+  "jest.debugCodeLens.showWhenTestStateIn": ["fail"],
 
-    "eslint.validate": [
-      "javascript",
-      "javascriptreact",
-      "typescript",
-      "typescriptreact",
-    ],
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
 
-    "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": true
-    },
-    "[javascript]": {
-      "editor.formatOnSave": false
-    },
-    "[javascriptreact]": {
-      "editor.formatOnSave": false
-    },
-    "[typescript]": {
-      "editor.formatOnSave": false
-    },
-    "[typescriptreact]": {
-      "editor.formatOnSave": false
-    }
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "[javascript]": {
+    "editor.formatOnSave": false
+  },
+  "[javascriptreact]": {
+    "editor.formatOnSave": false
+  },
+  "[typescript]": {
+    "editor.formatOnSave": false
+  },
+  "[typescriptreact]": {
+    "editor.formatOnSave": false
+  },
+  "cSpell.words": [
+    "Blurhash",
+    "bryc",
+    "Cathelineau",
+    "cyrb",
+    "darkred",
+    "debouncee",
+    "debouncer",
+    "debouncers",
+    "deduplication",
+    "Delapouite",
+    "Faithtoken",
+    "frameloop",
+    "freesound",
+    "GLTF",
+    "Immer",
+    "Lerped",
+    "lerping",
+    "linkify",
+    "lorc",
+    "noreferrer",
+    "Preet",
+    "Prefetch",
+    "Promisable",
+    "reduxjs",
+    "roughjs",
+    "RRID",
+    "sbed",
+    "seznam",
+    "Shihn",
+    "sjson",
+    "Skoll",
+    "slerp",
+    "stndrdth",
+    "Svish",
+    "tada",
+    "tinycolor",
+    "tippyjs",
+    "typanion",
+    "unfav",
+    "unnotified",
+    "unstyled"
+  ]
 }

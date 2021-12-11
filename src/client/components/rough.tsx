@@ -98,9 +98,9 @@ const DrawablePrimitive = React.forwardRef<
               />
             );
           case "fillSketch": {
-            let fweight = options.fillWeight;
-            if (fweight < 0) {
-              fweight = options.strokeWidth / 2;
+            let fillWeight = options.fillWeight;
+            if (fillWeight < 0) {
+              fillWeight = options.strokeWidth / 2;
             }
 
             return (
@@ -108,7 +108,7 @@ const DrawablePrimitive = React.forwardRef<
                 key={i}
                 d={generator.opsToPath(drawing)}
                 stroke={options.fill}
-                strokeWidth={fweight}
+                strokeWidth={fillWeight}
                 fill="none"
                 strokeDasharray={options.fillLineDash?.join(" ").trim()}
                 strokeDashoffset={options.fillLineDashOffset}

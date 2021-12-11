@@ -106,7 +106,7 @@ export const conditionNames = [
   "stunned",
   "unconscious",
   "hasted",
-  "polymorphed",
+  "polyMorphed",
   "hunters mark",
   "slowed",
   "cursed",

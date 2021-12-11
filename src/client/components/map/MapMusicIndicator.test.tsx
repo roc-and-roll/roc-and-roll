@@ -79,7 +79,7 @@ describe("MapMusicIndicator", () => {
     expect(
       screen
         .queryByTitle("Now playing:", { exact: false })
-        ?.querySelector(".is-timeouted")
+        ?.querySelector(".is-timeOuted")
     ).toBeInTheDocument();
 
     act(() => {
@@ -141,7 +141,7 @@ describe("MapMusicIndicator", () => {
     expect(
       screen
         .queryByTitle("Now playing:", { exact: false })
-        ?.querySelector(".is-timeouted")
+        ?.querySelector(".is-timeOuted")
     ).toBeInTheDocument();
 
     unmount();

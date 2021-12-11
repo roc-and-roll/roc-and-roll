@@ -6,7 +6,7 @@ import {
   clamp,
   isCharacterHurt,
   isCharacterUnconsciousOrDead,
-  isCharacterOverhealed,
+  isCharacterOverHealed,
   isCharacterDead,
 } from "../../../shared/util";
 import { tokenImageUrl } from "../../files";
@@ -31,7 +31,7 @@ export const CharacterPreview = React.forwardRef<
   const hurt = isCharacterHurt(character);
   const unconsciousOrDead = isCharacterUnconsciousOrDead(character);
   const dead = isCharacterDead(character);
-  const overhealed = isCharacterOverhealed(character);
+  const overHealed = isCharacterOverHealed(character);
 
   const asset = useServerState(
     (state) => state.assets.entities[character.tokenImageAssetId]
@@ -50,7 +50,7 @@ export const CharacterPreview = React.forwardRef<
           url: tokenImageUrl(character, asset, currentSize),
         }}
         className={clsx(
-          shouldDisplayShadow && { hurt, unconsciousOrDead, overhealed }
+          shouldDisplayShadow && { hurt, unconsciousOrDead, overHealed }
         )}
         width={currentSize}
         height={currentSize}

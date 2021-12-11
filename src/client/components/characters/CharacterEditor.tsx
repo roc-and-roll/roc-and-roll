@@ -96,7 +96,7 @@ export const conditionIcons = {
   hasted: speedometer,
   cursed: voodooDoll,
   "hunters mark": bullseye,
-  polymorphed: snail,
+  polyMorphed: snail,
   slowed: tortoise,
   dead: faSkullCrossbones,
 } as const;
@@ -390,8 +390,8 @@ function HPEditor({
       </div>
       <div>
         <small>
-          you can also edit hp by clicking on the hp in the healthbar of your
-          token on the map
+          You can also edit HP by clicking on the hp in the health bar of your
+          token on the map.
         </small>
       </div>
       <div>

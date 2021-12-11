@@ -6,7 +6,7 @@ import {
   RRAssetImage,
   RRPlayerID,
 } from "../../../shared/state";
-import { isTabletopAudioAsset } from "../../../shared/tabletopaudio";
+import { isTabletopAudioAsset } from "../../../shared/tabletopAudio";
 import { useConfirm } from "../../dialog-boxes";
 import { assetUrl } from "../../files";
 import { mapDeleteImmutably, mapSetImmutably } from "../../immutable-helpers";

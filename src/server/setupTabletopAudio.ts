@@ -8,7 +8,7 @@ import fetch from "node-fetch";
 import {
   isTabletopAudioAsset,
   isTabletopAudioIndex,
-} from "../shared/tabletopaudio";
+} from "../shared/tabletopAudio";
 import { batchActions } from "redux-batched-actions";
 
 export async function setupTabletopAudioTrackSync(

@@ -329,7 +329,7 @@ export const isSyncedState = t.isObject({
       currentMap: isRRID<RRMapID>(),
       characterIds: t.isArray(isRRID<RRCharacterID>()),
       mainCharacterId: t.isNullable(isRRID<RRCharacterID>()),
-      favoritedAssetIds: t.isArray(isRRID<RRAssetID>()),
+      favoriteAssetIds: t.isArray(isRRID<RRAssetID>()),
       diceTemplateCategories: t.isArray(isDiceTemplateCategory),
       hasHeroPoint: t.isBoolean(),
     })

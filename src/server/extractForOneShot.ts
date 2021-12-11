@@ -23,7 +23,7 @@ export async function extractForOneShot(
   const response = await prompts(
     [
       {
-        type: "multiselect",
+        type: "multiSelect",
         name: "playerIds",
         message: "Pick players to export",
         choices: entries(state.players).map((player) => ({

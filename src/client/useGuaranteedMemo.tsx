@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-export function useGuranteedMemo<R extends unknown, D extends unknown[]>(
+export function useGuaranteedMemo<R extends unknown, D extends unknown[]>(
   fn: () => R,
   deps: D
 ) {

@@ -137,7 +137,7 @@ export function useSmartChangeHP(myselfIsGM: boolean) {
                 </DialogTitle>
                 <DialogContent>
                   <p>
-                    Do you want to mark this character as dead or unconcious?
+                    Do you want to mark this character as dead or unconscious?
                   </p>
                 </DialogContent>
                 <DialogActions>
@@ -198,7 +198,7 @@ export function useSmartChangeHP(myselfIsGM: boolean) {
   );
 }
 
-export function useHealthbarMeasurements(
+export function useHealthBarMeasurements(
   character: RRCharacter,
   width: number
 ) {

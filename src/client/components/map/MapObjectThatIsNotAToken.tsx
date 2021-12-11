@@ -34,8 +34,8 @@ import { assetFamily, selectedMapObjectsFamily } from "./recoil";
 import { Popover } from "../Popover";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
-import { SVGBlurHashImage } from "../blurhash/SVGBlurhashImage";
 import { useMyProps } from "../../myself";
+import { SVGBlurhashImage } from "../blurhash/SVGBlurhashImage";
 
 export const MapObjectThatIsNotAToken = React.memo<{
   object: Exclude<RRMapObject, RRToken | RRMapLink>;
@@ -176,7 +176,7 @@ function MapObjectImage({
   const asset = useRecoilValue(assetFamily(object.imageAssetId));
 
   return asset?.type === "image" && asset.location.type === "local" ? (
-    <SVGBlurHashImage
+    <SVGBlurhashImage
       image={asset}
       width={(asset.width / asset.height) * object.height}
       height={object.height}

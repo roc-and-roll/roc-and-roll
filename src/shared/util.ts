@@ -116,7 +116,7 @@ export function isCharacterHurt(character: RRCharacter) {
   );
 }
 
-export function isCharacterOverhealed(character: RRCharacter) {
+export function isCharacterOverHealed(character: RRCharacter) {
   return (
     !isCharacterUnconsciousOrDead(character) &&
     character.maxHP > 0 &&

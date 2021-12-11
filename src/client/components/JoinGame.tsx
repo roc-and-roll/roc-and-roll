@@ -29,7 +29,7 @@ export const JoinGame = React.memo(function JoinGame({
       currentMap: maps.ids[0]!,
       isGM: false,
       characterIds: [],
-      favoritedAssetIds: [],
+      favoriteAssetIds: [],
       mainCharacterId: null,
       hasHeroPoint: false,
       diceTemplateCategories: [

@@ -15,7 +15,7 @@ import { SettingsDialog } from "./Toolbar";
 import { HPInlineEdit } from "../map/HPInlineEdit";
 import {
   useSmartChangeHP,
-  useHealthbarMeasurements,
+  useHealthBarMeasurements,
 } from "../../../client/util";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 import { playerUpdate } from "../../../shared/actions";
@@ -208,7 +208,7 @@ function HealthBar({
     hpColor,
     temporaryHPColor,
     totalMaxHP,
-  } = useHealthbarMeasurements(character, width);
+  } = useHealthBarMeasurements(character, width);
 
   return (
     <div

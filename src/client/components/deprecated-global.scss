@@ -177,14 +177,14 @@ a {
       animation-duration: 0.2s;
     }
 
-    &.overhealed {
-      animation-name: overhealed;
+    &.overHealed {
+      animation-name: overHealed;
       animation-duration: 2s;
     }
 
     &.hurt,
     &.unconsciousOrDead,
-    &.overhealed {
+    &.overHealed {
       animation-direction: alternate;
       animation-iteration-count: infinite;
       animation-timing-function: ease-in-out;
@@ -199,7 +199,7 @@ a {
       }
     }
 
-    @keyframes overhealed {
+    @keyframes overHealed {
       from {
         box-shadow: none;
       }
@@ -719,7 +719,7 @@ $gmAreaColor: #ab62c0;
       padding-bottom: 0.5rem;
       // we need to set the background color here (instead of inheriting it from
       // the parent, so that the list item has an opaque background when its
-      // position is anmiated and it is moved over other list items.
+      // position is animated and it is moved over other list items.
       background: #222;
       // Needed for z-index to work correctly (for some reason).
       // The z-index is applied from React when shuffling the items around.
@@ -1393,7 +1393,7 @@ aside.emoji-picker-react {
     transition: opacity 1s ease-in-out, max-width 1s ease-in-out,
       margin-left 1s ease-in-out;
 
-    &.is-timeouted {
+    &.is-timeOuted {
       max-width: 0;
       opacity: 0;
       margin-left: -$gap;

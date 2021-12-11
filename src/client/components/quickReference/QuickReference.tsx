@@ -389,7 +389,7 @@ function RollScaledLink({
             parseInt(
               (
                 await prompt(
-                  `What is the base roll you are trying to highten? Type a number corresponding to the base roll (${baseDiceStrings
+                  `What is the base roll you are trying to heighten? Type a number corresponding to the base roll (${baseDiceStrings
                     .map((diceString, idx) => `${idx + 1} = ${diceString}`)
                     .join(", ")})`
                 )
@@ -406,7 +406,7 @@ function RollScaledLink({
         const levelString =
           (
             await prompt(
-              `At which level do you want to cast the spell (posssible levels: ${levelRange})?`
+              `At which level do you want to cast the spell (possible levels: ${levelRange})?`
             )
           )?.trim() ?? null;
         if (levelString === null) {
@@ -482,13 +482,13 @@ function TextEntryString({
               />
             );
           }
-          case "scaledice":
-          case "scaledamage":
+          case "scaleDice":
+          case "scaleDamage":
             return (
               <RollScaledLink
                 key={key}
                 args={args}
-                isDamage={command === "scaledamage"}
+                isDamage={command === "scaleDamage"}
                 spell={spell}
               />
             );

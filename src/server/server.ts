@@ -9,7 +9,7 @@ import { ephemeralPlayerUpdate } from "../shared/actions";
 import { setupArgs } from "./setupArgs";
 import { isSyncedState } from "../shared/validation";
 import { setupInitialState } from "./setupInitialState";
-import { setupTabletopAudioTrackSync } from "./setupTabletopaudio";
+import { setupTabletopAudioTrackSync } from "./setupTabletopAudio";
 import { batchActions } from "redux-batched-actions";
 import { assertFFprobeIsInstalled } from "./files";
 import { extractForOneShot } from "./extractForOneShot";
