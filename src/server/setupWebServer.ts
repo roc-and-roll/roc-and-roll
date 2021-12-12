@@ -17,7 +17,7 @@ import AsyncLock from "async-lock";
 import { GRID_SIZE, SOCKET_IO_PATH } from "../shared/constants";
 import compression from "compression";
 import {
-  calculateBlurhash,
+  calculateBlurHash,
   getAudioDuration,
   getImageDimensions,
   getMimeType,
@@ -110,7 +110,7 @@ export async function setupWebServer(
                 ? {
                     type: "image" as const,
                     ...(await getImageDimensions(file.path)),
-                    blurhash: await calculateBlurhash(file.path),
+                    blurHash: await calculateBlurHash(file.path),
                   }
                 : isAudio
                 ? {
@@ -264,11 +264,11 @@ export async function setupWebServer(
         type: "image",
         width: 550,
         height: 550,
-        blurhash: await (async () => {
-          res.startTime("blurhash", "Calculating blurhash");
-          const blurhash = await calculateBlurhash(outputPath);
-          res.endTime("blurhash");
-          return blurhash;
+        blurHash: await (async () => {
+          res.startTime("blurHash", "Calculating blur hash");
+          const blurHash = await calculateBlurHash(outputPath);
+          res.endTime("blurHash");
+          return blurHash;
         })(),
       };
       return res.json(file);

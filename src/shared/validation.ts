@@ -30,12 +30,12 @@ import {
 } from "./state";
 import { withDo } from "./util";
 import tinycolor from "tinycolor2";
-import { isBlurhashValid } from "blurhash";
 import {
   isDamageType,
   isDiceRollTree,
   RRDamageType,
 } from "./dice-roll-tree-types-and-validation";
+import { isBlurHashValid } from "blurhash/dist/decode";
 
 export function isRRID<ID extends RRID>() {
   return t.makeValidator({
@@ -79,14 +79,14 @@ function isColor() {
   ]);
 }
 
-const isBlurhash = <T extends string>() =>
+const isBlurHash = <T extends string>() =>
   t.makeValidator<T>({
     test: (value, state) => {
-      const result = isBlurhashValid(value);
+      const result = isBlurHashValid(value);
       if (!result.result)
         return t.pushError(
           state,
-          `Expected a valid blurhash. ${result.errorReason ?? ""}`
+          `Expected a valid blur hash. ${result.errorReason ?? ""}`
         );
 
       return true;
@@ -140,7 +140,7 @@ const isRRAssetImage = t.isObject({
   type: t.isLiteral("image"),
   width: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
   height: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
-  blurhash: t.applyCascade(t.isString(), [isBlurhash()]),
+  blurHash: t.applyCascade(t.isString(), [isBlurHash()]),
 
   originalFunction: t.isEnum(["token", "map", "unknown"] as const),
 });

@@ -48,7 +48,7 @@ async function makeNewCharacter(
 
     type: "image",
     originalFunction: "token",
-    blurhash: image.blurhash,
+    blurHash: image.blurHash,
     width: image.width,
     height: image.height,
 

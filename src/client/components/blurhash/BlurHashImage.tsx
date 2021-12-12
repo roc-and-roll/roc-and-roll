@@ -6,17 +6,17 @@ import { assetUrl } from "../../files";
 
 const CANVAS_SIZE = 32;
 
-export const BlurhashImage = React.forwardRef<
+export const BlurHashImage = React.forwardRef<
   HTMLImageElement,
   {
-    image: RRAssetImage | { blurhash: string; url: string };
+    image: RRAssetImage | { blurHash: string; url: string };
     width: number;
     height: number;
     offset?: number;
   } & Partial<
     Omit<ImgHTMLAttributes<HTMLImageElement>, "width" | "height" | "src">
   >
->(function BlurhashImage(
+>(function BlurHashImage(
   { image, width, height, onLoad, style, offset, ...rest },
   externalRef
 ) {
@@ -24,14 +24,14 @@ export const BlurhashImage = React.forwardRef<
 
   style = { ...style, marginLeft: offset ?? 0, marginTop: offset ?? 0 };
 
-  const [blurhashUrl, setBlurhashUrl] = useState<null | string>(null);
+  const [blurHashUrl, setBlurHashUrl] = useState<null | string>(null);
 
   useEffect(() => {
     if (loaded) {
       return;
     }
 
-    const pixels = decode(image.blurhash, CANVAS_SIZE, CANVAS_SIZE);
+    const pixels = decode(image.blurHash, CANVAS_SIZE, CANVAS_SIZE);
 
     const canvas = document.createElement("canvas");
     canvas.width = CANVAS_SIZE;
@@ -51,7 +51,7 @@ export const BlurhashImage = React.forwardRef<
       if (isCancelled) {
         return;
       }
-      setBlurhashUrl((oldUrl) => {
+      setBlurHashUrl((oldUrl) => {
         if (oldUrl) {
           URL.revokeObjectURL(oldUrl);
         }
@@ -61,14 +61,14 @@ export const BlurhashImage = React.forwardRef<
 
     return () => {
       isCancelled = true;
-      setBlurhashUrl((oldUrl) => {
+      setBlurHashUrl((oldUrl) => {
         if (oldUrl) {
           URL.revokeObjectURL(oldUrl);
         }
         return null;
       });
     };
-  }, [image.blurhash, loaded]);
+  }, [image.blurHash, loaded]);
 
   return (
     <img
@@ -85,10 +85,10 @@ export const BlurhashImage = React.forwardRef<
         onLoad?.(e);
       }}
       style={
-        !loaded && blurhashUrl
+        !loaded && blurHashUrl
           ? {
               ...style,
-              backgroundImage: `url("${blurhashUrl}")`,
+              backgroundImage: `url("${blurHashUrl}")`,
               backgroundSize: `${width}px ${height}px`,
             }
           : style

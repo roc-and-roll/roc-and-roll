@@ -1,11 +1,11 @@
 import React, { ImgHTMLAttributes } from "react";
 import { RRAssetImage } from "../../../shared/state";
-import { BlurhashImage } from "./BlurhashImage";
+import { BlurHashImage } from "./BlurHashImage";
 
-export const SVGBlurhashImage = React.forwardRef<
+export const SVGBlurHashImage = React.forwardRef<
   HTMLImageElement,
   {
-    image: RRAssetImage | { blurhash: string; url: string };
+    image: RRAssetImage | { blurHash: string; url: string };
     tokenSize?: number;
     x: number;
     y: number;
@@ -14,7 +14,7 @@ export const SVGBlurhashImage = React.forwardRef<
   } & Partial<
     Omit<ImgHTMLAttributes<HTMLImageElement>, "width" | "height" | "src">
   >
->(function SVGBlurhashImage(
+>(function SVGBlurHashImage(
   { x, y, tokenSize: rawTokenSize, width, height, style, ...rest },
   ref
 ) {
@@ -28,7 +28,7 @@ export const SVGBlurhashImage = React.forwardRef<
       height={height}
       pointerEvents="none"
     >
-      <BlurhashImage
+      <BlurHashImage
         ref={ref}
         offset={tokenSize}
         width={width - tokenSize * 2}

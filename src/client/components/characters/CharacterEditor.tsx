@@ -136,7 +136,7 @@ export function CharacterEditor({
         assetImageUpdate({
           id: character.tokenImageAssetId,
           changes: {
-            blurhash: image.blurhash,
+            blurHash: image.blurHash,
             width: image.width,
             height: image.height,
             location: {

@@ -59,7 +59,7 @@ import { SmartIntegerInput } from "../ui/TextInput";
 import useRafLoop from "../../useRafLoop";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useHealthBarMeasurements } from "../../../client/util";
-import { SVGBlurhashImage } from "../blurhash/SVGBlurhashImage";
+import { SVGBlurHashImage } from "../blurhash/SVGBlurhashImage";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
@@ -411,7 +411,7 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
 
   return (
     <>
-      <SVGBlurhashImage
+      <SVGBlurHashImage
         onMouseDown={!props.isGhost ? props.handleMouseDown : undefined}
         onMouseUp={!props.isGhost ? props.handleMouseUp : undefined}
         tokenSize={extraSpace}
@@ -422,7 +422,7 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
         height={tokenSize + extraSpace * 2}
         image={{
           url: tokenImageUrl(character, asset, tokenSize * zoom),
-          blurhash: asset.blurhash,
+          blurHash: asset.blurHash,
         }}
       />
 

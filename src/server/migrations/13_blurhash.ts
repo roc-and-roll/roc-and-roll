@@ -1,8 +1,8 @@
 import path from "path";
 import { AbstractMigration } from "../migrations";
-import { calculateBlurhash } from "../files";
 import pLimit from "p-limit";
 import { getDefaultHeavyIOConcurrencyLimit } from "../util";
+import { calculateBlurHash } from "../files";
 
 export default class extends AbstractMigration {
   version = 13;
@@ -19,9 +19,9 @@ export default class extends AbstractMigration {
     uploadedFilesDir: string
   ) {
     const filePath = path.join(uploadedFilesDir, object.filename);
-    console.log(`Calculating blurhash for ${filePath}`);
-    object.blurhash = await calculateBlurhash(filePath);
-    console.log(`Blurhash for ${filePath} is ${object.blurhash}`);
+    console.log(`Calculating blur hash for ${filePath}`);
+    object.blurhash = await calculateBlurHash(filePath);
+    console.log(`Blur hash for ${filePath} is ${object.blurhash}`);
   }
 
   migrate = async (state: any, uploadedFilesDir: string) => {

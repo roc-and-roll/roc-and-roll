@@ -164,7 +164,7 @@ export default function MapContainer() {
             extra: {},
 
             type: "image",
-            blurhash: uploadedFile.blurhash,
+            blurHash: uploadedFile.blurHash,
             width: uploadedFile.width,
             height: uploadedFile.height,
             originalFunction: "map",

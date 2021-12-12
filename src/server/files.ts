@@ -97,7 +97,7 @@ export function isMimeTypeVideo(mimeType: MimeType) {
   return mimeType.startsWith("video/");
 }
 
-export async function calculateBlurhash(filePath: string) {
+export async function calculateBlurHash(filePath: string) {
   const { pixels, width, height } = await new Promise<{
     pixels: Buffer;
     width: number;
@@ -127,7 +127,7 @@ export async function calculateBlurhash(filePath: string) {
       clamp(1, Math.round(4 / aspectRatio), 9)
     );
   } catch (err) {
-    console.error(`Could not calculate blurhash of ${filePath}`);
+    console.error(`Could not calculate blurHash of ${filePath}`);
     console.error(err);
     throw err;
   }

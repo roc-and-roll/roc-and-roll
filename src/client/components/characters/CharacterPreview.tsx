@@ -11,7 +11,7 @@ import {
 } from "../../../shared/util";
 import { tokenImageUrl } from "../../files";
 import { useServerState } from "../../state";
-import { BlurhashImage } from "../blurhash/BlurhashImage";
+import { BlurHashImage } from "../blurhash/BlurHashImage";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 
 const DEFAULT_CHARACTER_SIZE = 32;
@@ -44,9 +44,9 @@ export const CharacterPreview = React.forwardRef<
   const currentSize = size ?? DEFAULT_CHARACTER_SIZE;
   return (
     <span className="character-image" ref={ref}>
-      <BlurhashImage
+      <BlurHashImage
         image={{
-          blurhash: asset.blurhash,
+          blurHash: asset.blurHash,
           url: tokenImageUrl(character, asset, currentSize),
         }}
         className={clsx(
