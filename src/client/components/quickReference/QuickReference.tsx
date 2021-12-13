@@ -482,16 +482,18 @@ function TextEntryString({
               />
             );
           }
-          case "scaleDice":
-          case "scaleDamage":
+          //cspell: disable
+          case "scaledice":
+          case "scaledamage":
             return (
               <RollScaledLink
                 key={key}
                 args={args}
-                isDamage={command === "scaleDamage"}
+                isDamage={command === "scaledamage"}
                 spell={spell}
               />
             );
+          //cspell: enable
           case "hit":
           case "d20": {
             assertIsInteger(args);
