@@ -9,38 +9,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-    - name: Increase available file watchers
-      # https://stackoverflow.com/a/59522493/2560557
-      run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Use Node.js 14
-      uses: actions/setup-node@v1
-      with:
-        node-version: 14
-    - name: Install Dependencies
-      run: yarn install --immutable
-    - name: Tests
-      run: yarn test --forceExit
-    # - name: Cypress Tests
-    #   uses: cypress-io/github-action@v2
-    #   with:
-    #     install: false
-    #     start: yarn run e2e:ci
-    #     wait-on: "http://localhost:3003"
-    - name: Lint
-      run: yarn lint
-    - name: Build
-      run: yarn build
-
-name: 'Check spelling'
-on: # rebuild any PRs and main branch changes
-  pull_request:
-  push:
-
-jobs:
-  spellcheck: # run the action
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: streetsidesoftware/cspell-action@v1.0.1
+      - name: Increase available file watchers
+        # https://stackoverflow.com/a/59522493/2560557
+        run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Use Node.js 14
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - name: Install Dependencies
+        run: yarn install --immutable
+      - name: Tests
+        run: yarn test --forceExit
+      # - name: Cypress Tests
+      #   uses: cypress-io/github-action@v2
+      #   with:
+      #     install: false
+      #     start: yarn run e2e:ci
+      #     wait-on: "http://localhost:3003"
+      - name: Lint
+        run: yarn lint
+      - name: Build
+        run: yarn build
