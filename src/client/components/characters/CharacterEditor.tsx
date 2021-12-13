@@ -390,7 +390,7 @@ function HPEditor({
       </div>
       <div>
         <small>
-          You can also edit HP by clicking on the hp in the health bar of your
+          You can also edit HP by clicking on the HP in the health bar of your
           token on the map.
         </small>
       </div>
