@@ -35,7 +35,7 @@ import {
   isDiceRollTree,
   RRDamageType,
 } from "./dice-roll-tree-types-and-validation";
-import { isBlurHashValid } from "blurhash/dist/decode";
+import { isBlurhashValid as isBlurHashValid } from "blurhash";
 
 export function isRRID<ID extends RRID>() {
   return t.makeValidator({
