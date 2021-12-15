@@ -11,7 +11,7 @@
     "dev:client": "webpack serve   --config webpack.client.js --env mode=development",
     "dev:server": "webpack --watch --config webpack.server.js --env mode=development",
     "test": "node --unhandled-rejections=strict --enable-source-maps node_modules/.bin/jest",
-    "test-e2e": "playwright test",
+    "e2e-test": "playwright test",
     "lint": "eslint --cache --ext .ts,.tsx,.js,.jsx src",
     "format": "yarn run lint --fix",
     "build": "concurrently --names client,server --prefix-colors blue,green yarn:build:client yarn:build:server",

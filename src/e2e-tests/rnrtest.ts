@@ -1,6 +1,6 @@
 import os from "os";
 import net from "net";
-import fs from "fs/promises";
+import fs from "fs";
 import fsExtra from "fs-extra";
 import path from "path";
 import { spawn } from "child_process";
@@ -45,12 +45,17 @@ function* possiblePortsForWorker(start: number, step: number) {
 }
 
 async function start(port: number) {
-  const workspace = await fs.mkdtemp(
+  const workspace = await fs.promises.mkdtemp(
     path.join(os.tmpdir(), "roc-and-roll-e2e-")
   );
 
   try {
     const executable = path.join("dist", "e2e", "server.roc-and-roll.js");
+
+    if (!fs.existsSync(executable)) {
+      console.error(`Could not find e2e build. Did you run "yarn e2e-build"?`);
+      process.exit(1);
+    }
 
     const version = (
       await execute(executable, ["--version"]).result
@@ -61,10 +66,6 @@ async function start(port: number) {
       );
       process.exit(1);
     }
-
-    // console.log(
-    //   `Starting Roc & Roll with workspace ${workspace} on http://localhost:${port}`
-    // );
 
     const { kill } = execute(executable, [
       "--workspace",

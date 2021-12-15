@@ -51,8 +51,8 @@ jobs:
       run: sudo apt update && sudo apt install ffmpeg
     - name: Install Playwright Dependencies
       # no need for `apt update` since that is already done above
-      run: yarn playwright install-deps ${{ matrix.browser }} 
+      run: yarn playwright install-deps ${{ matrix.browser }}
     - name: Install Playwright Browser
       run: yarn playwright install ${{ matrix.browser }}
     - name: Run e2e tests
-      run: yarn test-e2e --browser=${{ matrix.browser }}
+      run: yarn e2e-test --browser=${{ matrix.browser }}

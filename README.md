@@ -38,11 +38,13 @@ To build the application:
 
 ### Executing end to end (e2e) tests
 
-- Install dependencies: `yarn playwright install-deps`
-- Run tests: `yarn test-e2e` (add `--debug` to debug tests)
+- Install Playwright dependencies: `yarn playwright install-deps`
+- Install test browser(s): `yarn playwright install`
+- Build Roc & Roll for end to end tests: `yarn e2e-build`
+- Run tests: `yarn e2e-test` (add `--debug` to debug tests)
 
-If you use WSL, you might need to also need to `sudo apt-get install xvfb` and
-run tests like this `xvfb-run yarn test-e2e`. If you want to visually step
+If you use WSL, you might need to also `sudo apt-get install xvfb` and
+run tests like this: `xvfb-run yarn e2e-test`. If you want to visually step
 through tests, you will need to setup `vcxsrv.exe` or another way to forward X11
 from WSL to Windows.
 
