@@ -1,16 +1,13 @@
 const colors = require('tailwindcss/colors')
 
 module.exports = {
-  mode: 'jit',
-  purge: [
-    './src/client/**/*.ts',
-    './src/client/**/*.tsx',
+  content: [
+    './src/client/**/*.{ts,tsx}',
   ],
-  darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {
       colors: {
-        rr: colors.blueGray
+        rr: colors.slate,
       },
       keyframes: {
         'border-wiggle': {
