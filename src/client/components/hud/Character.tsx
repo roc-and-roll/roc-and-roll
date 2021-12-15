@@ -101,7 +101,6 @@ function ConditionsBar({ character }: { character: RRCharacter }) {
             title={condition}
             className="h-8 w-8 m-1 my-2 cursor-pointer"
             onClick={() => {
-              console.log(condition);
               setConditions((c) => c.filter((c) => c !== condition));
             }}
           >
@@ -167,13 +166,9 @@ function ConditionsBar({ character }: { character: RRCharacter }) {
         <div
           title="Add Condition"
           className="h-8 w-8 m-1 my-2 flex items-center justify-center rounded-full bg-rr-500 cursor-pointer"
+          onClick={() => setConditionChooserOpen((b) => !b)}
         >
-          <FontAwesomeIcon
-            icon={faPlus}
-            color="black"
-            size={"1x"}
-            onClick={() => setConditionChooserOpen((b) => !b)}
-          />
+          <FontAwesomeIcon icon={faPlus} color="black" size={"1x"} />
         </div>
       </Popover>
     </div>

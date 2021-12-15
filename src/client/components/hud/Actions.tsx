@@ -240,7 +240,7 @@ export const ActionsHUD = React.memo(function DicePanel() {
 
   return (
     <div
-      className="absolute bottom-0 left-20 flex flex-col"
+      className="absolute bottom-0 left-20 flex flex-col z-10"
       style={{ right: "500px" }}
     >
       <div style={{ width: "370px" }} className="bg-rr-800 rounded">
