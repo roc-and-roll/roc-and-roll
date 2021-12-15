@@ -12,9 +12,13 @@ export function LogHUD({
 }) {
   return (
     <div className="absolute bottom-2 right-2 flex flex-col items-end pointer-events-none">
-      <div className="w-[382px] pointer-events-auto flex flex-col items-end">
-        <MapMusicIndicator mapBackgroundColor={mapBackgroundColor} />
-        <Notifications />
+      <div className="w-[382px] flex flex-col items-end">
+        <div className="pointer-events-auto">
+          <MapMusicIndicator mapBackgroundColor={mapBackgroundColor} />
+        </div>
+        <div className="pointer-events-auto">
+          <Notifications />
+        </div>
       </div>
       <div className="w-[422px]">
         <Log />

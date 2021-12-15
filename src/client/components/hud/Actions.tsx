@@ -239,15 +239,13 @@ export const ActionsHUD = React.memo(function DicePanel() {
   }
 
   return (
-    <div
-      className="absolute bottom-0 left-20 flex flex-col z-10"
-      style={{ right: "500px" }}
-    >
-      <div style={{ width: "370px" }} className="bg-rr-800 rounded">
+    <div className="absolute bottom-0 left-20 right-[500px] flex flex-col z-10 pointer-events-none">
+      <div className="w-[370px] bg-rr-800 rounded pointer-events-auto">
         {renderContent(active)}
       </div>
 
-      <div className="flex">
+      {/* TODO: The layout is a bit messed up when the scrollbar is shown. */}
+      <div className="flex overflow-x-auto pointer-events-auto">
         <div
           className={clsx(actionClasses, activeClass(active === "STs"))}
           onClick={() => toggle("STs")}
