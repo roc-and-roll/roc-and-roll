@@ -31,7 +31,7 @@ export async function setupArgs() {
   const program = new Command();
 
   program
-    .version(__VERSION__)
+    .version(`${__VERSION__}-${process.env.NODE_ENV}`)
     .requiredOption(
       "-w, --workspace <folder>",
       "workspace directory",

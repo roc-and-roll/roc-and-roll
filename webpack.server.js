@@ -13,11 +13,16 @@ const gitRevisionPlugin = new GitRevisionPlugin();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const outputPath = path.join(__dirname, "dist");
-
 export default (webpackEnv) => {
-  const isEnvDevelopment = webpackEnv.development === true;
-  const isEnvProduction = webpackEnv.production === true;
+  const isEnvDevelopment = webpackEnv.mode === "development";
+  const isEnvE2E = webpackEnv.mode === "e2e";
+  const isEnvProduction = webpackEnv.mode === "production";
+
+  if (!isEnvDevelopment && !isEnvE2E && !isEnvProduction) {
+    throw new Error("You must specify either '--env mode=development', '--env mode=production', or '--env mod=e2e'.");
+  }
+
+  const outputPath = path.join(__dirname, "dist", webpackEnv.mode);
 
   return {
     target: "node14",
@@ -39,9 +44,9 @@ export default (webpackEnv) => {
         ].includes(moduleId) ? "module" : "node-commonjs"} ${moduleId}`;
       }
     })],
-    mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
-    bail: isEnvProduction,
-    devtool: isEnvProduction
+    mode: isEnvProduction ? 'production' : 'development',
+    bail: isEnvProduction || isEnvE2E,
+    devtool: isEnvProduction || isEnvE2E
       ? 'source-map'
       : isEnvDevelopment && 'cheap-module-source-map',
     node: {
@@ -100,7 +105,7 @@ export default (webpackEnv) => {
       new CleanWebpackPlugin({
         cleanOnceBeforeBuildPatterns: ["**/*", "!client/**/*", "!client"],
       }),
-      isEnvProduction && new CopyWebpackPlugin({
+      (isEnvProduction || isEnvE2E) && new CopyWebpackPlugin({
         patterns: [{
           from: "./src/public",
           to: "public"
@@ -125,6 +130,9 @@ export default (webpackEnv) => {
         nodeArgs: ['--unhandled-rejections=strict']
       }),
     ].filter(Boolean),
+    optimization: {
+      nodeEnv: isEnvE2E ? "e2e-test" : undefined,
+    },
     resolve: {
       extensions: [".tsx", ".ts", ".js", ".jsx"]
     },

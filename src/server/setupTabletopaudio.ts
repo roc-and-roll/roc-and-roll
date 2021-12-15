@@ -30,7 +30,10 @@ class TabletopAudioDownloader {
   constructor(private readonly store: MyStore) {}
 
   public async begin() {
-    if (process.env.NODE_ENV === "test") {
+    if (
+      process.env.NODE_ENV === "test" ||
+      process.env.NODE_ENV === "e2e-test"
+    ) {
       // Do not fetch tabletop audio in tests.
       return;
     }

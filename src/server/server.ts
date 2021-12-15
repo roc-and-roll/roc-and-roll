@@ -51,7 +51,7 @@ void (async () => {
     uploadedFilesCacheDir
   );
 
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV !== "production") {
     store.subscribe(() => {
       const errors: string[] = [];
       if (!isSyncedState(store.getState(), { errors })) {
