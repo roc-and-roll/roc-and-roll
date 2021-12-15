@@ -181,7 +181,7 @@ function HeroPoint() {
 
   return (
     <div
-      className="border-solid rounded-md w-10 h-10 flex justify-center items-center border-white opacity-80 m-2"
+      className="border-solid rounded-md w-10 h-10 flex justify-center items-center border-white opacity-80 m-2 cursor-pointer"
       style={{
         borderWidth: "5px",
         boxShadow: myself.hasHeroPoint ? "0 0 5px 1px #fff" : "",
@@ -221,7 +221,7 @@ function AC({ character }: { character: RRCharacter }) {
         fixedWidth
         className="text-white text-7xl opacity-50 right-2 m-1"
       />
-      <p className="text-4xl font-bold w-full absolute top-4 text-white left-0 text-center">
+      <p className="text-4xl font-bold w-full absolute top-4 text-white left-0 text-center select-none">
         {character.AC ?? "?"}
       </p>
     </div>
@@ -236,7 +236,7 @@ function SpellSave({ character }: { character: RRCharacter }) {
         fixedWidth
         className="text-white text-6xl opacity-50 right-2 m-1 "
       />
-      <p className="text-4xl font-bold w-full absolute top-4 text-white left-0 text-center">
+      <p className="text-4xl font-bold w-full absolute top-4 text-white left-0 text-center select-none">
         {character.spellSaveDC ?? "?"}
       </p>
     </div>
@@ -326,7 +326,7 @@ function HealthBar({
           )}
         </>
       )}
-      <div className="absolute h-full flex items-center justify-end right-4">
+      <div className="absolute h-full flex items-center justify-end right-4 select-none">
         <div className="text-black rough-text">
           <HPInlineEdit
             className="inline-block w-12"
