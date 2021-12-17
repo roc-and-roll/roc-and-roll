@@ -1,14 +1,13 @@
-import React, { useContext, useLayoutEffect } from "react";
+import React, { useContext, useEffect, useLayoutEffect, useState } from "react";
 import { atom, useRecoilValue, useSetRecoilState } from "recoil";
 import { IterableElement } from "type-fest";
-import {
-  EMPTY_ENTITY_COLLECTION,
-  RRPlayer,
-  RRPlayerID,
-  entries,
-} from "../shared/state";
+import { RRCharacterID, RRPlayer, RRPlayerID } from "../shared/state";
 import { selectedMapObjectIdsAtom } from "./components/map/recoil";
-import { useAutoDispatchPlayerIdOnChange, useServerState } from "./state";
+import {
+  useAutoDispatchPlayerIdOnChange,
+  useServerState,
+  useServerStateRef,
+} from "./state";
 import { useGuranteedMemo } from "./useGuranteedMemo";
 import useLocalState from "./useLocalState";
 
@@ -59,39 +58,40 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useMySelectedTokens() {
+export function useMySelectedCharacters() {
   const myself = useMyProps("currentMap");
-
-  const characterCollection = useServerState((state) => state.characters);
-  const mapObjects = useServerState(
-    (state) =>
-      state.maps.entities[myself.currentMap]?.objects ??
-      EMPTY_ENTITY_COLLECTION,
-    (current, next) => {
-      const cl = entries(current);
-      const nl = entries(next);
-      return cl === nl && cl.every((c, i) => c.id === nl[i]!.id);
-    }
-  );
+  const stateRef = useServerStateRef((state) => state);
 
   const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom).filter(
     Boolean
   );
 
-  const selectedCharacterIds = [
-    ...new Set(
-      selectedMapObjectIds.flatMap((mapObjectId) => {
-        const mapObject = mapObjects.entities[mapObjectId];
-        return mapObject?.type === "token" ? mapObject.characterId : [];
-      })
-    ),
-  ];
+  const [selectedCharacterIds, setSelectedCharacterIds] = useState<
+    Set<RRCharacterID>
+  >(() => new Set());
 
-  const selectedCharacters = selectedCharacterIds.flatMap(
-    (characterId) => characterCollection.entities[characterId] ?? []
+  useEffect(() => {
+    const mapObjects =
+      stateRef.current.maps.entities[myself.currentMap]?.objects;
+    setSelectedCharacterIds(
+      new Set(
+        selectedMapObjectIds.flatMap((mapObjectId) => {
+          const mapObject = mapObjects?.entities[mapObjectId];
+          return mapObject?.type === "token" ? mapObject.characterId : [];
+        })
+      )
+    );
+  }, [myself.currentMap, selectedMapObjectIds, stateRef]);
+
+  return useServerState(
+    (state) =>
+      [...selectedCharacterIds.values()].flatMap(
+        (characterId) => state.characters.entities[characterId] ?? []
+      ),
+    (current, next) =>
+      current.length === next.length &&
+      current.every((each, i) => each === next[i])
   );
-
-  return selectedCharacters;
 }
 
 export function useMyProps<T extends (keyof RRPlayer)[]>(

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { conditionNames, RRCharacter } from "../../../shared/state";
-import { useMyProps, useMySelectedTokens } from "../../myself";
+import { useMyProps, useMySelectedCharacters } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import { CharacterPreview } from "../characters/CharacterPreview";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -27,7 +27,7 @@ import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants"
 export function CharacterHUD() {
   const myself = useMyProps("mainCharacterId", "isGM");
 
-  const selectedCharacter = useMySelectedTokens();
+  const selectedCharacters = useMySelectedCharacters();
   const mainCharacter = useServerState((state) =>
     myself.mainCharacterId
       ? state.characters.entities[myself.mainCharacterId] ?? null
@@ -36,7 +36,7 @@ export function CharacterHUD() {
 
   const healthWidth = 250;
   const character =
-    selectedCharacter.length > 0 ? selectedCharacter[0]! : mainCharacter;
+    selectedCharacters.length === 1 ? selectedCharacters[0]! : mainCharacter;
 
   return (
     <div className="absolute top-0 right-0 pointer-events-none">
