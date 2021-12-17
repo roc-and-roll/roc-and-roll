@@ -313,7 +313,7 @@ function HealthBar({
               height: "100%",
               backgroundColor: hpColor,
             }}
-          ></div>
+          />
           {character.temporaryHP > 0 && temporaryHPBarWidth > 0 && (
             <div
               className="h-full absolute top-0"
@@ -326,15 +326,13 @@ function HealthBar({
           )}
         </>
       )}
-      <div className="absolute h-full flex items-center justify-end right-4 select-none">
-        <div className="text-black rough-text">
-          <HPInlineEdit
-            className="inline-block w-12"
-            hp={character.hp + character.temporaryHP}
-            setHP={(total) => setHP(character.id, total)}
-          />{" "}
-          / {totalMaxHP}
-        </div>
+      <div className="absolute h-full flex items-center justify-end left-4 right-4 select-none text-black rough-text text-2xl font-bold">
+        <HPInlineEdit
+          className="inline-block w-12 h-6 flex-1 mr-1 px-2 text-2xl"
+          hp={character.hp + character.temporaryHP}
+          setHP={(total) => setHP(character.id, total)}
+        />{" "}
+        / {totalMaxHP}
       </div>
     </div>
   );
