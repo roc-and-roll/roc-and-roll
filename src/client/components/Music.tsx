@@ -196,13 +196,19 @@ export const Music = React.memo(function Music() {
 
   return (
     <>
-      <TextInput
-        type="search"
-        value={filter}
-        onChange={(filter) => setFilter(filter)}
-        placeholder="search music..."
-      />
-      <UploadAudio onUploaded={() => setFilter("")} />
+      <div className="flex mb-2 items-center">
+        <h1 className="flex-1">Music</h1>
+        <UploadAudio onUploaded={() => setFilter("")} />
+      </div>
+      <div className="-mx-3">
+        <TextInput
+          className="mb-2 py-1 px-3"
+          type="search"
+          value={filter}
+          onChange={(filter) => setFilter(filter)}
+          placeholder="search music..."
+        />
+      </div>
       {activeMusic.length > 0 && (
         <Collapsible title="Playing">
           {activeMusic.map((activeSongOrSoundSet) => {
