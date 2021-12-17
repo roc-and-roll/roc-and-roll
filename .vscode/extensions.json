@@ -10,11 +10,11 @@
 		"bradlc.vscode-tailwindcss",
 		"ms-playwright.playwright",
 		"peggyjs.peggy-language",
-		"streetsidesoftware.code-spell-checker"
+		"streetsidesoftware.code-spell-checker",
+		"esbenp.prettier-vscode",
 	],
 	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
 	"unwantedRecommendations": [
-		"esbenp.prettier-vscode",
 		"msjsdiag.debugger-for-chrome",
 	],
 }

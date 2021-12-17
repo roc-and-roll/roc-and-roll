@@ -5,7 +5,7 @@
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
     "plugin:react/recommended",
-    "plugin:prettier/recommended"
+    "prettier"
   ],
   "settings": {
     "react": {
@@ -24,10 +24,9 @@
       "./tsconfig.json"
     ]
   },
-  "plugins": ["react", "react-hooks", "@typescript-eslint", "prettier", "unused-imports"],
+  "plugins": ["react", "react-hooks", "@typescript-eslint", "unused-imports"],
   "rules": {
     "no-alert": "warn",
-    "prettier/prettier": "warn",
     "react/prop-types": "off",
     "react/display-name": "warn",
     "@typescript-eslint/explicit-function-return-type": "off",
