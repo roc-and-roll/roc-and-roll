@@ -57,4 +57,4 @@ jobs:
     - name: Install Playwright Browser
       run: yarn playwright install ${{ matrix.browser }}
     - name: Run e2e tests
-      run: yarn e2e-test --browser=${{ matrix.browser }}
+      run: yarn e2e-test:ci --browser=${{ matrix.browser }}
