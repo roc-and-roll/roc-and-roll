@@ -35,7 +35,7 @@ import { Player } from "../Player";
 import { DebugSettings } from "./DebugSettings";
 import clsx from "clsx";
 
-const tooltipProps: RRTooltipProps = {
+const tooltipProps: Partial<RRTooltipProps> = {
   placement: "right",
   offset: [0, 16],
 };

@@ -56,6 +56,7 @@ import { useMyProps } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import { DiceTemplates, GeneratedDiceTemplates } from "../DiceTemplates";
 import { Popover } from "../Popover";
+import { RRTooltip } from "../RRTooltip";
 import { Button } from "../ui/Button";
 import { SmartTextInput } from "../ui/TextInput";
 
@@ -89,7 +90,8 @@ type Section = "closed" | "Skills" | "STs" | RRDiceTemplateCategoryID;
 
 const actionClasses =
   "snap-start border-black border flex items-center justify-center p-3 -mr-px last:mr-0 cursor-pointer";
-const activeClass = (active: boolean) => (!active ? "" : "bg-rr-500");
+const activeClass = (active: boolean) =>
+  !active ? "hover:bg-rr-600" : "bg-rr-500";
 
 export const ActionsHUD = React.memo(function DicePanel() {
   const [active, setActive] = useState<Section>("closed");
@@ -251,22 +253,24 @@ export const ActionsHUD = React.memo(function DicePanel() {
           { "rounded-tl-none": active !== "closed" }
         )}
       >
-        <div
-          className={clsx(actionClasses, activeClass(active === "STs"))}
-          onClick={() => toggle("STs")}
-        >
-          <FontAwesomeIcon
-            size="lg"
-            icon={faShieldAlt}
-            name={"Saving Throws"}
-          />
-        </div>
-        <div
-          className={clsx(actionClasses, activeClass(active === "Skills"))}
-          onClick={() => toggle("Skills")}
-        >
-          <FontAwesomeIcon size="lg" icon={faHandPaper} name={"Skills"} />
-        </div>
+        <RRTooltip content="Saving Throws" placement="top">
+          <Button
+            unstyled
+            className={clsx(actionClasses, activeClass(active === "STs"))}
+            onClick={() => toggle("STs")}
+          >
+            <FontAwesomeIcon size="lg" icon={faShieldAlt} fixedWidth />
+          </Button>
+        </RRTooltip>{" "}
+        <RRTooltip content="Skill Checks" placement="top">
+          <Button
+            unstyled
+            className={clsx(actionClasses, activeClass(active === "Skills"))}
+            onClick={() => toggle("Skills")}
+          >
+            <FontAwesomeIcon size="lg" icon={faHandPaper} fixedWidth />
+          </Button>
+        </RRTooltip>
         {myself.diceTemplateCategories.map((category) => (
           <DiceTemplateButton
             key={category.id}
@@ -276,15 +280,17 @@ export const ActionsHUD = React.memo(function DicePanel() {
           />
         ))}
         {myself.diceTemplateCategories.length < userCategoryIcons.length && (
-          <div
-            className={actionClasses}
-            onClick={() => {
-              addTemplateCategory();
-            }}
-            title="Add Category"
-          >
-            <FontAwesomeIcon size="lg" icon={faPlus} fixedWidth />
-          </div>
+          <RRTooltip content={"Add Category"} placement="top">
+            <Button
+              unstyled
+              className={actionClasses}
+              onClick={() => {
+                addTemplateCategory();
+              }}
+            >
+              <FontAwesomeIcon size="lg" icon={faPlus} fixedWidth />
+            </Button>
+          </RRTooltip>
         )}
       </div>
     </div>
@@ -310,30 +316,36 @@ function DiceTemplateButton({
       placement="bottom"
       content={<DiceTemplateCategoryEditor category={category} />}
     >
-      <div
-        className={clsx(actionClasses, activeClass(active))}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (e.button === 0) onSetActive();
-          else if (e.button === 2) {
-            e.stopPropagation();
-          }
-        }}
-        onContextMenu={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          if (
-            fixedCategoryIcons.findIndex(
-              (fixedIcon) => fixedIcon === category.icon
-            ) > -1
-          )
-            return;
-          setAddMenuVisible(true);
-        }}
-        title={category.categoryName}
+      <RRTooltip
+        content={category.categoryName}
+        placement="top"
+        disabled={category.categoryName.trim().length === 0 || addMenuVisible}
       >
-        <FontAwesomeIcon icon={iconMap[category.icon]} size="lg" fixedWidth />
-      </div>
+        <Button
+          unstyled
+          className={clsx(actionClasses, activeClass(active))}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (e.button === 0) onSetActive();
+            else if (e.button === 2) {
+              e.stopPropagation();
+            }
+          }}
+          onContextMenu={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (
+              fixedCategoryIcons.findIndex(
+                (fixedIcon) => fixedIcon === category.icon
+              ) > -1
+            )
+              return;
+            setAddMenuVisible(true);
+          }}
+        >
+          <FontAwesomeIcon icon={iconMap[category.icon]} size="lg" fixedWidth />
+        </Button>
+      </RRTooltip>
     </Popover>
   );
 }
