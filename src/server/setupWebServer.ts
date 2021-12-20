@@ -278,7 +278,7 @@ export async function setupWebServer(
   });
 
   // (6) Serve the client code to the browser
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV === "development") {
     // In development, simply redirect all non-api requests to the webpack dev
     // server, which serves the client code on its own.
     app.get("*", (req, res, next) => {

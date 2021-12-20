@@ -162,8 +162,8 @@ function MapTokenInner({
     (e: React.MouseEvent) => {
       if (e.button === 0) {
         onStartMove(objectRef.current, e);
-        firstMouseDownPos.current = { x: e.clientX, y: e.clientY };
       }
+      firstMouseDownPos.current = { x: e.clientX, y: e.clientY };
     },
     [onStartMove, objectRef]
   );

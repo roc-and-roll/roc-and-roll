@@ -50,21 +50,18 @@ async function execute(command: string, args: string[]) {
   return new Promise<string>((resolve, reject) => {
     const childProcess = spawn(command, args);
 
-    let result = "";
-    childProcess.stdout.on(
-      "data",
-      (data: Buffer) => (result += data.toString("utf-8"))
-    );
+    const result: Buffer[] = [];
+    childProcess.stdout.on("data", (data) => result.push(Buffer.from(data)));
 
-    childProcess.stderr.on("data", (data: Buffer) =>
-      console.error(data.toString("utf-8"))
+    childProcess.stderr.on("data", (data) =>
+      console.error(Buffer.from(data).toString("utf-8"))
     );
 
     childProcess.on("error", (err) => reject(err));
 
     childProcess.on("close", (code) => {
       if (code === 0) {
-        resolve(result);
+        resolve(Buffer.concat(result).toString("utf-8"));
       } else {
         reject(code);
       }

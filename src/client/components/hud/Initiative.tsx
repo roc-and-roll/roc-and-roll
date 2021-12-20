@@ -1,10 +1,5 @@
 import clsx from "clsx";
-import React, {
-  useContext,
-  useDeferredValue,
-  useEffect,
-  useState,
-} from "react";
+import React, { useDeferredValue, useEffect, useState } from "react";
 import { Flipped, Flipper } from "react-flip-toolkit";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import {
@@ -52,7 +47,6 @@ import { rollInitiative, diceResult } from "../../dice-rolling/roll";
 import useLocalState from "../../useLocalState";
 import { usePrompt } from "../../dialog-boxes";
 import ReactDOM from "react-dom";
-import { NotificationAreaPortal } from "../Notifications";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -179,9 +173,19 @@ function EndTurnButton({
 }) {
   return (
     <Button
-      className={clsx("initiative-tracker-turn-done", {
-        "gm-button": !canEdit && myself.isGM,
-      })}
+      className={clsx(
+        "initiative-tracker-turn-done",
+        "pointer-events-auto",
+        "absolute",
+        "top-0",
+        "z-30",
+        "left-1/2",
+        "w-64",
+        "-ml-32",
+        {
+          "gm-button": !canEdit && myself.isGM,
+        }
+      )}
       disabled={!(canEdit || myself.isGM)}
       onClick={onClick}
     >
@@ -191,15 +195,13 @@ function EndTurnButton({
 }
 
 function YourTurn({ endTurnButton }: { endTurnButton: React.ReactNode }) {
-  const [portal] = useContext(NotificationAreaPortal);
-  return portal
-    ? ReactDOM.createPortal(
-        <div className="your-turn bg-yellow-500/90 mt-2 p-1 hud-panel">
-          It is your turn! {endTurnButton}
-        </div>,
-        portal
-      )
-    : null;
+  return ReactDOM.createPortal(
+    <>
+      <div className="absolute inset-0 h-full w-full opacity-70 border-rr-500 border animate-border-wiggle pointer-events-none flex justify-center items-start z-20 your-turn-border"></div>
+      {endTurnButton}
+    </>,
+    document.body
+  );
 }
 
 const TOKEN_SIZE = 64;
@@ -227,7 +229,6 @@ const InitiativeEntry = React.memo<{
 
   const onRemoveEntry = () => dispatch(initiativeTrackerEntryRemove(entry.id));
 
-  let entryContainsPlayerCharacter = false;
   let content = null;
   let label = "";
   const [hovered, setHovered] = useState(false);
@@ -262,14 +263,6 @@ const InitiativeEntry = React.memo<{
           size={TOKEN_SIZE}
         />
       </>
-    );
-
-    entryContainsPlayerCharacter = entries(playerCollection).some(
-      (player) =>
-        !player.isGM &&
-        characters.some(
-          (character) => character && player.characterIds.includes(character.id)
-        )
     );
   }
 

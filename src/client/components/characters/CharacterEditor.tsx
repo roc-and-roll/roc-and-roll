@@ -51,7 +51,10 @@ import snail from "../../../third-party/game-icons.net/ffffff/transparent/1x1/lo
 import voodooDoll from "../../../third-party/game-icons.net/ffffff/transparent/1x1/lorc/voodoo-doll.svg";
 import bullseye from "../../../third-party/game-icons.net/ffffff/transparent/1x1/skoll/bullseye.svg";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
-import { faSkullCrossbones } from "@fortawesome/free-solid-svg-icons";
+import {
+  faHandSparkles,
+  faSkullCrossbones,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useConfirm } from "../../dialog-boxes";
 import { CharacterPreview } from "./CharacterPreview";
@@ -99,6 +102,7 @@ export const conditionIcons = {
   polyMorphed: snail,
   slowed: tortoise,
   dead: faSkullCrossbones,
+  concentrating: faHandSparkles,
 } as const;
 
 export function CharacterEditor({

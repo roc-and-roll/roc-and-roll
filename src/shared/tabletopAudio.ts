@@ -25,9 +25,7 @@ export type TabletopAudioIndex = t.InferType<typeof isTabletopAudioIndex>;
 export const isTabletopAudioAsset = t.isObject(
   {
     extra: t.isObject(
-      {
-        tabletopAudioKey: t.applyCascade(t.isNumber(), [t.isInteger()]),
-      },
+      { tabletopAudioKey: t.applyCascade(t.isNumber(), [t.isInteger()]) },
       { extra: t.isUnknown() }
     ),
   },

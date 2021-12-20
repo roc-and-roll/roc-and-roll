@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { RRCharacter } from "../../../shared/state";
+import { conditionNames, RRCharacter } from "../../../shared/state";
 import { useMyProps, useMySelectedTokens } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import { CharacterPreview } from "../characters/CharacterPreview";
@@ -8,6 +8,7 @@ import {
   faCog,
   faDragon,
   faMagic,
+  faPlus,
   faShieldAlt,
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
@@ -18,8 +19,10 @@ import {
   useHealthBarMeasurements,
 } from "../../../client/util";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
-import { playerUpdate } from "../../../shared/actions";
+import { characterUpdate, playerUpdate } from "../../../shared/actions";
 import { conditionIcons } from "../characters/CharacterEditor";
+import { Popover } from "../Popover";
+import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 
 export function CharacterHUD() {
   const myself = useMyProps("mainCharacterId", "isGM");
@@ -60,12 +63,47 @@ export function CharacterHUD() {
 }
 
 function ConditionsBar({ character }: { character: RRCharacter }) {
+  const [conditionChooserOpen, setConditionChooserOpen] = useState(false);
+  const dispatch = useServerDispatch();
+
+  const setConditions = (
+    updater: React.SetStateAction<RRCharacter["conditions"]>
+  ) =>
+    dispatch((state) => {
+      const oldConditions = state.characters.entities[character.id]?.conditions;
+
+      if (oldConditions === undefined) {
+        return [];
+      }
+
+      const newConditions =
+        typeof updater === "function" ? updater(oldConditions) : updater;
+
+      return {
+        actions: [
+          characterUpdate({
+            id: character.id,
+            changes: { conditions: newConditions },
+          }),
+        ],
+        optimisticKey: "conditions",
+        syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+      };
+    });
+
   return (
     <div className="flex flex-wrap flex-row-reverse pointer-events-auto">
       {character.conditions.map((condition) => {
         const icon = conditionIcons[condition];
         return (
-          <div key={condition} title={condition} className="h-8 w-8 m-1 my-2">
+          <div
+            key={condition}
+            title={condition}
+            className="h-8 w-8 m-1 my-2 cursor-pointer"
+            onClick={() => {
+              setConditions((c) => c.filter((c) => c !== condition));
+            }}
+          >
             {typeof icon === "string" ? (
               <img src={icon}></img>
             ) : (
@@ -82,6 +120,57 @@ function ConditionsBar({ character }: { character: RRCharacter }) {
           </div>
         );
       })}
+      <Popover
+        content={
+          <div
+            onMouseDown={(e) => e.stopPropagation()}
+            className="flex flex-wrap"
+          >
+            {conditionNames
+              .filter((c) => !character.conditions.includes(c))
+              .map((condition) => {
+                const icon = conditionIcons[condition];
+                return (
+                  <div
+                    key={condition}
+                    title={condition}
+                    className="h-8 w-8 m-1 my-2"
+                    onClick={() => {
+                      setConditions((c) => [...c, condition]);
+                      setConditionChooserOpen(false);
+                    }}
+                  >
+                    {typeof icon === "string" ? (
+                      <img src={icon}></img>
+                    ) : (
+                      <FontAwesomeIcon
+                        icon={icon}
+                        color="black"
+                        size={"2x"}
+                        style={{
+                          stroke: "white",
+                          strokeWidth: 18,
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        }
+        visible={conditionChooserOpen}
+        onClickOutside={() => setConditionChooserOpen(false)}
+        interactive
+        placement="bottom"
+      >
+        <div
+          title="Add Condition"
+          className="h-8 w-8 m-1 my-2 flex items-center justify-center rounded-full bg-rr-500 cursor-pointer"
+          onClick={() => setConditionChooserOpen((b) => !b)}
+        >
+          <FontAwesomeIcon icon={faPlus} color="black" size={"1x"} />
+        </div>
+      </Popover>
     </div>
   );
 }
@@ -92,7 +181,7 @@ function HeroPoint() {
 
   return (
     <div
-      className="border-solid rounded-md w-10 h-10 flex justify-center items-center border-white opacity-80 m-2"
+      className="border-solid rounded-md w-10 h-10 flex justify-center items-center border-white opacity-80 m-2 cursor-pointer"
       style={{
         borderWidth: "5px",
         boxShadow: myself.hasHeroPoint ? "0 0 5px 1px #fff" : "",
@@ -132,7 +221,7 @@ function AC({ character }: { character: RRCharacter }) {
         fixedWidth
         className="text-white text-7xl opacity-50 right-2 m-1"
       />
-      <p className="text-4xl font-bold w-full absolute top-4 text-white left-0 text-center">
+      <p className="text-4xl font-bold w-full absolute top-4 text-white left-0 text-center select-none">
         {character.AC ?? "?"}
       </p>
     </div>
@@ -147,7 +236,7 @@ function SpellSave({ character }: { character: RRCharacter }) {
         fixedWidth
         className="text-white text-6xl opacity-50 right-2 m-1 "
       />
-      <p className="text-4xl font-bold w-full absolute top-4 text-white left-0 text-center">
+      <p className="text-4xl font-bold w-full absolute top-4 text-white left-0 text-center select-none">
         {character.spellSaveDC ?? "?"}
       </p>
     </div>
@@ -237,7 +326,7 @@ function HealthBar({
           )}
         </>
       )}
-      <div className="absolute h-full flex items-center justify-end right-4">
+      <div className="absolute h-full flex items-center justify-end right-4 select-none">
         <div className="text-black rough-text">
           <HPInlineEdit
             className="inline-block w-12"
