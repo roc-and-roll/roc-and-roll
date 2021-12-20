@@ -62,6 +62,7 @@ import { CharacterSheetEditor } from "./CharacterSheetEditor";
 import { Collapsible } from "../Collapsible";
 import { Auras } from "./Auras";
 import { FileInput } from "../FileInput";
+import { LimitedUseSkillEditor } from "./LimitedUseItemEditor";
 
 export interface ConditionWithIcon {
   name: RRCharacterCondition;
@@ -262,6 +263,7 @@ export function CharacterEditor({
       </Collapsible>
       <Collapsible title="Character Editor" defaultCollapsed={true}>
         <CharacterSheetEditor character={character} isTemplate={isTemplate} />
+        <LimitedUseSkillEditor character={character} />
       </Collapsible>
       <Collapsible title="Auras" defaultCollapsed={true}>
         <Auras character={character} isTemplate={isTemplate} />

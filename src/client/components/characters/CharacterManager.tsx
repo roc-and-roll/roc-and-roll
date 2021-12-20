@@ -70,6 +70,7 @@ async function makeNewCharacter(
     stats: {},
     savingThrows: {},
     skills: {},
+    limitedUseSkills: [],
     name: await randomName(),
     tokenImageAssetId: assetImageAddAction.payload.id,
     tokenBorderColor: randomColor(),

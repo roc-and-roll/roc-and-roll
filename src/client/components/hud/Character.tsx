@@ -49,6 +49,7 @@ export function CharacterHUD() {
               width={healthWidth}
             />
             <ConditionsBar character={character} />
+            <LimitedUse character={character} />
           </div>
         )}
         <div className="flex flex-col justify-center items-center pointer-events-auto">
@@ -58,6 +59,16 @@ export function CharacterHUD() {
           {<HeroPoint />}
         </div>
       </div>
+    </div>
+  );
+}
+
+function LimitedUse({ character }: { character: RRCharacter }) {
+  return (
+    <div>
+      {character.limitedUseSkills.map((skill, index) => {
+        return <p key={index}>{skill.name}</p>;
+      })}
     </div>
   );
 }

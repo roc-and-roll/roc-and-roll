@@ -361,6 +361,20 @@ export const isSyncedState = t.isObject({
               visibleWhen: t.isEnum(["always", "onTurn", "hover"] as const),
             })
           ),
+          limitedUseSkills: t.isArray(
+            t.isObject({
+              maxUseCount: t.applyCascade(t.isNumber(), [
+                t.isPositive(),
+                t.isInteger(),
+              ]),
+              currentUseCount: t.applyCascade(t.isNumber(), [
+                t.isPositive(),
+                t.isInteger(),
+              ]),
+              restoresAt: t.isEnum(["shortRest", "longRest"] as const),
+              name: t.isString(),
+            })
+          ),
           hp: t.applyCascade(t.isNumber(), [t.isInteger()]),
           temporaryHP: t.applyCascade(t.isNumber(), [
             t.isInteger(),

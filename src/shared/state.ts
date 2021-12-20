@@ -82,6 +82,10 @@ type ECE<E extends EntityCollection<{ id: RRID }>> = ValueOf<E["entities"]>;
 
 export type RRAura = IterableElement<ECE<SyncedState["characters"]>["auras"]>;
 
+export type RRLimitedUseSkill = IterableElement<
+  ECE<SyncedState["characters"]>["limitedUseSkills"]
+>;
+
 export const conditionNames = [
   "blue",
   "green",
