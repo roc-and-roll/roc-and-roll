@@ -61,6 +61,8 @@
     ".vscode",
     ".vscode-insiders",
     "package.json",
-    "yarn.lock"
+    "yarn.lock",
+    "main.yml",
+    ".gitignore"
   ]
 }
