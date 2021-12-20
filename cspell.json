@@ -5,6 +5,8 @@
     "bryc",
     "Cathelineau",
     "clsx",
+    "Codespaces",
+    "corejs",
     "cyrb",
     "darkred",
     "debouncee",
@@ -13,7 +15,9 @@
     "deduplication",
     "Delapouite",
     "deps",
+    "Dyno",
     "Faithtoken",
+    "favicons",
     "ffprobe",
     "fontawesome",
     "fortawesome",
@@ -28,6 +32,8 @@
     "linkify",
     "lorc",
     "noreferrer",
+    "pathinfo",
+    "pmmmwh",
     "polymorphed",
     "Preet",
     "Prefetch",
@@ -63,6 +69,7 @@
     "package.json",
     "yarn.lock",
     "main.yml",
-    ".gitignore"
+    ".gitignore",
+    ".eslintrc.json"
   ]
 }
