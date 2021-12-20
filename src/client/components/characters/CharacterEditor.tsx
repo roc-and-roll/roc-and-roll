@@ -99,7 +99,7 @@ export const conditionIcons = {
   hasted: speedometer,
   cursed: voodooDoll,
   "hunters mark": bullseye,
-  polyMorphed: snail,
+  polymorphed: snail,
   slowed: tortoise,
   dead: faSkullCrossbones,
   concentrating: faHandSparkles,
