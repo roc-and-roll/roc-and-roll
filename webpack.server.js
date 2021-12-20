@@ -51,7 +51,7 @@ export default (webpackEnv) => {
       : isEnvDevelopment && 'cheap-module-source-map',
     node: {
       // Setting these to false prevents webpack from replacing them by "/"
-      // and therefore retains the original Node.js behaviour.
+      // and therefore retains the original Node.js behavior.
       __dirname: false,
       __filename: false
     },

@@ -3,6 +3,7 @@
   "words": [
     "Blurhash",
     "bryc",
+    "bufferutil",
     "Cathelineau",
     "clsx",
     "Codespaces",
@@ -27,11 +28,14 @@
     "Immer",
     "inotify",
     "ispending",
+    "jcalz",
     "Lerped",
     "lerping",
     "linkify",
     "lorc",
+    "namegen",
     "noreferrer",
+    "Nygård",
     "pathinfo",
     "pmmmwh",
     "polymorphed",
@@ -57,7 +61,9 @@
     "typanion",
     "unfav",
     "unnotified",
-    "unstyled"
+    "unstyled",
+    "vcxsrv",
+    "xvfb"
   ],
   "ignorePaths": [
     "package-lock.json",

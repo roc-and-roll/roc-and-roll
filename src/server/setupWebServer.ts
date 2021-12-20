@@ -30,6 +30,7 @@ import { randomBetweenInclusive } from "../shared/random";
 
 const ONE_YEAR = 1000 * 60 * 60 * 24 * 365;
 
+//cspell: ignore originalname
 export async function setupWebServer(
   httpHost: string,
   httpPort: number,
