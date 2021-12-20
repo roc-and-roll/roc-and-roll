@@ -1,7 +1,7 @@
 import { AbstractMigration } from "../migrations";
 
 export default class extends AbstractMigration {
-  version = 25;
+  version = 26;
 
   // cSpell:disable
   migrate = (state: any) => {
