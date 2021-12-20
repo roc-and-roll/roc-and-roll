@@ -435,80 +435,61 @@ $dice-templates-height: 200px;
   }
 }
 
-.generated-dice-templates-container {
+.generated-dice-templates {
   display: flex;
-  flex-wrap: wrap;
+  border-color: white;
+  border-width: 1px;
+  border-style: solid;
+  align-items: center;
+  padding: 0.5rem;
+  align-content: flex-start;
+  position: relative;
+  height: 66px;
+  cursor: pointer;
 
-  .generated-dice-templates {
+  &.hovered {
+    background-color: #676767;
+  }
+
+  .template-name {
+    flex-grow: 1;
+  }
+
+  .modifier-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin-left: 0.5rem;
+  }
+
+  .modifier-button {
+    background: white;
+    width: 26px;
+    height: 26px;
+    font-size: 26px;
+    position: absolute;
+    border-radius: 999px;
+    align-content: center;
     display: flex;
-    border-color: white;
-    border-width: 1px;
-    border-style: solid;
-    align-items: center;
-    padding: 0.5rem;
-    margin: 0.5rem;
-    width: 165px;
-    align-content: flex-start;
-    position: relative;
-    height: 66px;
+    top: -12px;
+  }
+
+  .advantage {
+    color: green;
+    right: 32px;
     cursor: pointer;
+  }
 
-    &.hovered {
-      background-color: #676767;
-    }
-
-    .template-name {
-      flex-grow: 1;
-    }
-
-    .modifier-value {
-      font-size: 24px;
-      font-weight: bold;
-      margin-left: 0.5rem;
-    }
-
-    .modifier-button {
-      background: white;
-      width: 26px;
-      height: 26px;
-      font-size: 26px;
-      position: absolute;
-      border-radius: 999px;
-      align-content: center;
-      display: flex;
-      top: -12px;
-    }
-
-    .advantage {
-      color: green;
-      right: 32px;
-      cursor: pointer;
-    }
-
-    .disadvantage {
-      color: red;
-      right: 2px;
-      cursor: pointer;
-    }
+  .disadvantage {
+    color: red;
+    right: 2px;
+    cursor: pointer;
   }
 }
 
 .dice-templates {
   $panel-background: rgb(59, 28, 6);
-  $animation-duration: 200ms;
-
-  width: 100%;
-  transition: $animation-duration height;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding-left: 8px;
 
   .dice-templates-container {
-    display: flex;
-    flex-wrap: wrap;
-    height: 100%;
-    width: 100%;
     // We need a minimum height so that we have space to drop new templates in.
     min-height: 4rem;
     align-items: stretch;
@@ -527,9 +508,7 @@ $dice-templates-height: 200px;
 
   .dice-template {
     min-height: 60px;
-    max-width: 170px;
     border: 1px solid rgba(255, 255, 255, 0.3);
-    margin: 0.3rem;
     position: relative;
     padding: 0.2rem;
     display: flex;
@@ -586,7 +565,6 @@ $dice-templates-height: 200px;
 
   $dice-picker-height: 250px;
   .dice-picker {
-    transition: $animation-duration $animation-duration;
     background: #555;
     border-radius: 5px;
     display: flex;
@@ -641,7 +619,6 @@ $dice-templates-height: 200px;
     padding: 0 2px;
     min-height: 0;
     font-size: 0.7rem;
-    margin: 0 2px;
   }
 
   .nested-template {

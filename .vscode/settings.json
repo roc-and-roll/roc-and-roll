@@ -16,8 +16,9 @@
 
   "browser-preview.startUrl": "http://localhost:3000",
 
-  "jest.autoEnable": true,
-  "jest.debugCodeLens.showWhenTestStateIn": ["fail"],
+  "jest.jestCommandLine": "yarn test",
+  "jest.autoRun": { "watch": true, "onStartup": ["all-tests"] },
+  "jest.debugCodeLens.showWhenTestStateIn": [],
 
   "eslint.validate": [
     "javascript",

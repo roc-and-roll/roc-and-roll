@@ -8,6 +8,7 @@
 		"ryanluker.vscode-coverage-gutters",
 		"dbaeumer.vscode-eslint",
 		"bradlc.vscode-tailwindcss",
+		"ms-playwright.playwright",
 		"peggyjs.peggy-language",
 		"streetsidesoftware.code-spell-checker"
 	],

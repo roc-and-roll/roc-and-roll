@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { conditionNames, RRCharacter } from "../../../shared/state";
-import { useMyProps, useMySelectedTokens } from "../../myself";
+import { useMyProps, useMySelectedCharacters } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import { CharacterPreview } from "../characters/CharacterPreview";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -27,7 +27,7 @@ import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants"
 export function CharacterHUD() {
   const myself = useMyProps("mainCharacterId", "isGM");
 
-  const selectedCharacter = useMySelectedTokens();
+  const selectedCharacters = useMySelectedCharacters();
   const mainCharacter = useServerState((state) =>
     myself.mainCharacterId
       ? state.characters.entities[myself.mainCharacterId] ?? null
@@ -36,7 +36,7 @@ export function CharacterHUD() {
 
   const healthWidth = 250;
   const character =
-    selectedCharacter.length > 0 ? selectedCharacter[0]! : mainCharacter;
+    selectedCharacters.length === 1 ? selectedCharacters[0]! : mainCharacter;
 
   return (
     <div className="absolute top-0 right-0 pointer-events-none">
@@ -313,7 +313,7 @@ function HealthBar({
               height: "100%",
               backgroundColor: hpColor,
             }}
-          ></div>
+          />
           {character.temporaryHP > 0 && temporaryHPBarWidth > 0 && (
             <div
               className="h-full absolute top-0"
@@ -326,15 +326,13 @@ function HealthBar({
           )}
         </>
       )}
-      <div className="absolute h-full flex items-center justify-end right-4 select-none">
-        <div className="text-black rough-text">
-          <HPInlineEdit
-            className="inline-block w-12"
-            hp={character.hp + character.temporaryHP}
-            setHP={(total) => setHP(character.id, total)}
-          />{" "}
-          / {totalMaxHP}
-        </div>
+      <div className="absolute h-full flex items-center justify-end left-4 right-4 select-none text-black rough-text text-2xl font-bold">
+        <HPInlineEdit
+          className="inline-block w-12 h-6 flex-1 mr-1 px-2 text-2xl"
+          hp={character.hp + character.temporaryHP}
+          setHP={(total) => setHP(character.id, total)}
+        />{" "}
+        / {totalMaxHP}
       </div>
     </div>
   );

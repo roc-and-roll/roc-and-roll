@@ -34,6 +34,10 @@ export const RnRTest = base.extend<{ rnrServer: null }, { rnrPort: number }>({
   baseURL: async ({ rnrPort }, use) => {
     await use(`http://localhost:${rnrPort}`);
   },
+  page: async ({ page }, use) => {
+    await page.goto("/");
+    await use(page);
+  },
 });
 
 function* possiblePortsForWorker(start: number, step: number) {

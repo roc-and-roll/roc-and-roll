@@ -1,10 +1,4 @@
-import React, {
-  ImgHTMLAttributes,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { ImgHTMLAttributes, useCallback, useRef, useState } from "react";
 import {
   DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
   GRID_SIZE,
@@ -36,6 +30,10 @@ import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import { useMyProps } from "../../myself";
 import { SVGBlurHashImage } from "../blurhash/SVGBlurhashImage";
+import { pointEquals } from "../../../shared/point";
+
+const CAN_CONTROL_STYLE = { cursor: "move" };
+const SELECTED_OR_HOVERED_STROKE_LINE_DASH = [GRID_SIZE / 10, GRID_SIZE / 10];
 
 export const MapObjectThatIsNotAToken = React.memo<{
   object: Exclude<RRMapObject, RRToken | RRMapLink>;
@@ -54,48 +52,55 @@ export const MapObjectThatIsNotAToken = React.memo<{
 
   const [editorVisible, setEditorVisible] = useState(false);
 
-  const myself = useMyProps("id");
+  const myself = useMyProps("id", "isGM");
 
   const canControl =
-    !object.locked && canStartMoving && object.playerId === myself.id;
-  const style = useMemo(
-    () => (canControl ? { cursor: "move" } : {}),
-    [canControl]
-  );
+    !object.locked &&
+    canStartMoving &&
+    (myself.isGM || object.playerId === myself.id);
 
-  const strokeLineDash = useMemo(
-    () => (isSelectedOrHovered ? [GRID_SIZE / 10, GRID_SIZE / 10] : undefined),
-    [isSelectedOrHovered]
-  );
+  const onStartMoveRef = useLatest((e: React.MouseEvent) => {
+    onStartMove(object, e);
+  });
 
-  const ref = useLatest({ object, onStartMove });
-  const onMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      ref.current.onStartMove(ref.current.object, e);
-    },
-    [ref]
-  );
-
-  const clickPositionRef = useRef<RRPoint>({ x: 0, y: 0 });
+  const clickPositionRef = useRef<RRPoint>();
 
   const sharedProps = {
     x: object.position.x,
     y: object.position.y,
-    style,
-    onMouseDown: (e: React.MouseEvent) => {
-      canControl && onMouseDown(e);
-      clickPositionRef.current = { x: e.clientX, y: e.clientY };
-    },
-    onMouseUp: (e: React.MouseEvent) =>
-      e.button === 2 &&
-      e.clientX === clickPositionRef.current.x &&
-      e.clientY === clickPositionRef.current.y &&
-      setEditorVisible(true),
+    style: canControl ? CAN_CONTROL_STYLE : undefined,
+    onMouseDown: useCallback(
+      (e: React.MouseEvent) => {
+        if (canControl) {
+          onStartMoveRef.current(e);
+        }
+        clickPositionRef.current = { x: e.clientX, y: e.clientY };
+      },
+      [onStartMoveRef, canControl]
+    ),
+    onMouseUp: useCallback(
+      (e: React.MouseEvent) => {
+        if (
+          e.button === 2 &&
+          clickPositionRef.current &&
+          pointEquals(clickPositionRef.current, {
+            x: e.clientX,
+            y: e.clientY,
+          }) &&
+          canControl
+        ) {
+          setEditorVisible(true);
+        }
+      },
+      [canControl]
+    ),
     fill: isSelectedOrHovered
       ? object.color
       : tinycolor(object.color).setAlpha(0.3).toRgbString(),
     stroke: object.color,
-    strokeLineDash,
+    strokeLineDash: isSelectedOrHovered
+      ? SELECTED_OR_HOVERED_STROKE_LINE_DASH
+      : undefined,
     seed: object.id,
   };
 
