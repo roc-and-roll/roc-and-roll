@@ -22,9 +22,9 @@ export async function setupTabletopAudioTrackSync(store: MyStore) {
 class TabletopAudioDownloader {
   private readonly CACHE_DIR = envPaths("roc-and-roll").cache;
 
-  private readonly CONTENT_FILE = "tabletopaudio.json";
-  private readonly TIMESTAMP_FILE = "last-tabletopaudio-update.txt";
-  private readonly LOCK_FILE = "tabletopaudio-update.lock";
+  private readonly CONTENT_FILE = "tabletop-audio.json";
+  private readonly TIMESTAMP_FILE = "last-tabletop-audio-update.txt";
+  private readonly LOCK_FILE = "tabletop-audio-update.lock";
   private readonly UPDATE_INTERVAL = 24 * 60 * 60 * 1000;
 
   constructor(private readonly store: MyStore) {}
