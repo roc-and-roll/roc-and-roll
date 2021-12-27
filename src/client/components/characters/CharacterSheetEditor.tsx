@@ -104,7 +104,7 @@ export const CharacterSheetEditor = React.memo<{
           />
         ))}
         <AttributeEditor
-          value={character.AC}
+          value={character.ac}
           label={"AC"}
           minimum={0}
           onChange={(newAC) => {
@@ -112,10 +112,10 @@ export const CharacterSheetEditor = React.memo<{
               actions: [
                 updateFunc({
                   id: character.id,
-                  changes: { AC: newAC },
+                  changes: { ac: newAC },
                 }),
               ],
-              optimisticKey: `AC`,
+              optimisticKey: `ac`,
               syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
             }));
           }}

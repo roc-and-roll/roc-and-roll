@@ -26,6 +26,19 @@ export default class extends AbstractMigration {
         delete asset.blurhash;
       }
     });
+
+    Object.values(
+      state.characters.entities as Record<string, { ac: any; AC: any }>
+    ).forEach((character) => {
+      if (character.ac === undefined) character.ac = character.AC ?? null;
+      delete character.AC;
+    });
+    Object.values(
+      state.characterTemplates.entities as Record<string, { ac: any; AC: any }>
+    ).forEach((character) => {
+      if (character.ac === undefined) character.ac = character.AC ?? null;
+      delete character.AC;
+    });
     // cSpell:enable
 
     return state;

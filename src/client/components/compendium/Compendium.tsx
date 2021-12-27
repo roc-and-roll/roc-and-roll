@@ -85,7 +85,7 @@ export function Compendium() {
               multiple
               onChange={async (e) => {
                 const files = Array.from(e.target.files ?? []);
-                const JSONs = await Promise.all(
+                const fileContents = await Promise.all(
                   files.map(async (file) => {
                     try {
                       const json = sjson.parse(await file.text());
@@ -102,7 +102,7 @@ export function Compendium() {
                 );
 
                 await Promise.all(
-                  JSONs.map(async ([fileName, json]) => {
+                  fileContents.map(async ([fileName, json]) => {
                     const errors: string[] = [];
                     if (isCompendiumData(json, { errors })) {
                       addSource({

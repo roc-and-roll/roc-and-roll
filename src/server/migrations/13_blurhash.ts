@@ -58,3 +58,4 @@ export default class extends AbstractMigration {
     return state;
   };
 }
+//cspell: enable
