@@ -11,7 +11,7 @@ import {
 } from "../../../shared/util";
 import { tokenImageUrl } from "../../files";
 import { useServerState } from "../../state";
-import { BlurHashImage } from "../blurhash/BlurHashImage";
+import { BlurHashImage } from "../blurHash/BlurHashImage";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 
 const DEFAULT_CHARACTER_SIZE = 32;

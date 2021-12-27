@@ -29,7 +29,7 @@ import { Popover } from "../Popover";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import { useMyProps } from "../../myself";
-import { SVGBlurHashImage } from "../blurhash/SVGBlurhashImage";
+import { SVGBlurHashImage } from "../blurHash/SVGBlurHashImage";
 import { pointEquals } from "../../../shared/point";
 
 const CAN_CONTROL_STYLE = { cursor: "move" };

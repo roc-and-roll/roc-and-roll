@@ -35,7 +35,7 @@ import {
   isDiceRollTree,
   RRDamageType,
 } from "./dice-roll-tree-types-and-validation";
-import { isBlurhashValid as isBlurHashValid } from "blurhash";
+import { isBlurhashValid as isBlurHashValid } from "blurhash"; //cspell: disable-line
 
 export function isRRID<ID extends RRID>() {
   return t.makeValidator({

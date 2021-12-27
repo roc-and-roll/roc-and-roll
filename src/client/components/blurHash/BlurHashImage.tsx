@@ -1,5 +1,5 @@
 import composeRefs from "@seznam/compose-react-refs";
-import { decode } from "blurhash";
+import { decode } from "blurhash"; //cspell: disable-line
 import React, { ImgHTMLAttributes, useEffect, useState } from "react";
 import { RRAssetImage } from "../../../shared/state";
 import { assetUrl } from "../../files";

@@ -1,4 +1,4 @@
-import { encode } from "blurhash";
+import { encode } from "blurhash"; //cspell: disable-line
 import { spawn } from "child_process";
 import fileType, { MimeType } from "file-type";
 import sharp from "sharp";

@@ -4,6 +4,7 @@ import pLimit from "p-limit";
 import { getDefaultHeavyIOConcurrencyLimit } from "../util";
 import { calculateBlurHash } from "../files";
 
+//cspell: disable
 export default class extends AbstractMigration {
   version = 13;
 

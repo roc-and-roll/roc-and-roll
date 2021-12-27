@@ -12,7 +12,7 @@ import { assetUrl } from "../../files";
 import { mapDeleteImmutably, mapSetImmutably } from "../../immutable-helpers";
 import { useMyProps } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
-import { BlurHashImage } from "../blurhash/BlurHashImage";
+import { BlurHashImage } from "../blurHash/BlurHashImage";
 import { GMArea } from "../GMArea";
 import { Button } from "../ui/Button";
 import { Select } from "../ui/Select";

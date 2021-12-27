@@ -59,7 +59,7 @@ import { SmartIntegerInput } from "../ui/TextInput";
 import useRafLoop from "../../useRafLoop";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useHealthBarMeasurements } from "../../../client/util";
-import { SVGBlurHashImage } from "../blurhash/SVGBlurhashImage";
+import { SVGBlurHashImage } from "../blurHash/SVGBlurHashImage";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;

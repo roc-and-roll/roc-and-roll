@@ -1,12 +1,14 @@
 import * as React from "react";
-import { decode } from "blurhash";
+import { decode } from "blurhash"; //cspell: disable-line
 
+//cspell: disable
 /**
  * BlurHashCanvas component based on react-blurhash
  * @url https://github.com/woltapp/react-blurhash
  * @license MIT
  * @author Klaus Nygård https://github.com/nygardk
  */
+//cspell: enable
 
 export type Props = React.CanvasHTMLAttributes<HTMLCanvasElement> & {
   hash: string;
