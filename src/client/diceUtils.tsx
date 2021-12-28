@@ -88,17 +88,14 @@ export function getModifierForTemplate(
   let returnValue = 0;
 
   template.parts.map((part) => {
-    if (part.type === "modifier") returnValue += part.number;
-    else if (character) {
-      if (part.type === "linkedProficiency")
+    if (part.type === "modifier") {
+      returnValue += part.number;
+    } else if (character) {
+      if (part.type === "linkedProficiency") {
         returnValue +=
           part.proficiency * (character.attributes["proficiency"] ?? 0);
-      else if (part.type === "linkedStat") {
-        if (
-          character.stats[part.name] === null ||
-          character.stats[part.name] === undefined
-        )
-          return;
+      } else if (part.type === "linkedStat") {
+        if (character.stats[part.name] === null) return;
         returnValue += modifierFromStat(character.stats[part.name]!);
       }
     }

@@ -103,19 +103,19 @@ export function Compendium() {
 
                 await Promise.all(
                   fileContents.map(async ([fileName, json]) => {
-                    const errors: string[] = [];
-                    if (isCompendiumData(json, { errors })) {
+                    const validationResult = isCompendiumData.safeParse(json);
+                    if (validationResult.success) {
                       addSource({
                         id: rrid<CompendiumSource>(),
                         title: fileName,
-                        data: json,
+                        data: validationResult.data,
                         meta: "",
                       });
                     } else {
-                      console.error({ json, errors });
+                      console.error({ json, error: validationResult.error });
                       await alert(
                         `Invalid data in file ${fileName}\n\n` +
-                          errors.join("\n")
+                          validationResult.error.message
                       );
                     }
                   })

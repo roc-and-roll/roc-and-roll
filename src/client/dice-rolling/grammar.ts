@@ -14,17 +14,17 @@ import parser from "./grammar.peggy";
 export const parseDiceString = (input: string): DiceRollTree<false> => {
   const diceRollTree = parser.parse(input);
   // if (process.env.NODE_ENV !== "production") {
-  const errors: string[] = [];
-  if (!isDiceRollTree(false)(diceRollTree, { errors })) {
+  const validationResult = isDiceRollTree(false).safeParse(diceRollTree);
+  if (!validationResult.success) {
     console.error(diceRollTree);
-    console.error(errors);
+    console.error(validationResult.error);
     throw new Error(
       `The grammar returned an invalid tree. This should never happen.`
     );
   }
   // }
 
-  return diceRollTree;
+  return validationResult.data;
 };
 
 export const parseDiceStringGetSyntaxError = (

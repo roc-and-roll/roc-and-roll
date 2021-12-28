@@ -85,8 +85,8 @@
     "three": "^0.127.0",
     "tinycolor2": "^1.4.2",
     "transformation-matrix": "^2.9.0",
-    "typanion": "^3.7.1",
-    "utf-8-validate": "^5.0.5"
+    "utf-8-validate": "^5.0.5",
+    "zod": "^3.11.6"
   },
   "devDependencies": {
     "@babel/core": "^7.15.0",

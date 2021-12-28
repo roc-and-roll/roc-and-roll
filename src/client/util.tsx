@@ -292,9 +292,9 @@ export function modifierFromStat(statValue: number): number {
 }
 
 export function getProficiencyValueString(
-  proficiency: keyof typeof proficiencyValues | undefined
+  proficiency: keyof typeof proficiencyValues | null
 ) {
-  return proficiency === 0 || proficiency === undefined
+  return proficiency === 0 || proficiency === null
     ? "Not Proficient"
     : proficiency === 0.5
     ? "Half Proficient"

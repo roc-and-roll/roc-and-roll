@@ -9,41 +9,25 @@ describe("text entry schema", () => {
     [{ type: "cell", roll: { min: 2, max: 3, pad: true } }, true],
     [{ type: "list", items: ["foo", { type: "list", items: [] }] }, true],
   ])("works", (entry, result) => {
-    expect(isTextEntry(entry)).toBe(result);
+    expect(isTextEntry.safeParse(entry).success).toBe(result);
   });
 
   it("uses correct keys for recursive errors", () => {
-    const errors: string[] = [];
     expect(
-      isTextEntry(
-        {
-          type: "list",
-          items: ["foo", "bar"],
-        },
-        { errors }
-      )
+      isTextEntry.safeParse({
+        type: "list",
+        items: ["foo", "bar"],
+      }).success
     ).toBe(true);
 
-    expect(errors).toHaveLength(0);
+    const validationResult = isTextEntry.safeParse({
+      type: "list",
+      items: ["foo", false],
+    });
+    if (validationResult.success) {
+      fail();
+    }
 
-    expect(
-      isTextEntry(
-        {
-          type: "list",
-          items: ["foo", false],
-        },
-        { errors }
-      )
-    ).toBe(false);
-
-    expect(errors).toMatchInlineSnapshot(`
-Array [
-  ".#1: Expected a string (got {\\"type\\":\\"list\\",\\"items\\":[\\"foo\\",false]})",
-  ".#2.type: Expected \\"entries\\" (got \\"list\\")",
-  ".#3.items[1]#1: Expected a string (got false)",
-  ".#4.type: Expected \\"table\\" (got \\"list\\")",
-  ".#5.type: Expected \\"cell\\" (got \\"list\\")",
-]
-`);
+    expect(validationResult.error).toMatchSnapshot();
   });
 });

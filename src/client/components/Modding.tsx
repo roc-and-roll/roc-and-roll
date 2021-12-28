@@ -7,6 +7,7 @@ import useLocalState from "../useLocalState";
 import { useCompendium } from "./compendium/Compendium";
 import { CompendiumSource, isCompendiumSource } from "./compendium/types";
 import { Button } from "./ui/Button";
+import type * as z from "zod";
 
 export function Modding() {
   return (
@@ -58,7 +59,7 @@ function OneOffMod() {
 export interface MODDING {
   rrid: () => RRID;
   compendium: {
-    addSource: (source: CompendiumSource) => string[];
+    addSource: (source: CompendiumSource) => z.ZodError | null;
     getSources: () => CompendiumSource[];
   };
 }
@@ -73,12 +74,12 @@ export function ModApi() {
       rrid,
       compendium: {
         addSource: (source: unknown) => {
-          const errors: string[] = [];
-          if (isCompendiumSource(source, { errors })) {
-            addCompendiumSource(source);
-            return errors;
+          const validationResult = isCompendiumSource.safeParse(source);
+          if (validationResult.success) {
+            addCompendiumSource(validationResult.data);
+            return null;
           }
-          return errors;
+          return validationResult.error;
         },
         getSources: (): CompendiumSource[] => {
           return compendiumSourcesRef.current;

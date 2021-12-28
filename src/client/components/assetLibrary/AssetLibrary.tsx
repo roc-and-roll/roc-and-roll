@@ -148,7 +148,7 @@ export const AssetLibrary = React.memo(function AssetLibrary() {
         {entries(assets)
           .filter(
             (asset) =>
-              !isTabletopAudioAsset(asset) &&
+              !isTabletopAudioAsset.safeParse(asset).success &&
               (assetTypeFilter === "all" || asset.type === assetTypeFilter) &&
               (imageTypeFilter === "all" ||
                 asset.type !== "image" ||

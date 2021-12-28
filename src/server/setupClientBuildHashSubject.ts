@@ -2,14 +2,13 @@ import path from "path";
 import { fileURLToPath } from "url";
 import chokidar from "chokidar";
 import { readFile } from "fs/promises";
-import * as t from "typanion";
+import * as z from "zod";
 
-const isHashObject = t.isObject(
-  {
-    hash: t.isString(),
-  },
-  { extra: t.isUnknown() }
-);
+const isHashObject = z
+  .strictObject({
+    hash: z.string(),
+  })
+  .passthrough();
 
 export async function setupClientBuildHashSubject(): Promise<ClientBuildHashSubject> {
   if (process.env.NODE_ENV !== "production") {
@@ -30,8 +29,9 @@ export async function setupClientBuildHashSubject(): Promise<ClientBuildHashSubj
     try {
       const content = await readFile(buildHashFilePath, "utf-8");
       const json = JSON.parse(content);
-      if (isHashObject(json)) {
-        return json.hash;
+      const validationResult = isHashObject.safeParse(json);
+      if (validationResult.success) {
+        return validationResult.data.hash;
       } else {
         return null;
       }
