@@ -36,6 +36,13 @@ To build the application:
 
 - execute `yarn build`
 
+### Creating migrations
+
+To create a new migration, run `yarn make migration` and follow the prompts.
+Then write the migration by editing the newly created file. Make sure to import
+as little as possible, so that the migration continues to work in the future
+when types might have evolved.
+
 ### Executing end to end (e2e) tests
 
 - Install Playwright dependencies: `yarn playwright install-deps`
