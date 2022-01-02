@@ -134,7 +134,7 @@ function ConditionsBar({ character }: { character: RRCharacter }) {
                   <div
                     key={condition}
                     title={condition}
-                    className="h-8 w-8 m-1 my-2"
+                    className="h-14 w-11 m-1 my-2"
                     onClick={() => {
                       setConditions((c) => [...c, condition]);
                       setConditionChooserOpen(false);
@@ -153,6 +153,7 @@ function ConditionsBar({ character }: { character: RRCharacter }) {
                         }}
                       />
                     )}
+                    <p className="text-xs truncate text-center">{condition}</p>
                   </div>
                 );
               })}

@@ -7,7 +7,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
-import ReactDOM from "react-dom";
 import {
   logEntryDiceRollAdd,
   playerAddDiceTemplate,
@@ -205,16 +204,25 @@ export const DiceTemplates = React.memo(function DiceTemplates({
         setSelectedTemplates([]);
       }}
     >
-      {selectedTemplates.length > 0 &&
-        ReactDOM.createPortal(
-          <div className="dice-template-roll-hints">
+      {templatesEditable && <DicePicker />}
+
+      <div className="flex mb-2">
+        <Button
+          title="Edit/Add Templates"
+          onClick={() => setTemplatesEditable((b) => !b)}
+        >
+          <FontAwesomeIcon icon={faEdit} />
+        </Button>
+        <div className="grow"></div>
+        {selectedTemplates.length > 0 && (
+          <>
             <Button
               onClick={() => {
                 doRoll();
                 setSelectedTemplates([]);
               }}
             >
-              Roll the Dice!
+              Roll!
             </Button>
             <Button
               onClick={() => {
@@ -222,20 +230,11 @@ export const DiceTemplates = React.memo(function DiceTemplates({
                 setSelectedTemplates([]);
               }}
             >
-              Roll a Crit!
+              Crit!
             </Button>
-            <em>Or right-click the pane to roll</em>
-          </div>,
-          document.body
+          </>
         )}
-      <Button
-        className="w-[28px] mb-2"
-        onClick={() => setTemplatesEditable((b) => !b)}
-      >
-        <FontAwesomeIcon icon={faEdit} />
-      </Button>
-      {templatesEditable && <DicePicker />}
-
+      </div>
       <div
         className="dice-templates-container grid grid-cols-2 gap-2"
         ref={dropRef}

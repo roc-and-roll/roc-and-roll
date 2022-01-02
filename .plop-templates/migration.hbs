@@ -1,0 +1,10 @@
+import { AbstractMigration } from "../migrations";
+
+export default class extends AbstractMigration {
+  version = {{version}};
+  migrate = async (state: any, uploadedFilesDir: string) => {
+    throw new Error("TODO: Implement migration.");
+
+    return state;
+  };
+}

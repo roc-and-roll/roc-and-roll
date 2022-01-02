@@ -561,6 +561,12 @@ $dice-templates-height: 200px;
     textarea {
       width: 100%;
     }
+
+    button {
+      padding: 0 2px;
+      min-height: 0;
+      font-size: 0.7rem;
+    }
   }
 
   $dice-picker-height: 250px;
@@ -613,12 +619,6 @@ $dice-templates-height: 200px;
 
   .dice-option-linked-modifier-name {
     font-size: 0.7em;
-  }
-
-  button {
-    padding: 0 2px;
-    min-height: 0;
-    font-size: 0.7rem;
   }
 
   .nested-template {
