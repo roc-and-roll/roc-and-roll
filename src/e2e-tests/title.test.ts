@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
-import { RnRTest } from "./rnrtest"; //cspell: disable-line
+import { uiTest } from "./rnrTest";
 
-RnRTest(`title is set correctly`, async ({ page }) => {
+uiTest(`title is set correctly`, async ({ page }) => {
   expect(await page.title()).toBe("Roc & Roll");
 });
