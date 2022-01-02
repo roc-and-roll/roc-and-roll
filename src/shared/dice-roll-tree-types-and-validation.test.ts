@@ -95,7 +95,7 @@ Array [
   ".#1.type: Expected \\"term\\" (got \\"dice\\")",
   ".#2.type: Expected \\"parens\\" (got \\"dice\\")",
   ".#3.type: Expected \\"negated\\" (got \\"dice\\")",
-  ".#4: A rolled dicepart should have exactly as many dice roll results as its dice count (count = 5, results = 4)",
+  ".#4: A rolled dice part should have exactly as many dice roll results as its dice count (count = 5, results = 4)",
   ".#5.type: Expected \\"num\\" (got \\"dice\\")",
 ]
 `);

@@ -1,5 +1,13 @@
 {
   "language": "en",
+  "useGitignore": true,
+  "dictionaries": [
+    "typescript",
+    "node",
+    "html",
+    "css",
+    "npm"
+  ],
   "words": [
     "bryc",
     "bufferutil",
@@ -8,7 +16,6 @@
     "Codespaces",
     "corejs",
     "cyrb",
-    "darkred",
     "debouncee",
     "debouncer",
     "debouncers",
@@ -17,9 +24,9 @@
     "deps",
     "Dyno",
     "Faithtoken",
-    "favicons",
     "ffprobe",
     "fontawesome",
+    "fontsource",
     "fortawesome",
     "frameloop",
     "freesound",
@@ -33,7 +40,6 @@
     "linkify",
     "lorc",
     "namegen",
-    "noreferrer",
     "Nygård",
     "pathinfo",
     "pmmmwh",
@@ -64,17 +70,14 @@
     "vcxsrv",
     "xvfb"
   ],
+  "files": [
+    "**/*.{js,jsx,ts,tsx,html,md,css,scss,peggy}"
+  ],
   "ignorePaths": [
-    "package-lock.json",
-    "node_modules",
-    "vscode-extension",
-    ".git/objects",
-    ".vscode",
-    ".vscode-insiders",
+    "third-party",
     "package.json",
-    "yarn.lock",
+    ".eslintrc.json",
     "main.yml",
-    ".gitignore",
-    ".eslintrc.json"
+    "src/shared/namegen.ts"
   ]
 }

@@ -87,7 +87,7 @@ export function rollInitiative(
   return {
     payload: {
       rollType: "initiative",
-      rollName: "Intiative",
+      rollName: "Initiative",
       diceRollTree:
         modifier === 0
           ? d20

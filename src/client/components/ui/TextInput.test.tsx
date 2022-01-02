@@ -252,6 +252,7 @@ describe("SmartTextInput & SmartIntegerInput", () => {
             placeholder: "input",
           });
 
+        //cspell: disable
         return (
           <Suspense fallback={null}>
             <p data-testid="value">{value}</p>
@@ -259,6 +260,7 @@ describe("SmartTextInput & SmartIntegerInput", () => {
             {!unmountInput && Input}
           </Suspense>
         );
+        //cspell: enable
       };
 
       const { rerender, getByPlaceholderText, getByTestId } = render(
