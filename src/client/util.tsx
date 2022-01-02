@@ -199,7 +199,10 @@ export function useSmartChangeHP(myselfIsGM: boolean) {
 }
 
 export function useHealthbarMeasurements(
-  character: RRCharacter,
+  character: Pick<
+    RRCharacter,
+    "hp" | "maxHP" | "maxHPAdjustment" | "temporaryHP"
+  >,
   width: number
 ) {
   const adjustedMaxHP = character.maxHP + character.maxHPAdjustment;

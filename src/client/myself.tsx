@@ -1,7 +1,12 @@
 import React, { useContext, useEffect, useLayoutEffect, useState } from "react";
 import { atom, useRecoilValue, useSetRecoilState } from "recoil";
 import { IterableElement } from "type-fest";
-import { RRCharacterID, RRPlayer, RRPlayerID } from "../shared/state";
+import {
+  RRCharacter,
+  RRCharacterID,
+  RRPlayer,
+  RRPlayerID,
+} from "../shared/state";
 import { selectedMapObjectIdsAtom } from "./components/map/recoil";
 import {
   useAutoDispatchPlayerIdOnChange,
@@ -58,7 +63,9 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useMySelectedCharacters() {
+export function useMySelectedCharacters<T extends (keyof RRCharacter)[]>(
+  ...fields: T
+): Pick<RRCharacter, IterableElement<T>>[] {
   const myself = useMyProps("currentMap");
   const stateRef = useServerStateRef((state) => state);
 
@@ -90,7 +97,10 @@ export function useMySelectedCharacters() {
       ),
     (current, next) =>
       current.length === next.length &&
-      current.every((each, i) => each === next[i])
+      current.every((each, i) => each.id === next[i]!.id) &&
+      fields.every((field) =>
+        current.every((each, i) => each[field] === next[i]![field])
+      )
   );
 }
 
