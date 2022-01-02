@@ -228,7 +228,7 @@
       "eslint --cache --fix"
     ],
     "*": [
-      "cspell lint"
+      "cspell lint --no-must-find-file"
     ]
   },
   "engines": {
