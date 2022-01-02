@@ -20,9 +20,9 @@ export default class extends AbstractMigration {
     uploadedFilesDir: string
   ) {
     const filePath = path.join(uploadedFilesDir, object.filename);
-    console.log(`Calculating blur hash for ${filePath}`);
+    console.log(`Calculating BlurHash for ${filePath}`);
     object.blurhash = await calculateBlurHash(filePath);
-    console.log(`Blur hash for ${filePath} is ${object.blurhash}`);
+    console.log(`BlurHash for ${filePath} is ${object.blurhash}`);
   }
 
   migrate = async (state: any, uploadedFilesDir: string) => {

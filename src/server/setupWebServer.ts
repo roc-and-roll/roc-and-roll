@@ -266,7 +266,7 @@ export async function setupWebServer(
         width: 550,
         height: 550,
         blurHash: await (async () => {
-          res.startTime("blurHash", "Calculating blur hash");
+          res.startTime("blurHash", "Calculating BlurHash");
           const blurHash = await calculateBlurHash(outputPath);
           res.endTime("blurHash");
           return blurHash;

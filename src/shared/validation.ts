@@ -86,7 +86,7 @@ const isBlurHash = <T extends string>() =>
       if (!result.result)
         return t.pushError(
           state,
-          `Expected a valid blur hash. ${result.errorReason ?? ""}`
+          `Expected a valid BlurHash. ${result.errorReason ?? ""}`
         );
 
       return true;
