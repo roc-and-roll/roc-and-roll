@@ -9,24 +9,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Increase available file watchers
-        # https://stackoverflow.com/a/59522493/2560557
-        run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version-file: .nvmrc
-          cache: "yarn"
-      - name: Install Dependencies
-        run: yarn install --immutable
-      - name: Tests
-        run: yarn test --forceExit
-      - name: Lint
-        run: yarn lint
-      - name: Build
-        run: yarn build
+    - name: Increase available file watchers
+      # https://stackoverflow.com/a/59522493/2560557
+      run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version-file: .nvmrc
+        cache: 'yarn'
+    - name: Install Dependencies
+      run: yarn install --immutable
+    - name: Tests
+      run: yarn test --forceExit
+    - name: Lint
+      run: yarn lint
+    - name: Build
+      run: yarn build
   e2e-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -35,26 +35,26 @@ jobs:
       matrix:
         browser: [chromium, firefox, webkit]
     steps:
-      - name: Increase available file watchers
-        # https://stackoverflow.com/a/59522493/2560557
-        run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version-file: .nvmrc
-          cache: "yarn"
-      - name: Install JavaScript Dependencies
-        run: yarn install --immutable
-      - name: Build for e2e tests
-        run: yarn e2e-build
-      - name: Install Roc & Roll Dependencies
-        run: sudo apt update && sudo apt install ffmpeg
-      - name: Install Playwright Dependencies
-        # no need for `apt update` since that is already done above
-        run: yarn playwright install-deps ${{ matrix.browser }}
-      - name: Install Playwright Browser
-        run: yarn playwright install ${{ matrix.browser }}
-      - name: Run e2e tests
-        run: yarn e2e-test:ci --browser=${{ matrix.browser }}
+    - name: Increase available file watchers
+      # https://stackoverflow.com/a/59522493/2560557
+      run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version-file: .nvmrc
+        cache: 'yarn'
+    - name: Install JavaScript Dependencies
+      run: yarn install --immutable
+    - name: Build for e2e tests
+      run: yarn e2e-build
+    - name: Install Roc & Roll Dependencies
+      run: sudo apt update && sudo apt install ffmpeg
+    - name: Install Playwright Dependencies
+      # no need for `apt update` since that is already done above
+      run: yarn playwright install-deps ${{ matrix.browser }}
+    - name: Install Playwright Browser
+      run: yarn playwright install ${{ matrix.browser }}
+    - name: Run e2e tests
+      run: yarn e2e-test:ci --browser=${{ matrix.browser }}
