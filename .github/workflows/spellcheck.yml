@@ -9,3 +9,5 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: streetsidesoftware/cspell-action@v1.3.5
+        with:
+          files: "**/*.{js,jsx,ts,tsx,html,md,css,scss,peggy}"
