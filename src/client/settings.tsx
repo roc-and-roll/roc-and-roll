@@ -13,6 +13,7 @@ export type RRSettings = ReadonlyDeep<{
   renderMode: "fast" | "mostly-fancy" | "fancy";
   enableExperimental25D: boolean;
   collapseDiceTemplates: boolean;
+  focusTokenOnTurnStart: boolean;
 }>;
 
 const initialSettings: RRSettings = {
@@ -22,6 +23,7 @@ const initialSettings: RRSettings = {
   renderMode: "fancy",
   enableExperimental25D: false,
   collapseDiceTemplates: false,
+  focusTokenOnTurnStart: false,
 };
 
 const RRSettingsContext = React.createContext<

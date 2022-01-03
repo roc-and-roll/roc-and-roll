@@ -97,6 +97,19 @@ export function Settings() {
           }
         />
       </label>
+      <label>
+        Focus Token on Turn Start
+        <input
+          type="checkbox"
+          checked={settings.focusTokenOnTurnStart}
+          onChange={(e) =>
+            setSettings((old) => ({
+              ...old,
+              focusTokenOnTurnStart: e.target.checked,
+            }))
+          }
+        />
+      </label>
     </>
   );
 }

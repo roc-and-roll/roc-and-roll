@@ -37,6 +37,7 @@ import {
   mapObjectsFamily,
   selectedMapObjectIdsAtom,
   selectedMapObjectsFamily,
+  viewPortSizeAtom,
 } from "./recoil";
 import { RoughContextProvider } from "../rough";
 import tinycolor from "tinycolor2";
@@ -705,7 +706,7 @@ transform,
     [imageArea, auraArea, defaultArea, tokenArea, healthbarArea]
   );
 
-  const [viewPortSize, setViewPortSize] = useState(() => makePoint(0));
+  const [viewPortSize, setViewPortSize] = useRecoilState(viewPortSizeAtom);
 
   useEffect(() => {
     if (!svgRef.current) {
@@ -736,7 +737,7 @@ transform,
     resizeObserver.observe(svgRef.current.parentElement!);
 
     return () => resizeObserver.disconnect();
-  }, []);
+  }, [setViewPortSize]);
 
   const bind = useGesture({
     onDrag: (e) => {

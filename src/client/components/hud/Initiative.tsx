@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React, { useDeferredValue, useEffect, useState } from "react";
+import React, { useDeferredValue, useEffect, useRef, useState } from "react";
 import { Flipped, Flipper } from "react-flip-toolkit";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import {
@@ -8,7 +8,9 @@ import {
   entries,
   InitiativeTrackerSyncedState,
   RRCharacter,
+  RRCharacterID,
   RRInitiativeTrackerEntry,
+  RRInitiativeTrackerEntryID,
   RRMapObject,
   RRMultipleRoll,
   RRPlayer,
@@ -25,12 +27,17 @@ import {
 } from "../../../shared/actions";
 import { EMPTY_ARRAY, isCharacterDead } from "../../../shared/util";
 import { useMyProps } from "../../myself";
-import { useServerDispatch, useServerState } from "../../state";
+import {
+  useServerDispatch,
+  useServerState,
+  useServerStateRef,
+} from "../../state";
 import { useLatest } from "../../useLatest";
 import { CharacterStack } from "../characters/CharacterPreview";
 import {
   highlightedCharactersFamily,
   selectedMapObjectIdsAtom,
+  viewPortSizeAtom,
 } from "../map/recoil";
 import { canControlToken } from "../../permissions";
 import { Button } from "../ui/Button";
@@ -47,6 +54,9 @@ import { rollInitiative, diceResult } from "../../dice-rolling/roll";
 import useLocalState from "../../useLocalState";
 import { usePrompt } from "../../dialog-boxes";
 import ReactDOM from "react-dom";
+import { mapTransformAtom } from "../map/Map";
+import { translate } from "transformation-matrix";
+import { useRRSettings } from "../../settings";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -88,6 +98,66 @@ export function InitiativeHUD() {
     !!currentRow && canEditEntry(currentRow, myself, characterCollection);
 
   const dispatch = useServerDispatch();
+
+  const mapObjects = useServerStateRef(
+    (state) =>
+      state.maps.entities[myself.currentMap]?.objects ?? EMPTY_ENTITY_COLLECTION
+  );
+  const setSelection = useRecoilCallback(
+    ({ snapshot, set, reset }) =>
+      (characterIds: RRCharacterID[]) => {
+        const tokens = characterIds.flatMap(
+          (characterId) =>
+            entries(mapObjects.current).find(
+              (o) => o.type === "token" && o.characterId === characterId
+            ) ?? []
+        );
+        const ids = tokens.map((t) => t.id);
+        const currentIds = snapshot
+          .getLoadable(selectedMapObjectIdsAtom)
+          .getValue();
+        if (
+          (tokens.length > 0 && ids.length !== currentIds.length) ||
+          ids.some((id) => !currentIds.includes(id))
+        ) {
+          if (canEdit) {
+            set(selectedMapObjectIdsAtom, ids);
+          }
+          const size = snapshot.getLoadable(viewPortSizeAtom).getValue();
+          set(
+            mapTransformAtom,
+            translate(
+              -tokens[0]!.position.x + size.x / 2,
+              -tokens[0]!.position.y + size.y / 2
+            )
+          );
+        }
+      },
+    [canEdit, mapObjects]
+  );
+
+  const lastRowId = useRef<RRInitiativeTrackerEntryID | null>(null);
+
+  const focusTokenOnTurnStart = useRRSettings()[0].focusTokenOnTurnStart;
+
+  useEffect(() => {
+    if (
+      focusTokenOnTurnStart &&
+      myself.isGM &&
+      currentRow &&
+      currentRow.id !== lastRowId.current &&
+      currentRow.type === "character"
+    ) {
+      setSelection(currentRow.characterIds);
+    }
+    lastRowId.current = currentRow?.id ?? null;
+  }, [
+    currentRow,
+    currentRowIndex,
+    focusTokenOnTurnStart,
+    myself.isGM,
+    setSelection,
+  ]);
 
   function findNextRow() {
     if (currentRowIndex < 0) {

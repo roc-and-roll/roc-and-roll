@@ -58,6 +58,11 @@ export const mapObjectIdsAtom = atom<ReadonlyArray<RRMapObjectID>>({
   default: [],
 });
 
+export const viewPortSizeAtom = atom<RRPoint>({
+  key: "ViewPortSize",
+  default: { x: 0, y: 0 },
+});
+
 export const characterFamily = atomFamily<RRCharacter | null, RRCharacterID>({
   key: "Character",
   default: null,
