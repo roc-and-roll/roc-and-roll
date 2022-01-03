@@ -537,3 +537,17 @@ export type SyncedStateAction<
 };
 
 export type SyncedStateDispatch = Dispatch<SyncedStateAction>;
+
+//We should probably convert the number ids to actual ids
+//export type RRAchievementID = MakeRRID<"achievement">;
+
+export type RRAchievement = {
+  id: number;
+  name: string;
+  requirement: string;
+};
+
+export type RRPlayerAchievement = {
+  id: number;
+  achievedAt: RRTimestamp;
+};

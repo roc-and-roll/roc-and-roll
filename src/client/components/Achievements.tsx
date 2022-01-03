@@ -1,26 +1,39 @@
 import React, { useState } from "react";
-import { logEntryAchievementAdd } from "../../shared/actions";
+import { logEntryAchievementAdd, playerUpdate } from "../../shared/actions";
 import { achievements, RRAchievement } from "./achievementList";
 import { useServerDispatch } from "../state";
 import { Players } from "./Players";
 import { RRPlayerID } from "../../shared/state";
 import { Button } from "./ui/Button";
 import { SmartTextInput } from "./ui/TextInput";
+import { useMyProps } from "../myself";
+import clsx from "clsx";
 
 export const Achievements = React.memo(function Achievements() {
   const dispatch = useServerDispatch();
   const [filterText, setFilterText] = useState("");
   const [selectedAchievement, setSelectedAchievement] =
     useState<RRAchievement | null>(null);
+  const myself = useMyProps("achievements");
 
+  //TODO keep from unlocking the same achievement again
   function unlockAchievement(playerId: RRPlayerID, achievement: RRAchievement) {
-    dispatch(
+    dispatch((state) => [
       logEntryAchievementAdd({
         payload: { achievementId: achievement.id },
         silent: false,
         playerId: playerId,
-      })
-    );
+      }),
+      playerUpdate({
+        id: playerId,
+        changes: {
+          achievements: [
+            ...(state.players.entities[playerId]?.achievements ?? []),
+            { id: achievement.id, achievedAt: Date.now() },
+          ],
+        },
+      }),
+    ]);
   }
 
   function filterAchievement(achievement: RRAchievement) {
@@ -31,9 +44,9 @@ export const Achievements = React.memo(function Achievements() {
   }
 
   return (
-    <div className="achievements">
+    <div className="relative">
       {selectedAchievement && (
-        <div className="achievement-player-select">
+        <div className="absolute top-0 right-0 left-0 bottom-0 w-full h-full p-2 bg-black/90">
           Select a player to award &quot;{selectedAchievement.name}&quot; to:
           <Players
             onClickPlayer={(player) => {
@@ -53,7 +66,12 @@ export const Achievements = React.memo(function Achievements() {
         .map((achievement) => (
           <div
             key={achievement.id}
-            className="achievement-button"
+            className={clsx(
+              "border-solid border p-1 m-1 rounded cursor-pointer ",
+              myself.achievements.find((a) => a.id === achievement.id)
+                ? "bg-yellow-500 border-white"
+                : "border-gray-400"
+            )}
             onClick={() => setSelectedAchievement(achievement)}
           >
             <h4>{achievement.name}</h4>
