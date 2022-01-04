@@ -1,12 +1,14 @@
 import * as React from "react";
-import BlurhashCanvas from "./BlurhashCanvas";
+import BlurHashCanvas from "./BlurHashCanvas";
 
+//cspell: disable
 /**
- * Blurhash component based on react-blurhash
+ * BlurHash component based on react-blurhash
  * @url https://github.com/woltapp/react-blurhash
  * @license MIT
  * @author Klaus Nygård https://github.com/nygardk
  */
+//cspell: enable
 
 type Props = React.HTMLAttributes<HTMLDivElement> & {
   hash: string;
@@ -30,7 +32,7 @@ const canvasStyle: React.CSSProperties = {
   height: "100%",
 };
 
-const Blurhash = React.memo(function Blurhash({
+const BlurHash = React.memo(function BlurHash({
   hash,
   height,
   width,
@@ -64,7 +66,7 @@ const Blurhash = React.memo(function Blurhash({
         position: "relative",
       }}
     >
-      <BlurhashCanvas
+      <BlurHashCanvas
         hash={hash}
         height={resolutionY}
         width={resolutionX}
@@ -75,4 +77,4 @@ const Blurhash = React.memo(function Blurhash({
   );
 });
 
-export default Blurhash;
+export default BlurHash;

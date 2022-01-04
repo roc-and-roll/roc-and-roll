@@ -3,9 +3,9 @@ import {
   playerAdd,
   playerRemove,
   playerUpdate,
-  playerUpdateAddFavoritedAssetId,
+  playerUpdateAddFavoriteAssetId,
   playerUpdateAddCharacterId,
-  playerUpdateRemoveFavoritedAssetId,
+  playerUpdateRemoveFavoriteAssetId,
   playerAddDiceTemplate,
   playerRemoveDiceTemplate,
   playerUpdateDiceTemplate,
@@ -39,15 +39,15 @@ export const playersReducer = createReducer(
         const player = state.entities[action.payload.id];
         player?.characterIds.push(action.payload.characterId);
       })
-      .addCase(playerUpdateAddFavoritedAssetId, (state, action) => {
+      .addCase(playerUpdateAddFavoriteAssetId, (state, action) => {
         const player = state.entities[action.payload.id];
-        player?.favoritedAssetIds.push(action.payload.assetId);
+        player?.favoriteAssetIds.push(action.payload.assetId);
       })
-      .addCase(playerUpdateRemoveFavoritedAssetId, (state, action) => {
+      .addCase(playerUpdateRemoveFavoriteAssetId, (state, action) => {
         const player = state.entities[action.payload.id];
-        const index = player?.favoritedAssetIds.indexOf(action.payload.assetId);
+        const index = player?.favoriteAssetIds.indexOf(action.payload.assetId);
         if (index !== undefined && index >= 0) {
-          player?.favoritedAssetIds.splice(index, 1);
+          player?.favoriteAssetIds.splice(index, 1);
         }
       })
       .addCase(playerRemove, playersAdapter.removeOne)

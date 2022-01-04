@@ -41,7 +41,7 @@ import {
   faLongArrowAltUp,
   faLevelUpAlt,
 } from "@fortawesome/free-solid-svg-icons";
-// TODO: Lazy loding the emoji picker does not play nicely with Tippy :/
+// TODO: Lazy loading the emoji picker does not play nicely with Tippy :/
 // const EmojiPicker = React.lazy(
 //   () => import(/* webpackPrefetch: true */ "emoji-picker-react")
 // );
@@ -162,8 +162,8 @@ export const MapToolbar = React.memo<{
       "everyone"
     );
 
-  const [favoritedReactions, setFavoritedReactions] = useLocalState<string[]>(
-    "map/toolbar/favoritedReactions",
+  const [favoriteReactions, setFavoriteReactions] = useLocalState<string[]>(
+    "map/toolbar/favoriteReactions",
     []
   );
   const [reactionCode, setReactionCode] = useLocalState<string>(
@@ -421,17 +421,17 @@ export const MapToolbar = React.memo<{
         </Popover>
         <Button
           onClick={() =>
-            setFavoritedReactions((l) =>
+            setFavoriteReactions((l) =>
               l.includes(reactionCode)
                 ? l.filter((e) => e !== reactionCode)
                 : [reactionCode, ...l]
             )
           }
         >
-          {favoritedReactions.includes(reactionCode) ? "unfav" : "fav"}
+          {favoriteReactions.includes(reactionCode) ? "unfav" : "fav"}
           {reactionCode}
         </Button>
-        {favoritedReactions.map((code) => (
+        {favoriteReactions.map((code) => (
           <Button
             key={code}
             className={reactionCode === code ? "active" : undefined}

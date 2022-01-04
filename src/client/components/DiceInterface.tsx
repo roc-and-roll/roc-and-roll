@@ -20,16 +20,20 @@ import {
 
 export function DiceInterface() {
   const [diceTypes, setDiceTypes] = useState<string[]>([]);
-  const [boni, setBoni] = useState<number | null>(null);
+  const [bonuses, setBonuses] = useState<number | null>(null);
   const myself = useMyProps("id", "diceTemplateCategories");
   const dispatch = useServerDispatch();
   const alert = useAlert();
   const prompt = usePrompt();
 
   const doRoll = async (addTemplate: boolean) => {
-    const boniString =
-      boni === null ? "" : boni >= 0 ? "+" + boni.toString() : boni.toString();
-    const rollString = diceTypes.join("+") + boniString;
+    const bonusesString =
+      bonuses === null
+        ? ""
+        : bonuses >= 0
+        ? "+" + bonuses.toString()
+        : bonuses.toString();
+    const rollString = diceTypes.join("+") + bonusesString;
 
     let diceRollTree: DiceRollTree<false>;
     try {
@@ -96,7 +100,7 @@ export function DiceInterface() {
       );
     }
     setDiceTypes([]);
-    setBoni(null);
+    setBonuses(null);
   };
 
   function addDiceType(diceType: string) {
@@ -132,11 +136,11 @@ export function DiceInterface() {
   }
 
   function addBonus(bonus: number) {
-    setBoni((boni) => (boni ?? 0) + bonus);
+    setBonuses((bonuses) => (bonuses ?? 0) + bonus);
   }
 
   function clear() {
-    setBoni(null);
+    setBonuses(null);
     setDiceTypes([]);
   }
 
@@ -212,16 +216,16 @@ export function DiceInterface() {
                   <Button
                     className="roll-it-button"
                     onClick={() => doRoll(false)}
-                    disabled={boni === null && diceTypes.length === 0}
+                    disabled={bonuses === null && diceTypes.length === 0}
                   >
                     <p>ROLL IT</p>
                     <p>{diceTypes.join(" + ")}</p>
                     <div>
-                      {boni === null
+                      {bonuses === null
                         ? ""
-                        : boni >= 0
-                        ? "+" + boni.toString()
-                        : boni.toString()}
+                        : bonuses >= 0
+                        ? "+" + bonuses.toString()
+                        : bonuses.toString()}
                     </div>
                   </Button>
                   <Button onClick={() => clear()}>Clear Input</Button>

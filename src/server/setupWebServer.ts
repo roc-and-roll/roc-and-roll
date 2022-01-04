@@ -17,7 +17,7 @@ import AsyncLock from "async-lock";
 import { GRID_SIZE, SOCKET_IO_PATH } from "../shared/constants";
 import compression from "compression";
 import {
-  calculateBlurhash,
+  calculateBlurHash,
   getAudioDuration,
   getImageDimensions,
   getMimeType,
@@ -30,6 +30,7 @@ import { randomBetweenInclusive } from "../shared/random";
 
 const ONE_YEAR = 1000 * 60 * 60 * 24 * 365;
 
+//cspell: ignore originalname
 export async function setupWebServer(
   httpHost: string,
   httpPort: number,
@@ -110,7 +111,7 @@ export async function setupWebServer(
                 ? {
                     type: "image" as const,
                     ...(await getImageDimensions(file.path)),
-                    blurhash: await calculateBlurhash(file.path),
+                    blurHash: await calculateBlurHash(file.path),
                   }
                 : isAudio
                 ? {
@@ -264,11 +265,11 @@ export async function setupWebServer(
         type: "image",
         width: 550,
         height: 550,
-        blurhash: await (async () => {
-          res.startTime("blurhash", "Calculating blurhash");
-          const blurhash = await calculateBlurhash(outputPath);
-          res.endTime("blurhash");
-          return blurhash;
+        blurHash: await (async () => {
+          res.startTime("blurHash", "Calculating BlurHash");
+          const blurHash = await calculateBlurHash(outputPath);
+          res.endTime("blurHash");
+          return blurHash;
         })(),
       };
       return res.json(file);
@@ -309,7 +310,7 @@ export async function setupWebServer(
 
     // 1. In production, serve the client code and static assets.
 
-    // Serve the index.html file explicitly, instead of reyling on the express.static
+    // Serve the index.html file explicitly, instead of relying on the express.static
     // call below. This is necessary because it is the only file in the client folder
     // that does not include a content hash in its filename. We therefore must not
     // serve it with the maxAge and immutable headers configured in the express.static

@@ -36,7 +36,7 @@ export const parseDiceStringGetSyntaxError = (
     if (error instanceof parser.SyntaxError) {
       return error;
     }
-    // If any other error occurrs, throw it (should never happen).
+    // If any other error occurs, throw it (should never happen).
     throw error;
   }
   return null;

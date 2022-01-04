@@ -7,6 +7,7 @@ export default class extends AbstractMigration {
       Object.values(state[key].entities as { conditions: string[] }[]).forEach(
         (character) => {
           character.conditions = character.conditions.map((condition) =>
+            // cSpell:disable-next-line
             condition === "paralysed" ? "paralyzed" : condition
           );
         }

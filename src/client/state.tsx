@@ -26,10 +26,10 @@ import {
   SyncedStateAction,
 } from "../shared/state";
 import { mapGetAndSetIfMissing, mergeDeep, rrid } from "../shared/util";
-import { useGuranteedMemo } from "./useGuranteedMemo";
 import { useLatest } from "./useLatest";
 import sjson from "secure-json-parse";
 import { measureTime } from "./debug";
+import { useGuaranteedMemo } from "./useGuaranteedMemo";
 
 type DeduplicationKey = Opaque<string, "optimisticDeduplicationKey">;
 
@@ -316,7 +316,7 @@ function ServerConnectionProvider({
     []
   );
 
-  const ctx = useGuranteedMemo(
+  const ctx = useGuaranteedMemo(
     () => ({
       connected,
       subscribeToReconnectAttempts,
@@ -737,7 +737,7 @@ export function useServerDispatch() {
     useContext(ServerStateContext);
   const socketRef = useLatest(socket);
 
-  const dispatcherKey = useGuranteedMemo(
+  const dispatcherKey = useGuaranteedMemo(
     () => rrid<{ id: OptimisticActionApplierDispatcherKey }>(),
     []
   );

@@ -16,7 +16,7 @@ import { SettingsDialog } from "./Toolbar";
 import { HPInlineEdit } from "../map/HPInlineEdit";
 import {
   useSmartChangeHP,
-  useHealthbarMeasurements,
+  useHealthBarMeasurements,
 } from "../../../client/util";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 import { characterUpdate, playerUpdate } from "../../../shared/actions";
@@ -32,7 +32,7 @@ const characterProps = [
   "temporaryHP",
   "maxHPAdjustment",
   "conditions",
-  "AC",
+  "ac",
   "tokenImageAssetId",
   "tokenBorderColor",
   "spellSaveDC",
@@ -238,7 +238,7 @@ function AC({ character }: { character: RRCharacterProps }) {
         className="text-white text-7xl opacity-50 right-2 m-1"
       />
       <p className="text-4xl font-bold w-full absolute top-4 text-white left-0 text-center select-none">
-        {character.AC ?? "?"}
+        {character.ac ?? "?"}
       </p>
     </div>
   );
@@ -317,7 +317,7 @@ function HealthBar({
     hpColor,
     temporaryHPColor,
     totalMaxHP,
-  } = useHealthbarMeasurements(character, width);
+  } = useHealthBarMeasurements(character, width);
 
   return (
     <div

@@ -8,12 +8,12 @@ import {
   RRPlayerID,
 } from "../shared/state";
 import { selectedMapObjectIdsAtom } from "./components/map/recoil";
+import { useGuaranteedMemo } from "./useGuaranteedMemo";
 import {
   useAutoDispatchPlayerIdOnChange,
   useServerState,
   useServerStateRef,
 } from "./state";
-import { useGuranteedMemo } from "./useGuranteedMemo";
 import useLocalState from "./useLocalState";
 
 const MyselfContext = React.createContext<{
@@ -41,7 +41,7 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
     (state) => (myPlayerId && state.players.entities[myPlayerId]) ?? null
   );
 
-  //This is needed, otherwise recoil will refuse to work in strict mode for unkown reasons
+  //This is needed, otherwise recoil will refuse to work in strict mode for unknown reasons
   const setPlayerId = useSetRecoilState(myPlayerIdAtom);
   useLayoutEffect(() => {
     setPlayerId(myPlayerId);
@@ -49,7 +49,7 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
 
   useAutoDispatchPlayerIdOnChange(myself?.id ?? null);
 
-  const ctx = useGuranteedMemo(
+  const ctx = useGuaranteedMemo(
     () => ({
       playerId: myself?.id ?? null,
       setMyPlayerId,
