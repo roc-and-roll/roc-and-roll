@@ -19,7 +19,17 @@ const DEFAULT_CHARACTER_SIZE = 32;
 export const CharacterPreview = React.forwardRef<
   HTMLSpanElement,
   {
-    character: RRCharacter;
+    character: Pick<
+      RRCharacter,
+      | "name"
+      | "temporaryHP"
+      | "hp"
+      | "maxHP"
+      | "maxHPAdjustment"
+      | "conditions"
+      | "tokenImageAssetId"
+      | "tokenBorderColor"
+    >;
     title?: string;
     size?: number;
     shouldDisplayShadow?: boolean;

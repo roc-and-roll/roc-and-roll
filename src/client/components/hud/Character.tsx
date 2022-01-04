@@ -24,10 +24,25 @@ import { conditionIcons } from "../characters/CharacterEditor";
 import { Popover } from "../Popover";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 
+const characterProps = [
+  "id",
+  "name",
+  "hp",
+  "maxHP",
+  "temporaryHP",
+  "maxHPAdjustment",
+  "conditions",
+  "ac",
+  "tokenImageAssetId",
+  "tokenBorderColor",
+  "spellSaveDC",
+] as const;
+export type RRCharacterProps = Pick<RRCharacter, typeof characterProps[number]>;
+
 export function CharacterHUD() {
   const myself = useMyProps("mainCharacterId", "isGM");
 
-  const selectedCharacters = useMySelectedCharacters();
+  const selectedCharacters = useMySelectedCharacters(...characterProps);
   const mainCharacter = useServerState((state) =>
     myself.mainCharacterId
       ? state.characters.entities[myself.mainCharacterId] ?? null
@@ -62,7 +77,7 @@ export function CharacterHUD() {
   );
 }
 
-function ConditionsBar({ character }: { character: RRCharacter }) {
+function ConditionsBar({ character }: { character: RRCharacterProps }) {
   const [conditionChooserOpen, setConditionChooserOpen] = useState(false);
   const dispatch = useServerDispatch();
 
@@ -214,7 +229,7 @@ function HeroPoint() {
   );
 }
 
-function AC({ character }: { character: RRCharacter }) {
+function AC({ character }: { character: RRCharacterProps }) {
   return (
     <div className="relative">
       <FontAwesomeIcon
@@ -229,7 +244,7 @@ function AC({ character }: { character: RRCharacter }) {
   );
 }
 
-function SpellSave({ character }: { character: RRCharacter }) {
+function SpellSave({ character }: { character: RRCharacterProps }) {
   return (
     <div className="relative">
       <FontAwesomeIcon
@@ -244,7 +259,11 @@ function SpellSave({ character }: { character: RRCharacter }) {
   );
 }
 
-function CurrentCharacter({ character }: { character: RRCharacter | null }) {
+function CurrentCharacter({
+  character,
+}: {
+  character: RRCharacterProps | null;
+}) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const myself = useMyProps("color");
   return (
@@ -287,7 +306,7 @@ function HealthBar({
   isGM,
   width,
 }: {
-  character: RRCharacter;
+  character: RRCharacterProps;
   isGM: boolean;
   width: number;
 }) {

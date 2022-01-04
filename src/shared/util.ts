@@ -96,7 +96,9 @@ export function fittingTokenSize(requestedSize: number): number {
   );
 }
 
-export function isCharacterUnconsciousOrDead(character: RRCharacter) {
+export function isCharacterUnconsciousOrDead(
+  character: Pick<RRCharacter, "conditions" | "hp" | "temporaryHP" | "maxHP">
+) {
   return (
     (character.maxHP > 0 && character.hp + character.temporaryHP === 0) ||
     character.conditions.includes("unconscious") ||
@@ -104,11 +106,16 @@ export function isCharacterUnconsciousOrDead(character: RRCharacter) {
   );
 }
 
-export function isCharacterDead(character: RRCharacter) {
+export function isCharacterDead(character: Pick<RRCharacter, "conditions">) {
   return character.conditions.includes("dead");
 }
 
-export function isCharacterHurt(character: RRCharacter) {
+export function isCharacterHurt(
+  character: Pick<
+    RRCharacter,
+    "temporaryHP" | "hp" | "maxHP" | "maxHPAdjustment"
+  >
+) {
   return (
     character.maxHP > 0 &&
     character.hp + character.temporaryHP <=
@@ -116,7 +123,9 @@ export function isCharacterHurt(character: RRCharacter) {
   );
 }
 
-export function isCharacterOverHealed(character: RRCharacter) {
+export function isCharacterOverHealed(
+  character: Pick<RRCharacter, "maxHP" | "hp" | "temporaryHP" | "conditions">
+) {
   return (
     !isCharacterUnconsciousOrDead(character) &&
     character.maxHP > 0 &&
