@@ -1,5 +1,11 @@
 import clsx from "clsx";
-import React, { useDeferredValue, useEffect, useRef, useState } from "react";
+import React, {
+  useContext,
+  useDeferredValue,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Flipped, Flipper } from "react-flip-toolkit";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import {
@@ -37,7 +43,7 @@ import { CharacterStack } from "../characters/CharacterPreview";
 import {
   highlightedCharactersFamily,
   selectedMapObjectIdsAtom,
-  viewPortSizeAtom,
+  selectedMapObjectsFamily,
 } from "../map/recoil";
 import { canControlToken } from "../../permissions";
 import { Button } from "../ui/Button";
@@ -54,9 +60,12 @@ import { rollInitiative, diceResult } from "../../dice-rolling/roll";
 import useLocalState from "../../useLocalState";
 import { usePrompt } from "../../dialog-boxes";
 import ReactDOM from "react-dom";
-import { mapTransformAtom } from "../map/Map";
 import { translate } from "transformation-matrix";
 import { useRRSettings } from "../../settings";
+import {
+  SetTargetTransformContext,
+  ViewPortSizeRefContext,
+} from "../map/MapContainer";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -103,6 +112,8 @@ export function InitiativeHUD() {
     (state) =>
       state.maps.entities[myself.currentMap]?.objects ?? EMPTY_ENTITY_COLLECTION
   );
+  const viewPortSizeRef = useContext(ViewPortSizeRefContext);
+  const setTargetTransform = useContext(SetTargetTransformContext);
   const setSelection = useRecoilCallback(
     ({ snapshot, set, reset }) =>
       (characterIds: RRCharacterID[]) => {
@@ -122,10 +133,16 @@ export function InitiativeHUD() {
         ) {
           if (canEdit) {
             set(selectedMapObjectIdsAtom, ids);
+            snapshot
+              .getLoadable(selectedMapObjectIdsAtom)
+              .getValue()
+              .forEach((id) => {
+                set(selectedMapObjectsFamily(id), false);
+              });
+            ids.map((id) => set(selectedMapObjectsFamily(id), true));
           }
-          const size = snapshot.getLoadable(viewPortSizeAtom).getValue();
-          set(
-            mapTransformAtom,
+          const size = viewPortSizeRef.current;
+          setTargetTransform(
             translate(
               -tokens[0]!.position.x + size.x / 2,
               -tokens[0]!.position.y + size.y / 2
@@ -133,7 +150,7 @@ export function InitiativeHUD() {
           );
         }
       },
-    [canEdit, mapObjects]
+    [canEdit, mapObjects, viewPortSizeRef, setTargetTransform]
   );
 
   const lastRowId = useRef<RRInitiativeTrackerEntryID | null>(null);

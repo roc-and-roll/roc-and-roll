@@ -1,5 +1,6 @@
 import React, {
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
@@ -31,19 +32,24 @@ import {
   RRMapRevealedAreas,
 } from "../../../shared/state";
 import { canControlMapObject } from "../../permissions";
-import { RRPlayerToolProps, ToolButtonState } from "./MapContainer";
+import {
+  RRPlayerToolProps,
+  SetViewPortSizeContext,
+  ToolButtonState,
+  ViewPortSizeContext,
+} from "./MapContainer";
 import {
   mapObjectIdsAtom,
   mapObjectsFamily,
   selectedMapObjectIdsAtom,
   selectedMapObjectsFamily,
-  viewPortSizeAtom,
 } from "./recoil";
 import { RoughContextProvider } from "../rough";
 import tinycolor from "tinycolor2";
 import {
   makePoint,
   pointAdd,
+  pointDistance,
   pointScale,
   snapPointToGrid,
 } from "../../../shared/point";
@@ -62,8 +68,26 @@ import { useLatest } from "../../useLatest";
 import { useGesture } from "react-use-gesture";
 import { RRMessage, useServerMessages } from "../../serverMessages";
 import { getPathWithNewPoint } from "./mapHelpers";
+import useRafLoop from "../../useRafLoop";
 
 type Rectangle = [number, number, number, number];
+
+const easeInOutCubic = (t: number) =>
+  t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+const lerp = (a: number, b: number, t: number) => {
+  return (b - a) * t + a;
+};
+
+const lerpMatrix = (x: Matrix, y: Matrix, t: number) => {
+  return {
+    a: lerp(x.a, y.a, t),
+    b: lerp(x.b, y.b, t),
+    c: lerp(x.c, y.c, t),
+    d: lerp(x.d, y.d, t),
+    e: lerp(x.e, y.e, t),
+    f: lerp(x.f, y.f, t),
+  };
+};
 
 export type MapAreas = {
   imageArea: SVGGElement;
@@ -166,6 +190,7 @@ const RRMapViewWithRef = React.forwardRef<
   {
     myself: RRPlayerToolProps;
     mapId: RRMapID;
+    targetTransform: Matrix;
     gridEnabled: boolean;
     gridColor: RRColor;
     backgroundColor: RRColor;
@@ -186,6 +211,7 @@ const RRMapViewWithRef = React.forwardRef<
   {
     myself,
     mapId,
+    targetTransform,
     gridEnabled,
     gridColor,
     backgroundColor,
@@ -214,6 +240,27 @@ const RRMapViewWithRef = React.forwardRef<
   // rendered transform.
   const [transform, setTransform] = useRecoilState(mapTransformAtom);
   const transformRef = useLatest(transform);
+
+  const [rafStart, rafStop] = useRafLoop();
+
+  useEffect(() => {
+    rafStart((progress) => {
+      if (progress === 1) {
+        setTransform(targetTransform);
+      } else {
+        setTransform(
+          lerpMatrix(
+            transformRef.current,
+            targetTransform,
+            easeInOutCubic(progress)
+          )
+        );
+      }
+    }, Math.max(600, (1000 * pointDistance({ x: targetTransform.e, y: targetTransform.f }, { x: transformRef.current.e, y: transformRef.current.f })) / GRID_SIZE / 55));
+    return () => {
+      rafStop();
+    };
+  }, [targetTransform, transformRef, rafStart, rafStop, setTransform]);
 
   const { subscribe, unsubscribe } = useServerMessages();
   useEffect(() => {
@@ -706,7 +753,8 @@ transform,
     [imageArea, auraArea, defaultArea, tokenArea, healthBarArea]
   );
 
-  const [viewPortSize, setViewPortSize] = useRecoilState(viewPortSizeAtom);
+  const viewPortSize = useContext(ViewPortSizeContext);
+  const setViewPortSize = useContext(SetViewPortSizeContext);
 
   useEffect(() => {
     if (!svgRef.current) {
@@ -781,13 +829,7 @@ transform,
           <g ref={setImageArea} />
           <g ref={setAuraArea} />
           <g ref={setDefaultArea} />
-          {gridEnabled && (
-            <MapGrid
-              transform={transform}
-              viewPortSize={viewPortSize}
-              color={gridColor}
-            />
-          )}
+          {gridEnabled && <MapGrid transform={transform} color={gridColor} />}
           <g ref={setTokenArea} />
           <g ref={setHealthBarArea} />
 
@@ -803,11 +845,7 @@ transform,
             />
           )}
 
-          <FogOfWar
-            transform={transform}
-            viewportSize={viewPortSize}
-            revealedAreas={revealedAreas}
-          />
+          <FogOfWar transform={transform} revealedAreas={revealedAreas} />
 
           {withSelectionAreaDo(
             selectionArea,
