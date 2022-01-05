@@ -4,7 +4,7 @@ import { ReadonlyDeep } from "type-fest";
 import useLocalState from "./useLocalState";
 
 // increase this whenever the Settings type changes
-const CURRENT_SETTINGS_VERSION = 5;
+const CURRENT_SETTINGS_VERSION = 6;
 
 export type RRSettings = ReadonlyDeep<{
   version: number;
