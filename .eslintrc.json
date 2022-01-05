@@ -57,7 +57,7 @@
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": [
       "error", {
-        "additionalHooks": "(useRecoilCallback|useEventCallback|useDrop|useDrag|useGuranteedMemo)"
+        "additionalHooks": "(useRecoilCallback|useEventCallback|useDrop|useDrag|useGuaranteedMemo)"
       }
     ],
     "padding-line-between-statements": [

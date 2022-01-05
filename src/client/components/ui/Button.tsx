@@ -1,6 +1,7 @@
 import React from "react";
 import { useRRSimpleSound } from "../../sound";
 // update acknowledgements if changed
+//cspell: disable-next-line
 import click from "../../../third-party/freesound.org/256116__kwahmah-02__click.mp3";
 import clsx from "clsx";
 

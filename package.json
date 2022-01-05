@@ -138,6 +138,7 @@
     "clean-webpack-plugin": "^4.0.0",
     "concurrently": "^6.2.1",
     "copy-webpack-plugin": "^9.0.1",
+    "cspell": "^5.13.4",
     "css-loader": "^6.2.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
@@ -227,6 +228,9 @@
   "lint-staged": {
     "src/**/*.{js,jsx,ts,tsx}": [
       "eslint --cache --fix"
+    ],
+    "*": [
+      "cspell lint --no-must-find-file"
     ]
   },
   "engines": {

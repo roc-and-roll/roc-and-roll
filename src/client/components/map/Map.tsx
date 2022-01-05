@@ -70,7 +70,7 @@ export type MapAreas = {
   auraArea: SVGGElement;
   defaultArea: SVGGElement;
   tokenArea: SVGGElement;
-  healthbarArea: SVGGElement;
+  healthBarArea: SVGGElement;
 };
 
 const PANNING_BUTTON = 2;
@@ -323,7 +323,7 @@ const RRMapViewWithRef = React.forwardRef<
           // updated to reflect the value set during the last frame (since React
           // can batch multiple setState() calls, particularly if the browser is
           // very busy).
-          // Instead use the ref, which is guranteed to have been updated.
+          // Instead use the ref, which is guaranteed to have been updated.
           x: x - dragLastMouseRef.current.x,
           y: y - dragLastMouseRef.current.y,
         };
@@ -690,20 +690,20 @@ transform,
   const [auraArea, setAuraArea] = useState<SVGGElement | null>(null);
   const [defaultArea, setDefaultArea] = useState<SVGGElement | null>(null);
   const [tokenArea, setTokenArea] = useState<SVGGElement | null>(null);
-  const [healthbarArea, setHealthbarArea] = useState<SVGGElement | null>(null);
+  const [healthBarArea, setHealthBarArea] = useState<SVGGElement | null>(null);
 
   const areas = useMemo(
     () =>
-      imageArea && auraArea && defaultArea && tokenArea && healthbarArea
+      imageArea && auraArea && defaultArea && tokenArea && healthBarArea
         ? {
             imageArea,
             auraArea,
             defaultArea,
             tokenArea,
-            healthbarArea,
+            healthBarArea: healthBarArea,
           }
         : null,
-    [imageArea, auraArea, defaultArea, tokenArea, healthbarArea]
+    [imageArea, auraArea, defaultArea, tokenArea, healthBarArea]
   );
 
   const [viewPortSize, setViewPortSize] = useRecoilState(viewPortSizeAtom);
@@ -789,7 +789,7 @@ transform,
             />
           )}
           <g ref={setTokenArea} />
-          <g ref={setHealthbarArea} />
+          <g ref={setHealthBarArea} />
 
           {areas && (
             <MapObjects

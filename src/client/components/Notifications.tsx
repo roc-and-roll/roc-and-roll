@@ -17,6 +17,7 @@ import { assertNever } from "../../shared/util";
 import { diceResultString, DiceResultWithTypes } from "../dice-rolling/roll";
 import { useRRSimpleSound } from "../sound";
 import { useServerState } from "../state";
+//cspell: disable-next-line
 import tada from "../../third-party/freesound.org/60443__jobro__tada1.mp3";
 import { achievements } from "./achievementList";
 import { Flipper, Flipped } from "react-flip-toolkit";

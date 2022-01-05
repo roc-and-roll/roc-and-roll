@@ -23,6 +23,7 @@ export async function extractForOneShot(
   const response = await prompts(
     [
       {
+        //cspell: disable-next-line
         type: "multiselect",
         name: "playerIds",
         message: "Pick players to export",

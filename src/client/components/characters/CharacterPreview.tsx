@@ -6,12 +6,12 @@ import {
   clamp,
   isCharacterHurt,
   isCharacterUnconsciousOrDead,
-  isCharacterOverhealed,
+  isCharacterOverHealed,
   isCharacterDead,
 } from "../../../shared/util";
 import { tokenImageUrl } from "../../files";
 import { useServerState } from "../../state";
-import { BlurhashImage } from "../blurhash/BlurhashImage";
+import { BlurHashImage } from "../blurHash/BlurHashImage";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 
 const DEFAULT_CHARACTER_SIZE = 32;
@@ -41,7 +41,7 @@ export const CharacterPreview = React.forwardRef<
   const hurt = isCharacterHurt(character);
   const unconsciousOrDead = isCharacterUnconsciousOrDead(character);
   const dead = isCharacterDead(character);
-  const overhealed = isCharacterOverhealed(character);
+  const overHealed = isCharacterOverHealed(character);
 
   const asset = useServerState(
     (state) => state.assets.entities[character.tokenImageAssetId]
@@ -54,13 +54,13 @@ export const CharacterPreview = React.forwardRef<
   const currentSize = size ?? DEFAULT_CHARACTER_SIZE;
   return (
     <span className="character-image" ref={ref}>
-      <BlurhashImage
+      <BlurHashImage
         image={{
-          blurhash: asset.blurhash,
+          blurHash: asset.blurHash,
           url: tokenImageUrl(character, asset, currentSize),
         }}
         className={clsx(
-          shouldDisplayShadow && { hurt, unconsciousOrDead, overhealed }
+          shouldDisplayShadow && { hurt, unconsciousOrDead, overHealed }
         )}
         width={currentSize}
         height={currentSize}

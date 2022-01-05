@@ -23,7 +23,7 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
     const serverStateRef = useServerStateRef((state) => state);
     const activeMusic = useServerState((state) => state.ephemeral.activeMusic);
     const [activeSongTitles, setActiveSongTitles] = useState<string>("");
-    const [isTimeouted, setIsTimeouted] = useState(false);
+    const [isTimeOuted, setIsTimeOuted] = useState(false);
 
     useEffect(() => {
       // This is a deliberate optimization (and tradeoff): Instead of
@@ -75,9 +75,9 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
         return;
       }
 
-      setIsTimeouted(false);
+      setIsTimeOuted(false);
 
-      const id = setTimeout(() => setIsTimeouted(true), 10000);
+      const id = setTimeout(() => setIsTimeOuted(true), 10000);
       return () => clearTimeout(id);
     }, [activeSongTitles]);
 
@@ -145,7 +145,7 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
         )}
         <span
           className={clsx("song-titles", {
-            "is-timeouted": isTimeouted,
+            "is-timeOuted": isTimeOuted,
           })}
         >
           {activeSongTitles}

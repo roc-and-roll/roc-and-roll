@@ -70,7 +70,7 @@ export const playerUpdate = createAction<Update<RRPlayer>>("player/update");
 export const playerUpdateAddCharacterId = createAction<{
   id: RRPlayerID;
   characterId: RRCharacterID;
-}>("player/update/characterid");
+}>("player/update/characterId");
 
 export const playerAddDiceTemplateCategory = createAction<{
   id: RRPlayerID;
@@ -126,15 +126,15 @@ export const playerAddDiceTemplate = createAction<{
   template: RRDiceTemplate;
 }>("player/diceTemplateCategories/template/add");
 
-export const playerUpdateAddFavoritedAssetId = createAction<{
+export const playerUpdateAddFavoriteAssetId = createAction<{
   id: RRPlayerID;
   assetId: RRAssetID;
-}>("player/update/assetid/add");
+}>("player/update/assetId/add");
 
-export const playerUpdateRemoveFavoritedAssetId = createAction<{
+export const playerUpdateRemoveFavoriteAssetId = createAction<{
   id: RRPlayerID;
   assetId: RRAssetID;
-}>("player/update/assetid/remove");
+}>("player/update/assetId/remove");
 
 export const playerRemove = createAction<RRPlayer["id"]>("player/remove");
 
@@ -262,7 +262,7 @@ export const mapObjectRemove = createAction(
 ////////////////////////////////////////////////////////////////////////////////
 
 export const privateChatAdd = createAction(
-  "privatechat/add",
+  "privateChat/add",
   (
     player1Id: RRPlayerID,
     player2Id: RRPlayerID
@@ -288,13 +288,13 @@ export const privateChatAdd = createAction(
 );
 
 export const privateChatUpdate =
-  createAction<Update<Omit<RRPrivateChat, "messages">>>("privatechat/update");
+  createAction<Update<Omit<RRPrivateChat, "messages">>>("privateChat/update");
 
 export const privateChatRemove =
-  createAction<RRPrivateChat["id"]>("privatechat/remove");
+  createAction<RRPrivateChat["id"]>("privateChat/remove");
 
 export const privateChatMessageAdd = createAction(
-  "privatechat/message/add",
+  "privateChat/message/add",
   (
     chatId: RRPrivateChatID,
     message: Omit<RRPrivateChatMessage, "id" | "timestamp" | "read">
@@ -316,7 +316,7 @@ export const privateChatMessageAdd = createAction(
 );
 
 export const privateChatMessageUpdate = createAction(
-  "privatechat/message/update",
+  "privateChat/message/update",
   (
     chatId: RRPrivateChatID,
     update: Update<Omit<RRPrivateChatMessage, "timestamp">>
@@ -335,7 +335,7 @@ export const privateChatMessageUpdate = createAction(
 ////////////////////////////////////////////////////////////////////////////////
 
 export const logEntryMessageAdd = createAction(
-  "logentry/message/add",
+  "logEntry/message/add",
   (
     logEntry: Omit<RRLogEntryMessage, "id" | "type" | "timestamp">
   ): { payload: RRLogEntryMessage } => ({
@@ -349,7 +349,7 @@ export const logEntryMessageAdd = createAction(
 );
 
 export const logEntryAchievementAdd = createAction(
-  "logentry/achievement/add",
+  "logEntry/achievement/add",
   (
     logEntry: Omit<RRLogEntryAchievement, "id" | "type" | "timestamp">
   ): { payload: RRLogEntryAchievement } => ({
@@ -363,7 +363,7 @@ export const logEntryAchievementAdd = createAction(
 );
 
 export const logEntryDiceRollAdd = createAction(
-  "logentry/diceroll/add",
+  "logEntry/diceRoll/add",
   (
     logEntry: Omit<RRLogEntryDiceRoll, "id" | "type" | "timestamp">
   ): { payload: RRLogEntryDiceRoll } => ({
@@ -376,7 +376,7 @@ export const logEntryDiceRollAdd = createAction(
   })
 );
 
-export const logEntryRemove = createAction<RRLogEntry["id"]>("logentry/remove");
+export const logEntryRemove = createAction<RRLogEntry["id"]>("logEntry/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
 // InitiativeTracker
@@ -391,9 +391,9 @@ export const initiativeTrackerSetCurrentEntry = createAction<
 >("initiativeTracker/currentEntryId");
 
 export const initiativeTrackerEntryCharacterAdd = createAction(
-  "initiativetracker/entry/character/add",
+  "initiativeTracker/entry/character/add",
   (
-    initiativetrackerEntry: Omit<
+    initiativeTrackerEntry: Omit<
       RRInitiativeTrackerEntryCharacter,
       "id" | "type"
     >
@@ -401,15 +401,15 @@ export const initiativeTrackerEntryCharacterAdd = createAction(
     payload: {
       id: rrid<RRInitiativeTrackerEntryCharacter>(),
       type: "character",
-      ...initiativetrackerEntry,
+      ...initiativeTrackerEntry,
     },
   })
 );
 
 export const initiativeTrackerEntryLairActionAdd = createAction(
-  "initiativetracker/entry/lairaction/add",
+  "initiativeTracker/entry/lairAction/add",
   (
-    initiativetrackerEntry: Omit<
+    initiativeTrackerEntry: Omit<
       RRInitiativeTrackerEntryLairAction,
       "id" | "type"
     >
@@ -417,7 +417,7 @@ export const initiativeTrackerEntryLairActionAdd = createAction(
     payload: {
       id: rrid<RRInitiativeTrackerEntryLairAction>(),
       type: "lairAction",
-      ...initiativetrackerEntry,
+      ...initiativeTrackerEntry,
     },
   })
 );
@@ -432,7 +432,7 @@ export const initiativeTrackerEntryLairActionUpdate = createAction<
 
 export const initiativeTrackerEntryRemove = createAction<
   RRInitiativeTrackerEntry["id"]
->("initiativetracker/entry/remove");
+>("initiativeTracker/entry/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
 // Ephemeral state
@@ -569,5 +569,5 @@ export const soundSetPlaylistEntryRemove = createAction<{
 ////////////////////////////////////////////////////////////////////////////////
 
 export const globalSettingsUpdate = createAction<Partial<RRGlobalSettings>>(
-  "globalsettings/update"
+  "globalSettings/update"
 );

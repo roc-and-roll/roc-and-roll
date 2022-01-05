@@ -115,7 +115,7 @@ const isDRTPartDice = <WithResults extends true | false>(
 
           return t.pushError(
             state,
-            `A rolled dicepart should have exactly as many dice roll results as its dice count (count = ${String(
+            `A rolled dice part should have exactly as many dice roll results as its dice count (count = ${String(
               dicePart["count"]
             )}, results = ${String(dicePart["results"].length)})`
           );

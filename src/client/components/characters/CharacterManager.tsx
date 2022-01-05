@@ -48,7 +48,7 @@ async function makeNewCharacter(
 
     type: "image",
     originalFunction: "token",
-    blurhash: image.blurhash,
+    blurHash: image.blurHash,
     width: image.width,
     height: image.height,
 
@@ -62,7 +62,7 @@ async function makeNewCharacter(
     maxHP: 0,
     temporaryHP: 0,
     maxHPAdjustment: 0,
-    AC: null,
+    ac: null,
     spellSaveDC: null,
     scale: 1,
     visibility: "everyone",

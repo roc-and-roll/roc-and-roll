@@ -68,7 +68,7 @@ export type RRFileImage = RRFileBase & {
   type: "image";
   width: number;
   height: number;
-  blurhash: string;
+  blurHash: string;
 };
 
 export type RRFileOther = RRFileBase & {

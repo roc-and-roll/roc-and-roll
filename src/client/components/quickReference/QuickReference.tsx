@@ -389,7 +389,7 @@ function RollScaledLink({
             parseInt(
               (
                 await prompt(
-                  `What is the base roll you are trying to highten? Type a number corresponding to the base roll (${baseDiceStrings
+                  `What is the base roll you are trying to heighten? Type a number corresponding to the base roll (${baseDiceStrings
                     .map((diceString, idx) => `${idx + 1} = ${diceString}`)
                     .join(", ")})`
                 )
@@ -406,7 +406,7 @@ function RollScaledLink({
         const levelString =
           (
             await prompt(
-              `At which level do you want to cast the spell (posssible levels: ${levelRange})?`
+              `At which level do you want to cast the spell (possible levels: ${levelRange})?`
             )
           )?.trim() ?? null;
         if (levelString === null) {
@@ -482,6 +482,7 @@ function TextEntryString({
               />
             );
           }
+          //cspell: disable
           case "scaledice":
           case "scaledamage":
             return (
@@ -492,6 +493,7 @@ function TextEntryString({
                 spell={spell}
               />
             );
+          //cspell: enable
           case "hit":
           case "d20": {
             assertIsInteger(args);

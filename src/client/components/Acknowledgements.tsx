@@ -15,6 +15,7 @@ const licenses = {
   },
 };
 
+//cspell: disable
 const gameIconsNetAuthors = {
   Cathelineau: { license: licenses["CC-BY 3.0"], url: null },
   Delapouite: {
@@ -58,6 +59,7 @@ const audio = [
     license: licenses["CC-BY-NC-ND 4.0"],
   },
 ];
+//cspell: enable
 
 export function Acknowledgements() {
   return (

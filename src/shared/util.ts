@@ -123,7 +123,7 @@ export function isCharacterHurt(
   );
 }
 
-export function isCharacterOverhealed(
+export function isCharacterOverHealed(
   character: Pick<RRCharacter, "maxHP" | "hp" | "temporaryHP" | "conditions">
 ) {
   return (

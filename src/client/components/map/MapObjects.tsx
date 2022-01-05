@@ -82,7 +82,7 @@ export const MapObjects = React.memo<{
           "0.4s",
           "red"
         )}
-        {makeBlinkingCharacterFilter("tokenOverhealedShadow", "4s", "green")}
+        {makeBlinkingCharacterFilter("tokenOverHealedShadow", "4s", "green")}
       </defs>
       {mapObjectIds.map((mapObjectId) => (
         <MapObjectWrapper
@@ -171,7 +171,7 @@ const MapObjectWrapper = React.memo<{
           onStartMove={onStartMove}
           // additional parameters for tokens
           auraArea={areas.auraArea}
-          healthbarArea={areas.healthbarArea}
+          healthBarArea={areas.healthBarArea}
           zoom={zoom}
           contrastColor={contrastColor}
           smartSetTotalHP={smartSetTotalHP}

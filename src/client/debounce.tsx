@@ -5,8 +5,8 @@ import React, {
   useState,
   useTransition,
 } from "react";
+import { useGuaranteedMemo } from "./useGuaranteedMemo";
 import { useLatest } from "./useLatest";
-import { useGuranteedMemo } from "./useGuranteedMemo";
 
 type PendingChangeSubscriber = (pending: boolean) => void;
 
@@ -124,12 +124,12 @@ export function useDebounce<A extends unknown[]>(
 ] {
   const forceOnUnmountRef = useLatest(forceOnUnmount);
 
-  const syncedDebounceMaker = useGuranteedMemo(
+  const syncedDebounceMaker = useGuaranteedMemo(
     () => ensureSyncedDebounceMaker(debounce),
     [debounce]
   );
 
-  const debouncer = useGuranteedMemo(
+  const debouncer = useGuaranteedMemo(
     () => syncedDebounceMaker.makeDebouncer<A, unknown>(callback),
     [callback, syncedDebounceMaker]
   );

@@ -21,7 +21,7 @@ export function evaluateDiceTemplatePart(
         roll({
           ...part,
           // click on none, is advantage --> none
-          // click on disadvatage, is none --> disadvantage
+          // click on disadvantage, is none --> disadvantage
           // click on none, is none --> none
           modified: part.faces !== 20 ? "none" : modified,
         }),
