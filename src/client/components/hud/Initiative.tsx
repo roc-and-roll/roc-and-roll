@@ -108,7 +108,7 @@ export function InitiativeHUD() {
 
   const dispatch = useServerDispatch();
 
-  const mapObjects = useServerStateRef(
+  const mapObjectsRef = useServerStateRef(
     (state) =>
       state.maps.entities[myself.currentMap]?.objects ?? EMPTY_ENTITY_COLLECTION
   );
@@ -119,7 +119,7 @@ export function InitiativeHUD() {
       (characterIds: RRCharacterID[]) => {
         const tokens = characterIds.flatMap(
           (characterId) =>
-            entries(mapObjects.current).find(
+            entries(mapObjectsRef.current).find(
               (o) => o.type === "token" && o.characterId === characterId
             ) ?? []
         );
@@ -132,13 +132,11 @@ export function InitiativeHUD() {
           ids.some((id) => !currentIds.includes(id))
         ) {
           if (canEdit) {
-            set(selectedMapObjectIdsAtom, ids);
             snapshot
               .getLoadable(selectedMapObjectIdsAtom)
               .getValue()
-              .forEach((id) => {
-                set(selectedMapObjectsFamily(id), false);
-              });
+              .forEach((id) => reset(selectedMapObjectsFamily(id)));
+            set(selectedMapObjectIdsAtom, ids);
             ids.map((id) => set(selectedMapObjectsFamily(id), true));
           }
           const size = viewPortSizeRef.current;
@@ -150,7 +148,7 @@ export function InitiativeHUD() {
           );
         }
       },
-    [canEdit, mapObjects, viewPortSizeRef, setTargetTransform]
+    [canEdit, mapObjectsRef, viewPortSizeRef, setTargetTransform]
   );
 
   const lastRowId = useRef<RRInitiativeTrackerEntryID | null>(null);

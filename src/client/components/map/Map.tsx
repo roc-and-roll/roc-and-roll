@@ -244,6 +244,16 @@ const RRMapViewWithRef = React.forwardRef<
   const [rafStart, rafStop] = useRafLoop();
 
   useEffect(() => {
+    const duration = Math.max(
+      600,
+      (1000 *
+        pointDistance(
+          { x: targetTransform.e, y: targetTransform.f },
+          { x: transformRef.current.e, y: transformRef.current.f }
+        )) /
+        GRID_SIZE /
+        55
+    );
     rafStart((progress) => {
       if (progress === 1) {
         setTransform(targetTransform);
@@ -256,7 +266,7 @@ const RRMapViewWithRef = React.forwardRef<
           )
         );
       }
-    }, Math.max(600, (1000 * pointDistance({ x: targetTransform.e, y: targetTransform.f }, { x: transformRef.current.e, y: transformRef.current.f })) / GRID_SIZE / 55));
+    }, duration);
     return () => {
       rafStop();
     };
