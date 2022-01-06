@@ -66,8 +66,9 @@ export const Music = React.memo(function Music() {
   const assets = useServerState((state) => state.assets);
   const allSongs = entries(assets).flatMap((a) => (a.type === "song" ? a : []));
 
-  const [tabletopAudioSongs, ownSongs] = partition(allSongs, (song) =>
-    isTabletopAudioAsset(song)
+  const [tabletopAudioSongs, ownSongs] = partition(
+    allSongs,
+    (song) => isTabletopAudioAsset.safeParse(song).success
   );
 
   const onStop = useCallback(

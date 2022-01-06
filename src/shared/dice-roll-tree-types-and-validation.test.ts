@@ -6,7 +6,7 @@ import {
 
 it("correctly validates the absence of dice results", () => {
   expect(
-    isDiceRollTree(false)({
+    isDiceRollTree(false).safeParse({
       type: "dice",
       count: 5,
       results: "not-yet-rolled",
@@ -15,11 +15,11 @@ it("correctly validates the absence of dice results", () => {
       damage: {
         type: null,
       },
-    })
+    }).success
   ).toBe(true);
 
   expect(
-    isDiceRollTree(false)({
+    isDiceRollTree(false).safeParse({
       type: "dice",
       count: 5,
       results: [1, 2, 3, 4, 5],
@@ -28,13 +28,13 @@ it("correctly validates the absence of dice results", () => {
       damage: {
         type: null,
       },
-    })
+    }).success
   ).toBe(false);
 });
 
 it("correctly validates the presence of dice results", () => {
   expect(
-    isDiceRollTree(true)({
+    isDiceRollTree(true).safeParse({
       type: "dice",
       count: 5,
       results: [1, 2, 3, 4, 5],
@@ -43,11 +43,11 @@ it("correctly validates the presence of dice results", () => {
       damage: {
         type: null,
       },
-    })
+    }).success
   ).toBe(true);
 
   expect(
-    isDiceRollTree(true)({
+    isDiceRollTree(true).safeParse({
       type: "dice",
       count: 5,
       results: "not-yet-rolled",
@@ -56,13 +56,13 @@ it("correctly validates the presence of dice results", () => {
       damage: {
         type: null,
       },
-    })
+    }).success
   ).toBe(false);
 });
 
 it("validates that rolled dice parts have exactly .count entries in .results", () => {
   expect(
-    isDiceRollTree(true)({
+    isDiceRollTree(true).safeParse({
       type: "dice",
       count: 5,
       results: [1, 2, 3, 4, 5],
@@ -71,33 +71,32 @@ it("validates that rolled dice parts have exactly .count entries in .results", (
       damage: {
         type: null,
       },
-    })
+    }).success
   ).toBe(true);
 
-  const errors: string[] = [];
-  expect(
-    isDiceRollTree(true)(
-      {
-        type: "dice",
-        count: 5,
-        results: [1, 2, 3, 4], // one too few
-        modified: "none",
-        faces: 6,
-        damage: {
-          type: null,
-        },
-      },
-      { errors }
-    )
-  ).toBe(false);
-  expect(errors).toMatchInlineSnapshot(`
-Array [
-  ".#1.type: Expected \\"term\\" (got \\"dice\\")",
-  ".#2.type: Expected \\"parens\\" (got \\"dice\\")",
-  ".#3.type: Expected \\"negated\\" (got \\"dice\\")",
-  ".#4: A rolled dice part should have exactly as many dice roll results as its dice count (count = 5, results = 4)",
-  ".#5.type: Expected \\"num\\" (got \\"dice\\")",
-]
+  const validationResult = isDiceRollTree(true).safeParse({
+    type: "dice",
+    count: 5,
+    results: [1, 2, 3, 4], // one too few
+    modified: "none",
+    faces: 6,
+    damage: {
+      type: null,
+    },
+  });
+  if (validationResult.success) {
+    fail();
+  }
+  expect(validationResult.error).toMatchInlineSnapshot(`
+[ZodError: [
+  {
+    "code": "custom",
+    "message": "A rolled dice part should have exactly as many dice roll results as its dice count (count = 5, results = 4)",
+    "path": [
+      "results"
+    ]
+  }
+]]
 `);
 });
 

@@ -53,9 +53,9 @@ void (async () => {
 
   if (process.env.NODE_ENV !== "production") {
     store.subscribe(() => {
-      const errors: string[] = [];
-      if (!isSyncedState(store.getState(), { errors })) {
-        errors.forEach((error) => console.error(error));
+      const validationResult = isSyncedState.safeParse(store.getState());
+      if (!validationResult.success) {
+        console.error(validationResult.error);
         console.error(`
 #############################################
 #############################################

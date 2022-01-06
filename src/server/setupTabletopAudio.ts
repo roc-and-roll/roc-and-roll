@@ -88,13 +88,15 @@ class TabletopAudioDownloader {
         return null;
       }
 
-      const json = await result.json();
-      const errors: string[] = [];
-      if (!isTabletopAudioIndex(json, { errors })) {
+      const validationResult = isTabletopAudioIndex.safeParse(
+        await result.json()
+      );
+      if (!validationResult.success) {
         this.error("Error parsing tabletop audio song index.");
-        errors.forEach((error) => this.error(error));
+        this.error(validationResult.error.message);
         return null;
       }
+      const json = validationResult.data;
 
       await fs.promises.writeFile(
         path.join(this.CACHE_DIR, this.CONTENT_FILE),
@@ -114,11 +116,15 @@ class TabletopAudioDownloader {
         path.join(this.CACHE_DIR, this.CONTENT_FILE),
         "utf-8"
       );
-      const cachedAudioIndex = JSON.parse(cachedAudioIndexJSON);
-      if (!isTabletopAudioIndex(cachedAudioIndex)) {
-        throw new Error("Invalid cached audio index file.");
+      const validationResult = isTabletopAudioIndex.safeParse(
+        JSON.parse(cachedAudioIndexJSON)
+      );
+      if (!validationResult.success) {
+        throw new Error(
+          `Invalid cached audio index file: ${validationResult.error.message}`
+        );
       }
-      return cachedAudioIndex;
+      return validationResult.data;
     } catch (err) {
       this.error(String(err));
       return null;
@@ -132,10 +138,11 @@ class TabletopAudioDownloader {
 
     const existingTabletopAudioAssetMap = new Map(
       entries(this.store.getState().assets).flatMap((existingAsset) => {
-        if (!isTabletopAudioAsset(existingAsset)) {
+        const validationResult = isTabletopAudioAsset.safeParse(existingAsset);
+        if (!validationResult.success) {
           return [];
         }
-        return [[existingAsset.extra.tabletopAudioKey, existingAsset]];
+        return [[validationResult.data.extra.tabletopAudioKey, existingAsset]];
       })
     );
 

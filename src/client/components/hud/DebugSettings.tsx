@@ -1,14 +1,13 @@
 import { faBug } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useContext } from "react";
-import * as t from "typanion";
+import * as z from "zod";
 
-const isDebugSettings = t.isObject({
-  mapDebugOverlayActive: t.isBoolean(),
-  noHUD: t.isBoolean(),
+const isDebugSettings = z.strictObject({
+  mapDebugOverlayActive: z.boolean(),
+  noHUD: z.boolean(),
 });
-
-type DebugSettings = t.InferType<typeof isDebugSettings>;
+type DebugSettings = z.infer<typeof isDebugSettings>;
 
 const DEFAULT_DEBUG_SETTINGS: DebugSettings = {
   mapDebugOverlayActive: false,

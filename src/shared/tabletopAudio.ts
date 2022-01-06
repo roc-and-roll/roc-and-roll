@@ -1,35 +1,28 @@
-import * as t from "typanion";
+import * as z from "zod";
 
-// a bit naive, but that should be sufficient for now.
-const isUrl = () => t.matchesRegExp(/https:\/\//);
-
-export const isTabletopAudioIndex = t.isObject({
-  tracks: t.isArray(
-    t.isObject({
-      key: t.applyCascade(t.isNumber(), [t.isInteger()]),
-      track_title: t.isString(),
-      track_type: t.isString(),
-      track_genre: t.isArray(t.isString()),
-      flavor_text: t.isString(),
-      link: t.applyCascade(t.isString(), [isUrl()]),
-      small_image: t.applyCascade(t.isString(), [isUrl()]),
-      large_image: t.applyCascade(t.isString(), [isUrl()]),
-      new: t.isUnknown(),
-      tags: t.isArray(t.isString()),
+export const isTabletopAudioIndex = z.strictObject({
+  tracks: z.array(
+    z.strictObject({
+      key: z.number().int(),
+      track_title: z.string(),
+      track_type: z.string(),
+      track_genre: z.array(z.string()),
+      flavor_text: z.string(),
+      link: z.string().url(),
+      small_image: z.string().url(),
+      large_image: z.string().url(),
+      new: z.unknown(),
+      tags: z.array(z.string()),
     })
   ),
 });
 
-export type TabletopAudioIndex = t.InferType<typeof isTabletopAudioIndex>;
+export type TabletopAudioIndex = z.infer<typeof isTabletopAudioIndex>;
 
-export const isTabletopAudioAsset = t.isObject(
-  {
-    extra: t.isObject(
-      { tabletopAudioKey: t.applyCascade(t.isNumber(), [t.isInteger()]) },
-      { extra: t.isUnknown() }
-    ),
-  },
-  { extra: t.isUnknown() }
-);
+export const isTabletopAudioAsset = z
+  .strictObject({
+    extra: z.strictObject({ tabletopAudioKey: z.number().int() }).passthrough(),
+  })
+  .passthrough();
 
-export type RRAssetTabletopAudio = t.InferType<typeof isTabletopAudioAsset>;
+export type RRAssetTabletopAudio = z.infer<typeof isTabletopAudioAsset>;

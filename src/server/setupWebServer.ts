@@ -76,11 +76,14 @@ export async function setupWebServer(
           return;
         }
 
-        const allowedFileTypes = req.body.allowedFileTypes;
-        if (!isAllowedFiletypes(allowedFileTypes)) {
+        const validationResult = isAllowedFiletypes.safeParse(
+          req.body.allowedFileTypes
+        );
+        if (!validationResult.success) {
           res.status(400);
           return;
         }
+        const allowedFileTypes = validationResult.data;
 
         const data: RRFile[] = await Promise.all(
           req.files.map(async (file) => {

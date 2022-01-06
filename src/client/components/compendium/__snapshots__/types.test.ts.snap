@@ -1,0 +1,263 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`text entry schema uses correct keys for recursive errors 1`] = `
+[ZodError: [
+  {
+    "code": "invalid_union",
+    "unionErrors": [
+      {
+        "issues": [
+          {
+            "code": "invalid_type",
+            "expected": "string",
+            "received": "object",
+            "path": [],
+            "message": "Expected string, received object"
+          }
+        ],
+        "name": "ZodError"
+      },
+      {
+        "issues": [
+          {
+            "code": "invalid_type",
+            "expected": "entries",
+            "received": "list",
+            "path": [
+              "type"
+            ],
+            "message": "Expected entries, received list"
+          },
+          {
+            "code": "invalid_type",
+            "expected": "string",
+            "received": "undefined",
+            "path": [
+              "name"
+            ],
+            "message": "Required"
+          },
+          {
+            "code": "invalid_type",
+            "expected": "array",
+            "received": "undefined",
+            "path": [
+              "entries"
+            ],
+            "message": "Required"
+          },
+          {
+            "code": "unrecognized_keys",
+            "keys": [
+              "items"
+            ],
+            "path": [],
+            "message": "Unrecognized key(s) in object: 'items'"
+          }
+        ],
+        "name": "ZodError"
+      },
+      {
+        "issues": [
+          {
+            "code": "invalid_union",
+            "unionErrors": [
+              {
+                "issues": [
+                  {
+                    "code": "invalid_type",
+                    "expected": "string",
+                    "received": "boolean",
+                    "path": [
+                      "items",
+                      1
+                    ],
+                    "message": "Expected string, received boolean"
+                  }
+                ],
+                "name": "ZodError"
+              },
+              {
+                "issues": [
+                  {
+                    "code": "invalid_type",
+                    "expected": "object",
+                    "received": "boolean",
+                    "path": [
+                      "items",
+                      1
+                    ],
+                    "message": "Expected object, received boolean"
+                  }
+                ],
+                "name": "ZodError"
+              },
+              {
+                "issues": [
+                  {
+                    "code": "invalid_type",
+                    "expected": "object",
+                    "received": "boolean",
+                    "path": [
+                      "items",
+                      1
+                    ],
+                    "message": "Expected object, received boolean"
+                  }
+                ],
+                "name": "ZodError"
+              },
+              {
+                "issues": [
+                  {
+                    "code": "invalid_type",
+                    "expected": "object",
+                    "received": "boolean",
+                    "path": [
+                      "items",
+                      1
+                    ],
+                    "message": "Expected object, received boolean"
+                  }
+                ],
+                "name": "ZodError"
+              },
+              {
+                "issues": [
+                  {
+                    "code": "invalid_type",
+                    "expected": "object",
+                    "received": "boolean",
+                    "path": [
+                      "items",
+                      1
+                    ],
+                    "message": "Expected object, received boolean"
+                  }
+                ],
+                "name": "ZodError"
+              }
+            ],
+            "path": [
+              "items",
+              1
+            ],
+            "message": "Invalid input"
+          }
+        ],
+        "name": "ZodError"
+      },
+      {
+        "issues": [
+          {
+            "code": "invalid_type",
+            "expected": "table",
+            "received": "list",
+            "path": [
+              "type"
+            ],
+            "message": "Expected table, received list"
+          },
+          {
+            "code": "invalid_type",
+            "expected": "array",
+            "received": "undefined",
+            "path": [
+              "colLabels"
+            ],
+            "message": "Required"
+          },
+          {
+            "code": "invalid_type",
+            "expected": "array",
+            "received": "undefined",
+            "path": [
+              "colStyles"
+            ],
+            "message": "Required"
+          },
+          {
+            "code": "invalid_type",
+            "expected": "array",
+            "received": "undefined",
+            "path": [
+              "rows"
+            ],
+            "message": "Required"
+          },
+          {
+            "code": "unrecognized_keys",
+            "keys": [
+              "items"
+            ],
+            "path": [],
+            "message": "Unrecognized key(s) in object: 'items'"
+          }
+        ],
+        "name": "ZodError"
+      },
+      {
+        "issues": [
+          {
+            "code": "invalid_type",
+            "expected": "cell",
+            "received": "list",
+            "path": [
+              "type"
+            ],
+            "message": "Expected cell, received list"
+          },
+          {
+            "code": "invalid_union",
+            "unionErrors": [
+              {
+                "issues": [
+                  {
+                    "code": "invalid_type",
+                    "expected": "object",
+                    "received": "undefined",
+                    "path": [
+                      "roll"
+                    ],
+                    "message": "Required"
+                  }
+                ],
+                "name": "ZodError"
+              },
+              {
+                "issues": [
+                  {
+                    "code": "invalid_type",
+                    "expected": "object",
+                    "received": "undefined",
+                    "path": [
+                      "roll"
+                    ],
+                    "message": "Required"
+                  }
+                ],
+                "name": "ZodError"
+              }
+            ],
+            "path": [
+              "roll"
+            ],
+            "message": "Invalid input"
+          },
+          {
+            "code": "unrecognized_keys",
+            "keys": [
+              "items"
+            ],
+            "path": [],
+            "message": "Unrecognized key(s) in object: 'items'"
+          }
+        ],
+        "name": "ZodError"
+      }
+    ],
+    "path": [],
+    "message": "Invalid input"
+  }
+]]
+`;
