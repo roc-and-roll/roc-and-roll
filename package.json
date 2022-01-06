@@ -14,8 +14,14 @@
     "test": "node --unhandled-rejections=strict --enable-source-maps node_modules/.bin/jest",
     "e2e-test:ci": "playwright test --forbid-only",
     "e2e-test": "   playwright test --update-snapshots",
-    "lint": "eslint --cache --ext .ts,.tsx,.js,.jsx src",
-    "format": "yarn run lint --fix",
+    "lint": "concurrently --names prettier,eslint,cspell --prefix-colors green,blue,yellow yarn:lint:prettier yarn:lint:eslint yarn:lint:cspell",
+    "format": "yarn format:prettier && yarn format:eslint && yarn format:cspell",
+    "lint:prettier": "  prettier --check .",
+    "format:prettier": "prettier --write .",
+    "lint:eslint": "  eslint --cache --cache-strategy content .",
+    "format:eslint": "eslint --cache --cache-strategy content . --fix",
+    "lint:cspell": "  cspell lint --no-progress --show-suggestions --no-must-find-files --cache --cache-strategy content",
+    "format:cpsell": "cspell lint --no-progress --show-suggestions --no-must-find-files --cache --cache-strategy content",
     "build": "concurrently --names client,server --prefix-colors blue,green yarn:build:client yarn:build:server",
     "build:client": "webpack --config webpack.client.js --env mode=production",
     "build:server": "webpack --config webpack.server.js --env mode=production && bash import-meta-url-hack.sh",
@@ -142,7 +148,6 @@
     "css-loader": "^6.2.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-react": "^7.26.1",
     "eslint-plugin-react-hooks": "alpha",
     "eslint-plugin-unused-imports": "^1.1.5",
@@ -226,11 +231,9 @@
     ]
   },
   "lint-staged": {
-    "src/**/*.{js,jsx,ts,tsx}": [
-      "eslint --cache --fix"
-    ],
     "*": [
-      "cspell lint --no-must-find-file"
+      "prettier --write --ignore-unknown --no-error-on-unmatched-pattern",
+      "eslint --cache --cache-strategy content --fix --no-error-on-unmatched-pattern"
     ]
   },
   "engines": {

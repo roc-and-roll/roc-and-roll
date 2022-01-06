@@ -9,9 +9,7 @@
       "request": "attach",
       "name": "Attach to Server",
       "restart": true,
-      "skipFiles": [
-        "<node_internals>/**"
-      ]
+      "skipFiles": ["<node_internals>/**"]
     },
     {
       "name": "Debug Tests",
@@ -26,10 +24,7 @@
       "internalConsoleOptions": "neverOpen",
       "port": 9229,
       "smartStep": true,
-      "skipFiles": [
-        "<node_internals>/**",
-        "node_modules/**"
-      ]
+      "skipFiles": ["<node_internals>/**", "node_modules/**"]
     },
     {
       "name": "[client][chrome] debug",
@@ -37,7 +32,7 @@
       "request": "launch",
       "url": "http://localhost:3001",
       "skipFiles": ["${workspaceRoot}/node_modules/**"],
-      "smartStep": true,
+      "smartStep": true
     },
     {
       "name": "[client][edge] debug",
@@ -45,7 +40,7 @@
       "request": "launch",
       "url": "http://localhost:3001",
       "skipFiles": ["${workspaceRoot}/node_modules/**"],
-      "smartStep": true,
+      "smartStep": true
     },
     {
       "name": "[client][firefox] debug",
@@ -56,7 +51,7 @@
       "reAttach": false,
       "pathMappings": [
         { "url": "webpack://roc-and-roll/./", "path": "${workspaceFolder}/" },
-        { "url": "webpack://roc-and-roll/",   "path": "${workspaceFolder}/" },
+        { "url": "webpack://roc-and-roll/", "path": "${workspaceFolder}/" }
       ]
     }
   ]

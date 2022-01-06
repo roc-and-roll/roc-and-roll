@@ -5,10 +5,7 @@
   "tasks": [
     {
       "label": "dev",
-      "dependsOn": [
-        "dev:server",
-        "dev:client"
-      ],
+      "dependsOn": ["dev:server", "dev:client"],
       "runOptions": {
         "runOn": "folderOpen"
       },
@@ -39,6 +36,6 @@
         "clear": true,
         "group": "dev"
       }
-    },
+    }
   ]
 }

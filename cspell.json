@@ -1,13 +1,7 @@
 {
   "language": "en",
   "useGitignore": true,
-  "dictionaries": [
-    "typescript",
-    "node",
-    "html",
-    "css",
-    "npm"
-  ],
+  "dictionaries": ["typescript", "node", "html", "css", "npm"],
   "words": [
     "bryc",
     "bufferutil",
@@ -70,9 +64,7 @@
     "vcxsrv",
     "xvfb"
   ],
-  "files": [
-    "**/*.{js,jsx,ts,tsx,html,md,css,scss,peggy}"
-  ],
+  "files": ["**/*.{js,jsx,ts,tsx,html,md,css,scss,peggy}"],
   "ignorePaths": [
     "third-party",
     "package.json",

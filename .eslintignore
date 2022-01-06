@@ -1,0 +1,33 @@
+# First, ignore everything, and then allowlist anything that's a directory
+# https://stackoverflow.com/a/9227991/2560557
+*
+!*/
+
+/.git
+/.yarn
+/dist
+/workspace
+/node_modules
+
+!/jest-setup.ts
+!/playwright.config.ts
+
+!/src/client/**/*.js
+!/src/client/**/*.jsx
+!/src/client/**/*.ts
+!/src/client/**/*.tsx
+
+!/src/server/**/*.js
+!/src/server/**/*.jsx
+!/src/server/**/*.ts
+!/src/server/**/*.tsx
+
+!/src/shared/**/*.js
+!/src/shared/**/*.jsx
+!/src/shared/**/*.ts
+!/src/shared/**/*.tsx
+
+!/src/e2e-tests/**/*.js
+!/src/e2e-tests/**/*.jsx
+!/src/e2e-tests/**/*.ts
+!/src/e2e-tests/**/*.tsx
