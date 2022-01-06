@@ -158,7 +158,6 @@ export function InitiativeHUD() {
   useEffect(() => {
     if (
       focusTokenOnTurnStart &&
-      myself.isGM &&
       currentRow &&
       currentRow.id !== lastRowId.current &&
       currentRow.type === "character"
@@ -166,13 +165,7 @@ export function InitiativeHUD() {
       setSelection(currentRow.characterIds);
     }
     lastRowId.current = currentRow?.id ?? null;
-  }, [
-    currentRow,
-    currentRowIndex,
-    focusTokenOnTurnStart,
-    myself.isGM,
-    setSelection,
-  ]);
+  }, [currentRow, currentRowIndex, focusTokenOnTurnStart, setSelection]);
 
   function findNextRow() {
     if (currentRowIndex < 0) {
