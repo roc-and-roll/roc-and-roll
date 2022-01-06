@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
+        browser: [chromium, firefox]
     steps:
     - name: Increase available file watchers
       # https://stackoverflow.com/a/59522493/2560557
@@ -57,4 +57,4 @@ jobs:
     - name: Install Playwright Browser
       run: yarn playwright install ${{ matrix.browser }}
     - name: Run e2e tests
-      run: yarn e2e-test:ci --browser=${{ matrix.browser }}
+      run: yarn e2e-test:ci --project=${{ matrix.browser }}

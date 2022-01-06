@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 import { GRID_SIZE } from "../shared/constants";
-import { uiTest } from "./rnrTest";
+import { uiTest } from "./uiTest";
 
 uiTest(`editing HP via HPInlineEdit`, async ({ page }) => {
   const CHARACTER_NAME = "My Character";
