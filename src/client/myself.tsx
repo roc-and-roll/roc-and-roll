@@ -69,9 +69,7 @@ export function useMySelectedCharacters<T extends (keyof RRCharacter)[]>(
   const myself = useMyProps("currentMap");
   const stateRef = useServerStateRef((state) => state);
 
-  const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom).filter(
-    Boolean
-  );
+  const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom);
 
   const [selectedCharacterIds, setSelectedCharacterIds] = useState<
     Set<RRCharacterID>
