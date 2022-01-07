@@ -624,24 +624,15 @@ export function useServerState<T>(
   selector: (state: SyncedState) => T,
   equalityFn?: (current: T, next: T) => boolean
 ): T {
-  const setSelectedStateRef = useRef<((state: T) => void) | null>(null);
-
   const selectedStateRef = useServerStateRef(
     selector,
-    (selectedState) => {
-      if (!setSelectedStateRef.current) {
-        // Should never happen.
-        throw new Error();
-      }
-      return setSelectedStateRef.current(selectedState);
-    },
+    (selectedState) => setSelectedState(selectedState),
     equalityFn
   );
 
   const [selectedState, setSelectedState] = useState<T>(
-    selectedStateRef.current
+    (): T => selectedStateRef.current
   );
-  setSelectedStateRef.current = setSelectedState;
 
   return selectedState;
 }
