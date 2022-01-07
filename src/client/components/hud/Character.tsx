@@ -1,5 +1,9 @@
 import React, { useState } from "react";
-import { conditionNames, RRCharacter } from "../../../shared/state";
+import {
+  conditionNames,
+  RRCharacter,
+  RRCharacterID,
+} from "../../../shared/state";
 import { useMyProps, useMySelectedCharacters } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import { CharacterPreview } from "../characters/CharacterPreview";
@@ -23,6 +27,7 @@ import { characterUpdate, playerUpdate } from "../../../shared/actions";
 import { conditionIcons } from "../characters/CharacterEditor";
 import { Popover } from "../Popover";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
+import { useDrag } from "react-dnd";
 
 const characterProps = [
   "id",
@@ -273,11 +278,7 @@ function CurrentCharacter({
       )}
       <div className="relative">
         {character ? (
-          <CharacterPreview
-            character={character}
-            size={128}
-            shouldDisplayShadow={false}
-          />
+          <DraggableCharacterPreview character={character} />
         ) : (
           <RRFontAwesomeIcon
             icon={faUserCircle}
@@ -297,6 +298,30 @@ function CurrentCharacter({
           <FontAwesomeIcon icon={faCog} />
         </div>
       </div>
+    </div>
+  );
+}
+
+function DraggableCharacterPreview({
+  character,
+}: {
+  character: RRCharacterProps;
+}) {
+  const [, dragRef] = useDrag<{ id: RRCharacterID }, void, null>(
+    () => ({
+      type: "token",
+      item: { id: character.id },
+    }),
+    [character.id]
+  );
+
+  return (
+    <div ref={dragRef} className="token-preview">
+      <CharacterPreview
+        character={character}
+        size={128}
+        shouldDisplayShadow={false}
+      />
     </div>
   );
 }
