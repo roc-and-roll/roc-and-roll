@@ -16,7 +16,7 @@ import {
 } from "./state";
 import useLocalState from "./useLocalState";
 
-const MyselfContext = React.createContext<{
+export const MyselfContext = React.createContext<{
   playerId: RRPlayerID | null;
   setMyPlayerId: (id: RRPlayerID) => void;
   forgetMyPlayerId: () => void;

@@ -6,6 +6,7 @@ import { useServerState } from "../../state";
 import { MapListEntry } from "../Maps";
 import { Popover } from "../Popover";
 import { RoughCircle, RoughText } from "../rough";
+import { RRMouseEvent } from "./MapObjectThatIsNotAToken";
 
 export const MAP_LINK_SIZE = GRID_SIZE / 2;
 
@@ -16,7 +17,7 @@ export function MapLink({
 }: {
   link: RRMapLink;
   canStartMoving: boolean;
-  onStartMove: (object: RRMapObject, event: React.MouseEvent) => void;
+  onStartMove: (object: RRMapObject, event: RRMouseEvent) => void;
 }) {
   const myself = useMyProps("id", "isGM");
   const canControl =

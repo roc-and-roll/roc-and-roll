@@ -1,4 +1,4 @@
-import React, { ImgHTMLAttributes, useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
   GRID_SIZE,
@@ -11,33 +11,35 @@ import {
   RRPoint,
   RRToken,
 } from "../../../shared/state";
-import {
-  RoughEllipse,
-  RoughRectangle,
-  RoughText,
-  RoughLinearPath,
-  RoughPolygon,
-} from "../rough";
 import { useServerDispatch } from "../../state";
 import { useLatest } from "../../useLatest";
 import tinycolor from "tinycolor2";
-import { assertNever } from "../../../shared/util";
 import { useRecoilValue } from "recoil";
 import { hoveredMapObjectsFamily } from "./Map";
 import { assetFamily, selectedMapObjectsFamily } from "./recoil";
-import { Popover } from "../Popover";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import { useMyProps } from "../../myself";
-import { SVGBlurHashImage } from "../blurHash/SVGBlurHashImage";
 import { pointEquals } from "../../../shared/point";
+import * as PIXI from "pixi.js";
+import { PRectangle } from "./Primitives";
+import { Container, PixiElement, Sprite } from "react-pixi-fiber";
+import { assetUrl } from "../../files";
 
-const CAN_CONTROL_STYLE = { cursor: "move" };
+export const colorValue = (color: string) =>
+  parseInt(tinycolor(color).toHex(), 16);
+
+export type RRMouseEvent = {
+  clientX: number;
+  clientY: number;
+  button: number;
+};
+
 const SELECTED_OR_HOVERED_STROKE_LINE_DASH = [GRID_SIZE / 10, GRID_SIZE / 10];
 
 export const MapObjectThatIsNotAToken = React.memo<{
   object: Exclude<RRMapObject, RRToken | RRMapLink>;
-  onStartMove: (object: RRMapObject, event: React.MouseEvent) => void;
+  onStartMove: (object: RRMapObject, event: RRMouseEvent) => void;
   mapId: RRMapID;
   canStartMoving: boolean;
 }>(function MapObjectThatIsNotAToken({
@@ -59,7 +61,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
     canStartMoving &&
     (myself.isGM || object.playerId === myself.id);
 
-  const onStartMoveRef = useLatest((e: React.MouseEvent) => {
+  const onStartMoveRef = useLatest((e: RRMouseEvent) => {
     onStartMove(object, e);
   });
 
@@ -68,24 +70,27 @@ export const MapObjectThatIsNotAToken = React.memo<{
   const sharedProps = {
     x: object.position.x,
     y: object.position.y,
-    style: canControl ? CAN_CONTROL_STYLE : undefined,
-    onMouseDown: useCallback(
-      (e: React.MouseEvent) => {
+    cursor: canControl ? "move" : undefined,
+    interactive: true,
+    mousedown: useCallback(
+      ({ data: { originalEvent: e } }: PIXI.InteractionEvent) => {
+        const event = e as MouseEvent;
         if (canControl) {
-          onStartMoveRef.current(e);
+          onStartMoveRef.current(event);
         }
-        clickPositionRef.current = { x: e.clientX, y: e.clientY };
+        clickPositionRef.current = { x: event.clientX, y: event.clientY };
       },
       [onStartMoveRef, canControl]
     ),
-    onMouseUp: useCallback(
-      (e: React.MouseEvent) => {
+    mouseup: useCallback(
+      ({ data: { originalEvent: e } }: PIXI.InteractionEvent) => {
+        const event = e as MouseEvent;
         if (
-          e.button === 2 &&
+          event.button === 2 &&
           clickPositionRef.current &&
           pointEquals(clickPositionRef.current, {
-            x: e.clientX,
-            y: e.clientY,
+            x: event.clientX,
+            y: event.clientY,
           }) &&
           canControl
         ) {
@@ -94,79 +99,68 @@ export const MapObjectThatIsNotAToken = React.memo<{
       },
       [canControl]
     ),
-    fill: isSelectedOrHovered
-      ? object.color
-      : tinycolor(object.color).setAlpha(0.3).toRgbString(),
-    stroke: object.color,
-    strokeLineDash: isSelectedOrHovered
-      ? SELECTED_OR_HOVERED_STROKE_LINE_DASH
-      : undefined,
-    seed: object.id,
+    fill: colorValue(
+      isSelectedOrHovered
+        ? object.color
+        : tinycolor(object.color).setAlpha(0.3).toHexString()
+    ),
+    stroke: colorValue(object.color),
   };
 
   const content = () => {
     switch (object.type) {
       case "rectangle":
         return (
-          <RoughRectangle
+          <PRectangle
             {...sharedProps}
-            w={object.size.x}
-            h={object.size.y}
+            width={object.size.x}
+            height={object.size.y}
           />
         );
-      case "ellipse":
-        return (
-          <RoughEllipse {...sharedProps} w={object.size.x} h={object.size.y} />
-        );
-      case "freehand":
-        return <RoughLinearPath {...sharedProps} points={object.points} />;
-      case "polygon":
-        return <RoughPolygon {...sharedProps} points={object.points} />;
-      case "text": {
-        const {
-          fill: _1,
-          stroke: _2,
-          strokeLineDash: _3,
-          seed: _4,
-          ...textProps
-        } = sharedProps;
-        return (
-          <RoughText {...textProps} fill={sharedProps.stroke}>
-            {object.text}
-          </RoughText>
-        );
-      }
+      default:
+        return null;
+      // case "ellipse":
+      //   return (
+      //     <PEllipse {...sharedProps} width={object.size.x} height={object.size.y} />
+      //   );
+      // case "freehand":
+      //   return <RoughLinearPath {...sharedProps} points={object.points} />;
+      // case "polygon":
+      //   return <RoughPolygon {...sharedProps} points={object.points} />;
+      // case "text": {
+      //   const {
+      //     fill: _1,
+      //     stroke: _2,
+      //     strokeLineDash: _3,
+      //     seed: _4,
+      //     ...textProps
+      //   } = sharedProps;
+      //   return (
+      //     <RoughText {...textProps} fill={sharedProps.stroke}>
+      //       {object.text}
+      //     </RoughText>
+      //   );
+      // }
       case "image": {
-        const {
-          strokeLineDash: _1,
-          seed: _2,
-          fill: _3,
-          stroke: _4,
-          ...imageProps
-        } = sharedProps;
+        const { fill: _, stroke: _1, ...imageProps } = sharedProps;
 
         return <MapObjectImage object={object} {...imageProps} />;
       }
-      default:
-        assertNever(object);
+      // default:
+      //   assertNever(object);
     }
   };
 
   return (
-    <Popover
-      content={<ObjectEditOptions object={object} mapId={mapId} />}
-      visible={editorVisible}
-      onClickOutside={() => setEditorVisible(false)}
-      interactive
-      placement="right"
-    >
-      <g
-        transform={`rotate(${object.rotation}, 0, 0)`}
-        style={{ transformBox: "fill-box", transformOrigin: "center" }}
-      >
-        {content()}
-      </g>
-    </Popover>
+    // <Popover
+    //   content={<ObjectEditOptions object={object} mapId={mapId} />}
+    //   visible={editorVisible}
+    //   onClickOutside={() => setEditorVisible(false)}
+    //   interactive
+    //   placement="right"
+    // >
+    <Container angle={object.rotation}>{content()}</Container>
+    /* </Popover> */
   );
 });
 
@@ -177,17 +171,23 @@ function MapObjectImage({
   object: RRMapDrawingImage;
   x: number;
   y: number;
-} & Omit<ImgHTMLAttributes<HTMLImageElement>, "width" | "height" | "src">) {
+} & Omit<PixiElement<Sprite>, "width" | "height" | "texture">) {
   const asset = useRecoilValue(assetFamily(object.imageAssetId));
 
   return asset?.type === "image" && asset.location.type === "local" ? (
-    <SVGBlurHashImage
-      image={asset}
+    <Sprite
+      {...rest}
       width={(asset.width / asset.height) * object.height}
       height={object.height}
-      {...rest}
+      texture={PIXI.Texture.from(assetUrl(asset))}
     />
-  ) : null;
+  ) : // <SVGBlurHashImage
+  //   image={asset}
+  //   width={(asset.width / asset.height) * object.height}
+  //   height={object.height}
+  //   {...rest}
+  // />
+  null;
 }
 
 function ObjectEditOptions({

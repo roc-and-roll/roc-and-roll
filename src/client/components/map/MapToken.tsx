@@ -32,7 +32,6 @@ import {
   isCharacterUnconsciousOrDead,
 } from "../../../shared/util";
 import { useMyProps } from "../../myself";
-import ReactDOM from "react-dom";
 import { HPInlineEdit } from "./HPInlineEdit";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { CURSOR_POSITION_SYNC_DEBOUNCE, hoveredMapObjectsFamily } from "./Map";
@@ -59,7 +58,10 @@ import { SmartIntegerInput } from "../ui/TextInput";
 import useRafLoop from "../../useRafLoop";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useHealthBarMeasurements } from "../../../client/util";
-import { SVGBlurHashImage } from "../blurHash/SVGBlurHashImage";
+import { PCircle, PRectangle } from "./Primitives";
+import * as PIXI from "pixi.js";
+import { Container, Text, Sprite } from "react-pixi-fiber";
+import { RRMouseEvent, colorValue } from "./MapObjectThatIsNotAToken";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
@@ -68,9 +70,7 @@ export const MapToken = React.memo<{
   mapId: RRMapID;
   object: RRToken;
   canStartMoving: boolean;
-  onStartMove: (o: RRMapObject, e: React.MouseEvent) => void;
-  auraArea: SVGGElement | null;
-  healthBarArea: SVGGElement | null;
+  onStartMove: (o: RRMapObject, e: RRMouseEvent) => void;
   zoom: number;
   contrastColor: string;
   smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
@@ -79,8 +79,6 @@ export const MapToken = React.memo<{
   object,
   canStartMoving,
   onStartMove,
-  auraArea,
-  healthBarArea: healthBarArea,
   zoom,
   contrastColor,
   smartSetTotalHP,
@@ -100,8 +98,6 @@ export const MapToken = React.memo<{
       object={object}
       canStartMoving={canStartMoving}
       onStartMove={onStartMove}
-      auraArea={auraArea}
-      healthBarArea={healthBarArea}
       zoom={zoom}
       contrastColor={contrastColor}
       smartSetTotalHP={smartSetTotalHP}
@@ -116,8 +112,6 @@ function MapTokenInner({
   object,
   canStartMoving,
   onStartMove,
-  auraArea,
-  healthBarArea,
   zoom,
   contrastColor,
   smartSetTotalHP,
@@ -127,9 +121,7 @@ function MapTokenInner({
   myself: Pick<RRPlayer, "id" | "isGM" | "characterIds">;
   object: RRToken;
   canStartMoving: boolean;
-  onStartMove: (o: RRMapObject, e: React.MouseEvent) => void;
-  auraArea: SVGGElement | null;
-  healthBarArea: SVGGElement | null;
+  onStartMove: (o: RRMapObject, e: RRMouseEvent) => void;
   zoom: number;
   contrastColor: string;
   smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
@@ -159,7 +151,7 @@ function MapTokenInner({
   const canControl = canStartMoving && canControlToken(character, myself);
 
   const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
+    (e: RRMouseEvent) => {
       if (e.button === 0) {
         onStartMove(objectRef.current, e);
       }
@@ -167,7 +159,7 @@ function MapTokenInner({
     },
     [onStartMove, objectRef]
   );
-  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+  const handleMouseUp = useCallback((e: RRMouseEvent) => {
     if (
       e.button === 2 &&
       firstMouseDownPos.current &&
@@ -218,14 +210,9 @@ function MapTokenInner({
   const fullTokenRepresentation = (
     position: RRPoint,
     isGhost = false,
-    ref: React.LegacyRef<SVGGElement> | undefined = undefined
+    ref: React.LegacyRef<Container> | undefined = undefined
   ) => (
-    <g
-      ref={ref}
-      transform={`translate(${position.x}, ${position.y}), rotate(${
-        object.rotation
-      }, ${tokenSize / 2}, ${tokenSize / 2})`}
-    >
+    <Container ref={ref} angle={object.rotation} x={position.x} y={position.y}>
       {isGhost ? (
         <TokenImageOrPlaceholder
           isGhost={true}
@@ -245,7 +232,7 @@ function MapTokenInner({
           handleMouseUp={handleMouseUp}
         />
       )}
-    </g>
+    </Container>
   );
 
   const [startAnimation, stopAnimation] = useRafLoop();
@@ -255,17 +242,14 @@ function MapTokenInner({
     }
     if (!ghostPosition.fade) {
       if (ghostTokenRef.current) {
-        ghostTokenRef.current.style.opacity = GHOST_OPACITY.toString();
+        ghostTokenRef.current.alpha = GHOST_OPACITY;
       }
       return;
     }
 
     startAnimation((amount) => {
       if (ghostTokenRef.current) {
-        ghostTokenRef.current.style.opacity = (
-          GHOST_OPACITY *
-          (1 - amount ** 3)
-        ).toString();
+        ghostTokenRef.current.alpha = GHOST_OPACITY * (1 - amount ** 3);
       }
       if (amount === 1) {
         setGhostPosition(null);
@@ -276,89 +260,84 @@ function MapTokenInner({
     };
   }, [ghostPosition, setGhostPosition, startAnimation, stopAnimation]);
 
-  const ghostTokenRef = useRef<SVGGElement>(null);
+  const ghostTokenRef = useRef<Container>(null);
 
   return (
     <>
       {ghostPosition &&
         fullTokenRepresentation(ghostPosition.position, true, ghostTokenRef)}
-      {auraArea &&
-        // we need to render the auras as the very first thing in the SVG so
-        // that they are located in the background and still allow users to
-        // interact with objects that would otherwise be beneath the auras
-        ReactDOM.createPortal(
-          character.auras.map((aura, i) => (
-            <Aura
-              key={i}
-              character={character}
-              aura={aura}
-              myself={myself}
-              x={x}
-              y={y}
-            />
-          )),
-          auraArea
-        )}
-      {healthBarArea &&
-        ReactDOM.createPortal(
-          <>
-            {isCharacterDead(character) && (
-              <DeadMarker x={x} y={y} scale={character.scale} />
-            )}
-            {canControl && character.maxHP > 0 && (
-              <g transform={`translate(${x},${y - 16})`}>
-                <HealthBar
-                  character={character}
-                  setHP={setHP}
-                  contrastColor={contrastColor}
-                />
-              </g>
-            )}
-            {isHighlighted && (
-              <RoughRectangle
-                x={x}
-                y={y}
-                w={tokenSize}
-                h={tokenSize}
-                stroke="orange"
-                fill="none"
-              />
-            )}
-            <g transform={`translate(${x},${y})`}>
-              <ConditionIcons
+      {character.auras.map((aura, i) => (
+        <Aura
+          key={i}
+          character={character}
+          aura={aura}
+          myself={myself}
+          x={x}
+          y={y}
+        />
+      ))}
+      {
+        <>
+          {isCharacterDead(character) && (
+            <DeadMarker x={x} y={y} scale={character.scale} />
+          )}
+          {canControl && character.maxHP > 0 && (
+            <g transform={`translate(${x},${y - 16})`}>
+              <HealthBar
                 character={character}
-                canControl={canControl}
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
+                setHP={setHP}
+                contrastColor={contrastColor}
               />
             </g>
-          </>,
-          healthBarArea
-        )}
-      {canControl ? (
-        <Popover
-          content={
-            <div onMouseDown={(e) => e.stopPropagation()}>
-              <CharacterEditor
-                isTemplate={false}
-                character={character}
-                wasJustCreated={false}
-                onNameFirstEdited={() => {}}
-                onClose={() => setEditorVisible(false)}
-              />
-              <MapTokenEditor mapId={mapId} token={object} />
-            </div>
-          }
-          visible={editorVisible}
-          onClickOutside={() => setEditorVisible(false)}
-          interactive
-          placement="right"
-        >
-          <g>{fullTokenRepresentation({ x, y })}</g>
-        </Popover>
-      ) : (
-        fullTokenRepresentation({ x, y })
-      )}
+          )}
+          {isHighlighted && (
+            <PRectangle
+              x={x}
+              y={y}
+              width={tokenSize}
+              height={tokenSize}
+              stroke={colorValue("orange")}
+              fill={0x000000}
+              alpha={0}
+            />
+          )}
+          <Container x={x} y={y}>
+            <ConditionIcons
+              character={character}
+              canControl={canControl}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
+            />
+          </Container>
+        </>
+      }
+      {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, no-constant-condition
+        false && canControl ? (
+          <Popover
+            content={
+              <div onMouseDown={(e) => e.stopPropagation()}>
+                <CharacterEditor
+                  isTemplate={false}
+                  character={character}
+                  wasJustCreated={false}
+                  onNameFirstEdited={() => {}}
+                  onClose={() => setEditorVisible(false)}
+                />
+                <MapTokenEditor mapId={mapId} token={object} />
+              </div>
+            }
+            visible={editorVisible}
+            onClickOutside={() => setEditorVisible(false)}
+            interactive
+            placement="right"
+          >
+            <g>{fullTokenRepresentation({ x, y })}</g>
+          </Popover>
+        ) : (
+          fullTokenRepresentation({ x, y })
+        )
+      }
     </>
   );
 }
@@ -377,15 +356,15 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
       isGhost: false;
       canControl: boolean;
       isSelectedOrHovered: boolean;
-      handleMouseDown: (e: React.MouseEvent) => void;
-      handleMouseUp: (e: React.MouseEvent) => void;
+      handleMouseDown: (e: RRMouseEvent) => void;
+      handleMouseUp: (e: RRMouseEvent) => void;
     }
   | { isGhost: true }
 )) {
   const tokenSize = GRID_SIZE * character.scale;
-  const extraSpace = tokenSize / 2;
   const canControl = props.isGhost ? false : props.canControl;
 
+  // TODO
   const tokenStyle = useMemo(
     () => ({
       ...(props.isGhost
@@ -398,10 +377,8 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
         : isCharacterOverHealed(character)
         ? { filter: "url(#tokenOverHealedShadow)" }
         : {}),
-      ...(canControl ? { cursor: "move" } : {}),
-      borderRadius: tokenSize / 2,
     }),
-    [character, tokenSize, canControl, props.isGhost]
+    [character, props.isGhost]
   );
 
   const asset = useRecoilValue(assetFamily(character.tokenImageAssetId));
@@ -409,59 +386,64 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
     return null;
   }
 
+  // TODO tokenstyle
   return (
     <>
-      <SVGBlurHashImage
-        onMouseDown={!props.isGhost ? props.handleMouseDown : undefined}
-        onMouseUp={!props.isGhost ? props.handleMouseUp : undefined}
-        tokenSize={extraSpace}
-        x={-extraSpace}
-        y={-extraSpace}
-        style={tokenStyle}
-        width={tokenSize + extraSpace * 2}
-        height={tokenSize + extraSpace * 2}
-        image={{
-          url: tokenImageUrl(character, asset, tokenSize * zoom),
-          blurHash: asset.blurHash,
-        }}
+      <Sprite
+        interactive={!props.isGhost}
+        cursor={canControl ? "move" : undefined}
+        mousedown={
+          props.isGhost
+            ? undefined
+            : (e) => props.handleMouseDown(e.data.originalEvent as MouseEvent)
+        }
+        width={tokenSize}
+        height={tokenSize}
+        mouseup={
+          props.isGhost
+            ? undefined
+            : (e) => props.handleMouseUp(e.data.originalEvent as MouseEvent)
+        }
+        texture={PIXI.Texture.from(
+          tokenImageUrl(character, asset, tokenSize * zoom)
+        )}
       />
 
       {!props.isGhost && props.isSelectedOrHovered && (
-        <circle
+        <PCircle
           // do not block pointer events
-          pointerEvents="none"
+          // TODO pointerEvents="none"
           cx={tokenSize / 2}
           cy={tokenSize / 2}
           r={tokenSize / 2 - character.scale * 1.5}
-          fill="transparent"
-          stroke={contrastColor}
-          strokeWidth={`${character.scale * 2.5 + 2}px`}
+          fill={0x000000}
+          alpha={0}
+          stroke={parseInt(tinycolor(contrastColor).toHex(), 16)}
+          strokeWidth={character.scale * 2.5 + 2}
         />
       )}
 
       {!props.isGhost && character.visibility !== "everyone" && (
         <>
           <title>only visible to GMs</title>
-          <RoughText
+          <Text
             // do not block pointer events
-            pointerEvents="none"
+            // TODO pointerEvents="none"
             x={tokenSize / 2}
             y={tokenSize / 2}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="red"
-            stroke="black"
-            strokeWidth={5}
-            paintOrder="stroke"
-            fontSize={`calc(1.2rem * ${tokenSize / GRID_SIZE})`}
-            fontWeight="bold"
-            transform={`rotate(-30, ${tokenSize / 2}, ${tokenSize / 2})`}
             style={{
-              letterSpacing: ".3rem",
+              fill: "red",
+              stroke: "black",
+              strokeThickness: 5,
+              fontSize: `calc(1.2rem * ${tokenSize / GRID_SIZE})`,
+              fontWeight: "bold",
+              letterSpacing: 6,
             }}
+            angle={-30}
+            anchor={{ x: 0.5, y: 0.5 }}
           >
             HIDDEN
-          </RoughText>
+          </Text>
         </>
       )}
     </>
@@ -475,8 +457,8 @@ const ConditionIcons = React.memo(function ConditionIcons({
   canControl,
 }: {
   character: RRCharacter;
-  onMouseDown: (e: React.MouseEvent) => void;
-  onMouseUp: (e: React.MouseEvent) => void;
+  onMouseDown: (e: RRMouseEvent) => void;
+  onMouseUp: (e: RRMouseEvent) => void;
   canControl: boolean;
 }) {
   const tinyIcons = character.conditions.length > 12;

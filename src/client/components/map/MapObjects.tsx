@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import { useRecoilValue } from "recoil";
 import {
   RRColor,
@@ -15,7 +14,10 @@ import { MapAreas } from "./Map";
 import { ToolButtonState } from "./MapContainer";
 import { mapObjectIdsAtom, mapObjectsFamily } from "./recoil";
 import { MapLink } from "./MapLink";
-import { MapObjectThatIsNotAToken } from "./MapObjectThatIsNotAToken";
+import {
+  MapObjectThatIsNotAToken,
+  RRMouseEvent,
+} from "./MapObjectThatIsNotAToken";
 import { MapToken } from "./MapToken";
 
 const HURT_SHADOW_BLUR_SIZE = 0.2;
@@ -57,10 +59,7 @@ export const MapObjects = React.memo<{
   zoom: number;
   mapId: RRMapID;
   smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
-  handleStartMoveMapObject: (
-    object: RRMapObject,
-    event: React.MouseEvent
-  ) => void;
+  handleStartMoveMapObject: (object: RRMapObject, event: RRMouseEvent) => void;
 }>(function MapObjects({
   areas,
   contrastColor,
@@ -75,7 +74,7 @@ export const MapObjects = React.memo<{
 
   return (
     <>
-      <defs>
+      {/* <defs>
         {makeBlinkingCharacterFilter("tokenHurtShadow", "4s", "red")}
         {makeBlinkingCharacterFilter(
           "tokenUnconsciousOrDeadShadow",
@@ -83,7 +82,7 @@ export const MapObjects = React.memo<{
           "red"
         )}
         {makeBlinkingCharacterFilter("tokenOverHealedShadow", "4s", "green")}
-      </defs>
+      </defs> */}
       {mapObjectIds.map((mapObjectId) => (
         <MapObjectWrapper
           key={mapObjectId}
@@ -105,7 +104,7 @@ export const MapObjects = React.memo<{
 const MapObjectWrapper = React.memo<{
   mapObjectId: RRMapObjectID;
   canStartMoving: boolean;
-  onStartMove: (object: RRMapObject, event: React.MouseEvent) => void;
+  onStartMove: (object: RRMapObject, event: RRMouseEvent) => void;
   areas: MapAreas;
   // additional parameters for tokens
   zoom: number;
@@ -130,53 +129,48 @@ const MapObjectWrapper = React.memo<{
 
   switch (mapObject.type) {
     case "image":
-      return ReactDOM.createPortal(
+      // TODO z-index
+      return (
         <MapObjectThatIsNotAToken
           mapId={mapId}
           object={mapObject}
           canStartMoving={canStartMoving}
           onStartMove={onStartMove}
-        />,
-        areas.imageArea
+        />
       );
     case "rectangle":
     case "ellipse":
     case "freehand":
     case "polygon":
     case "text":
-      return ReactDOM.createPortal(
+      return (
         <MapObjectThatIsNotAToken
           mapId={mapId}
           object={mapObject}
           canStartMoving={canStartMoving}
           onStartMove={onStartMove}
-        />,
-        areas.defaultArea
+        />
       );
     case "mapLink":
-      return ReactDOM.createPortal(
+      return (
         <MapLink
           link={mapObject}
           canStartMoving={canStartMoving}
           onStartMove={onStartMove}
-        />,
-        areas.tokenArea
+        />
       );
     case "token": {
-      return ReactDOM.createPortal(
+      return (
         <MapToken
           mapId={mapId}
           object={mapObject}
           canStartMoving={canStartMoving}
           onStartMove={onStartMove}
           // additional parameters for tokens
-          auraArea={areas.auraArea}
-          healthBarArea={areas.healthBarArea}
           zoom={zoom}
           contrastColor={contrastColor}
           smartSetTotalHP={smartSetTotalHP}
-        />,
-        areas.tokenArea
+        />
       );
     }
     default:

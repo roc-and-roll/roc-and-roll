@@ -224,7 +224,7 @@ const DEBUG = false as boolean;
 // To re-render components when a selected part of the state changes, the
 // useServerState hook subscribes and unsubscribes to state changes through the
 // context and uses useState internally.
-const ServerStateContext = React.createContext<{
+export const ServerStateContext = React.createContext<{
   subscribe: (subscriber: StateUpdateSubscriber) => void;
   unsubscribe: (subscriber: StateUpdateSubscriber) => void;
   subscribeToOptimisticUpdateExecuted: (
@@ -259,11 +259,12 @@ const ServerStateContext = React.createContext<{
     discard: () => {},
   }),
 });
+
 ServerStateContext.displayName = "ServerStateContext";
 
 type ReconnectionAttemptSubscriber = () => void;
 
-const ServerConnectionContext = React.createContext<{
+export const ServerConnectionContext = React.createContext<{
   connected: boolean;
   subscribeToReconnectAttempts: (
     subscriber: ReconnectionAttemptSubscriber
