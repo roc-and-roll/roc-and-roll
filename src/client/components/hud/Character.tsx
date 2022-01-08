@@ -88,7 +88,14 @@ function LimitedUse({ character }: { character: RRCharacterProps }) {
   return (
     <div>
       {character.limitedUseSkills.map((skill, index) => {
-        return <p key={index}>{skill.name}</p>;
+        return (
+          <div key={index} className="flex">
+            {skill.name}
+            <div className="text-right flex-grow">
+              {skill.currentUseCount} / {skill.maxUseCount}
+            </div>
+          </div>
+        );
       })}
     </div>
   );
