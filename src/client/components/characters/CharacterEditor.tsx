@@ -261,8 +261,10 @@ export function CharacterEditor({
       <Collapsible title="Hit Point Editor">
         <HPEditor character={character} updateFunc={updateFunc} />
       </Collapsible>
-      <Collapsible title="Character Editor" defaultCollapsed={true}>
+      <Collapsible title="Stats & Proficiencies" defaultCollapsed={true}>
         <CharacterSheetEditor character={character} isTemplate={isTemplate} />
+      </Collapsible>
+      <Collapsible title="Skills" defaultCollapsed={true}>
         <LimitedUseSkillEditor character={character} />
       </Collapsible>
       <Collapsible title="Auras" defaultCollapsed={true}>

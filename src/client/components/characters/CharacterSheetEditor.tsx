@@ -342,20 +342,14 @@ function StatEditor({
   return (
     <div className={"stat-editor"}>
       <p>{name}</p>
-      <p style={{ fontSize: "24px" }}>
+      <p className="text-2xl">
         {value === null
           ? "-"
           : modifier(value) >= 1
           ? `+${modifier(value)}`
           : modifier(value)}
       </p>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+      <div className="flex items-center justify-center">
         <div onClick={() => updateValue((value) => (value ?? 0) - 1)}>
           <FontAwesomeIcon
             fixedWidth

@@ -195,11 +195,11 @@ export function Auras({
           >
             Delete Aura
           </Button>
-          <hr style={{ marginBottom: 0 }} />
+          <hr className="mb-0" />
         </div>
       ))}
       <Button
-        style={{ minWidth: "60px", display: "block", margin: "0 auto" }}
+        className="w-16 block my-0 mx-auto"
         onClick={() => {
           setAuras((old) => [
             ...old,
