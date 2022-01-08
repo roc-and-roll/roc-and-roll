@@ -34,7 +34,6 @@ export const LimitedUseSkillEditor = React.memo<{
           character.id
         ]?.limitedUseSkills;
 
-      console.log(oldSkills);
       if (oldSkills === undefined) {
         return [];
       }
