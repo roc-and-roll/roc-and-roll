@@ -87,11 +87,22 @@
     "@typescript-eslint/prefer-optional-chain": "warn",
     "@typescript-eslint/prefer-nullish-coalescing": "warn",
     "no-restricted-properties": [
-      2,
+      "error",
       {
         "object": "z",
         "property": "object",
         "message": "Please use z.strictObject() instead. If you want to allow additional arbitrary properties (you likely don't), use z.strictObject({ /* ... */ }).passthrough()."
+      }
+    ],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "CallExpression[callee.name='useDrag'][arguments.length!=2]",
+        "message": "Please use exactly two arguments with useDrag. The first argument should be a function, and the second argument should be a dependency array similar to useEffect."
+      },
+      {
+        "selector": "CallExpression[callee.name='useDrop'][arguments.length!=2]",
+        "message": "Please use exactly two arguments with useDrop. The first argument should be a function, and the second argument should be a dependency array similar to useEffect."
       }
     ]
   },
