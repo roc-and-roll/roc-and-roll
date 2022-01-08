@@ -252,23 +252,26 @@ function CharacterList({
     { files: File[] },
     void,
     { nativeFileHovered: boolean }
-  >(() => ({
-    accept: addCharacter ? [NativeTypes.FILE] : [],
-    drop: (item) => {
-      void (async () => {
-        if (addCharacter !== false) {
-          const uploadedFiles = await uploadFiles(item.files, "image");
-          uploadedFiles.forEach((uploadedFile) => {
-            addCharacter(uploadedFile);
-          });
-        }
-      })();
-    },
-    collect: (monitor) => ({
-      nativeFileHovered:
-        monitor.canDrop() && monitor.getItemType() === NativeTypes.FILE,
+  >(
+    () => ({
+      accept: addCharacter ? [NativeTypes.FILE] : [],
+      drop: (item) => {
+        void (async () => {
+          if (addCharacter !== false) {
+            const uploadedFiles = await uploadFiles(item.files, "image");
+            uploadedFiles.forEach((uploadedFile) => {
+              addCharacter(uploadedFile);
+            });
+          }
+        })();
+      },
+      collect: (monitor) => ({
+        nativeFileHovered:
+          monitor.canDrop() && monitor.getItemType() === NativeTypes.FILE,
+      }),
     }),
-  }));
+    [addCharacter]
+  );
 
   return (
     <div className="token-list" ref={dropRef}>
@@ -303,10 +306,13 @@ const EditableCharacterPreview = React.memo(function EditableCharacterPreview({
   wasJustCreated: boolean;
   isTemplate?: boolean;
 }) {
-  const [, dragRef] = useDrag<{ id: RRCharacterID }, void, null>(() => ({
-    type: isTemplate ? "tokenTemplate" : "token",
-    item: { id: character.id },
-  }));
+  const [, dragRef] = useDrag<{ id: RRCharacterID }, void, null>(
+    () => ({
+      type: isTemplate ? "tokenTemplate" : "token",
+      item: { id: character.id },
+    }),
+    [isTemplate, character.id]
+  );
 
   const [selected, setSelected] = useState(wasJustCreated);
 
