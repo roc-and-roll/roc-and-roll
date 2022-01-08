@@ -1,18 +1,18 @@
 {
-	// See http://go.microsoft.com/fwlink/?LinkId=827846 to learn about workspace recommendations.
-	// Extension identifier format: ${publisher}.${name}. Example: vscode.csharp
+  // See http://go.microsoft.com/fwlink/?LinkId=827846 to learn about workspace recommendations.
+  // Extension identifier format: ${publisher}.${name}. Example: vscode.csharp
 
-	// List of extensions which should be recommended for users of this workspace.
-	"recommendations": [
-		"firefox-devtools.vscode-firefox-debug",
-		"ryanluker.vscode-coverage-gutters",
-		"dbaeumer.vscode-eslint",
-		"bradlc.vscode-tailwindcss",
-		"peggyjs.peggy-language",
-	],
-	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
-	"unwantedRecommendations": [
-		"esbenp.prettier-vscode",
-		"msjsdiag.debugger-for-chrome",
-	],
+  // List of extensions which should be recommended for users of this workspace.
+  "recommendations": [
+    "firefox-devtools.vscode-firefox-debug",
+    "ryanluker.vscode-coverage-gutters",
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "ms-playwright.playwright",
+    "peggyjs.peggy-language",
+    "streetsidesoftware.code-spell-checker",
+    "esbenp.prettier-vscode"
+  ],
+  // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
+  "unwantedRecommendations": ["msjsdiag.debugger-for-chrome"]
 }

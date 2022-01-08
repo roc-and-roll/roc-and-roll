@@ -1,7 +1,7 @@
 import { AbstractMigration } from "../migrations";
 
 export default class extends AbstractMigration {
-  version = 25;
+  version = 28;
 
   migrate = (state: any) => {
     Object.values(

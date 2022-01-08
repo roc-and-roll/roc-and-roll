@@ -104,7 +104,7 @@ export const CharacterSheetEditor = React.memo<{
           />
         ))}
         <AttributeEditor
-          value={character.AC}
+          value={character.ac}
           label={"AC"}
           minimum={0}
           onChange={(newAC) => {
@@ -112,10 +112,10 @@ export const CharacterSheetEditor = React.memo<{
               actions: [
                 updateFunc({
                   id: character.id,
-                  changes: { AC: newAC },
+                  changes: { ac: newAC },
                 }),
               ],
-              optimisticKey: `AC`,
+              optimisticKey: `ac`,
               syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
             }));
           }}
@@ -158,8 +158,8 @@ function ProficiencyEditor({
   const dispatch = useServerDispatch();
   const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
 
-  function getIcon(proficiency: keyof typeof proficiencyValues | undefined) {
-    return proficiency === 0 || proficiency === undefined
+  function getIcon(proficiency: keyof typeof proficiencyValues | null) {
+    return proficiency === 0 || proficiency === null
       ? faEmptyCircle
       : proficiency === 0.5
       ? faAdjust
@@ -170,10 +170,9 @@ function ProficiencyEditor({
 
   function calculateModifierWithProficiency(
     baseStat: typeof characterStatNames[number],
-    proficiency: typeof proficiencyValues[number] | undefined
+    proficiency: typeof proficiencyValues[number] | null
   ) {
-    return character.stats[baseStat] === null ||
-      character.stats[baseStat] === undefined
+    return character.stats[baseStat] === null
       ? 0
       : modifierFromStat(character.stats[baseStat]!) +
           Math.floor(
@@ -182,11 +181,11 @@ function ProficiencyEditor({
   }
 
   function changeProficiencyInSavingThrow(
-    proficiency: typeof proficiencyValues[number] | undefined,
+    proficiency: typeof proficiencyValues[number] | null,
     stat: typeof characterStatNames[number]
   ) {
     const newValue =
-      proficiency === undefined
+      proficiency === null
         ? 0.5
         : proficiencyValues[(proficiencyValues.indexOf(proficiency) + 1) % 4]!;
     dispatch((state) => {
@@ -214,7 +213,7 @@ function ProficiencyEditor({
     });
   }
   function changeProficiencyInSkill(
-    proficiency: typeof proficiencyValues[number] | undefined,
+    proficiency: typeof proficiencyValues[number] | null,
     skill: typeof skillNames[number]
   ) {
     const newValue =
@@ -247,8 +246,7 @@ function ProficiencyEditor({
   return (
     <div>
       {characterStatNames.map((stat) => {
-        const proficiency: 0 | 0.5 | 1 | 2 | undefined =
-          character.savingThrows[stat];
+        const proficiency = character.savingThrows[stat];
         return (
           <div key={stat} className="proficiencies">
             <Button
@@ -268,8 +266,7 @@ function ProficiencyEditor({
       })}
       <hr />
       {skillNames.map((skill) => {
-        const proficiency: typeof proficiencyValues[number] | undefined =
-          character.skills[skill];
+        const proficiency = character.skills[skill];
         const stat = skillMap[skill];
         return (
           <div key={skill} className="proficiencies">
@@ -300,7 +297,7 @@ function StatEditor({
   character,
   isTemplate,
 }: {
-  name: string;
+  name: typeof characterStatNames[number];
   character: RRCharacter;
   isTemplate: boolean | undefined;
 }) {

@@ -107,7 +107,7 @@ const Dice: React.FC<
   };
 
   const faceRotations = useMemo(() => {
-    // props.numFaces === 6 && console.log( "my aray", faceRotationsFrom(props.geometry!, props.numFaces));
+    // props.numFaces === 6 && console.log( "my array", faceRotationsFrom(props.geometry!, props.numFaces));
     return faceRotationsFrom(props.geometry!, props.numFaces).map((v) =>
       new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), v)
     );

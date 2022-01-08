@@ -21,7 +21,7 @@ export function evaluateDiceTemplatePart(
         roll({
           ...part,
           // click on none, is advantage --> none
-          // click on disadvatage, is none --> disadvantage
+          // click on disadvantage, is none --> disadvantage
           // click on none, is none --> none
           modified: part.faces !== 20 ? "none" : modified,
         }),
@@ -88,17 +88,14 @@ export function getModifierForTemplate(
   let returnValue = 0;
 
   template.parts.map((part) => {
-    if (part.type === "modifier") returnValue += part.number;
-    else if (character) {
-      if (part.type === "linkedProficiency")
+    if (part.type === "modifier") {
+      returnValue += part.number;
+    } else if (character) {
+      if (part.type === "linkedProficiency") {
         returnValue +=
           part.proficiency * (character.attributes["proficiency"] ?? 0);
-      else if (part.type === "linkedStat") {
-        if (
-          character.stats[part.name] === null ||
-          character.stats[part.name] === undefined
-        )
-          return;
+      } else if (part.type === "linkedStat") {
+        if (character.stats[part.name] === null) return;
         returnValue += modifierFromStat(character.stats[part.name]!);
       }
     }

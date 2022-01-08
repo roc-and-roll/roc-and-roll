@@ -6,13 +6,13 @@ import {
   RRAssetImage,
   RRPlayerID,
 } from "../../../shared/state";
-import { isTabletopAudioAsset } from "../../../shared/tabletopaudio";
+import { isTabletopAudioAsset } from "../../../shared/tabletopAudio";
 import { useConfirm } from "../../dialog-boxes";
 import { assetUrl } from "../../files";
 import { mapDeleteImmutably, mapSetImmutably } from "../../immutable-helpers";
 import { useMyProps } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
-import { BlurhashImage } from "../blurhash/BlurhashImage";
+import { BlurHashImage } from "../blurHash/BlurHashImage";
 import { GMArea } from "../GMArea";
 import { Button } from "../ui/Button";
 import { Select } from "../ui/Select";
@@ -148,7 +148,7 @@ export const AssetLibrary = React.memo(function AssetLibrary() {
         {entries(assets)
           .filter(
             (asset) =>
-              !isTabletopAudioAsset(asset) &&
+              !isTabletopAudioAsset.safeParse(asset).success &&
               (assetTypeFilter === "all" || asset.type === assetTypeFilter) &&
               (imageTypeFilter === "all" ||
                 asset.type !== "image" ||
@@ -182,7 +182,7 @@ function Asset({
           const height = Math.min(asset.height, MAX_HEIGHT);
 
           return (
-            <BlurhashImage
+            <BlurHashImage
               image={asset}
               width={asset.width * (height / asset.height)}
               height={height}

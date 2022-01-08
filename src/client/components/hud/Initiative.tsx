@@ -1,5 +1,11 @@
 import clsx from "clsx";
-import React, { useDeferredValue, useEffect, useState } from "react";
+import React, {
+  useContext,
+  useDeferredValue,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Flipped, Flipper } from "react-flip-toolkit";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 import {
@@ -8,7 +14,9 @@ import {
   entries,
   InitiativeTrackerSyncedState,
   RRCharacter,
+  RRCharacterID,
   RRInitiativeTrackerEntry,
+  RRInitiativeTrackerEntryID,
   RRMapObject,
   RRMultipleRoll,
   RRPlayer,
@@ -25,12 +33,17 @@ import {
 } from "../../../shared/actions";
 import { EMPTY_ARRAY, isCharacterDead } from "../../../shared/util";
 import { useMyProps } from "../../myself";
-import { useServerDispatch, useServerState } from "../../state";
+import {
+  useServerDispatch,
+  useServerState,
+  useServerStateRef,
+} from "../../state";
 import { useLatest } from "../../useLatest";
 import { CharacterStack } from "../characters/CharacterPreview";
 import {
   highlightedCharactersFamily,
   selectedMapObjectIdsAtom,
+  selectedMapObjectsFamily,
 } from "../map/recoil";
 import { canControlToken } from "../../permissions";
 import { Button } from "../ui/Button";
@@ -47,6 +60,12 @@ import { rollInitiative, diceResult } from "../../dice-rolling/roll";
 import useLocalState from "../../useLocalState";
 import { usePrompt } from "../../dialog-boxes";
 import ReactDOM from "react-dom";
+import { translate } from "transformation-matrix";
+import { useRRSettings } from "../../settings";
+import {
+  SetTargetTransformContext,
+  ViewPortSizeRefContext,
+} from "../map/MapContainer";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -88,6 +107,65 @@ export function InitiativeHUD() {
     !!currentRow && canEditEntry(currentRow, myself, characterCollection);
 
   const dispatch = useServerDispatch();
+
+  const mapObjectsRef = useServerStateRef(
+    (state) =>
+      state.maps.entities[myself.currentMap]?.objects ?? EMPTY_ENTITY_COLLECTION
+  );
+  const viewPortSizeRef = useContext(ViewPortSizeRefContext);
+  const setTargetTransform = useContext(SetTargetTransformContext);
+  const setSelection = useRecoilCallback(
+    ({ snapshot, set, reset }) =>
+      (characterIds: RRCharacterID[]) => {
+        const tokens = characterIds.flatMap(
+          (characterId) =>
+            entries(mapObjectsRef.current).find(
+              (o) => o.type === "token" && o.characterId === characterId
+            ) ?? []
+        );
+        const ids = tokens.map((t) => t.id);
+        const currentIds = snapshot
+          .getLoadable(selectedMapObjectIdsAtom)
+          .getValue();
+        if (
+          (tokens.length > 0 && ids.length !== currentIds.length) ||
+          ids.some((id) => !currentIds.includes(id))
+        ) {
+          if (canEdit) {
+            snapshot
+              .getLoadable(selectedMapObjectIdsAtom)
+              .getValue()
+              .forEach((id) => reset(selectedMapObjectsFamily(id)));
+            set(selectedMapObjectIdsAtom, ids);
+            ids.map((id) => set(selectedMapObjectsFamily(id), true));
+          }
+          const size = viewPortSizeRef.current;
+          setTargetTransform(
+            translate(
+              -tokens[0]!.position.x + size.x / 2,
+              -tokens[0]!.position.y + size.y / 2
+            )
+          );
+        }
+      },
+    [canEdit, mapObjectsRef, viewPortSizeRef, setTargetTransform]
+  );
+
+  const lastRowId = useRef<RRInitiativeTrackerEntryID | null>(null);
+
+  const focusTokenOnTurnStart = useRRSettings()[0].focusTokenOnTurnStart;
+
+  useEffect(() => {
+    if (
+      focusTokenOnTurnStart &&
+      currentRow &&
+      currentRow.id !== lastRowId.current &&
+      currentRow.type === "character"
+    ) {
+      setSelection(currentRow.characterIds);
+    }
+    lastRowId.current = currentRow?.id ?? null;
+  }, [currentRow, currentRowIndex, focusTokenOnTurnStart, setSelection]);
 
   function findNextRow() {
     if (currentRowIndex < 0) {

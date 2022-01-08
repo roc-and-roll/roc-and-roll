@@ -17,7 +17,7 @@
     "sourceMap": true,
     "jsx": "react",
     "baseUrl": "./",
-    "typeRoots": ["src/shared/types", "./node_modules/@types"],
+    "typeRoots": ["src/shared/types", "./node_modules/@types"]
   },
   "include": [
     "./jest-setup.ts",
@@ -25,6 +25,6 @@
     "src/client/**/*",
     "src/server/**/*",
     "src/shared/**/*",
-    "src/e2e-tests/**/*",
-  ],
+    "src/e2e-tests/**/*"
+  ]
 }

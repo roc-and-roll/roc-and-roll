@@ -32,7 +32,7 @@ export default class extends AbstractMigration {
       originalFunction,
       playerId,
 
-      blurhash: image.blurhash,
+      blurhash: image.blurhash, //cspell: disable-line
       width: image.width,
       height: image.height,
     };

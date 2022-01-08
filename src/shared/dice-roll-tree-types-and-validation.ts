@@ -1,12 +1,15 @@
-import * as t from "typanion";
+import * as z from "zod";
 import { assert, IsExact } from "conditional-type-checks";
-import { damageTypes } from "./state";
+import { damageTypesWithoutNull } from "./state";
 
-export const isDamageType = t.isObject({
-  type: t.isEnum(damageTypes),
+export const isDamageType = z.strictObject({
+  // z.enum only works with strings, therefore we cannot use `damageTypes`
+  // and instead use `damageTypesWithoutNull` and make it nullable after the
+  // fact.
+  type: z.enum(damageTypesWithoutNull).nullable(),
 });
 
-export type RRDamageType = t.InferType<typeof isDamageType>;
+export type RRDamageType = z.infer<typeof isDamageType>;
 
 export type DiceRollTree<WithResults extends true | false> =
   DRTPartExpression<WithResults>;
@@ -54,108 +57,78 @@ export interface DRTPartNegated<WithResults extends true | false>
 
 const __isDRTPartExpression = <WithResults extends true | false>(
   withResults: WithResults
-) =>
-  t.makeValidator({
-    test: (value, state): value is DRTPartExpression<WithResults> =>
-      isDRTPartExpression(withResults)(value, state),
-  });
+): z.ZodSchema<DRTPartExpression<WithResults>> =>
+  z.lazy(() => isDRTPartExpression(withResults));
 
 const isDRTPartParens = <WithResults extends true | false>(
   withResults: WithResults
 ) =>
-  t.isObject({
-    type: t.isLiteral("parens"),
+  z.strictObject({
+    type: z.literal("parens"),
     inner: __isDRTPartExpression(withResults),
   });
-
-const isDRTPartNum = t.isObject({
-  type: t.isLiteral("num"),
-  value: t.isNumber(),
+const isDRTPartNum = z.strictObject({
+  type: z.literal("num"),
+  value: z.number(),
   damage: isDamageType,
 });
-
 const isDRTPartDice = <WithResults extends true | false>(
   withResults: WithResults
-) =>
-  t.applyCascade(
-    t.isObject({
-      type: t.isLiteral("dice"),
-      count: t.isNumber(),
-      results: t.makeValidator({
-        test: (
-          value,
-          state
-        ): value is WithResults extends true ? number[] : "not-yet-rolled" =>
-          withResults
-            ? t.isArray(t.isNumber())(value, state)
-            : t.isLiteral("not-yet-rolled")(value, state),
-      }),
-      modified: t.isEnum(["none", "advantage", "disadvantage"] as const),
-      faces: t.applyCascade(t.isNumber(), [t.isInteger(), t.isAtLeast(1)]),
-      damage: isDamageType,
-    }),
-    [
-      // Validate that count === results.length
-      t.makeValidator<Record<string, unknown>>({
-        test: (dicePart, state) => {
-          if (!withResults) {
-            return true;
-          }
-          if (
-            !("results" in dicePart) ||
-            !("count" in dicePart) ||
-            !Array.isArray(dicePart["results"])
-          ) {
-            return false;
-          }
+): z.ZodSchema<DRTPartDice<WithResults>> => {
+  const baseSchema = z.strictObject({
+    type: z.literal("dice"),
+    count: z.number(),
+    modified: z.enum(["none", "advantage", "disadvantage"]),
+    faces: z.number().int().min(1),
+    damage: isDamageType,
+  });
+  if (!withResults) {
+    const schema: z.ZodSchema<DRTPartDice<false>> = baseSchema.extend({
+      results: z.literal("not-yet-rolled"),
+    });
+    return schema as any;
+  } else {
+    const schema: z.ZodSchema<DRTPartDice<true>> = baseSchema
+      .extend({ results: z.array(z.number()) })
+      .superRefine((dicePart, ctx) => {
+        if (dicePart["results"].length !== dicePart["count"]) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `A rolled dice part should have exactly as many dice roll results as its dice count (count = ${dicePart["count"]}, results = ${dicePart.results.length})`,
+            path: ["results"],
+          });
+        }
+      });
 
-          if (dicePart["results"].length === dicePart["count"]) {
-            return true;
-          }
-
-          return t.pushError(
-            state,
-            `A rolled dicepart should have exactly as many dice roll results as its dice count (count = ${String(
-              dicePart["count"]
-            )}, results = ${String(dicePart["results"].length)})`
-          );
-        },
-      }),
-    ]
-  );
+    return schema as any;
+  }
+};
 
 const isDRTPartNegated = <WithResults extends true | false>(
   withResults: WithResults
 ) =>
-  t.isObject({
-    type: t.isLiteral("negated"),
+  z.strictObject({
+    type: z.literal("negated"),
     inner: __isDRTPartExpression(withResults),
   });
-
 const isDRTPartTerm = <WithResults extends true | false>(
   withResults: WithResults
 ) =>
-  t.isObject({
-    type: t.isLiteral("term"),
-    operator: t.isEnum(["*", "/", "+", "-"] as const),
-    operands: t.applyCascade(t.isArray(__isDRTPartExpression(withResults)), [
-      t.hasMinLength(2),
-    ]),
+  z.strictObject({
+    type: z.literal("term"),
+    operator: z.enum(["*", "/", "+", "-"] as const),
+    operands: z.array(__isDRTPartExpression(withResults)).min(2),
   });
-
 const isDRTPartExpression = <WithResults extends true | false>(
   withResults: WithResults
 ) =>
-  t.isOneOf(
-    [
-      isDRTPartTerm(withResults),
-      isDRTPartParens(withResults),
-      isDRTPartNegated(withResults),
-      isDRTPartDice(withResults),
-      isDRTPartNum,
-    ],
-    { exclusive: true }
-  );
+  z.union([
+    isDRTPartTerm(withResults),
+    isDRTPartParens(withResults),
+    isDRTPartNegated(withResults),
+    isDRTPartDice(withResults),
+    isDRTPartNum,
+  ]);
 
 export const isDiceRollTree = isDRTPartExpression;
 
@@ -164,8 +137,8 @@ const isDiceRollTreeWithResults = isDiceRollTree(true);
 
 // Make sure that the schema really matches the DiceRollTree type.
 assert<
-  IsExact<t.InferType<typeof isDiceRollTreeWithoutResults>, DiceRollTree<false>>
+  IsExact<z.infer<typeof isDiceRollTreeWithoutResults>, DiceRollTree<false>>
 >(true);
-assert<
-  IsExact<t.InferType<typeof isDiceRollTreeWithResults>, DiceRollTree<true>>
->(true);
+assert<IsExact<z.infer<typeof isDiceRollTreeWithResults>, DiceRollTree<true>>>(
+  true
+);

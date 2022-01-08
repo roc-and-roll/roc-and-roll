@@ -1,5 +1,6 @@
 import React, {
   useCallback,
+  useContext,
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
@@ -31,7 +32,12 @@ import {
   RRMapRevealedAreas,
 } from "../../../shared/state";
 import { canControlMapObject } from "../../permissions";
-import { RRPlayerToolProps, ToolButtonState } from "./MapContainer";
+import {
+  RRPlayerToolProps,
+  SetViewPortSizeContext,
+  ToolButtonState,
+  ViewPortSizeContext,
+} from "./MapContainer";
 import {
   mapObjectIdsAtom,
   mapObjectsFamily,
@@ -43,6 +49,7 @@ import tinycolor from "tinycolor2";
 import {
   makePoint,
   pointAdd,
+  pointDistance,
   pointScale,
   snapPointToGrid,
 } from "../../../shared/point";
@@ -61,15 +68,33 @@ import { useLatest } from "../../useLatest";
 import { useGesture } from "react-use-gesture";
 import { RRMessage, useServerMessages } from "../../serverMessages";
 import { getPathWithNewPoint } from "./mapHelpers";
+import useRafLoop from "../../useRafLoop";
 
 type Rectangle = [number, number, number, number];
+
+const easeInOutCubic = (t: number) =>
+  t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+const lerp = (a: number, b: number, t: number) => {
+  return (b - a) * t + a;
+};
+
+const lerpMatrix = (x: Matrix, y: Matrix, t: number) => {
+  return {
+    a: lerp(x.a, y.a, t),
+    b: lerp(x.b, y.b, t),
+    c: lerp(x.c, y.c, t),
+    d: lerp(x.d, y.d, t),
+    e: lerp(x.e, y.e, t),
+    f: lerp(x.f, y.f, t),
+  };
+};
 
 export type MapAreas = {
   imageArea: SVGGElement;
   auraArea: SVGGElement;
   defaultArea: SVGGElement;
   tokenArea: SVGGElement;
-  healthbarArea: SVGGElement;
+  healthBarArea: SVGGElement;
 };
 
 const PANNING_BUTTON = 2;
@@ -165,6 +190,7 @@ const RRMapViewWithRef = React.forwardRef<
   {
     myself: RRPlayerToolProps;
     mapId: RRMapID;
+    targetTransform: Matrix;
     gridEnabled: boolean;
     gridColor: RRColor;
     backgroundColor: RRColor;
@@ -185,6 +211,7 @@ const RRMapViewWithRef = React.forwardRef<
   {
     myself,
     mapId,
+    targetTransform,
     gridEnabled,
     gridColor,
     backgroundColor,
@@ -213,6 +240,37 @@ const RRMapViewWithRef = React.forwardRef<
   // rendered transform.
   const [transform, setTransform] = useRecoilState(mapTransformAtom);
   const transformRef = useLatest(transform);
+
+  const [rafStart, rafStop] = useRafLoop();
+
+  useEffect(() => {
+    const duration = Math.max(
+      600,
+      (1000 *
+        pointDistance(
+          { x: targetTransform.e, y: targetTransform.f },
+          { x: transformRef.current.e, y: transformRef.current.f }
+        )) /
+        GRID_SIZE /
+        55
+    );
+    rafStart((progress) => {
+      if (progress === 1) {
+        setTransform(targetTransform);
+      } else {
+        setTransform(
+          lerpMatrix(
+            transformRef.current,
+            targetTransform,
+            easeInOutCubic(progress)
+          )
+        );
+      }
+    }, duration);
+    return () => {
+      rafStop();
+    };
+  }, [targetTransform, transformRef, rafStart, rafStop, setTransform]);
 
   const { subscribe, unsubscribe } = useServerMessages();
   useEffect(() => {
@@ -322,7 +380,7 @@ const RRMapViewWithRef = React.forwardRef<
           // updated to reflect the value set during the last frame (since React
           // can batch multiple setState() calls, particularly if the browser is
           // very busy).
-          // Instead use the ref, which is guranteed to have been updated.
+          // Instead use the ref, which is guaranteed to have been updated.
           x: x - dragLastMouseRef.current.x,
           y: y - dragLastMouseRef.current.y,
         };
@@ -689,23 +747,24 @@ transform,
   const [auraArea, setAuraArea] = useState<SVGGElement | null>(null);
   const [defaultArea, setDefaultArea] = useState<SVGGElement | null>(null);
   const [tokenArea, setTokenArea] = useState<SVGGElement | null>(null);
-  const [healthbarArea, setHealthbarArea] = useState<SVGGElement | null>(null);
+  const [healthBarArea, setHealthBarArea] = useState<SVGGElement | null>(null);
 
   const areas = useMemo(
     () =>
-      imageArea && auraArea && defaultArea && tokenArea && healthbarArea
+      imageArea && auraArea && defaultArea && tokenArea && healthBarArea
         ? {
             imageArea,
             auraArea,
             defaultArea,
             tokenArea,
-            healthbarArea,
+            healthBarArea: healthBarArea,
           }
         : null,
-    [imageArea, auraArea, defaultArea, tokenArea, healthbarArea]
+    [imageArea, auraArea, defaultArea, tokenArea, healthBarArea]
   );
 
-  const [viewPortSize, setViewPortSize] = useState(() => makePoint(0));
+  const viewPortSize = useContext(ViewPortSizeContext);
+  const setViewPortSize = useContext(SetViewPortSizeContext);
 
   useEffect(() => {
     if (!svgRef.current) {
@@ -736,7 +795,7 @@ transform,
     resizeObserver.observe(svgRef.current.parentElement!);
 
     return () => resizeObserver.disconnect();
-  }, []);
+  }, [setViewPortSize]);
 
   const bind = useGesture({
     onDrag: (e) => {
@@ -780,15 +839,9 @@ transform,
           <g ref={setImageArea} />
           <g ref={setAuraArea} />
           <g ref={setDefaultArea} />
-          {gridEnabled && (
-            <MapGrid
-              transform={transform}
-              viewPortSize={viewPortSize}
-              color={gridColor}
-            />
-          )}
+          {gridEnabled && <MapGrid transform={transform} color={gridColor} />}
           <g ref={setTokenArea} />
-          <g ref={setHealthbarArea} />
+          <g ref={setHealthBarArea} />
 
           {areas && (
             <MapObjects
@@ -802,11 +855,7 @@ transform,
             />
           )}
 
-          <FogOfWar
-            transform={transform}
-            viewportSize={viewPortSize}
-            revealedAreas={revealedAreas}
-          />
+          <FogOfWar transform={transform} revealedAreas={revealedAreas} />
 
           {withSelectionAreaDo(
             selectionArea,

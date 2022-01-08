@@ -7,7 +7,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React, { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
-import ReactDOM from "react-dom";
 import {
   logEntryDiceRollAdd,
   playerAddDiceTemplate,
@@ -195,7 +194,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
 
   return (
     <div
-      className={clsx("dice-templates")}
+      className="dice-templates p-2"
       onContextMenu={(e) => {
         e.preventDefault();
         doRoll();
@@ -205,16 +204,25 @@ export const DiceTemplates = React.memo(function DiceTemplates({
         setSelectedTemplates([]);
       }}
     >
-      {selectedTemplates.length > 0 &&
-        ReactDOM.createPortal(
-          <div className="dice-template-roll-hints">
+      {templatesEditable && <DicePicker />}
+
+      <div className="flex mb-2">
+        <Button
+          title="Edit/Add Templates"
+          onClick={() => setTemplatesEditable((b) => !b)}
+        >
+          <FontAwesomeIcon icon={faEdit} />
+        </Button>
+        <div className="grow"></div>
+        {selectedTemplates.length > 0 && (
+          <>
             <Button
               onClick={() => {
                 doRoll();
                 setSelectedTemplates([]);
               }}
             >
-              Roll the Dice!
+              Roll!
             </Button>
             <Button
               onClick={() => {
@@ -222,50 +230,40 @@ export const DiceTemplates = React.memo(function DiceTemplates({
                 setSelectedTemplates([]);
               }}
             >
-              Roll a Crit!
+              Crit!
             </Button>
-            <em>Or right-click the pane to roll</em>
-          </div>,
-          document.body
+          </>
         )}
-      <div style={{ width: "100%" }}>
-        <div style={{ display: "flex" }}>
-          <Button
-            style={{ width: "28px" }}
-            onClick={() => setTemplatesEditable((b) => !b)}
+      </div>
+      <div
+        className="dice-templates-container grid grid-cols-2 gap-2"
+        ref={dropRef}
+      >
+        {category.templates.map((template) => (
+          <DiceTemplatePartMenuWrapper
+            categoryId={category.id}
+            key={template.id}
+            template={template}
+            part={{
+              id: rrid<RRDiceTemplatePart>(),
+              type: "template",
+              template,
+            }}
+            isTopLevel={true}
           >
-            <FontAwesomeIcon icon={faEdit} />
-          </Button>
-        </div>
-        {templatesEditable && <DicePicker />}
-
-        <div className="dice-templates-container" ref={dropRef}>
-          {category.templates.map((template) => (
-            <DiceTemplatePartMenuWrapper
+            <DiceTemplate
               categoryId={category.id}
-              key={template.id}
+              onRoll={(templates, modified, event) =>
+                clickedTemplates(templates, event, modified)
+              }
+              newIds={newIds}
               template={template}
-              part={{
-                id: rrid<RRDiceTemplatePart>(),
-                type: "template",
-                template,
-              }}
-              isTopLevel={true}
-            >
-              <DiceTemplate
-                categoryId={category.id}
-                onRoll={(templates, modified, event) =>
-                  clickedTemplates(templates, event, modified)
-                }
-                newIds={newIds}
-                template={template}
-                selectedTemplateIds={selectedTemplates}
-                editable={templatesEditable}
-                isChildTemplate={false}
-              />
-            </DiceTemplatePartMenuWrapper>
-          ))}
-        </div>
+              selectedTemplateIds={selectedTemplates}
+              editable={templatesEditable}
+              isChildTemplate={false}
+            />
+          </DiceTemplatePartMenuWrapper>
+        ))}
       </div>
     </div>
   );
@@ -278,12 +276,10 @@ export const GeneratedDiceTemplates = React.memo(
     templates: RRDiceTemplate[];
   }) {
     return (
-      <div className="generated-dice-templates-container">
-        {templates.map((template) => {
-          return (
-            <GeneratedDiceTemplate key={template.id} template={template} />
-          );
-        })}
+      <div className="grid grid-cols-2 gap-2 p-2">
+        {templates.map((template) => (
+          <GeneratedDiceTemplate key={template.id} template={template} />
+        ))}
       </div>
     );
   }
@@ -537,6 +533,7 @@ function PickerDiceTemplatePart({
 }
 
 const DiceTemplate = React.memo(function DiceTemplate({
+  className,
   template,
   categoryId,
   newIds,
@@ -545,6 +542,7 @@ const DiceTemplate = React.memo(function DiceTemplate({
   editable,
   isChildTemplate,
 }: {
+  className?: string;
   template: RRDiceTemplate;
   categoryId: RRDiceTemplateCategoryID;
   newIds: React.MutableRefObject<RRDiceTemplateID[]>;
@@ -689,13 +687,17 @@ const DiceTemplate = React.memo(function DiceTemplate({
           onRoll([template], defaultModified, e);
         }
       }}
-      onMouseEnter={(e) => setExpanded(true)}
-      onMouseLeave={(e) => setExpanded(false)}
-      className={clsx("dice-template", {
-        created: template,
-        selected: selectionCount > 0,
-        expanded: expanded,
-      })}
+      onMouseEnter={() => setExpanded(true)}
+      onMouseLeave={() => setExpanded(false)}
+      className={clsx(
+        "dice-template",
+        {
+          created: template,
+          selected: selectionCount > 0,
+          expanded: expanded,
+        },
+        className
+      )}
     >
       {selectionCount > 1 && (
         <div className="dice-template-selection-count">{selectionCount}</div>
@@ -1289,6 +1291,7 @@ const DiceTemplatePart = React.forwardRef<
     case "template":
       content = (
         <DiceTemplate
+          className="ml-1"
           onRoll={(templates, modified, event) =>
             onRoll(templates, modified, event)
           }

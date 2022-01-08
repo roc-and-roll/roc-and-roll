@@ -141,7 +141,7 @@ export function CharacterEditor({
         assetImageUpdate({
           id: character.tokenImageAssetId,
           changes: {
-            blurhash: image.blurhash,
+            blurHash: image.blurHash,
             width: image.width,
             height: image.height,
             location: {
@@ -396,8 +396,8 @@ function HPEditor({
       </div>
       <div>
         <small>
-          you can also edit hp by clicking on the hp in the healthbar of your
-          token on the map
+          You can also edit HP by clicking on the HP in the health bar of your
+          token on the map.
         </small>
       </div>
       <div>

@@ -90,4 +90,24 @@ Object {
   "type": "negated",
 }
 `);
+
+  expect(parseDiceString("+ 42")).toMatchInlineSnapshot(`
+Object {
+  "damage": Object {
+    "type": null,
+  },
+  "type": "num",
+  "value": 42,
+}
+`);
+
+  expect(parseDiceString("+ 42.1337")).toMatchInlineSnapshot(`
+Object {
+  "damage": Object {
+    "type": null,
+  },
+  "type": "num",
+  "value": 42.1337,
+}
+`);
 });

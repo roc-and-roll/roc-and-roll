@@ -1,10 +1,11 @@
-import * as t from "typanion";
+import * as z from "zod";
 import type { Dispatch } from "redux";
 import type { IterableElement, ValueOf } from "type-fest";
 import { assertNever, rrid } from "./util";
 import { isSyncedState, RRDiceTemplate } from "./validation";
 import { LAST_MIGRATION_VERSION } from "./constants";
 import { RRDamageType } from "./dice-roll-tree-types-and-validation";
+import { assert, IsExact } from "conditional-type-checks";
 
 export type MakeRRID<K extends string> = `RRID/${K}/${string}`;
 
@@ -68,7 +69,7 @@ export type RRFileImage = RRFileBase & {
   type: "image";
   width: number;
   height: number;
-  blurhash: string;
+  blurHash: string;
 };
 
 export type RRFileOther = RRFileBase & {
@@ -211,7 +212,27 @@ export type RRLogEntryAchievement = Extract<
 
 export const characterAttributeNames = ["proficiency", "initiative"] as const;
 
+assert<
+  IsExact<
+    keyof RRCharacter["attributes"],
+    typeof characterAttributeNames[number]
+  >
+>(true);
+
+// TODO: zod does not yet allow us to use the more concise
+// `z.enum(proficiencyValues)` (only works for strings).
+export const isProficiencyValue = z.union([
+  z.literal(0),
+  z.literal(0.5),
+  z.literal(1),
+  z.literal(2),
+]);
+
 export const proficiencyValues = [0, 0.5, 1, 2] as const;
+
+assert<
+  IsExact<z.infer<typeof isProficiencyValue>, typeof proficiencyValues[number]>
+>(true);
 
 export const skillMap: Record<
   typeof skillNames[number],
@@ -258,6 +279,8 @@ export const skillNames = [
   "Persuasion",
 ] as const;
 
+assert<IsExact<keyof RRCharacter["skills"], typeof skillNames[number]>>(true);
+
 export const characterStatNames = [
   "STR",
   "DEX",
@@ -266,6 +289,14 @@ export const characterStatNames = [
   "WIS",
   "CHA",
 ] as const;
+
+assert<IsExact<keyof RRCharacter["stats"], typeof characterStatNames[number]>>(
+  true
+);
+
+assert<
+  IsExact<keyof RRCharacter["savingThrows"], typeof characterStatNames[number]>
+>(true);
 
 export type RRDiceTemplatePartTemplate = Extract<
   IterableElement<RRDiceTemplate["parts"]>,
@@ -344,10 +375,12 @@ export const userCategoryIcons = [
   "wrench",
 ] as const;
 
-export const categoryIcons = [...userCategoryIcons, ...fixedCategoryIcons];
+export const categoryIcons = [
+  ...userCategoryIcons,
+  ...fixedCategoryIcons,
+] as const;
 
-export const damageTypes = [
-  null,
+export const damageTypesWithoutNull = [
   "slashing",
   "piercing",
   "bludgeoning",
@@ -362,6 +395,8 @@ export const damageTypes = [
   "force",
   "psychic",
 ] as const;
+
+export const damageTypes = [null, ...damageTypesWithoutNull] as const;
 
 export const colorForDamageType = (type: RRDamageType["type"]) => {
   switch (type) {
@@ -480,7 +515,7 @@ export type EphemeralSyncedState = SyncedState["ephemeral"];
 
 export type RRGlobalSettings = SyncedState["globalSettings"];
 
-export type SyncedState = t.InferType<typeof isSyncedState>;
+export type SyncedState = z.infer<typeof isSyncedState>;
 
 export function makeDefaultMap() {
   return {

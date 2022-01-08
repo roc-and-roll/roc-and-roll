@@ -6,8 +6,5 @@
     "lib": ["es2020"],
     "noEmit": false
   },
-  "include": [
-    "src/server/**/*",
-    "src/shared/**/*"
-  ]
+  "include": ["src/server/**/*", "src/shared/**/*"]
 }

@@ -1,5 +1,6 @@
+import clsx from "clsx";
 import React, { useEffect, useRef, useState } from "react";
-import { SmartTextInput } from "../ui/TextInput";
+import { TextInput } from "../ui/TextInput";
 
 export function HPInlineEdit({
   hp,
@@ -35,7 +36,7 @@ export function HPInlineEdit({
     return true;
   };
 
-  // if HP changes from the outside, update the input field with the new HP
+  // if HP change from the outside, update the input field with the new HP
   useEffect(() => {
     setLocalHP(hp.toString());
   }, [hp]);
@@ -43,9 +44,16 @@ export function HPInlineEdit({
   const ignoreBlurRef = useRef(false);
 
   return (
-    <SmartTextInput
+    // This MUST NOT be a SmartTextInput - it interferes with the assumption of
+    // this component that the value in `localHP` correctly reflects the value
+    // of the text input before `onBlur()` is executed. Maybe we should look
+    // into whether this is something that can be fixed by modifying
+    // `useFieldWithSmartOnChangeTransitions`. Regardless, this component
+    // wouldn't really benefit from a SmartTextInput anyway, since it only
+    // triggers potentially costly state updates on blur and 'Enter'.
+    <TextInput
       ref={ref}
-      className={"hp-inline-edit " + (className ?? "")}
+      className={clsx("hp-inline-edit", className)}
       placeholder="HP"
       type="text"
       value={localHP}
@@ -68,10 +76,9 @@ export function HPInlineEdit({
       }}
       onFocus={() => ref.current?.select()}
       onBlur={() => {
-        // Only update the hp if blur is not caused by the manual call to blur()
-        // in the keydown handler (isTrusted = false). Otherwise, we call
-        // updateHP twice, once in the keydown handler and once in the blur
-        // handler.
+        // Only update the HP if blur is not caused by the manual call to blur()
+        // in the keydown handler. Otherwise, we would call updateHP twice, once
+        // in the keydown handler and once in the blur handler.
         if (ignoreBlurRef.current) {
           ignoreBlurRef.current = false;
           return;

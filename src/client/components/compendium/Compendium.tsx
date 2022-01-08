@@ -1,7 +1,6 @@
 import React, { useCallback, useContext } from "react";
 import { rrid } from "../../../shared/util";
 import { useAlert } from "../../dialog-boxes";
-import { useGuranteedMemo } from "../../useGuranteedMemo";
 import useLocalState from "../../useLocalState";
 import { FileInput } from "../FileInput";
 import { Button } from "../ui/Button";
@@ -11,6 +10,7 @@ import {
   isCompendiumData,
 } from "./types";
 import sjson from "secure-json-parse";
+import { useGuaranteedMemo } from "../../useGuaranteedMemo";
 
 const CompendiumContext = React.createContext<{
   sources: CompendiumSource[];
@@ -48,7 +48,7 @@ export function CompendiumProvider({
     [setSources]
   );
 
-  const ctx = useGuranteedMemo(
+  const ctx = useGuaranteedMemo(
     () => ({
       sources,
       addSource,
@@ -85,7 +85,7 @@ export function Compendium() {
               multiple
               onChange={async (e) => {
                 const files = Array.from(e.target.files ?? []);
-                const jsons = await Promise.all(
+                const fileContents = await Promise.all(
                   files.map(async (file) => {
                     try {
                       const json = sjson.parse(await file.text());
@@ -102,20 +102,20 @@ export function Compendium() {
                 );
 
                 await Promise.all(
-                  jsons.map(async ([fileName, json]) => {
-                    const errors: string[] = [];
-                    if (isCompendiumData(json, { errors })) {
+                  fileContents.map(async ([fileName, json]) => {
+                    const validationResult = isCompendiumData.safeParse(json);
+                    if (validationResult.success) {
                       addSource({
                         id: rrid<CompendiumSource>(),
                         title: fileName,
-                        data: json,
+                        data: validationResult.data,
                         meta: "",
                       });
                     } else {
-                      console.error({ json, errors });
+                      console.error({ json, error: validationResult.error });
                       await alert(
                         `Invalid data in file ${fileName}\n\n` +
-                          errors.join("\n")
+                          validationResult.error.message
                       );
                     }
                   })

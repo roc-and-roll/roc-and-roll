@@ -26,10 +26,10 @@ import {
   SyncedStateAction,
 } from "../shared/state";
 import { mapGetAndSetIfMissing, mergeDeep, rrid } from "../shared/util";
-import { useGuranteedMemo } from "./useGuranteedMemo";
 import { useLatest } from "./useLatest";
 import sjson from "secure-json-parse";
 import { measureTime } from "./debug";
+import { useGuaranteedMemo } from "./useGuaranteedMemo";
 
 type DeduplicationKey = Opaque<string, "optimisticDeduplicationKey">;
 
@@ -316,7 +316,7 @@ function ServerConnectionProvider({
     []
   );
 
-  const ctx = useGuranteedMemo(
+  const ctx = useGuaranteedMemo(
     () => ({
       connected,
       subscribeToReconnectAttempts,
@@ -624,24 +624,15 @@ export function useServerState<T>(
   selector: (state: SyncedState) => T,
   equalityFn?: (current: T, next: T) => boolean
 ): T {
-  const setSelectedStateRef = useRef<((state: T) => void) | null>(null);
-
   const selectedStateRef = useServerStateRef(
     selector,
-    (selectedState) => {
-      if (!setSelectedStateRef.current) {
-        // Should never happen.
-        throw new Error();
-      }
-      return setSelectedStateRef.current(selectedState);
-    },
+    (selectedState) => setSelectedState(selectedState),
     equalityFn
   );
 
   const [selectedState, setSelectedState] = useState<T>(
-    selectedStateRef.current
+    (): T => selectedStateRef.current
   );
-  setSelectedStateRef.current = setSelectedState;
 
   return selectedState;
 }
@@ -737,7 +728,7 @@ export function useServerDispatch() {
     useContext(ServerStateContext);
   const socketRef = useLatest(socket);
 
-  const dispatcherKey = useGuranteedMemo(
+  const dispatcherKey = useGuaranteedMemo(
     () => rrid<{ id: OptimisticActionApplierDispatcherKey }>(),
     []
   );

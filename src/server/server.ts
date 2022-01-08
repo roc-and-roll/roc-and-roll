@@ -9,7 +9,7 @@ import { ephemeralPlayerUpdate } from "../shared/actions";
 import { setupArgs } from "./setupArgs";
 import { isSyncedState } from "../shared/validation";
 import { setupInitialState } from "./setupInitialState";
-import { setupTabletopAudioTrackSync } from "./setupTabletopaudio";
+import { setupTabletopAudioTrackSync } from "./setupTabletopAudio";
 import { batchActions } from "redux-batched-actions";
 import { assertFFprobeIsInstalled } from "./files";
 import { extractForOneShot } from "./extractForOneShot";
@@ -53,9 +53,9 @@ void (async () => {
 
   if (process.env.NODE_ENV !== "production") {
     store.subscribe(() => {
-      const errors: string[] = [];
-      if (!isSyncedState(store.getState(), { errors })) {
-        errors.forEach((error) => console.error(error));
+      const validationResult = isSyncedState.safeParse(store.getState());
+      if (!validationResult.success) {
+        console.error(validationResult.error);
         console.error(`
 #############################################
 #############################################

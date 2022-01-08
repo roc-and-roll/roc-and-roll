@@ -1,4 +1,4 @@
-import * as t from "typanion";
+import * as z from "zod";
 import { SyncedState } from "../shared/state";
 import { EMPTY_ENTITY_COLLECTION } from "../shared/state";
 import fs from "fs";
@@ -35,7 +35,7 @@ class StateInvalidRecoverableError extends StateInvalidError {
 }
 
 class StateValidationFailedError extends StateInvalidRecoverableError {
-  constructor(public readonly validationErrors: string[], state: unknown) {
+  constructor(public readonly validationError: z.ZodError, state: unknown) {
     super("The current state does not pass validation.", state);
   }
 }
@@ -70,18 +70,19 @@ export async function setupInitialState(
   return state;
 }
 
-const isWithVersion = t.isObject(
-  { version: t.isOptional(isStateVersion) },
-  { extra: t.isUnknown() }
-);
+const isWithVersion = z.strictObject({ version: isStateVersion }).passthrough();
+
+const isWithOptionalVersion = z
+  .strictObject({ version: z.optional(isStateVersion) })
+  .passthrough();
 
 async function loadAndMigrateState(
   statePath: string,
   uploadedFilesDir: string
 ): Promise<SyncedState | undefined> {
-  let state;
+  let stateJSON;
   try {
-    state = sjson.parse(fs.readFileSync(statePath, { encoding: "utf-8" }));
+    stateJSON = sjson.parse(fs.readFileSync(statePath, { encoding: "utf-8" }));
   } catch (err) {
     throw new StateInvalidError(
       `Error while parsing the JSON file at ${statePath}.`,
@@ -89,7 +90,10 @@ async function loadAndMigrateState(
     );
   }
 
-  if (!isWithVersion(state)) {
+  let state;
+  try {
+    state = isWithOptionalVersion.parse(stateJSON);
+  } catch (error) {
     throw new StateInvalidError(
       `The state does not have a valid migration version`
     );
@@ -126,17 +130,15 @@ async function loadAndMigrateState(
 
       try {
         console.info(`Running migration for version ${migration.version}.`);
-        state = await migration.migrate(state, uploadedFilesDir);
-        if (
-          !t.isObject(
-            { version: t.isUnknown() },
-            { extra: t.isUnknown() }
-          )(state)
-        ) {
+        const validationResult = isWithVersion.safeParse(
+          await migration.migrate(state, uploadedFilesDir)
+        );
+        if (!validationResult.success) {
           throw new Error(
             `The migration did not return an object with a .version key.`
           );
         }
+        state = validationResult.data;
         state.version = migration.version;
       } catch (err) {
         throw new StateInvalidError(
@@ -155,18 +157,18 @@ async function loadAndMigrateState(
     console.info("Migrations finished successfully.");
   }
 
-  const errors: string[] = [];
-  if (!isSyncedState(state, { errors })) {
-    throw new StateValidationFailedError(errors, state);
+  const validationResult = isSyncedState.safeParse(state);
+  if (!validationResult.success) {
+    throw new StateValidationFailedError(validationResult.error, state);
   }
-  return state;
+  return validationResult.data;
 }
 
 async function recoverFromStateInvalidError(error: StateInvalidError) {
   console.error(error.message);
 
   if (error instanceof StateValidationFailedError) {
-    error.validationErrors.forEach((error) => console.error(error));
+    console.error(error.validationError.message);
   }
 
   console.error(`

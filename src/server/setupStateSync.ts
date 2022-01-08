@@ -9,7 +9,7 @@ import {
 } from "../shared/state";
 import { ephemeralPlayerAdd, ephemeralPlayerRemove } from "../shared/actions";
 import { throttled } from "../shared/util";
-import * as t from "typanion";
+import * as z from "zod";
 import { isRRID } from "../shared/validation";
 import {
   SOCKET_PATCH_STATE,
@@ -28,16 +28,16 @@ type AdditionalSocketData = {
   lastState: SyncedState | null;
 };
 
-const isREDUX_ACTION = t.isObject({
-  actions: t.isArray(
-    t.isObject({
-      type: t.isString(),
-      payload: t.isUnknown(),
-      meta: t.isOptional(t.isUnknown()),
-      error: t.isOptional(t.isUnknown()),
+const isREDUX_ACTION = z.strictObject({
+  actions: z.array(
+    z.strictObject({
+      type: z.string(),
+      payload: z.unknown(),
+      meta: z.optional(z.unknown()),
+      error: z.optional(z.unknown()),
     })
   ),
-  optimisticUpdateId: t.isNullable(isRRID<OptimisticUpdateID>()),
+  optimisticUpdateId: z.nullable(isRRID<OptimisticUpdateID>()),
 });
 
 export const setupStateSync = (
@@ -183,12 +183,17 @@ export const setupStateSync = (
     socket.on(
       SOCKET_DISPATCH_ACTION,
       (msg: unknown, sendResponse: (r: string) => void) => {
-        if (!isREDUX_ACTION(msg)) {
-          console.warn("Received unsupported message from client.", msg);
+        const validationResult = isREDUX_ACTION.safeParse(msg);
+        if (!validationResult.success) {
+          console.warn(
+            "Received unsupported message from client.",
+            msg,
+            validationResult.error.message
+          );
           return;
         }
 
-        const { optimisticUpdateId, actions } = msg;
+        const { optimisticUpdateId, actions } = validationResult.data;
 
         // log("actions", actions);
 

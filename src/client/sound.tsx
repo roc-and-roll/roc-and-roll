@@ -186,17 +186,19 @@ export function useRRComplexSound(
           onpause: () => setState("paused"),
           onstop: () => setState("stopped"),
           onend: () => setState("stopped"),
-          onloaderror: () => setState("error"),
+          onloaderror: () => setState("error"), //cspell: disable-line
           onload: () => {
             setLoadingSounds((loadingSounds) =>
               setDeleteImmutably(loadingSounds, id)
             );
             _play();
           },
+          //cspell: disable-next-line
           onplayerror: () => {
             // https://github.com/goldfire/howler.js/#mobilechrome-playback
             setState("error-needs-unlock");
           },
+          //cspell: disable-next-line
           onunlock: () => {
             _play();
           },

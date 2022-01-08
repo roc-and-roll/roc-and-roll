@@ -2,3 +2,7 @@
 . "$(dirname "$0")/_/husky.sh"
 
 npx lint-staged
+# Sadly cspell ignores the files configued in .cspell.json when lint-staged
+# passes it a file name. This causes cspell to check files we do not want it
+# to check.
+yarn lint:cspell

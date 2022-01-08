@@ -137,7 +137,7 @@ export function useSmartChangeHP(myselfIsGM: boolean) {
                 </DialogTitle>
                 <DialogContent>
                   <p>
-                    Do you want to mark this character as dead or unconcious?
+                    Do you want to mark this character as dead or unconscious?
                   </p>
                 </DialogContent>
                 <DialogActions>
@@ -198,8 +198,11 @@ export function useSmartChangeHP(myselfIsGM: boolean) {
   );
 }
 
-export function useHealthbarMeasurements(
-  character: RRCharacter,
+export function useHealthBarMeasurements(
+  character: Pick<
+    RRCharacter,
+    "hp" | "maxHP" | "maxHPAdjustment" | "temporaryHP"
+  >,
   width: number
 ) {
   const adjustedMaxHP = character.maxHP + character.maxHPAdjustment;
@@ -289,9 +292,9 @@ export function modifierFromStat(statValue: number): number {
 }
 
 export function getProficiencyValueString(
-  proficiency: keyof typeof proficiencyValues | undefined
+  proficiency: keyof typeof proficiencyValues | null
 ) {
-  return proficiency === 0 || proficiency === undefined
+  return proficiency === 0 || proficiency === null
     ? "Not Proficient"
     : proficiency === 0.5
     ? "Half Proficient"

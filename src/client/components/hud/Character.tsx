@@ -1,6 +1,10 @@
 import React, { useState } from "react";
-import { conditionNames, RRCharacter } from "../../../shared/state";
-import { useMyProps, useMySelectedTokens } from "../../myself";
+import {
+  conditionNames,
+  RRCharacter,
+  RRCharacterID,
+} from "../../../shared/state";
+import { useMyProps, useMySelectedCharacters } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import { CharacterPreview } from "../characters/CharacterPreview";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -16,18 +20,35 @@ import { SettingsDialog } from "./Toolbar";
 import { HPInlineEdit } from "../map/HPInlineEdit";
 import {
   useSmartChangeHP,
-  useHealthbarMeasurements,
+  useHealthBarMeasurements,
 } from "../../../client/util";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 import { characterUpdate, playerUpdate } from "../../../shared/actions";
 import { conditionIcons } from "../characters/CharacterEditor";
 import { Popover } from "../Popover";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
+import { useDrag } from "react-dnd";
+
+const characterProps = [
+  "id",
+  "name",
+  "hp",
+  "maxHP",
+  "temporaryHP",
+  "maxHPAdjustment",
+  "conditions",
+  "ac",
+  "tokenImageAssetId",
+  "tokenBorderColor",
+  "spellSaveDC",
+  "limitedUseSkills",
+] as const;
+export type RRCharacterProps = Pick<RRCharacter, typeof characterProps[number]>;
 
 export function CharacterHUD() {
   const myself = useMyProps("mainCharacterId", "isGM");
 
-  const selectedCharacter = useMySelectedTokens();
+  const selectedCharacters = useMySelectedCharacters(...characterProps);
   const mainCharacter = useServerState((state) =>
     myself.mainCharacterId
       ? state.characters.entities[myself.mainCharacterId] ?? null
@@ -36,7 +57,7 @@ export function CharacterHUD() {
 
   const healthWidth = 250;
   const character =
-    selectedCharacter.length > 0 ? selectedCharacter[0]! : mainCharacter;
+    selectedCharacters.length === 1 ? selectedCharacters[0]! : mainCharacter;
 
   return (
     <div className="absolute top-0 right-0 pointer-events-none">
@@ -63,7 +84,7 @@ export function CharacterHUD() {
   );
 }
 
-function LimitedUse({ character }: { character: RRCharacter }) {
+function LimitedUse({ character }: { character: RRCharacterProps }) {
   return (
     <div>
       {character.limitedUseSkills.map((skill, index) => {
@@ -73,7 +94,7 @@ function LimitedUse({ character }: { character: RRCharacter }) {
   );
 }
 
-function ConditionsBar({ character }: { character: RRCharacter }) {
+function ConditionsBar({ character }: { character: RRCharacterProps }) {
   const [conditionChooserOpen, setConditionChooserOpen] = useState(false);
   const dispatch = useServerDispatch();
 
@@ -145,7 +166,7 @@ function ConditionsBar({ character }: { character: RRCharacter }) {
                   <div
                     key={condition}
                     title={condition}
-                    className="h-8 w-8 m-1 my-2"
+                    className="h-14 w-11 m-1 my-2"
                     onClick={() => {
                       setConditions((c) => [...c, condition]);
                       setConditionChooserOpen(false);
@@ -164,6 +185,7 @@ function ConditionsBar({ character }: { character: RRCharacter }) {
                         }}
                       />
                     )}
+                    <p className="text-xs truncate text-center">{condition}</p>
                   </div>
                 );
               })}
@@ -224,7 +246,7 @@ function HeroPoint() {
   );
 }
 
-function AC({ character }: { character: RRCharacter }) {
+function AC({ character }: { character: RRCharacterProps }) {
   return (
     <div className="relative">
       <FontAwesomeIcon
@@ -233,13 +255,13 @@ function AC({ character }: { character: RRCharacter }) {
         className="text-white text-7xl opacity-50 right-2 m-1"
       />
       <p className="text-4xl font-bold w-full absolute top-4 text-white left-0 text-center select-none">
-        {character.AC ?? "?"}
+        {character.ac ?? "?"}
       </p>
     </div>
   );
 }
 
-function SpellSave({ character }: { character: RRCharacter }) {
+function SpellSave({ character }: { character: RRCharacterProps }) {
   return (
     <div className="relative">
       <FontAwesomeIcon
@@ -254,7 +276,11 @@ function SpellSave({ character }: { character: RRCharacter }) {
   );
 }
 
-function CurrentCharacter({ character }: { character: RRCharacter | null }) {
+function CurrentCharacter({
+  character,
+}: {
+  character: RRCharacterProps | null;
+}) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const myself = useMyProps("color");
   return (
@@ -264,11 +290,7 @@ function CurrentCharacter({ character }: { character: RRCharacter | null }) {
       )}
       <div className="relative">
         {character ? (
-          <CharacterPreview
-            character={character}
-            size={128}
-            shouldDisplayShadow={false}
-          />
+          <DraggableCharacterPreview character={character} />
         ) : (
           <RRFontAwesomeIcon
             icon={faUserCircle}
@@ -292,12 +314,36 @@ function CurrentCharacter({ character }: { character: RRCharacter | null }) {
   );
 }
 
+function DraggableCharacterPreview({
+  character,
+}: {
+  character: RRCharacterProps;
+}) {
+  const [, dragRef] = useDrag<{ id: RRCharacterID }, void, null>(
+    () => ({
+      type: "token",
+      item: { id: character.id },
+    }),
+    [character.id]
+  );
+
+  return (
+    <div ref={dragRef} className="token-preview">
+      <CharacterPreview
+        character={character}
+        size={128}
+        shouldDisplayShadow={false}
+      />
+    </div>
+  );
+}
+
 function HealthBar({
   character,
   isGM,
   width,
 }: {
-  character: RRCharacter;
+  character: RRCharacterProps;
   isGM: boolean;
   width: number;
 }) {
@@ -308,7 +354,7 @@ function HealthBar({
     hpColor,
     temporaryHPColor,
     totalMaxHP,
-  } = useHealthbarMeasurements(character, width);
+  } = useHealthBarMeasurements(character, width);
 
   return (
     <div
@@ -324,7 +370,7 @@ function HealthBar({
               height: "100%",
               backgroundColor: hpColor,
             }}
-          ></div>
+          />
           {character.temporaryHP > 0 && temporaryHPBarWidth > 0 && (
             <div
               className="h-full absolute top-0"
@@ -337,15 +383,13 @@ function HealthBar({
           )}
         </>
       )}
-      <div className="absolute h-full flex items-center justify-end right-4 select-none">
-        <div className="text-black rough-text">
-          <HPInlineEdit
-            className="inline-block w-12"
-            hp={character.hp + character.temporaryHP}
-            setHP={(total) => setHP(character.id, total)}
-          />{" "}
-          / {totalMaxHP}
-        </div>
+      <div className="absolute h-full flex items-center justify-end left-4 right-4 select-none text-black rough-text text-2xl font-bold">
+        <HPInlineEdit
+          className="inline-block w-12 h-6 flex-1 mr-1 px-2 text-2xl"
+          hp={character.hp + character.temporaryHP}
+          setHP={(total) => setHP(character.id, total)}
+        />{" "}
+        / {totalMaxHP}
       </div>
     </div>
   );

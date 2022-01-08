@@ -1,14 +1,15 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Matrix } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
-import { RRColor, RRPoint } from "../../../shared/state";
+import { RRColor } from "../../../shared/state";
 import { getViewportCorners } from "../../util";
+import { ViewPortSizeContext } from "./MapContainer";
 
 export const MapGrid = React.memo<{
   transform: Matrix;
-  viewPortSize: RRPoint;
   color: RRColor;
-}>(function MapGrid({ transform, viewPortSize, color }) {
+}>(function MapGrid({ transform, color }) {
+  const viewPortSize = useContext(ViewPortSizeContext);
   const corners = getViewportCorners(transform, viewPortSize)
     .map((point) => `${point.x},${point.y}`)
     .join(" ");

@@ -14,8 +14,8 @@ import {
   ephemeralMusicAdd,
   ephemeralMusicRemove,
   ephemeralMusicUpdate,
-  playerUpdateAddFavoritedAssetId,
-  playerUpdateRemoveFavoritedAssetId,
+  playerUpdateAddFavoriteAssetId,
+  playerUpdateRemoveFavoriteAssetId,
   soundSetAdd,
 } from "../../shared/actions";
 import {
@@ -29,7 +29,7 @@ import {
   RRAssetSong,
   RRSoundSet,
 } from "../../shared/state";
-import { isTabletopAudioAsset } from "../../shared/tabletopaudio";
+import { isTabletopAudioAsset } from "../../shared/tabletopAudio";
 import { partition, rrid, timestamp } from "../../shared/util";
 import { useFileUpload } from "../files";
 import { useMyProps } from "../myself";
@@ -55,7 +55,7 @@ export type MusicActions = {
 };
 
 export const Music = React.memo(function Music() {
-  const myself = useMyProps("favoritedAssetIds", "id");
+  const myself = useMyProps("favoriteAssetIds", "id");
   const dispatch = useServerDispatch();
   const activeMusic = entries(
     useServerState((state) => state.ephemeral.activeMusic)
@@ -66,8 +66,9 @@ export const Music = React.memo(function Music() {
   const assets = useServerState((state) => state.assets);
   const allSongs = entries(assets).flatMap((a) => (a.type === "song" ? a : []));
 
-  const [tabletopaudioSongs, ownSongs] = partition(allSongs, (song) =>
-    isTabletopAudioAsset(song)
+  const [tabletopAudioSongs, ownSongs] = partition(
+    allSongs,
+    (song) => isTabletopAudioAsset.safeParse(song).success
   );
 
   const onStop = useCallback(
@@ -81,18 +82,18 @@ export const Music = React.memo(function Music() {
     (song: RRAssetSong) => {
       dispatch({
         actions: [
-          (myself.favoritedAssetIds.includes(song.id)
-            ? playerUpdateRemoveFavoritedAssetId
-            : playerUpdateAddFavoritedAssetId)({
+          (myself.favoriteAssetIds.includes(song.id)
+            ? playerUpdateRemoveFavoriteAssetId
+            : playerUpdateAddFavoriteAssetId)({
             id: myself.id,
             assetId: song.id,
           }),
         ],
-        optimisticKey: `favourite/${myself.id}/${song.id}`,
+        optimisticKey: `favorite/${myself.id}/${song.id}`,
         syncToServerThrottle: 0,
       });
     },
-    [dispatch, myself.id, myself.favoritedAssetIds]
+    [dispatch, myself.id, myself.favoriteAssetIds]
   );
 
   const onReplace = useCallback(
@@ -189,20 +190,26 @@ export const Music = React.memo(function Music() {
           audio={song}
           filterText={filter}
           actions={actions}
-          isFavorite={myself.favoritedAssetIds.includes(song.id)}
+          isFavorite={myself.favoriteAssetIds.includes(song.id)}
         />
       );
     });
 
   return (
     <>
-      <TextInput
-        type="search"
-        value={filter}
-        onChange={(filter) => setFilter(filter)}
-        placeholder="search music..."
-      />
-      <UploadAudio onUploaded={() => setFilter("")} />
+      <div className="flex mb-2 items-center">
+        <h1 className="flex-1">Music</h1>
+        <UploadAudio onUploaded={() => setFilter("")} />
+      </div>
+      <div className="-mx-3">
+        <TextInput
+          className="mb-2 py-1 px-3"
+          type="search"
+          value={filter}
+          onChange={(filter) => setFilter(filter)}
+          placeholder="search music..."
+        />
+      </div>
       {activeMusic.length > 0 && (
         <Collapsible title="Playing">
           {activeMusic.map((activeSongOrSoundSet) => {
@@ -225,9 +232,9 @@ export const Music = React.memo(function Music() {
           })}
         </Collapsible>
       )}
-      <Collapsible title="Favourites" defaultCollapsed={true}>
+      <Collapsible title="Favorites" defaultCollapsed={true}>
         {showSongList(
-          myself.favoritedAssetIds.flatMap((id) => {
+          myself.favoriteAssetIds.flatMap((id) => {
             const asset = assets.entities[id];
             return asset?.type === "song" ? asset : [];
           })
@@ -249,7 +256,7 @@ export const Music = React.memo(function Music() {
         {showSongList(ownSongs)}{" "}
       </Collapsible>
       <Collapsible title="Tabletop Audio" defaultCollapsed={true}>
-        {showSongList(tabletopaudioSongs)}
+        {showSongList(tabletopAudioSongs)}
       </Collapsible>
     </>
   );

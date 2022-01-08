@@ -1,9 +1,7 @@
-import * as t from "typanion";
+import * as z from "zod";
 import { assert, IsExact } from "conditional-type-checks";
 import {
   conditionNames,
-  EntityCollection,
-  characterAttributeNames,
   multipleRollValues,
   RRActiveMusicID,
   RRAssetID,
@@ -23,145 +21,126 @@ import {
   RRPlaylistEntryID,
   RRPlaylistID,
   characterStatNames,
-  skillNames,
   proficiencyValues,
   categoryIcons,
   RRDiceTemplateCategoryID,
+  isProficiencyValue,
 } from "./state";
 import { withDo } from "./util";
 import tinycolor from "tinycolor2";
-import { isBlurhashValid } from "blurhash";
 import {
   isDamageType,
   isDiceRollTree,
   RRDamageType,
 } from "./dice-roll-tree-types-and-validation";
+import { isBlurhashValid as isBlurHashValid } from "blurhash"; //cspell: disable-line
 
-export function isRRID<ID extends RRID>() {
-  return t.makeValidator({
-    test: (value, state): value is ID =>
-      t.applyCascade(t.isString(), [t.hasExactLength(21)])(value, state),
+function hasUniqueItems<I, S>(
+  map: (item: I) => S
+): z.RefinementEffect<I[]>["refinement"] {
+  return (array, ctx) => {
+    const seen = new Set<S>();
+    for (const item of array) {
+      const mappedItem = map(item);
+      if (seen.has(mappedItem)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Array has duplicate items.",
+        });
+      }
+      seen.add(mappedItem);
+    }
+  };
+}
+
+export const isRRID = <ID extends RRID>() =>
+  z.custom<ID>().superRefine((val, ctx) => {
+    const validator = z.string().length(21);
+    const validationResult = validator.safeParse(val);
+    if (!validationResult.success) {
+      validationResult.error.issues.forEach((issue) => ctx.addIssue(issue));
+    }
+  });
+
+function isEntityCollection<S extends z.ZodSchema<{ id: RRID }>>(
+  entitySchema: S
+) {
+  return z.strictObject({
+    entities: z.record(isRRID<z.infer<S>["id"]>(), entitySchema),
+    ids: z
+      .array(isRRID<z.infer<S>["id"]>())
+      .superRefine(hasUniqueItems((id) => id)),
   });
 }
 
-// @ts-expect-error This should be fine.
-const isDictByRRID: <T extends t.StrictValidator<any, { id: RRID }>>(
-  spec: T,
-  {
-    keys: keySpec,
-  }: {
-    keys: t.StrictValidator<unknown, RRID>;
+const isColor = z
+  .string()
+  .refine((value) => tinycolor(value).isValid(), { message: "Invalid color" });
+
+const isBlurHash = z.string().superRefine((value, ctx) => {
+  const validationResult = isBlurHashValid(value);
+  if (!validationResult.result) {
+    ctx.addIssue({
+      message: `Invalid BlurHash. ${validationResult.errorReason ?? ""}`,
+      code: z.ZodIssueCode.custom,
+    });
   }
-) => t.StrictValidator<unknown, Record<t.InferType<T>["id"], t.InferType<T>>> =
-  t.isDict;
-
-function isEntityCollection<V extends t.StrictValidator<any, { id: RRID }>>(
-  entityValidator: V
-): t.StrictValidator<unknown, EntityCollection<V["__trait"]>> {
-  // @ts-expect-error This should be fine.
-  return t.isObject({
-    entities: isDictByRRID(entityValidator, {
-      keys: isRRID<V["__trait"]["id"]>(),
-    }),
-    ids: t.applyCascade(t.isArray(isRRID<V["__trait"]["id"]>()), [
-      t.hasUniqueItems(),
-    ]),
-  });
-}
-
-function isColor() {
-  return t.applyCascade(t.isString(), [
-    t.makeValidator({
-      test: (value: string) => {
-        return tinycolor(value).isValid();
-      },
-    }),
-  ]);
-}
-
-const isBlurhash = <T extends string>() =>
-  t.makeValidator<T>({
-    test: (value, state) => {
-      const result = isBlurhashValid(value);
-      if (!result.result)
-        return t.pushError(
-          state,
-          `Expected a valid blurhash. ${result.errorReason ?? ""}`
-        );
-
-      return true;
-    },
-  });
-
-const isRRPoint = t.isObject({
-  x: t.isNumber(),
-  y: t.isNumber(),
 });
 
-const isTimestamp = t.applyCascade(t.isNumber(), [
-  t.isInteger(),
-  t.isPositive(),
-]);
+const isRRPoint = z.strictObject({
+  x: z.number(),
+  y: z.number(),
+});
+const isTimestamp = z.number().int().min(0);
 
 const sharedAssetValidators = {
   id: isRRID<RRAssetID>(),
-  name: t.isString(),
-  description: t.isNullable(t.isString()),
-  tags: t.isArray(t.isString()),
+  name: z.string(),
+  description: z.nullable(z.string()),
+  tags: z.array(z.string()),
 
-  location: t.isOneOf(
-    [
-      t.isObject({
-        type: t.isLiteral("external"),
-        url: t.isString(),
-      }),
-      t.isObject({
-        type: t.isLiteral("local"),
-        filename: t.isString(),
-        originalFilename: t.isString(),
-        mimeType: t.isString(),
-      }),
-    ],
-    { exclusive: true }
-  ),
+  location: z.union([
+    z.strictObject({
+      type: z.literal("external"),
+      url: z.string().url(),
+    }),
+    z.strictObject({
+      type: z.literal("local"),
+      filename: z.string(),
+      originalFilename: z.string(),
+      mimeType: z.string(),
+    }),
+  ]),
 
-  playerId: t.isNullable(isRRID<RRPlayerID>()),
-  extra: t.isObject({}, { extra: t.isUnknown() }),
+  playerId: z.nullable(isRRID<RRPlayerID>()),
+  extra: z.record(z.unknown()),
 };
 
-const isRRAssetSong = t.isObject({
+const isRRAssetSong = z.strictObject({
   ...sharedAssetValidators,
-  type: t.isLiteral("song"),
-  duration: t.applyCascade(t.isNumber(), [t.isAtLeast(1)]),
+  type: z.literal("song"),
+  duration: z.number().min(1),
 });
-
-const isRRAssetImage = t.isObject({
+const isRRAssetImage = z.strictObject({
   ...sharedAssetValidators,
-  type: t.isLiteral("image"),
-  width: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
-  height: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
-  blurhash: t.applyCascade(t.isString(), [isBlurhash()]),
+  type: z.literal("image"),
+  width: z.number().int().min(0),
+  height: z.number().int().min(0),
+  blurHash: isBlurHash,
 
-  originalFunction: t.isEnum(["token", "map", "unknown"] as const),
+  originalFunction: z.enum(["token", "map", "unknown"] as const),
 });
-
-const isRRAssetOther = t.isObject({
+const isRRAssetOther = z.strictObject({
   ...sharedAssetValidators,
-  type: t.isLiteral("other"),
+  type: z.literal("other"),
 });
+const isRRAsset = z.union([isRRAssetSong, isRRAssetImage, isRRAssetOther]);
 
-const isRRAsset = t.isOneOf([isRRAssetSong, isRRAssetImage, isRRAssetOther], {
-  exclusive: true,
-});
+const isVolume = z.number().min(0).max(1);
 
-const isVolume = t.applyCascade(t.isNumber(), [t.isInInclusiveRange(0, 1)]);
+export const isStateVersion = z.number().int().min(0);
 
-export const isStateVersion = t.applyCascade(t.isNumber(), [
-  t.isInteger(),
-  t.isPositive(),
-]);
-
-const rollType = ["initiative", "hit", "attack", null] as const;
+const isRollType = z.enum(["initiative", "hit", "attack"] as const).nullable();
 
 interface _RRDiceTemplate {
   id: RRDiceTemplateID;
@@ -203,213 +182,209 @@ interface _RRDiceTemplate {
         damage: RRDamageType;
       }
   )[];
-  rollType: typeof rollType[number];
+  rollType: z.infer<typeof isRollType>;
 }
 
-const __isDiceTemplateRecursive = t.makeValidator({
-  test: (value, state): value is _RRDiceTemplate =>
-    isDiceTemplate(value, state),
-});
+const __isDiceTemplateRecursive: z.ZodSchema<_RRDiceTemplate> = z.lazy(
+  () => isDiceTemplate
+);
 
-const isDiceTemplate = t.isObject({
+const isDiceTemplate = z.strictObject({
   id: isRRID<RRDiceTemplateID>(),
-  name: t.isString(),
-  notes: t.isString(),
-  parts: t.applyCascade(
-    t.isArray(
-      t.isOneOf(
+  name: z.string(),
+  notes: z.string(),
+  parts: z
+    .array(
+      z.union(
         withDo({ id: isRRID<RRDiceTemplatePartID>() }, (sharedValidators) => [
-          t.isObject({
+          z.strictObject({
             ...sharedValidators,
-            type: t.isLiteral("dice"),
-            count: t.applyCascade(t.isNumber(), [
-              t.isInteger(),
-              t.isPositive(),
-            ]),
-            faces: t.applyCascade(t.isNumber(), [
-              t.isInteger(),
-              t.isPositive(),
-            ]),
-            negated: t.isBoolean(),
+            type: z.literal("dice"),
+            count: z.number().int().min(0),
+            faces: z.number().int().min(0),
+            negated: z.boolean(),
             damage: isDamageType,
-            modified: t.isEnum(multipleRollValues),
+            modified: z.enum(multipleRollValues),
           }),
-          t.isObject({
+          z.strictObject({
             ...sharedValidators,
-            type: t.isLiteral("template"),
+            type: z.literal("template"),
             template: __isDiceTemplateRecursive,
           }),
-          t.isObject({
+          z.strictObject({
             ...sharedValidators,
-            type: t.isLiteral("modifier"),
-            number: t.applyCascade(t.isNumber(), [t.isInteger()]),
+            type: z.literal("modifier"),
+            number: z.number().int(),
             damage: isDamageType,
           }),
-          t.isObject({
+          z.strictObject({
             ...sharedValidators,
-            type: t.isLiteral("linkedModifier"),
-            name: t.isLiteral("initiative"),
+            type: z.literal("linkedModifier"),
+            name: z.literal("initiative"),
             damage: isDamageType,
           }),
-          t.isObject({
+          z.strictObject({
             ...sharedValidators,
-            type: t.isLiteral("linkedProficiency"),
+            type: z.literal("linkedProficiency"),
             damage: isDamageType,
-            proficiency: t.isEnum(proficiencyValues),
+            proficiency: isProficiencyValue,
           }),
-          t.isObject({
+          z.strictObject({
             ...sharedValidators,
-            type: t.isLiteral("linkedStat"),
-            name: t.isEnum(characterStatNames),
+            type: z.literal("linkedStat"),
+            name: z.enum(characterStatNames),
             damage: isDamageType,
           }),
         ])
       )
-    ),
-    [t.hasUniqueItems({ map: (part) => part.id })]
-  ),
-  rollType: t.isEnum(rollType),
+    )
+    .superRefine(hasUniqueItems((part) => part.id)),
+  rollType: isRollType,
 });
-
-export type RRDiceTemplate = t.InferType<typeof isDiceTemplate>;
+export type RRDiceTemplate = z.infer<typeof isDiceTemplate>;
 
 assert<IsExact<RRDiceTemplate, _RRDiceTemplate>>(true);
 
-const isDiceTemplateCategory = t.isObject({
+const isDiceTemplateCategory = z.strictObject({
   id: isRRID<RRDiceTemplateCategoryID>(),
-  icon: t.isEnum(categoryIcons),
-  categoryName: t.isString(),
-  templates: t.applyCascade(t.isArray(isDiceTemplate), [
-    t.hasUniqueItems({ map: (diceTemplate) => diceTemplate.id }),
-  ]),
+  icon: z.enum(categoryIcons),
+  categoryName: z.string(),
+  templates: z
+    .array(isDiceTemplate)
+    .superRefine(hasUniqueItems((diceTemplate) => diceTemplate.id)),
 });
-export type RRDiceTemplateCategory = t.InferType<typeof isDiceTemplateCategory>;
+export type RRDiceTemplateCategory = z.infer<typeof isDiceTemplateCategory>;
 
-export const isSyncedState = t.isObject({
+export const isSyncedState = z.strictObject({
   version: isStateVersion,
-  globalSettings: t.isObject({
-    musicIsGMOnly: t.isBoolean(),
+  globalSettings: z.strictObject({
+    musicIsGMOnly: z.boolean(),
   }),
-  initiativeTracker: t.isObject({
-    visible: t.isBoolean(),
+  initiativeTracker: z.strictObject({
+    visible: z.boolean(),
     entries: isEntityCollection(
-      t.isOneOf(
+      z.union(
         withDo(
           {
             id: isRRID<RRInitiativeTrackerEntryID>(),
-            initiative: t.applyCascade(t.isNumber(), [
-              t.isInteger(),
-              t.isPositive(),
-            ]),
+            initiative: z.number().int().min(0),
           },
           (sharedValidators) => [
-            t.isObject({
+            z.strictObject({
               ...sharedValidators,
-              type: t.isLiteral("character"),
-              characterIds: t.isArray(isRRID<RRCharacterID>()),
+              type: z.literal("character"),
+              characterIds: z.array(isRRID<RRCharacterID>()),
             }),
-            t.isObject({
+            z.strictObject({
               ...sharedValidators,
-              type: t.isLiteral("lairAction"),
-              description: t.isString(),
+              type: z.literal("lairAction"),
+              description: z.string(),
             }),
           ]
-        ),
-        { exclusive: true }
+        )
       )
     ),
-    currentEntryId: t.isNullable(isRRID<RRInitiativeTrackerEntryID>()),
+    currentEntryId: z.nullable(isRRID<RRInitiativeTrackerEntryID>()),
   }),
   players: isEntityCollection(
-    t.isObject({
+    z.strictObject({
       id: isRRID<RRPlayerID>(),
-      name: t.isString(),
-      color: isColor(),
-      isGM: t.isBoolean(),
+      name: z.string(),
+      color: isColor,
+      isGM: z.boolean(),
       currentMap: isRRID<RRMapID>(),
-      characterIds: t.isArray(isRRID<RRCharacterID>()),
-      mainCharacterId: t.isNullable(isRRID<RRCharacterID>()),
-      favoritedAssetIds: t.isArray(isRRID<RRAssetID>()),
-      diceTemplateCategories: t.isArray(isDiceTemplateCategory),
-      hasHeroPoint: t.isBoolean(),
+      characterIds: z.array(isRRID<RRCharacterID>()),
+      mainCharacterId: z.nullable(isRRID<RRCharacterID>()),
+      favoriteAssetIds: z.array(isRRID<RRAssetID>()),
+      diceTemplateCategories: z.array(isDiceTemplateCategory),
+      hasHeroPoint: z.boolean(),
     })
   ),
   ...withDo(
     () =>
       isEntityCollection(
-        t.isObject({
+        z.strictObject({
           id: isRRID<RRCharacterID>(),
-          name: t.isString(),
+          name: z.string(),
 
           tokenImageAssetId: isRRID<RRAssetID>(),
-          tokenBorderColor: isColor(),
-          scale: t.applyCascade(t.isNumber(), [t.isAtLeast(1)]),
+          tokenBorderColor: isColor,
+          scale: z.number().min(1),
 
-          auras: t.isArray(
-            t.isObject({
-              size: t.applyCascade(t.isNumber(), [
-                t.isInteger(),
-                t.isPositive(),
-              ]),
-              color: isColor(),
-              shape: t.isEnum(["circle", "square"] as const),
-              visibility: t.isEnum([
+          auras: z.array(
+            z.strictObject({
+              size: z.number().int().min(0),
+              color: isColor,
+              shape: z.enum(["circle", "square"] as const),
+              visibility: z.enum([
                 "playerOnly",
                 "playerAndGM",
                 "everyone",
               ] as const),
-              visibleWhen: t.isEnum(["always", "onTurn", "hover"] as const),
+              visibleWhen: z.enum(["always", "onTurn", "hover"] as const),
             })
           ),
-          limitedUseSkills: t.isArray(
-            t.isObject({
-              maxUseCount: t.applyCascade(t.isNumber(), [
-                t.isPositive(),
-                t.isInteger(),
-              ]),
-              currentUseCount: t.applyCascade(t.isNumber(), [
-                t.isPositive(),
-                t.isInteger(),
-              ]),
-              restoresAt: t.isEnum(["shortRest", "longRest"] as const),
-              name: t.isString(),
+          limitedUseSkills: z.array(
+            z.strictObject({
+              maxUseCount: z.number().int().min(0),
+              currentUseCount: z.number().int().min(0),
+              restoresAt: z.enum(["shortRest", "longRest"] as const),
+              name: z.string(),
             })
           ),
-          hp: t.applyCascade(t.isNumber(), [t.isInteger()]),
-          temporaryHP: t.applyCascade(t.isNumber(), [
-            t.isInteger(),
-            t.isPositive(),
-          ]),
-          maxHP: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
+          hp: z.number().int(),
+          temporaryHP: z.number().int().min(0),
+          maxHP: z.number().int().min(0),
           // Like from the Hero's Feast, which increases your hit point maximum.
           // Can also be used to decrease the hit point maximum temporarily.
-          maxHPAdjustment: t.applyCascade(t.isNumber(), [t.isInteger()]),
+          maxHPAdjustment: z.number().int(),
 
-          AC: t.isNullable(
-            t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()])
-          ),
-          spellSaveDC: t.isNullable(
-            t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()])
-          ),
+          ac: z.nullable(z.number().int().min(0)),
+          spellSaveDC: z.nullable(z.number().int().min(0)),
 
-          attributes: t.isDict(
-            t.isNullable(t.applyCascade(t.isNumber(), [t.isInteger()])),
-            { keys: t.isEnum(characterAttributeNames) }
-          ),
-          stats: t.isDict(
-            t.isNullable(t.applyCascade(t.isNumber(), [t.isInteger()])),
-            { keys: t.isEnum(characterStatNames) }
-          ),
-          conditions: t.isArray(t.isEnum(conditionNames)),
-          skills: t.isDict(t.isEnum(proficiencyValues), {
-            keys: t.isEnum(skillNames),
+          attributes: z.strictObject({
+            initiative: z.number().int().nullable(),
+            proficiency: z.number().int().nullable(),
           }),
-          savingThrows: t.isDict(t.isEnum(proficiencyValues), {
-            keys: t.isEnum(characterStatNames),
+          stats: z.strictObject({
+            STR: z.number().int().nullable(),
+            DEX: z.number().int().nullable(),
+            CON: z.number().int().nullable(),
+            INT: z.number().int().nullable(),
+            WIS: z.number().int().nullable(),
+            CHA: z.number().int().nullable(),
           }),
-
-          visibility: t.isEnum(["gmOnly", "everyone"] as const),
-          localToMap: t.isNullable(isRRID<RRMapID>()),
+          conditions: z.array(z.enum(conditionNames)),
+          skills: z.strictObject({
+            Athletics: isProficiencyValue.nullable(),
+            Acrobatics: isProficiencyValue.nullable(),
+            "Sleight of Hand": isProficiencyValue.nullable(),
+            Stealth: isProficiencyValue.nullable(),
+            Arcana: isProficiencyValue.nullable(),
+            History: isProficiencyValue.nullable(),
+            Investigation: isProficiencyValue.nullable(),
+            Nature: isProficiencyValue.nullable(),
+            Religion: isProficiencyValue.nullable(),
+            "Animal Handling": isProficiencyValue.nullable(),
+            Insight: isProficiencyValue.nullable(),
+            Medicine: isProficiencyValue.nullable(),
+            Perception: isProficiencyValue.nullable(),
+            Survival: isProficiencyValue.nullable(),
+            Deception: isProficiencyValue.nullable(),
+            Intimidation: isProficiencyValue.nullable(),
+            Performance: isProficiencyValue.nullable(),
+            Persuasion: isProficiencyValue.nullable(),
+          }),
+          savingThrows: z.strictObject({
+            STR: isProficiencyValue.nullable(),
+            DEX: isProficiencyValue.nullable(),
+            CON: isProficiencyValue.nullable(),
+            INT: isProficiencyValue.nullable(),
+            WIS: isProficiencyValue.nullable(),
+            CHA: isProficiencyValue.nullable(),
+          }),
+          visibility: z.enum(["gmOnly", "everyone"] as const),
+          localToMap: z.nullable(isRRID<RRMapID>()),
         })
       ),
     (makeValidator) => ({
@@ -418,7 +393,7 @@ export const isSyncedState = t.isObject({
     })
   ),
   maps: isEntityCollection(
-    t.isObject({
+    z.strictObject({
       id: isRRID<RRMapID>(),
 
       objects: isEntityCollection(
@@ -427,65 +402,62 @@ export const isSyncedState = t.isObject({
           {
             id: isRRID<RRMapObjectID>(),
             position: isRRPoint,
-            rotation: t.isNumber(),
+            rotation: z.number(),
             playerId: isRRID<RRPlayerID>(),
-            visibility: t.isEnum(["gmOnly", "everyone"] as const),
+            visibility: z.enum(["gmOnly", "everyone"] as const),
           },
           (sharedValidators) =>
-            t.isOneOf([
-              t.isObject({
+            z.union([
+              z.strictObject({
                 ...withDo(sharedValidators, ({ visibility, ...v }) => v),
-                type: t.isLiteral("token"),
+                type: z.literal("token"),
                 characterId: isRRID<RRCharacterID>(),
               }),
-              t.isObject({
+              z.strictObject({
                 ...sharedValidators,
-                type: t.isLiteral("mapLink"),
-                locked: t.isBoolean(),
+                type: z.literal("mapLink"),
+                locked: z.boolean(),
                 mapId: isRRID<RRMapID>(),
-                color: isColor(),
+                color: isColor,
               }),
               ...withDo(
                 // RRMapDrawingBase
                 {
                   ...sharedValidators,
-                  locked: t.isBoolean(),
-                  color: isColor(),
+                  locked: z.boolean(),
+                  color: isColor,
                 },
                 (sharedValidators) => [
-                  t.isObject({
+                  z.strictObject({
                     ...sharedValidators,
-                    type: t.isLiteral("image"),
+                    type: z.literal("image"),
                     imageAssetId: isRRID<RRAssetID>(),
-                    height: t.applyCascade(t.isNumber(), [
-                      t.isInteger(),
-                      t.isPositive(),
-                    ]),
+                    height: z.number().int().min(0),
                   }),
-                  t.isObject({
+                  z.strictObject({
                     ...sharedValidators,
-                    type: t.isLiteral("rectangle"),
+                    type: z.literal("rectangle"),
                     size: isRRPoint,
                   }),
-                  t.isObject({
+                  z.strictObject({
                     ...sharedValidators,
-                    type: t.isLiteral("ellipse"),
+                    type: z.literal("ellipse"),
                     size: isRRPoint,
                   }),
-                  t.isObject({
+                  z.strictObject({
                     ...sharedValidators,
-                    type: t.isLiteral("polygon"),
-                    points: t.isArray(isRRPoint),
+                    type: z.literal("polygon"),
+                    points: z.array(isRRPoint),
                   }),
-                  t.isObject({
+                  z.strictObject({
                     ...sharedValidators,
-                    type: t.isLiteral("freehand"),
-                    points: t.isArray(isRRPoint),
+                    type: z.literal("freehand"),
+                    points: z.array(isRRPoint),
                   }),
-                  t.isObject({
+                  z.strictObject({
                     ...sharedValidators,
-                    type: t.isLiteral("text"),
-                    text: t.isString(),
+                    type: z.literal("text"),
+                    text: z.string(),
                   }),
                 ]
               ),
@@ -493,13 +465,13 @@ export const isSyncedState = t.isObject({
         )
       ),
 
-      settings: t.isObject({
-        name: t.isString(),
-        backgroundColor: isColor(),
-        gridEnabled: t.isBoolean(),
-        gridColor: isColor(),
-        revealedAreas: t.isNullable(
-          t.isArray(t.isArray(t.isObject({ X: t.isNumber(), Y: t.isNumber() })))
+      settings: z.strictObject({
+        name: z.string(),
+        backgroundColor: isColor,
+        gridEnabled: z.boolean(),
+        gridColor: isColor,
+        revealedAreas: z.nullable(
+          z.array(z.array(z.strictObject({ X: z.number(), Y: z.number() })))
         ),
 
         gmWorldPosition: isRRPoint,
@@ -507,99 +479,90 @@ export const isSyncedState = t.isObject({
     })
   ),
   privateChats: isEntityCollection(
-    t.isObject({
+    z.strictObject({
       id: isRRID<RRPrivateChatID>(),
       idA: isRRID<RRPlayerID>(),
       idB: isRRID<RRPlayerID>(),
       messages: isEntityCollection(
-        t.isObject({
+        z.strictObject({
           id: isRRID<RRPrivateChatMessageID>(),
-          direction: t.isEnum(["a2b", "b2a"] as const),
-          text: t.isString(),
-          read: t.isBoolean(),
+          direction: z.enum(["a2b", "b2a"] as const),
+          text: z.string(),
+          read: z.boolean(),
           timestamp: isTimestamp,
         })
       ),
     })
   ),
   logEntries: isEntityCollection(
-    t.isOneOf(
+    z.union(
       withDo(
         {
           id: isRRID<RRLogEntryID>(),
-          silent: t.isBoolean(),
-          playerId: t.isNullable(isRRID<RRPlayerID>()),
+          silent: z.boolean(),
+          playerId: z.nullable(isRRID<RRPlayerID>()),
           timestamp: isTimestamp,
         },
         (sharedValidators) => [
-          t.isObject({
+          z.strictObject({
             ...sharedValidators,
-            type: t.isLiteral("message"),
-            payload: t.isObject({
-              text: t.isString(),
+            type: z.literal("message"),
+            payload: z.strictObject({
+              text: z.string(),
             }),
           }),
-          t.isObject({
+          z.strictObject({
             ...sharedValidators,
-            type: t.isLiteral("achievement"),
-            payload: t.isObject({
-              achievementId: t.applyCascade(t.isNumber(), [
-                t.isInteger(),
-                t.isPositive(),
-              ]),
+            type: z.literal("achievement"),
+            payload: z.strictObject({
+              achievementId: z.number().int().min(0),
             }),
           }),
-          t.isObject({
+          z.strictObject({
             ...sharedValidators,
-            type: t.isLiteral("diceRoll"),
-            payload: t.isObject({
-              rollType: t.isEnum([
-                "initiative",
-                "hit",
-                "attack",
-                null,
-              ] as const),
-              rollName: t.isNullable(t.isString()),
+            type: z.literal("diceRoll"),
+            payload: z.strictObject({
+              rollType: isRollType,
+              rollName: z.nullable(z.string()),
               diceRollTree: isDiceRollTree(true),
             }),
           }),
         ]
-      ),
-      { exclusive: true }
+      )
     )
   ),
   assets: isEntityCollection(isRRAsset),
   soundSets: isEntityCollection(
-    t.isObject({
+    z.strictObject({
       id: isRRID<RRSoundSetID>(),
-      name: t.isString(),
-      description: t.isNullable(t.isString()),
+      name: z.string(),
+      description: z.nullable(z.string()),
       playerId: isRRID<RRPlayerID>(),
       // A sound set has an array of playlists. Each playlist is an array of
       // songs, each with separately controllable volume. All playlists are
       // played in parallel and loop individually. Songs of a playlist are
       // played in order.
-      playlists: t.isArray(
-        t.isObject({
+      playlists: z.array(
+        z.strictObject({
           id: isRRID<RRPlaylistID>(),
           volume: isVolume,
-          entries: t.isArray(
+          entries: z.array(
             withDo(
               {
                 id: isRRID<RRPlaylistEntryID>(),
               },
               (sharedValidators) =>
-                t.isOneOf([
-                  t.isObject({
+                z.union([
+                  z.strictObject({
                     ...sharedValidators,
-                    type: t.isLiteral("song"),
+                    type: z.literal("song"),
                     songId: isRRID<RRAssetID>(),
                     volume: isVolume,
                   }),
-                  t.isObject({
+                  z.strictObject({
                     ...sharedValidators,
-                    type: t.isLiteral("silence"),
-                    duration: t.applyCascade(t.isNumber(), [t.isAtLeast(1)]),
+                    type: z.literal("silence"),
+                    duration: z.number().min(1),
                   }),
                 ])
             )
@@ -608,19 +571,19 @@ export const isSyncedState = t.isObject({
       ),
     })
   ),
-  ephemeral: t.isObject({
+  ephemeral: z.strictObject({
     players: isEntityCollection(
-      t.isObject({
+      z.strictObject({
         id: isRRID<RRPlayerID>(),
-        isOnline: t.isBoolean(),
-        mapMouse: t.isNullable(
-          t.isObject({
+        isOnline: z.boolean(),
+        mapMouse: z.nullable(
+          z.strictObject({
             position: isRRPoint,
-            positionHistory: t.isArray(isRRPoint),
+            positionHistory: z.array(isRRPoint),
             lastUpdate: isTimestamp,
           })
         ),
-        measurePath: t.isArray(isRRPoint),
+        measurePath: z.array(isRRPoint),
       })
     ),
     activeMusic: isEntityCollection(
@@ -632,15 +595,15 @@ export const isSyncedState = t.isObject({
           addedBy: isRRID<RRPlayerID>(),
         },
         (sharedActiveMusicValidators) =>
-          t.isOneOf([
-            t.isObject({
+          z.union([
+            z.strictObject({
               ...sharedActiveMusicValidators,
-              type: t.isLiteral("song"),
+              type: z.literal("song"),
               songId: isRRID<RRAssetID>(),
             }),
-            t.isObject({
+            z.strictObject({
               ...sharedActiveMusicValidators,
-              type: t.isLiteral("soundSet"),
+              type: z.literal("soundSet"),
               soundSetId: isRRID<RRSoundSetID>(),
             }),
           ])
@@ -649,7 +612,7 @@ export const isSyncedState = t.isObject({
   }),
 });
 
-type SchemaType = t.InferType<typeof isSyncedState>;
+type SchemaType = z.infer<typeof isSyncedState>;
 
 // Make sure that the schema really matches the type.
 assert<IsExact<SchemaType, SyncedState>>(true);

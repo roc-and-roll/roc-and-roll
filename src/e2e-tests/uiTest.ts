@@ -7,7 +7,7 @@ import { spawn } from "child_process";
 import getPort from "get-port";
 import { test as base } from "@playwright/test";
 
-export const rnrtest = base.extend<{ rnrServer: null }, { rnrPort: number }>({
+export const uiTest = base.extend<{ rnrServer: null }, { rnrPort: number }>({
   rnrPort: [
     // eslint-disable-next-line no-empty-pattern
     async ({}, use, workerInfo) => {
@@ -33,6 +33,10 @@ export const rnrtest = base.extend<{ rnrServer: null }, { rnrPort: number }>({
   ],
   baseURL: async ({ rnrPort }, use) => {
     await use(`http://localhost:${rnrPort}`);
+  },
+  page: async ({ page }, use) => {
+    await page.goto("/");
+    await use(page);
   },
 });
 

@@ -1,15 +1,19 @@
-import React, { useContext, useLayoutEffect } from "react";
+import React, { useContext, useEffect, useLayoutEffect, useState } from "react";
 import { atom, useRecoilValue, useSetRecoilState } from "recoil";
 import { IterableElement } from "type-fest";
 import {
-  EMPTY_ENTITY_COLLECTION,
+  RRCharacter,
+  RRCharacterID,
   RRPlayer,
   RRPlayerID,
-  entries,
 } from "../shared/state";
 import { selectedMapObjectIdsAtom } from "./components/map/recoil";
-import { useAutoDispatchPlayerIdOnChange, useServerState } from "./state";
-import { useGuranteedMemo } from "./useGuranteedMemo";
+import { useGuaranteedMemo } from "./useGuaranteedMemo";
+import {
+  useAutoDispatchPlayerIdOnChange,
+  useServerState,
+  useServerStateRef,
+} from "./state";
 import useLocalState from "./useLocalState";
 
 const MyselfContext = React.createContext<{
@@ -37,7 +41,7 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
     (state) => (myPlayerId && state.players.entities[myPlayerId]) ?? null
   );
 
-  //This is needed, otherwise recoil will refuse to work in strict mode for unkown reasons
+  //This is needed, otherwise recoil will refuse to work in strict mode for unknown reasons
   const setPlayerId = useSetRecoilState(myPlayerIdAtom);
   useLayoutEffect(() => {
     setPlayerId(myPlayerId);
@@ -45,7 +49,7 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
 
   useAutoDispatchPlayerIdOnChange(myself?.id ?? null);
 
-  const ctx = useGuranteedMemo(
+  const ctx = useGuaranteedMemo(
     () => ({
       playerId: myself?.id ?? null,
       setMyPlayerId,
@@ -59,39 +63,43 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useMySelectedTokens() {
+export function useMySelectedCharacters<T extends (keyof RRCharacter)[]>(
+  ...fields: T
+): Pick<RRCharacter, IterableElement<T>>[] {
   const myself = useMyProps("currentMap");
+  const stateRef = useServerStateRef((state) => state);
 
-  const characterCollection = useServerState((state) => state.characters);
-  const mapObjects = useServerState(
+  const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom);
+
+  const [selectedCharacterIds, setSelectedCharacterIds] = useState<
+    Set<RRCharacterID>
+  >(() => new Set());
+
+  useEffect(() => {
+    const mapObjects =
+      stateRef.current.maps.entities[myself.currentMap]?.objects;
+    setSelectedCharacterIds(
+      new Set(
+        selectedMapObjectIds.flatMap((mapObjectId) => {
+          const mapObject = mapObjects?.entities[mapObjectId];
+          return mapObject?.type === "token" ? mapObject.characterId : [];
+        })
+      )
+    );
+  }, [myself.currentMap, selectedMapObjectIds, stateRef]);
+
+  return useServerState(
     (state) =>
-      state.maps.entities[myself.currentMap]?.objects ??
-      EMPTY_ENTITY_COLLECTION,
-    (current, next) => {
-      const cl = entries(current);
-      const nl = entries(next);
-      return cl === nl && cl.every((c, i) => c.id === nl[i]!.id);
-    }
+      [...selectedCharacterIds.values()].flatMap(
+        (characterId) => state.characters.entities[characterId] ?? []
+      ),
+    (current, next) =>
+      current.length === next.length &&
+      current.every((each, i) => each.id === next[i]!.id) &&
+      fields.every((field) =>
+        current.every((each, i) => each[field] === next[i]![field])
+      )
   );
-
-  const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom).filter(
-    Boolean
-  );
-
-  const selectedCharacterIds = [
-    ...new Set(
-      selectedMapObjectIds.flatMap((mapObjectId) => {
-        const mapObject = mapObjects.entities[mapObjectId];
-        return mapObject?.type === "token" ? mapObject.characterId : [];
-      })
-    ),
-  ];
-
-  const selectedCharacters = selectedCharacterIds.flatMap(
-    (characterId) => characterCollection.entities[characterId] ?? []
-  );
-
-  return selectedCharacters;
 }
 
 export function useMyProps<T extends (keyof RRPlayer)[]>(

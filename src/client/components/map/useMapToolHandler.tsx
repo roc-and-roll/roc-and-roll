@@ -391,7 +391,7 @@ export function useMapToolHandler(
 
               type: "image",
               originalFunction: "map",
-              blurhash: image.blurhash,
+              blurHash: image.blurHash,
               width: image.width,
               height: image.height,
 

@@ -88,8 +88,10 @@ export const DiceGeometry: React.FC<
         emissive={new THREE.Color(contrastColor(finalColor))}
         emissiveMap={invertedImage}
         color={finalColor}
+        //cspell: disable
         clearcoat={0.3}
         clearcoatRoughness={0.8}
+        //cspell: enable
       />
     </mesh>
   );

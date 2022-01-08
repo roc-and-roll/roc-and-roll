@@ -1,9 +1,9 @@
-import * as t from "typanion";
+import * as z from "zod";
 import { assert, IsExact } from "conditional-type-checks";
 import { isRRID } from "../../../shared/validation";
 import {
   conditionNames,
-  damageTypes,
+  damageTypesWithoutNull,
   MakeRRID,
   RRCharacterCondition,
 } from "../../../shared/state";
@@ -25,49 +25,45 @@ export type CompendiumTextEntry =
       roll: { min: number; max: number; pad?: boolean } | { exact: number };
     };
 
-const __isTextEntryRecursive = t.makeValidator({
-  test: (value, state): value is CompendiumTextEntry =>
-    isTextEntry(value, state),
-});
+const __isTextEntryRecursive: z.ZodSchema<CompendiumTextEntry> = z.lazy(
+  () => isTextEntry
+);
 
-export const isTextEntry = t.isOneOf([
-  t.isString(),
-  t.isObject({
-    type: t.isLiteral("entries"),
-    name: t.isString(),
-    entries: t.isArray(__isTextEntryRecursive),
+export const isTextEntry = z.union([
+  z.string(),
+  z.strictObject({
+    type: z.literal("entries"),
+    name: z.string(),
+    entries: z.array(__isTextEntryRecursive),
   }),
-  t.isObject({
-    type: t.isLiteral("list"),
-    items: t.isArray(__isTextEntryRecursive),
+  z.strictObject({
+    type: z.literal("list"),
+    items: z.array(__isTextEntryRecursive),
   }),
-  t.isObject({
-    type: t.isLiteral("table"),
-    caption: t.isOptional(t.isString()),
-    colLabels: t.isArray(t.isString()),
-    colStyles: t.isArray(t.isUnknown()),
-    rows: t.isArray(t.isArray(__isTextEntryRecursive)),
+  z.strictObject({
+    type: z.literal("table"),
+    caption: z.optional(z.string()),
+    colLabels: z.array(z.string()),
+    colStyles: z.array(z.unknown()),
+    rows: z.array(z.array(__isTextEntryRecursive)),
   }),
-  t.isObject({
-    type: t.isLiteral("cell"),
-    roll: t.isOneOf(
-      [
-        t.isObject({
-          exact: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
-        }),
-        t.isObject({
-          min: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
-          max: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
-          pad: t.isOptional(t.isBoolean()),
-        }),
-      ],
-      { exclusive: true }
-    ),
+  z.strictObject({
+    type: z.literal("cell"),
+    roll: z.union([
+      z.strictObject({
+        exact: z.number().int().min(0),
+      }),
+      z.strictObject({
+        min: z.number().int().min(0),
+        max: z.number().int().min(0),
+        pad: z.optional(z.boolean()),
+      }),
+    ]),
   }),
 ]);
 
 // Make sure that the schema really matches the TextEntry type.
-assert<IsExact<t.InferType<typeof isTextEntry>, CompendiumTextEntry>>(true);
+assert<IsExact<z.infer<typeof isTextEntry>, CompendiumTextEntry>>(true);
 
 type MaybeArray<T> = T | T[];
 
@@ -189,159 +185,111 @@ export type CompendiumSpell = {
   };
 };
 
-const isScalingLevelDice = t.isObject({
-  label: t.isString(),
-  scaling: t.isDict(t.isString(), {
-    keys: t.applyCascade(t.isString(), [t.matchesRegExp(/^\d{1,2}$/)]),
-  }),
+const isScalingLevelDice = z.strictObject({
+  label: z.string(),
+  scaling: z.record(z.string().regex(/^\d{1,2}$/), z.string()),
 });
-
-export const isSpell = t.isObject({
-  components: t.isObject({
-    v: t.isOptional(t.isBoolean()),
-    s: t.isOptional(t.isBoolean()),
-    m: t.isOptional(
-      t.isOneOf(
-        [
-          t.isString(),
-          t.isObject({
-            text: t.isString(),
-            cost: t.isOptional(
-              t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()])
-            ),
-            consume: t.isOptional(
-              t.isOneOf([t.isBoolean(), t.isLiteral("optional")], {
-                exclusive: true,
-              })
-            ),
-          }),
-        ],
-        { exclusive: true }
-      )
+export const isSpell = z.strictObject({
+  components: z.strictObject({
+    v: z.optional(z.boolean()),
+    s: z.optional(z.boolean()),
+    m: z.optional(
+      z.union([
+        z.string(),
+        z.strictObject({
+          text: z.string(),
+          cost: z.optional(z.number().int().min(0)),
+          consume: z.optional(z.union([z.boolean(), z.literal("optional")])),
+        }),
+      ])
     ),
   }),
-  duration: t.isArray(
-    t.isOneOf(
-      [
-        t.isObject({
-          type: t.isEnum(["instant", "special"] as const),
-        }),
-        t.isObject({
-          type: t.isLiteral("permanent"),
-          ends: t.isArray(
-            t.isOneOf([t.isLiteral("dispel"), t.isLiteral("trigger")], {
-              exclusive: true,
-            })
-          ),
-        }),
-        t.isObject({
-          type: t.isLiteral("timed"),
-          duration: t.isObject({
-            type: t.isEnum(["round", "minute", "hour", "day"] as const),
-            amount: t.applyCascade(t.isNumber(), [
-              t.isInteger(),
-              t.isPositive(),
-            ]),
-            upTo: t.isOptional(t.isBoolean()),
-          }),
-          concentration: t.isOptional(t.isBoolean()),
-        }),
-      ],
-      { exclusive: true }
-    )
-  ),
-  level: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
-  name: t.isString(),
-  range: t.isOneOf(
-    [
-      t.isObject({
-        type: t.isEnum([
-          "point",
-          "radius",
-          "line",
-          "cone",
-          "hemisphere",
-          "sphere",
-          "cube",
-        ] as const),
-        distance: t.isObject({
-          type: t.isEnum(["feet", "miles"] as const),
-          amount: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
-        }),
+  duration: z.array(
+    z.union([
+      z.strictObject({
+        type: z.enum(["instant", "special"] as const),
       }),
-      t.isObject({
-        type: t.isLiteral("point"),
-        distance: t.isObject({
-          type: t.isEnum(["self", "touch", "sight", "unlimited"] as const),
-        }),
+      z.strictObject({
+        type: z.literal("permanent"),
+        ends: z.array(z.enum(["dispel", "trigger"] as const)),
       }),
-      t.isObject({ type: t.isLiteral("special") }),
-    ],
-    {
-      exclusive: true,
-    }
+      z.strictObject({
+        type: z.literal("timed"),
+        duration: z.strictObject({
+          type: z.enum(["round", "minute", "hour", "day"] as const),
+          amount: z.number().int().min(0),
+          upTo: z.optional(z.boolean()),
+        }),
+        concentration: z.optional(z.boolean()),
+      }),
+    ])
   ),
-  source: t.isString(),
-  page: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
-  otherSources: t.isOptional(
-    t.isArray(
-      t.isObject({
-        source: t.isString(),
-        page: t.isOptional(
-          t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()])
-        ),
+  level: z.number().int().min(0),
+  name: z.string(),
+  range: z.union([
+    z.strictObject({
+      type: z.enum([
+        "point",
+        "radius",
+        "line",
+        "cone",
+        "hemisphere",
+        "sphere",
+        "cube",
+      ] as const),
+      distance: z.strictObject({
+        type: z.enum(["feet", "miles"] as const),
+        amount: z.number().int().min(0),
+      }),
+    }),
+    z.strictObject({
+      type: z.literal("point"),
+      distance: z.strictObject({
+        type: z.enum(["self", "touch", "sight", "unlimited"] as const),
+      }),
+    }),
+    z.strictObject({ type: z.literal("special") }),
+  ]),
+  source: z.string(),
+  page: z.number().int().min(0),
+  otherSources: z.optional(
+    z.array(
+      z.strictObject({
+        source: z.string(),
+        page: z.optional(z.number().int().min(0)),
       })
     )
   ),
-  time: t.isArray(
-    t.isOneOf(
-      [
-        t.isObject({
-          number: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
-          unit: t.isEnum(["action", "bonus", "minute", "hour"] as const),
-        }),
-        t.isObject({
-          number: t.applyCascade(t.isNumber(), [t.isInteger(), t.isPositive()]),
-          unit: t.isLiteral("reaction"),
-          condition: t.isString(),
-        }),
-      ],
-      { exclusive: true }
-    )
+  time: z.array(
+    z.union([
+      z.strictObject({
+        number: z.number().int().min(0),
+        unit: z.enum(["action", "bonus", "minute", "hour"] as const),
+      }),
+      z.strictObject({
+        number: z.number().int().min(0),
+        unit: z.literal("reaction"),
+        condition: z.string(),
+      }),
+    ])
   ),
-  entries: t.isArray(isTextEntry),
-  entriesHigherLevel: t.isOptional(t.isArray(isTextEntry)),
-  srd: t.isOptional(
+  entries: z.array(isTextEntry),
+  entriesHigherLevel: z.optional(z.array(isTextEntry)),
+  srd: z.optional(
     // If this is a string, then the spell has a different name in the SRD.
-    t.isOneOf([t.isBoolean(), t.isString()], { exclusive: true })
+    z.union([z.boolean(), z.string()])
   ),
-  hasFluff: t.isOptional(t.isBoolean()),
-  hasFluffImages: t.isOptional(t.isBoolean()),
-  school: t.isEnum(["V", "N", "E", "A", "C", "T", "I", "D"] as const),
-  damageInflict: t.isOptional(
-    t.isArray(
-      t.isEnum(damageTypes.flatMap((each) => (each !== null ? each : [])))
-    )
-  ),
-  damageResist: t.isOptional(
-    t.isArray(
-      t.isEnum(damageTypes.flatMap((each) => (each !== null ? each : [])))
-    )
-  ),
-  damageImmune: t.isOptional(
-    t.isArray(
-      t.isEnum(damageTypes.flatMap((each) => (each !== null ? each : [])))
-    )
-  ),
-  damageVulnerable: t.isOptional(
-    t.isArray(
-      t.isEnum(damageTypes.flatMap((each) => (each !== null ? each : [])))
-    )
-  ),
-  conditionInflict: t.isOptional(t.isArray(t.isEnum(conditionNames))),
-  savingThrow: t.isOptional(
-    t.isArray(
-      t.isEnum([
+  hasFluff: z.optional(z.boolean()),
+  hasFluffImages: z.optional(z.boolean()),
+  school: z.enum(["V", "N", "E", "A", "C", "T", "I", "D"] as const),
+  damageInflict: z.optional(z.array(z.enum(damageTypesWithoutNull))),
+  damageResist: z.optional(z.array(z.enum(damageTypesWithoutNull))),
+  damageImmune: z.optional(z.array(z.enum(damageTypesWithoutNull))),
+  damageVulnerable: z.optional(z.array(z.enum(damageTypesWithoutNull))),
+  conditionInflict: z.optional(z.array(z.enum(conditionNames))),
+  savingThrow: z.optional(
+    z.array(
+      z.enum([
         "strength",
         "dexterity",
         "constitution",
@@ -351,9 +299,9 @@ export const isSpell = t.isObject({
       ] as const)
     )
   ),
-  abilityCheck: t.isOptional(
-    t.isArray(
-      t.isEnum([
+  abilityCheck: z.optional(
+    z.array(
+      z.enum([
         "strength",
         "dexterity",
         "constitution",
@@ -363,80 +311,80 @@ export const isSpell = t.isObject({
       ] as const)
     )
   ),
-  spellAttack: t.isOptional(t.isArray(t.isEnum(["R", "M"] as const))),
-  miscTags: t.isOptional(t.isArray(t.isString())),
-  areaTags: t.isOptional(t.isArray(t.isString())),
-  classes: t.isObject({
-    fromClassList: t.isOptional(
-      t.isArray(
-        t.isObject({
-          name: t.isString(),
-          source: t.isString(),
-          definedInSource: t.isOptional(t.isString()),
+  spellAttack: z.optional(z.array(z.enum(["R", "M"] as const))),
+  miscTags: z.optional(z.array(z.string())),
+  areaTags: z.optional(z.array(z.string())),
+  classes: z.strictObject({
+    fromClassList: z.optional(
+      z.array(
+        z.strictObject({
+          name: z.string(),
+          source: z.string(),
+          definedInSource: z.optional(z.string()),
         })
       )
     ),
-    fromClassListVariant: t.isOptional(
-      t.isArray(
-        t.isObject({
-          name: t.isString(),
-          source: t.isString(),
-          definedInSource: t.isOptional(t.isString()),
+    fromClassListVariant: z.optional(
+      z.array(
+        z.strictObject({
+          name: z.string(),
+          source: z.string(),
+          definedInSource: z.optional(z.string()),
         })
       )
     ),
-    fromSubclass: t.isOptional(
-      t.isArray(
-        t.isObject({
-          class: t.isObject({
-            name: t.isString(),
-            source: t.isString(),
+    fromSubclass: z.optional(
+      z.array(
+        z.strictObject({
+          class: z.strictObject({
+            name: z.string(),
+            source: z.string(),
           }),
-          subclass: t.isObject({
-            name: t.isString(),
-            source: t.isString(),
-            subSubclass: t.isOptional(t.isString()),
+          subclass: z.strictObject({
+            name: z.string(),
+            source: z.string(),
+            subSubclass: z.optional(z.string()),
           }),
         })
       )
     ),
   }),
-  races: t.isOptional(
-    t.isArray(
-      t.isObject({
-        name: t.isString(),
-        source: t.isString(),
-        baseName: t.isOptional(t.isString()),
-        baseSource: t.isOptional(t.isString()),
+  races: z.optional(
+    z.array(
+      z.strictObject({
+        name: z.string(),
+        source: z.string(),
+        baseName: z.optional(z.string()),
+        baseSource: z.optional(z.string()),
       })
     )
   ),
-  backgrounds: t.isOptional(
-    t.isArray(
-      t.isObject({
-        name: t.isString(),
-        source: t.isString(),
+  backgrounds: z.optional(
+    z.array(
+      z.strictObject({
+        name: z.string(),
+        source: z.string(),
       })
     )
   ),
-  eldritchInvocations: t.isOptional(
-    t.isArray(t.isObject({ name: t.isString(), source: t.isString() }))
+  eldritchInvocations: z.optional(
+    z.array(z.strictObject({ name: z.string(), source: z.string() }))
   ),
-  scalingLevelDice: t.isOptional(
-    t.isOneOf([isScalingLevelDice, t.isArray(isScalingLevelDice)])
+  scalingLevelDice: z.optional(
+    z.union([isScalingLevelDice, z.array(isScalingLevelDice)])
   ),
-  meta: t.isOptional(
-    t.isObject({
-      ritual: t.isOptional(t.isBoolean()),
+  meta: z.optional(
+    z.strictObject({
+      ritual: z.optional(z.boolean()),
     })
   ),
 });
 
 // Make sure that the schema really matches the Spell type.
-assert<IsExact<t.InferType<typeof isSpell>, CompendiumSpell>>(true);
+assert<IsExact<z.infer<typeof isSpell>, CompendiumSpell>>(true);
 
-export const isCompendiumData = t.isObject({
-  spell: t.isArray(isSpell),
+export const isCompendiumData = z.strictObject({
+  spell: z.array(isSpell),
 });
 
 export type CompendiumData = {
@@ -444,7 +392,7 @@ export type CompendiumData = {
 };
 
 // Make sure that the schema really matches the CompendiumData type.
-assert<IsExact<t.InferType<typeof isCompendiumData>, CompendiumData>>(true);
+assert<IsExact<z.infer<typeof isCompendiumData>, CompendiumData>>(true);
 
 export type CompendiumSourceID = MakeRRID<"compendiumSource">;
 
@@ -455,12 +403,12 @@ export type CompendiumSource = {
   data: CompendiumData;
 };
 
-export const isCompendiumSource = t.isObject({
+export const isCompendiumSource = z.strictObject({
   id: isRRID<CompendiumSourceID>(),
-  title: t.isString(),
-  meta: t.isString(),
+  title: z.string(),
+  meta: z.string(),
   data: isCompendiumData,
 });
 
 // Make sure that the schema really matches the TextEntry type.
-assert<IsExact<t.InferType<typeof isCompendiumSource>, CompendiumSource>>(true);
+assert<IsExact<z.infer<typeof isCompendiumSource>, CompendiumSource>>(true);

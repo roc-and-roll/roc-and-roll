@@ -28,7 +28,7 @@ import {
   assertNever,
   isCharacterDead,
   isCharacterHurt,
-  isCharacterOverhealed,
+  isCharacterOverHealed,
   isCharacterUnconsciousOrDead,
 } from "../../../shared/util";
 import { useMyProps } from "../../myself";
@@ -58,8 +58,8 @@ import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import useRafLoop from "../../useRafLoop";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { SVGBlurHashImage } from "../blurhash/SVGBlurhashImage";
-import { useHealthbarMeasurements } from "../../util";
+import { useHealthBarMeasurements } from "../../../client/util";
+import { SVGBlurHashImage } from "../blurHash/SVGBlurHashImage";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
@@ -70,7 +70,7 @@ export const MapToken = React.memo<{
   canStartMoving: boolean;
   onStartMove: (o: RRMapObject, e: React.MouseEvent) => void;
   auraArea: SVGGElement | null;
-  healthbarArea: SVGGElement | null;
+  healthBarArea: SVGGElement | null;
   zoom: number;
   contrastColor: string;
   smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
@@ -80,7 +80,7 @@ export const MapToken = React.memo<{
   canStartMoving,
   onStartMove,
   auraArea,
-  healthbarArea,
+  healthBarArea: healthBarArea,
   zoom,
   contrastColor,
   smartSetTotalHP,
@@ -101,7 +101,7 @@ export const MapToken = React.memo<{
       canStartMoving={canStartMoving}
       onStartMove={onStartMove}
       auraArea={auraArea}
-      healthbarArea={healthbarArea}
+      healthBarArea={healthBarArea}
       zoom={zoom}
       contrastColor={contrastColor}
       smartSetTotalHP={smartSetTotalHP}
@@ -117,7 +117,7 @@ function MapTokenInner({
   canStartMoving,
   onStartMove,
   auraArea,
-  healthbarArea,
+  healthBarArea,
   zoom,
   contrastColor,
   smartSetTotalHP,
@@ -129,7 +129,7 @@ function MapTokenInner({
   canStartMoving: boolean;
   onStartMove: (o: RRMapObject, e: React.MouseEvent) => void;
   auraArea: SVGGElement | null;
-  healthbarArea: SVGGElement | null;
+  healthBarArea: SVGGElement | null;
   zoom: number;
   contrastColor: string;
   smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
@@ -215,7 +215,7 @@ function MapTokenInner({
 
   const { x, y } = lerpedPosition;
 
-  const fullTokenRepresenation = (
+  const fullTokenRepresentation = (
     position: RRPoint,
     isGhost = false,
     ref: React.LegacyRef<SVGGElement> | undefined = undefined
@@ -281,7 +281,7 @@ function MapTokenInner({
   return (
     <>
       {ghostPosition &&
-        fullTokenRepresenation(ghostPosition.position, true, ghostTokenRef)}
+        fullTokenRepresentation(ghostPosition.position, true, ghostTokenRef)}
       {auraArea &&
         // we need to render the auras as the very first thing in the SVG so
         // that they are located in the background and still allow users to
@@ -299,7 +299,7 @@ function MapTokenInner({
           )),
           auraArea
         )}
-      {healthbarArea &&
+      {healthBarArea &&
         ReactDOM.createPortal(
           <>
             {isCharacterDead(character) && (
@@ -307,7 +307,7 @@ function MapTokenInner({
             )}
             {canControl && character.maxHP > 0 && (
               <g transform={`translate(${x},${y - 16})`}>
-                <Healthbar
+                <HealthBar
                   character={character}
                   setHP={setHP}
                   contrastColor={contrastColor}
@@ -333,7 +333,7 @@ function MapTokenInner({
               />
             </g>
           </>,
-          healthbarArea
+          healthBarArea
         )}
       {canControl ? (
         <Popover
@@ -354,10 +354,10 @@ function MapTokenInner({
           interactive
           placement="right"
         >
-          <g>{fullTokenRepresenation({ x, y })}</g>
+          <g>{fullTokenRepresentation({ x, y })}</g>
         </Popover>
       ) : (
-        fullTokenRepresenation({ x, y })
+        fullTokenRepresentation({ x, y })
       )}
     </>
   );
@@ -395,8 +395,8 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
         ? { filter: "url(#tokenUnconsciousOrDeadShadow)" }
         : isCharacterHurt(character)
         ? { filter: "url(#tokenHurtShadow)" }
-        : isCharacterOverhealed(character)
-        ? { filter: "url(#tokenOverhealedShadow)" }
+        : isCharacterOverHealed(character)
+        ? { filter: "url(#tokenOverHealedShadow)" }
         : {}),
       ...(canControl ? { cursor: "move" } : {}),
       borderRadius: tokenSize / 2,
@@ -422,7 +422,7 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
         height={tokenSize + extraSpace * 2}
         image={{
           url: tokenImageUrl(character, asset, tokenSize * zoom),
-          blurhash: asset.blurhash,
+          blurHash: asset.blurHash,
         }}
       />
 
@@ -661,7 +661,7 @@ function Aura({
   }
 }
 
-const Healthbar = React.memo(function Healthbar({
+const HealthBar = React.memo(function HealthBar({
   character,
   contrastColor,
   setHP,
@@ -677,7 +677,7 @@ const Healthbar = React.memo(function Healthbar({
     hpColor,
     temporaryHPColor,
     totalMaxHP,
-  } = useHealthbarMeasurements(character, tokenSize);
+  } = useHealthBarMeasurements(character, tokenSize);
 
   return (
     <>

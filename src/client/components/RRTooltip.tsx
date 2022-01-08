@@ -7,6 +7,8 @@ export type RRTooltipProps = Pick<
   "content" | "placement" | "offset" | "children" | "disabled"
 >;
 
-export function RRTooltip(props: RRTooltipProps) {
-  return <Tippy {...props} />;
-}
+export const RRTooltip = React.forwardRef<Element, RRTooltipProps>(
+  function RRTooltip(props, ref) {
+    return <Tippy ref={ref} {...props} />;
+  }
+);

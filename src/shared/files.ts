@@ -1,9 +1,9 @@
 import type { RRFile, RRFileImage, RRFileAudio } from "./state";
-import * as t from "typanion";
+import * as z from "zod";
 
-export const isAllowedFiletypes = t.isEnum(["all", "audio", "image"]);
+export const isAllowedFiletypes = z.enum(["all", "audio", "image"]);
 
-export type AllowedFileTypes = t.InferType<typeof isAllowedFiletypes>;
+export type AllowedFileTypes = z.infer<typeof isAllowedFiletypes>;
 
 export type AllowedFileTypesToObject<T extends AllowedFileTypes> =
   T extends "all"

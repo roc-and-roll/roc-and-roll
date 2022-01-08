@@ -1,7 +1,6 @@
 import { expect } from "@playwright/test";
-import { rnrtest } from "./rnrtest";
+import { uiTest } from "./uiTest";
 
-rnrtest(`title is set correctly`, async ({ page }) => {
-  await page.goto("/");
+uiTest(`title is set correctly`, async ({ page }) => {
   expect(await page.title()).toBe("Roc & Roll");
 });

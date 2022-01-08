@@ -71,11 +71,16 @@ Dice
     };
   }
 
+NumInner
+  = [0-9]+("."[0-9]+)? {
+    return text();
+  }
+
 Num
-  = (_ "+")? _ [0-9]+("."[0-9]+)? _ {
+  = (_ "+")? _ num:NumInner _ {
     return {
   	  type: 'num',
-      value: parseFloat(text(), 10),
+      value: parseFloat(num, 10),
       damage: {
         type: null,
       },

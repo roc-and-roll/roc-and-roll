@@ -35,7 +35,7 @@ import { Player } from "../Player";
 import { DebugSettings } from "./DebugSettings";
 import clsx from "clsx";
 
-const tooltipProps: RRTooltipProps = {
+const tooltipProps: Partial<RRTooltipProps> = {
   placement: "right",
   offset: [0, 16],
 };
@@ -213,7 +213,7 @@ export const HUDToolbar = React.memo(function Toolbar() {
             (!toolbarElement.gmOnly || myself.isGM) && (
               <div
                 key={toolbarElement.id}
-                className="m-2 last:mb-0 p-3 hud-panel"
+                className="toolbar-panel m-2 last:mb-0 p-3 hud-panel"
               >
                 {toolbarElement.content}
               </div>

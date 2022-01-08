@@ -400,6 +400,7 @@ describe("useServerDispatch", () => {
   );
 });
 
+//cspell: disable
 describe("OptimisticActionAppliers", () => {
   it("calculates deduplication keys correctly", () => {
     const applier: OptimisticActionApplier = {
@@ -412,6 +413,7 @@ describe("OptimisticActionAppliers", () => {
       `dkey/key`
     );
   });
+  //cspell: enable
 
   it("works", () => {
     const oAA = new OptimisticActionAppliers();

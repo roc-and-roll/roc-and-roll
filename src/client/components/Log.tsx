@@ -73,7 +73,11 @@ export function CollapsedLog() {
 
   return (
     <div className="p-2 line-clamp-3">
-      {lastLogEntry ? <LogEntry logEntry={lastLogEntry} /> : null}
+      {lastLogEntry ? (
+        <LogEntry logEntry={lastLogEntry} />
+      ) : (
+        <em>Nothing here yet. Try rolling some dice!</em>
+      )}
     </div>
   );
 }
