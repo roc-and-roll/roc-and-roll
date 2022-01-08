@@ -6,7 +6,7 @@ import { useServerState } from "../../state";
 import { MapListEntry } from "../Maps";
 import { Popover } from "../Popover";
 import { RoughCircle, RoughText } from "../rough";
-import { RRMouseEvent } from "./MapObjectThatIsNotAToken";
+import { RRMouseEvent } from "./pixi-utils";
 
 export const MAP_LINK_SIZE = GRID_SIZE / 2;
 

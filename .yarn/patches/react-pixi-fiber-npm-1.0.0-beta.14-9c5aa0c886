@@ -1,0 +1,64 @@
+diff --git a/cjs/react-pixi-fiber.development.js b/cjs/react-pixi-fiber.development.js
+index 70ed30cf839da49e90b41e8839d56302f72db640..4ac98c8f17a75c136e7b00f4333bc3404a14e9bd 100644
+--- a/cjs/react-pixi-fiber.development.js
++++ b/cjs/react-pixi-fiber.development.js
+@@ -293,7 +293,7 @@ function _nonIterableRest() {
+  * This source code is licensed under the MIT license found in the
+  * LICENSE file in the root directory of this source tree.
+  *
+- * 
++ *
+  */
+ function makeEmptyFunction(arg) {
+   return function () {
+@@ -330,7 +330,7 @@ var emptyFunction_1 = emptyFunction;
+  * This source code is licensed under the MIT license found in the
+  * LICENSE file in the root directory of this source tree.
+  *
+- * 
++ *
+  */
+ 
+ var validateFormat =  function (format) {
+@@ -1009,7 +1009,7 @@ var emptyObject_1 = emptyObject;
+  * LICENSE file in the root directory of this source tree.
+  *
+  * @typechecks
+- * 
++ *
+  */
+ 
+ var hasOwnProperty = Object.prototype.hasOwnProperty;
+@@ -20730,7 +20730,7 @@ function injectIntoDevTools(devToolsConfig) {
+     scheduleRoot:  scheduleRoot ,
+     setRefreshHandler:  setRefreshHandler ,
+     // Enables DevTools to append owner stacks to error messages in DEV mode.
+-    getCurrentFiber:  getCurrentFiberForDevTools 
++    getCurrentFiber:  getCurrentFiberForDevTools
+   });
+ }
+ 
+@@ -21586,7 +21586,7 @@ function resizeRenderer(app, oldProps, newProps) {
+ }
+ 
+ function usePreviousProps(value) {
+-  var props = React.useRef(emptyObject_1);
++  var props = React.useRef(value);
+   React.useEffect(function () {
+     props.current = value;
+   });
+diff --git a/package.json b/package.json
+index d1b8697d8cf8860467307e0547a14385bde4922e..04c36b247395bcff1fb040d364f37728f909aa6a 100644
+--- a/package.json
++++ b/package.json
+@@ -4,8 +4,8 @@
+   "description": "React Fiber renderer for PixiJS",
+   "main": "index.js",
+   "umd:main": "index.umd.js",
+-  "module": "index.es.js",
+-  "jsnext:main": "index.es.js",
++  "module": "index.js",
++  "jsnext:main": "index.js",
+   "author": "Michal Ochman",
+   "license": "MIT",
+   "repository": "github:michalochman/react-pixi-fiber",

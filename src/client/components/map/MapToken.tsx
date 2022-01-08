@@ -61,7 +61,7 @@ import { useHealthBarMeasurements } from "../../../client/util";
 import { PCircle, PRectangle } from "./Primitives";
 import * as PIXI from "pixi.js";
 import { Container, Text, Sprite } from "react-pixi-fiber";
-import { RRMouseEvent, colorValue } from "./MapObjectThatIsNotAToken";
+import { RRMouseEvent, colorValue, createPixiPortal } from "./pixi-utils";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
@@ -71,6 +71,8 @@ export const MapToken = React.memo<{
   object: RRToken;
   canStartMoving: boolean;
   onStartMove: (o: RRMapObject, e: RRMouseEvent) => void;
+  auraArea: Container | null;
+  healthBarArea: Container | null;
   zoom: number;
   contrastColor: string;
   smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
@@ -79,6 +81,8 @@ export const MapToken = React.memo<{
   object,
   canStartMoving,
   onStartMove,
+  auraArea,
+  healthBarArea,
   zoom,
   contrastColor,
   smartSetTotalHP,
@@ -98,6 +102,8 @@ export const MapToken = React.memo<{
       object={object}
       canStartMoving={canStartMoving}
       onStartMove={onStartMove}
+      auraArea={auraArea}
+      healthBarArea={healthBarArea}
       zoom={zoom}
       contrastColor={contrastColor}
       smartSetTotalHP={smartSetTotalHP}
@@ -112,6 +118,8 @@ function MapTokenInner({
   object,
   canStartMoving,
   onStartMove,
+  auraArea,
+  healthBarArea,
   zoom,
   contrastColor,
   smartSetTotalHP,
@@ -122,6 +130,8 @@ function MapTokenInner({
   object: RRToken;
   canStartMoving: boolean;
   onStartMove: (o: RRMapObject, e: RRMouseEvent) => void;
+  auraArea: Container | null;
+  healthBarArea: Container | null;
   zoom: number;
   contrastColor: string;
   smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
@@ -266,51 +276,60 @@ function MapTokenInner({
     <>
       {ghostPosition &&
         fullTokenRepresentation(ghostPosition.position, true, ghostTokenRef)}
-      {character.auras.map((aura, i) => (
-        <Aura
-          key={i}
-          character={character}
-          aura={aura}
-          myself={myself}
-          x={x}
-          y={y}
-        />
-      ))}
-      {
-        <>
-          {isCharacterDead(character) && (
-            <DeadMarker x={x} y={y} scale={character.scale} />
-          )}
-          {canControl && character.maxHP > 0 && (
-            <g transform={`translate(${x},${y - 16})`}>
-              <HealthBar
-                character={character}
-                setHP={setHP}
-                contrastColor={contrastColor}
-              />
-            </g>
-          )}
-          {isHighlighted && (
-            <PRectangle
+      {auraArea &&
+        // we need to render the auras as the very first thing in the game so
+        // that they are located in the background and still allow users to
+        // interact with objects that would otherwise be beneath the auras
+        createPixiPortal(
+          character.auras.map((aura, i) => (
+            <Aura
+              key={i}
+              character={character}
+              aura={aura}
+              myself={myself}
               x={x}
               y={y}
-              width={tokenSize}
-              height={tokenSize}
-              stroke={colorValue("orange")}
-              fill={0x000000}
-              alpha={0}
             />
-          )}
-          <Container x={x} y={y}>
-            <ConditionIcons
-              character={character}
-              canControl={canControl}
-              onMouseDown={handleMouseDown}
-              onMouseUp={handleMouseUp}
-            />
-          </Container>
-        </>
-      }
+          )),
+          auraArea
+        )}
+      {healthBarArea &&
+        createPixiPortal(
+          <>
+            {isCharacterDead(character) && (
+              <DeadMarker x={x} y={y} scale={character.scale} />
+            )}
+            {canControl && character.maxHP > 0 && (
+              <g transform={`translate(${x},${y - 16})`}>
+                <HealthBar
+                  character={character}
+                  setHP={setHP}
+                  contrastColor={contrastColor}
+                />
+              </g>
+            )}
+            {isHighlighted && (
+              <PRectangle
+                x={x}
+                y={y}
+                width={tokenSize}
+                height={tokenSize}
+                stroke={colorValue("orange")}
+                fill={0x000000}
+                alpha={0}
+              />
+            )}
+            <Container x={x} y={y}>
+              <ConditionIcons
+                character={character}
+                canControl={canControl}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+              />
+            </Container>
+          </>,
+          healthBarArea
+        )}
       {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, no-constant-condition
         false && canControl ? (
@@ -386,7 +405,7 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
     return null;
   }
 
-  // TODO tokenstyle
+  // TODO tokenStyle
   return (
     <>
       <Sprite

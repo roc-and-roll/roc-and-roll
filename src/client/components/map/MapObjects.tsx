@@ -14,10 +14,8 @@ import { MapAreas } from "./Map";
 import { ToolButtonState } from "./MapContainer";
 import { mapObjectIdsAtom, mapObjectsFamily } from "./recoil";
 import { MapLink } from "./MapLink";
-import {
-  MapObjectThatIsNotAToken,
-  RRMouseEvent,
-} from "./MapObjectThatIsNotAToken";
+import { MapObjectThatIsNotAToken } from "./MapObjectThatIsNotAToken";
+import { createPixiPortal, RRMouseEvent } from "./pixi-utils";
 import { MapToken } from "./MapToken";
 
 const HURT_SHADOW_BLUR_SIZE = 0.2;
@@ -129,48 +127,53 @@ const MapObjectWrapper = React.memo<{
 
   switch (mapObject.type) {
     case "image":
-      // TODO z-index
-      return (
+      return createPixiPortal(
         <MapObjectThatIsNotAToken
           mapId={mapId}
           object={mapObject}
           canStartMoving={canStartMoving}
           onStartMove={onStartMove}
-        />
+        />,
+        areas.imageArea
       );
     case "rectangle":
     case "ellipse":
     case "freehand":
     case "polygon":
     case "text":
-      return (
+      return createPixiPortal(
         <MapObjectThatIsNotAToken
           mapId={mapId}
           object={mapObject}
           canStartMoving={canStartMoving}
           onStartMove={onStartMove}
-        />
+        />,
+        areas.defaultArea
       );
     case "mapLink":
-      return (
+      return createPixiPortal(
         <MapLink
           link={mapObject}
           canStartMoving={canStartMoving}
           onStartMove={onStartMove}
-        />
+        />,
+        areas.tokenArea
       );
     case "token": {
-      return (
+      return createPixiPortal(
         <MapToken
           mapId={mapId}
           object={mapObject}
           canStartMoving={canStartMoving}
           onStartMove={onStartMove}
           // additional parameters for tokens
+          auraArea={areas.auraArea}
+          healthBarArea={areas.healthBarArea}
           zoom={zoom}
           contrastColor={contrastColor}
           smartSetTotalHP={smartSetTotalHP}
-        />
+        />,
+        areas.tokenArea
       );
     }
     default:

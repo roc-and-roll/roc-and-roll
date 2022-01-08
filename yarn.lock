@@ -3962,6 +3962,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/react-is@npm:^17.0.3":
+  version: 17.0.3
+  resolution: "@types/react-is@npm:17.0.3"
+  dependencies:
+    "@types/react": "*"
+  checksum: 6abb7c47d54f012272650df8a962a28bd82f219291e5ef8b4dfa7fe0bb98ae243b060bf9fbe8ceff6213141794855a006db194b490b00ffd15842ae19d0ce1f0
+  languageName: node
+  linkType: hard
+
+"@types/react-reconciler@npm:^0.26.4":
+  version: 0.26.4
+  resolution: "@types/react-reconciler@npm:0.26.4"
+  dependencies:
+    "@types/react": "*"
+  checksum: 5ebb72f8aa70824b69030ae7f4c21828c0fb5c1cc5873a606eb7f7ac50cf5dd52502edcd32bf1eead2f149d076ee1798c86f1ffaebfa8b31d523343368d351e0
+  languageName: node
+  linkType: hard
+
 "@types/react-test-renderer@npm:>=16.9.0, @types/react-test-renderer@npm:^17":
   version: 17.0.1
   resolution: "@types/react-test-renderer@npm:17.0.1"
@@ -4667,7 +4685,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ansi-regex@npm:^5.0.0, ansi-regex@npm:^5.0.1":
+"ansi-regex@npm:^5.0.1":
   version: 5.0.1
   resolution: "ansi-regex@npm:5.0.1"
   checksum: 2aa4bb54caf2d622f1afdad09441695af2a83aa3fe8b8afa581d205e57ed4261c183c4d3877cee25794443fde5876417d859c108078ab788d6af7e4fe52eb66b
@@ -6302,14 +6320,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"core-util-is@npm:1.0.2, core-util-is@npm:~1.0.0":
+"core-util-is@npm:1.0.2":
   version: 1.0.2
   resolution: "core-util-is@npm:1.0.2"
   checksum: 7a4c925b497a2c91421e25bf76d6d8190f0b2359a9200dbeed136e63b2931d6294d3b1893eda378883ed363cd950f44a12a401384c609839ea616befb7927dab
   languageName: node
   linkType: hard
 
-"core-util-is@npm:^1.0.2":
+"core-util-is@npm:^1.0.2, core-util-is@npm:~1.0.0":
   version: 1.0.3
   resolution: "core-util-is@npm:1.0.3"
   checksum: 9de8597363a8e9b9952491ebe18167e3b36e7707569eed0ebf14f8bba773611376466ae34575bca8cfe3c767890c859c74056084738f09d4e4a6f902b2ad7d99
@@ -8803,13 +8821,6 @@ __metadata:
     capital-case: ^1.0.4
     tslib: ^2.0.3
   checksum: 571c83eeb25e8130d172218712f807c0b96d62b020981400bccc1503a7cf14b09b8b10498a962d2739eccf231d950e3848ba7d420b58a6acd2f9283439546cd9
-  languageName: node
-  linkType: hard
-
-"hoist-non-react-statics@npm:^2.5.0":
-  version: 2.5.5
-  resolution: "hoist-non-react-statics@npm:2.5.5"
-  checksum: ee2d05e5c7e1398ad84a15b0327f66bd78f38a8e0015e852f954b36434e32eb7e942d5357505020a3a1147f247b165bf1e69d72393e3accab67cafdafeb86230
   languageName: node
   linkType: hard
 
@@ -13524,17 +13535,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prop-types@npm:^15.6.2":
-  version: 15.8.1
-  resolution: "prop-types@npm:15.8.1"
-  dependencies:
-    loose-envify: ^1.4.0
-    object-assign: ^4.1.1
-    react-is: ^16.13.1
-  checksum: c056d3f1c057cb7ff8344c645450e14f088a915d078dcda795041765047fa080d38e5d626560ccaac94a4e16e3aa15f3557c1a9a8d1174530955e992c675e459
-  languageName: node
-  linkType: hard
-
 "proper-lockfile@npm:^4.1.1, proper-lockfile@npm:^4.1.2":
   version: 4.1.2
   resolution: "proper-lockfile@npm:4.1.2"
@@ -13727,26 +13727,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-adopt@npm:^0.6.0":
-  version: 0.6.0
-  resolution: "react-adopt@npm:0.6.0"
-  dependencies:
-    hoist-non-react-statics: ^2.5.0
-    react: ^16.3.2
-    react-display-name: ^0.2.4
-  peerDependencies:
-    react: ">= 0.14.0"
-  checksum: a26801f465ee9c7d1e449787f2dea6de63a284d3647c0f16d372752391cb5b1c0826d268f14a8f37094e99b87d6f0461b49730fd69ca2f0af34a6aed948a7bb7
-  languageName: node
-  linkType: hard
-
-"react-display-name@npm:^0.2.4":
-  version: 0.2.5
-  resolution: "react-display-name@npm:0.2.5"
-  checksum: ba27778c975e09afea2bfb58c4052b9e12121329a5115391564085ec64293f2b54d3408b841ad04600142c37d40493442676bf1124d0cc0e68f2f1e02762812b
-  languageName: node
-  linkType: hard
-
 "react-dnd-html5-backend@npm:^14.0.1":
   version: 14.0.1
   resolution: "react-dnd-html5-backend@npm:14.0.1"
@@ -13818,6 +13798,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-is@npm:18.0.0-alpha-b6ff9ad16-20210820":
+  version: 18.0.0-alpha-b6ff9ad16-20210820
+  resolution: "react-is@npm:18.0.0-alpha-b6ff9ad16-20210820"
+  checksum: c83f29c0ad5d0024f1f805084bfbfc177a58af1df39c60c761b31643e921982138ac1d5c1717b71b62b8415b3164efc0ab611eba052e7fa3700d21a45684c869
+  languageName: node
+  linkType: hard
+
 "react-is@npm:18.0.0-beta-149b420f6-20211119":
   version: 18.0.0-beta-149b420f6-20211119
   resolution: "react-is@npm:18.0.0-beta-149b420f6-20211119"
@@ -13832,7 +13819,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-is@npm:^16.13.1, react-is@npm:^16.7.0, react-is@npm:^16.8.1":
+"react-is@npm:^16.7.0, react-is@npm:^16.8.1":
   version: 16.13.1
   resolution: "react-is@npm:16.13.1"
   checksum: f7a19ac3496de32ca9ae12aa030f00f14a3d45374f1ceca0af707c831b2a6098ef0d6bdae51bd437b0a306d7f01d4677fcc8de7c0d331eb47ad0f46130e53c5f
@@ -13893,6 +13880,21 @@ __metadata:
     react: ^17.0.0
     react-dom: ^17.0.0
   checksum: 2df79b9df37bcf7b49978cca4a2206412c5f562bf8dc661b8413756a74704607330407d8e78fc74ec615c1ee8ab17f904c0cc9f936998dbe0a557bd4d23fc656
+  languageName: node
+  linkType: hard
+
+"react-pixi-fiber@patch:react-pixi-fiber@npm:1.0.0-beta.14#.yarn/patches/react-pixi-fiber-npm-1.0.0-beta.14-9c5aa0c886::locator=roc-and-roll%40workspace%3A.":
+  version: 1.0.0-beta.14
+  resolution: "react-pixi-fiber@patch:react-pixi-fiber@npm%3A1.0.0-beta.14#.yarn/patches/react-pixi-fiber-npm-1.0.0-beta.14-9c5aa0c886::version=1.0.0-beta.14&hash=3cad36&locator=roc-and-roll%40workspace%3A."
+  dependencies:
+    fbjs: ^3.0.0
+    react-reconciler: ^0.26.2
+  peerDependencies:
+    pixi.js: ^4.4.0 || ^5.0.0 || ^6.0.0
+    prop-types: ^15.7.2
+    react: ^17.0.0
+    react-dom: ^17.0.0
+  checksum: c0deb03ca11cd40872dd40fa2742ee57af2e2a5dc4fcfa659f18cde2125eb3751200e6544bb93006796da837ed230a23496dd9ce31d38b28c98ff8ffe04ce3c0
   languageName: node
   linkType: hard
 
@@ -13967,17 +13969,6 @@ __metadata:
     react: ">=16.13"
     react-dom: ">=16.13"
   checksum: cbaf8896f14bb4b3259a39181b8cd26bf8291cda5f02729f6f977169145acfa1b727d9a99710f20329eb717bad189f599a1616e735053ff07f9ae0a0bd7fd206
-  languageName: node
-  linkType: hard
-
-"react@npm:^16.3.2":
-  version: 16.14.0
-  resolution: "react@npm:16.14.0"
-  dependencies:
-    loose-envify: ^1.1.0
-    object-assign: ^4.1.1
-    prop-types: ^15.6.2
-  checksum: 8484f3ecb13414526f2a7412190575fc134da785c02695eb92bb6028c930bfe1c238d7be2a125088fec663cc7cda0a3623373c46807cf2c281f49c34b79881ac
   languageName: node
   linkType: hard
 
@@ -14611,6 +14602,8 @@ resolve@^2.0.0-next.3:
     "@types/proper-lockfile": ^4
     "@types/react": ^17.0.19
     "@types/react-dom": ^17.0.9
+    "@types/react-is": ^17.0.3
+    "@types/react-reconciler": ^0.26.4
     "@types/react-test-renderer": ^17
     "@types/sharp": ^0.28.6
     "@types/socket.io": ^3.0.2
@@ -14685,11 +14678,11 @@ resolve@^2.0.0-next.3:
     raw-loader: ^4.0.2
     re-resizable: ^6.9.0
     react: alpha
-    react-adopt: ^0.6.0
     react-dnd: ^14.0.3
     react-dnd-html5-backend: ^14.0.1
     react-dom: alpha
     react-flip-toolkit: ^7.0.13
+    react-is: 18.0.0-alpha-b6ff9ad16-20210820
     react-lag-radar: ^1.0.0
     react-markdown: ^7.0.1
     react-pixi-fiber: 1.0.0-beta.14
@@ -15811,16 +15804,7 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"strip-ansi@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "strip-ansi@npm:6.0.0"
-  dependencies:
-    ansi-regex: ^5.0.0
-  checksum: 04c3239ede44c4d195b0e66c0ad58b932f08bec7d05290416d361ff908ad282ecdaf5d9731e322c84f151d427436bde01f05b7422c3ec26dd927586736b0e5d0
-  languageName: node
-  linkType: hard
-
-"strip-ansi@npm:^6.0.1":
+"strip-ansi@npm:^6.0.0, strip-ansi@npm:^6.0.1":
   version: 6.0.1
   resolution: "strip-ansi@npm:6.0.1"
   dependencies:

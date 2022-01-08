@@ -69,10 +69,12 @@ import { getPathWithNewPoint } from "./mapHelpers";
 import useRafLoop from "../../useRafLoop";
 import { Container, Stage } from "react-pixi-fiber";
 import * as PIXI from "pixi.js";
-import { RRMouseEvent } from "./MapObjectThatIsNotAToken";
+import { colorValue, RRMouseEvent } from "./pixi-utils";
 import { MyselfContext } from "../../myself";
 import { ContextBridge } from "./ContextBridge";
 import { ServerStateContext, ServerConnectionContext } from "../../state";
+import { RoughContextProvider } from "../rough";
+import { matrixToPixiTransform } from "./pixi-utils";
 
 type Rectangle = [number, number, number, number];
 
@@ -824,66 +826,65 @@ transform,
     },
   });
 
-  const toPixi = (m: Matrix) => {
-    const t = new PIXI.Transform();
-    t.setFromMatrix(new PIXI.Matrix(m.a, m.b, m.c, m.d, m.e, m.f));
-    return t;
-  };
-
   const RecoilBridge = useRecoilBridgeAcrossReactRoots_UNSTABLE();
 
   return (
-    <div
-      ref={rootRef}
-      {...bind()}
-      style={{
-        backgroundColor,
-        touchAction: "none",
-        cursor: toolButtonState === "tool" ? "crosshair" : "inherit",
-      }}
-    >
-      <ContextBridge
-        contexts={[ServerStateContext, ServerConnectionContext, MyselfContext]}
-        barrierRender={(children) => (
-          <Stage
-            className="map-svg"
-            options={{
-              height: viewPortSize.y,
-              width: viewPortSize.x,
-              antialias: true,
-            }}
-          >
-            {children}
-          </Stage>
-        )}
+    <RoughContextProvider enabled={roughEnabled}>
+      <div
+        ref={rootRef}
+        {...bind()}
+        style={{
+          touchAction: "none",
+          cursor: toolButtonState === "tool" ? "crosshair" : "inherit",
+        }}
       >
-        <RecoilBridge>
-          <Container
-            transform={toPixi(transform)}
-            interactive
-            mousedown={handleMouseDown}
-            mousemove={handleMapMouseMove}
-          >
-            <Container ref={setImageArea} />
-            <Container ref={setAuraArea} />
-            <Container ref={setDefaultArea} />
-            {/* {gridEnabled && <MapGrid transform={transform} color={gridColor} />} */}
-            <Container ref={setTokenArea} />
-            <Container ref={setHealthBarArea} />
+        <ContextBridge
+          contexts={[
+            ServerStateContext,
+            ServerConnectionContext,
+            MyselfContext,
+          ]}
+          barrierRender={(children) => (
+            <Stage
+              className="map-svg"
+              options={{
+                height: viewPortSize.y,
+                width: viewPortSize.x,
+                antialias: true,
+                backgroundColor: colorValue(backgroundColor),
+              }}
+            >
+              {children}
+            </Stage>
+          )}
+        >
+          <RecoilBridge>
+            <Container
+              transform={matrixToPixiTransform(transform)}
+              interactive
+              mousedown={handleMouseDown}
+              mousemove={handleMapMouseMove}
+            >
+              <Container ref={setImageArea} />
+              <Container ref={setAuraArea} />
+              <Container ref={setDefaultArea} />
+              {/* {gridEnabled && <MapGrid transform={transform} color={gridColor} />} */}
+              <Container ref={setTokenArea} />
+              <Container ref={setHealthBarArea} />
 
-            {areas && (
-              <MapObjects
-                mapId={mapId}
-                areas={areas}
-                contrastColor={contrastColor}
-                smartSetTotalHP={onSmartSetTotalHP}
-                toolButtonState={toolButtonState}
-                handleStartMoveMapObject={handleStartMoveMapObject}
-                zoom={transform.a}
-              />
-            )}
+              {areas && (
+                <MapObjects
+                  mapId={mapId}
+                  areas={areas}
+                  contrastColor={contrastColor}
+                  smartSetTotalHP={onSmartSetTotalHP}
+                  toolButtonState={toolButtonState}
+                  handleStartMoveMapObject={handleStartMoveMapObject}
+                  zoom={transform.a}
+                />
+              )}
 
-            {/* <FogOfWar transform={transform} revealedAreas={revealedAreas} />
+              {/* <FogOfWar transform={transform} revealedAreas={revealedAreas} />
 
           {withSelectionAreaDo(
             selectionArea,
@@ -914,10 +915,11 @@ transform,
             players={players}
           />
           {toolOverlay} */}
-          </Container>
-        </RecoilBridge>
-      </ContextBridge>
-    </div>
+            </Container>
+          </RecoilBridge>
+        </ContextBridge>
+      </div>
+    </RoughContextProvider>
   );
 });
 

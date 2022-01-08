@@ -25,15 +25,7 @@ import * as PIXI from "pixi.js";
 import { PRectangle } from "./Primitives";
 import { Container, PixiElement, Sprite } from "react-pixi-fiber";
 import { assetUrl } from "../../files";
-
-export const colorValue = (color: string) =>
-  parseInt(tinycolor(color).toHex(), 16);
-
-export type RRMouseEvent = {
-  clientX: number;
-  clientY: number;
-  button: number;
-};
+import { colorValue, RRMouseEvent } from "./pixi-utils";
 
 const SELECTED_OR_HOVERED_STROKE_LINE_DASH = [GRID_SIZE / 10, GRID_SIZE / 10];
 
@@ -100,9 +92,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
       [canControl]
     ),
     fill: colorValue(
-      isSelectedOrHovered
-        ? object.color
-        : tinycolor(object.color).setAlpha(0.3).toHexString()
+      isSelectedOrHovered ? object.color : tinycolor(object.color).setAlpha(0.3)
     ),
     stroke: colorValue(object.color),
   };
