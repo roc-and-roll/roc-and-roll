@@ -157,7 +157,7 @@ export const mapTransformAtom = atom<Matrix>({
   default: identity(),
 });
 
-const withSelectionAreaDo = <T extends any>(
+const withSelectionAreaDo = <T,>(
   selectionArea: Rectangle | null,
   cb: (x: number, y: number, w: number, h: number) => T,
   otherwise: T | (() => T)

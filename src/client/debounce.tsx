@@ -10,7 +10,7 @@ import { useLatest } from "./useLatest";
 
 type PendingChangeSubscriber = (pending: boolean) => void;
 
-class DebouncerImpl<A extends unknown[], R extends unknown> {
+class DebouncerImpl<A extends unknown[], R> {
   private lastArgs: null | A = null;
   private pendingChangeSubscribers = new Set<PendingChangeSubscriber>();
 
@@ -61,9 +61,7 @@ export class SyncedDebounceMaker {
 
   constructor(private readonly time: number) {}
 
-  public makeDebouncer<A extends unknown[], R extends unknown>(
-    debouncee: (...args: A) => R
-  ) {
+  public makeDebouncer<A extends unknown[], R>(debouncee: (...args: A) => R) {
     const schedule = (debouncer: DebouncerImpl<A, R>) => {
       if (this.pendingDebouncers.has(debouncer)) {
         return;
@@ -185,10 +183,7 @@ export function useAggregatedDebounce<A extends unknown[]>(
   return localCallback;
 }
 
-export function useAggregatedDoubleDebounce<
-  A extends unknown[],
-  R extends unknown
->(
+export function useAggregatedDoubleDebounce<A extends unknown[], R>(
   callback: (args: A[]) => R,
   serverDebounce: Debouncer,
   localDebounceSteps: number,

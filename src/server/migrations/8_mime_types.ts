@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import path from "path";
 import { getAudioDuration, getImageDimensions, getMimeType } from "../files";
 import { AbstractMigration } from "../migrations";

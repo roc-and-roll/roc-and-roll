@@ -13,10 +13,7 @@ import { ephemeralPlayersFamily } from "./recoil";
 import { useContrastColor } from "../../util";
 import { pathLength, shortestDistance } from "./mapHelpers";
 
-const overlappingPairsMap = <T extends any, U extends any>(
-  a: T[],
-  f: (a: T, b: T, i: number) => U
-) => {
+const overlappingPairsMap = <T, U>(a: T[], f: (a: T, b: T, i: number) => U) => {
   const res: U[] = [];
   for (let i = 0; i < a.length - 1; i++) {
     res.push(f(a[i]!, a[i + 1]!, i));

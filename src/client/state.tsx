@@ -438,7 +438,10 @@ export function ServerStateProvider({
   );
 
   const updateState = useCallback(
-    (finishedOptimisticUpdateIds: OptimisticUpdateID[], forceSync = false) => {
+    (
+      finishedOptimisticUpdateIds: OptimisticUpdateID[],
+      forceSync: boolean = false
+    ) => {
       removeFinishedOptimisticUpdateAppliers(finishedOptimisticUpdateIds);
 
       internalStateRef.current = applyOptimisticUpdateAppliers(
@@ -779,7 +782,7 @@ export function useServerDispatch() {
           ? actionOrActionsOrUpdater(stateRef.current)
           : actionOrActionsOrUpdater;
 
-      const allActions = Array.isArray(actionOrActions)
+      const allActions: A[] = Array.isArray(actionOrActions)
         ? actionOrActions
         : [actionOrActions as A];
 

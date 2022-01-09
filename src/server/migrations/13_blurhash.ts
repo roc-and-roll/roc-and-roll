@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import path from "path";
 import { AbstractMigration } from "../migrations";
 import pLimit from "p-limit";

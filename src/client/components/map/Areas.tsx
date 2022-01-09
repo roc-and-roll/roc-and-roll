@@ -102,10 +102,7 @@ export function BurstArea({
   );
 }
 
-function unique<E extends unknown>(
-  elements: E[],
-  comparator: (a: E, b: E) => boolean
-) {
+function unique<E>(elements: E[], comparator: (a: E, b: E) => boolean) {
   const result: E[] = [];
 
   // this can certainly be done better.

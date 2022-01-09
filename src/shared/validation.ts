@@ -324,6 +324,14 @@ export const isSyncedState = z.strictObject({
               visibleWhen: z.enum(["always", "onTurn", "hover"] as const),
             })
           ),
+          limitedUseSkills: z.array(
+            z.strictObject({
+              maxUseCount: z.number().int().min(0),
+              currentUseCount: z.number().int().min(0),
+              restoresAt: z.enum(["shortRest", "longRest"] as const),
+              name: z.string(),
+            })
+          ),
           hp: z.number().int(),
           temporaryHP: z.number().int().min(0),
           maxHP: z.number().int().min(0),

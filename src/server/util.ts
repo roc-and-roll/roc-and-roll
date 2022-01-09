@@ -3,7 +3,11 @@ import path from "path";
 import { readdir } from "fs/promises";
 import os from "os";
 
-export function buildPatch(old: any, cur: any, keyPrefix: string = "") {
+export function buildPatch(
+  old: Record<string, unknown>,
+  cur: Record<string, unknown>,
+  keyPrefix: string = ""
+) {
   if (typeof old !== "object" || typeof cur !== "object") {
     throw new Error("Can only patch objects!");
   }
@@ -12,7 +16,7 @@ export function buildPatch(old: any, cur: any, keyPrefix: string = "") {
   const keysOld = Object.keys(old);
   const keysCur = Object.keys(cur);
 
-  const patch = keysOld.reduce((patch: any, keyOld: string) => {
+  const patch = keysOld.reduce((patch, keyOld: string) => {
     const keyWasDeleted = !(keyOld in cur);
     if (keyWasDeleted) {
       deletedKeys.push(`${keyPrefix}${keyOld}`);
@@ -37,12 +41,12 @@ export function buildPatch(old: any, cur: any, keyPrefix: string = "") {
       }
     }
     return patch;
-  }, {});
+  }, {} as Record<string, unknown>);
 
   return {
     patch: keysCur
       .filter((keyCur) => !(keyCur in old))
-      .reduce((patch: any, keyCur: string) => {
+      .reduce((patch, keyCur: string) => {
         patch[keyCur] = cur[keyCur];
         return patch;
       }, patch),
@@ -50,7 +54,7 @@ export function buildPatch(old: any, cur: any, keyPrefix: string = "") {
   };
 }
 
-export function isEmptyObject(obj: any) {
+export function isEmptyObject(obj: object) {
   return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
 

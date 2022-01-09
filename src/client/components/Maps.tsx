@@ -97,10 +97,13 @@ export function MapListEntry({
   const myself = useMyProps("currentMap", "id");
   const isMyCurrentMap = myself.currentMap === mapId;
 
-  const [, dragRef] = useDrag<{ id: RRMapID }, void, null>(() => ({
-    type: "map",
-    item: { id: mapId },
-  }));
+  const [, dragRef] = useDrag<{ id: RRMapID }, void, null>(
+    () => ({
+      type: "map",
+      item: { id: mapId },
+    }),
+    [mapId]
+  );
 
   const [{ canDropAndHovered, canDrop }, dropRef] = useDrop<
     { id: RRPlayerID },

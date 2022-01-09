@@ -6,6 +6,8 @@ module.exports = {
     extend: {
       colors: {
         rr: colors.slate,
+        rrOrange: "#ff9900",
+        rrOrangeLighter: "#ffbb22",
       },
       keyframes: {
         "border-wiggle": {

@@ -52,10 +52,7 @@ export function getPathWithNewPoint(path: RRPoint[], newPoint: RRPoint) {
   return path;
 }
 
-const overlappingPairsSum = <T extends any>(
-  a: T[],
-  f: (a: T, b: T) => number
-) => {
+const overlappingPairsSum = <T,>(a: T[], f: (a: T, b: T) => number) => {
   let sum = 0;
   for (let i = 0; i < a.length - 1; i++) {
     sum += f(a[i]!, a[i + 1]!);

@@ -26,9 +26,12 @@
     "typescript",
     "typescriptreact"
   ],
+  // "eslint.codeActionsOnSave.rules": ["!@typescript-eslint/*", "*"],
+  // "eslint.debug": true,
 
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    // TODO: Disabled for now, simply too slow.
+    "source.fixAll.eslint": false
   },
   "[javascript]": {
     "editor.formatOnSave": true,

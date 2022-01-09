@@ -62,6 +62,7 @@ import { CharacterSheetEditor } from "./CharacterSheetEditor";
 import { Collapsible } from "../Collapsible";
 import { Auras } from "./Auras";
 import { FileInput } from "../FileInput";
+import { LimitedUseSkillEditor } from "./LimitedUseItemEditor";
 
 export interface ConditionWithIcon {
   name: RRCharacterCondition;
@@ -260,8 +261,11 @@ export function CharacterEditor({
       <Collapsible title="Hit Point Editor">
         <HPEditor character={character} updateFunc={updateFunc} />
       </Collapsible>
-      <Collapsible title="Character Editor" defaultCollapsed={true}>
+      <Collapsible title="Stats & Proficiencies" defaultCollapsed={true}>
         <CharacterSheetEditor character={character} isTemplate={isTemplate} />
+      </Collapsible>
+      <Collapsible title="Skills" defaultCollapsed={true}>
+        <LimitedUseSkillEditor character={character} />
       </Collapsible>
       <Collapsible title="Auras" defaultCollapsed={true}>
         <Auras character={character} isTemplate={isTemplate} />

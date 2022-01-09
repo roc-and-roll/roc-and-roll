@@ -98,12 +98,12 @@ function execute(executable: string, args: string[]) {
   const proc = spawn("node", [...nodeArgs, executable, ...args]);
 
   const stdoutChunks: Buffer[] = [];
-  proc.stdout.on("data", (data) => {
+  proc.stdout.on("data", (data: Buffer | string) => {
     stdoutChunks.push(Buffer.from(data));
   });
 
   const stderrChunks: Buffer[] = [];
-  proc.stderr.on("data", (data) => {
+  proc.stderr.on("data", (data: Buffer | string) => {
     stderrChunks.push(Buffer.from(data));
   });
 

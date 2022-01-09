@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { rrid } from "../../shared/util";
 import { AbstractMigration } from "../migrations";
 

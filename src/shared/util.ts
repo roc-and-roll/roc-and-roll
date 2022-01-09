@@ -6,7 +6,7 @@ export async function randomName(pattern = "!<s|B|Bv|v><V|s|'|V><s|V|C>") {
   return new (await import("./namegen")).default(pattern).toString();
 }
 
-export function isObject(item: any): item is Record<string, any> {
+export function isObject(item: any): item is Record<string, unknown> {
   return item && typeof item === "object" && !Array.isArray(item);
 }
 
@@ -28,7 +28,7 @@ export function mergeDeep<T>(base: any, patch: any): T {
       }
     });
   }
-  return output as T;
+  return output as unknown as T;
 }
 
 export function rrid<E extends { id: RRID }>() {
@@ -39,7 +39,7 @@ export function timestamp(): RRTimestamp {
   return Date.now();
 }
 
-export function throttled<A extends unknown[], R extends unknown>(
+export function throttled<A extends unknown[], R>(
   fn: (...args: A) => R,
   time: number
 ): (...args: A) => void {

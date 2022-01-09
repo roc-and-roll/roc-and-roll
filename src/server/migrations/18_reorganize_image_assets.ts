@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import path from "path";
 import { rrid } from "../../shared/util";
 import { getMimeType } from "../files";

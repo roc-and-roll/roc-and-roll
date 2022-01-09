@@ -492,10 +492,13 @@ function DiceHolder({
 }
 
 function PickerDiceTemplateNested() {
-  const [, dragRef] = useDrag<Record<string, never>, void, null>(() => ({
-    type: "diceTemplateNested",
-    item: {},
-  }));
+  const [, dragRef] = useDrag<Record<string, never>, void, null>(
+    () => ({
+      type: "diceTemplateNested",
+      item: {},
+    }),
+    []
+  );
 
   return (
     <div className="dice-option nested-template" ref={dragRef}>
@@ -511,10 +514,13 @@ function PickerDiceTemplatePart({
   part: RRDiceTemplatePart;
   onClick: () => void;
 }) {
-  const [, dragRef] = useDrag<RRDiceTemplatePart, void, null>(() => ({
-    type: "diceTemplatePart",
-    item: part,
-  }));
+  const [, dragRef] = useDrag<RRDiceTemplatePart, void, null>(
+    () => ({
+      type: "diceTemplatePart",
+      item: part,
+    }),
+    [part]
+  );
 
   const newIds = useRef([]);
 
