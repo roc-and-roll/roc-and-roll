@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { randomColor } from "../../shared/colors";
 import { AbstractMigration } from "../migrations";
 

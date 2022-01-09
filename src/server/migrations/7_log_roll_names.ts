@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { AbstractMigration } from "../migrations";
 
 export default class extends AbstractMigration {

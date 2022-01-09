@@ -51,9 +51,11 @@ async function execute(command: string, args: string[]) {
     const childProcess = spawn(command, args);
 
     const result: Buffer[] = [];
-    childProcess.stdout.on("data", (data) => result.push(Buffer.from(data)));
+    childProcess.stdout.on("data", (data: Buffer | string) =>
+      result.push(Buffer.from(data))
+    );
 
-    childProcess.stderr.on("data", (data) =>
+    childProcess.stderr.on("data", (data: Buffer | string) =>
       console.error(Buffer.from(data).toString("utf-8"))
     );
 
