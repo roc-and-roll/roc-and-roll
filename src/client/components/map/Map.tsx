@@ -73,8 +73,9 @@ import { colorValue, RRMouseEvent } from "./pixi-utils";
 import { MyselfContext } from "../../myself";
 import { ContextBridge } from "./ContextBridge";
 import { ServerStateContext, ServerConnectionContext } from "../../state";
-import { RoughContextProvider } from "../rough";
+import { RoughContext, RoughContextProvider } from "../rough";
 import { matrixToPixiTransform } from "./pixi-utils";
+import { MapGrid } from "./MapGrid";
 
 type Rectangle = [number, number, number, number];
 
@@ -829,7 +830,7 @@ transform,
   const RecoilBridge = useRecoilBridgeAcrossReactRoots_UNSTABLE();
 
   return (
-    <RoughContextProvider enabled={roughEnabled}>
+    <RoughContextProvider enabled={true /* TODO: roughEnabled */}>
       <div
         ref={rootRef}
         {...bind()}
@@ -843,6 +844,8 @@ transform,
             ServerStateContext,
             ServerConnectionContext,
             MyselfContext,
+            RoughContext,
+            ViewPortSizeContext,
           ]}
           barrierRender={(children) => (
             <Stage
@@ -868,7 +871,9 @@ transform,
               <Container ref={setImageArea} />
               <Container ref={setAuraArea} />
               <Container ref={setDefaultArea} />
-              {/* {gridEnabled && <MapGrid transform={transform} color={gridColor} />} */}
+              {gridEnabled && (
+                <MapGrid transform={transform} color={gridColor} />
+              )}
               <Container ref={setTokenArea} />
               <Container ref={setHealthBarArea} />
 

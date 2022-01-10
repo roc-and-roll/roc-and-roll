@@ -12,6 +12,7 @@ import { RoughLine, RoughText } from "../rough";
 import { ephemeralPlayersFamily } from "./recoil";
 import { useContrastColor } from "../../util";
 import { pathLength, shortestDistance } from "./mapHelpers";
+import { colorValue } from "./pixi-utils";
 
 const overlappingPairsMap = <T, U>(a: T[], f: (a: T, b: T, i: number) => U) => {
   const res: U[] = [];
@@ -124,13 +125,15 @@ const MapMeasurePathInner = React.memo<{
         <RoughText
           x={FEET_BOX_WIDTH / 2}
           y={PADDING}
-          fill={color}
-          fontSize={FONT_SIZE}
-          fontWeight="bold"
-          textAnchor="middle"
-        >
-          {length * 5}&thinsp;ft
-        </RoughText>
+          style={{
+            fill: colorValue(color),
+            fontSize: FONT_SIZE,
+            fontWeight: "bold",
+          }}
+          // \u2009 == &thinsp;
+          text={`${length * 5}\u2009ft`}
+          anchor={{ x: 0.5, y: 0 }}
+        />
       </g>
     </>
   );

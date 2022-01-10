@@ -61,9 +61,13 @@ export function MapLink({
         // TODO: rotate
         transform={`translate(${link.position.x}, ${link.position.y})`}
       >
-        <RoughText x={0} y={-5} dominantBaseline="text-bottom">
-          {mapName}
-        </RoughText>
+        <RoughText
+          x={0}
+          y={-5}
+          text={mapName}
+          // TODO
+          // dominantBaseline="text-bottom">
+        />
         <RoughCircle
           x={0}
           y={0}

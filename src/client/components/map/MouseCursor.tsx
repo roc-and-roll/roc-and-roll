@@ -20,6 +20,7 @@ import { RoughSVGPath, RoughText } from "../rough";
 import { CURSOR_POSITION_SYNC_DEBOUNCE } from "./Map";
 import { ephemeralPlayersFamily } from "./recoil";
 import { getViewportCorners } from "../../util";
+import { colorValue } from "./pixi-utils";
 
 export const MouseCursor = React.memo<{
   playerId: RRPlayerID;
@@ -120,11 +121,9 @@ const MouseCursorInner = React.memo<{
       <RoughText
         x={0}
         y={GRID_SIZE * 1.1}
-        fontSize="2rem"
-        fill={props.contrastColor}
-      >
-        {props.playerName}
-      </RoughText>
+        style={{ fontSize: "2rem", fill: colorValue(props.contrastColor) }}
+        text={props.playerName}
+      />
     </g>
   );
 });

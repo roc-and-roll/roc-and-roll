@@ -1,37 +1,45 @@
-import { CustomPIXIComponent } from "react-pixi-fiber";
+import { Graphics } from "react-pixi-fiber";
 import * as PIXI from "pixi.js";
+import { useEffect, useRef } from "react";
+import React from "react";
+import composeRefs from "@seznam/compose-react-refs";
 
-export const PRectangle = CustomPIXIComponent<
+type CustomGraphicsProps<T> = T & Omit<Graphics, "geometry" | keyof T>;
+
+export const PRectangle = React.forwardRef<
   PIXI.Graphics,
-  {
-    fill: number;
-    x: number;
-    y: number;
+  CustomGraphicsProps<{
+    fill?: number;
     width: number;
     height: number;
     alpha?: number;
     stroke?: number;
     strokeWidth?: number;
-  }
->(
-  {
-    customDisplayObject: (props) => new PIXI.Graphics(),
-    customApplyProps: function (instance, oldProps, newProps) {
-      const { fill, x, y, width, height, alpha, stroke, strokeWidth } =
-        newProps;
-      instance.clear();
-      instance.beginFill(fill, alpha ?? 1);
-      if (stroke) instance.lineStyle(strokeWidth ?? 1, stroke);
-      instance.drawRect(x, y, width, height);
-      instance.endFill();
-    },
-  },
-  "Rectangle"
-);
+  }>
+>(function PRectangle(
+  { fill, width, height, alpha, stroke, strokeWidth, ...rest },
+  externalRef
+) {
+  const internalRef = useRef<PIXI.Graphics>(null);
 
-export const PCircle = CustomPIXIComponent<
+  useEffect(() => {
+    const instance = internalRef.current;
+    if (!instance) {
+      return;
+    }
+    instance.clear();
+    instance.beginFill(fill ?? 0xff0000, alpha ?? 1);
+    if (stroke) instance.lineStyle(strokeWidth ?? 1, stroke);
+    instance.drawRect(0, 0, width, height);
+    instance.endFill();
+  }, [alpha, fill, height, stroke, strokeWidth, width]);
+
+  return <Graphics ref={composeRefs(internalRef, externalRef)} {...rest} />;
+});
+
+export const PCircle = React.forwardRef<
   PIXI.Graphics,
-  {
+  CustomGraphicsProps<{
     cx: number;
     cy: number;
     r: number;
@@ -39,18 +47,24 @@ export const PCircle = CustomPIXIComponent<
     stroke: number;
     strokeWidth: number;
     alpha: number;
-  }
->(
-  {
-    customDisplayObject: (props) => new PIXI.Graphics(),
-    customApplyProps: function (instance, oldProps, newProps) {
-      const { fill, cx, cy, r, stroke, strokeWidth, alpha } = newProps;
-      instance.clear();
-      instance.beginFill(fill, alpha);
-      instance.lineStyle(strokeWidth, stroke);
-      instance.drawCircle(cx, cy, r);
-      instance.endFill();
-    },
-  },
-  "Circle"
-);
+  }>
+>(function PCircle(
+  { cx, cy, r, fill, stroke, strokeWidth, alpha, ...rest },
+  externalRef
+) {
+  const internalRef = useRef<PIXI.Graphics>(null);
+
+  useEffect(() => {
+    const instance = internalRef.current;
+    if (!instance) {
+      return;
+    }
+    instance.clear();
+    instance.beginFill(fill, alpha);
+    instance.lineStyle(strokeWidth, stroke);
+    instance.drawCircle(cx, cy, r);
+    instance.endFill();
+  }, [alpha, cx, cy, fill, r, stroke, strokeWidth]);
+
+  return <Graphics ref={composeRefs(internalRef, externalRef)} {...rest} />;
+});

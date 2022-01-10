@@ -22,10 +22,16 @@ import { SmartIntegerInput } from "../ui/TextInput";
 import { useMyProps } from "../../myself";
 import { pointEquals } from "../../../shared/point";
 import * as PIXI from "pixi.js";
-import { PRectangle } from "./Primitives";
 import { Container, PixiElement, Sprite } from "react-pixi-fiber";
 import { assetUrl } from "../../files";
-import { colorValue, RRMouseEvent } from "./pixi-utils";
+import { RRMouseEvent, rrToPixiHandler } from "./pixi-utils";
+import {
+  RoughEllipse,
+  RoughLinearPath,
+  RoughPolygon,
+  RoughRectangle,
+  RoughText,
+} from "../rough";
 
 const SELECTED_OR_HOVERED_STROKE_LINE_DASH = [GRID_SIZE / 10, GRID_SIZE / 10];
 
@@ -63,10 +69,8 @@ export const MapObjectThatIsNotAToken = React.memo<{
     x: object.position.x,
     y: object.position.y,
     cursor: canControl ? "move" : undefined,
-    interactive: true,
-    mousedown: useCallback(
-      ({ data: { originalEvent: e } }: PIXI.InteractionEvent) => {
-        const event = e as MouseEvent;
+    onMouseDown: useCallback(
+      (event: RRMouseEvent) => {
         if (canControl) {
           onStartMoveRef.current(event);
         }
@@ -74,9 +78,8 @@ export const MapObjectThatIsNotAToken = React.memo<{
       },
       [onStartMoveRef, canControl]
     ),
-    mouseup: useCallback(
-      ({ data: { originalEvent: e } }: PIXI.InteractionEvent) => {
-        const event = e as MouseEvent;
+    onMouseUp: useCallback(
+      (event: RRMouseEvent) => {
         if (
           event.button === 2 &&
           clickPositionRef.current &&
@@ -91,50 +94,62 @@ export const MapObjectThatIsNotAToken = React.memo<{
       },
       [canControl]
     ),
-    fill: colorValue(
-      isSelectedOrHovered ? object.color : tinycolor(object.color).setAlpha(0.3)
-    ),
-    stroke: colorValue(object.color),
+    fill: isSelectedOrHovered
+      ? object.color
+      : tinycolor(object.color).setAlpha(0.3).toRgbString(),
+    stroke: object.color,
   };
 
   const content = () => {
     switch (object.type) {
       case "rectangle":
         return (
-          <PRectangle
+          <RoughRectangle
             {...sharedProps}
-            width={object.size.x}
-            height={object.size.y}
+            w={object.size.x}
+            h={object.size.y}
           />
         );
       default:
         return null;
-      // case "ellipse":
-      //   return (
-      //     <PEllipse {...sharedProps} width={object.size.x} height={object.size.y} />
-      //   );
-      // case "freehand":
-      //   return <RoughLinearPath {...sharedProps} points={object.points} />;
-      // case "polygon":
-      //   return <RoughPolygon {...sharedProps} points={object.points} />;
-      // case "text": {
-      //   const {
-      //     fill: _1,
-      //     stroke: _2,
-      //     strokeLineDash: _3,
-      //     seed: _4,
-      //     ...textProps
-      //   } = sharedProps;
-      //   return (
-      //     <RoughText {...textProps} fill={sharedProps.stroke}>
-      //       {object.text}
-      //     </RoughText>
-      //   );
-      // }
+      case "ellipse":
+        return (
+          <RoughEllipse {...sharedProps} w={object.size.x} h={object.size.y} />
+        );
+      case "freehand":
+        return <RoughLinearPath {...sharedProps} points={object.points} />;
+      case "polygon":
+        return <RoughPolygon {...sharedProps} points={object.points} />;
+      case "text": {
+        const {
+          fill: _1,
+          stroke: fill,
+          // strokeLineDash: _3,
+          // seed: _4,
+          ...textProps
+        } = sharedProps;
+        return <RoughText {...textProps} style={{ fill }} text={object.text} />;
+      }
       case "image": {
-        const { fill: _, stroke: _1, ...imageProps } = sharedProps;
+        const {
+          onMouseDown,
+          onMouseUp,
+          fill: _1,
+          stroke: _2,
+          // strokeLineDash: _3,
+          // seed: _4,
+          ...rest
+        } = sharedProps;
 
-        return <MapObjectImage object={object} {...imageProps} />;
+        return (
+          <MapObjectImage
+            object={object}
+            interactive
+            mousedown={rrToPixiHandler(onMouseDown)}
+            mouseup={rrToPixiHandler(onMouseUp)}
+            {...rest}
+          />
+        );
       }
       // default:
       //   assertNever(object);

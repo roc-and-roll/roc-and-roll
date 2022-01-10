@@ -1,12 +1,24 @@
-import React, { SVGProps, useContext, useMemo } from "react";
+import React, { useContext, useEffect, useMemo, useRef } from "react";
 import rough from "roughjs/bin/rough";
-import type { Drawable, Options } from "roughjs/bin/core";
+import type {
+  Drawable,
+  OpSet,
+  Options,
+  ResolvedOptions,
+} from "roughjs/bin/core";
 import { RoughGenerator } from "roughjs/bin/generator";
-import clsx from "clsx";
 import { RRPoint } from "../../shared/state";
 import { makePoint } from "../../shared/point";
 import { randomSeed } from "roughjs/bin/math";
-import { hashString } from "../../shared/util";
+import { assertNever, hashString } from "../../shared/util";
+import {
+  Container,
+  Graphics,
+  InteractiveComponent,
+  Text,
+} from "react-pixi-fiber";
+import * as PIXI from "pixi.js";
+import { colorValue, RRMouseEvent, rrToPixiHandler } from "./map/pixi-utils";
 
 const DEFAULT_ROUGHNESS = 3;
 
@@ -47,78 +59,131 @@ export function RoughContextProvider({
 
 /*!
  * Adapted from Rough.js
- * https://github.com/rough-stuff/rough/blob/bc460dd98eca1f6c4eb8104794931960f0b078ca/src/svg.ts
+ * https://github.com/rough-stuff/rough/blob/bc460dd98eca1f6c4eb8104794931960f0b078ca/src/canvas.ts
  *
  * @license MIT
  * Copyright (c) 2019 Preet Shihn
  */
+function OpSetToPIXI({
+  opSet,
+  options,
+}: {
+  opSet: OpSet;
+  options: ResolvedOptions;
+}) {
+  const ref = useRef<PIXI.Graphics>(null);
+
+  useEffect(() => {
+    const instance = ref.current;
+    if (!instance) {
+      return;
+    }
+
+    instance.clear();
+
+    switch (opSet.type) {
+      case "path":
+        instance.lineStyle({
+          color: colorValue(options.stroke),
+          width: options.strokeWidth,
+        });
+
+        // TODO
+        // <path
+        //   strokeDasharray={options.strokeLineDash?.join(" ").trim()}
+        //   strokeDashoffset={options.strokeLineDashOffset}
+        // />;
+        break;
+      case "fillPath":
+        instance.lineStyle({ width: 0 });
+        instance.beginFill(colorValue(options.fill!), 1);
+        // TODO
+        // fillRule={
+        //   drawable.shape === "curve" || drawable.shape === "polygon"
+        //     ? "evenodd"
+        //     : undefined
+        break;
+      case "fillSketch": {
+        let fillWeight = options.fillWeight;
+        if (fillWeight < 0) {
+          fillWeight = options.strokeWidth / 2;
+        }
+        instance.lineStyle({
+          color: colorValue(options.fill!),
+          width: fillWeight,
+        });
+        break;
+
+        // TODO
+        // <path
+        //   strokeDasharray={options.fillLineDash?.join(" ").trim()}
+        //   strokeDashoffset={options.fillLineDashOffset}
+        // />;
+      }
+      default:
+        assertNever(opSet.type);
+    }
+
+    for (const { op, data } of opSet.ops) {
+      switch (op) {
+        case "move":
+          instance.moveTo(data[0]!, data[1]!);
+          break;
+        case "lineTo":
+          instance.lineTo(data[0]!, data[1]!);
+          break;
+        case "bcurveTo": // cspell: disable-line
+          instance.bezierCurveTo(
+            data[0]!,
+            data[1]!,
+            data[2]!,
+            data[3]!,
+            data[4]!,
+            data[5]!
+          );
+          break;
+        default:
+          assertNever(op);
+      }
+    }
+    if (opSet.type === "fillPath") {
+      instance.endFill();
+    }
+  }, [
+    opSet,
+    opSet.ops,
+    opSet.type,
+    options.fill,
+    options.fillWeight,
+    options.stroke,
+    options.strokeLineDash,
+    options.strokeLineDashOffset,
+    options.strokeWidth,
+  ]);
+
+  return <Graphics ref={ref} />;
+}
+
 const DrawablePrimitive = React.forwardRef<
-  SVGGElement,
+  PIXI.Container,
   {
     x: number;
     y: number;
     drawable: Drawable;
     generator: RoughGenerator;
-  } & SVGProps<SVGGElement>
+  } & Omit<Container, "x" | "y"> &
+    InteractiveComponent
 >(function DrawablePrimitive(
   { drawable, generator, x, y, children, ...props },
   ref
 ) {
-  const options = drawable.options;
-
   return (
-    <g {...props} transform={`translate(${x}, ${y})`} ref={ref}>
-      {drawable.sets.map((drawing, i) => {
-        switch (drawing.type) {
-          case "path":
-            return (
-              <path
-                key={i}
-                d={generator.opsToPath(drawing)}
-                stroke={options.stroke}
-                strokeWidth={options.strokeWidth}
-                fill="none"
-                strokeDasharray={options.strokeLineDash?.join(" ").trim()}
-                strokeDashoffset={options.strokeLineDashOffset}
-              />
-            );
-          case "fillPath":
-            return (
-              <path
-                key={i}
-                d={generator.opsToPath(drawing)}
-                stroke="none"
-                strokeWidth={0}
-                fill={options.fill}
-                fillRule={
-                  drawable.shape === "curve" || drawable.shape === "polygon"
-                    ? "evenodd"
-                    : undefined
-                }
-              />
-            );
-          case "fillSketch": {
-            let fillWeight = options.fillWeight;
-            if (fillWeight < 0) {
-              fillWeight = options.strokeWidth / 2;
-            }
-
-            return (
-              <path
-                key={i}
-                d={generator.opsToPath(drawing)}
-                stroke={options.fill}
-                strokeWidth={fillWeight}
-                fill="none"
-                strokeDasharray={options.fillLineDash?.join(" ").trim()}
-                strokeDashoffset={options.fillLineDashOffset}
-              />
-            );
-          }
-        }
-      })}
+    <Container {...props} x={x} y={y} ref={ref}>
+      {drawable.sets.map((drawing, i) => (
+        <OpSetToPIXI key={i} opSet={drawing} options={drawable.options} />
+      ))}
       {children}
-    </g>
+    </Container>
   );
 });
 
@@ -160,16 +225,12 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
     React.forwardRef<
       E | SVGGElement,
       C &
-        PassedThroughOptions &
-        Pick<
-          SVGProps<SVGElement>,
-          | "onClick"
-          | "onMouseDown"
-          | "onMouseUp"
-          | "onContextMenu"
-          | "style"
-          | "children"
-        > & {
+        PassedThroughOptions & {
+          onClick?: (e: RRMouseEvent) => void;
+          onMouseDown?: (e: RRMouseEvent) => void;
+          onMouseUp?: (e: RRMouseEvent) => void;
+          onContextMenu?: (e: RRMouseEvent) => void;
+        } & Pick<Container, "children"> & {
           x: number;
           y: number;
         } & {
@@ -191,7 +252,6 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
       ) => {
         const generator = useContext(RoughContext);
         const {
-          style,
           children,
           onClick,
           onMouseDown,
@@ -245,16 +305,17 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
 
           return (
             <DrawablePrimitive
-              ref={ref as React.ForwardedRef<SVGGElement>}
+              ref={ref as React.ForwardedRef<PIXI.Graphics>}
               drawable={drawable}
               generator={generator}
               x={x}
               y={y}
-              onClick={onClick}
-              onMouseDown={onMouseDown}
-              onMouseUp={onMouseUp}
-              onContextMenu={onContextMenu}
-              style={style}
+              interactive
+              click={rrToPixiHandler(onClick)}
+              mousedown={rrToPixiHandler(onMouseDown)}
+              mouseup={rrToPixiHandler(onMouseUp)}
+              // TODO
+              // contextmenu={rrToPixiHandler(onContextMenu)}
             >
               {children}
             </DrawablePrimitive>
@@ -269,7 +330,6 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
               onMouseDown,
               onMouseUp,
               onContextMenu,
-              style,
               fill,
               stroke,
               strokeLineDash,
@@ -435,24 +495,18 @@ export const RoughPolygon = makeRoughComponent<
   )
 );
 
-// Rough.JS does not support text. We simply use a handwritten font to "fake"
-// that look.
-const RoughTextNonMemoized = React.forwardRef<
-  SVGTextElement,
-  SVGProps<SVGTextElement>
->(function RoughText({ children, x, y, ...props }, ref) {
-  return (
-    <text
-      ref={ref}
-      x={x}
-      y={y}
-      dominantBaseline="text-before-edge"
-      {...props}
-      className={clsx("rough-text", props.className)}
-    >
-      {children}
-    </text>
-  );
-});
+const RoughTextNonMemoized = React.forwardRef<PIXI.Text, Text>(
+  function RoughText({ style, ...props }, ref) {
+    return (
+      <Text
+        ref={ref}
+        style={{ fontFamily: ["Architects Daughter", "cursive"], ...style }}
+        {...props}
+        // TODO
+        // dominantBaseline="text-before-edge"
+      />
+    );
+  }
+);
 
 export const RoughText = React.memo(RoughTextNonMemoized);

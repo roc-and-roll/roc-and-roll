@@ -37,3 +37,33 @@ export function createPixiPortal(
   };
   return portal as unknown as ReactPortal;
 }
+
+type RRHandler = (e: RRMouseEvent) => void;
+type PixiHandler = (e: PIXI.InteractionEvent) => void;
+
+const cache = new WeakMap<RRHandler, PixiHandler>();
+
+// TODO: This should eventually be removed.
+export function rrToPixiHandler(
+  rrHandler?: RRHandler
+): PixiHandler | undefined {
+  if (rrHandler === undefined) {
+    return undefined;
+  }
+
+  {
+    const pixiHandler = cache.get(rrHandler);
+    if (pixiHandler) {
+      return pixiHandler;
+    }
+  }
+
+  {
+    const pixiHandler: PixiHandler = ({
+      data: { originalEvent: e },
+    }: PIXI.InteractionEvent) => rrHandler(e as MouseEvent);
+
+    cache.set(rrHandler, pixiHandler);
+    return pixiHandler;
+  }
+}

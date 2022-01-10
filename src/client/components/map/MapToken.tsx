@@ -749,12 +749,14 @@ const HealthBar = React.memo(function HealthBar({
         x={tokenSize / 2 - 3}
         y={-1}
         width={tokenSize}
-        fontWeight="bold"
-        fontSize={14}
-        style={{ cursor: "default" }}
-      >
-        /&thinsp;{totalMaxHP}
-      </RoughText>
+        cursor="default"
+        style={{
+          fontWeight: "bold",
+          fontSize: 14,
+        }}
+        // \u2009 == &thinsp;
+        text={`/\u2009${totalMaxHP}`}
+      />
     </>
   );
 });
