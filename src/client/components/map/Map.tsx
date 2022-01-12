@@ -868,14 +868,14 @@ transform,
               mousedown={handleMouseDown}
               mousemove={handleMapMouseMove}
             >
-              <Container ref={setImageArea} />
-              <Container ref={setAuraArea} />
-              <Container ref={setDefaultArea} />
+              <Container ref={setImageArea} name="images" />
+              <Container ref={setAuraArea} name="auras" />
+              <Container ref={setDefaultArea} name="default" />
               {gridEnabled && (
                 <MapGrid transform={transform} color={gridColor} />
               )}
-              <Container ref={setTokenArea} />
-              <Container ref={setHealthBarArea} />
+              <Container ref={setTokenArea} name="tokens" />
+              <Container ref={setHealthBarArea} name="healthBars" />
 
               {areas && (
                 <MapObjects
@@ -929,3 +929,8 @@ transform,
 });
 
 export const RRMapView = React.memo(RRMapViewWithRef);
+
+// Let Pixi Inspector know about PIXI: https://github.com/bfanger/pixi-inspector
+// @ts-expect-error TypeScript does not know about the Pixi Inspector.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+window.__PIXI_INSPECTOR_GLOBAL_HOOK__?.register({ PIXI });

@@ -18,7 +18,12 @@ import {
   Text,
 } from "react-pixi-fiber";
 import * as PIXI from "pixi.js";
-import { colorValue, RRMouseEvent, rrToPixiHandler } from "./map/pixi-utils";
+import {
+  colorValue,
+  RRMouseEvent,
+  RRPixiProps,
+  rrToPixiHandler,
+} from "./map/pixi-utils";
 
 const DEFAULT_ROUGHNESS = 3;
 
@@ -171,14 +176,24 @@ const DrawablePrimitive = React.forwardRef<
     y: number;
     drawable: Drawable;
     generator: RoughGenerator;
-  } & Omit<Container, "x" | "y"> &
+  } & Omit<Container, "x" | "y" | "interactiveChildren" | "hitArea"> &
     InteractiveComponent
 >(function DrawablePrimitive(
   { drawable, generator, x, y, children, ...props },
   ref
 ) {
   return (
-    <Container {...props} x={x} y={y} ref={ref}>
+    <Container
+      {...props}
+      // TODO: We need a better way to determine which area registers events.
+      // TODO: This [1] suggests that it might be better to use `containsPoint`
+      // [1] https://github.com/pixijs/pixijs/issues/6614
+      hitArea={new PIXI.Rectangle(0, 0, 100, 100)}
+      interactiveChildren={false}
+      x={x}
+      y={y}
+      ref={ref}
+    >
       {drawable.sets.map((drawing, i) => (
         <OpSetToPIXI key={i} opSet={drawing} options={drawable.options} />
       ))}
@@ -207,6 +222,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
   ) => Drawable,
   generateSimple: (
     customProps: C & {
+      name?: string;
       x: number;
       y: number;
       onClick?: (e: React.MouseEvent<SVGElement>) => void;
@@ -230,7 +246,10 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
           onMouseDown?: (e: RRMouseEvent) => void;
           onMouseUp?: (e: RRMouseEvent) => void;
           onContextMenu?: (e: RRMouseEvent) => void;
-        } & Pick<Container, "children"> & {
+        } & Pick<
+          RRPixiProps<PIXI.Container>,
+          "children" | "name" | "cursor"
+        > & {
           x: number;
           y: number;
         } & {
@@ -252,6 +271,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
       ) => {
         const generator = useContext(RoughContext);
         const {
+          name,
           children,
           onClick,
           onMouseDown,
@@ -259,6 +279,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
           onContextMenu,
           x,
           y,
+          cursor,
           ...generatorProps
         } = props;
 
@@ -306,11 +327,13 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
           return (
             <DrawablePrimitive
               ref={ref as React.ForwardedRef<PIXI.Graphics>}
+              name={name}
               drawable={drawable}
               generator={generator}
               x={x}
               y={y}
               interactive
+              cursor={cursor}
               click={rrToPixiHandler(onClick)}
               mousedown={rrToPixiHandler(onMouseDown)}
               mouseup={rrToPixiHandler(onMouseUp)}
@@ -323,6 +346,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
         } else {
           return generateSimple(
             {
+              name,
               x,
               y,
               children,
@@ -495,18 +519,19 @@ export const RoughPolygon = makeRoughComponent<
   )
 );
 
-const RoughTextNonMemoized = React.forwardRef<PIXI.Text, Text>(
-  function RoughText({ style, ...props }, ref) {
-    return (
-      <Text
-        ref={ref}
-        style={{ fontFamily: ["Architects Daughter", "cursive"], ...style }}
-        {...props}
-        // TODO
-        // dominantBaseline="text-before-edge"
-      />
-    );
-  }
-);
+const RoughTextNonMemoized = React.forwardRef<
+  PIXI.Text,
+  RRPixiProps<PIXI.Text>
+>(function RoughText({ style, ...props }, ref) {
+  return (
+    <Text
+      ref={ref}
+      style={{ fontFamily: ["Architects Daughter", "cursive"], ...style }}
+      {...props}
+      // TODO
+      // dominantBaseline="text-before-edge"
+    />
+  );
+});
 
 export const RoughText = React.memo(RoughTextNonMemoized);

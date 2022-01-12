@@ -124,11 +124,22 @@ export const MapObjectThatIsNotAToken = React.memo<{
         const {
           fill: _1,
           stroke: fill,
+          onMouseDown,
+          onMouseUp,
           // strokeLineDash: _3,
           // seed: _4,
           ...textProps
         } = sharedProps;
-        return <RoughText {...textProps} style={{ fill }} text={object.text} />;
+        return (
+          <RoughText
+            {...textProps}
+            interactive
+            mousedown={rrToPixiHandler(onMouseDown)}
+            mouseup={rrToPixiHandler(onMouseUp)}
+            style={{ fill }}
+            text={object.text}
+          />
+        );
       }
       case "image": {
         const {
@@ -164,7 +175,9 @@ export const MapObjectThatIsNotAToken = React.memo<{
     //   interactive
     //   placement="right"
     // >
-    <Container angle={object.rotation}>{content()}</Container>
+    <Container name={`${object.type}: ${object.id}`} angle={object.rotation}>
+      {content()}
+    </Container>
     /* </Popover> */
   );
 });

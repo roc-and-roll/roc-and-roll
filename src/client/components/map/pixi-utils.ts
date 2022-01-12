@@ -3,7 +3,11 @@ import * as PIXI from "pixi.js";
 import tinycolor, { ColorInput } from "tinycolor2";
 import { Key, ReactNode, ReactPortal } from "react";
 import * as ReactIs from "react-is";
-import { Container } from "react-pixi-fiber";
+import {
+  Container,
+  DisplayObjectProps,
+  InteractiveComponent,
+} from "react-pixi-fiber";
 import { ReactPortal as ReactReconcilerPortal } from "react-reconciler";
 
 export const matrixToPixiTransform = (m: Matrix) => {
@@ -67,3 +71,8 @@ export function rrToPixiHandler(
     return pixiHandler;
   }
 }
+
+// react-pixi-fiber type definitions are super weird and don't play nicely when
+// used with forwardRef. Use the below type instead.
+export type RRPixiProps<T extends PIXI.DisplayObject> = DisplayObjectProps<T> &
+  InteractiveComponent;
