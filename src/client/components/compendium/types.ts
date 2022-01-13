@@ -23,6 +23,13 @@ export type CompendiumTextEntry =
   | {
       type: "cell";
       roll: { min: number; max: number; pad?: boolean } | { exact: number };
+    }
+  | {
+      type: "inset";
+      page: number;
+      source: string;
+      name: string;
+      entries: CompendiumTextEntry[];
     };
 
 const __isTextEntryRecursive: z.ZodSchema<CompendiumTextEntry> = z.lazy(
@@ -59,6 +66,13 @@ export const isTextEntry = z.union([
         pad: z.optional(z.boolean()),
       }),
     ]),
+  }),
+  z.strictObject({
+    type: z.literal("inset"),
+    page: z.number().int().min(0),
+    source: z.string(),
+    name: z.string(),
+    entries: z.array(__isTextEntryRecursive),
   }),
 ]);
 
@@ -183,6 +197,10 @@ export type CompendiumSpell = {
   meta?: {
     ritual?: boolean;
   };
+  basicRules?: boolean;
+  affectsCreatureType?: Array<string>; //todo be more precise here
+  conditionImmune?: Array<RRCharacterCondition>;
+  additionalSources?: { page: number; source: string }[];
 };
 
 const isScalingLevelDice = z.strictObject({
@@ -377,6 +395,14 @@ export const isSpell = z.strictObject({
     z.strictObject({
       ritual: z.optional(z.boolean()),
     })
+  ),
+  basicRules: z.optional(z.boolean()),
+  affectsCreatureType: z.optional(z.array(z.string())),
+  conditionImmune: z.optional(z.array(z.enum(conditionNames))),
+  additionalSources: z.optional(
+    z.array(
+      z.strictObject({ page: z.number().int().min(0), source: z.string() })
+    )
   ),
 });
 

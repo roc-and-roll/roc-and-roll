@@ -527,9 +527,8 @@ function TextEntryString({
             );
           }
           case "chance": {
-            assertIsInteger(args);
-            const winPercentage = parseInt(args);
-            return <em key={key}>{winPercentage} percent</em>;
+            const [_chance, chanceString] = args.split("|");
+            return <em key={key}>{chanceString}</em>;
           }
           case "note":
             return (
@@ -658,6 +657,10 @@ function TextEntry({
           {min} &ndash; {max}
         </>
       );
+    }
+
+    case "inset": {
+      return <div></div>;
     }
   }
 }
