@@ -409,12 +409,212 @@ export const isSpell = z.strictObject({
 // Make sure that the schema really matches the Spell type.
 assert<IsExact<z.infer<typeof isSpell>, CompendiumSpell>>(true);
 
+export type ConditionalSpeed = {
+  number: number;
+  condition: string;
+};
+
+export type CompendiumMonster = {
+  name: string;
+  source: string;
+  page: number;
+  size?: string;
+  ac?: (
+    | {
+        ac?: number;
+        from?: string[];
+        special?: string;
+        condition?: string;
+        braces?: boolean;
+      }
+    | number
+  )[];
+  hp?: { special?: string; average?: number; formula?: string };
+  speed?: {
+    walk?: number | ConditionalSpeed;
+    climb?: number | ConditionalSpeed;
+    fly?: number | ConditionalSpeed;
+    canHover?: boolean;
+    swim?: number | ConditionalSpeed;
+    burrow?: number | ConditionalSpeed;
+  };
+  str?: number;
+  dex?: number;
+  con?: number;
+  int?: number;
+  wis?: number;
+  cha?: number;
+
+  type?: any;
+  alignment?: any;
+  hasToken?: boolean;
+  senses?: any;
+  passive?: any;
+  trait?: any;
+  action?: any;
+  senseTags?: any;
+  damageTags?: any;
+  miscTags?: any;
+  immune?: any;
+  conditionImmune?: any;
+  otherSources?: any;
+  skill?: any;
+  languages?: any;
+  cr?: any;
+  environment?: any;
+  soundClip?: any;
+  languageTags?: any;
+  hasFluff?: any;
+  hasFluffImages?: any;
+  srd?: any;
+  save?: any;
+  legendary?: any;
+  legendaryGroup?: any;
+  traitTags?: any;
+  actionTags?: any;
+  conditionInflict?: any;
+  conditionInflictLegendary?: any;
+  summonedBySpell?: any;
+  pbNote?: any;
+  summonedByClass?: any;
+  _copy?: any;
+  resist?: any;
+  reaction?: any;
+  bonus?: any;
+  actionNote?: any;
+  sizeNote?: any;
+  vulnerable?: any;
+  group?: any;
+  variant?: any;
+  dragonCastingColor?: any;
+  basicRules?: any;
+  spellcasting?: any; //cspell: disable-line
+  spellcastingTags?: any; //cspell: disable-line
+  condition?: any;
+  conditionInflictSpell?: any;
+  braces?: any;
+  _verses?: any;
+  _versions?: any;
+  altArt?: any;
+  familiar?: any;
+  legendaryHeader?: any;
+  alias?: any;
+};
+
+export const isConditionalSpeed = z.strictObject({
+  number: z.number(),
+  condition: z.string(),
+});
+
+export const isMonster = z.strictObject({
+  name: z.string(),
+  source: z.string(),
+  page: z.number().int().min(0),
+  size: z.optional(z.string()),
+  type: z.any(),
+  alignment: z.optional(z.any()),
+  ac: z.optional(
+    z.array(
+      z
+        .strictObject({
+          ac: z.optional(z.number()),
+          from: z.optional(z.array(z.string())),
+          special: z.optional(z.string()),
+          condition: z.optional(z.string()),
+          braces: z.optional(z.boolean()),
+        })
+        .or(z.number())
+    )
+  ),
+  hp: z.optional(
+    z.strictObject({
+      special: z.optional(z.string()),
+      average: z.optional(z.number()),
+      formula: z.optional(z.string()),
+    })
+  ),
+  speed: z.optional(
+    z.strictObject({
+      walk: z.optional(z.number().or(isConditionalSpeed)),
+      climb: z.optional(z.number().or(isConditionalSpeed)),
+      fly: z.optional(z.number().or(isConditionalSpeed)),
+      swim: z.optional(z.number().or(isConditionalSpeed)),
+      burrow: z.optional(z.number().or(isConditionalSpeed)),
+      canHover: z.optional(z.boolean()),
+    })
+  ),
+  str: z.optional(z.number()),
+  dex: z.optional(z.number()),
+  con: z.optional(z.number()),
+  int: z.optional(z.number()),
+  wis: z.optional(z.number()),
+  cha: z.optional(z.number()),
+  hasToken: z.optional(z.boolean()),
+
+  senses: z.any(),
+  passive: z.any(),
+  trait: z.any(),
+  action: z.any(),
+  senseTags: z.any(),
+  damageTags: z.any(),
+  miscTags: z.any(),
+  immune: z.any(),
+  conditionImmune: z.any(),
+  otherSources: z.any(),
+  skill: z.any(),
+  languages: z.any(),
+  cr: z.any(),
+  environment: z.any(),
+  soundClip: z.any(),
+  languageTags: z.any(),
+  hasFluff: z.any(),
+  hasFluffImages: z.any(),
+  srd: z.any(),
+  save: z.any(),
+  legendary: z.any(),
+  legendaryGroup: z.any(),
+  traitTags: z.any(),
+  actionTags: z.any(),
+  conditionInflict: z.any(),
+  conditionInflictLegendary: z.any(),
+  summonedBySpell: z.any(),
+  pbNote: z.any(),
+  summonedByClass: z.any(),
+  _copy: z.any(),
+  resist: z.any(),
+  reaction: z.any(),
+  bonus: z.any(),
+  actionNote: z.any(),
+  sizeNote: z.any(),
+  vulnerable: z.any(),
+  group: z.any(),
+  variant: z.any(),
+  dragonCastingColor: z.any(),
+  basicRules: z.any(),
+  spellcasting: z.any(), //cspell: disable-line
+  spellcastingTags: z.any(), //cspell: disable-line
+  condition: z.any(),
+  conditionInflictSpell: z.any(),
+  braces: z.any(),
+  _verses: z.any(),
+  _versions: z.any(),
+  altArt: z.any(),
+  familiar: z.any(),
+  legendaryHeader: z.any(),
+  alias: z.any(),
+});
+
+// Make sure that the schema really matches the Spell type.
+assert<IsExact<z.infer<typeof isMonster>, CompendiumMonster>>(true);
+
 export const isCompendiumData = z.strictObject({
   spell: z.array(isSpell),
+  monster: z.array(isMonster),
 });
 
 export type CompendiumData = {
   spell: CompendiumSpell[];
+  monster: CompendiumMonster[];
 };
 
 // Make sure that the schema really matches the CompendiumData type.
