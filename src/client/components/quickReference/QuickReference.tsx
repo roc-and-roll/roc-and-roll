@@ -14,7 +14,11 @@ import {
 import { useMyProps } from "../../myself";
 import { useServerDispatch } from "../../state";
 import { useCompendium } from "../compendium/Compendium";
-import { CompendiumSpell, CompendiumTextEntry } from "../compendium/types";
+import {
+  CompendiumMonster,
+  CompendiumSpell,
+  CompendiumTextEntry,
+} from "../compendium/types";
 import { Dialog, DialogContent, DialogTitle } from "../Dialog";
 import { SmartTextInput } from "../ui/TextInput";
 import "./QuickReference.scss";
@@ -39,7 +43,7 @@ export default function QuickReference({ onClose }: { onClose: () => void }) {
         onChange={(search) => setSearch(search)}
       />
       <DialogContent>
-        <Spells
+        <Content
           search={deferredSearch}
           searchIsStale={search !== deferredSearch}
         />
@@ -48,7 +52,7 @@ export default function QuickReference({ onClose }: { onClose: () => void }) {
   );
 }
 
-function Spells({
+function Content({
   search,
   searchIsStale,
 }: {
@@ -67,11 +71,26 @@ function Spells({
     [compendiumSources, search]
   );
 
+  const monsters = useMemo(
+    () =>
+      matchSorter(
+        compendiumSources.flatMap((source) => source.data.monster),
+        search,
+        { keys: ["name"] }
+      ),
+    [compendiumSources, search]
+  );
+
   return (
     <ul style={searchIsStale ? { opacity: 0.7 } : {}}>
       {spells.map((spell) => (
         <li key={spell.name}>
           <Spell spell={spell} />
+        </li>
+      ))}
+      {monsters.map((monster) => (
+        <li key={monster.name}>
+          <Monster monster={monster} />
         </li>
       ))}
     </ul>
@@ -167,10 +186,60 @@ function formatDuration(
   }
 }
 
+const Monster = React.memo(function Monster({
+  monster,
+}: {
+  monster: CompendiumMonster;
+}) {
+  return (
+    <>
+      <p className="text-2xl mt-4">{monster.name}</p>
+      <dl>
+        <dt>Stat Block</dt>
+        <dd>
+          <div className="flex">
+            {Object.entries({
+              STR: monster.str,
+              DEX: monster.dex,
+              CON: monster.con,
+              INT: monster.int,
+              WIS: monster.wis,
+              CHA: monster.cha,
+            }).map(([key, value]) => {
+              return (
+                <div className="border m-1 p-1 text-center w-24" key={key}>
+                  <p>{value ?? null}</p>
+                  <p className="font-bold">{key}</p>
+                </div>
+              );
+            })}
+          </div>
+        </dd>
+
+        <dt>Armor Class</dt>
+        <dd>
+          {monster.ac !== undefined &&
+            (typeof monster.ac[0] === "number"
+              ? monster.ac[0]
+              : monster.ac[0]?.ac)}
+        </dd>
+        <dt>Hit Points</dt>
+        <dd>
+          {monster.hp !== undefined && (
+            <p>
+              {monster.hp.average} ({monster.hp.formula})
+            </p>
+          )}
+        </dd>
+      </dl>
+    </>
+  );
+});
+
 const Spell = React.memo(function Spell({ spell }: { spell: CompendiumSpell }) {
   return (
     <>
-      <h2>{spell.name}</h2>
+      <p className="text-2xl mt-4">{spell.name}</p>
       <dl>
         <dt>Level</dt>
         <dd>
