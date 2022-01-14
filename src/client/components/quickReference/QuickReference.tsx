@@ -558,6 +558,7 @@ function TextEntryString({
           case "skill":
           case "filter":
           case "book":
+          case "i":
             return part;
           default:
             throw new Error(`Unexpected command, got ${part}`);
@@ -660,7 +661,17 @@ function TextEntry({
     }
 
     case "inset": {
-      return <div></div>;
+      return (
+        <div className="m-2 p-2 border-2 border-white">
+          <p className="font-bold">{entry.name}</p>
+          {entry.entries.map((insetEntry, index) => {
+            return <TextEntry key={index} entry={insetEntry} spell={spell} />;
+          })}
+          <div className="text-sm text-right">
+            {entry.source} on page {entry.page}
+          </div>
+        </div>
+      );
     }
   }
 }
