@@ -69,7 +69,7 @@ import { getPathWithNewPoint } from "./mapHelpers";
 import useRafLoop from "../../useRafLoop";
 import { Container, Stage } from "react-pixi-fiber";
 import * as PIXI from "pixi.js";
-import { colorValue, RRMouseEvent } from "./pixi-utils";
+import { colorValue, RRMouseEvent, rrToPixiHandler } from "./pixi-utils";
 import { MyselfContext } from "../../myself";
 import { ContextBridge } from "./ContextBridge";
 import { ServerStateContext, ServerConnectionContext } from "../../state";
@@ -467,8 +467,7 @@ const RRMapViewWithRef = React.forwardRef<
   );
 
   const handleMouseDown = useCallback(
-    ({ data: { originalEvent: ev } }: PIXI.InteractionEvent) => {
-      const e = ev as MouseEvent;
+    (e: RRMouseEvent) => {
       if (mouseActionRef.current !== MouseAction.NONE) {
         // Ignore additional mouse downs while we are currently handling another
         // mouse down action (e.g., ignore right clicks while drawing a
@@ -664,8 +663,7 @@ const RRMapViewWithRef = React.forwardRef<
   }, [handleMouseMove, handleWheel, handleMouseUp, handleKeyDown]);
 
   const handleMapMouseMove = useCallback(
-    ({ data: { originalEvent: ev } }: PIXI.InteractionEvent) => {
-      const e = ev as MouseEvent;
+    (e: RRMouseEvent) => {
       onMousePositionChanged(
         globalToLocal(transformRef.current, localCoords(rootRef.current, e))
       );
@@ -829,6 +827,12 @@ transform,
 
   const RecoilBridge = useRecoilBridgeAcrossReactRoots_UNSTABLE();
 
+  // TODO: Remove and use `transform` directly.
+  const pixiTransform = useMemo(
+    () => matrixToPixiTransform(transform),
+    [transform]
+  );
+
   return (
     <RoughContextProvider enabled={true /* TODO: roughEnabled */}>
       <div
@@ -838,6 +842,7 @@ transform,
           touchAction: "none",
           cursor: toolButtonState === "tool" ? "crosshair" : "inherit",
         }}
+        onContextMenu={(e) => e.preventDefault()}
       >
         <ContextBridge
           contexts={[
@@ -863,10 +868,15 @@ transform,
         >
           <RecoilBridge>
             <Container
-              transform={matrixToPixiTransform(transform)}
+              x={pixiTransform.position.x}
+              y={pixiTransform.position.y}
+              scale={pixiTransform.scale}
+              rotation={pixiTransform.rotation}
+              skew={pixiTransform.skew}
+              pivot={pixiTransform.pivot}
               interactive
-              mousedown={handleMouseDown}
-              mousemove={handleMapMouseMove}
+              mousedown={rrToPixiHandler(handleMouseDown)}
+              mousemove={rrToPixiHandler(handleMapMouseMove)}
             >
               <Container ref={setImageArea} name="images" />
               <Container ref={setAuraArea} name="auras" />
@@ -891,35 +901,35 @@ transform,
 
               {/* <FogOfWar transform={transform} revealedAreas={revealedAreas} />
 
-          {withSelectionAreaDo(
-            selectionArea,
-            (x, y, w, h) => (
-              <rect
-                x={x}
-                y={y}
-                width={w}
-                height={h}
-                fill={tinycolor(contrastColor).setAlpha(0.3).toRgbString()}
+              {withSelectionAreaDo(
+                selectionArea,
+                (x, y, w, h) => (
+                  <rect
+                    x={x}
+                    y={y}
+                    width={w}
+                    height={h}
+                    fill={tinycolor(contrastColor).setAlpha(0.3).toRgbString()}
+                  />
+                ),
+                null
+              )}
+              <MeasurePaths
+                mapId={mapId}
+                zoom={transform.a}
+                backgroundColor={backgroundColor}
+                players={players}
               />
-            ),
-            null
-          )}
-          <MeasurePaths
-            mapId={mapId}
-            zoom={transform.a}
-            backgroundColor={backgroundColor}
-            players={players}
-          />
-          <MapReactions mapId={mapId} />
-          <MouseCursors
-            myId={myself.id}
-            mapId={mapId}
-            transform={transform}
-            viewPortSize={viewPortSize}
-            contrastColor={contrastColor}
-            players={players}
-          />
-          {toolOverlay} */}
+              <MapReactions mapId={mapId} />
+              <MouseCursors
+                myId={myself.id}
+                mapId={mapId}
+                transform={transform}
+                viewPortSize={viewPortSize}
+                contrastColor={contrastColor}
+                players={players}
+              />
+              {toolOverlay} */}
             </Container>
           </RecoilBridge>
         </ContextBridge>

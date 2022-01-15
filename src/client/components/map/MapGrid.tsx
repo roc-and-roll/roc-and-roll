@@ -7,49 +7,68 @@ import { getViewportCorners } from "../../util";
 import { ViewPortSizeContext } from "./MapContainer";
 import * as PIXI from "pixi.js";
 import { colorValue } from "./pixi-utils";
+import { snapPointToGrid } from "../../../shared/point";
 
-const STROKE_WIDTH = 1;
+const STROKE_WIDTH = 2;
 
 export const MapGrid = React.memo<{
   transform: Matrix;
   color: RRColor;
 }>(function MapGrid({ transform, color }) {
   const viewPortSize = useContext(ViewPortSizeContext);
-  // TODO: The grid needs to probably take these into account to properly scale
-  // and move.
-  const corners = getViewportCorners(transform, viewPortSize)
-    .map((point) => `${point.x},${point.y}`)
-    .join(" ");
+  const corners = getViewportCorners(transform, viewPortSize);
 
   const app = useContext(AppContext);
-  const texture = useMemo(() => {
-    const graphics = new PIXI.Graphics();
-    graphics.beginFill(colorValue(color));
-    graphics.drawRect(0, 0, STROKE_WIDTH / 2, GRID_SIZE);
-    graphics.drawRect(0, 0, GRID_SIZE, STROKE_WIDTH / 2);
-    graphics.drawRect(
-      GRID_SIZE - STROKE_WIDTH / 2,
-      0,
-      STROKE_WIDTH / 2,
-      GRID_SIZE
-    );
-    graphics.drawRect(
-      0,
-      GRID_SIZE - STROKE_WIDTH / 2,
-      GRID_SIZE,
-      STROKE_WIDTH / 2
-    );
-    graphics.endFill();
-    return app.renderer.generateTexture(graphics);
-  }, [color, app.renderer]);
 
-  return (
+  const strokeWidth =
+    transform.a >= 1
+      ? STROKE_WIDTH
+      : transform.a < 1 / 4
+      ? null
+      : Math.ceil(STROKE_WIDTH / transform.a);
+  const scaleMode =
+    transform.a > 0.5 ? PIXI.SCALE_MODES.NEAREST : PIXI.SCALE_MODES.LINEAR;
+
+  const graphics = useMemo(() => {
+    const graphics = new PIXI.Graphics();
+    graphics.name = "grid-texture";
+    return graphics;
+  }, []);
+
+  // TODO: There is a leak somewhere: When toggling the grid on and off,
+  // additional PIXI.Graphics objects are created.
+  // This does not help:
+  // useEffect(() => {
+  //   return () => {
+  //     graphics.destroy(true);
+  //   };
+  // }, [graphics]);
+
+  const texture = useMemo(() => {
+    if (strokeWidth === null) {
+      return null;
+    }
+
+    graphics.clear();
+    graphics.lineStyle(strokeWidth / 2, colorValue(color));
+    graphics.drawRect(
+      0,
+      0,
+      GRID_SIZE - strokeWidth / 2,
+      GRID_SIZE - strokeWidth / 2
+    );
+    return app.renderer.generateTexture(graphics, { scaleMode });
+  }, [graphics, color, strokeWidth, app.renderer, scaleMode]);
+
+  const topLeft = snapPointToGrid(corners[0]);
+
+  return texture ? (
     <TilingSprite
       texture={texture}
-      x={0}
-      y={0}
-      width={viewPortSize.x}
-      height={viewPortSize.y}
+      x={topLeft.x}
+      y={topLeft.y}
+      width={corners[2].x - topLeft.x}
+      height={corners[1].y - topLeft.y}
     />
-  );
+  ) : null;
 });
