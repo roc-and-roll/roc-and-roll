@@ -445,13 +445,14 @@ export type CompendiumMonster = {
   wis?: number;
   cha?: number;
 
+  action?: { name: string; entries: CompendiumTextEntry[] }[];
+
   type?: any;
   alignment?: any;
   hasToken?: boolean;
   senses?: any;
   passive?: any;
   trait?: any;
-  action?: any;
   senseTags?: any;
   damageTags?: any;
   miscTags?: any;
@@ -551,10 +552,13 @@ export const isMonster = z.strictObject({
   cha: z.optional(z.number()),
   hasToken: z.optional(z.boolean()),
 
+  action: z.optional(
+    z.array(z.strictObject({ name: z.string(), entries: z.array(isTextEntry) }))
+  ),
+
   senses: z.any(),
   passive: z.any(),
   trait: z.any(),
-  action: z.any(),
   senseTags: z.any(),
   damageTags: z.any(),
   miscTags: z.any(),

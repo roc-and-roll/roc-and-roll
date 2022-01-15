@@ -1,10 +1,9 @@
 import { matchSorter } from "match-sorter";
 import React, { useDeferredValue, useMemo, useState } from "react";
 import { useEffect, useRef } from "react";
-import { IterableElement, Promisable } from "type-fest";
+import { Promisable } from "type-fest";
 import { logEntryDiceRollAdd } from "../../../shared/actions";
 import { RRLogEntryDiceRoll } from "../../../shared/state";
-import { assertNever } from "../../../shared/util";
 import { usePrompt } from "../../dialog-boxes";
 import {
   roll,
@@ -14,14 +13,12 @@ import {
 import { useMyProps } from "../../myself";
 import { useServerDispatch } from "../../state";
 import { useCompendium } from "../compendium/Compendium";
-import {
-  CompendiumMonster,
-  CompendiumSpell,
-  CompendiumTextEntry,
-} from "../compendium/types";
+import { CompendiumTextEntry } from "../compendium/types";
 import { Dialog, DialogContent, DialogTitle } from "../Dialog";
 import { SmartTextInput } from "../ui/TextInput";
 import "./QuickReference.scss";
+import { Monster } from "./QuickReferenceMonster";
+import { Spell } from "./QuickReferenceSpell";
 
 export default function QuickReference({ onClose }: { onClose: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -97,7 +94,7 @@ function Content({
   );
 }
 
-function stndrdth(number: number) {
+export function stndrdth(number: number) {
   switch (number) {
     case 1:
       return "st";
@@ -110,190 +107,15 @@ function stndrdth(number: number) {
   }
 }
 
-function capitalize(string: string) {
+export function capitalize(string: string) {
   return `${string.slice(0, 1).toUpperCase()}${string.slice(1)}`;
 }
 
-function formatRange(range: CompendiumSpell["range"]) {
-  if (range.type === "special") {
-    return "special";
-  }
-
-  switch (range.distance.type) {
-    case "self":
-    case "touch":
-    case "sight":
-    case "unlimited": {
-      if (range.type !== "point") {
-        throw range;
-      }
-      return capitalize(range.distance.type);
-    }
-    case "feet":
-    case "miles": {
-      const distance = `${range.distance.amount} ${range.distance.type}`;
-
-      if (range.type === "point") {
-        return distance;
-      }
-      return `Self (${distance} ${range.type})`;
-    }
-    default:
-      assertNever(range.distance);
-  }
-}
-
-function formatTime(time: IterableElement<CompendiumSpell["time"]>) {
-  const formattedUnit = time.unit === "bonus" ? "bonus action" : time.unit;
-
-  let text = `${time.number} ${pluralizeIfNeeded(time.number, formattedUnit)}`;
-
-  if (time.unit === "reaction") {
-    text += `, ${time.condition}`;
-  }
-
-  return text;
-}
-
-function formatDuration(
-  duration: IterableElement<CompendiumSpell["duration"]>
-) {
-  switch (duration.type) {
-    case "instant":
-      return "Instantaneous";
-    case "special":
-      return "Special";
-    case "timed":
-      return `${duration.concentration ? "Concentration, up to " : ""}${
-        duration.duration.amount
-      } ${pluralizeIfNeeded(duration.duration.amount, duration.duration.type)}`;
-    case "permanent":
-      return `Until ${duration.ends
-        .map((ends) => {
-          switch (ends) {
-            case "dispel":
-              return "dispelled";
-            case "trigger":
-              return "triggered";
-            default:
-              assertNever(ends);
-          }
-        })
-        .join(" or ")}`;
-
-    default:
-      assertNever(duration);
-  }
-}
-
-const Monster = React.memo(function Monster({
-  monster,
-}: {
-  monster: CompendiumMonster;
-}) {
-  return (
-    <>
-      <p className="text-2xl mt-4">{monster.name}</p>
-      <dl>
-        <dt>Stat Block</dt>
-        <dd>
-          <div className="flex">
-            {Object.entries({
-              STR: monster.str,
-              DEX: monster.dex,
-              CON: monster.con,
-              INT: monster.int,
-              WIS: monster.wis,
-              CHA: monster.cha,
-            }).map(([key, value]) => {
-              return (
-                <div className="border m-1 p-1 text-center w-24" key={key}>
-                  <p>{value ?? null}</p>
-                  <p className="font-bold">{key}</p>
-                </div>
-              );
-            })}
-          </div>
-        </dd>
-
-        <dt>Armor Class</dt>
-        <dd>
-          {monster.ac !== undefined &&
-            (typeof monster.ac[0] === "number"
-              ? monster.ac[0]
-              : monster.ac[0]?.ac)}
-        </dd>
-        <dt>Hit Points</dt>
-        <dd>
-          {monster.hp !== undefined && (
-            <p>
-              {monster.hp.average} ({monster.hp.formula})
-            </p>
-          )}
-        </dd>
-      </dl>
-    </>
-  );
-});
-
-const Spell = React.memo(function Spell({ spell }: { spell: CompendiumSpell }) {
-  return (
-    <>
-      <p className="text-2xl mt-4">{spell.name}</p>
-      <dl>
-        <dt>Level</dt>
-        <dd>
-          {spell.level === 0
-            ? "cantrip"
-            : `${spell.level}${stndrdth(spell.level)}`}
-        </dd>
-        <dt>Casting Time</dt>
-        <dd>{spell.time.map((time) => formatTime(time)).join(" or ")}</dd>
-        <dt>Range</dt>
-        <dd>{formatRange(spell.range)}</dd>
-        <dt>Components</dt>
-        <dd>
-          {[
-            spell.components.v === true ? "V" : null,
-            spell.components.s === true ? "S" : null,
-            spell.components.m ? " " : null,
-          ]
-            .filter(Boolean)
-            .join(", ")}
-          <MaterialComponents m={spell.components.m} />
-        </dd>
-        <dt>Duration</dt>
-        <dd>
-          {spell.duration.map((duration, i) => (
-            <div key={i}>{formatDuration(duration)}</div>
-          ))}
-        </dd>
-      </dl>
-      <hr />
-      {spell.entries.map((entry, i) => (
-        <TextEntry key={i} entry={entry} spell={spell} />
-      ))}
-
-      {spell.entriesHigherLevel?.map((entry, i) => (
-        <TextEntry key={i} entry={entry} spell={spell} />
-      ))}
-    </>
-  );
-});
-
-function pluralizeIfNeeded(value: number, unit: string) {
+export function pluralizeIfNeeded(value: number, unit: string) {
   if (value === 1) {
     return unit;
   }
   return `${unit}s`;
-}
-
-function MaterialComponents({ m }: { m: CompendiumSpell["components"]["m"] }) {
-  if (!m) {
-    return null;
-  }
-
-  return <>M ({typeof m === "string" ? m : m.text})</>;
 }
 
 export function* getPartsFromTextEntryString(text: string) {
@@ -389,11 +211,11 @@ function RollLink({
 function RollScaledLink({
   args,
   isDamage,
-  spell,
+  rollName,
 }: {
   args: string;
   isDamage: boolean;
-  spell: CompendiumSpell;
+  rollName: string;
 }) {
   const [baseDiceString, levelRange, diceStringPerLevel] = args.split("|");
   const baseDiceStrings = baseDiceString?.split(";");
@@ -496,7 +318,7 @@ function RollScaledLink({
         return {
           diceRollTree: parseDiceStringAndRoll(diceString),
           rollType: isDamage ? "hit" : null,
-          rollName: `${spell.name} (level ${level})`,
+          rollName: `${rollName} (level ${level})`,
         };
       }}
     />
@@ -505,10 +327,10 @@ function RollScaledLink({
 
 function TextEntryString({
   text,
-  spell,
+  rollName,
 }: {
   text: string;
-  spell: CompendiumSpell;
+  rollName: string;
 }) {
   return (
     <>
@@ -522,8 +344,16 @@ function TextEntryString({
           throw new Error(`Unexpected command, got ${part}`);
         }
         const idx = content.indexOf(" ");
-        const command = content.substring(1, idx);
-        const args = content.substring(idx + 1);
+
+        let command: string;
+        let args: string;
+        if (idx !== -1) {
+          command = content.substring(1, idx);
+          args = content.substring(idx + 1);
+        } else {
+          command = content.substring(1);
+          args = "";
+        }
 
         switch (command) {
           case "dice":
@@ -534,10 +364,13 @@ function TextEntryString({
               (process.env.NODE_ENV !== "production" &&
                 !isValidDiceString(diceString))
             ) {
-              console.error(spell.name);
-              throw new Error(
-                `Can not parse dice expression: ${String(diceString)}`
+              console.log(
+                `Could not parse dice expression: ${String(diceString)}`
               );
+              return <>{diceString && " " + diceString + " "}</>;
+              //throw new Error(
+              //`Can not parse dice expression: ${String(diceString)}`
+              //);
             }
             return (
               <RollLink
@@ -546,7 +379,7 @@ function TextEntryString({
                 roll={() => ({
                   diceRollTree: parseDiceStringAndRoll(diceString),
                   rollType: command === "damage" ? "attack" : null,
-                  rollName: spell.name,
+                  rollName,
                 })}
               />
             );
@@ -559,7 +392,7 @@ function TextEntryString({
                 key={key}
                 args={args}
                 isDamage={command === "scaledamage"}
-                spell={spell}
+                rollName={rollName}
               />
             );
           //cspell: enable
@@ -590,7 +423,7 @@ function TextEntryString({
                     ],
                   },
                   rollType: command === "hit" ? "attack" : null,
-                  rollName: spell.name,
+                  rollName,
                 })}
               />
             );
@@ -604,7 +437,7 @@ function TextEntryString({
               <React.Fragment key={key}>
                 <br />
                 <em>
-                  Note: <TextEntryString text={args} spell={spell} />
+                  Note: <TextEntryString text={args} rollName={rollName} />
                 </em>
                 <br />
                 <br />
@@ -615,6 +448,22 @@ function TextEntryString({
             // the label comes after ||.
             const race = args.split("||");
             return <em key={key}>{race[race.length - 1]}</em>;
+          }
+          case "atk": {
+            let attackString = "";
+            if (args === "mw") attackString = "Melee Weapon Attack";
+            else if (args === "rw") attackString = "Ranged Weapon Attack";
+            else if (args === "ms") attackString = "Melee Spell Attack";
+            else if (args === "rs") attackString = "Ranged Spell Attack";
+            else if (args === "mw,rw")
+              attackString = "Melee or Ranged Weapon Attack";
+            else if (attackString === "")
+              console.log("Unexpected attack type: " + args);
+
+            return <em key={key}>{attackString}</em>;
+          }
+          case "h": {
+            return <em key={key}>Hit: </em>;
           }
           // TODO: We should also handle these properly.
           case "spell":
@@ -628,6 +477,8 @@ function TextEntryString({
           case "filter":
           case "book":
           case "i":
+          case "dc":
+          case "hitYourSpellAttack":
             return part;
           default:
             throw new Error(`Unexpected command, got ${part}`);
@@ -637,17 +488,17 @@ function TextEntryString({
   );
 }
 
-function TextEntry({
+export function TextEntry({
   entry,
-  spell,
+  rollName,
 }: {
   entry: CompendiumTextEntry;
-  spell: CompendiumSpell;
+  rollName: string;
 }) {
   if (typeof entry === "string") {
     return (
       <p>
-        <TextEntryString text={entry} spell={spell} />
+        <TextEntryString text={entry} rollName={rollName} />
       </p>
     );
   }
@@ -660,7 +511,7 @@ function TextEntry({
             <strong>{entry.name}</strong>
           </p>
           {entry.entries.map((each, i) => (
-            <TextEntry key={i} entry={each} spell={spell} />
+            <TextEntry key={i} entry={each} rollName={rollName} />
           ))}
         </div>
       );
@@ -671,7 +522,7 @@ function TextEntry({
         <ul>
           {entry.items.map((each, i) => (
             <li key={i}>
-              <TextEntry entry={each} spell={spell} />
+              <TextEntry entry={each} rollName={rollName} />
             </li>
           ))}
         </ul>
@@ -699,7 +550,7 @@ function TextEntry({
                 <tr key={y}>
                   {row.map((cell, x) => (
                     <td key={x}>
-                      <TextEntry entry={cell} spell={spell} />
+                      <TextEntry entry={cell} rollName={rollName} />
                     </td>
                   ))}
                 </tr>
@@ -734,7 +585,9 @@ function TextEntry({
         <div className="m-2 p-2 border-2 border-white">
           <p className="font-bold">{entry.name}</p>
           {entry.entries.map((insetEntry, index) => {
-            return <TextEntry key={index} entry={insetEntry} spell={spell} />;
+            return (
+              <TextEntry key={index} entry={insetEntry} rollName={rollName} />
+            );
           })}
           <div className="text-sm text-right">
             {entry.source} on page {entry.page}
