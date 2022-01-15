@@ -56,12 +56,13 @@ import { useLatest } from "../../useLatest";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import useRafLoop from "../../useRafLoop";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useHealthBarMeasurements } from "../../../client/util";
-import { PCircle, PRectangle } from "./Primitives";
+import { PCircle } from "./Primitives";
 import * as PIXI from "pixi.js";
-import { Container, Text, Sprite } from "react-pixi-fiber";
-import { RRMouseEvent, colorValue, createPixiPortal } from "./pixi-utils";
+import { Container, Sprite } from "react-pixi-fiber";
+import { RRMouseEvent, createPixiPortal } from "./pixi-utils";
+import { PixiTooltip } from "./pixi/PixiTooltip";
+import { PixiFontawesomeIcon } from "./pixi/PixiFontawesomeIcon";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
@@ -299,7 +300,7 @@ function MapTokenInner({
             {isCharacterDead(character) && (
               <DeadMarker x={x} y={y} scale={character.scale} />
             )}
-            {canControl && character.maxHP > 0 && (
+            {/* canControl && character.maxHP > 0 && (
               <g transform={`translate(${x},${y - 16})`}>
                 <HealthBar
                   character={character}
@@ -307,25 +308,19 @@ function MapTokenInner({
                   contrastColor={contrastColor}
                 />
               </g>
-            )}
+            ) */}
             {isHighlighted && (
-              <PRectangle
+              <RoughRectangle
                 x={x}
                 y={y}
-                width={tokenSize}
-                height={tokenSize}
-                stroke={colorValue("orange")}
-                fill={0x000000}
-                alpha={0}
+                w={tokenSize}
+                h={tokenSize}
+                stroke="orange"
+                fill="none"
               />
             )}
-            <Container x={x} y={y}>
-              <ConditionIcons
-                character={character}
-                canControl={canControl}
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
-              />
+            <Container x={x} y={y} name="condition-icons">
+              <ConditionIcons character={character} />
             </Container>
           </>,
           healthBarArea
@@ -443,11 +438,8 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
       )}
 
       {!props.isGhost && character.visibility !== "everyone" && (
-        <>
-          <title>only visible to GMs</title>
-          <Text
-            // do not block pointer events
-            // TODO pointerEvents="none"
+        <PixiTooltip text="only visible to GMs">
+          <RoughText
             x={tokenSize / 2}
             y={tokenSize / 2}
             style={{
@@ -460,10 +452,9 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
             }}
             angle={-30}
             anchor={{ x: 0.5, y: 0.5 }}
-          >
-            HIDDEN
-          </Text>
-        </>
+            text="HIDDEN"
+          />
+        </PixiTooltip>
       )}
     </>
   );
@@ -471,14 +462,8 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
 
 const ConditionIcons = React.memo(function ConditionIcons({
   character,
-  onMouseDown,
-  onMouseUp,
-  canControl,
 }: {
   character: RRCharacter;
-  onMouseDown: (e: RRMouseEvent) => void;
-  onMouseUp: (e: RRMouseEvent) => void;
-  canControl: boolean;
 }) {
   const tinyIcons = character.conditions.length > 12;
   const iconSize = (tinyIcons ? 12 : 16) * character.scale;
@@ -493,41 +478,22 @@ const ConditionIcons = React.memo(function ConditionIcons({
           y: Math.floor(index / iconsPerRow) * iconSize,
           width: iconSize,
           height: iconSize,
-          onMouseDown,
-          onMouseUp,
-          style: canControl ? { cursor: "move" } : {},
         };
 
-        // TODO: Normally, we'd want to disable pointer events on
-        // condition icons, so that clicking on them will still allow
-        // you to select and move your token. However, this causes the
-        // <title> not to show when hovering the condition icon.
-        //
-        // pointerEvents="none"
-
-        return typeof icon === "string" ? (
-          <image key={condition} href={icon} {...props}>
-            <title>{condition}</title>
-          </image>
-        ) : (
-          <React.Fragment key={condition}>
-            <FontAwesomeIcon
-              icon={icon}
-              symbol={`${character.id}/condition-icon/${condition}`}
-            />
-            <use
-              {...props}
-              xlinkHref={`#${character.id}/condition-icon/${condition}`}
-              color="black"
-              style={{
-                stroke: "white",
-                strokeWidth: 18,
-                ...props.style,
-              }}
-            >
-              <title>{condition}</title>
-            </use>
-          </React.Fragment>
+        return (
+          <PixiTooltip key={condition} text={condition}>
+            {typeof icon === "string" ? (
+              <Sprite texture={PIXI.Texture.from(icon)} {...props} />
+            ) : (
+              <PixiFontawesomeIcon
+                icon={icon}
+                fill="black"
+                stroke="white"
+                strokeWidth={18}
+                {...props}
+              />
+            )}
+          </PixiTooltip>
         );
       })}
     </>
@@ -561,14 +527,14 @@ function DeadMarker({ x, y, scale }: { x: number; y: number; scale: number }) {
   };
 
   return (
-    <g pointerEvents="none">
+    <Container interactiveChildren={false}>
       {[outerProps, innerProps].map((props, i) => (
         <React.Fragment key={i}>
           <RoughLine y={y} h={TOKEN_SIZE} {...props} />
           <RoughLine y={y + TOKEN_SIZE} h={-TOKEN_SIZE} {...props} />
         </React.Fragment>
       ))}
-    </g>
+    </Container>
   );
 }
 

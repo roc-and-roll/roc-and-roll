@@ -88,6 +88,10 @@ function OpSetToPIXI({
 
     switch (opSet.type) {
       case "path":
+        if (options.stroke === "none") {
+          return;
+        }
+
         instance.lineStyle({
           color: colorValue(options.stroke),
           width: options.strokeWidth,
@@ -100,6 +104,10 @@ function OpSetToPIXI({
         // />;
         break;
       case "fillPath":
+        if (options.fill === "none") {
+          return;
+        }
+
         instance.lineStyle({ width: 0 });
         instance.beginFill(colorValue(options.fill!), 1);
         // TODO
@@ -109,6 +117,10 @@ function OpSetToPIXI({
         //     : undefined
         break;
       case "fillSketch": {
+        if (options.fill === "none") {
+          return;
+        }
+
         let fillWeight = options.fillWeight;
         if (fillWeight < 0) {
           fillWeight = options.strokeWidth / 2;

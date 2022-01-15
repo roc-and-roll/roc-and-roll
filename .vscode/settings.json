@@ -20,6 +20,18 @@
   "jest.autoRun": { "watch": true, "onStartup": ["all-tests"] },
   "jest.debugCodeLens.showWhenTestStateIn": [],
 
+  "cSpell.enableFiletypes": [
+    "js",
+    "jsx",
+    "ts",
+    "tsx",
+    "html",
+    "md",
+    "css",
+    "scss",
+    "peggy"
+  ],
+
   "eslint.validate": [
     "javascript",
     "javascriptreact",
