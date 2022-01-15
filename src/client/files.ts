@@ -99,6 +99,23 @@ const fileListToArray = (fileList: FileList) => {
   return files;
 };
 
+export async function uploadRemoteFile<T extends AllowedFileTypes>(
+  url: string,
+  allowedFileTypes: T
+): Promise<AllowedFileTypesToObject<T>> {
+  const result = await fetch(`/api/upload-remote`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url, allowedFileTypes }),
+  });
+
+  if (result.status === 200) {
+    return (await result.json()) as AllowedFileTypesToObject<T>;
+  }
+  console.error(result);
+  throw new Error("something went wrong");
+}
+
 export async function uploadFiles<T extends AllowedFileTypes>(
   fileList: FileList | File[],
   allowedFileTypes: T

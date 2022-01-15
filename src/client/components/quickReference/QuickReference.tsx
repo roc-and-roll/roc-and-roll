@@ -595,5 +595,18 @@ export function TextEntry({
         </div>
       );
     }
+
+    case "item": {
+      return (
+        <div>
+          <p className="font-bold">{entry.name}</p>
+          {(entry.entry ? [entry.entry] : entry.entries ?? []).map(
+            (nestedEntry, index) => (
+              <TextEntry key={index} entry={nestedEntry} rollName={rollName} />
+            )
+          )}
+        </div>
+      );
+    }
   }
 }

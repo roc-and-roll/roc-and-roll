@@ -1,5 +1,6 @@
 import path from "path";
-import { fileURLToPath } from "url";
+import fs from "fs";
+import { fileURLToPath, URL } from "url";
 import express from "express";
 import { Server as SocketIOServer } from "socket.io";
 // These two packages speed up socket.io. Include them here just to verify that
@@ -26,6 +27,8 @@ import {
 } from "./files";
 import { isAllowedFiletypes } from "../shared/files";
 import serverTiming from "server-timing";
+import request from "request";
+import bodyParser from "body-parser";
 import { randomBetweenInclusive } from "../shared/random";
 
 const ONE_YEAR = 1000 * 60 * 60 * 24 * 365;
@@ -60,10 +63,89 @@ export async function setupWebServer(
   }
 
   // (2) Add an endpoint to upload files
+  const filenameFor = (originalName: string) =>
+    `${nanoid()}${path.extname(originalName)}`;
   const storage = multer.diskStorage({
     destination: uploadedFilesDir,
-    filename: (req, file, cb) =>
-      cb(null, `${nanoid()}${path.extname(file.originalname)}`),
+    filename: (req, file, cb) => cb(null, filenameFor(file.originalname)),
+  });
+
+  const handleUploadedFile = async (
+    file: {
+      path: string;
+      originalname: string;
+      filename: string;
+    },
+    allowedFileTypes: string
+  ) => {
+    const mimeType = await getMimeType(file.path);
+    if (mimeType === undefined) {
+      throw new Error("MimeType could not be determined for uploaded file.");
+    }
+
+    const isImage = isMimeTypeImage(mimeType);
+    const isAudio = isMimeTypeAudio(mimeType);
+
+    if (
+      allowedFileTypes !== "*" &&
+      ((allowedFileTypes === "image" && !isImage) ||
+        (allowedFileTypes === "audio" && !isAudio))
+    ) {
+      throw new Error(
+        `A file with mime type ${mimeType} cannot be uploaded as ${allowedFileTypes}.`
+      );
+    }
+
+    return {
+      originalFilename: file.originalname,
+      filename: file.filename,
+      mimeType,
+      ...(isImage
+        ? {
+            type: "image" as const,
+            ...(await getImageDimensions(file.path)),
+            blurHash: await calculateBlurHash(file.path),
+          }
+        : isAudio
+        ? {
+            type: "audio" as const,
+            duration: await getAudioDuration(file.path),
+          }
+        : { type: "other" as const }),
+    };
+  };
+
+  const downloadFile = (url: string, name: string): Promise<string> =>
+    new Promise((resolve, _reject) => {
+      const filepath = path.join(uploadedFilesDir, filenameFor(name));
+      request(url).pipe(
+        fs.createWriteStream(filepath).on("close", () => resolve(filepath))
+      );
+    });
+
+  app.post("/api/upload-remote", bodyParser.json(), async (req, res, next) => {
+    try {
+      const validationResult = isAllowedFiletypes.safeParse(
+        req.body.allowedFileTypes
+      );
+      if (!validationResult.success) {
+        res.status(400);
+        return;
+      }
+      const allowedFileTypes = validationResult.data;
+
+      const originalname = path.basename(new URL(url).pathname);
+      const filepath = await downloadFile(req.body.url as string, originalname);
+      const filename = path.basename(filepath);
+      res.json(
+        await handleUploadedFile(
+          { path: filepath, filename, originalname },
+          allowedFileTypes
+        )
+      );
+    } catch (err) {
+      next(err);
+    }
   });
 
   app.post(
@@ -86,44 +168,7 @@ export async function setupWebServer(
         const allowedFileTypes = validationResult.data;
 
         const data: RRFile[] = await Promise.all(
-          req.files.map(async (file) => {
-            const mimeType = await getMimeType(file.path);
-            if (mimeType === undefined) {
-              throw new Error(
-                "MimeType could not be determined for uploaded file."
-              );
-            }
-
-            const isImage = isMimeTypeImage(mimeType);
-            const isAudio = isMimeTypeAudio(mimeType);
-
-            if (
-              (allowedFileTypes === "image" && !isImage) ||
-              (allowedFileTypes === "audio" && !isAudio)
-            ) {
-              throw new Error(
-                `A file with mime type ${mimeType} cannot be uploaded as ${allowedFileTypes}.`
-              );
-            }
-
-            return {
-              originalFilename: file.originalname,
-              filename: file.filename,
-              mimeType,
-              ...(isImage
-                ? {
-                    type: "image" as const,
-                    ...(await getImageDimensions(file.path)),
-                    blurHash: await calculateBlurHash(file.path),
-                  }
-                : isAudio
-                ? {
-                    type: "audio" as const,
-                    duration: await getAudioDuration(file.path),
-                  }
-                : { type: "other" as const }),
-            };
-          })
+          req.files.map((file) => handleUploadedFile(file, allowedFileTypes))
         );
         res.json(data);
       } catch (err) {
