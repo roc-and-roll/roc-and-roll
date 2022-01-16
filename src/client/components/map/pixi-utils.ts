@@ -16,8 +16,10 @@ export const matrixToPixiTransform = (m: Matrix) => {
   return t;
 };
 
-export const colorValue = (color: ColorInput) =>
-  parseInt(tinycolor(color).toHex(), 16);
+export const colorValue = (color: ColorInput) => {
+  const t = tinycolor(color);
+  return { color: parseInt(t.toHex(), 16), alpha: t.getAlpha() };
+};
 
 export type RRMouseEvent = {
   clientX: number;

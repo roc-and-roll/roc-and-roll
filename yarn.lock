@@ -3805,6 +3805,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/fontfaceobserver@npm:^2":
+  version: 2.1.0
+  resolution: "@types/fontfaceobserver@npm:2.1.0"
+  checksum: 19bf653d82f91e86f32cd3f2df2988495b96d8ad5be5a625b7dad06a1a01a9add76607f8b8f821c50aad1f45f4d40433bec48463d60c7e9fa05a02e9e8469b66
+  languageName: node
+  linkType: hard
+
 "@types/fs-extra@npm:^9.0.13":
   version: 9.0.13
   resolution: "@types/fs-extra@npm:9.0.13"
@@ -8378,6 +8385,13 @@ __metadata:
     debug:
       optional: true
   checksum: 4b5aaa91a0f938547a083d001a572da4d6b7586b699f330da8794ae2cf8b0d8628bcde794f9b205fbe6c6dcab30272454e723aed8f5540bf47a41fa8c7e36441
+  languageName: node
+  linkType: hard
+
+"fontfaceobserver@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "fontfaceobserver@npm:2.1.0"
+  checksum: 11e04d076bc4ede19d1b8dbc614fa8dd4b2b092c40e174954abaefa914cefb2f30eca2527a41100cc492e50a1c1b0f7dec477c51ff34091967b9fae36ca3c442
   languageName: node
   linkType: hard
 
@@ -14919,6 +14933,7 @@ resolve@^2.0.0-next.3:
     "@types/compression": ^1.7.1
     "@types/express": ^4.17.13
     "@types/favicons": ^6
+    "@types/fontfaceobserver": ^2
     "@types/fs-extra": ^9.0.13
     "@types/howler": ^2.2.4
     "@types/jest": ^27.0.1
@@ -14977,6 +14992,7 @@ resolve@^2.0.0-next.3:
     favicons-webpack-plugin: ^5.0.2
     file-loader: ^6.2.0
     file-type: ^16.5.3
+    fontfaceobserver: ^2.1.0
     fork-ts-checker-webpack-plugin: ^6.3.2
     fs-extra: ^10.0.0
     get-port: ^5

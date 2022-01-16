@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import rough from "roughjs/bin/rough";
 import type {
   Drawable,
@@ -24,6 +24,7 @@ import {
   RRPixiProps,
   rrToPixiHandler,
 } from "./map/pixi-utils";
+import FontFaceObserver from "fontfaceobserver"; // cspell: disable-line
 
 const DEFAULT_ROUGHNESS = 3;
 
@@ -87,13 +88,15 @@ function OpSetToPIXI({
     instance.clear();
 
     switch (opSet.type) {
-      case "path":
+      case "path": {
         if (options.stroke === "none") {
           return;
         }
 
+        const strokeColor = colorValue(options.stroke);
         instance.lineStyle({
-          color: colorValue(options.stroke),
+          color: strokeColor.color,
+          alpha: strokeColor.alpha,
           width: options.strokeWidth,
         });
 
@@ -103,19 +106,22 @@ function OpSetToPIXI({
         //   strokeDashoffset={options.strokeLineDashOffset}
         // />;
         break;
-      case "fillPath":
+      }
+      case "fillPath": {
         if (options.fill === "none") {
           return;
         }
 
         instance.lineStyle({ width: 0 });
-        instance.beginFill(colorValue(options.fill!), 1);
+        const fillColor = colorValue(options.fill!);
+        instance.beginFill(fillColor.color, fillColor.alpha);
         // TODO
         // fillRule={
         //   drawable.shape === "curve" || drawable.shape === "polygon"
         //     ? "evenodd"
         //     : undefined
         break;
+      }
       case "fillSketch": {
         if (options.fill === "none") {
           return;
@@ -125,8 +131,10 @@ function OpSetToPIXI({
         if (fillWeight < 0) {
           fillWeight = options.strokeWidth / 2;
         }
+        const fillColor = colorValue(options.fill!);
         instance.lineStyle({
-          color: colorValue(options.fill!),
+          color: fillColor.color,
+          alpha: fillColor.alpha,
           width: fillWeight,
         });
         break;
@@ -499,7 +507,7 @@ export const RoughLinearPath = makeRoughComponent<
   ({ x, y, points, fill, strokeLineDash: _, ...rest }, ref) => (
     <polyline
       ref={ref}
-      fill="transparent"
+      fill="none"
       points={[makePoint(0), ...points]
         .map(({ x: px, y: py }) => `${x + px},${y + py}`)
         .join(" ")}
@@ -531,19 +539,60 @@ export const RoughPolygon = makeRoughComponent<
   )
 );
 
+const fontObserver = new (class {
+  private loaded = false;
+  private observers = new Set<() => void>();
+
+  constructor() {
+    const fontFaceObserver = new FontFaceObserver("Architects Daughter");
+    void fontFaceObserver
+      .load(null, 60_000)
+      .then(() => {
+        this.loaded = true;
+        this.observers.forEach((observer) => observer());
+        this.observers.clear();
+      })
+      .catch((error) => console.error(error));
+  }
+
+  public onLoad(observer: () => void) {
+    this.observers.add(observer);
+    return () => this.observers.delete(observer);
+  }
+
+  public isLoaded() {
+    return this.loaded;
+  }
+})();
+
 const RoughTextNonMemoized = React.forwardRef<
   PIXI.Text,
   RRPixiProps<PIXI.Text>
 >(function RoughText({ style, ...props }, ref) {
-  return (
+  // We need to wait until the font is loaded, otherwise the text will be
+  // rendered with a default font.
+  const [fontLoaded, setFontLoaded] = useState(fontObserver.isLoaded());
+  useEffect(() => {
+    if (!fontLoaded) {
+      const unsubscribe = fontObserver.onLoad(() => setFontLoaded(true));
+      return () => {
+        unsubscribe();
+      };
+    }
+  }, [fontLoaded]);
+
+  return fontLoaded ? (
     <Text
       ref={ref}
-      style={{ fontFamily: ["Architects Daughter", "cursive"], ...style }}
+      style={{ fontFamily: ["'Architects Daughter'", "cursive"], ...style }}
+      // TODO: Text is blurry when zooming -- thus we render it at 5x the
+      // resolution here. There is probably a better way.
+      resolution={5}
       {...props}
       // TODO
       // dominantBaseline="text-before-edge"
     />
-  );
+  ) : null;
 });
 
 export const RoughText = React.memo(RoughTextNonMemoized);

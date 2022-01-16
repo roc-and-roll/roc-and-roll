@@ -44,8 +44,8 @@ export const PCircle = React.forwardRef<
     cy: number;
     r: number;
     fill: number;
-    stroke: number;
-    strokeWidth: number;
+    stroke?: number;
+    strokeWidth?: number;
     alpha: number;
   }>
 >(function PCircle(
@@ -61,7 +61,9 @@ export const PCircle = React.forwardRef<
     }
     instance.clear();
     instance.beginFill(fill, alpha);
-    instance.lineStyle(strokeWidth, stroke);
+    if (strokeWidth !== undefined && stroke !== undefined) {
+      instance.lineStyle(strokeWidth, stroke);
+    }
     instance.drawCircle(cx, cy, r);
     instance.endFill();
   }, [alpha, cx, cy, fill, r, stroke, strokeWidth]);

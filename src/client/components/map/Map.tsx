@@ -852,19 +852,23 @@ transform,
             RoughContext,
             ViewPortSizeContext,
           ]}
-          barrierRender={(children) => (
-            <Stage
-              className="map-svg"
-              options={{
-                height: viewPortSize.y,
-                width: viewPortSize.x,
-                antialias: true,
-                backgroundColor: colorValue(backgroundColor),
-              }}
-            >
-              {children}
-            </Stage>
-          )}
+          barrierRender={(children) => {
+            const color = colorValue(backgroundColor);
+            return (
+              <Stage
+                className="map-svg"
+                options={{
+                  height: viewPortSize.y,
+                  width: viewPortSize.x,
+                  antialias: true,
+                  backgroundColor: color.color,
+                  backgroundAlpha: color.alpha,
+                }}
+              >
+                {children}
+              </Stage>
+            );
+          }}
         >
           <RecoilBridge>
             <Container
@@ -879,7 +883,11 @@ transform,
               mousemove={rrToPixiHandler(handleMapMouseMove)}
             >
               <Container ref={setImageArea} name="images" />
-              <Container ref={setAuraArea} name="auras" />
+              <Container
+                ref={setAuraArea}
+                interactiveChildren={false}
+                name="auras"
+              />
               <Container ref={setDefaultArea} name="default" />
               {gridEnabled && (
                 <MapGrid transform={transform} color={gridColor} />

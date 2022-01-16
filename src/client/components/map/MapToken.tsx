@@ -32,7 +32,6 @@ import {
   isCharacterUnconsciousOrDead,
 } from "../../../shared/util";
 import { useMyProps } from "../../myself";
-import { HPInlineEdit } from "./HPInlineEdit";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { CURSOR_POSITION_SYNC_DEBOUNCE, hoveredMapObjectsFamily } from "./Map";
 import {
@@ -57,10 +56,10 @@ import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import useRafLoop from "../../useRafLoop";
 import { useHealthBarMeasurements } from "../../../client/util";
-import { PCircle } from "./Primitives";
+import { PCircle, PRectangle } from "./Primitives";
 import * as PIXI from "pixi.js";
 import { Container, Sprite } from "react-pixi-fiber";
-import { RRMouseEvent, createPixiPortal } from "./pixi-utils";
+import { RRMouseEvent, createPixiPortal, colorValue } from "./pixi-utils";
 import { PixiTooltip } from "./pixi/PixiTooltip";
 import { PixiFontawesomeIcon } from "./pixi/PixiFontawesomeIcon";
 
@@ -300,15 +299,15 @@ function MapTokenInner({
             {isCharacterDead(character) && (
               <DeadMarker x={x} y={y} scale={character.scale} />
             )}
-            {/* canControl && character.maxHP > 0 && (
-              <g transform={`translate(${x},${y - 16})`}>
+            {canControl && character.maxHP > 0 && (
+              <Container x={x} y={y - 16} name="healthBar">
                 <HealthBar
                   character={character}
                   setHP={setHP}
                   contrastColor={contrastColor}
                 />
-              </g>
-            ) */}
+              </Container>
+            )}
             {isHighlighted && (
               <RoughRectangle
                 x={x}
@@ -425,8 +424,6 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
 
       {!props.isGhost && props.isSelectedOrHovered && (
         <PCircle
-          // do not block pointer events
-          // TODO pointerEvents="none"
           cx={tokenSize / 2}
           cy={tokenSize / 2}
           r={tokenSize / 2 - character.scale * 1.5}
@@ -527,7 +524,7 @@ function DeadMarker({ x, y, scale }: { x: number; y: number; scale: number }) {
   };
 
   return (
-    <Container interactiveChildren={false}>
+    <Container interactiveChildren={false} name="deadMarker">
       {[outerProps, innerProps].map((props, i) => (
         <React.Fragment key={i}>
           <RoughLine y={y} h={TOKEN_SIZE} {...props} />
@@ -592,15 +589,16 @@ function Aura({
   const tokenSize = GRID_SIZE * character.scale;
 
   const size = (aura.size * GRID_SIZE) / 5 + tokenSize / 2;
-  const fill = tinycolor(aura.color).setAlpha(0.3).toRgbString();
+  const fill = colorValue(tinycolor(aura.color).setAlpha(0.3));
   switch (aura.shape) {
     case "circle":
       return (
         <>
-          <circle
+          <PCircle
             cx={x + tokenSize / 2}
             cy={y + tokenSize / 2}
-            fill={tinycolor(fill).setAlpha(0.15).toRgbString()}
+            fill={fill.color}
+            alpha={fill.alpha / 2}
             r={size}
           />
           <EmanationArea
@@ -615,10 +613,11 @@ function Aura({
       );
     case "square":
       return (
-        <rect
+        <PRectangle
           x={x - size + tokenSize / 2}
           y={y - size + tokenSize / 2}
-          fill={fill}
+          fill={fill.color}
+          alpha={fill.alpha}
           height={size * 2}
           width={size * 2}
         />
@@ -653,7 +652,7 @@ const HealthBar = React.memo(function HealthBar({
         y={0}
         w={tokenSize}
         h={16}
-        stroke="transparent"
+        stroke="none"
         fill="white"
         fillStyle="solid"
         roughness={1}
@@ -665,7 +664,7 @@ const HealthBar = React.memo(function HealthBar({
             y={0}
             w={hpBarWidth}
             h={16}
-            stroke="transparent"
+            stroke="none"
             fill={hpColor}
             fillStyle="solid"
             roughness={0}
@@ -676,7 +675,7 @@ const HealthBar = React.memo(function HealthBar({
               y={0}
               w={temporaryHPBarWidth}
               h={16}
-              stroke="transparent"
+              stroke="none"
               fill={temporaryHPColor}
               fillStyle="solid"
               roughness={0}
@@ -690,7 +689,7 @@ const HealthBar = React.memo(function HealthBar({
         w={tokenSize}
         h={16}
         stroke={tinycolor(contrastColor).setAlpha(0.5).toRgbString()}
-        fill="transparent"
+        fill="none"
         roughness={1}
       />
       {/*
@@ -708,13 +707,12 @@ const HealthBar = React.memo(function HealthBar({
             {token.hp}&thinsp;/&thinsp;{token.maxHP}
           </RoughText>
         */}
-      <foreignObject x={0} y={2} width={tokenSize / 2 - 4} height={14}>
+      {/* <foreignObject x={0} y={2} width={tokenSize / 2 - 4} height={14}>
         <HPInlineEdit hp={character.hp + character.temporaryHP} setHP={setHP} />
-      </foreignObject>
+      </foreignObject> */}
       <RoughText
         x={tokenSize / 2 - 3}
         y={-1}
-        width={tokenSize}
         cursor="default"
         style={{
           fontWeight: "bold",

@@ -32,10 +32,12 @@ export const PixiSVGPath = React.forwardRef<
       stroke !== undefined &&
       stroke !== "none"
     ) {
-      instance.lineStyle(strokeWidth, colorValue(stroke), 1);
+      const strokeColor = colorValue(stroke);
+      instance.lineStyle(strokeWidth, strokeColor.color, strokeColor.alpha);
     }
     if (fill !== undefined && fill !== "none") {
-      instance.beginFill(colorValue(fill), 1);
+      const fillColor = colorValue(fill);
+      instance.beginFill(fillColor.color, fillColor.alpha);
     }
 
     applySVGPathToPixiGraphics(instance, svgPath);

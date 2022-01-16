@@ -50,7 +50,8 @@ export const MapGrid = React.memo<{
     }
 
     graphics.clear();
-    graphics.lineStyle(strokeWidth / 2, colorValue(color));
+    const strokeColor = colorValue(color);
+    graphics.lineStyle(strokeWidth / 2, strokeColor.color, strokeColor.alpha);
     graphics.drawRect(
       0,
       0,

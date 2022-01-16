@@ -20,6 +20,7 @@ import {
   snapPointToGrid,
 } from "../../../shared/point";
 import { RoughRectangle } from "../rough";
+import { PRectangle } from "./Primitives";
 
 function calculateSquaresForBurst(r: number): RRPoint[] {
   // must always be 0,0
@@ -129,7 +130,7 @@ export const EmanationArea = React.memo(function EmanationArea({
   creatureW: number;
   creatureH: number;
   r: number;
-  fill: string;
+  fill: { color: number; alpha: number };
 }) {
   const squares = useMemo(() => {
     const points = [];
@@ -161,13 +162,14 @@ export const EmanationArea = React.memo(function EmanationArea({
         );
 
         return (
-          <rect
+          <PRectangle
             key={i}
             x={x}
             y={y}
             width={GRID_SIZE}
             height={GRID_SIZE}
-            fill={fill}
+            fill={fill.color}
+            alpha={fill.alpha}
           />
         );
       })}
