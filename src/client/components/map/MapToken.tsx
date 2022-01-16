@@ -222,7 +222,13 @@ function MapTokenInner({
     isGhost = false,
     ref: React.LegacyRef<Container> | undefined = undefined
   ) => (
-    <Container ref={ref} angle={object.rotation} x={position.x} y={position.y}>
+    <Container
+      ref={ref}
+      angle={object.rotation}
+      pivot={{ x: tokenSize / 2, y: tokenSize / 2 }}
+      x={position.x + tokenSize / 2}
+      y={position.y + tokenSize / 2}
+    >
       {isGhost ? (
         <TokenImageOrPlaceholder
           isGhost={true}
