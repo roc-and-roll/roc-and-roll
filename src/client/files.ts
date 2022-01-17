@@ -103,17 +103,17 @@ export async function uploadRemoteFile<T extends AllowedFileTypes>(
   url: string,
   allowedFileTypes: T
 ): Promise<AllowedFileTypesToObject<T>> {
-  const result = await fetch(`/api/upload-remote`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url, allowedFileTypes }),
-  });
-
-  if (result.status === 200) {
-    return (await result.json()) as AllowedFileTypesToObject<T>;
-  }
-  console.error(result);
-  throw new Error("something went wrong");
+  const blob = await fetch(url).then((r) => r.blob());
+  return (
+    await uploadFiles(
+      [
+        new File([blob], url.split("/").pop() ?? "remote-file", {
+          type: blob.type,
+        }),
+      ],
+      allowedFileTypes
+    )
+  )[0]!;
 }
 
 export async function uploadFiles<T extends AllowedFileTypes>(

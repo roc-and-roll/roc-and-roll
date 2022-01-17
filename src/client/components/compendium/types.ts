@@ -630,12 +630,12 @@ assert<IsExact<z.infer<typeof isMonster>, CompendiumMonster>>(true);
 
 export const isCompendiumData = z.strictObject({
   spell: z.array(isSpell),
-  monster: z.array(isMonster),
+  monster: z.optional(z.array(isMonster)),
 });
 
 export type CompendiumData = {
   spell: CompendiumSpell[];
-  monster: CompendiumMonster[];
+  monster?: CompendiumMonster[];
 };
 
 // Make sure that the schema really matches the CompendiumData type.

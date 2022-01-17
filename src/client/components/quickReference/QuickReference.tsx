@@ -71,7 +71,7 @@ function Content({
   const monsters = useMemo(
     () =>
       matchSorter(
-        compendiumSources.flatMap((source) => source.data.monster),
+        compendiumSources.flatMap((source) => source.data.monster ?? []),
         search,
         { keys: ["name"] }
       ),

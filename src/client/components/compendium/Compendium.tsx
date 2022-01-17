@@ -129,7 +129,7 @@ export function Compendium() {
           <li key={i}>
             <p>{source.title}</p>
             <p>Spells: {source.data.spell.length}</p>
-            <p>Monsters: {source.data.monster.length}</p>
+            <p>Monsters: {source.data.monster?.length ?? 0}</p>
             <Button onClick={() => removeSource(source.id)}>remove</Button>
           </li>
         ))}
