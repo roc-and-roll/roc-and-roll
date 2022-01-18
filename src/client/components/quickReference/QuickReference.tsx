@@ -78,6 +78,8 @@ function Content({
     [compendiumSources, search]
   );
 
+  if (search.length < 3) return null;
+
   return (
     <ul style={searchIsStale ? { opacity: 0.7 } : {}}>
       {spells.map((spell) => (
