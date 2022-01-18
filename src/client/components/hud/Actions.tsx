@@ -54,7 +54,7 @@ import {
 import { useConfirm } from "../../dialog-boxes";
 import { useMyProps, useMySelectedCharacters } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
-import { DiceTemplates } from "../DiceTemplates";
+import { DiceTemplates } from "../diceTemplates/DiceTemplates";
 import { GeneratedDiceTemplates } from "../diceTemplates/GeneratedDiceTemplates";
 import { Popover } from "../Popover";
 import { RRTooltip } from "../RRTooltip";
