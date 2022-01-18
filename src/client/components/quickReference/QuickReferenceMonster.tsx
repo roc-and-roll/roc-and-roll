@@ -154,6 +154,29 @@ export const Monster = React.memo(function Monster({
             </p>
           )}
         </dd>
+        {monster.immune && monster.immune.length > 0 && (
+          <>
+            <dt>Damage Immunities</dt>
+            <dd>
+              {monster.immune.map(
+                (immunity, index) =>
+                  immunity + (index >= monster.immune!.length - 1 ? "" : ", ")
+              )}
+            </dd>
+          </>
+        )}
+        {monster.conditionImmune && monster.conditionImmune.length > 0 && (
+          <>
+            <dt>Condition Immunities</dt>
+            <dd>
+              {monster.conditionImmune.map(
+                (immunity, index) =>
+                  immunity +
+                  (index >= monster.conditionImmune!.length - 1 ? "" : ", ")
+              )}
+            </dd>
+          </>
+        )}
 
         <dt>Actions</dt>
         <dd>

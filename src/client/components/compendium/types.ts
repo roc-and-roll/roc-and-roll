@@ -463,6 +463,9 @@ export type CompendiumMonster = {
 
   action?: { name: string; entries: CompendiumTextEntry[] }[];
 
+  immune?: Array<NonNullable<RRDamageType["type"]>>;
+  conditionImmune?: Array<RRCharacterCondition>;
+
   type?: any;
   alignment?: any;
   hasToken?: boolean;
@@ -472,8 +475,6 @@ export type CompendiumMonster = {
   senseTags?: any;
   damageTags?: any;
   miscTags?: any;
-  immune?: any;
-  conditionImmune?: any;
   otherSources?: any;
   skill?: any;
   languages?: any;
@@ -572,6 +573,8 @@ export const isMonster = z.strictObject({
   action: z.optional(
     z.array(z.strictObject({ name: z.string(), entries: z.array(isTextEntry) }))
   ),
+  immune: z.optional(z.array(z.enum(damageTypesWithoutNull))),
+  conditionImmune: z.optional(z.array(z.enum(conditionNames))),
 
   senses: z.any(),
   passive: z.any(),
@@ -579,8 +582,6 @@ export const isMonster = z.strictObject({
   senseTags: z.any(),
   damageTags: z.any(),
   miscTags: z.any(),
-  immune: z.any(),
-  conditionImmune: z.any(),
   otherSources: z.any(),
   skill: z.any(),
   languages: z.any(),
