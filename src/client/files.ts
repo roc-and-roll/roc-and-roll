@@ -107,9 +107,13 @@ export async function uploadRemoteFile<T extends AllowedFileTypes>(
   return (
     await uploadFiles(
       [
-        new File([blob], url.split("/").pop() ?? "remote-file", {
-          type: blob.type,
-        }),
+        new File(
+          [blob],
+          new URL(url).pathname.split("/").pop() ?? "remote-file",
+          {
+            type: blob.type,
+          }
+        ),
       ],
       allowedFileTypes
     )
