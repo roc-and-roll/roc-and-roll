@@ -13,7 +13,7 @@ export function evaluateDiceTemplatePart(
   part: RRDiceTemplatePart,
   modified: RRMultipleRoll,
   crit: boolean = false,
-  character?: RRCharacter | null
+  character?: Pick<RRCharacter, "stats" | "attributes"> | null
 ): DRTPartExpression<true>[] {
   switch (part.type) {
     case "dice": {
@@ -83,7 +83,7 @@ export function evaluateDiceTemplatePart(
 
 export function getModifierForTemplate(
   template: RRDiceTemplate,
-  character?: RRCharacter | null
+  character?: Pick<RRCharacter, "stats" | "attributes"> | null
 ) {
   let returnValue = 0;
 

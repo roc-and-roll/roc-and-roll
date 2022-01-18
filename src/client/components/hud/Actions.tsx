@@ -52,9 +52,10 @@ import {
   RRDiceTemplateCategory,
 } from "../../../shared/validation";
 import { useConfirm } from "../../dialog-boxes";
-import { useMyProps } from "../../myself";
+import { useMyProps, useMySelectedCharacters } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
-import { DiceTemplates, GeneratedDiceTemplates } from "../DiceTemplates";
+import { DiceTemplates } from "../DiceTemplates";
+import { GeneratedDiceTemplates } from "../diceTemplates/GeneratedDiceTemplates";
 import { Popover } from "../Popover";
 import { RRTooltip } from "../RRTooltip";
 import { Button } from "../ui/Button";
@@ -92,6 +93,8 @@ const actionClasses =
   "snap-start border-black border flex items-center justify-center p-3 -mr-px last:mr-0 cursor-pointer";
 const activeClass = (active: boolean) =>
   !active ? "hover:bg-rr-600" : "bg-rr-500";
+const highlightClass = (shouldHighlight: boolean, active: boolean) =>
+  shouldHighlight ? (active ? "bg-green-400" : "bg-green-600") : "";
 
 export const ActionsHUD = React.memo(function DicePanel() {
   const [active, setActive] = useState<Section>("closed");
@@ -240,6 +243,13 @@ export const ActionsHUD = React.memo(function DicePanel() {
     }
   }
 
+  const selectedCharacters = useMySelectedCharacters("id");
+  const shouldHighlight =
+    (selectedCharacters.length === 1 &&
+      myself.mainCharacterId &&
+      selectedCharacters[0]!.id !== myself.mainCharacterId) ??
+    false;
+
   return (
     <div className="absolute bottom-2 top-24 left-20 right-[500px] flex flex-col justify-end items-start z-10 pointer-events-none">
       <div className="hud-panel w-[370px] rounded-b-none pointer-events-auto overflow-y-auto">
@@ -256,7 +266,11 @@ export const ActionsHUD = React.memo(function DicePanel() {
         <RRTooltip content="Saving Throws" placement="top">
           <Button
             unstyled
-            className={clsx(actionClasses, activeClass(active === "STs"))}
+            className={clsx(
+              actionClasses,
+              activeClass(active === "STs"),
+              highlightClass(shouldHighlight, active === "STs")
+            )}
             onClick={() => toggle("STs")}
           >
             <FontAwesomeIcon size="lg" icon={faShieldAlt} fixedWidth />
@@ -265,7 +279,11 @@ export const ActionsHUD = React.memo(function DicePanel() {
         <RRTooltip content="Skill Checks" placement="top">
           <Button
             unstyled
-            className={clsx(actionClasses, activeClass(active === "Skills"))}
+            className={clsx(
+              actionClasses,
+              activeClass(active === "Skills"),
+              highlightClass(shouldHighlight, active === "Skills")
+            )}
             onClick={() => toggle("Skills")}
           >
             <FontAwesomeIcon size="lg" icon={faHandPaper} fixedWidth />
