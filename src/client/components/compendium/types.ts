@@ -12,7 +12,7 @@ import { RRDamageType } from "../../../shared/dice-roll-tree-types-and-validatio
 export type CompendiumTextEntry =
   | string
   | { type: "entries"; name: string; entries: CompendiumTextEntry[] }
-  | { type: "list"; items: CompendiumTextEntry[] }
+  | { type: "list"; style?: string; items: CompendiumTextEntry[] }
   | {
       type: "table";
       caption?: string;
@@ -30,6 +30,13 @@ export type CompendiumTextEntry =
       source: string;
       name: string;
       entries: CompendiumTextEntry[];
+    }
+  | {
+      type: "item";
+      name: string;
+      entry?: CompendiumTextEntry;
+      entries?: CompendiumTextEntry[];
+      style?: string;
     };
 
 const __isTextEntryRecursive: z.ZodSchema<CompendiumTextEntry> = z.lazy(
@@ -45,6 +52,7 @@ export const isTextEntry = z.union([
   }),
   z.strictObject({
     type: z.literal("list"),
+    style: z.optional(z.string()),
     items: z.array(__isTextEntryRecursive),
   }),
   z.strictObject({
@@ -73,6 +81,13 @@ export const isTextEntry = z.union([
     source: z.string(),
     name: z.string(),
     entries: z.array(__isTextEntryRecursive),
+  }),
+  z.strictObject({
+    type: z.literal("item"),
+    name: z.string(),
+    entry: z.optional(__isTextEntryRecursive),
+    entries: z.optional(z.array(__isTextEntryRecursive)),
+    style: z.optional(z.string()),
   }),
 ]);
 
@@ -417,6 +432,7 @@ export type ConditionalSpeed = {
 export type CompendiumMonster = {
   name: string;
   source: string;
+  imageUrl?: string;
   page: number;
   size?: string;
   ac?: (
@@ -511,6 +527,7 @@ export const isMonster = z.strictObject({
   name: z.string(),
   source: z.string(),
   page: z.number().int().min(0),
+  imageUrl: z.optional(z.string()),
   size: z.optional(z.string()),
   type: z.any(),
   alignment: z.optional(z.any()),
@@ -613,12 +630,12 @@ assert<IsExact<z.infer<typeof isMonster>, CompendiumMonster>>(true);
 
 export const isCompendiumData = z.strictObject({
   spell: z.array(isSpell),
-  monster: z.array(isMonster),
+  monster: z.optional(z.array(isMonster)),
 });
 
 export type CompendiumData = {
   spell: CompendiumSpell[];
-  monster: CompendiumMonster[];
+  monster?: CompendiumMonster[];
 };
 
 // Make sure that the schema really matches the CompendiumData type.

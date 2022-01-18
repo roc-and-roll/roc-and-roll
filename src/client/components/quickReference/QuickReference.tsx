@@ -71,7 +71,7 @@ function Content({
   const monsters = useMemo(
     () =>
       matchSorter(
-        compendiumSources.flatMap((source) => source.data.monster),
+        compendiumSources.flatMap((source) => source.data.monster ?? []),
         search,
         { keys: ["name"] }
       ),
@@ -592,6 +592,19 @@ export function TextEntry({
           <div className="text-sm text-right">
             {entry.source} on page {entry.page}
           </div>
+        </div>
+      );
+    }
+
+    case "item": {
+      return (
+        <div>
+          <p className="font-bold">{entry.name}</p>
+          {(entry.entry ? [entry.entry] : entry.entries ?? []).map(
+            (nestedEntry, index) => (
+              <TextEntry key={index} entry={nestedEntry} rollName={rollName} />
+            )
+          )}
         </div>
       );
     }

@@ -1,7 +1,7 @@
 import React from "react";
 import { assetImageAdd, characterTemplateAdd } from "../../../shared/actions";
 import { randomColor } from "../../../shared/colors";
-import { generateRandomToken } from "../../files";
+import { generateRandomToken, uploadRemoteFile } from "../../files";
 import { useMyProps } from "../../myself";
 import { useServerDispatch } from "../../state";
 import { CompendiumMonster } from "../compendium/types";
@@ -24,7 +24,10 @@ export const Monster = React.memo(function Monster({
   }
 
   async function addTemplate() {
-    const image = await generateRandomToken();
+    const image = monster.imageUrl
+      ? await uploadRemoteFile(monster.imageUrl, "image")
+      : await generateRandomToken();
+
     const assetImageAddAction = assetImageAdd({
       name: image.originalFilename,
       description: null,
