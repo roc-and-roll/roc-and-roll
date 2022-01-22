@@ -465,6 +465,13 @@ export type CompendiumMonster = {
 
   immune?: Array<NonNullable<RRDamageType["type"]>>;
   conditionImmune?: Array<RRCharacterCondition>;
+  skill?: {
+    deception?: string;
+    insight?: string;
+    perception?: string;
+    persuasion?: string;
+    stealth?: string;
+  };
 
   type?: any;
   alignment?: any;
@@ -476,7 +483,6 @@ export type CompendiumMonster = {
   damageTags?: any;
   miscTags?: any;
   otherSources?: any;
-  skill?: any;
   languages?: any;
   cr?: any;
   environment?: any;
@@ -575,6 +581,15 @@ export const isMonster = z.strictObject({
   ),
   immune: z.optional(z.array(z.enum(damageTypesWithoutNull))),
   conditionImmune: z.optional(z.array(z.enum(conditionNames))),
+  skill: z.optional(
+    z.strictObject({
+      deception: z.optional(z.string()),
+      insight: z.optional(z.string()),
+      perception: z.optional(z.string()),
+      persuasion: z.optional(z.string()),
+      stealth: z.optional(z.string()),
+    })
+  ),
 
   senses: z.any(),
   passive: z.any(),
@@ -583,7 +598,6 @@ export const isMonster = z.strictObject({
   damageTags: z.any(),
   miscTags: z.any(),
   otherSources: z.any(),
-  skill: z.any(),
   languages: z.any(),
   cr: z.any(),
   environment: z.any(),

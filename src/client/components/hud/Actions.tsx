@@ -38,7 +38,6 @@ import {
   categoryIcons,
   characterStatNames,
   fixedCategoryIcons,
-  RRCharacter,
   RRDiceTemplateCategoryID,
   RRDiceTemplatePart,
   RRDiceTemplatePartDice,
@@ -152,29 +151,35 @@ export const ActionsHUD = React.memo(function DicePanel() {
       damage: { type: null },
     };
   }
-  const character: RRCharacter | null = useServerState((state) =>
+  const mainCharacter = useServerState((state) =>
     myself.mainCharacterId
       ? state.characters.entities[myself.mainCharacterId] ?? null
       : null
   );
+  const selectedCharacters = useMySelectedCharacters(
+    "id",
+    "savingThrows",
+    "skills"
+  );
+  const character =
+    selectedCharacters.length === 1 ? selectedCharacters[0]! : mainCharacter;
 
   const isCharacterNull = character === null;
   const savingThrowTemplates = useMemo(
     () =>
       characterStatNames.map((statName: typeof characterStatNames[number]) => {
         const proficiency = isCharacterNull
-          ? 0
-          : character.savingThrows[statName] ?? 0;
+          ? "notProficient"
+          : character.savingThrows[statName] ?? "notProficient";
 
-        const parts: RRDiceTemplatePart[] = [
-          createD20Part(),
-          {
+        const parts: RRDiceTemplatePart[] = [createD20Part()];
+        if (typeof proficiency !== "number")
+          parts.push({
             id: rrid<RRDiceTemplatePart>(),
             type: "linkedStat",
             name: statName,
             damage: { type: null },
-          },
-        ];
+          });
 
         if (proficiency !== 0)
           parts.push({
@@ -198,17 +203,18 @@ export const ActionsHUD = React.memo(function DicePanel() {
   const skillTemplates = useMemo(
     () =>
       skillNames.map((skill) => {
-        const proficiency = isCharacterNull ? 0 : character.skills[skill] ?? 0;
-        const parts: RRDiceTemplatePart[] = [
-          createD20Part(),
-          {
+        const proficiency = isCharacterNull
+          ? "notProficient"
+          : character.skills[skill] ?? "notProficient";
+        const parts: RRDiceTemplatePart[] = [createD20Part()];
+        if (typeof proficiency !== "number")
+          parts.push({
             id: rrid<RRDiceTemplatePart>(),
             type: "linkedStat",
             name: skillMap[skill],
             damage: { type: null },
-          },
-        ];
-        if (proficiency !== 0)
+          });
+        if (proficiency !== "notProficient")
           parts.push({
             id: rrid<RRDiceTemplatePart>(),
             type: "linkedProficiency",
@@ -243,7 +249,6 @@ export const ActionsHUD = React.memo(function DicePanel() {
     }
   }
 
-  const selectedCharacters = useMySelectedCharacters("id");
   const shouldHighlight =
     (selectedCharacters.length === 1 &&
       myself.mainCharacterId &&

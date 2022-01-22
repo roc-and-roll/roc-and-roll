@@ -90,21 +90,36 @@ export const Monster = React.memo(function Monster({
         Athletics: null,
         Acrobatics: null,
         "Sleight of Hand": null,
-        Stealth: null,
+        Stealth:
+          monster.skill?.stealth === undefined
+            ? null
+            : parseInt(monster.skill.stealth),
         Arcana: null,
         History: null,
         Investigation: null,
         Nature: null,
         Religion: null,
         "Animal Handling": null,
-        Insight: null,
+        Insight:
+          monster.skill?.insight === undefined
+            ? null
+            : parseInt(monster.skill.insight),
         Medicine: null,
-        Perception: null,
+        Perception:
+          monster.skill?.perception === undefined
+            ? null
+            : parseInt(monster.skill.perception),
         Survival: null,
-        Deception: null,
+        Deception:
+          monster.skill?.deception === undefined
+            ? null
+            : parseInt(monster.skill.deception),
         Intimidation: null,
         Performance: null,
-        Persuasion: null,
+        Persuasion:
+          monster.skill?.persuasion === undefined
+            ? null
+            : parseInt(monster.skill.persuasion),
       },
       tokenImageAssetId: assetImageAddAction.payload.id,
       tokenBorderColor: randomColor(),

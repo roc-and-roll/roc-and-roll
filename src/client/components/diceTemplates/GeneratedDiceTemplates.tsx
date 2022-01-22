@@ -11,6 +11,7 @@ import {
 } from "../../diceUtils";
 import { useMyProps, useMySelectedCharacters } from "../../myself";
 import { useServerState, useServerDispatch } from "../../state";
+import { signedModifierString } from "../../util";
 
 export const GeneratedDiceTemplates = React.memo(
   function GeneratedDiceTemplates({
@@ -80,9 +81,9 @@ function GeneratedDiceTemplate({ template }: { template: RRDiceTemplate }) {
     setIsHovered(true);
   }
 
-  let modifierString = "";
-  if (getModifierForTemplate(template, character) > 0) modifierString += "+";
-  modifierString += getModifierForTemplate(template, character);
+  const modifierString = signedModifierString(
+    getModifierForTemplate(template, character)
+  );
 
   return (
     <div

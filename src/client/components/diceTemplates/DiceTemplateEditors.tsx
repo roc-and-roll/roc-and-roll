@@ -13,18 +13,18 @@ import {
   multipleRollValues,
   RRDiceTemplatePartModifier,
   RRDiceTemplatePartLinkedProficiency,
-  proficiencyValues,
   damageTypes,
   RRDiceTemplatePartWithDamage,
   RRDiceTemplatePart,
   RRDiceTemplatePartID,
   RRPlayerID,
+  proficiencyValueStrings,
 } from "../../../shared/state";
 import { empty2Null } from "../../../shared/util";
 import { RRDiceTemplate } from "../../../shared/validation";
 import { useMyProps } from "../../myself";
 import { useServerDispatch } from "../../state";
-import { getProficiencyValueString } from "../../util";
+import { getProficiencyValueString, signedModifierString } from "../../util";
 import { iconMap } from "../hud/Actions";
 import { Select } from "../ui/Select";
 import { SmartIntegerInput, SmartTextareaInput } from "../ui/TextInput";
@@ -198,26 +198,30 @@ export function ProficiencyValueEditor({
   return (
     <label>
       Proficiency:
-      <Select
-        options={proficiencyValues.map((t) => ({
-          value: t.toString(),
-          label: getProficiencyValueString(t),
-        }))}
-        value={part.proficiency.toString()}
-        onChange={(newValue: string) =>
-          dispatch({
-            actions: [
-              updatePartAction(myself.id, part.id, categoryId, template, {
-                proficiency: parseFloat(
-                  newValue
-                ) as typeof proficiencyValues[number],
-              }),
-            ],
-            optimisticKey: "proficiency",
-            syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-          })
-        }
-      />
+      {typeof part.proficiency === "number" ? (
+        <p>{signedModifierString(part.proficiency)}</p>
+      ) : (
+        <Select
+          options={[
+            ...proficiencyValueStrings.map((t) => ({
+              value: t,
+              label: getProficiencyValueString(t),
+            })),
+          ]}
+          value={part.proficiency}
+          onChange={(newValue: typeof proficiencyValueStrings[number]) => {
+            return dispatch({
+              actions: [
+                updatePartAction(myself.id, part.id, categoryId, template, {
+                  proficiency: newValue,
+                }),
+              ],
+              optimisticKey: "proficiency",
+              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+            });
+          }}
+        />
+      )}
     </label>
   );
 }

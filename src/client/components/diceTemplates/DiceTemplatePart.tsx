@@ -16,6 +16,7 @@ import {
 } from "../../../shared/state";
 import { assertNever } from "../../../shared/util";
 import { RRDiceTemplate } from "../../../shared/validation";
+import { proficiencyStringToValue } from "../../diceUtils";
 import { useMyProps } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import { contrastColor, modifierFromStat } from "../../util";
@@ -213,12 +214,14 @@ export const DiceTemplatePart = React.forwardRef<
       content = (
         <div className="dice-option" style={styleFor(part)}>
           <div className="dice-option-linked-modifier">
-            {
-              //TODO this shows incorrect value in editor, others show no value
-              character?.attributes["proficiency"]
-                ? character.attributes["proficiency"] * part.proficiency
-                : null
-            }
+            {typeof part.proficiency === "number"
+              ? part.proficiency
+              : character?.attributes["proficiency"]
+              ? Math.floor(
+                  character.attributes["proficiency"] *
+                    proficiencyStringToValue(part.proficiency)
+                )
+              : null}
           </div>
           <div className="dice-option-linked-modifier-name">{"Prof"}</div>
         </div>

@@ -262,7 +262,7 @@ function DicePicker() {
     id: rrid<RRDiceTemplatePart>(),
     type: "linkedProficiency" as const,
     damage: { type: null },
-    proficiency: 1,
+    proficiency: "proficient",
   };
 
   const initiativePart: RRDiceTemplatePartLinkedModifier = {
