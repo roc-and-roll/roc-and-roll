@@ -31,6 +31,19 @@ export const Monster = React.memo(function Monster({
     return key === undefined ? null : parseInt(key);
   }
 
+  function getTokenSize() {
+    return monster.size === undefined ||
+      monster.size === "T" || //technically these would be a quarter of a square only
+      monster.size === "S" ||
+      monster.size === "M"
+      ? 1
+      : monster.size === "L"
+      ? 2
+      : monster.size === "H"
+      ? 3
+      : 4;
+  }
+
   async function addTemplate() {
     const image = monster.imageUrl
       ? await uploadRemoteFile(monster.imageUrl, "image")
@@ -79,7 +92,7 @@ export const Monster = React.memo(function Monster({
       },
 
       spellSaveDC: null,
-      scale: 1,
+      scale: getTokenSize(),
       visibility: "everyone",
       limitedUseSkills: [],
       attributes: {
