@@ -202,7 +202,7 @@ export const Monster = React.memo(function Monster({
                 {action.entries.map((entry, index) => {
                   return (
                     <TextEntry
-                      key={index}
+                      key={"textEntry" + index.toString()}
                       entry={entry}
                       rollName={`${monster.name} ${action.name} `}
                     />
