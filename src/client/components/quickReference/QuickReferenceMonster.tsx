@@ -4,7 +4,10 @@ import { randomColor } from "../../../shared/colors";
 import { generateRandomToken, uploadRemoteFile } from "../../files";
 import { useMyProps } from "../../myself";
 import { useServerDispatch } from "../../state";
-import { CompendiumMonster } from "../compendium/types";
+import {
+  CompendiumMonster,
+  CompendiumMonsterSkills,
+} from "../compendium/types";
 import { Button } from "../ui/Button";
 import { TextEntry } from "./QuickReference";
 
@@ -21,6 +24,11 @@ export const Monster = React.memo(function Monster({
     return typeof monster.ac[0] === "number"
       ? monster.ac[0]
       : monster.ac[0]?.ac ?? null;
+  }
+
+  function getSkill(skillName: keyof CompendiumMonsterSkills) {
+    const key = monster.skill?.[skillName];
+    return key === undefined ? null : parseInt(key);
   }
 
   async function addTemplate() {
@@ -87,39 +95,24 @@ export const Monster = React.memo(function Monster({
         CHA: null,
       },
       skills: {
-        Athletics: null,
-        Acrobatics: null,
-        "Sleight of Hand": null,
-        Stealth:
-          monster.skill?.stealth === undefined
-            ? null
-            : parseInt(monster.skill.stealth),
-        Arcana: null,
-        History: null,
-        Investigation: null,
-        Nature: null,
-        Religion: null,
+        Athletics: getSkill("athletics"),
+        Acrobatics: getSkill("acrobatics"),
+        "Sleight of Hand": getSkill("sleight of hand"),
+        Stealth: getSkill("stealth"),
+        Arcana: getSkill("arcana"),
+        History: getSkill("history"),
+        Investigation: getSkill("investigation"),
+        Nature: getSkill("nature"),
+        Religion: getSkill("religion"),
         "Animal Handling": null,
-        Insight:
-          monster.skill?.insight === undefined
-            ? null
-            : parseInt(monster.skill.insight),
-        Medicine: null,
-        Perception:
-          monster.skill?.perception === undefined
-            ? null
-            : parseInt(monster.skill.perception),
-        Survival: null,
-        Deception:
-          monster.skill?.deception === undefined
-            ? null
-            : parseInt(monster.skill.deception),
-        Intimidation: null,
-        Performance: null,
-        Persuasion:
-          monster.skill?.persuasion === undefined
-            ? null
-            : parseInt(monster.skill.persuasion),
+        Insight: getSkill("insight"),
+        Medicine: getSkill("medicine"),
+        Perception: getSkill("perception"),
+        Survival: getSkill("survival"),
+        Deception: getSkill("deception"),
+        Intimidation: getSkill("intimidation"),
+        Performance: getSkill("performance"),
+        Persuasion: getSkill("persuasion"),
       },
       tokenImageAssetId: assetImageAddAction.payload.id,
       tokenBorderColor: randomColor(),
@@ -175,7 +168,10 @@ export const Monster = React.memo(function Monster({
             <dd>
               {monster.immune.map(
                 (immunity, index) =>
-                  immunity + (index >= monster.immune!.length - 1 ? "" : ", ")
+                  typeof immunity === "string"
+                    ? immunity +
+                      (index >= monster.immune!.length - 1 ? "" : ", ")
+                    : "" //Todo handle conditional immunities
               )}
             </dd>
           </>

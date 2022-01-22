@@ -429,12 +429,32 @@ export type ConditionalSpeed = {
   condition: string;
 };
 
+export type CompendiumMonsterSkills = {
+  acrobatics?: string;
+  arcana?: string;
+  athletics?: string;
+  deception?: string;
+  insight?: string;
+  intimidation?: string;
+  investigation?: string;
+  history?: string;
+  medicine?: string;
+  nature?: string;
+  perception?: string;
+  performance?: string;
+  persuasion?: string;
+  religion?: string;
+  "sleight of hand"?: string;
+  stealth?: string;
+  survival?: string;
+};
+
 export type CompendiumMonster = {
   name: string;
   source: string;
   imageUrl?: string;
   page: number;
-  size?: string;
+  size?: "G" | "H" | "M" | "L" | "S" | "T";
   ac?: (
     | {
         ac?: number;
@@ -463,15 +483,16 @@ export type CompendiumMonster = {
 
   action?: { name: string; entries: CompendiumTextEntry[] }[];
 
-  immune?: Array<NonNullable<RRDamageType["type"]>>;
+  immune?: Array<
+    | NonNullable<RRDamageType["type"]>
+    | {
+        immune: Array<NonNullable<RRDamageType["type"]>>;
+        cond: boolean;
+        note: string;
+      }
+  >;
   conditionImmune?: Array<RRCharacterCondition>;
-  skill?: {
-    deception?: string;
-    insight?: string;
-    perception?: string;
-    persuasion?: string;
-    stealth?: string;
-  };
+  skill?: CompendiumMonsterSkills;
 
   type?: any;
   alignment?: any;
@@ -535,7 +556,7 @@ export const isMonster = z.strictObject({
   source: z.string(),
   page: z.number().int().min(0),
   imageUrl: z.optional(z.string()),
-  size: z.optional(z.string()),
+  size: z.optional(z.enum(["G", "H", "M", "L", "S", "T"])),
   type: z.any(),
   alignment: z.optional(z.any()),
   ac: z.optional(
@@ -579,15 +600,37 @@ export const isMonster = z.strictObject({
   action: z.optional(
     z.array(z.strictObject({ name: z.string(), entries: z.array(isTextEntry) }))
   ),
-  immune: z.optional(z.array(z.enum(damageTypesWithoutNull))),
+  immune: z.optional(
+    z.array(
+      z.enum(damageTypesWithoutNull).or(
+        z.strictObject({
+          immune: z.array(z.enum(damageTypesWithoutNull)),
+          cond: z.boolean(),
+          note: z.string(),
+        })
+      )
+    )
+  ),
   conditionImmune: z.optional(z.array(z.enum(conditionNames))),
   skill: z.optional(
     z.strictObject({
+      acrobatics: z.optional(z.string()),
+      arcana: z.optional(z.string()),
+      athletics: z.optional(z.string()),
       deception: z.optional(z.string()),
+      history: z.optional(z.string()),
       insight: z.optional(z.string()),
+      intimidation: z.optional(z.string()),
+      investigation: z.optional(z.string()),
+      medicine: z.optional(z.string()),
+      nature: z.optional(z.string()),
       perception: z.optional(z.string()),
+      performance: z.optional(z.string()),
       persuasion: z.optional(z.string()),
+      religion: z.optional(z.string()),
+      "sleight of hand": z.optional(z.string()),
       stealth: z.optional(z.string()),
+      survival: z.optional(z.string()),
     })
   ),
 
