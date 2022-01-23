@@ -89,7 +89,7 @@ export function CharacterHUD() {
             </div>
           </div>
         )}
-        <div className="flex flex-col justify-center items-center pointer-events-auto">
+        <div className="flex flex-col items-center pointer-events-auto min-h-min">
           <CurrentCharacter character={character} />
           {character && <AC character={character} />}
           {character && <SpellSave character={character} />}
