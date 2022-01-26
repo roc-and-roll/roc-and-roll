@@ -117,7 +117,7 @@ export const Monster = React.memo(function Monster({
         Investigation: getSkill("investigation"),
         Nature: getSkill("nature"),
         Religion: getSkill("religion"),
-        "Animal Handling": null,
+        "Animal Handling": getSkill("animal handling"),
         Insight: getSkill("insight"),
         Medicine: getSkill("medicine"),
         Perception: getSkill("perception"),

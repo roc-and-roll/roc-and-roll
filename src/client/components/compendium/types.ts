@@ -431,6 +431,7 @@ export type ConditionalSpeed = {
 
 export type CompendiumMonsterSkills = {
   acrobatics?: string;
+  "animal handling"?: string;
   arcana?: string;
   athletics?: string;
   deception?: string;
@@ -492,7 +493,7 @@ export type CompendiumMonster = {
       }
   >;
   conditionImmune?: Array<RRCharacterCondition>;
-  skill?: CompendiumMonsterSkills;
+  skill?: CompendiumMonsterSkills & { other?: any };
 
   type?: any;
   alignment?: any;
@@ -514,6 +515,7 @@ export type CompendiumMonster = {
   srd?: any;
   save?: any;
   legendary?: any;
+  legendaryActions?: any;
   legendaryGroup?: any;
   traitTags?: any;
   actionTags?: any;
@@ -544,6 +546,7 @@ export type CompendiumMonster = {
   familiar?: any;
   legendaryHeader?: any;
   alias?: any;
+  isNamedCreature?: any;
 };
 
 export const isConditionalSpeed = z.strictObject({
@@ -615,6 +618,7 @@ export const isMonster = z.strictObject({
   skill: z.optional(
     z.strictObject({
       acrobatics: z.optional(z.string()),
+      "animal handling": z.optional(z.string()),
       arcana: z.optional(z.string()),
       athletics: z.optional(z.string()),
       deception: z.optional(z.string()),
@@ -631,6 +635,7 @@ export const isMonster = z.strictObject({
       "sleight of hand": z.optional(z.string()),
       stealth: z.optional(z.string()),
       survival: z.optional(z.string()),
+      other: z.optional(z.any()),
     })
   ),
 
@@ -651,6 +656,7 @@ export const isMonster = z.strictObject({
   srd: z.any(),
   save: z.any(),
   legendary: z.any(),
+  legendaryActions: z.any(),
   legendaryGroup: z.any(),
   traitTags: z.any(),
   actionTags: z.any(),
@@ -681,6 +687,7 @@ export const isMonster = z.strictObject({
   familiar: z.any(),
   legendaryHeader: z.any(),
   alias: z.any(),
+  isNamedCreature: z.any(),
 });
 
 // Make sure that the schema really matches the Spell type.
