@@ -6,7 +6,11 @@ import { HUDToolbar } from "./Toolbar";
 import { RRColor } from "../../../shared/state";
 import { ActionsHUD } from "./Actions";
 
-export function HUD({ mapBackgroundColor }: { mapBackgroundColor: RRColor }) {
+export const HUD = React.memo(function HUD({
+  mapBackgroundColor,
+}: {
+  mapBackgroundColor: RRColor;
+}) {
   return (
     <>
       <HUDToolbar />
@@ -16,4 +20,4 @@ export function HUD({ mapBackgroundColor }: { mapBackgroundColor: RRColor }) {
       <ActionsHUD />
     </>
   );
-}
+});
