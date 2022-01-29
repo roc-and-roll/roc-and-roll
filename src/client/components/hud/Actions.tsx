@@ -38,7 +38,6 @@ import {
   categoryIcons,
   characterStatNames,
   fixedCategoryIcons,
-  RRCharacter,
   RRDiceTemplateCategoryID,
   RRDiceTemplatePart,
   RRDiceTemplatePartDice,
@@ -52,9 +51,10 @@ import {
   RRDiceTemplateCategory,
 } from "../../../shared/validation";
 import { useConfirm } from "../../dialog-boxes";
-import { useMyProps } from "../../myself";
+import { useMyProps, useMySelectedCharacters } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
-import { DiceTemplates, GeneratedDiceTemplates } from "../DiceTemplates";
+import { DiceTemplates } from "../diceTemplates/DiceTemplates";
+import { GeneratedDiceTemplates } from "../diceTemplates/GeneratedDiceTemplates";
 import { Popover } from "../Popover";
 import { RRTooltip } from "../RRTooltip";
 import { Button } from "../ui/Button";
@@ -92,6 +92,8 @@ const actionClasses =
   "snap-start border-black border flex items-center justify-center p-3 -mr-px last:mr-0 cursor-pointer";
 const activeClass = (active: boolean) =>
   !active ? "hover:bg-rr-600" : "bg-rr-500";
+const highlightClass = (shouldHighlight: boolean, active: boolean) =>
+  shouldHighlight ? (active ? "bg-green-400" : "bg-green-600") : "";
 
 export const ActionsHUD = React.memo(function DicePanel() {
   const [active, setActive] = useState<Section>("closed");
@@ -149,29 +151,35 @@ export const ActionsHUD = React.memo(function DicePanel() {
       damage: { type: null },
     };
   }
-  const character: RRCharacter | null = useServerState((state) =>
+  const mainCharacter = useServerState((state) =>
     myself.mainCharacterId
       ? state.characters.entities[myself.mainCharacterId] ?? null
       : null
   );
+  const selectedCharacters = useMySelectedCharacters(
+    "id",
+    "savingThrows",
+    "skills"
+  );
+  const character =
+    selectedCharacters.length === 1 ? selectedCharacters[0]! : mainCharacter;
 
   const isCharacterNull = character === null;
   const savingThrowTemplates = useMemo(
     () =>
       characterStatNames.map((statName: typeof characterStatNames[number]) => {
         const proficiency = isCharacterNull
-          ? 0
-          : character.savingThrows[statName] ?? 0;
+          ? "notProficient"
+          : character.savingThrows[statName] ?? "notProficient";
 
-        const parts: RRDiceTemplatePart[] = [
-          createD20Part(),
-          {
+        const parts: RRDiceTemplatePart[] = [createD20Part()];
+        if (typeof proficiency !== "number")
+          parts.push({
             id: rrid<RRDiceTemplatePart>(),
             type: "linkedStat",
             name: statName,
             damage: { type: null },
-          },
-        ];
+          });
 
         if (proficiency !== 0)
           parts.push({
@@ -195,17 +203,18 @@ export const ActionsHUD = React.memo(function DicePanel() {
   const skillTemplates = useMemo(
     () =>
       skillNames.map((skill) => {
-        const proficiency = isCharacterNull ? 0 : character.skills[skill] ?? 0;
-        const parts: RRDiceTemplatePart[] = [
-          createD20Part(),
-          {
+        const proficiency = isCharacterNull
+          ? "notProficient"
+          : character.skills[skill] ?? "notProficient";
+        const parts: RRDiceTemplatePart[] = [createD20Part()];
+        if (typeof proficiency !== "number")
+          parts.push({
             id: rrid<RRDiceTemplatePart>(),
             type: "linkedStat",
             name: skillMap[skill],
             damage: { type: null },
-          },
-        ];
-        if (proficiency !== 0)
+          });
+        if (proficiency !== "notProficient")
           parts.push({
             id: rrid<RRDiceTemplatePart>(),
             type: "linkedProficiency",
@@ -240,6 +249,12 @@ export const ActionsHUD = React.memo(function DicePanel() {
     }
   }
 
+  const shouldHighlight =
+    (selectedCharacters.length === 1 &&
+      myself.mainCharacterId &&
+      selectedCharacters[0]!.id !== myself.mainCharacterId) ??
+    false;
+
   return (
     <div className="absolute bottom-2 top-24 left-20 right-[500px] flex flex-col justify-end items-start z-10 pointer-events-none">
       <div className="hud-panel w-[370px] rounded-b-none pointer-events-auto overflow-y-auto">
@@ -256,7 +271,11 @@ export const ActionsHUD = React.memo(function DicePanel() {
         <RRTooltip content="Saving Throws" placement="top">
           <Button
             unstyled
-            className={clsx(actionClasses, activeClass(active === "STs"))}
+            className={clsx(
+              actionClasses,
+              activeClass(active === "STs"),
+              highlightClass(shouldHighlight, active === "STs")
+            )}
             onClick={() => toggle("STs")}
           >
             <FontAwesomeIcon size="lg" icon={faShieldAlt} fixedWidth />
@@ -265,7 +284,11 @@ export const ActionsHUD = React.memo(function DicePanel() {
         <RRTooltip content="Skill Checks" placement="top">
           <Button
             unstyled
-            className={clsx(actionClasses, activeClass(active === "Skills"))}
+            className={clsx(
+              actionClasses,
+              activeClass(active === "Skills"),
+              highlightClass(shouldHighlight, active === "Skills")
+            )}
             onClick={() => toggle("Skills")}
           >
             <FontAwesomeIcon size="lg" icon={faHandPaper} fixedWidth />

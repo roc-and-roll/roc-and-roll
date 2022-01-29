@@ -173,7 +173,7 @@ interface _RRDiceTemplate {
         id: RRDiceTemplatePartID;
         type: "linkedProficiency";
         damage: RRDamageType;
-        proficiency: typeof proficiencyValues[number];
+        proficiency: proficiencyValues;
       }
     | {
         id: RRDiceTemplatePartID;

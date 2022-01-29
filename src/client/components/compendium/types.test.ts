@@ -24,10 +24,7 @@ describe("text entry schema", () => {
       type: "list",
       items: ["foo", false],
     });
-    if (validationResult.success) {
-      fail();
-    }
 
-    expect(validationResult.error).toMatchSnapshot();
+    expect(validationResult.success).toBe(false);
   });
 });

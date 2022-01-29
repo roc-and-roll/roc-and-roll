@@ -3,17 +3,27 @@ import {
   RRDiceTemplatePart,
   RRMultipleRoll,
   RRCharacter,
+  proficiencyValueStrings,
 } from "../shared/state";
 import { assertNever } from "../shared/util";
 import { RRDiceTemplate } from "../shared/validation";
 import { roll } from "./dice-rolling/roll";
 import { modifierFromStat } from "./util";
 
+export function proficiencyStringToValue(
+  proficiencyString: typeof proficiencyValueStrings[number]
+): number {
+  if (proficiencyString === "notProficient") return 0;
+  else if (proficiencyString === "halfProficient") return 0.5;
+  else if (proficiencyString === "proficient") return 1;
+  else return 2;
+}
+
 export function evaluateDiceTemplatePart(
   part: RRDiceTemplatePart,
   modified: RRMultipleRoll,
   crit: boolean = false,
-  character?: RRCharacter | null
+  character?: Pick<RRCharacter, "stats" | "attributes"> | null
 ): DRTPartExpression<true>[] {
   switch (part.type) {
     case "dice": {
@@ -48,7 +58,13 @@ export function evaluateDiceTemplatePart(
       return [
         {
           type: "num",
-          value: character?.attributes["proficiency"] ?? 0 * part.proficiency,
+          value:
+            typeof part.proficiency === "number"
+              ? part.proficiency
+              : Math.floor(
+                  (character?.attributes["proficiency"] ?? 0) *
+                    proficiencyStringToValue(part.proficiency)
+                ),
           damage: part.damage,
         },
       ];
@@ -83,7 +99,7 @@ export function evaluateDiceTemplatePart(
 
 export function getModifierForTemplate(
   template: RRDiceTemplate,
-  character?: RRCharacter | null
+  character?: Pick<RRCharacter, "stats" | "attributes"> | null
 ) {
   let returnValue = 0;
 
@@ -92,8 +108,15 @@ export function getModifierForTemplate(
       returnValue += part.number;
     } else if (character) {
       if (part.type === "linkedProficiency") {
+        //Currently a hard-coded proficiency overrules other modifiers
+        //to make importing templates from the compendium easier
+        if (typeof part.proficiency === "number") {
+          returnValue = part.proficiency;
+          return;
+        }
         returnValue +=
-          part.proficiency * (character.attributes["proficiency"] ?? 0);
+          proficiencyStringToValue(part.proficiency) *
+          (character.attributes["proficiency"] ?? 0);
       } else if (part.type === "linkedStat") {
         if (character.stats[part.name] === null) return;
         returnValue += modifierFromStat(character.stats[part.name]!);

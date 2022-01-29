@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useLayoutEffect, useState } from "react";
-import { atom, useRecoilValue, useSetRecoilState } from "recoil";
+import React, { useContext, useEffect, useState } from "react";
+import { useRecoilValue } from "recoil";
 import { IterableElement } from "type-fest";
 import {
   RRCharacter,
@@ -27,10 +27,6 @@ export const MyselfContext = React.createContext<{
 });
 
 MyselfContext.displayName = "MyselfContext";
-const myPlayerIdAtom = atom<RRPlayerID | null>({
-  key: "MyPlayerId",
-  default: null,
-});
 
 export function MyselfProvider({ children }: { children: React.ReactNode }) {
   const [myPlayerId, setMyPlayerId, forgetMyPlayerId] =
@@ -40,12 +36,6 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
   const myself = useServerState(
     (state) => (myPlayerId && state.players.entities[myPlayerId]) ?? null
   );
-
-  //This is needed, otherwise recoil will refuse to work in strict mode for unknown reasons
-  const setPlayerId = useSetRecoilState(myPlayerIdAtom);
-  useLayoutEffect(() => {
-    setPlayerId(myPlayerId);
-  }, [myPlayerId, setPlayerId]);
 
   useAutoDispatchPlayerIdOnChange(myself?.id ?? null);
 

@@ -4,6 +4,7 @@ import {
   faMinusSquare,
   faPlusCircle,
   faPlusSquare,
+  faQuestionCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { faCircle as faEmptyCircle } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -17,6 +18,7 @@ import {
   characterAttributeNames,
   characterStatNames,
   proficiencyValues,
+  proficiencyValueStrings,
   RRCharacter,
   skillMap,
   skillNames,
@@ -25,6 +27,7 @@ import { useServerDispatch } from "../../state";
 import { Button } from "../ui/Button";
 import { SmartIntegerInput } from "../ui/TextInput";
 import { getProficiencyValueString, modifierFromStat } from "../../util";
+import { proficiencyStringToValue } from "../../diceUtils";
 
 export const CharacterSheetEditor = React.memo<{
   character: RRCharacter;
@@ -158,36 +161,45 @@ function ProficiencyEditor({
   const dispatch = useServerDispatch();
   const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
 
-  function getIcon(proficiency: keyof typeof proficiencyValues | null) {
-    return proficiency === 0 || proficiency === null
+  function getIcon(proficiency: proficiencyValues | null) {
+    return proficiency === "notProficient" || proficiency === null
       ? faEmptyCircle
-      : proficiency === 0.5
+      : proficiency === "halfProficient"
       ? faAdjust
-      : proficiency === 1
+      : proficiency === "proficient"
       ? faCircle
-      : faPlusCircle;
+      : proficiency === "doublyProficient"
+      ? faPlusCircle
+      : faQuestionCircle;
   }
 
   function calculateModifierWithProficiency(
     baseStat: typeof characterStatNames[number],
-    proficiency: typeof proficiencyValues[number] | null
+    proficiency: proficiencyValues | null
   ) {
     return character.stats[baseStat] === null
       ? 0
+      : typeof proficiency === "number"
+      ? proficiency
       : modifierFromStat(character.stats[baseStat]!) +
-          Math.floor(
-            (character.attributes["proficiency"] ?? 0) * (proficiency ?? 0)
-          );
+        Math.floor(
+          (character.attributes["proficiency"] ?? 0) *
+            proficiencyStringToValue(proficiency ?? "notProficient")
+        );
   }
 
   function changeProficiencyInSavingThrow(
-    proficiency: typeof proficiencyValues[number] | null,
+    proficiency: proficiencyValues | null,
     stat: typeof characterStatNames[number]
   ) {
     const newValue =
-      proficiency === null
-        ? 0.5
-        : proficiencyValues[(proficiencyValues.indexOf(proficiency) + 1) % 4]!;
+      typeof proficiency === "number"
+        ? 0
+        : proficiencyValueStrings[
+            (proficiencyValueStrings.indexOf(proficiency ?? "notProficient") +
+              1) %
+              4
+          ]!;
     dispatch((state) => {
       const oldSavingThrows = (
         isTemplate ? state.characterTemplates : state.characters
@@ -213,11 +225,17 @@ function ProficiencyEditor({
     });
   }
   function changeProficiencyInSkill(
-    proficiency: typeof proficiencyValues[number] | null,
+    proficiency: proficiencyValues | null,
     skill: typeof skillNames[number]
   ) {
     const newValue =
-      proficiencyValues[(proficiencyValues.indexOf(proficiency ?? 0) + 1) % 4]!;
+      typeof proficiency === "number"
+        ? 0
+        : proficiencyValueStrings[
+            (proficiencyValueStrings.indexOf(proficiency ?? "notProficient") +
+              1) %
+              4
+          ]!;
     dispatch((state) => {
       const oldSkills = (
         isTemplate ? state.characterTemplates : state.characters

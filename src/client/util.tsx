@@ -291,14 +291,20 @@ export function modifierFromStat(statValue: number): number {
   return Math.floor((statValue - 10) / 2);
 }
 
+export function signedModifierString(value: number): string {
+  return value > 0 ? "+" + value.toString() : value.toString();
+}
+
 export function getProficiencyValueString(
-  proficiency: keyof typeof proficiencyValues | null
+  proficiency: proficiencyValues | null
 ) {
-  return proficiency === 0 || proficiency === null
+  return proficiency === "notProficient" || proficiency === null
     ? "Not Proficient"
-    : proficiency === 0.5
+    : proficiency === "halfProficient"
     ? "Half Proficient"
-    : proficiency === 1
+    : proficiency === "proficient"
     ? "Proficient"
-    : "Expertise";
+    : proficiency === "doublyProficient"
+    ? "Expertise"
+    : signedModifierString(proficiency);
 }

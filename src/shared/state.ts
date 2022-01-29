@@ -219,20 +219,20 @@ assert<
   >
 >(true);
 
-// TODO: zod does not yet allow us to use the more concise
-// `z.enum(proficiencyValues)` (only works for strings).
-export const isProficiencyValue = z.union([
-  z.literal(0),
-  z.literal(0.5),
-  z.literal(1),
-  z.literal(2),
-]);
+export const isProficiencyValue = z
+  .enum(["notProficient", "halfProficient", "proficient", "doublyProficient"])
+  .or(z.number());
 
-export const proficiencyValues = [0, 0.5, 1, 2] as const;
+export const proficiencyValueStrings = [
+  "notProficient",
+  "halfProficient",
+  "proficient",
+  "doublyProficient",
+] as const;
 
-assert<
-  IsExact<z.infer<typeof isProficiencyValue>, typeof proficiencyValues[number]>
->(true);
+export type proficiencyValues = typeof proficiencyValueStrings[number] | number;
+
+assert<IsExact<z.infer<typeof isProficiencyValue>, proficiencyValues>>(true);
 
 export const skillMap: Record<
   typeof skillNames[number],

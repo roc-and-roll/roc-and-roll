@@ -41,9 +41,10 @@ export function CompendiumProvider({
 
   const removeSource = useCallback(
     (sourceId: CompendiumSourceID) => {
-      setSources((sources) =>
-        sources.filter((source) => source.id !== sourceId)
-      );
+      setSources((sources) => {
+        console.log(sources);
+        return sources.filter((source) => source.id !== sourceId);
+      });
     },
     [setSources]
   );
@@ -128,6 +129,7 @@ export function Compendium() {
           <li key={i}>
             <p>{source.title}</p>
             <p>Spells: {source.data.spell.length}</p>
+            <p>Monsters: {source.data.monster?.length ?? 0}</p>
             <Button onClick={() => removeSource(source.id)}>remove</Button>
           </li>
         ))}
