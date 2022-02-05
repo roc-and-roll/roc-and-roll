@@ -6,6 +6,7 @@ import { Matrix } from "transformation-matrix";
 import { toCap } from "../../../shared/point";
 import { getViewportCorners } from "../../util";
 import { ViewPortSizeContext } from "./MapContainer";
+import { ClipperPolygon } from "./Primitives";
 
 export const FogOfWar = React.memo(function FogOfWar({
   revealedAreas: upToDateRevealedAreas,
@@ -34,22 +35,6 @@ export const FogOfWar = React.memo(function FogOfWar({
     />
   );
 });
-
-const useShapeToSVGPath = (shape: Shape, isGM: boolean) => {
-  return useMemo(() => {
-    const points = shape.paths.flatMap((p) =>
-      p.map((p, i) => (i === 0 ? "M " : "L ") + `${p.X},${p.Y} `)
-    );
-    return points.length === 0 ? null : (
-      <path
-        className="map-reveal-areas"
-        fill={`rgba(0, 0, 0, ${isGM ? 0.3 : 1})`}
-        fillRule="evenodd"
-        d={points.join(" ") + "Z"}
-      />
-    );
-  }, [isGM, shape]);
-};
 
 const FogOfWarInner = ({
   revealedAreas,
@@ -95,10 +80,11 @@ const FogOfWarInner = ({
     return viewport.difference(background);
   }, [background, corners]);
 
+  const sharedProps = { alpha: isGM ? 0.3 : 1, fill: 0x000000 };
   return (
     <>
-      {useShapeToSVGPath(result, isGM)}
-      {useShapeToSVGPath(outerFill, isGM)}
+      <ClipperPolygon {...sharedProps} shape={result} />
+      <ClipperPolygon {...sharedProps} shape={outerFill} />
     </>
   );
 };

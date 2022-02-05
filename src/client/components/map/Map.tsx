@@ -64,7 +64,11 @@ import { assertNever } from "../../../shared/util";
 import { useContrastColor } from "../../util";
 import { useLatest } from "../../useLatest";
 import { useGesture } from "react-use-gesture";
-import { RRMessage, useServerMessages } from "../../serverMessages";
+import {
+  RRMessage,
+  ServerMessagesContext,
+  useServerMessages,
+} from "../../serverMessages";
 import { getPathWithNewPoint } from "./mapHelpers";
 import useRafLoop from "../../useRafLoop";
 import { Container, Stage } from "react-pixi-fiber";
@@ -76,6 +80,11 @@ import { ServerStateContext, ServerConnectionContext } from "../../state";
 import { RoughContext, RoughContextProvider } from "../rough";
 import { matrixToPixiTransform } from "./pixi-utils";
 import { MapGrid } from "./MapGrid";
+import { PRectangle } from "./Primitives";
+import { MeasurePaths } from "./MeasurePaths";
+import { MouseCursors } from "./MouseCursors";
+import { FogOfWar } from "./FogOfWar";
+import { MapReactions } from "./MapReactions";
 
 type Rectangle = [number, number, number, number];
 
@@ -848,6 +857,7 @@ transform,
           contexts={[
             ServerStateContext,
             ServerConnectionContext,
+            ServerMessagesContext,
             MyselfContext,
             RoughContext,
             ViewPortSizeContext,
@@ -906,18 +916,16 @@ transform,
                   zoom={transform.a}
                 />
               )}
-
-              {/* <FogOfWar transform={transform} revealedAreas={revealedAreas} />
-
               {withSelectionAreaDo(
                 selectionArea,
                 (x, y, w, h) => (
-                  <rect
+                  <PRectangle
                     x={x}
                     y={y}
                     width={w}
                     height={h}
-                    fill={tinycolor(contrastColor).setAlpha(0.3).toRgbString()}
+                    fill={colorValue(contrastColor).color}
+                    alpha={0.3}
                   />
                 ),
                 null
@@ -928,6 +936,7 @@ transform,
                 backgroundColor={backgroundColor}
                 players={players}
               />
+              <FogOfWar transform={transform} revealedAreas={revealedAreas} />
               <MapReactions mapId={mapId} />
               <MouseCursors
                 myId={myself.id}
@@ -937,7 +946,7 @@ transform,
                 contrastColor={contrastColor}
                 players={players}
               />
-              {toolOverlay} */}
+              {toolOverlay}
             </Container>
           </RecoilBridge>
         </ContextBridge>

@@ -16,10 +16,11 @@ import {
   pointSubtract,
 } from "../../../shared/point";
 import useRafLoop from "../../useRafLoop";
-import { RoughSVGPath, RoughText } from "../rough";
+import { RoughPolygon, RoughText } from "../rough";
 import { CURSOR_POSITION_SYNC_DEBOUNCE } from "./Map";
 import { ephemeralPlayersFamily } from "./recoil";
 import { getViewportCorners } from "../../util";
+import { Container } from "react-pixi-fiber";
 
 export const MouseCursor = React.memo<{
   playerId: RRPlayerID;
@@ -101,18 +102,18 @@ const MouseCursorInner = React.memo<{
   );
 
   return (
-    <g
-      transform={`translate(${clampedPosition.x},${clampedPosition.y}) scale(${
-        0.5 / transform.a
-      })`}
+    <Container
+      x={clampedPosition.x}
+      y={clampedPosition.y}
+      scale={0.5 / transform.a}
     >
-      <RoughSVGPath
-        // https://mavo.io/demos/svgpath/
+      <RoughPolygon
         x={0}
         y={0}
-        path={`m 0 0 v ${GRID_SIZE} h ${(GRID_SIZE * 5) / 7} l ${
-          (-GRID_SIZE * 5) / 7
-        } ${-GRID_SIZE}`}
+        points={[
+          { x: 0, y: GRID_SIZE },
+          { x: (GRID_SIZE * 5) / 7, y: GRID_SIZE },
+        ]}
         fillStyle="solid"
         fill={props.playerColor}
         stroke={props.contrastColor}
@@ -123,6 +124,6 @@ const MouseCursorInner = React.memo<{
         style={{ fontSize: "2rem", fill: props.contrastColor }}
         text={props.playerName}
       />
-    </g>
+    </Container>
   );
 });
