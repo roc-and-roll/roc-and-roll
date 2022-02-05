@@ -1,17 +1,10 @@
 import CustomPIXIComponent, { CustomPIXIProperty } from "./CustomPIXIComponent";
 import { AppContext, AppProvider, withApp } from "./AppProvider";
-import Stage, { createStageClass } from "./Stage";
+import Stage from "./Stage";
 import { TYPES } from "./types";
 import { usePixiApp, usePixiTicker } from "./hooks";
-import { createRender, createUnmount } from "./render";
-import {
-  ReactPixiFiberAsPrimaryRenderer,
-  unstable_batchedUpdates,
-} from "./ReactPixiFiber";
+import { unstable_batchedUpdates } from "./ReactPixiFiber";
 import { applyDisplayObjectProps } from "./ReactPixiFiberComponent";
-
-const render = createRender(ReactPixiFiberAsPrimaryRenderer);
-const unmount = createUnmount(ReactPixiFiberAsPrimaryRenderer);
 
 /* Public API */
 
@@ -22,9 +15,6 @@ export {
   CustomPIXIProperty,
   Stage,
   applyDisplayObjectProps,
-  createStageClass,
-  render,
-  unmount,
   withApp,
   usePixiApp,
   usePixiTicker,
