@@ -69,6 +69,7 @@ export const CharacterPreview = React.forwardRef<
           width: currentSize,
           height: currentSize,
           borderRadius: currentSize,
+          filter: isCharacterDead(character) ? "grayscale(100%)" : undefined,
         }}
         title={title ?? character.name}
       />
