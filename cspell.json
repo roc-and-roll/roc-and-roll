@@ -63,7 +63,8 @@
     "unnotified",
     "unstyled",
     "vcxsrv",
-    "xvfb"
+    "xvfb",
+    "rightdown"
   ],
   "files": ["**/*.{js,jsx,ts,tsx,html,md,css,scss,peggy}"],
   "ignorePaths": [

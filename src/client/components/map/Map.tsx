@@ -890,6 +890,7 @@ transform,
               pivot={pixiTransform.pivot}
               interactive
               mousedown={rrToPixiHandler(handleMouseDown)}
+              rightdown={rrToPixiHandler(handleMouseDown)}
               mousemove={rrToPixiHandler(handleMapMouseMove)}
             >
               <Container ref={setImageArea} name="images" />

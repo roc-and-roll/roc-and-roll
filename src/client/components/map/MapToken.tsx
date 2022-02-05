@@ -713,9 +713,19 @@ const HealthBar = React.memo(function HealthBar({
             {token.hp}&thinsp;/&thinsp;{token.maxHP}
           </RoughText>
         */}
-      {/* <foreignObject x={0} y={2} width={tokenSize / 2 - 4} height={14}>
+      {/* TODO make editable
+      <foreignObject x={0} y={2} width={tokenSize / 2 - 4} height={14}>
         <HPInlineEdit hp={character.hp + character.temporaryHP} setHP={setHP} />
       </foreignObject> */}
+      <RoughText
+        x={4}
+        y={-1}
+        style={{
+          fontWeight: "bold",
+          fontSize: 14,
+        }}
+        text={`${character.hp + character.temporaryHP}`}
+      />
       <RoughText
         x={tokenSize / 2 - 3}
         y={-1}
