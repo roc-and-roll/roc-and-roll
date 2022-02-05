@@ -59,7 +59,12 @@ const LogEntry = React.memo<{ logEntry: RRLogEntry }>(function LogEntry({
       assertNever(logEntry);
   }
 
-  return <div title={formatTimestamp(logEntry.timestamp)}>{content}</div>;
+  const tooltip: string =
+    logEntry.type === "diceRoll" ? logEntry.payload.tooltip ?? "" : "";
+
+  return (
+    <div title={tooltip + formatTimestamp(logEntry.timestamp)}>{content}</div>
+  );
 });
 
 export function CollapsedLog() {

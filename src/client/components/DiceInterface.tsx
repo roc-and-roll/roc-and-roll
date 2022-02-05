@@ -95,6 +95,7 @@ export function DiceInterface() {
             diceRollTree: rollDiceRollTree(diceRollTree),
             rollType: null,
             rollName: null,
+            tooltip: null,
           },
         })
       );

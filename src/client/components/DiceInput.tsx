@@ -24,7 +24,12 @@ export function DiceInput() {
       logEntryDiceRollAdd({
         silent: false,
         playerId: myself.id,
-        payload: { diceRollTree, rollType: null, rollName: null },
+        payload: {
+          diceRollTree,
+          rollType: null,
+          rollName: null,
+          tooltip: null,
+        },
       })
     );
     setText("");

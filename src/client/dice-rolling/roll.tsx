@@ -86,6 +86,7 @@ export function rollInitiative(
 
   return {
     payload: {
+      tooltip: null,
       rollType: "initiative",
       rollName: "Initiative",
       diceRollTree:

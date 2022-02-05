@@ -522,6 +522,7 @@ export const isSyncedState = z.strictObject({
             ...sharedValidators,
             type: z.literal("diceRoll"),
             payload: z.strictObject({
+              tooltip: z.nullable(z.string()),
               rollType: isRollType,
               rollName: z.nullable(z.string()),
               diceRollTree: isDiceRollTree(true),
