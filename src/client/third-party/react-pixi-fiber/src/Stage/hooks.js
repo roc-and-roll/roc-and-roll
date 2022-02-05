@@ -5,7 +5,6 @@ import React, {
   useLayoutEffect,
   useRef,
 } from "react";
-import emptyObject from "fbjs/lib/emptyObject";
 import invariant from "fbjs/lib/invariant";
 import shallowEqual from "fbjs/lib/shallowEqual";
 import { createPixiApplication } from "../utils";
@@ -21,7 +20,7 @@ import { defaultProps, getCanvasProps, propTypes } from "./propTypes";
 import * as PIXI from "pixi.js";
 
 export function usePreviousProps(value) {
-  const props = useRef(emptyObject);
+  const props = useRef(value);
 
   useEffect(() => {
     props.current = value;
