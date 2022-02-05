@@ -6,7 +6,6 @@ import {
   entries,
   makeDefaultMap,
   RRCharacter,
-  RRCharacterTemplate,
   RRPlayer,
   RRPlayerID,
   SyncedState,
@@ -66,7 +65,6 @@ export async function extractForOneShot(
       ids: [...playerIds],
     },
     characters: filterCharacters(state.characters, players),
-    characterTemplates: EMPTY_ENTITY_COLLECTION,
     maps: {
       entities: {
         [defaultMap.id]: defaultMap,
@@ -86,7 +84,7 @@ export async function extractForOneShot(
   await writeFile(outputFilePath, JSON.stringify(exportedState), "utf-8");
 }
 
-function filterCharacters<T extends RRCharacter | RRCharacterTemplate>(
+function filterCharacters<T extends RRCharacter>(
   entityCollection: EntityCollection<T>,
   players: RRPlayer[]
 ): EntityCollection<T> {

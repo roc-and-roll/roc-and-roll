@@ -2,14 +2,12 @@ import React, { useState, useCallback } from "react";
 import {
   playerUpdateAddCharacterId,
   characterAdd,
-  characterTemplateAdd,
   assetImageAdd,
 } from "../../../shared/actions";
 import {
   entries,
   RRCharacter,
   RRCharacterID,
-  RRCharacterTemplate,
   RRFileImage,
   RRPlayerID,
 } from "../../../shared/state";
@@ -28,7 +26,7 @@ import { NativeTypes } from "react-dnd-html5-backend";
 import { DropIndicator } from "../DropIndicator";
 
 async function makeNewCharacter(
-  actionCreator: typeof characterAdd | typeof characterTemplateAdd,
+  isTemplate: boolean,
   myId: RRPlayerID,
   tokenImage?: RRFileImage
 ) {
@@ -55,7 +53,7 @@ async function makeNewCharacter(
     playerId: myId,
   });
 
-  const addAction = actionCreator({
+  const addAction = characterAdd({
     auras: [],
     conditions: [],
     hp: 0,
@@ -111,6 +109,8 @@ async function makeNewCharacter(
     tokenImageAssetId: assetImageAddAction.payload.id,
     tokenBorderColor: randomColor(),
     localToMap: null,
+    isTemplate,
+    diceTemplateCategories: [],
   });
 
   return {
@@ -133,7 +133,7 @@ export const CharacterManager = React.memo(function CharacterManager() {
       setIsAddingToken(true);
       try {
         const { id: newCharacterId, actions } = await makeNewCharacter(
-          characterAdd,
+          false,
           myself.id,
           tokenImage
         );
@@ -197,7 +197,7 @@ const TemplateEditor = React.memo(function TemplateEditor() {
     setIsAddingToken(true);
     try {
       const { id: newCharacterId, actions } = await makeNewCharacter(
-        characterTemplateAdd,
+        true,
         myself.id,
         tokenImage
       );
@@ -209,8 +209,8 @@ const TemplateEditor = React.memo(function TemplateEditor() {
   };
 
   const characterTemplates = entries(
-    useServerState((state) => state.characterTemplates)
-  );
+    useServerState((state) => state.characters)
+  ).filter((t) => t.isTemplate);
 
   return (
     <GMArea>
@@ -242,7 +242,7 @@ function CharacterList({
   isTemplate,
   addCharacter,
 }: {
-  characters: RRCharacter[] | RRCharacterTemplate[];
+  characters: RRCharacter[];
   newCharacterIds: RRCharacterID[];
   setNewCharacterIds: React.Dispatch<React.SetStateAction<RRCharacterID[]>>;
   isTemplate?: boolean;
@@ -320,7 +320,6 @@ const EditableCharacterPreview = React.memo(function EditableCharacterPreview({
     <Popover
       content={
         <CharacterEditor
-          isTemplate={isTemplate}
           character={character}
           wasJustCreated={wasJustCreated}
           onNameFirstEdited={onNameFirstEdited}

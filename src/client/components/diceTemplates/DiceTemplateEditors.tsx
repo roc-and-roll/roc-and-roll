@@ -1,10 +1,10 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import {
-  playerAddDiceTemplate,
-  playerRemoveDiceTemplate,
-  playerUpdateDiceTemplate,
-  playerUpdateDiceTemplatePart,
+  characterAddDiceTemplate,
+  characterRemoveDiceTemplate,
+  characterUpdateDiceTemplate,
+  characterUpdateDiceTemplatePart,
 } from "../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import {
@@ -17,12 +17,12 @@ import {
   RRDiceTemplatePartWithDamage,
   RRDiceTemplatePart,
   RRDiceTemplatePartID,
-  RRPlayerID,
   proficiencyValueStrings,
+  RRCharacterID,
 } from "../../../shared/state";
 import { empty2Null } from "../../../shared/util";
 import { RRDiceTemplate } from "../../../shared/validation";
-import { useMyProps } from "../../myself";
+import { useMyActiveCharacter } from "../../myself";
 import { useServerDispatch } from "../../state";
 import { getProficiencyValueString, signedModifierString } from "../../util";
 import { iconMap } from "../hud/Actions";
@@ -30,14 +30,14 @@ import { Select } from "../ui/Select";
 import { SmartIntegerInput, SmartTextareaInput } from "../ui/TextInput";
 
 const updatePartAction = (
-  myId: RRPlayerID,
+  id: RRCharacterID,
   partId: RRDiceTemplatePartID,
   categoryId: RRDiceTemplateCategoryID,
   diceTemplate: RRDiceTemplate,
   changes: Partial<RRDiceTemplatePart>
 ) =>
-  playerUpdateDiceTemplatePart({
-    id: myId,
+  characterUpdateDiceTemplatePart({
+    id,
     categoryId,
     templateId: diceTemplate.id,
     part: {
@@ -56,7 +56,7 @@ export function DamageTypeEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const myself = useMyProps("id");
+  const selected = useMyActiveCharacter("id")!;
 
   return (
     <label>
@@ -66,7 +66,7 @@ export function DamageTypeEditor({
         onChange={(damageType) =>
           dispatch({
             actions: [
-              updatePartAction(myself.id, part.id, categoryId, template, {
+              updatePartAction(selected.id, part.id, categoryId, template, {
                 damage: { type: empty2Null(damageType) },
               }),
             ],
@@ -90,7 +90,7 @@ export function DiceMultipleRollEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const myself = useMyProps("id");
+  const selected = useMyActiveCharacter("id")!;
 
   return (
     <label>
@@ -100,7 +100,7 @@ export function DiceMultipleRollEditor({
         onChange={(modified) =>
           dispatch({
             actions: [
-              updatePartAction(myself.id, part.id, categoryId, template, {
+              updatePartAction(selected.id, part.id, categoryId, template, {
                 modified,
               }),
             ],
@@ -127,7 +127,7 @@ export function DiceCountEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const myself = useMyProps("id");
+  const selected = useMyActiveCharacter("id")!;
 
   return (
     <label>
@@ -137,7 +137,7 @@ export function DiceCountEditor({
         onChange={(count) =>
           dispatch({
             actions: [
-              updatePartAction(myself.id, part.id, categoryId, template, {
+              updatePartAction(selected.id, part.id, categoryId, template, {
                 count,
               }),
             ],
@@ -160,7 +160,7 @@ export function ModifierNumberEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const myself = useMyProps("id");
+  const selected = useMyActiveCharacter("id")!;
 
   return (
     <label>
@@ -170,7 +170,7 @@ export function ModifierNumberEditor({
         onChange={(number) =>
           dispatch({
             actions: [
-              updatePartAction(myself.id, part.id, categoryId, template, {
+              updatePartAction(selected.id, part.id, categoryId, template, {
                 number,
               }),
             ],
@@ -193,7 +193,7 @@ export function ProficiencyValueEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const myself = useMyProps("id");
+  const selected = useMyActiveCharacter("id")!;
 
   return (
     <label>
@@ -212,7 +212,7 @@ export function ProficiencyValueEditor({
           onChange={(newValue: typeof proficiencyValueStrings[number]) => {
             return dispatch({
               actions: [
-                updatePartAction(myself.id, part.id, categoryId, template, {
+                updatePartAction(selected.id, part.id, categoryId, template, {
                   proficiency: newValue,
                 }),
               ],
@@ -234,12 +234,14 @@ export function CategoryEditor({
   template: RRDiceTemplate;
 }) {
   const dispatch = useServerDispatch();
-  const myself = useMyProps("diceTemplateCategories", "id");
+  const selected = useMyActiveCharacter("id", "diceTemplateCategories");
+
+  if (!selected) return <></>;
 
   return (
     <label>
       Category:
-      {myself.diceTemplateCategories.map((category) => (
+      {selected.diceTemplateCategories.map((category) => (
         <label
           key={category.id}
           className="radio-label"
@@ -253,13 +255,13 @@ export function CategoryEditor({
             onChange={(e) =>
               dispatch({
                 actions: [
-                  playerRemoveDiceTemplate({
-                    id: myself.id,
+                  characterRemoveDiceTemplate({
+                    id: selected.id,
                     categoryId: categoryId,
                     templateId: template.id,
                   }),
-                  playerAddDiceTemplate({
-                    id: myself.id,
+                  characterAddDiceTemplate({
+                    id: selected.id,
                     categoryId: category.id,
                     template: template,
                   }),
@@ -284,8 +286,9 @@ export function TemplateSettingsEditor({
   template: RRDiceTemplate;
 }) {
   const dispatch = useServerDispatch();
-  const myself = useMyProps("diceTemplateCategories", "id");
+  const selected = useMyActiveCharacter("id", "diceTemplateCategories");
 
+  if (!selected) return <></>;
   return (
     <div>
       <label>
@@ -295,8 +298,8 @@ export function TemplateSettingsEditor({
           onChange={(notes) =>
             dispatch({
               actions: [
-                playerUpdateDiceTemplate({
-                  id: myself.id,
+                characterUpdateDiceTemplate({
+                  id: selected.id,
                   categoryId,
                   template: {
                     id: template.id,

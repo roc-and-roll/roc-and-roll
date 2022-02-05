@@ -9,10 +9,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React from "react";
-import {
-  characterTemplateUpdate,
-  characterUpdate,
-} from "../../../shared/actions";
+import { characterUpdate } from "../../../shared/actions";
 import { randomColor } from "../../../shared/colors";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import { RRAura, RRCharacter } from "../../../shared/state";
@@ -20,22 +17,12 @@ import { useServerDispatch } from "../../state";
 import { Button } from "../ui/Button";
 import { ColorInput } from "../ui/ColorInput";
 
-export function Auras({
-  character,
-  isTemplate,
-}: {
-  character: RRCharacter;
-  isTemplate: boolean | undefined;
-}) {
+export function Auras({ character }: { character: RRCharacter }) {
   const dispatch = useServerDispatch();
-  const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
 
   const setAuras = (updater: React.SetStateAction<RRCharacter["auras"]>) =>
     dispatch((state) => {
-      const oldAuras =
-        state[isTemplate ? "characterTemplates" : "characters"].entities[
-          character.id
-        ]?.auras;
+      const oldAuras = state.characters.entities[character.id]?.auras;
 
       if (oldAuras === undefined) {
         return [];
@@ -45,7 +32,7 @@ export function Auras({
 
       return {
         actions: [
-          updateFunc({ id: character.id, changes: { auras: newAuras } }),
+          characterUpdate({ id: character.id, changes: { auras: newAuras } }),
         ],
         optimisticKey: "auras",
         syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,

@@ -4,7 +4,7 @@ import React, { useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import {
   logEntryDiceRollAdd,
-  playerAddDiceTemplate,
+  characterAddDiceTemplate,
 } from "../../../shared/actions";
 import {
   RRDiceTemplateID,
@@ -13,7 +13,6 @@ import {
   characterStatNames,
   RRDiceTemplatePartLinkedProficiency,
   RRDiceTemplateCategoryID,
-  RRCharacter,
   RRDiceTemplatePartLinkedModifier,
 } from "../../../shared/state";
 import { rrid } from "../../../shared/util";
@@ -21,8 +20,8 @@ import {
   RRDiceTemplate,
   RRDiceTemplateCategory,
 } from "../../../shared/validation";
-import { useMyProps } from "../../myself";
-import { useServerDispatch, useServerState } from "../../state";
+import { useMyProps, useMyActiveCharacter } from "../../myself";
+import { useServerDispatch } from "../../state";
 import { Button } from "../ui/Button";
 import { evaluateDiceTemplatePart } from "../../diceUtils";
 import { DiceTemplate } from "./DiceTemplate";
@@ -42,12 +41,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
   category: RRDiceTemplateCategory;
 }) {
   const [templatesEditable, setTemplatesEditable] = useState(false);
-  const myself = useMyProps(
-    "id",
-    "characterIds",
-    "diceTemplateCategories",
-    "mainCharacterId"
-  );
+  const myself = useMyProps("id", "characterIds", "mainCharacterId");
 
   const dispatch = useServerDispatch();
   const newIds = useRef<RRDiceTemplateID[]>([]);
@@ -55,11 +49,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
     []
   );
 
-  const character: RRCharacter | null = useServerState((state) =>
-    myself.mainCharacterId
-      ? state.characters.entities[myself.mainCharacterId] ?? null
-      : null
-  );
+  const character = useMyActiveCharacter("id", "stats", "attributes");
 
   const [, dropRef] = useDrop<
     RRDiceTemplatePart | RRDiceTemplatePart[],
@@ -69,14 +59,15 @@ export const DiceTemplates = React.memo(function DiceTemplates({
     () => ({
       accept: ["diceTemplatePart"],
       drop: (item, monitor) => {
+        if (!character) return;
         if (Array.isArray(item)) {
           item = item.map((part) => {
             return { ...part, id: rrid<RRDiceTemplatePart>() };
           });
         }
-        const action = playerAddDiceTemplate({
+        const action = characterAddDiceTemplate({
           categoryId: category.id,
-          id: myself.id,
+          id: character.id,
           template: {
             id: rrid<RRDiceTemplate>(),
             name: "",
@@ -90,7 +81,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
       },
       canDrop: (_item, monitor) => monitor.isOver({ shallow: true }),
     }),
-    [category, dispatch, myself.id]
+    [category, dispatch, character]
   );
 
   const doRoll = (crit: boolean = false) => {
@@ -350,36 +341,6 @@ function DicePicker() {
         //<DiceHolder diceTemplateParts={diceHolder} />
         //<Button onClick={() => setDiceHolder([])}>EMPTY</Button>
       }
-    </div>
-  );
-}
-
-//TODO: this was broken before as well, and needs to be fixed or removed
-function DiceHolder({
-  diceTemplateParts,
-}: {
-  diceTemplateParts: RRDiceTemplatePart[];
-}) {
-  const [, dragRef] = useDrag<RRDiceTemplatePart[], void, null>(
-    () => ({
-      type: "diceTemplate",
-      item: diceTemplateParts,
-      options: { dropEffect: "copy" },
-    }),
-    [diceTemplateParts]
-  );
-
-  return (
-    <div className="dice-holder" ref={dragRef}>
-      {diceTemplateParts.map((part) => {
-        return (
-          <PickerDiceTemplatePart // TODO: make them not draggable
-            part={part}
-            key={part.id}
-            onClick={() => {}}
-          />
-        );
-      })}
     </div>
   );
 }

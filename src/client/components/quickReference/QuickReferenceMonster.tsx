@@ -1,5 +1,5 @@
 import React from "react";
-import { assetImageAdd, characterTemplateAdd } from "../../../shared/actions";
+import { assetImageAdd, characterAdd } from "../../../shared/actions";
 import { randomColor } from "../../../shared/colors";
 import { generateRandomToken, uploadRemoteFile } from "../../files";
 import { useMyProps } from "../../myself";
@@ -71,7 +71,7 @@ export const Monster = React.memo(function Monster({
       playerId: myself.id,
     });
 
-    const templateAddAction = characterTemplateAdd({
+    const templateAddAction = characterAdd({
       name: monster.name,
       hp: monster.hp?.average ?? 0,
       maxHP: monster.hp?.average ?? 0,
@@ -130,6 +130,8 @@ export const Monster = React.memo(function Monster({
       tokenImageAssetId: assetImageAddAction.payload.id,
       tokenBorderColor: randomColor(),
       localToMap: null,
+      isTemplate: true,
+      diceTemplateCategories: [],
     });
 
     dispatch([assetImageAddAction, templateAddAction]);

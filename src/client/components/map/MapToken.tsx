@@ -340,7 +340,6 @@ function MapTokenInner({
           content={
             <div onMouseDown={(e) => e.stopPropagation()}>
               <CharacterEditor
-                isTemplate={false}
                 character={character}
                 wasJustCreated={false}
                 onNameFirstEdited={() => {}}
