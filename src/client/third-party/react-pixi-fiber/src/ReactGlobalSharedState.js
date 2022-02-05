@@ -3,9 +3,10 @@ import React from "react";
 
 const ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-export const ReactDebugCurrentFrame = __DEV__
-  ? ReactInternals.ReactDebugCurrentFrame
-  : null;
+export const ReactDebugCurrentFrame =
+  process.env.NODE_ENV === "development"
+    ? ReactInternals.ReactDebugCurrentFrame
+    : null;
 
 export function getStackAddendum() {
   if (ReactDebugCurrentFrame == null) {

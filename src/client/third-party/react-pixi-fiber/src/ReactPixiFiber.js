@@ -12,7 +12,7 @@ import { findStrictRoot } from "./utils";
 
 let validatePropertiesInDevelopment;
 
-if (__DEV__) {
+if (process.env.NODE_ENV === "development") {
   validatePropertiesInDevelopment = function (type, props, internalHandle) {
     const strictRoot = findStrictRoot(internalHandle);
     if (strictRoot != null) {
@@ -78,7 +78,7 @@ export function commitUpdate(
     internalHandle
   );
 
-  if (__DEV__) {
+  if (process.env.NODE_ENV === "development") {
     validatePropertiesInDevelopment(type, nextProps, internalHandle);
   }
 }
@@ -166,7 +166,7 @@ export function clearContainer(container) {
 }
 
 export function commitMount(instance, type, props, internalHandle) {
-  if (__DEV__) {
+  if (process.env.NODE_ENV === "development") {
     validatePropertiesInDevelopment(type, props, internalHandle);
   }
 }

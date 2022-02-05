@@ -25,11 +25,7 @@ export function createInstance(
               font: props.font,
               tint: props.tint,
             };
-      try {
-        instance = new PIXI.extras.BitmapText(props.text, style);
-      } catch (e) {
-        instance = new PIXI.BitmapText(props.text, style);
-      }
+      instance = new PIXI.BitmapText(props.text, style);
       break;
     case TYPES.CONTAINER:
       instance = new PIXI.Container();
@@ -38,40 +34,21 @@ export function createInstance(
       instance = new PIXI.Graphics();
       break;
     case TYPES.NINE_SLICE_PLANE:
-      try {
-        instance = new PIXI.mesh.NineSlicePlane(
-          props.texture,
-          props.leftWidth,
-          props.topHeight,
-          props.rightWidth,
-          props.bottomHeight
-        );
-      } catch (e) {
-        instance = new PIXI.NineSlicePlane(
-          props.texture,
-          props.leftWidth,
-          props.topHeight,
-          props.rightWidth,
-          props.bottomHeight
-        );
-      }
+      instance = new PIXI.NineSlicePlane(
+        props.texture,
+        props.leftWidth,
+        props.topHeight,
+        props.rightWidth,
+        props.bottomHeight
+      );
       break;
     case TYPES.PARTICLE_CONTAINER:
-      try {
-        instance = new PIXI.particles.ParticleContainer(
-          props.maxSize,
-          props.properties,
-          props.batchSize,
-          props.autoResize
-        );
-      } catch (e) {
-        instance = new PIXI.ParticleContainer(
-          props.maxSize,
-          props.properties,
-          props.batchSize,
-          props.autoResize
-        );
-      }
+      instance = new PIXI.ParticleContainer(
+        props.maxSize,
+        props.properties,
+        props.batchSize,
+        props.autoResize
+      );
       break;
     case TYPES.SPRITE:
       instance = new PIXI.Sprite(props.texture);
@@ -80,19 +57,11 @@ export function createInstance(
       instance = new PIXI.Text(props.text, props.style, props.canvas);
       break;
     case TYPES.TILING_SPRITE:
-      try {
-        instance = new PIXI.extras.TilingSprite(
-          props.texture,
-          props.width,
-          props.height
-        );
-      } catch (e) {
-        instance = new PIXI.TilingSprite(
-          props.texture,
-          props.width,
-          props.height
-        );
-      }
+      instance = new PIXI.TilingSprite(
+        props.texture,
+        props.width,
+        props.height
+      );
       break;
     default:
       instance = createInjectedTypeInstance(

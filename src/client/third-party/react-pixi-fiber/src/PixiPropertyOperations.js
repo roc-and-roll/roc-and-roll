@@ -34,7 +34,7 @@ export function setValueForProperty(
 ) {
   const propertyInfo = getPropertyInfo(propName);
   let strictRoot = null;
-  if (__DEV__) {
+  if (process.env.NODE_ENV === "development") {
     strictRoot = findStrictRoot(internalHandle);
   }
 

@@ -6610,11 +6610,11 @@ __metadata:
   linkType: hard
 
 "cross-fetch@npm:^3.0.4":
-  version: 3.1.4
-  resolution: "cross-fetch@npm:3.1.4"
+  version: 3.1.5
+  resolution: "cross-fetch@npm:3.1.5"
   dependencies:
-    node-fetch: 2.6.1
-  checksum: 2107e5e633aa327bdacab036b1907c7ddd28651ede0c1d4fd14db04510944d56849a8255e2f5b8f9a1da0e061b6cee943f6819fe29ed9a130195e7fadd82a4ff
+    node-fetch: 2.6.7
+  checksum: f6b8c6ee3ef993ace6277fd789c71b6acf1b504fd5f5c7128df4ef2f125a429e29cd62dc8c127523f04a5f2fa4771ed80e3f3d9695617f441425045f505cf3bb
   languageName: node
   linkType: hard
 
@@ -8177,7 +8177,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fbjs@npm:^3.0.0":
+"fbjs@npm:^3.0.2":
   version: 3.0.2
   resolution: "fbjs@npm:3.0.2"
   dependencies:
@@ -12386,10 +12386,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:2.6.1":
-  version: 2.6.1
-  resolution: "node-fetch@npm:2.6.1"
-  checksum: 91075bedd57879117e310fbcc36983ad5d699e522edb1ebcdc4ee5294c982843982652925c3532729fdc86b2d64a8a827797a745f332040d91823c8752ee4d7c
+"node-fetch@npm:2.6.7":
+  version: 2.6.7
+  resolution: "node-fetch@npm:2.6.7"
+  dependencies:
+    whatwg-url: ^5.0.0
+  peerDependencies:
+    encoding: ^0.1.0
+  peerDependenciesMeta:
+    encoding:
+      optional: true
+  checksum: 8d816ffd1ee22cab8301c7756ef04f3437f18dace86a1dae22cf81db8ef29c0bf6655f3215cb0cdb22b420b6fe141e64b26905e7f33f9377a7fa59135ea3e10b
   languageName: node
   linkType: hard
 
@@ -14218,33 +14225,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-pixi-fiber@npm:1.0.0-beta.14":
-  version: 1.0.0-beta.14
-  resolution: "react-pixi-fiber@npm:1.0.0-beta.14"
+"react-reconciler@npm:^0.26.2":
+  version: 0.26.2
+  resolution: "react-reconciler@npm:0.26.2"
   dependencies:
-    fbjs: ^3.0.0
-    react-reconciler: ^0.26.2
+    loose-envify: ^1.1.0
+    object-assign: ^4.1.1
+    scheduler: ^0.20.2
   peerDependencies:
-    pixi.js: ^4.4.0 || ^5.0.0 || ^6.0.0
-    prop-types: ^15.7.2
-    react: ^17.0.0
-    react-dom: ^17.0.0
-  checksum: 2df79b9df37bcf7b49978cca4a2206412c5f562bf8dc661b8413756a74704607330407d8e78fc74ec615c1ee8ab17f904c0cc9f936998dbe0a557bd4d23fc656
-  languageName: node
-  linkType: hard
-
-"react-pixi-fiber@patch:react-pixi-fiber@npm:1.0.0-beta.14#.yarn/patches/react-pixi-fiber-npm-1.0.0-beta.14-9c5aa0c886::locator=roc-and-roll%40workspace%3A.":
-  version: 1.0.0-beta.14
-  resolution: "react-pixi-fiber@patch:react-pixi-fiber@npm%3A1.0.0-beta.14#.yarn/patches/react-pixi-fiber-npm-1.0.0-beta.14-9c5aa0c886::version=1.0.0-beta.14&hash=6ad7bf&locator=roc-and-roll%40workspace%3A."
-  dependencies:
-    fbjs: ^3.0.0
-    react-reconciler: ^0.26.2
-  peerDependencies:
-    pixi.js: ^4.4.0 || ^5.0.0 || ^6.0.0
-    prop-types: ^15.7.2
-    react: ^17.0.0
-    react-dom: ^17.0.0
-  checksum: 9af5265ca6bcc79627978dfd37c75c7f71eaa97d425525b0cf3e2fc2f075c92d0800a927255c22b5479a6f329f7dddf05df0eae9e99bedf48c76e8ff18b3f64c
+    react: ^17.0.2
+  checksum: 2ebceace56f547f51eaf142becefef9cca980eae4f42d90ee5a966f54a375f5082d78b71b00c40bbd9bca69e0e0f698c7d4e81cc7373437caa19831fddc1d01b
   languageName: node
   linkType: hard
 
@@ -14998,6 +14988,7 @@ resolve@^2.0.0-next.3:
     express: ^4.17.1
     favicons: ^6.2.2
     favicons-webpack-plugin: ^5.0.2
+    fbjs: ^3.0.2
     file-loader: ^6.2.0
     file-type: ^16.5.3
     fontfaceobserver: ^2.1.0
@@ -15041,7 +15032,7 @@ resolve@^2.0.0-next.3:
     react-is: rc
     react-lag-radar: ^1.0.0
     react-markdown: ^7.0.1
-    react-pixi-fiber: 1.0.0-beta.14
+    react-reconciler: rc
     react-refresh: ^0.11.0
     react-test-renderer: beta
     react-use-gesture: ^9.1.3

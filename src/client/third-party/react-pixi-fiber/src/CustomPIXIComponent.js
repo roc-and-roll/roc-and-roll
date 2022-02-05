@@ -16,7 +16,7 @@ function CustomPIXIComponent(behavior, type) {
 
 let CustomPIXIProperty = emptyFunction;
 
-if (__DEV__) {
+if (process.env.NODE_ENV === "development") {
   /**
    * @param maybeComponentType string|string[]|null|undefined
    * @param propertyName string

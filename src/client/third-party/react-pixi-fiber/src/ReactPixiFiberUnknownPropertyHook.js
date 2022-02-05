@@ -13,7 +13,7 @@ import possibleStandardNames from "./possibleStandardNames";
 
 let validateProperty = emptyFunction;
 
-if (__DEV__) {
+if (process.env.NODE_ENV === "development") {
   const warnedProperties = {};
   const hasOwnProperty = Object.prototype.hasOwnProperty;
   const EVENT_NAME_REGEX = /^on./;

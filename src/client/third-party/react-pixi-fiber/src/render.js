@@ -19,9 +19,9 @@ export function createRender(ReactPixiFiber) {
 
       ReactPixiFiber.injectIntoDevTools({
         findFiberByHostInstance: ReactPixiFiber.findFiberByHostInstance,
-        bundleType: __DEV__ ? 1 : 0,
+        bundleType: process.env.NODE_ENV === "development" ? 1 : 0,
         version: getDevToolsVersion(),
-        rendererPackageName: __PACKAGE_NAME__,
+        rendererPackageName: "react-pixi-fiber",
       });
     }
 
