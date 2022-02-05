@@ -146,8 +146,6 @@ export type RRObjectVisibility = "gmOnly" | "everyone";
 
 export type RRCharacter = ECE<SyncedState["characters"]>;
 
-export type RRCharacterTemplate = ECE<SyncedState["characterTemplates"]>;
-
 export type RRToken = Extract<
   ECE<ECE<SyncedState["maps"]>["objects"]>,
   { type: "token" }
@@ -546,7 +544,6 @@ export const initialSyncedState: SyncedState = {
   },
   players: EMPTY_ENTITY_COLLECTION,
   characters: EMPTY_ENTITY_COLLECTION,
-  characterTemplates: EMPTY_ENTITY_COLLECTION,
   maps: {
     entities: { [defaultMap.id]: defaultMap },
     ids: [defaultMap.id],

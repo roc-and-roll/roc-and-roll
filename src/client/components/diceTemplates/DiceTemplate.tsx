@@ -2,8 +2,8 @@ import clsx from "clsx";
 import React, { useRef, useState, useEffect } from "react";
 import { useDrop } from "react-dnd";
 import {
-  playerAddDiceTemplatePart,
-  playerUpdateDiceTemplate,
+  characterAddDiceTemplatePart,
+  characterUpdateDiceTemplate,
 } from "../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import {
@@ -14,7 +14,7 @@ import {
 } from "../../../shared/state";
 import { rrid } from "../../../shared/util";
 import { RRDiceTemplate } from "../../../shared/validation";
-import { useMyProps } from "../../myself";
+import { useMyActiveCharacter } from "../../myself";
 import { useRRSettings } from "../../settings";
 import { useServerDispatch } from "../../state";
 import { Button } from "../ui/Button";
@@ -48,7 +48,7 @@ export const DiceTemplate = React.memo(function DiceTemplate({
   editable: boolean;
   isChildTemplate: boolean;
 }) {
-  const myself = useMyProps("id");
+  const character = useMyActiveCharacter("id")!;
   const dispatch = useServerDispatch();
 
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -97,8 +97,8 @@ export const DiceTemplate = React.memo(function DiceTemplate({
         }
 
         dispatch(
-          playerAddDiceTemplatePart({
-            id: myself.id,
+          characterAddDiceTemplatePart({
+            id: character.id,
             categoryId,
             templateId: template.id,
             part: item,
@@ -107,7 +107,7 @@ export const DiceTemplate = React.memo(function DiceTemplate({
       },
       canDrop: (_item, monitor) => monitor.isOver({ shallow: true }),
     }),
-    [categoryId, dispatch, myself.id, template.id]
+    [categoryId, dispatch, character.id, template.id]
   );
 
   useEffect(() => {
@@ -205,8 +205,8 @@ export const DiceTemplate = React.memo(function DiceTemplate({
               onChange={(name) =>
                 dispatch({
                   actions: [
-                    playerUpdateDiceTemplate({
-                      id: myself.id,
+                    characterUpdateDiceTemplate({
+                      id: character.id,
                       categoryId: categoryId,
                       template: { id: template.id, changes: { name } },
                     }),

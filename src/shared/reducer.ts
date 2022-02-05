@@ -11,7 +11,6 @@ import {
   ephemeralMusicReducer,
 } from "../shared/features/ephemeral";
 import { assetsReducer } from "../shared/features/assets";
-import { characterTemplatesReducer } from "../shared/features/charactersTemplates";
 import { globalSettingsReducer } from "../shared/features/globalSettings";
 import { soundSetsReducer } from "./features/soundSets";
 
@@ -24,7 +23,6 @@ export const reducer = combineReducers({
   initiativeTracker: initiativeTrackerReducer,
   players: playersReducer,
   characters: charactersReducer,
-  characterTemplates: characterTemplatesReducer,
   maps: mapsReducer,
   privateChats: privateChatsReducer,
   logEntries: logEntriesReducer,

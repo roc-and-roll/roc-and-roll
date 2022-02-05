@@ -63,6 +63,19 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+export function useMyActiveCharacter<T extends (keyof RRCharacter)[]>(
+  ...fields: T
+): Pick<RRCharacter, IterableElement<T>> | null {
+  const selected = useMySelectedCharacters(...fields);
+  const myself = useMyProps("mainCharacterId");
+  const characters = useServerState((s) => s.characters).entities;
+
+  return (
+    selected[0] ??
+    (myself.mainCharacterId ? characters[myself.mainCharacterId] ?? null : null)
+  );
+}
+
 export function useMySelectedCharacters<T extends (keyof RRCharacter)[]>(
   ...fields: T
 ): Pick<RRCharacter, IterableElement<T>>[] {

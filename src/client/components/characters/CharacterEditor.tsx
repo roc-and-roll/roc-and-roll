@@ -2,15 +2,12 @@ import React, { useRef, useEffect, useState } from "react";
 import {
   characterUpdate,
   characterRemove,
-  characterTemplateUpdate,
-  characterTemplateRemove,
   assetImageUpdate,
 } from "../../../shared/actions";
 import {
   conditionNames,
   RRCharacter,
   RRCharacterCondition,
-  RRCharacterTemplate,
 } from "../../../shared/state";
 import { useFileUpload } from "../../files";
 import { useServerDispatch } from "../../state";
@@ -111,13 +108,11 @@ export function CharacterEditor({
   wasJustCreated,
   onClose,
   onNameFirstEdited,
-  isTemplate,
 }: {
-  character: RRCharacter | RRCharacterTemplate;
+  character: RRCharacter;
   onClose: () => void;
   wasJustCreated: boolean;
   onNameFirstEdited: () => void;
-  isTemplate?: boolean;
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
@@ -125,8 +120,6 @@ export function CharacterEditor({
   const confirm = useConfirm();
 
   const dispatch = useServerDispatch();
-  const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
-  const removeFunc = isTemplate ? characterTemplateRemove : characterRemove;
 
   const updateImage = async () => {
     if (!fileInput.current) {
@@ -162,10 +155,7 @@ export function CharacterEditor({
     updater: React.SetStateAction<RRCharacter["conditions"]>
   ) =>
     dispatch((state) => {
-      const oldConditions =
-        state[isTemplate ? "characterTemplates" : "characters"].entities[
-          character.id
-        ]?.conditions;
+      const oldConditions = state.characters.entities[character.id]?.conditions;
 
       if (oldConditions === undefined) {
         return [];
@@ -176,7 +166,7 @@ export function CharacterEditor({
 
       return {
         actions: [
-          updateFunc({
+          characterUpdate({
             id: character.id,
             changes: { conditions: newConditions },
           }),
@@ -202,13 +192,13 @@ export function CharacterEditor({
     if (
       await confirm(
         `Do you really want to delete this character${
-          isTemplate ? " template" : ""
+          character.isTemplate ? " template" : ""
         } forever? This will _not_ just delete the token, but the entire character${
-          isTemplate ? " template" : ""
+          character.isTemplate ? " template" : ""
         }!`
       )
     ) {
-      dispatch(removeFunc(character.id));
+      dispatch(characterRemove(character.id));
       onClose();
     }
   };
@@ -227,7 +217,9 @@ export function CharacterEditor({
             value={character.name}
             onChange={(name) =>
               dispatch({
-                actions: [updateFunc({ id: character.id, changes: { name } })],
+                actions: [
+                  characterUpdate({ id: character.id, changes: { name } }),
+                ],
                 optimisticKey: "name",
                 syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
               })
@@ -244,7 +236,7 @@ export function CharacterEditor({
             onChange={(e) =>
               dispatch({
                 actions: [
-                  updateFunc({
+                  characterUpdate({
                     id: character.id,
                     changes: {
                       visibility: e.target.checked ? "gmOnly" : "everyone",
@@ -259,16 +251,16 @@ export function CharacterEditor({
         </label>
       </div>
       <Collapsible title="Hit Point Editor">
-        <HPEditor character={character} updateFunc={updateFunc} />
+        <HPEditor character={character} />
       </Collapsible>
       <Collapsible title="Stats & Proficiencies" defaultCollapsed={true}>
-        <CharacterSheetEditor character={character} isTemplate={isTemplate} />
+        <CharacterSheetEditor character={character} />
       </Collapsible>
       <Collapsible title="Skills" defaultCollapsed={true}>
         <LimitedUseSkillEditor character={character} />
       </Collapsible>
       <Collapsible title="Auras" defaultCollapsed={true}>
-        <Auras character={character} isTemplate={isTemplate} />
+        <Auras character={character} />
       </Collapsible>
       <Collapsible title="Conditions" defaultCollapsed={true}>
         <ConditionPicker
@@ -285,7 +277,7 @@ export function CharacterEditor({
               onChange={(tokenBorderColor) =>
                 dispatch({
                   actions: [
-                    updateFunc({
+                    characterUpdate({
                       id: character.id,
                       changes: { tokenBorderColor },
                     }),
@@ -317,7 +309,7 @@ export function CharacterEditor({
               onChange={(scale) =>
                 dispatch({
                   actions: [
-                    updateFunc({ id: character.id, changes: { scale } }),
+                    characterUpdate({ id: character.id, changes: { scale } }),
                   ],
                   optimisticKey: "scale",
                   syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
@@ -329,20 +321,14 @@ export function CharacterEditor({
       </Collapsible>
       <Collapsible title="Delete" defaultCollapsed={true}>
         <Button className="red" onClick={remove}>
-          delete character {isTemplate && "template"}
+          delete character {character.isTemplate && "template"}
         </Button>
       </Collapsible>
     </div>
   );
 }
 
-function HPEditor({
-  character,
-  updateFunc,
-}: {
-  character: RRCharacter | RRCharacterTemplate;
-  updateFunc: typeof characterTemplateUpdate | typeof characterUpdate;
-}) {
+function HPEditor({ character }: { character: RRCharacter }) {
   const dispatch = useServerDispatch();
 
   return (
@@ -356,7 +342,9 @@ function HPEditor({
             placeholder="HP"
             onChange={(hp) =>
               dispatch({
-                actions: [updateFunc({ id: character.id, changes: { hp } })],
+                actions: [
+                  characterUpdate({ id: character.id, changes: { hp } }),
+                ],
                 optimisticKey: "hp",
                 syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
               })
@@ -371,7 +359,9 @@ function HPEditor({
             placeholder="Max HP"
             onChange={(maxHP) =>
               dispatch({
-                actions: [updateFunc({ id: character.id, changes: { maxHP } })],
+                actions: [
+                  characterUpdate({ id: character.id, changes: { maxHP } }),
+                ],
                 optimisticKey: "maxHP",
                 syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
               })
@@ -387,7 +377,10 @@ function HPEditor({
             onChange={(temporaryHP) =>
               dispatch({
                 actions: [
-                  updateFunc({ id: character.id, changes: { temporaryHP } }),
+                  characterUpdate({
+                    id: character.id,
+                    changes: { temporaryHP },
+                  }),
                 ],
                 optimisticKey: "temporaryHP",
                 syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
@@ -411,7 +404,7 @@ function HPEditor({
             onChange={(maxHPAdjustment) =>
               dispatch({
                 actions: [
-                  updateFunc({
+                  characterUpdate({
                     id: character.id,
                     changes: { maxHPAdjustment },
                   }),

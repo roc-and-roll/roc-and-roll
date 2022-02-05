@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
-  playerRemoveDiceTemplate,
-  playerUpdateDiceTemplate,
+  characterRemoveDiceTemplate,
+  characterUpdateDiceTemplate,
 } from "../../../shared/actions";
 import {
   RRDiceTemplatePart,
@@ -12,12 +12,12 @@ import {
   colorForDamageType,
   RRCharacter,
   RRDiceTemplatePartID,
-  RRPlayerID,
+  RRCharacterID,
 } from "../../../shared/state";
 import { assertNever } from "../../../shared/util";
 import { RRDiceTemplate } from "../../../shared/validation";
 import { proficiencyStringToValue } from "../../diceUtils";
-import { useMyProps } from "../../myself";
+import { useMyActiveCharacter, useMyProps } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import { contrastColor, modifierFromStat } from "../../util";
 import { Popover } from "../Popover";
@@ -35,13 +35,13 @@ import {
 import { SelectionPair } from "./DiceTemplates";
 
 const removePartAction = (
-  myId: RRPlayerID,
+  id: RRCharacterID,
   partId: RRDiceTemplatePartID,
   categoryId: RRDiceTemplateCategoryID,
   diceTemplate: RRDiceTemplate
 ) =>
-  playerUpdateDiceTemplate({
-    id: myId,
+  characterUpdateDiceTemplate({
+    id,
     categoryId,
     template: {
       id: diceTemplate.id,
@@ -59,18 +59,18 @@ export const DiceTemplatePartMenuWrapper: React.FC<{
 }> = ({ part, template, children, categoryId, isTopLevel }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const dispatch = useServerDispatch();
-  const myself = useMyProps("id");
+  const character = useMyActiveCharacter("id")!;
 
   const applyDelete = (part: RRDiceTemplatePart) => {
     isTopLevel
       ? dispatch(
-          playerRemoveDiceTemplate({
-            id: myself.id,
+          characterRemoveDiceTemplate({
+            id: character.id,
             categoryId,
             templateId: template.id,
           })
         )
-      : dispatch(removePartAction(myself.id, part.id, categoryId, template));
+      : dispatch(removePartAction(character.id, part.id, categoryId, template));
   };
 
   return (

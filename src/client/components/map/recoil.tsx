@@ -68,19 +68,6 @@ export const characterIdsAtom = atom<ReadonlyArray<RRCharacterID>>({
   default: [],
 });
 
-export const characterTemplateFamily = atomFamily<
-  RRCharacter | null,
-  RRCharacterID
->({
-  key: "CharacterTemplate",
-  default: null,
-});
-
-export const characterTemplateIdsAtom = atom<ReadonlyArray<RRCharacterID>>({
-  key: "CharacterTemplateIds",
-  default: [],
-});
-
 export const assetFamily = atomFamily<RRAsset | null, RRAssetID>({
   key: "Asset",
   default: null,
@@ -158,12 +145,6 @@ export const ReduxToRecoilBridge = React.memo(function ReduxToRecoilBridge({
     useServerState((s) => s.characters),
     characterIdsAtom,
     characterFamily
-  );
-  useReduxToRecoilBridge(
-    "characterTemplates",
-    useServerState((s) => s.characterTemplates),
-    characterTemplateIdsAtom,
-    characterTemplateFamily
   );
   useReduxToRecoilBridge(
     "assets",

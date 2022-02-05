@@ -63,7 +63,6 @@ import { uploadFiles } from "../../files";
 import { MAP_LINK_SIZE } from "./MapLink";
 import {
   characterFamily,
-  characterTemplateFamily,
   selectedMapObjectIdsAtom,
   mapObjectsFamily,
   selectedMapObjectsFamily,
@@ -139,14 +138,6 @@ export default function MapContainer() {
     ({ snapshot }) =>
       (id: RRCharacterID) => {
         return snapshot.getLoadable(characterFamily(id)).getValue();
-      },
-    []
-  );
-
-  const getTemplateCharacter = useRecoilCallback(
-    ({ snapshot }) =>
-      (id: RRCharacterID) => {
-        return snapshot.getLoadable(characterTemplateFamily(id)).getValue();
       },
     []
   );
@@ -261,19 +252,17 @@ export default function MapContainer() {
 
         let characterId = item.id as RRCharacterID;
 
-        const character =
-          monitor.getItemType() === "tokenTemplate"
-            ? getTemplateCharacter(characterId)
-            : getCharacter(characterId);
+        const character = getCharacter(characterId);
 
         if (!character) return;
 
         // first create copy
-        if (monitor.getItemType() === "tokenTemplate") {
+        if (character.isTemplate) {
           const { id: _, ...copy } = character;
           const action = characterAdd({
             ...copy,
             localToMap: mapId,
+            isTemplate: false,
           });
           dispatch(action);
           characterId = action.payload.id;
@@ -302,7 +291,6 @@ export default function MapContainer() {
       dispatch,
       getCharacter,
       getOwnerOfCharacter,
-      getTemplateCharacter,
       getTransform,
       mapId,
       myself,

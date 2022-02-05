@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { Button } from "./ui/Button";
 import {
   logEntryDiceRollAdd,
-  playerAddDiceTemplate,
-  playerAddDiceTemplateCategory,
+  characterAddDiceTemplate,
+  characterAddDiceTemplateCategory,
 } from "../../shared/actions";
-import { useMyProps } from "../myself";
+import { useMyProps, useMySelectedCharacters } from "../myself";
 import { useServerDispatch } from "../state";
 import { tryConvertDiceRollTreeToDiceTemplateParts } from "../dice-rolling/dice-template-interop";
 import { parseDiceString } from "../dice-rolling/grammar";
@@ -21,7 +21,8 @@ import {
 export function DiceInterface() {
   const [diceTypes, setDiceTypes] = useState<string[]>([]);
   const [bonuses, setBonuses] = useState<number | null>(null);
-  const myself = useMyProps("id", "diceTemplateCategories");
+  const myself = useMyProps("id");
+  const character = useMySelectedCharacters("id", "diceTemplateCategories")[0];
   const dispatch = useServerDispatch();
   const alert = useAlert();
   const prompt = usePrompt();
@@ -56,9 +57,9 @@ export function DiceInterface() {
       const name =
         (await prompt("Name of the new dice template"))?.trim() ?? "";
       let categoryId;
-      if (myself.diceTemplateCategories.length < 1) {
-        const newTemplateCategoryAction = playerAddDiceTemplateCategory({
-          id: myself.id,
+      if (character!.diceTemplateCategories.length < 1) {
+        const newTemplateCategoryAction = characterAddDiceTemplateCategory({
+          id: character!.id,
           category: {
             categoryName: "Generated Templates",
             id: rrid<RRDiceTemplateCategory>(),
@@ -70,11 +71,11 @@ export function DiceInterface() {
         dispatch(newTemplateCategoryAction);
         categoryId = newTemplateCategoryAction.payload.category.id;
       } else {
-        categoryId = myself.diceTemplateCategories[0]!.id;
+        categoryId = character!.diceTemplateCategories[0]!.id;
       }
       dispatch(
-        playerAddDiceTemplate({
-          id: myself.id,
+        characterAddDiceTemplate({
+          id: character!.id,
           // FIXME should allow to select
           categoryId,
           template: {
@@ -210,7 +211,11 @@ export function DiceInterface() {
                 </td>
 
                 <td className="buttons-full-width">
-                  <Button onClick={() => doRoll(true)}>
+                  <Button
+                    disabled={!character}
+                    onClick={() => doRoll(true)}
+                    title={character ? undefined : "No character selected"}
+                  >
                     <p>Template</p>
                   </Button>
                   <Button
