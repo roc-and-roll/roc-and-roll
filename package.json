@@ -254,7 +254,8 @@
   "resolutions": {
     "@reduxjs/toolkit": "patch:@reduxjs/toolkit@npm:1.6.1#.yarn/patches/@reduxjs-toolkit-npm-1.6.1-a0999c8262",
     "peggy": "patch:peggy@npm:1.2.0#.yarn/patches/peggy-npm-1.2.0-dcccbe8690",
-    "react-pixi-fiber@1.0.0-beta.14": "patch:react-pixi-fiber@npm:1.0.0-beta.14#.yarn/patches/react-pixi-fiber-npm-1.0.0-beta.14-9c5aa0c886"
+    "react-pixi-fiber@1.0.0-beta.14": "patch:react-pixi-fiber@npm:1.0.0-beta.14#.yarn/patches/react-pixi-fiber-npm-1.0.0-beta.14-9c5aa0c886",
+    "react-reconciler": "rc"
   },
-  "packageManager": "yarn@3.1.0-rc.2"
+  "packageManager": "yarn@3.1.1"
 }

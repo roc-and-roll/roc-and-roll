@@ -2,45 +2,9 @@ diff --git a/cjs/react-pixi-fiber.development.js b/cjs/react-pixi-fiber.developm
 index 70ed30cf839da49e90b41e8839d56302f72db640..4ac98c8f17a75c136e7b00f4333bc3404a14e9bd 100644
 --- a/cjs/react-pixi-fiber.development.js
 +++ b/cjs/react-pixi-fiber.development.js
-@@ -293,7 +293,7 @@ function _nonIterableRest() {
-  * This source code is licensed under the MIT license found in the
-  * LICENSE file in the root directory of this source tree.
-  *
-- * 
-+ *
-  */
- function makeEmptyFunction(arg) {
-   return function () {
-@@ -330,7 +330,7 @@ var emptyFunction_1 = emptyFunction;
-  * This source code is licensed under the MIT license found in the
-  * LICENSE file in the root directory of this source tree.
-  *
-- * 
-+ *
-  */
- 
- var validateFormat =  function (format) {
-@@ -1009,7 +1009,7 @@ var emptyObject_1 = emptyObject;
-  * LICENSE file in the root directory of this source tree.
-  *
-  * @typechecks
-- * 
-+ *
-  */
- 
- var hasOwnProperty = Object.prototype.hasOwnProperty;
-@@ -20730,7 +20730,7 @@ function injectIntoDevTools(devToolsConfig) {
-     scheduleRoot:  scheduleRoot ,
-     setRefreshHandler:  setRefreshHandler ,
-     // Enables DevTools to append owner stacks to error messages in DEV mode.
--    getCurrentFiber:  getCurrentFiberForDevTools 
-+    getCurrentFiber:  getCurrentFiberForDevTools
-   });
- }
- 
 @@ -21586,7 +21586,7 @@ function resizeRenderer(app, oldProps, newProps) {
  }
- 
+
  function usePreviousProps(value) {
 -  var props = React.useRef(emptyObject_1);
 +  var props = React.useRef(value);
