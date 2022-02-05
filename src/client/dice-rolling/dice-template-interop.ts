@@ -6,7 +6,28 @@ import { rrid } from "../../shared/util";
 export function tryConvertDiceRollTreeToDiceTemplateParts(
   diceRollTree: DiceRollTree<false>
 ): RRDiceTemplate["parts"] | false {
-  if (diceRollTree.type !== "term" || diceRollTree.operator !== "+") {
+  if (diceRollTree.type === "dice")
+    return [
+      {
+        id: rrid<RRDiceTemplatePart>(),
+        type: "dice",
+        count: diceRollTree.count,
+        faces: diceRollTree.faces,
+        modified: diceRollTree.modified,
+        negated: false,
+        damage: diceRollTree.damage,
+      },
+    ];
+  else if (diceRollTree.type === "num")
+    return [
+      {
+        id: rrid<RRDiceTemplatePart>(),
+        type: "modifier",
+        number: diceRollTree.value,
+        damage: diceRollTree.damage,
+      },
+    ];
+  else if (diceRollTree.type !== "term" || diceRollTree.operator !== "+") {
     return false;
   }
 

@@ -14424,9 +14424,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"recoil@npm:^0.6.0":
-  version: 0.6.0
-  resolution: "recoil@npm:0.6.0"
+"recoil@npm:^0.6.1":
+  version: 0.6.1
+  resolution: "recoil@npm:0.6.1"
   dependencies:
     hamt_plus: 1.0.2
   peerDependencies:
@@ -14436,7 +14436,7 @@ __metadata:
       optional: true
     react-native:
       optional: true
-  checksum: ef38ee4074d94e5d14c69dbbb10874e21976d8bfc318e47a4666db786227a8837a5c54006e78bd4781d9b6b8eb637f1f0f9fe2e2ee8833e87f56775f1dec8cd7
+  checksum: 823c098e30f9b711f6e5d73ae3bf3c6d43ae6342998825f00ee18b01c88f499f7216fd59b472bd5ad349c6475e698e2937ad73b82499e31535bd63e431244146
   languageName: node
   linkType: hard
 
@@ -15044,7 +15044,7 @@ resolve@^2.0.0-next.3:
     react-refresh: ^0.11.0
     react-test-renderer: beta
     react-use-gesture: ^9.1.3
-    recoil: ^0.6.0
+    recoil: ^0.6.1
     redux: ^4.1.2
     redux-batched-actions: ^0.5.0
     regenerator-runtime: ^0.13.9

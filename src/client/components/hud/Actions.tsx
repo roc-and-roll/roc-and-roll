@@ -202,34 +202,36 @@ export const ActionsHUD = React.memo(function DicePanel() {
 
   const skillTemplates = useMemo(
     () =>
-      skillNames.map((skill) => {
-        const proficiency = isCharacterNull
-          ? "notProficient"
-          : character.skills[skill] ?? "notProficient";
-        const parts: RRDiceTemplatePart[] = [createD20Part()];
-        if (typeof proficiency !== "number")
-          parts.push({
-            id: rrid<RRDiceTemplatePart>(),
-            type: "linkedStat",
-            name: skillMap[skill],
-            damage: { type: null },
-          });
-        if (proficiency !== "notProficient")
-          parts.push({
-            id: rrid<RRDiceTemplatePart>(),
-            type: "linkedProficiency",
-            damage: { type: null },
-            proficiency,
-          });
+      skillNames
+        .map((skill) => {
+          const proficiency = isCharacterNull
+            ? "notProficient"
+            : character.skills[skill] ?? "notProficient";
+          const parts: RRDiceTemplatePart[] = [createD20Part()];
+          if (typeof proficiency !== "number")
+            parts.push({
+              id: rrid<RRDiceTemplatePart>(),
+              type: "linkedStat",
+              name: skillMap[skill],
+              damage: { type: null },
+            });
+          if (proficiency !== "notProficient")
+            parts.push({
+              id: rrid<RRDiceTemplatePart>(),
+              type: "linkedProficiency",
+              damage: { type: null },
+              proficiency,
+            });
 
-        return {
-          id: rrid<RRDiceTemplate>(),
-          name: skill,
-          notes: "",
-          parts,
-          rollType: null,
-        };
-      }),
+          return {
+            id: rrid<RRDiceTemplate>(),
+            name: skill,
+            notes: "",
+            parts,
+            rollType: null,
+          };
+        })
+        .sort(),
     [isCharacterNull, character?.skills]
   );
 

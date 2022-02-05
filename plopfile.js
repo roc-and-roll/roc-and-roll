@@ -30,7 +30,7 @@ export default function (
       {
         type: "add",
         path: "src/server/migrations/{{version}}_{{snakeCase name}}.ts",
-        templateFile: ".plop-templates/migration.hbs",
+        templateFile: ".plop-templates/migration.ts.hbs",
         data: async () => ({ version: await getNextMigrationVersion() }),
       },
       {

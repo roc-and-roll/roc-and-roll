@@ -25,7 +25,6 @@ export const MyselfContext = React.createContext<{
   setMyPlayerId: () => {},
   forgetMyPlayerId: () => {},
 });
-
 MyselfContext.displayName = "MyselfContext";
 
 export function MyselfProvider({ children }: { children: React.ReactNode }) {
