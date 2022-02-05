@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { logEntryDiceRollAdd } from "../../shared/actions";
-import { useServerDispatch } from "../state";
-import { parseDiceStringAndRoll } from "../dice-rolling/roll";
-import { parseDiceStringGetSyntaxError } from "../dice-rolling/grammar";
-import { Button } from "./ui/Button";
-import { useMyProps } from "../myself";
+import { logEntryDiceRollAdd } from "../../../shared/actions";
+import { useServerDispatch } from "../../state";
+import { parseDiceStringAndRoll } from "../../dice-rolling/roll";
+import { parseDiceStringGetSyntaxError } from "../../dice-rolling/grammar";
+import { Button } from "../ui/Button";
+import { useMyProps } from "../../myself";
 
 export function DiceInput() {
   const [text, setText] = useState("");

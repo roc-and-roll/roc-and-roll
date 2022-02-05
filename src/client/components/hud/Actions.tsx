@@ -53,6 +53,7 @@ import {
 import { useConfirm } from "../../dialog-boxes";
 import { useMyProps, useMySelectedCharacters } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
+import { DicePanel } from "../diceTemplates/DicePanel";
 import { DiceTemplates } from "../diceTemplates/DiceTemplates";
 import { GeneratedDiceTemplates } from "../diceTemplates/GeneratedDiceTemplates";
 import { Popover } from "../Popover";
@@ -86,7 +87,12 @@ export const iconMap: Record<typeof categoryIcons[number], IconDefinition> = {
   d20: faDiceD20,
 };
 
-type Section = "closed" | "Skills" | "STs" | RRDiceTemplateCategoryID;
+type Section =
+  | "closed"
+  | "Dice Input"
+  | "Skills"
+  | "STs"
+  | RRDiceTemplateCategoryID;
 
 const actionClasses =
   "snap-start border-black border flex items-center justify-center p-3 -mr-px last:mr-0 cursor-pointer";
@@ -95,7 +101,7 @@ const activeClass = (active: boolean) =>
 const highlightClass = (shouldHighlight: boolean, active: boolean) =>
   shouldHighlight ? (active ? "bg-green-400" : "bg-green-600") : "";
 
-export const ActionsHUD = React.memo(function DicePanel() {
+export const ActionsHUD = React.memo(function ActionsHUD() {
   const [active, setActive] = useState<Section>("closed");
   const myself = useMyProps("diceTemplateCategories", "id", "mainCharacterId");
   const dispatch = useServerDispatch();
@@ -105,6 +111,7 @@ export const ActionsHUD = React.memo(function DicePanel() {
 
   useEffect(() => {
     if (
+      active !== "Dice Input" &&
       active !== "Skills" &&
       active !== "STs" &&
       myself.diceTemplateCategories.find((cat) => cat.id === active) ===
@@ -240,6 +247,8 @@ export const ActionsHUD = React.memo(function DicePanel() {
       (cat) => cat.id === active
     );
     switch (active) {
+      case "Dice Input":
+        return <DicePanel />;
       case "Skills":
         return <GeneratedDiceTemplates templates={skillTemplates} />;
       case "STs":
@@ -270,6 +279,18 @@ export const ActionsHUD = React.memo(function DicePanel() {
           { "rounded-tl-none": active !== "closed" }
         )}
       >
+        <RRTooltip content="Dice Input" placement="top">
+          <Button
+            unstyled
+            className={clsx(
+              actionClasses,
+              activeClass(active === "Dice Input")
+            )}
+            onClick={() => toggle("Dice Input")}
+          >
+            <FontAwesomeIcon size="lg" icon={faDiceD20} fixedWidth />
+          </Button>
+        </RRTooltip>
         <RRTooltip content="Saving Throws" placement="top">
           <Button
             unstyled
@@ -282,7 +303,7 @@ export const ActionsHUD = React.memo(function DicePanel() {
           >
             <FontAwesomeIcon size="lg" icon={faShieldAlt} fixedWidth />
           </Button>
-        </RRTooltip>{" "}
+        </RRTooltip>
         <RRTooltip content="Skill Checks" placement="top">
           <Button
             unstyled
