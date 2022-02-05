@@ -8,7 +8,13 @@ import type {
 } from "roughjs/bin/core";
 import { RoughGenerator } from "roughjs/bin/generator";
 import { RRPoint } from "../../shared/state";
-import { makePoint } from "../../shared/point";
+import {
+  pointAdd,
+  pointNormalize,
+  pointScale,
+  pointSubtract,
+  pointLeftRotate,
+} from "../../shared/point";
 import { randomSeed } from "roughjs/bin/math";
 import { assertNever, hashString } from "../../shared/util";
 import {
@@ -29,6 +35,8 @@ import FontFaceObserver from "fontfaceobserver"; // cspell: disable-line
 const DEFAULT_ROUGHNESS = 3;
 
 const STROKE_WIDTH_SIMPLE = 4;
+
+const EPSILON = 5;
 
 export const RoughContext = React.createContext<RoughGenerator | null>(null);
 
@@ -194,30 +202,43 @@ const DrawablePrimitive = React.forwardRef<
   {
     x: number;
     y: number;
+    hitArea: PIXI.IHitArea;
     drawable: Drawable;
     generator: RoughGenerator;
   } & Omit<Container, "x" | "y" | "interactiveChildren" | "hitArea"> &
     InteractiveComponent
 >(function DrawablePrimitive(
-  { drawable, generator, x, y, children, ...props },
+  {
+    drawable,
+    generator,
+    x,
+    y,
+    hitArea,
+    children,
+    interactive,
+    click,
+    mousedown,
+    mouseup,
+    ...props
+  },
   ref
 ) {
   return (
     <Container
       {...props}
-      // TODO: We need a better way to determine which area registers events.
-      // TODO: This [1] suggests that it might be better to use `containsPoint`
-      // [1] https://github.com/pixijs/pixijs/issues/6614
-      hitArea={new PIXI.Rectangle(0, 0, 100, 100)}
-      interactiveChildren={false}
       x={x}
       y={y}
       ref={ref}
+      interactive={interactive}
+      interactiveChildren={false}
+      click={click}
+      mousedown={mousedown}
+      mouseup={mouseup}
+      hitArea={hitArea}
     >
       {drawable.sets.map((drawing, i) => (
         <OpSetToPIXI key={i} opSet={drawing} options={drawable.options} />
       ))}
-      {children}
     </Container>
   );
 });
@@ -240,22 +261,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
     customProps: C,
     options: PassedThroughOptions & { seed: number }
   ) => Drawable,
-  generateSimple: (
-    customProps: C & {
-      name?: string;
-      x: number;
-      y: number;
-      onClick?: (e: React.MouseEvent<SVGElement>) => void;
-      children?: React.ReactNode;
-      onMouseDown?: (e: React.MouseEvent<SVGElement>) => void;
-      onMouseUp?: (e: React.MouseEvent<SVGElement>) => void;
-      onContextMenu?: (e: React.MouseEvent<SVGElement>) => void;
-    } & Pick<
-        PassedThroughOptions,
-        "fill" | "stroke" | "strokeWidth" | "strokeLineDash"
-      >,
-    ref: React.ForwardedRef<E>
-  ) => React.ReactElement
+  generateHitArea: (customProps: C) => PIXI.IHitArea
 ) {
   const component = React.memo(
     React.forwardRef<
@@ -338,6 +344,15 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
             ...Object.values(generatorProps),
           ]
         );
+        const hitArea = useMemo(
+          () => generateHitArea(generatorProps as C),
+          // eslint-disable-next-line react-hooks/exhaustive-deps
+          [
+            // TODO
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            ...Object.values(generatorProps),
+          ]
+        );
 
         if (generator) {
           if (!drawable) {
@@ -352,6 +367,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
               generator={generator}
               x={x}
               y={y}
+              hitArea={hitArea}
               interactive
               cursor={cursor}
               click={rrToPixiHandler(onClick)}
@@ -364,24 +380,8 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
             </DrawablePrimitive>
           );
         } else {
-          return generateSimple(
-            {
-              name,
-              x,
-              y,
-              children,
-              onClick,
-              onMouseDown,
-              onMouseUp,
-              onContextMenu,
-              fill,
-              stroke,
-              strokeLineDash,
-              strokeWidth: strokeWidth ?? STROKE_WIDTH_SIMPLE,
-              ...(generatorProps as C),
-            },
-            ref as React.ForwardedRef<E>
-          );
+          // TODO: Maybe support simple display mode again.
+          return null;
         }
       }
     )
@@ -400,33 +400,16 @@ export const RoughLine = makeRoughComponent<
 >(
   "RoughLine",
   (generator, { w, h }, options) => generator.line(0, 0, w, h, options),
-  ({ x, y, w, h, strokeLineDash: _, ...rest }, ref) => (
-    <line x1={x} y1={y} x2={x + w} y2={y + h} ref={ref} {...rest} />
-  )
+  ({ w, h }) => {
+    const perpendicular = pointNormalize(pointLeftRotate({ x: w, y: h }));
+    const tl = pointScale(perpendicular, -0.5 * EPSILON);
+    const tr = pointAdd(tl, { x: w, y: h });
+    const br = pointAdd(tr, pointScale(perpendicular, EPSILON));
+    const bl = pointSubtract(br, { x: w, y: h });
+
+    return new PIXI.Polygon([tl, tr, br, bl]);
+  }
 );
-
-function correctNegativeSize({
-  x,
-  y,
-  w,
-  h,
-}: {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}) {
-  if (w < 0) {
-    x = x + w;
-    w = -w;
-  }
-  if (h < 0) {
-    y = y + h;
-    h = -h;
-  }
-
-  return { x, y, w, h };
-}
 
 export const RoughRectangle = makeRoughComponent<
   {
@@ -437,10 +420,8 @@ export const RoughRectangle = makeRoughComponent<
 >(
   "RoughRectangle",
   (generator, { w, h }, options) => generator.rectangle(0, 0, w, h, options),
-  ({ x: ox, y: oy, w: ow, h: oh, strokeLineDash: _, ...rest }, ref) => {
-    const { x, y, w, h } = correctNegativeSize({ x: ox, y: oy, w: ow, h: oh });
-    return <rect x={x} y={y} width={w} height={h} ref={ref} {...rest} />;
-  }
+  ({ w, h }) =>
+    new PIXI.Rectangle(w < 0 ? w : 0, h < 0 ? h : 0, Math.abs(w), Math.abs(h))
 );
 
 export const RoughEllipse = makeRoughComponent<
@@ -453,29 +434,16 @@ export const RoughEllipse = makeRoughComponent<
   "RoughEllipse",
   (generator, { w, h }, options) =>
     generator.ellipse(w / 2, h / 2, w, h, options),
-  ({ x: ox, y: oy, w: ow, h: oh, strokeLineDash: _, ...rest }, ref) => {
-    const { x, y, w, h } = correctNegativeSize({ x: ox, y: oy, w: ow, h: oh });
-    return (
-      <ellipse
-        cx={x + w / 2}
-        cy={y + h / 2}
-        rx={w / 2}
-        ry={h / 2}
-        ref={ref}
-        {...rest}
-      />
-    );
+  ({ w, h }) => {
+    return new PIXI.Ellipse(w / 2, h / 2, Math.abs(w) / 2, Math.abs(h) / 2);
   }
 );
 
 export const RoughCircle = makeRoughComponent<{ d: number }, SVGCircleElement>(
   "RoughCircle",
   (generator, { d }, options) => generator.circle(d / 2, d / 2, d, options),
-  ({ x: ox, y: oy, d: od, strokeLineDash: _, ...rest }, ref) => {
-    const { x, y, w: d } = correctNegativeSize({ x: ox, y: oy, w: od, h: od });
-    return (
-      <circle cx={x + d / 2} cy={y + d / 2} r={d / 2} ref={ref} {...rest} />
-    );
+  ({ d }) => {
+    return new PIXI.Ellipse(d / 2, d / 2, Math.abs(d) / 2, Math.abs(d) / 2);
   }
 );
 
@@ -487,9 +455,7 @@ export const RoughSVGPath = makeRoughComponent<
 >(
   "RoughSVGPath",
   (generator, { path }, options) => generator.path(path, options),
-  ({ x, y, path, strokeLineDash: _, ...rest }, ref) => (
-    <path x={x} y={y} d={path} ref={ref} {...rest} />
-  )
+  ({ path }) => new PIXI.Rectangle(0, 0, 100, 100)
 );
 
 export const RoughLinearPath = makeRoughComponent<
@@ -504,16 +470,32 @@ export const RoughLinearPath = makeRoughComponent<
       [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
       options
     ),
-  ({ x, y, points, fill, strokeLineDash: _, ...rest }, ref) => (
-    <polyline
-      ref={ref}
-      fill="none"
-      points={[makePoint(0), ...points]
-        .map(({ x: px, y: py }) => `${x + px},${y + py}`)
-        .join(" ")}
-      {...rest}
-    />
-  )
+  ({ points }) => {
+    const thickPoints: RRPoint[] = [];
+    points = [{ x: 0, y: 0 }, ...points];
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const point = points[i]!;
+      const dir = pointSubtract(points[i + 1]!, point);
+      const perpendicular = pointNormalize(pointLeftRotate(dir));
+      const tl = pointAdd(pointScale(perpendicular, 0.5 * EPSILON), point);
+      const tr = pointAdd(tl, dir);
+      thickPoints.push(tl);
+      thickPoints.push(tr);
+    }
+
+    for (let i = points.length - 1; i > 0; i--) {
+      const point = points[i]!;
+      const dir = pointSubtract(points[i - 1]!, point);
+      const perpendicular = pointNormalize(pointLeftRotate(dir));
+      const br = pointAdd(pointScale(perpendicular, 0.5 * EPSILON), point);
+      const bl = pointAdd(br, dir);
+      thickPoints.push(br);
+      thickPoints.push(bl);
+    }
+
+    return new PIXI.Polygon(thickPoints);
+  }
 );
 
 export const RoughPolygon = makeRoughComponent<
@@ -528,15 +510,7 @@ export const RoughPolygon = makeRoughComponent<
       [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
       options
     ),
-  ({ x, y, points, strokeLineDash: _, ...rest }, ref) => (
-    <polygon
-      points={[makePoint(0), ...points]
-        .map(({ x: px, y: py }) => `${x + px},${y + py}`)
-        .join(" ")}
-      ref={ref}
-      {...rest}
-    />
-  )
+  ({ points }) => new PIXI.Polygon(points)
 );
 
 const fontObserver = new (class {
