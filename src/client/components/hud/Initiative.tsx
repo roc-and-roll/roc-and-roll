@@ -211,17 +211,6 @@ export function InitiativeHUD() {
     <div className="absolute inset-2 h-24 pointer-events-none">
       <Flipper flipKey={sortedRows.map((row) => row.id).join("-")}>
         <ul role="list" className="inline-flex flex-wrap pointer-events-auto">
-          {sortedRows.map((entry, idx) => (
-            <InitiativeEntry
-              key={entry.id}
-              inverseIdx={sortedRows.length - idx - 1}
-              entry={entry}
-              isCurrentEntry={entry.id === initiativeTracker.currentEntryId}
-              characterCollection={characterCollection}
-              playerCollection={playerCollection}
-              myself={myself}
-            />
-          ))}
           <RollInitiative
             isGM={myself.isGM}
             clearInitiative={() =>
@@ -233,6 +222,17 @@ export function InitiativeHUD() {
             characterCollection={characterCollection}
             myselfId={myself.id}
           />
+          {sortedRows.map((entry, idx) => (
+            <InitiativeEntry
+              key={entry.id}
+              inverseIdx={sortedRows.length - idx - 1}
+              entry={entry}
+              isCurrentEntry={entry.id === initiativeTracker.currentEntryId}
+              characterCollection={characterCollection}
+              playerCollection={playerCollection}
+              myself={myself}
+            />
+          ))}
         </ul>
       </Flipper>
       {canEdit && <YourTurn endTurnButton={endTurnButton} />}
@@ -600,25 +600,26 @@ const RollInitiativeDeferredImpl = React.memo<{
           >
             <FontAwesomeIcon icon={faDiceD20} />
           </Button>
-          <div className="flex flex-col mx-2">
-            <Button
-              className="initiative-modified"
-              disabled={mapObjectsOutdated}
-              onClick={() => roll("advantage")}
-            >
-              Adv
-            </Button>
-            <Button
-              className="initiative-modified"
-              disabled={mapObjectsOutdated}
-              onClick={() => roll("disadvantage")}
-            >
-              Dis
-            </Button>
-          </div>
-          <div className="flex flex-col w-16">
+          <div className="flex flex-col mx-2 justify-center">
+            <div className="flex flex-row">
+              <Button
+                className="p-0"
+                w-8
+                disabled={mapObjectsOutdated}
+                onClick={() => roll("advantage")}
+              >
+                Adv
+              </Button>
+              <Button
+                className="p-0 w-8"
+                disabled={mapObjectsOutdated}
+                onClick={() => roll("disadvantage")}
+              >
+                Dis
+              </Button>
+            </div>
             <input
-              className="w-full text-center"
+              className="w-16 text-center"
               value={
                 allHaveSameInitiative ? allSelectedInitiatives[0]! : modifier
               }
