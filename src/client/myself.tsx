@@ -101,7 +101,9 @@ export function useMySelectedCharacters<T extends (keyof RRCharacter)[]>(
         (characterId) => state.characters.entities[characterId] ?? []
       ),
     fields.length === 0
-      ? undefined
+      ? (current, next) =>
+          current.length === next.length &&
+          current.every((each, i) => each === next[i])
       : (current, next) =>
           current.length === next.length &&
           current.every((each, i) => each.id === next[i]!.id) &&

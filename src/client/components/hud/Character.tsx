@@ -5,10 +5,7 @@ import {
   RRCharacterID,
   RRLimitedUseSkill,
 } from "../../../shared/state";
-import {
-  useMyActiveCharacter,
-  useMyProps,
-} from "../../myself";
+import { useMyActiveCharacter, useMyProps } from "../../myself";
 import { useServerDispatch } from "../../state";
 import { CharacterPreview } from "../characters/CharacterPreview";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
