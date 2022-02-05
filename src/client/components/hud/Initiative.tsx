@@ -603,8 +603,7 @@ const RollInitiativeDeferredImpl = React.memo<{
           <div className="flex flex-col mx-2 justify-center">
             <div className="flex flex-row">
               <Button
-                className="p-0"
-                w-8
+                className="p-0 w-8"
                 disabled={mapObjectsOutdated}
                 onClick={() => roll("advantage")}
               >
