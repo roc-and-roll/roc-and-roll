@@ -58,6 +58,7 @@ import {
   useMySelectedCharacters,
 } from "../../myself";
 import { useServerDispatch } from "../../state";
+import { DicePanel } from "../diceTemplates/DicePanel";
 import { DiceTemplates } from "../diceTemplates/DiceTemplates";
 import { GeneratedDiceTemplates } from "../diceTemplates/GeneratedDiceTemplates";
 import { Popover } from "../Popover";
@@ -91,7 +92,12 @@ export const iconMap: Record<typeof categoryIcons[number], IconDefinition> = {
   d20: faDiceD20,
 };
 
-type Section = "closed" | "Skills" | "STs" | RRDiceTemplateCategoryID;
+type Section =
+  | "closed"
+  | "Dice Input"
+  | "Skills"
+  | "STs"
+  | RRDiceTemplateCategoryID;
 
 const actionClasses =
   "snap-start border-black border flex items-center justify-center p-3 -mr-px last:mr-0 cursor-pointer";
@@ -128,6 +134,7 @@ export const InnerActionsHUD = function ({
 
   useEffect(() => {
     if (
+      active !== "Dice Input" &&
       active !== "Skills" &&
       active !== "STs" &&
       character.diceTemplateCategories.find((cat) => cat.id === active) ===
@@ -246,6 +253,8 @@ export const InnerActionsHUD = function ({
       (cat) => cat.id === active
     );
     switch (active) {
+      case "Dice Input":
+        return <DicePanel />;
       case "Skills":
         return <GeneratedDiceTemplates templates={skillTemplates} />;
       case "STs":
@@ -276,6 +285,18 @@ export const InnerActionsHUD = function ({
           { "rounded-tl-none": active !== "closed" }
         )}
       >
+        <RRTooltip content="Dice Input" placement="top">
+          <Button
+            unstyled
+            className={clsx(
+              actionClasses,
+              activeClass(active === "Dice Input")
+            )}
+            onClick={() => toggle("Dice Input")}
+          >
+            <FontAwesomeIcon size="lg" icon={faDiceD20} fixedWidth />
+          </Button>
+        </RRTooltip>
         <RRTooltip content="Saving Throws" placement="top">
           <Button
             unstyled
@@ -288,7 +309,7 @@ export const InnerActionsHUD = function ({
           >
             <FontAwesomeIcon size="lg" icon={faShieldAlt} fixedWidth />
           </Button>
-        </RRTooltip>{" "}
+        </RRTooltip>
         <RRTooltip content="Skill Checks" placement="top">
           <Button
             unstyled

@@ -2,7 +2,7 @@
 import { AbstractMigration } from "../migrations";
 
 export default class extends AbstractMigration {
-  version = 30;
+  version = 31;
   migrate = async (state: any) => {
     Object.values(
       state.characterTemplates.entities as Record<

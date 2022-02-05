@@ -96,6 +96,7 @@ export function DiceInterface() {
             diceRollTree: rollDiceRollTree(diceRollTree),
             rollType: null,
             rollName: null,
+            tooltip: null,
           },
         })
       );
@@ -149,29 +150,27 @@ export function DiceInterface() {
     <>
       <div id="pane">
         <div>
-          <table
-            style={{
-              width: "100%",
-              height: "100%",
-              border: "1px lightgray solid",
-            }}
-          >
+          <table className="w-full h-full">
             <tbody>
               <tr>
-                <th style={{ width: "33%" }}>Type</th>
-                <th style={{ width: "33%" }}>Bonus</th>
+                <th className="w-1/3">Type</th>
+                <th className="w-1/3">Bonus</th>
                 <th />
               </tr>
               <tr>
-                <td className="buttons-full-width">
+                <td>
                   {[4, 6, 8, 10, 12].map((dice) => (
-                    <Button key={dice} onClick={() => addDiceType(`d${dice}`)}>
+                    <Button
+                      key={dice}
+                      onClick={() => addDiceType(`d${dice}`)}
+                      className="w-full"
+                    >
                       d{dice}
                     </Button>
                   ))}
-                  <div style={{ display: "flex" }}>
+                  <div className="flex">
                     <Button
-                      style={{ width: "40%" }}
+                      className="w-2/5"
                       onClick={() => addDiceType("d20")}
                     >
                       d20
@@ -192,26 +191,21 @@ export function DiceInterface() {
                     </Button>
                   </div>
                 </td>
-                <td className="buttons-half-width">
-                  <div>
-                    <Button onClick={() => addBonus(-2)}>-2</Button>
-                    <Button onClick={() => addBonus(-1)}>-1</Button>
-                    <Button onClick={() => addBonus(1)}>+1</Button>
-                    <Button onClick={() => addBonus(2)}>+2</Button>
-                    <Button onClick={() => addBonus(3)}>+3</Button>
-                    <Button onClick={() => addBonus(4)}>+4</Button>
-                  </div>
-                  <div>
-                    {[5, 6, 7, 8, 9, 10].map((bonus) => (
-                      <Button key={bonus} onClick={() => addBonus(bonus)}>
-                        +{bonus}
-                      </Button>
-                    ))}
-                  </div>
+                <td className="flex flex-wrap flex-col h-[182px]">
+                  {[-1, -2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((bonus) => (
+                    <Button
+                      className="h-1/6 w-1/2 flex-1"
+                      key={bonus}
+                      onClick={() => addBonus(bonus)}
+                    >
+                      {bonus > 0 ? "+" + bonus.toString() : bonus}
+                    </Button>
+                  ))}
                 </td>
 
-                <td className="buttons-full-width">
+                <td>
                   <Button
+                    className="w-full"
                     disabled={!character}
                     onClick={() => doRoll(true)}
                     title={character ? undefined : "No character selected"}
@@ -219,7 +213,7 @@ export function DiceInterface() {
                     <p>Template</p>
                   </Button>
                   <Button
-                    className="roll-it-button"
+                    className="w-full h-[120px]"
                     onClick={() => doRoll(false)}
                     disabled={bonuses === null && diceTypes.length === 0}
                   >
@@ -233,7 +227,9 @@ export function DiceInterface() {
                         : bonuses.toString()}
                     </div>
                   </Button>
-                  <Button onClick={() => clear()}>Clear Input</Button>
+                  <Button className="w-full" onClick={() => clear()}>
+                    Clear Input
+                  </Button>
                 </td>
               </tr>
             </tbody>

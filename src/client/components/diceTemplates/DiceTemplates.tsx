@@ -15,7 +15,7 @@ import {
   RRDiceTemplateCategoryID,
   RRDiceTemplatePartLinkedModifier,
 } from "../../../shared/state";
-import { empty2Null, rrid } from "../../../shared/util";
+import { rrid } from "../../../shared/util";
 import {
   RRDiceTemplate,
   RRDiceTemplateCategory,
@@ -95,11 +95,26 @@ export const DiceTemplates = React.memo(function DiceTemplates({
     const rollTemplates = selectedTemplates.flatMap(
       ({ template }) => category.templates.find((t) => t === template) ?? []
     );
-    const rollName = empty2Null(
-      rollTemplates
-        .map((template) => template.name)
+
+    const countTemplateString = (templates: RRDiceTemplate[]) => {
+      const templateTimes: Record<string, number> = {};
+      templates.map(
+        (template) =>
+          (templateTimes[template.name] = templateTimes[template.name]
+            ? templateTimes[template.name]! + 1
+            : 1)
+      );
+      return Object.entries(templateTimes)
+        .map(([key, value]) =>
+          value > 1 ? value.toString() + "× " + key : key
+        )
         .join(" ")
-        .trim()
+        .trim();
+    };
+
+    const rollName = countTemplateString(rollTemplates);
+    const tooltip = countTemplateString(
+      selectedTemplates.map(({ template }) => template)
     );
 
     dispatch(
@@ -107,6 +122,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
         silent: false,
         playerId: myself.id,
         payload: {
+          tooltip: tooltip,
           rollType: "attack", // TODO
           rollName,
           diceRollTree:

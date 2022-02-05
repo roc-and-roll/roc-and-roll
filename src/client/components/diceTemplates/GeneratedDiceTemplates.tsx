@@ -60,6 +60,7 @@ function GeneratedDiceTemplate({ template }: { template: RRDiceTemplate }) {
         silent: false,
         playerId: myself.id,
         payload: {
+          tooltip: null,
           rollType: "attack", // TODO
           rollName: template.name,
           diceRollTree:

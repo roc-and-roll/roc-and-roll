@@ -4,7 +4,6 @@ import {
   faChevronDown,
   faChevronUp,
   faCog,
-  faDiceD20,
   faMapSigns,
   faMusic,
   faPhotoVideo,
@@ -22,7 +21,6 @@ import { CharacterManager } from "../characters/CharacterManager";
 import { Collapsible } from "../Collapsible";
 import { Compendium } from "../compendium/Compendium";
 import { Dialog, DialogContent, DialogTitle } from "../Dialog";
-import { DicePanel } from "../DicePanel";
 import { GMArea } from "../GMArea";
 import { Maps } from "../Maps";
 import { Modding } from "../Modding";
@@ -141,14 +139,6 @@ export const HUDToolbar = React.memo(function Toolbar() {
       gmOnly: false,
       icon: faStreetView,
       iconTooltip: "Characters",
-    },
-    {
-      id: "dice",
-      collapsed: false,
-      content: <DicePanel />,
-      gmOnly: false,
-      icon: faDiceD20,
-      iconTooltip: "Dice Rolling",
     },
   ];
 

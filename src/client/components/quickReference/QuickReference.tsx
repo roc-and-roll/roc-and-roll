@@ -321,6 +321,7 @@ function RollScaledLink({
           diceRollTree: parseDiceStringAndRoll(diceString),
           rollType: isDamage ? "hit" : null,
           rollName: `${rollName} (level ${level})`,
+          tooltip: null,
         };
       }}
     />
@@ -382,6 +383,7 @@ function TextEntryString({
                   diceRollTree: parseDiceStringAndRoll(diceString),
                   rollType: command === "damage" ? "attack" : null,
                   rollName,
+                  tooltip: null,
                 })}
               />
             );
@@ -426,6 +428,7 @@ function TextEntryString({
                   },
                   rollType: command === "hit" ? "attack" : null,
                   rollName,
+                  tooltip: null,
                 })}
               />
             );
