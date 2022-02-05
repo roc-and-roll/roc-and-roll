@@ -275,7 +275,7 @@ function EndTurnButton({
 function YourTurn({ endTurnButton }: { endTurnButton: React.ReactNode }) {
   return ReactDOM.createPortal(
     <>
-      <div className="absolute inset-0 h-full w-full opacity-70 border-rr-500 border animate-border-wiggle pointer-events-none flex justify-center items-start z-20 your-turn-border"></div>
+      <div className="animate-border-color absolute inset-0 h-full w-full border-[16px] pointer-events-none flex justify-center items-start z-20 "></div>
       {endTurnButton}
     </>,
     document.body
