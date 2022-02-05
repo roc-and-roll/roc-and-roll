@@ -483,6 +483,7 @@ export type CompendiumMonster = {
   cha?: number;
 
   action?: { name: string; entries: CompendiumTextEntry[] }[];
+  legendary?: { name: string; entries: CompendiumTextEntry[] }[];
 
   immune?: Array<
     | NonNullable<RRDamageType["type"]>
@@ -514,7 +515,6 @@ export type CompendiumMonster = {
   hasFluffImages?: any;
   srd?: any;
   save?: any;
-  legendary?: any;
   legendaryActions?: any;
   legendaryGroup?: any;
   traitTags?: any;
@@ -603,6 +603,9 @@ export const isMonster = z.strictObject({
   action: z.optional(
     z.array(z.strictObject({ name: z.string(), entries: z.array(isTextEntry) }))
   ),
+  legendary: z.optional(
+    z.array(z.strictObject({ name: z.string(), entries: z.array(isTextEntry) }))
+  ),
   immune: z.optional(
     z.array(
       z.enum(damageTypesWithoutNull).or(
@@ -655,7 +658,6 @@ export const isMonster = z.strictObject({
   hasFluffImages: z.any(),
   srd: z.any(),
   save: z.any(),
-  legendary: z.any(),
   legendaryActions: z.any(),
   legendaryGroup: z.any(),
   traitTags: z.any(),

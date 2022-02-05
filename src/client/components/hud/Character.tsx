@@ -34,6 +34,7 @@ import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants"
 import { useDrag } from "react-dnd";
 import clsx from "clsx";
 import { Button } from "../ui/Button";
+import { CombatCardHUD } from "./CombatCard";
 
 const characterProps = [
   "id",
@@ -87,6 +88,7 @@ export function CharacterHUD() {
               />
               {skillsVisible && <LimitedUse character={character} />}
             </div>
+            <CombatCardHUD />
           </div>
         )}
         <div className="flex flex-col items-center pointer-events-auto min-h-min">
