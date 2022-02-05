@@ -55,20 +55,24 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
 
 export function useMyActiveCharacter<T extends (keyof RRCharacter)[]>(
   ...fields: T
-): Pick<RRCharacter, IterableElement<T>> | null {
-  const selected = useMySelectedCharacters(...fields);
+): [] extends T
+  ? RRCharacter | null
+  : Pick<RRCharacter, IterableElement<T>> | null {
+  const selected = useMySelectedCharacters(...fields)[0] ?? null;
   const myself = useMyProps("mainCharacterId");
   const characters = useServerState((s) => s.characters).entities;
 
   return (
-    selected[0] ??
+    (selected as [] extends T
+      ? RRCharacter | null
+      : Pick<RRCharacter, IterableElement<T>> | null) ??
     (myself.mainCharacterId ? characters[myself.mainCharacterId] ?? null : null)
   );
 }
 
 export function useMySelectedCharacters<T extends (keyof RRCharacter)[]>(
   ...fields: T
-): Pick<RRCharacter, IterableElement<T>>[] {
+): [] extends T ? RRCharacter[] : Pick<RRCharacter, IterableElement<T>>[] {
   const myself = useMyProps("currentMap");
   const stateRef = useServerStateRef((state) => state);
 
@@ -96,12 +100,14 @@ export function useMySelectedCharacters<T extends (keyof RRCharacter)[]>(
       [...selectedCharacterIds.values()].flatMap(
         (characterId) => state.characters.entities[characterId] ?? []
       ),
-    (current, next) =>
-      current.length === next.length &&
-      current.every((each, i) => each.id === next[i]!.id) &&
-      fields.every((field) =>
-        current.every((each, i) => each[field] === next[i]![field])
-      )
+    fields.length === 0
+      ? undefined
+      : (current, next) =>
+          current.length === next.length &&
+          current.every((each, i) => each.id === next[i]!.id) &&
+          fields.every((field) =>
+            current.every((each, i) => each[field] === next[i]![field])
+          )
   );
 }
 
