@@ -296,100 +296,94 @@ export const isSyncedState = z.strictObject({
       characterIds: z.array(isRRID<RRCharacterID>()),
       mainCharacterId: z.nullable(isRRID<RRCharacterID>()),
       favoriteAssetIds: z.array(isRRID<RRAssetID>()),
-      diceTemplateCategories: z.array(isDiceTemplateCategory),
       hasHeroPoint: z.boolean(),
     })
   ),
-  ...withDo(
-    () =>
-      isEntityCollection(
+  characters: isEntityCollection(
+    z.strictObject({
+      id: isRRID<RRCharacterID>(),
+      name: z.string(),
+      isTemplate: z.boolean(),
+
+      tokenImageAssetId: isRRID<RRAssetID>(),
+      tokenBorderColor: isColor,
+      scale: z.number().min(1),
+
+      auras: z.array(
         z.strictObject({
-          id: isRRID<RRCharacterID>(),
-          name: z.string(),
-
-          tokenImageAssetId: isRRID<RRAssetID>(),
-          tokenBorderColor: isColor,
-          scale: z.number().min(1),
-
-          auras: z.array(
-            z.strictObject({
-              size: z.number().int().min(0),
-              color: isColor,
-              shape: z.enum(["circle", "square"] as const),
-              visibility: z.enum([
-                "playerOnly",
-                "playerAndGM",
-                "everyone",
-              ] as const),
-              visibleWhen: z.enum(["always", "onTurn", "hover"] as const),
-            })
-          ),
-          limitedUseSkills: z.array(
-            z.strictObject({
-              maxUseCount: z.number().int().min(0),
-              currentUseCount: z.number().int().min(0),
-              restoresAt: z.enum(["shortRest", "longRest"] as const),
-              name: z.string(),
-            })
-          ),
-          hp: z.number().int(),
-          temporaryHP: z.number().int().min(0),
-          maxHP: z.number().int().min(0),
-          // Like from the Hero's Feast, which increases your hit point maximum.
-          // Can also be used to decrease the hit point maximum temporarily.
-          maxHPAdjustment: z.number().int(),
-
-          ac: z.nullable(z.number().int().min(0)),
-          spellSaveDC: z.nullable(z.number().int().min(0)),
-
-          attributes: z.strictObject({
-            initiative: z.number().int().nullable(),
-            proficiency: z.number().int().nullable(),
-          }),
-          stats: z.strictObject({
-            STR: z.number().int().nullable(),
-            DEX: z.number().int().nullable(),
-            CON: z.number().int().nullable(),
-            INT: z.number().int().nullable(),
-            WIS: z.number().int().nullable(),
-            CHA: z.number().int().nullable(),
-          }),
-          conditions: z.array(z.enum(conditionNames)),
-          skills: z.strictObject({
-            Athletics: isProficiencyValue.nullable(),
-            Acrobatics: isProficiencyValue.nullable(),
-            "Sleight of Hand": isProficiencyValue.nullable(),
-            Stealth: isProficiencyValue.nullable(),
-            Arcana: isProficiencyValue.nullable(),
-            History: isProficiencyValue.nullable(),
-            Investigation: isProficiencyValue.nullable(),
-            Nature: isProficiencyValue.nullable(),
-            Religion: isProficiencyValue.nullable(),
-            "Animal Handling": isProficiencyValue.nullable(),
-            Insight: isProficiencyValue.nullable(),
-            Medicine: isProficiencyValue.nullable(),
-            Perception: isProficiencyValue.nullable(),
-            Survival: isProficiencyValue.nullable(),
-            Deception: isProficiencyValue.nullable(),
-            Intimidation: isProficiencyValue.nullable(),
-            Performance: isProficiencyValue.nullable(),
-            Persuasion: isProficiencyValue.nullable(),
-          }),
-          savingThrows: z.strictObject({
-            STR: isProficiencyValue.nullable(),
-            DEX: isProficiencyValue.nullable(),
-            CON: isProficiencyValue.nullable(),
-            INT: isProficiencyValue.nullable(),
-            WIS: isProficiencyValue.nullable(),
-            CHA: isProficiencyValue.nullable(),
-          }),
-          visibility: z.enum(["gmOnly", "everyone"] as const),
-          localToMap: z.nullable(isRRID<RRMapID>()),
+          size: z.number().int().min(0),
+          color: isColor,
+          shape: z.enum(["circle", "square"] as const),
+          visibility: z.enum([
+            "playerOnly",
+            "playerAndGM",
+            "everyone",
+          ] as const),
+          visibleWhen: z.enum(["always", "onTurn", "hover"] as const),
         })
       ),
-    (makeValidator) => ({
-      characters: makeValidator(),
-      characterTemplates: makeValidator(),
+      limitedUseSkills: z.array(
+        z.strictObject({
+          maxUseCount: z.number().int().min(0),
+          currentUseCount: z.number().int().min(0),
+          restoresAt: z.enum(["shortRest", "longRest"] as const),
+          name: z.string(),
+        })
+      ),
+      hp: z.number().int(),
+      temporaryHP: z.number().int().min(0),
+      maxHP: z.number().int().min(0),
+      // Like from the Hero's Feast, which increases your hit point maximum.
+      // Can also be used to decrease the hit point maximum temporarily.
+      maxHPAdjustment: z.number().int(),
+
+      ac: z.nullable(z.number().int().min(0)),
+      spellSaveDC: z.nullable(z.number().int().min(0)),
+
+      attributes: z.strictObject({
+        initiative: z.number().int().nullable(),
+        proficiency: z.number().int().nullable(),
+      }),
+      stats: z.strictObject({
+        STR: z.number().int().nullable(),
+        DEX: z.number().int().nullable(),
+        CON: z.number().int().nullable(),
+        INT: z.number().int().nullable(),
+        WIS: z.number().int().nullable(),
+        CHA: z.number().int().nullable(),
+      }),
+      conditions: z.array(z.enum(conditionNames)),
+      skills: z.strictObject({
+        Athletics: isProficiencyValue.nullable(),
+        Acrobatics: isProficiencyValue.nullable(),
+        "Sleight of Hand": isProficiencyValue.nullable(),
+        Stealth: isProficiencyValue.nullable(),
+        Arcana: isProficiencyValue.nullable(),
+        History: isProficiencyValue.nullable(),
+        Investigation: isProficiencyValue.nullable(),
+        Nature: isProficiencyValue.nullable(),
+        Religion: isProficiencyValue.nullable(),
+        "Animal Handling": isProficiencyValue.nullable(),
+        Insight: isProficiencyValue.nullable(),
+        Medicine: isProficiencyValue.nullable(),
+        Perception: isProficiencyValue.nullable(),
+        Survival: isProficiencyValue.nullable(),
+        Deception: isProficiencyValue.nullable(),
+        Intimidation: isProficiencyValue.nullable(),
+        Performance: isProficiencyValue.nullable(),
+        Persuasion: isProficiencyValue.nullable(),
+      }),
+      savingThrows: z.strictObject({
+        STR: isProficiencyValue.nullable(),
+        DEX: isProficiencyValue.nullable(),
+        CON: isProficiencyValue.nullable(),
+        INT: isProficiencyValue.nullable(),
+        WIS: isProficiencyValue.nullable(),
+        CHA: isProficiencyValue.nullable(),
+      }),
+      visibility: z.enum(["gmOnly", "everyone"] as const),
+      localToMap: z.nullable(isRRID<RRMapID>()),
+      diceTemplateCategories: z.array(isDiceTemplateCategory),
     })
   ),
   maps: isEntityCollection(
@@ -522,6 +516,7 @@ export const isSyncedState = z.strictObject({
             ...sharedValidators,
             type: z.literal("diceRoll"),
             payload: z.strictObject({
+              tooltip: z.nullable(z.string()),
               rollType: isRollType,
               rollName: z.nullable(z.string()),
               diceRollTree: isDiceRollTree(true),

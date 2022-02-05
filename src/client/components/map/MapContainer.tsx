@@ -8,6 +8,8 @@ import {
   characterAdd,
   mapSettingsUpdate,
   assetImageAdd,
+  initiativeTrackerEntryRemove,
+  initiativeTrackerEntryCharacterUpdate,
 } from "../../../shared/actions";
 import {
   entries,
@@ -19,6 +21,7 @@ import {
   RRMapRevealedAreas,
   RRPlayer,
   RRMapObjectID,
+  SyncedStateAction,
 } from "../../../shared/state";
 import { useMyProps } from "../../myself";
 import {
@@ -63,7 +66,6 @@ import { uploadFiles } from "../../files";
 import { MAP_LINK_SIZE } from "./MapLink";
 import {
   characterFamily,
-  characterTemplateFamily,
   selectedMapObjectIdsAtom,
   mapObjectsFamily,
   selectedMapObjectsFamily,
@@ -139,14 +141,6 @@ export default function MapContainer() {
     ({ snapshot }) =>
       (id: RRCharacterID) => {
         return snapshot.getLoadable(characterFamily(id)).getValue();
-      },
-    []
-  );
-
-  const getTemplateCharacter = useRecoilCallback(
-    ({ snapshot }) =>
-      (id: RRCharacterID) => {
-        return snapshot.getLoadable(characterTemplateFamily(id)).getValue();
       },
     []
   );
@@ -261,19 +255,17 @@ export default function MapContainer() {
 
         let characterId = item.id as RRCharacterID;
 
-        const character =
-          monitor.getItemType() === "tokenTemplate"
-            ? getTemplateCharacter(characterId)
-            : getCharacter(characterId);
+        const character = getCharacter(characterId);
 
         if (!character) return;
 
         // first create copy
-        if (monitor.getItemType() === "tokenTemplate") {
+        if (character.isTemplate) {
           const { id: _, ...copy } = character;
           const action = characterAdd({
             ...copy,
             localToMap: mapId,
+            isTemplate: false,
           });
           dispatch(action);
           characterId = action.payload.id;
@@ -302,13 +294,13 @@ export default function MapContainer() {
       dispatch,
       getCharacter,
       getOwnerOfCharacter,
-      getTemplateCharacter,
       getTransform,
       mapId,
       myself,
     ]
   );
   const dropRef = composeRefs<HTMLDivElement>(dropRef2, dropRef1);
+  const initiativeTracker = useServerState((state) => state.initiativeTracker);
 
   const handleKeyDown = useRecoilCallback(
     ({ snapshot, set, reset }) =>
@@ -350,7 +342,7 @@ export default function MapContainer() {
         switch (e.key) {
           case "Delete": {
             dispatch(
-              selectedMapObjectIds.map((mapObjectId) => {
+              selectedMapObjectIds.flatMap((mapObjectId) => {
                 const mapObject = snapshot
                   .getLoadable(mapObjectsFamily(mapObjectId))
                   .getValue()!;
@@ -358,11 +350,66 @@ export default function MapContainer() {
                   const character = snapshot
                     .getLoadable(characterFamily(mapObject.characterId))
                     .getValue()!;
-                  return mapObjectRemove({
-                    mapId,
-                    mapObject,
-                    relatedCharacter: character,
+
+                  const actions: SyncedStateAction[] = [
+                    mapObjectRemove({
+                      mapId,
+                      mapObject,
+                      relatedCharacter: character,
+                    }),
+                  ];
+
+                  //Check if other instances of this token still exist on the map
+                  //in that case dont delete it from the initiative
+                  if (
+                    entries(map.objects).findIndex(
+                      (object) =>
+                        !selectedMapObjectIds.includes(object.id) &&
+                        object.type === "token" &&
+                        object.characterId === character.id
+                    ) !== -1
+                  )
+                    return actions;
+
+                  const entryToRemove = entries(
+                    initiativeTracker.entries
+                  ).filter(
+                    (entry) =>
+                      entry.type === "character" &&
+                      entry.characterIds.length === 1 &&
+                      entry.characterIds[0] === character.id
+                  );
+                  if (entryToRemove.length === 1)
+                    actions.push(
+                      initiativeTrackerEntryRemove(entryToRemove[0]!.id)
+                    );
+
+                  //Remove deleted characters from token stack in initiative
+                  const updates: SyncedStateAction[] = entries(
+                    initiativeTracker.entries
+                  ).flatMap((entry) => {
+                    if (
+                      entry.type === "character" &&
+                      entry.characterIds.includes(character.id)
+                    ) {
+                      const res = [];
+                      if (entry.characterIds.length === 1) {
+                        res.push(initiativeTrackerEntryRemove(entry.id));
+                      }
+                      res.push(
+                        initiativeTrackerEntryCharacterUpdate({
+                          id: entry.id,
+                          changes: {
+                            characterIds: entry.characterIds.filter(
+                              (id) => id !== character.id
+                            ),
+                          },
+                        })
+                      );
+                      return res;
+                    } else return [];
                   });
+                  return [...actions, ...updates];
                 } else {
                   return mapObjectRemove({ mapId, mapObjectId });
                 }
@@ -396,7 +443,7 @@ export default function MapContainer() {
           e.stopPropagation();
         }
       },
-    [dispatch, mapId]
+    [dispatch, initiativeTracker.entries, map.objects, mapId]
   );
 
   const [editState, setEditState] = useState<MapEditState>({

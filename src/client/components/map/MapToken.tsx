@@ -330,6 +330,7 @@ function MapTokenInner({
           </>,
           healthBarArea
         )}
+
       {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, no-constant-condition
         false && canControl ? (
@@ -337,7 +338,6 @@ function MapTokenInner({
             content={
               <div onMouseDown={(e) => e.stopPropagation()}>
                 <CharacterEditor
-                  isTemplate={false}
                   character={character}
                   wasJustCreated={false}
                   onNameFirstEdited={() => {}}

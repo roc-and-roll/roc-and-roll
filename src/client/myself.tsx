@@ -25,6 +25,7 @@ export const MyselfContext = React.createContext<{
   setMyPlayerId: () => {},
   forgetMyPlayerId: () => {},
 });
+
 MyselfContext.displayName = "MyselfContext";
 
 export function MyselfProvider({ children }: { children: React.ReactNode }) {
@@ -49,6 +50,19 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <MyselfContext.Provider value={ctx}>{children}</MyselfContext.Provider>
+  );
+}
+
+export function useMyActiveCharacter<T extends (keyof RRCharacter)[]>(
+  ...fields: T
+): Pick<RRCharacter, IterableElement<T>> | null {
+  const selected = useMySelectedCharacters(...fields);
+  const myself = useMyProps("mainCharacterId");
+  const characters = useServerState((s) => s.characters).entities;
+
+  return (
+    selected[0] ??
+    (myself.mainCharacterId ? characters[myself.mainCharacterId] ?? null : null)
   );
 }
 

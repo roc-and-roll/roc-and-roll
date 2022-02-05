@@ -29,15 +29,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  playerAddDiceTemplateCategory,
-  playerUpdateDiceTemplateCategory,
-  playerDeleteDiceTemplateCategory,
+  characterAddDiceTemplateCategory,
+  characterDeleteDiceTemplateCategory,
+  characterUpdateDiceTemplateCategory,
 } from "../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import {
   categoryIcons,
   characterStatNames,
   fixedCategoryIcons,
+  RRCharacter,
   RRDiceTemplateCategoryID,
   RRDiceTemplatePart,
   RRDiceTemplatePartDice,
@@ -51,8 +52,13 @@ import {
   RRDiceTemplateCategory,
 } from "../../../shared/validation";
 import { useConfirm } from "../../dialog-boxes";
-import { useMyProps, useMySelectedCharacters } from "../../myself";
-import { useServerDispatch, useServerState } from "../../state";
+import {
+  useMyActiveCharacter,
+  useMyProps,
+  useMySelectedCharacters,
+} from "../../myself";
+import { useServerDispatch } from "../../state";
+import { DicePanel } from "../diceTemplates/DicePanel";
 import { DiceTemplates } from "../diceTemplates/DiceTemplates";
 import { GeneratedDiceTemplates } from "../diceTemplates/GeneratedDiceTemplates";
 import { Popover } from "../Popover";
@@ -86,7 +92,12 @@ export const iconMap: Record<typeof categoryIcons[number], IconDefinition> = {
   d20: faDiceD20,
 };
 
-type Section = "closed" | "Skills" | "STs" | RRDiceTemplateCategoryID;
+type Section =
+  | "closed"
+  | "Dice Input"
+  | "Skills"
+  | "STs"
+  | RRDiceTemplateCategoryID;
 
 const actionClasses =
   "snap-start border-black border flex items-center justify-center p-3 -mr-px last:mr-0 cursor-pointer";
@@ -95,9 +106,27 @@ const activeClass = (active: boolean) =>
 const highlightClass = (shouldHighlight: boolean, active: boolean) =>
   shouldHighlight ? (active ? "bg-green-400" : "bg-green-600") : "";
 
-export const ActionsHUD = React.memo(function DicePanel() {
+export const ActionsHUD = React.memo(function ActionsHUDMemoed() {
+  const character = useMyActiveCharacter(
+    "id",
+    "savingThrows",
+    "skills",
+    "diceTemplateCategories"
+  );
+  return character ? <InnerActionsHUD character={character} /> : <></>;
+});
+
+export const InnerActionsHUD = function ({
+  character,
+}: {
+  character: Pick<
+    RRCharacter,
+    "diceTemplateCategories" | "id" | "savingThrows" | "skills"
+  >;
+}) {
   const [active, setActive] = useState<Section>("closed");
-  const myself = useMyProps("diceTemplateCategories", "id", "mainCharacterId");
+  const myself = useMyProps("id", "mainCharacterId");
+  const selectedCharacters = useMySelectedCharacters("id");
   const dispatch = useServerDispatch();
 
   const toggle = (section: Section) =>
@@ -105,18 +134,19 @@ export const ActionsHUD = React.memo(function DicePanel() {
 
   useEffect(() => {
     if (
+      active !== "Dice Input" &&
       active !== "Skills" &&
       active !== "STs" &&
-      myself.diceTemplateCategories.find((cat) => cat.id === active) ===
+      character.diceTemplateCategories.find((cat) => cat.id === active) ===
         undefined
     ) {
       setActive("closed");
     }
-  }, [myself.diceTemplateCategories, active]);
+  }, [character.diceTemplateCategories, active]);
 
   function addTemplateCategory() {
     const freeIcon = userCategoryIcons.find((userIcon) => {
-      return !myself.diceTemplateCategories
+      return !character.diceTemplateCategories
         .map(({ icon }: { icon: typeof categoryIcons[number] }) => icon)
         .includes(userIcon);
     });
@@ -125,8 +155,8 @@ export const ActionsHUD = React.memo(function DicePanel() {
 
     dispatch({
       actions: [
-        playerAddDiceTemplateCategory({
-          id: myself.id,
+        characterAddDiceTemplateCategory({
+          id: character.id,
           category: {
             id: rrid<RRDiceTemplateCategory>(),
             icon: freeIcon,
@@ -151,26 +181,11 @@ export const ActionsHUD = React.memo(function DicePanel() {
       damage: { type: null },
     };
   }
-  const mainCharacter = useServerState((state) =>
-    myself.mainCharacterId
-      ? state.characters.entities[myself.mainCharacterId] ?? null
-      : null
-  );
-  const selectedCharacters = useMySelectedCharacters(
-    "id",
-    "savingThrows",
-    "skills"
-  );
-  const character =
-    selectedCharacters.length === 1 ? selectedCharacters[0]! : mainCharacter;
 
-  const isCharacterNull = character === null;
   const savingThrowTemplates = useMemo(
     () =>
       characterStatNames.map((statName: typeof characterStatNames[number]) => {
-        const proficiency = isCharacterNull
-          ? "notProficient"
-          : character.savingThrows[statName] ?? "notProficient";
+        const proficiency = character.savingThrows[statName] ?? "notProficient";
 
         const parts: RRDiceTemplatePart[] = [createD20Part()];
         if (typeof proficiency !== "number")
@@ -197,16 +212,14 @@ export const ActionsHUD = React.memo(function DicePanel() {
           rollType: null,
         };
       }),
-    [isCharacterNull, character?.savingThrows]
+    [character.savingThrows]
   );
 
   const skillTemplates = useMemo(
     () =>
       skillNames
         .map((skill) => {
-          const proficiency = isCharacterNull
-            ? "notProficient"
-            : character.skills[skill] ?? "notProficient";
+          const proficiency = character.skills[skill] ?? "notProficient";
           const parts: RRDiceTemplatePart[] = [createD20Part()];
           if (typeof proficiency !== "number")
             parts.push({
@@ -232,14 +245,16 @@ export const ActionsHUD = React.memo(function DicePanel() {
           };
         })
         .sort(),
-    [isCharacterNull, character?.skills]
+    [character.skills]
   );
 
   function renderContent(active: string) {
-    const category = myself.diceTemplateCategories.find(
+    const category = character.diceTemplateCategories.find(
       (cat) => cat.id === active
     );
     switch (active) {
+      case "Dice Input":
+        return <DicePanel />;
       case "Skills":
         return <GeneratedDiceTemplates templates={skillTemplates} />;
       case "STs":
@@ -247,7 +262,7 @@ export const ActionsHUD = React.memo(function DicePanel() {
       case "closed":
         return <></>;
       default:
-        return <DiceTemplates category={category!} />;
+        return category ? <DiceTemplates category={category} /> : <></>;
     }
   }
 
@@ -270,6 +285,18 @@ export const ActionsHUD = React.memo(function DicePanel() {
           { "rounded-tl-none": active !== "closed" }
         )}
       >
+        <RRTooltip content="Dice Input" placement="top">
+          <Button
+            unstyled
+            className={clsx(
+              actionClasses,
+              activeClass(active === "Dice Input")
+            )}
+            onClick={() => toggle("Dice Input")}
+          >
+            <FontAwesomeIcon size="lg" icon={faDiceD20} fixedWidth />
+          </Button>
+        </RRTooltip>
         <RRTooltip content="Saving Throws" placement="top">
           <Button
             unstyled
@@ -282,7 +309,7 @@ export const ActionsHUD = React.memo(function DicePanel() {
           >
             <FontAwesomeIcon size="lg" icon={faShieldAlt} fixedWidth />
           </Button>
-        </RRTooltip>{" "}
+        </RRTooltip>
         <RRTooltip content="Skill Checks" placement="top">
           <Button
             unstyled
@@ -296,7 +323,7 @@ export const ActionsHUD = React.memo(function DicePanel() {
             <FontAwesomeIcon size="lg" icon={faHandPaper} fixedWidth />
           </Button>
         </RRTooltip>
-        {myself.diceTemplateCategories.map((category) => (
+        {character.diceTemplateCategories.map((category) => (
           <DiceTemplateButton
             key={category.id}
             category={category}
@@ -304,7 +331,7 @@ export const ActionsHUD = React.memo(function DicePanel() {
             onSetActive={() => toggle(category.id)}
           />
         ))}
-        {myself.diceTemplateCategories.length < userCategoryIcons.length && (
+        {character.diceTemplateCategories.length < userCategoryIcons.length && (
           <RRTooltip content={"Add Category"} placement="top">
             <Button
               unstyled
@@ -320,7 +347,7 @@ export const ActionsHUD = React.memo(function DicePanel() {
       </div>
     </div>
   );
-});
+};
 
 function DiceTemplateButton({
   category,
@@ -380,11 +407,13 @@ function DiceTemplateCategoryEditor({
 }: {
   category: RRDiceTemplateCategory;
 }) {
-  const myself = useMyProps("diceTemplateCategories", "id");
+  const character = useMyActiveCharacter("diceTemplateCategories", "id");
   const dispatch = useServerDispatch();
   const confirm = useConfirm();
 
-  async function deleteCategory() {
+  if (!character) return <></>;
+
+  const deleteCategory = async function () {
     if (
       await confirm(
         `Do you really want to delete this category forever? All templates in this category will also be deleted.`
@@ -392,15 +421,15 @@ function DiceTemplateCategoryEditor({
     )
       dispatch({
         actions: [
-          playerDeleteDiceTemplateCategory({
-            id: myself.id,
+          characterDeleteDiceTemplateCategory({
+            id: character.id,
             categoryId: category.id,
           }),
         ],
         optimisticKey: "diceTemplateCategories",
         syncToServerThrottle: 0,
       });
-  }
+  };
 
   function updateCategory(
     category: RRDiceTemplateCategory,
@@ -408,8 +437,8 @@ function DiceTemplateCategoryEditor({
   ) {
     dispatch({
       actions: [
-        playerUpdateDiceTemplateCategory({
-          id: myself.id,
+        characterUpdateDiceTemplateCategory({
+          id: character!.id,
           category: { id: category.id, changes },
         }),
       ],
@@ -428,7 +457,7 @@ function DiceTemplateCategoryEditor({
       <div>
         {userCategoryIcons.map((icon) => {
           const alreadyUsed =
-            myself.diceTemplateCategories.findIndex(
+            character.diceTemplateCategories.findIndex(
               (category) => category.icon === icon
             ) >= 0;
           return (

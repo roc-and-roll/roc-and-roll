@@ -9,10 +9,7 @@ import {
 import { faCircle as faEmptyCircle } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useState } from "react";
-import {
-  characterTemplateUpdate,
-  characterUpdate,
-} from "../../../shared/actions";
+import { characterUpdate } from "../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import {
   characterAttributeNames,
@@ -31,47 +28,21 @@ import { proficiencyStringToValue } from "../../diceUtils";
 
 export const CharacterSheetEditor = React.memo<{
   character: RRCharacter;
-  isTemplate: boolean | undefined;
-}>(function CharacterSheetEditor({ character, isTemplate }) {
+}>(function CharacterSheetEditor({ character }) {
   const dispatch = useServerDispatch();
-  const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
   const [showProficiencyEditor, setShowProficiencyEditor] = useState(false);
 
   return (
     <div>
       <div style={{ display: "flex" }}>
-        <StatEditor
-          name={"STR"}
-          character={character}
-          isTemplate={isTemplate}
-        />
-        <StatEditor
-          name={"DEX"}
-          character={character}
-          isTemplate={isTemplate}
-        />
-        <StatEditor
-          name={"CON"}
-          character={character}
-          isTemplate={isTemplate}
-        />
+        <StatEditor name={"STR"} character={character} />
+        <StatEditor name={"DEX"} character={character} />
+        <StatEditor name={"CON"} character={character} />
       </div>
       <div style={{ display: "flex" }}>
-        <StatEditor
-          name={"INT"}
-          character={character}
-          isTemplate={isTemplate}
-        />
-        <StatEditor
-          name={"WIS"}
-          character={character}
-          isTemplate={isTemplate}
-        />
-        <StatEditor
-          name={"CHA"}
-          character={character}
-          isTemplate={isTemplate}
-        />
+        <StatEditor name={"INT"} character={character} />
+        <StatEditor name={"WIS"} character={character} />
+        <StatEditor name={"CHA"} character={character} />
       </div>
       <div className="character-editor-attributes">
         {characterAttributeNames.map((attributeName) => (
@@ -81,15 +52,14 @@ export const CharacterSheetEditor = React.memo<{
             label={attributeName}
             onChange={(newValue) =>
               dispatch((state) => {
-                const oldAttributes = (
-                  isTemplate ? state.characterTemplates : state.characters
-                ).entities[character.id]?.attributes;
+                const oldAttributes =
+                  state.characters.entities[character.id]?.attributes;
                 if (!oldAttributes) {
                   return [];
                 }
                 return {
                   actions: [
-                    updateFunc({
+                    characterUpdate({
                       id: character.id,
                       changes: {
                         attributes: {
@@ -113,7 +83,7 @@ export const CharacterSheetEditor = React.memo<{
           onChange={(newAC) => {
             dispatch(() => ({
               actions: [
-                updateFunc({
+                characterUpdate({
                   id: character.id,
                   changes: { ac: newAC },
                 }),
@@ -130,7 +100,7 @@ export const CharacterSheetEditor = React.memo<{
           onChange={(newDC) => {
             dispatch(() => ({
               actions: [
-                updateFunc({
+                characterUpdate({
                   id: character.id,
                   changes: { spellSaveDC: newDC },
                 }),
@@ -144,22 +114,13 @@ export const CharacterSheetEditor = React.memo<{
       <Button onClick={() => setShowProficiencyEditor(!showProficiencyEditor)}>
         Edit Proficiencies
       </Button>
-      {showProficiencyEditor && (
-        <ProficiencyEditor character={character} isTemplate={isTemplate} />
-      )}
+      {showProficiencyEditor && <ProficiencyEditor character={character} />}
     </div>
   );
 });
 
-function ProficiencyEditor({
-  character,
-  isTemplate,
-}: {
-  character: RRCharacter;
-  isTemplate: boolean | undefined;
-}) {
+function ProficiencyEditor({ character }: { character: RRCharacter }) {
   const dispatch = useServerDispatch();
-  const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
 
   function getIcon(proficiency: proficiencyValues | null) {
     return proficiency === "notProficient" || proficiency === null
@@ -201,15 +162,14 @@ function ProficiencyEditor({
               4
           ]!;
     dispatch((state) => {
-      const oldSavingThrows = (
-        isTemplate ? state.characterTemplates : state.characters
-      ).entities[character.id]?.savingThrows;
+      const oldSavingThrows =
+        state.characters.entities[character.id]?.savingThrows;
       if (!oldSavingThrows) {
         return [];
       }
       return {
         actions: [
-          updateFunc({
+          characterUpdate({
             id: character.id,
             changes: {
               savingThrows: {
@@ -237,15 +197,13 @@ function ProficiencyEditor({
               4
           ]!;
     dispatch((state) => {
-      const oldSkills = (
-        isTemplate ? state.characterTemplates : state.characters
-      ).entities[character.id]?.skills;
+      const oldSkills = state.characters.entities[character.id]?.skills;
       if (!oldSkills) {
         return [];
       }
       return {
         actions: [
-          updateFunc({
+          characterUpdate({
             id: character.id,
             changes: {
               skills: {
@@ -313,14 +271,11 @@ function ProficiencyEditor({
 function StatEditor({
   name,
   character,
-  isTemplate,
 }: {
   name: typeof characterStatNames[number];
   character: RRCharacter;
-  isTemplate: boolean | undefined;
 }) {
   const dispatch = useServerDispatch();
-  const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
 
   function modifier(stat: number) {
     return Math.floor((stat - 10) / 2);
@@ -328,15 +283,13 @@ function StatEditor({
 
   function updateValue(newValue: React.SetStateAction<number | null>) {
     dispatch((state) => {
-      const oldStats = (
-        isTemplate ? state.characterTemplates : state.characters
-      ).entities[character.id]?.stats;
+      const oldStats = state.characters.entities[character.id]?.stats;
       if (!oldStats) {
         return [];
       }
       return {
         actions: [
-          updateFunc({
+          characterUpdate({
             id: character.id,
             changes: {
               stats: {

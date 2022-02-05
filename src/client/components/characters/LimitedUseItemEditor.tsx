@@ -8,10 +8,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React from "react";
-import {
-  characterTemplateUpdate,
-  characterUpdate,
-} from "../../../shared/actions";
+import { characterUpdate } from "../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import { RRCharacter, RRLimitedUseSkill } from "../../../shared/state";
 import { useServerDispatch } from "../../state";
@@ -20,19 +17,15 @@ import { SmartIntegerInput, SmartTextInput } from "../ui/TextInput";
 
 export const LimitedUseSkillEditor = React.memo<{
   character: RRCharacter;
-  isTemplate?: boolean;
-}>(function CharacterSheetEditor({ character, isTemplate }) {
+}>(function CharacterSheetEditor({ character }) {
   const dispatch = useServerDispatch();
-  const updateFunc = isTemplate ? characterTemplateUpdate : characterUpdate;
 
   const setLimitedUseSkills = (
     updater: React.SetStateAction<RRCharacter["limitedUseSkills"]>
   ) =>
     dispatch((state) => {
       const oldSkills =
-        state[isTemplate ? "characterTemplates" : "characters"].entities[
-          character.id
-        ]?.limitedUseSkills;
+        state.characters.entities[character.id]?.limitedUseSkills;
 
       if (oldSkills === undefined) {
         return [];
@@ -42,7 +35,7 @@ export const LimitedUseSkillEditor = React.memo<{
 
       return {
         actions: [
-          updateFunc({
+          characterUpdate({
             id: character.id,
             changes: { limitedUseSkills: newSkills },
           }),

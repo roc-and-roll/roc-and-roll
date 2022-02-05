@@ -67,65 +67,6 @@ export const playerAdd = createAction(
 
 export const playerUpdate = createAction<Update<RRPlayer>>("player/update");
 
-export const playerUpdateAddCharacterId = createAction<{
-  id: RRPlayerID;
-  characterId: RRCharacterID;
-}>("player/update/characterId");
-
-export const playerAddDiceTemplateCategory = createAction<{
-  id: RRPlayerID;
-  category: RRDiceTemplateCategory;
-}>("player/diceTemplateCategories/add");
-
-export const playerUpdateDiceTemplateCategory = createAction<{
-  id: RRPlayerID;
-  category: Update<RRDiceTemplateCategory>;
-}>("player/diceTemplateCategories/update");
-
-export const playerDeleteDiceTemplateCategory = createAction<{
-  id: RRPlayerID;
-  categoryId: RRDiceTemplateCategoryID;
-}>("player/diceTemplateCategories/delete");
-
-export const playerRemoveDiceTemplate = createAction<{
-  id: RRPlayerID;
-  categoryId: RRDiceTemplateCategoryID;
-  templateId: RRDiceTemplateID;
-}>("player/diceTemplateCategories/template/remove");
-
-export const playerUpdateDiceTemplate = createAction<{
-  id: RRPlayerID;
-  categoryId: RRDiceTemplateCategoryID;
-  template: Update<RRDiceTemplate>;
-}>("player/diceTemplateCategories/template/update");
-
-export const playerUpdateDiceTemplatePart = createAction<{
-  id: RRPlayerID;
-  categoryId: RRDiceTemplateCategoryID;
-  templateId: RRDiceTemplateID;
-  part: Update<RRDiceTemplatePart>;
-}>("player/diceTemplateCategories/template/part/update");
-
-export const playerAddDiceTemplatePart = createAction<{
-  id: RRPlayerID;
-  categoryId: RRDiceTemplateCategoryID;
-  templateId: RRDiceTemplateID;
-  part: RRDiceTemplatePart;
-}>("player/diceTemplateCategories/template/part/add");
-
-export const playerRemoveDiceTemplatePart = createAction<{
-  id: RRPlayerID;
-  categoryId: RRDiceTemplateCategoryID;
-  templateId: RRDiceTemplateID;
-  partId: RRDiceTemplatePartID;
-}>("player/diceTemplateCategories/template/part/remove");
-
-export const playerAddDiceTemplate = createAction<{
-  id: RRPlayerID;
-  categoryId: RRDiceTemplateCategoryID;
-  template: RRDiceTemplate;
-}>("player/diceTemplateCategories/template/add");
-
 export const playerUpdateAddFavoriteAssetId = createAction<{
   id: RRPlayerID;
   assetId: RRAssetID;
@@ -155,24 +96,64 @@ export const characterUpdate =
 export const characterRemove =
   createAction<RRCharacter["id"]>("character/remove");
 
-////////////////////////////////////////////////////////////////////////////////
-// Character Templates
-////////////////////////////////////////////////////////////////////////////////
+export const playerUpdateAddCharacterId = createAction<{
+  id: RRPlayerID;
+  characterId: RRCharacterID;
+}>("player/update/characterId");
 
-export const characterTemplateAdd = createAction(
-  "characterTemplate/add",
-  (character: Omit<RRCharacter, "id">): { payload: RRCharacter } => ({
-    payload: { id: rrid<RRCharacter>(), ...character },
-  })
-);
+export const characterAddDiceTemplateCategory = createAction<{
+  id: RRCharacterID;
+  category: RRDiceTemplateCategory;
+}>("character/diceTemplateCategories/add");
 
-export const characterTemplateUpdate = createAction<Update<RRCharacter>>(
-  "characterTemplate/update"
-);
+export const characterUpdateDiceTemplateCategory = createAction<{
+  id: RRCharacterID;
+  category: Update<RRDiceTemplateCategory>;
+}>("character/diceTemplateCategories/update");
 
-export const characterTemplateRemove = createAction<RRCharacter["id"]>(
-  "characterTemplate/remove"
-);
+export const characterDeleteDiceTemplateCategory = createAction<{
+  id: RRCharacterID;
+  categoryId: RRDiceTemplateCategoryID;
+}>("character/diceTemplateCategories/delete");
+
+export const characterRemoveDiceTemplate = createAction<{
+  id: RRCharacterID;
+  categoryId: RRDiceTemplateCategoryID;
+  templateId: RRDiceTemplateID;
+}>("character/diceTemplateCategories/template/remove");
+
+export const characterUpdateDiceTemplate = createAction<{
+  id: RRCharacterID;
+  categoryId: RRDiceTemplateCategoryID;
+  template: Update<RRDiceTemplate>;
+}>("character/diceTemplateCategories/template/update");
+
+export const characterUpdateDiceTemplatePart = createAction<{
+  id: RRCharacterID;
+  categoryId: RRDiceTemplateCategoryID;
+  templateId: RRDiceTemplateID;
+  part: Update<RRDiceTemplatePart>;
+}>("character/diceTemplateCategories/template/part/update");
+
+export const characterAddDiceTemplatePart = createAction<{
+  id: RRCharacterID;
+  categoryId: RRDiceTemplateCategoryID;
+  templateId: RRDiceTemplateID;
+  part: RRDiceTemplatePart;
+}>("character/diceTemplateCategories/template/part/add");
+
+export const characterRemoveDiceTemplatePart = createAction<{
+  id: RRCharacterID;
+  categoryId: RRDiceTemplateCategoryID;
+  templateId: RRDiceTemplateID;
+  partId: RRDiceTemplatePartID;
+}>("character/diceTemplateCategories/template/part/remove");
+
+export const characterAddDiceTemplate = createAction<{
+  id: RRCharacterID;
+  categoryId: RRDiceTemplateCategoryID;
+  template: RRDiceTemplate;
+}>("character/diceTemplateCategories/template/add");
 
 ////////////////////////////////////////////////////////////////////////////////
 // Maps

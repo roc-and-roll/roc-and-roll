@@ -4,8 +4,26 @@ import {
   characterUpdate,
   characterRemove,
   mapObjectRemove,
+  characterAddDiceTemplate,
+  characterAddDiceTemplateCategory,
+  characterUpdateDiceTemplatePart,
+  characterUpdateDiceTemplateCategory,
+  characterRemoveDiceTemplate,
+  characterAddDiceTemplatePart,
+  characterRemoveDiceTemplatePart,
+  characterUpdateDiceTemplate,
+  characterDeleteDiceTemplateCategory,
 } from "../actions";
-import { initialSyncedState, RRCharacter } from "../state";
+import {
+  EntityCollection,
+  initialSyncedState,
+  RRCharacter,
+  RRCharacterID,
+  RRDiceTemplateCategoryID,
+  RRDiceTemplateID,
+  RRDiceTemplatePartID,
+} from "../state";
+import { RRDiceTemplate } from "../validation";
 
 const charactersAdapter = createEntityAdapter<RRCharacter>();
 
@@ -24,6 +42,132 @@ export const charactersReducer = createReducer(
           );
         }
         return state;
+      })
+
+      .addCase(characterAddDiceTemplate, (state, action) => {
+        const character = state.entities[action.payload.id];
+        character?.diceTemplateCategories
+          .find((c) => c.id === action.payload.categoryId)
+          ?.templates.push(action.payload.template);
+      })
+
+      .addCase(characterAddDiceTemplateCategory, (state, action) => {
+        const character = state.entities[action.payload.id];
+        character?.diceTemplateCategories.push(action.payload.category);
+      })
+
+      .addCase(characterUpdateDiceTemplateCategory, (state, action) => {
+        const character = state.entities[action.payload.id];
+        const category = character?.diceTemplateCategories.find(
+          (c) => c.id === action.payload.category.id
+        );
+        if (!category) return;
+        Object.assign(category, action.payload.category.changes);
+      })
+
+      .addCase(characterDeleteDiceTemplateCategory, (state, action) => {
+        const character = state.entities[action.payload.id];
+        const index = character?.diceTemplateCategories.findIndex(
+          (c) => c.id === action.payload.categoryId
+        );
+        if (index !== undefined && index >= 0) {
+          character?.diceTemplateCategories.splice(index, 1);
+        }
+      })
+
+      .addCase(characterRemoveDiceTemplate, (state, action) => {
+        const character = state.entities[action.payload.id];
+        const templates = character?.diceTemplateCategories.find(
+          (c) => c.id === action.payload.categoryId
+        )?.templates;
+        const index = templates?.findIndex(
+          (t) => t.id === action.payload.templateId
+        );
+        if (index !== undefined && index >= 0) {
+          templates?.splice(index, 1);
+        }
+      })
+
+      .addCase(characterUpdateDiceTemplate, (state, action) => {
+        const template = getTemplateForPayload(state, {
+          ...action.payload,
+          templateId: action.payload.template.id,
+        });
+        if (!template) return;
+        Object.assign(template, action.payload.template.changes);
+      })
+
+      .addCase(characterUpdateDiceTemplatePart, (state, action) => {
+        const part = getPartForPayload(state, action.payload);
+        if (!part) return;
+        Object.assign(part, action.payload.part.changes);
+      })
+
+      .addCase(characterAddDiceTemplatePart, (state, action) => {
+        const template = getTemplateForPayload(state, action.payload);
+        if (!template) return;
+        template.parts.push(action.payload.part);
+      })
+
+      .addCase(characterRemoveDiceTemplatePart, (state, action) => {
+        const template = getTemplateForPayload(state, action.payload);
+        if (!template) return;
+        const index = template.parts.findIndex(
+          (p) => p.id === action.payload.partId
+        );
+        if (index >= 0) {
+          template.parts.splice(index, 1);
+        }
       });
   }
 );
+
+function getTemplateForPayload(
+  state: EntityCollection<RRCharacter>,
+  payload: {
+    templateId: RRDiceTemplateID;
+    id: RRCharacterID;
+    categoryId: RRDiceTemplateCategoryID;
+  }
+) {
+  const character = state.entities[payload.id];
+  return getTemplateForId(
+    payload.templateId,
+    character?.diceTemplateCategories.find((c) => c.id === payload.categoryId)
+      ?.templates ?? []
+  );
+}
+
+function getPartForPayload(
+  state: EntityCollection<RRCharacter>,
+  payload: {
+    templateId: RRDiceTemplateID;
+    id: RRCharacterID;
+    categoryId: RRDiceTemplateCategoryID;
+    part: { id: RRDiceTemplatePartID };
+  }
+) {
+  return getTemplateForPayload(state, payload)?.parts.find(
+    (p) => p.id === payload.part.id
+  );
+}
+
+function getTemplateForId(
+  id: RRDiceTemplateID,
+  templates: RRDiceTemplate[]
+): RRDiceTemplate | null {
+  for (const template of templates) {
+    if (template.id === id) {
+      return template;
+    }
+    for (const part of template.parts) {
+      if (part.type === "template") {
+        const ret = getTemplateForId(id, [part.template]);
+        if (ret !== null) {
+          return ret;
+        }
+      }
+    }
+  }
+  return null;
+}
