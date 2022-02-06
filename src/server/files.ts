@@ -1,7 +1,9 @@
+import path from "path";
+import fs from "fs";
 import { encode } from "blurhash"; //cspell: disable-line
 import { spawn } from "child_process";
 import fileType, { MimeType } from "file-type";
-import sharp from "sharp";
+import sharp, { FormatEnum } from "sharp";
 import { clamp } from "../shared/util";
 
 export async function getMimeType(path: string) {
@@ -82,6 +84,33 @@ export async function getImageDimensions(path: string) {
     width: metadata.width,
     height: metadata.height,
   };
+}
+
+export function requiresTiling({
+  width,
+  height,
+}: {
+  width: number;
+  height: number;
+}) {
+  return width > 2048 || height > 2048;
+}
+
+export async function tileImage(
+  imagePath: string,
+  outPath: string,
+  inExt: string
+): Promise<string> {
+  await sharp(imagePath)
+    .toFormat(inExt.substring(1) as keyof FormatEnum)
+    .tile({ depth: "one" })
+    .toFile(outPath + ".dz");
+  const outExt = await new Promise<string>((resolve, reject) =>
+    fs.readdir(outPath + "_files/0", (err, filenames) =>
+      err !== null ? reject(err) : resolve(path.extname(filenames[0]!))
+    )
+  );
+  return `${path.basename(outPath)}_files/0/{x}_{y}${outExt}`;
 }
 
 export function isMimeTypeImage(mimeType: MimeType) {

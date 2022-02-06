@@ -127,6 +127,7 @@ const isRRAssetImage = z.strictObject({
   width: z.number().int().min(0),
   height: z.number().int().min(0),
   blurHash: isBlurHash,
+  tilesBasePath: z.nullable(z.string()),
 
   originalFunction: z.enum(["token", "map", "unknown"] as const),
 });

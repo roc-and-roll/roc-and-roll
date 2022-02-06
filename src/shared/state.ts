@@ -70,6 +70,7 @@ export type RRFileImage = RRFileBase & {
   width: number;
   height: number;
   blurHash: string;
+  tilesBasePath: string | null;
 };
 
 export type RRFileOther = RRFileBase & {

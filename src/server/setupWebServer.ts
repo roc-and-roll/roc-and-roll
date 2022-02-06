@@ -23,6 +23,8 @@ import {
   getMimeType,
   isMimeTypeAudio,
   isMimeTypeImage,
+  requiresTiling,
+  tileImage,
 } from "./files";
 import { isAllowedFiletypes } from "../shared/files";
 import serverTiming from "server-timing";
@@ -111,11 +113,21 @@ export async function setupWebServer(
               filename: file.filename,
               mimeType,
               ...(isImage
-                ? {
-                    type: "image" as const,
-                    ...(await getImageDimensions(file.path)),
-                    blurHash: await calculateBlurHash(file.path),
-                  }
+                ? await (async () => {
+                    const dimensions = await getImageDimensions(file.path);
+                    return {
+                      type: "image" as const,
+                      tilesBasePath: requiresTiling(dimensions)
+                        ? await tileImage(
+                            file.path,
+                            path.join(uploadedFilesDir, nanoid()),
+                            path.extname(file.originalname)
+                          )
+                        : null,
+                      ...dimensions,
+                      blurHash: await calculateBlurHash(file.path),
+                    };
+                  })()
                 : isAudio
                 ? {
                     type: "audio" as const,
@@ -268,6 +280,7 @@ export async function setupWebServer(
         type: "image",
         width: 550,
         height: 550,
+        tilesBasePath: null,
         blurHash: await (async () => {
           res.startTime("blurHash", "Calculating BlurHash");
           const blurHash = await calculateBlurHash(outputPath);

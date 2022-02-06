@@ -174,6 +174,7 @@ export default function MapContainer() {
             extra: {},
 
             type: "image",
+            tilesBasePath: uploadedFile.tilesBasePath,
             blurHash: uploadedFile.blurHash,
             width: uploadedFile.width,
             height: uploadedFile.height,

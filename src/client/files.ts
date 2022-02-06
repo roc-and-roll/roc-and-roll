@@ -10,8 +10,12 @@ import { fittingTokenSize } from "../shared/util";
 
 export function assetUrl(asset: RRAsset) {
   return asset.location.type === "local"
-    ? `/api/files/${encodeURIComponent(asset.location.filename)}`
+    ? urlToLocalFile(encodeURIComponent(asset.location.filename))
     : asset.location.url;
+}
+
+export function urlToLocalFile(path: string) {
+  return `/api/files/${path}`;
 }
 
 export function tokenImageUrl(
