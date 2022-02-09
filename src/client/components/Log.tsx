@@ -60,7 +60,7 @@ const LogEntry = React.memo<{ logEntry: RRLogEntry }>(function LogEntry({
   }
 
   const tooltip: string =
-    logEntry.type === "diceRoll" ? logEntry.payload.tooltip ?? "" : "";
+    logEntry.type === "diceRoll" ? (logEntry.payload.tooltip ?? "") + " " : "";
 
   return (
     <div title={tooltip + formatTimestamp(logEntry.timestamp)}>{content}</div>
