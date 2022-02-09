@@ -28,8 +28,8 @@ import {
   assertNever,
   isCharacterDead,
   isCharacterHurt,
+  isCharacterUnconscious,
   isCharacterOverHealed,
-  isCharacterUnconsciousOrDead,
 } from "../../../shared/util";
 import { useMyProps } from "../../myself";
 import ReactDOM from "react-dom";
@@ -385,23 +385,26 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
   const extraSpace = tokenSize / 2;
   const canControl = props.isGhost ? false : props.canControl;
 
-  const tokenStyle = useMemo(
-    () => ({
+  const tokenStyle = useMemo(() => {
+    const style: React.CSSProperties = {
       ...(props.isGhost
         ? // Do not show any shadows for ghosts and ignore pointer events
           ({ pointerEvents: "none" } as const)
-        : isCharacterUnconsciousOrDead(character)
-        ? { filter: "url(#tokenUnconsciousOrDeadShadow)" }
-        : isCharacterHurt(character)
+        : isCharacterUnconscious(character)
+        ? { filter: "url(#tokenUnconsciousShadow)" }
+        : isCharacterHurt(character) && !isCharacterDead(character)
         ? { filter: "url(#tokenHurtShadow)" }
         : isCharacterOverHealed(character)
         ? { filter: "url(#tokenOverHealedShadow)" }
         : {}),
       ...(canControl ? { cursor: "move" } : {}),
       borderRadius: tokenSize / 2,
-    }),
-    [character, tokenSize, canControl, props.isGhost]
-  );
+    };
+
+    if (isCharacterDead(character)) style.filter = "grayscale(100%)";
+
+    return style;
+  }, [character, tokenSize, canControl, props.isGhost]);
 
   const asset = useRecoilValue(assetFamily(character.tokenImageAssetId));
   if (asset?.type !== "image") {

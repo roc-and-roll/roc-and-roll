@@ -121,7 +121,8 @@ async function makeNewCharacter(
 
 export const CharacterManager = React.memo(function CharacterManager() {
   const myself = useMyProps("id", "isGM", "characterIds");
-  const characters = useServerState((s) => s.characters);
+  const allCharacters = useServerState((s) => s.characters);
+  const characters = entries(allCharacters).filter((s) => !s.isTemplate);
   const [newCharacterIds, setNewCharacterIds] = useState<RRCharacterID[]>([]);
 
   const dispatch = useServerDispatch();
@@ -160,7 +161,7 @@ export const CharacterManager = React.memo(function CharacterManager() {
       <CharacterList
         newCharacterIds={newCharacterIds}
         setNewCharacterIds={setNewCharacterIds}
-        characters={entries(characters).filter((t) =>
+        characters={characters.filter((t) =>
           myself.characterIds.includes(t.id)
         )}
         addCharacter={addCharacter}
@@ -174,7 +175,7 @@ export const CharacterManager = React.memo(function CharacterManager() {
           <CharacterList
             newCharacterIds={newCharacterIds}
             setNewCharacterIds={setNewCharacterIds}
-            characters={entries(characters).filter(
+            characters={characters.filter(
               (t) => !myself.characterIds.includes(t.id) && !t.localToMap
             )}
             addCharacter={false}

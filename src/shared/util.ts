@@ -96,12 +96,18 @@ export function fittingTokenSize(requestedSize: number): number {
   );
 }
 
+export function isCharacterUnconscious(
+  character: Pick<RRCharacter, "conditions">
+) {
+  return character.conditions.includes("unconscious");
+}
+
 export function isCharacterUnconsciousOrDead(
   character: Pick<RRCharacter, "conditions" | "hp" | "temporaryHP" | "maxHP">
 ) {
   return (
     (character.maxHP > 0 && character.hp + character.temporaryHP === 0) ||
-    character.conditions.includes("unconscious") ||
+    isCharacterUnconscious(character) ||
     isCharacterDead(character)
   );
 }
