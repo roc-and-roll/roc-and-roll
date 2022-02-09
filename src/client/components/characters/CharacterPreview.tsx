@@ -5,7 +5,7 @@ import { RRCharacter } from "../../../shared/state";
 import {
   clamp,
   isCharacterHurt,
-  isCharacterUnconsciousOrDead,
+  isCharacterUnconscious,
   isCharacterOverHealed,
   isCharacterDead,
 } from "../../../shared/util";
@@ -39,8 +39,8 @@ export const CharacterPreview = React.forwardRef<
   ref
 ) {
   const hurt = isCharacterHurt(character);
-  const unconsciousOrDead = isCharacterUnconsciousOrDead(character);
   const dead = isCharacterDead(character);
+  const unconscious = isCharacterUnconscious(character);
   const overHealed = isCharacterOverHealed(character);
 
   const asset = useServerState(
@@ -60,7 +60,7 @@ export const CharacterPreview = React.forwardRef<
           url: tokenImageUrl(character, asset, currentSize),
         }}
         className={clsx(
-          shouldDisplayShadow && { hurt, unconsciousOrDead, overHealed }
+          shouldDisplayShadow && { hurt, unconscious, overHealed }
         )}
         width={currentSize}
         height={currentSize}
@@ -69,7 +69,7 @@ export const CharacterPreview = React.forwardRef<
           width: currentSize,
           height: currentSize,
           borderRadius: currentSize,
-          filter: isCharacterDead(character) ? "grayscale(100%)" : undefined,
+          filter: dead ? "grayscale(100%)" : undefined,
         }}
         title={title ?? character.name}
       />

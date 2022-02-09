@@ -391,7 +391,7 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
         ? // Do not show any shadows for ghosts and ignore pointer events
           ({ pointerEvents: "none" } as const)
         : isCharacterUnconscious(character)
-        ? { filter: "url(#tokenUnconsciousOrDeadShadow)" }
+        ? { filter: "url(#tokenUnconsciousShadow)" }
         : isCharacterHurt(character) && !isCharacterDead(character)
         ? { filter: "url(#tokenHurtShadow)" }
         : isCharacterOverHealed(character)
