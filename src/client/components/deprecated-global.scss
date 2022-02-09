@@ -167,12 +167,12 @@ a {
     background-position: center center;
     background-size: cover;
 
-    &.hurt {
+    &.hurt:not(.dead) {
       animation-name: hurt;
       animation-duration: 2s;
     }
 
-    &.unconscious {
+    &.unconscious:not(.dead) {
       animation-name: hurt;
       animation-duration: 0.2s;
     }

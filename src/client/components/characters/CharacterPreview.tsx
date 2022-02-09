@@ -60,7 +60,7 @@ export const CharacterPreview = React.forwardRef<
           url: tokenImageUrl(character, asset, currentSize),
         }}
         className={clsx(
-          shouldDisplayShadow && { hurt, unconscious, overHealed }
+          shouldDisplayShadow && { hurt, unconscious, overHealed, dead }
         )}
         width={currentSize}
         height={currentSize}
