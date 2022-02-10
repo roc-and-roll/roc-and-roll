@@ -74,11 +74,7 @@ export const MapObjects = React.memo<{
     <>
       {/* <defs>
         {makeBlinkingCharacterFilter("tokenHurtShadow", "4s", "red")}
-        {makeBlinkingCharacterFilter(
-          "tokenUnconsciousOrDeadShadow",
-          "0.4s",
-          "red"
-        )}
+        {makeBlinkingCharacterFilter("tokenUnconsciousShadow", "0.4s", "red")}
         {makeBlinkingCharacterFilter("tokenOverHealedShadow", "4s", "green")}
       </defs> */}
       {mapObjectIds.map((mapObjectId) => (
