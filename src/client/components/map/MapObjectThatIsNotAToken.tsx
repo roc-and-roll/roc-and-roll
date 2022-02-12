@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useState } from "react";
 import {
   DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
   GRID_SIZE,
+  IMAGE_TILE_SIZE,
 } from "../../../shared/constants";
 import {
   RRMapDrawingImage,
@@ -23,7 +24,7 @@ import { useMyProps } from "../../myself";
 import { pointEquals } from "../../../shared/point";
 import * as PIXI from "pixi.js";
 import { Container, PixiElement, Sprite } from "react-pixi-fiber";
-import { assetUrl, urlToLocalFile } from "../../files";
+import { assetUrl } from "../../files";
 import { RRMouseEvent, rrToPixiHandler } from "./pixi-utils";
 import {
   RoughEllipse,
@@ -189,38 +190,59 @@ function MapObjectImage({
   object: RRMapDrawingImage;
   x: number;
   y: number;
-} & Omit<PixiElement<Sprite>, "width" | "height" | "texture">) {
+} & Pick<
+  PixiElement<Sprite>,
+  "mousedown" | "mouseup" | "cursor" | "interactive"
+>) {
   const asset = useRecoilValue(assetFamily(object.imageAssetId));
 
-  if (!(asset?.type === "image" && asset.location.type === "local"))
+  if (asset?.type !== "image" || asset.location.type !== "local") {
     return null;
+  }
 
-  if (asset.tilesBasePath) {
-    const url = urlToLocalFile(asset.tilesBasePath);
-    const rows = Math.ceil(asset.height / 256);
-    const columns = Math.ceil(asset.width / 256);
+  const scaleFactor = object.height / asset.height;
+  const width = asset.width * scaleFactor;
+  const height = asset.height * scaleFactor;
+
+  if (asset.width > 2048 || asset.height > 2048) {
+    const filename = asset.location.filename;
+    const rows = Math.ceil(asset.height / IMAGE_TILE_SIZE);
+    const columns = Math.ceil(asset.width / IMAGE_TILE_SIZE);
     return (
-      <Container {...rest}>
+      <Container
+        hitArea={new PIXI.Rectangle(0, 0, width, height)}
+        interactiveChildren={false}
+        {...rest}
+      >
         {Array(rows)
           .fill(0)
           .flatMap((_, y) =>
             Array(columns)
               .fill(0)
-              .flatMap((_, x) => (
-                <Sprite
-                  {...rest}
-                  key={`${x}-${y}`}
-                  width={256}
-                  height={256}
-                  x={x * 256}
-                  y={y * 256}
-                  texture={PIXI.Texture.from(
-                    url
-                      .replace("{x}", x.toString())
-                      .replace("{y}", y.toString())
-                  )}
-                />
-              ))
+              .map((_, x) => {
+                const w =
+                  Math.min(IMAGE_TILE_SIZE, asset.width - x * IMAGE_TILE_SIZE) *
+                  scaleFactor;
+                const h =
+                  Math.min(
+                    IMAGE_TILE_SIZE,
+                    asset.height - y * IMAGE_TILE_SIZE
+                  ) * scaleFactor;
+                return (
+                  <Sprite
+                    key={`${x}-${y}`}
+                    width={w}
+                    height={h}
+                    x={x * IMAGE_TILE_SIZE * scaleFactor}
+                    y={y * IMAGE_TILE_SIZE * scaleFactor}
+                    texture={PIXI.Texture.from(
+                      `/api/files/cache/${encodeURIComponent(
+                        filename
+                      )}-tiles/0/${x}_${y}.jpeg`
+                    )}
+                  />
+                );
+              })
           )}
       </Container>
     );
@@ -229,8 +251,8 @@ function MapObjectImage({
   return (
     <Sprite
       {...rest}
-      width={(asset.width / asset.height) * object.height}
-      height={object.height}
+      width={width}
+      height={height}
       texture={PIXI.Texture.from(assetUrl(asset))}
     />
   );

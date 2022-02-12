@@ -23,7 +23,6 @@ import {
   getMimeType,
   isMimeTypeAudio,
   isMimeTypeImage,
-  requiresTiling,
   tileImage,
 } from "./files";
 import { isAllowedFiletypes } from "../shared/files";
@@ -31,6 +30,8 @@ import serverTiming from "server-timing";
 import { randomBetweenInclusive } from "../shared/random";
 
 const ONE_YEAR = 1000 * 60 * 60 * 24 * 365;
+
+const VALID_FILE_NAME = "[A-Za-z0-9_-]+(?:[.][A-Za-z0-9_-]+)?";
 
 //cspell: ignore originalname
 export async function setupWebServer(
@@ -117,13 +118,6 @@ export async function setupWebServer(
                     const dimensions = await getImageDimensions(file.path);
                     return {
                       type: "image" as const,
-                      tilesBasePath: requiresTiling(dimensions)
-                        ? await tileImage(
-                            file.path,
-                            path.join(uploadedFilesDir, nanoid()),
-                            path.extname(file.originalname)
-                          )
-                        : null,
                       ...dimensions,
                       blurHash: await calculateBlurHash(file.path),
                     };
@@ -151,14 +145,53 @@ export async function setupWebServer(
       etag: true,
       immutable: true,
       maxAge: ONE_YEAR,
+      fallthrough: true,
     })
   );
 
   const lock = new AsyncLock();
 
+  app.get<{ fileName: string; x: string; y: string }>(
+    `/api/files/cache/:fileName(${VALID_FILE_NAME})-tiles/0/:x([0-9]+)_:y([0-9]+).jpeg`,
+    async (req, res, next) => {
+      try {
+        const fileName = req.params.fileName;
+        const x = parseInt(req.params.x);
+        const y = parseInt(req.params.y);
+
+        if (isNaN(x) || isNaN(y) || fileName.length === 0) {
+          res.status(400);
+          return;
+        }
+
+        const tilesDirectory = path.join(
+          uploadedFilesCacheDir,
+          fileName + "-tiles"
+        );
+
+        res.startTime("lock", "Awaiting lock");
+        await lock.acquire(fileName, async () => {
+          res.endTime("lock");
+          if (existsSync(tilesDirectory)) {
+            return;
+          }
+          console.log("Generating image tiles");
+          res.startTime("generate", "Generating token");
+          await tileImage(uploadedFilesDir, uploadedFilesCacheDir, fileName);
+          res.endTime("generate");
+          console.log("Finished generating image tiles");
+        });
+
+        res.sendFile(path.join(tilesDirectory, "0", `${x}_${y}.jpeg`));
+      } catch (err) {
+        next(err);
+      }
+    }
+  );
+
   // (4) Add an endpoint to generate tokens from already uploaded files
   app.get<{ filename: string; size: string; zoom: string }>(
-    "/api/token-image/:filename/:size",
+    `/api/token-image/:filename(${VALID_FILE_NAME})/:size([0-9]+)`,
     async (req, res, next) => {
       try {
         const filename = req.params.filename;
@@ -280,7 +313,6 @@ export async function setupWebServer(
         type: "image",
         width: 550,
         height: 550,
-        tilesBasePath: null,
         blurHash: await (async () => {
           res.startTime("blurHash", "Calculating BlurHash");
           const blurHash = await calculateBlurHash(outputPath);

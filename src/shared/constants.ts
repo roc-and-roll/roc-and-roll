@@ -33,3 +33,5 @@ export const SOCKET_BROADCAST_MSG = "MESSAGE";
 export const SOCKET_SERVER_INFO = "SERVER_INFO";
 
 export const DEFAULT_VOLUME = 0.5;
+
+export const IMAGE_TILE_SIZE = 256;

@@ -396,7 +396,6 @@ export function useMapToolHandler(
               blurHash: image.blurHash,
               width: image.width,
               height: image.height,
-              tilesBasePath: image.tilesBasePath,
 
               playerId: myself.id,
             });

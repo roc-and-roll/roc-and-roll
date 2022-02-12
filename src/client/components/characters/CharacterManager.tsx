@@ -49,7 +49,6 @@ async function makeNewCharacter(
     blurHash: image.blurHash,
     width: image.width,
     height: image.height,
-    tilesBasePath: null,
 
     playerId: myId,
   });
