@@ -34,6 +34,7 @@ import {
   RoughText,
 } from "../rough";
 import { PixiPopover } from "./pixi/PixiPopover";
+import { assertNever } from "../../../shared/util";
 
 const SELECTED_OR_HOVERED_STROKE_LINE_DASH = [GRID_SIZE / 10, GRID_SIZE / 10];
 
@@ -112,8 +113,6 @@ export const MapObjectThatIsNotAToken = React.memo<{
             h={object.size.y}
           />
         );
-      default:
-        return null;
       case "ellipse":
         return (
           <RoughEllipse {...sharedProps} w={object.size.x} h={object.size.y} />
@@ -168,8 +167,8 @@ export const MapObjectThatIsNotAToken = React.memo<{
           />
         );
       }
-      // default:
-      //   assertNever(object);
+      default:
+        assertNever(object);
     }
   };
 
