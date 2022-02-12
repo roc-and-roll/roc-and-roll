@@ -11,6 +11,23 @@ import {
 import { Button } from "../ui/Button";
 import { TextEntry } from "./QuickReference";
 
+export function getMonsterSpeedAsString(monster: CompendiumMonster) {
+  if (!monster.speed) return "";
+  return Object.entries(monster.speed)
+    .map(([speedType, value]) => {
+      return typeof value === "number"
+        ? value.toString() + "ft " + speedType
+        : typeof value === "boolean"
+        ? "can hover" // it's the only boolean that exists
+        : value.number.toString() +
+          " ft " +
+          speedType +
+          " if " +
+          value.condition.slice(1, -1);
+    })
+    .join(", ");
+}
+
 export const Monster = React.memo(function Monster({
   monster,
 }: {
@@ -177,6 +194,12 @@ export const Monster = React.memo(function Monster({
             </p>
           )}
         </dd>
+        {monster.speed && (
+          <>
+            <dt>Speed</dt>
+            <dd>{getMonsterSpeedAsString(monster)}</dd>
+          </>
+        )}
         {monster.immune && monster.immune.length > 0 && (
           <>
             <dt>Damage Immunities</dt>

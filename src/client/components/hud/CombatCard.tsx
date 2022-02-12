@@ -3,6 +3,7 @@ import { useCompendium } from "../compendium/Compendium";
 import { useMyActiveCharacter } from "../../myself";
 import { TextEntry } from "../quickReference/QuickReference";
 import { CompendiumTextEntry } from "../compendium/types";
+import { getMonsterSpeedAsString } from "../quickReference/QuickReferenceMonster";
 
 export function CombatCardHUD() {
   const character = useMyActiveCharacter("name");
@@ -42,6 +43,12 @@ export function CombatCardHUD() {
 
   return monster ? (
     <div className="w-72 text-xs max-h-72 overflow-y-auto hud-panel p-2 rounded pointer-events-auto">
+      {monster.speed && (
+        <p>
+          <b>Speed: </b>
+          {getMonsterSpeedAsString(monster)}
+        </p>
+      )}
       {(monster.legendary?.length ?? 0) > 0 && (
         <>
           <h2 className="text-xl">Legendary Actions</h2>
