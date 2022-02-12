@@ -33,6 +33,7 @@ import {
   RoughRectangle,
   RoughText,
 } from "../rough";
+import { PixiPopover } from "./pixi/PixiPopover";
 
 const SELECTED_OR_HOVERED_STROKE_LINE_DASH = [GRID_SIZE / 10, GRID_SIZE / 10];
 
@@ -72,7 +73,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
     cursor: canControl ? "move" : undefined,
     onMouseDown: useCallback(
       (event: RRMouseEvent) => {
-        if (canControl) {
+        if (canControl && event.button === 0) {
           onStartMoveRef.current(event);
         }
         clickPositionRef.current = { x: event.clientX, y: event.clientY };
@@ -137,6 +138,8 @@ export const MapObjectThatIsNotAToken = React.memo<{
             interactive
             mousedown={rrToPixiHandler(onMouseDown)}
             mouseup={rrToPixiHandler(onMouseUp)}
+            rightdown={rrToPixiHandler(onMouseDown)}
+            rightup={rrToPixiHandler(onMouseUp)}
             style={{ fill }}
             text={object.text}
           />
@@ -159,6 +162,8 @@ export const MapObjectThatIsNotAToken = React.memo<{
             interactive
             mousedown={rrToPixiHandler(onMouseDown)}
             mouseup={rrToPixiHandler(onMouseUp)}
+            rightdown={rrToPixiHandler(onMouseDown)}
+            rightup={rrToPixiHandler(onMouseUp)}
             {...rest}
           />
         );
@@ -169,17 +174,15 @@ export const MapObjectThatIsNotAToken = React.memo<{
   };
 
   return (
-    // <Popover
-    //   content={<ObjectEditOptions object={object} mapId={mapId} />}
-    //   visible={editorVisible}
-    //   onClickOutside={() => setEditorVisible(false)}
-    //   interactive
-    //   placement="right"
-    // >
-    <Container name={`${object.type}: ${object.id}`} angle={object.rotation}>
-      {content()}
-    </Container>
-    /* </Popover> */
+    <PixiPopover
+      content={<ObjectEditOptions object={object} mapId={mapId} />}
+      visible={editorVisible}
+      onClickOutside={() => setEditorVisible(false)}
+    >
+      <Container name={`${object.type}: ${object.id}`} angle={object.rotation}>
+        {content()}
+      </Container>
+    </PixiPopover>
   );
 });
 
@@ -192,7 +195,7 @@ function MapObjectImage({
   y: number;
 } & Pick<
   PixiElement<Sprite>,
-  "mousedown" | "mouseup" | "cursor" | "interactive"
+  "mousedown" | "mouseup" | "rightdown" | "rightup" | "cursor" | "interactive"
 >) {
   const asset = useRecoilValue(assetFamily(object.imageAssetId));
 

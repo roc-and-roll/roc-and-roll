@@ -64,7 +64,8 @@
     "unstyled",
     "vcxsrv",
     "xvfb",
-    "rightdown"
+    "rightdown",
+    "rightup"
   ],
   "files": ["**/*.{js,jsx,ts,tsx,html,md,css,scss,peggy}"],
   "ignorePaths": [

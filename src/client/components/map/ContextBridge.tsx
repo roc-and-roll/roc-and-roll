@@ -1,4 +1,13 @@
-// https://github.com/michalochman/react-pixi-fiber/blob/master/README.md
+/*!
+ * cspell:disable
+ *
+ * Based on code from react-pixi-fiber's README by Michał Ochman.
+ * @license MIT License
+ * Copyright (c) 2018 Michał Ochman
+ * https://github.com/michalochman/react-pixi-fiber/blob/master/README.md
+ *
+ * cspell:enable
+ */
 import React from "react";
 
 type ContextBridgeProps<T extends [...React.Context<any>[]]> = {

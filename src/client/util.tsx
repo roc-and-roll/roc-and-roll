@@ -147,7 +147,7 @@ export function useSmartChangeHP(myselfIsGM: boolean) {
                   </Button>
                 </DialogActions>
               </>
-            ));
+            )).result;
             if (result === null) {
               return;
             }
@@ -176,7 +176,7 @@ export function useSmartChangeHP(myselfIsGM: boolean) {
                 <Button onClick={() => onClose("yes")}>yes</Button>
               </DialogActions>
             </>
-          ));
+          )).result;
           if (result === null) {
             return;
           }

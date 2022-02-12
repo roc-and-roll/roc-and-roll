@@ -234,6 +234,8 @@ const DrawablePrimitive = React.forwardRef<
       click={click}
       mousedown={mousedown}
       mouseup={mouseup}
+      rightdown={mousedown}
+      rightup={mouseup}
       hitArea={hitArea}
     >
       {drawable.sets.map((drawing, i) => (

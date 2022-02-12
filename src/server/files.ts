@@ -86,16 +86,6 @@ export async function getImageDimensions(path: string) {
   };
 }
 
-export function requiresTiling({
-  width,
-  height,
-}: {
-  width: number;
-  height: number;
-}) {
-  return width > 2048 || height > 2048;
-}
-
 export async function tileImage(
   uploadedFilesDir: string,
   uploadedFilesCacheDir: string,

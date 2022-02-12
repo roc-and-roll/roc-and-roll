@@ -85,6 +85,7 @@ import { MeasurePaths } from "./MeasurePaths";
 import { MouseCursors } from "./MouseCursors";
 import { FogOfWar } from "./FogOfWar";
 import { MapReactions } from "./MapReactions";
+import { dialogCtxs } from "../../dialog-boxes";
 
 type Rectangle = [number, number, number, number];
 
@@ -869,6 +870,7 @@ transform,
             MyselfContext,
             RoughContext,
             ViewPortSizeContext,
+            dialogCtxs.set,
           ]}
           barrierRender={(children) => {
             const color = colorValue(backgroundColor);

@@ -41,7 +41,6 @@ import {
   assetFamily,
   mapObjectGhostPositionsFamily,
 } from "./recoil";
-import { Popover } from "../Popover";
 import { CharacterEditor, conditionIcons } from "../characters/CharacterEditor";
 import {
   pointAdd,
@@ -62,6 +61,7 @@ import { Container, Sprite } from "react-pixi-fiber";
 import { RRMouseEvent, createPixiPortal, colorValue } from "./pixi-utils";
 import { PixiTooltip } from "./pixi/PixiTooltip";
 import { PixiFontawesomeIcon } from "./pixi/PixiFontawesomeIcon";
+import { PixiPopover } from "./pixi/PixiPopover";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
@@ -338,32 +338,27 @@ function MapTokenInner({
           healthBarArea
         )}
 
-      {
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, no-constant-condition
-        false && canControl ? (
-          <Popover
-            content={
-              <div onMouseDown={(e) => e.stopPropagation()}>
-                <CharacterEditor
-                  character={character}
-                  wasJustCreated={false}
-                  onNameFirstEdited={() => {}}
-                  onClose={() => setEditorVisible(false)}
-                />
-                <MapTokenEditor mapId={mapId} token={object} />
-              </div>
-            }
-            visible={editorVisible}
-            onClickOutside={() => setEditorVisible(false)}
-            interactive
-            placement="right"
-          >
-            <g>{fullTokenRepresentation({ x, y })}</g>
-          </Popover>
-        ) : (
-          fullTokenRepresentation({ x, y })
-        )
-      }
+      {canControl ? (
+        <PixiPopover
+          content={
+            <div onMouseDown={(e) => e.stopPropagation()}>
+              <CharacterEditor
+                character={character}
+                wasJustCreated={false}
+                onNameFirstEdited={() => {}}
+                onClose={() => setEditorVisible(false)}
+              />
+              <MapTokenEditor mapId={mapId} token={object} />
+            </div>
+          }
+          visible={editorVisible}
+          onClickOutside={() => setEditorVisible(false)}
+        >
+          {fullTokenRepresentation({ x, y })}
+        </PixiPopover>
+      ) : (
+        fullTokenRepresentation({ x, y })
+      )}
     </>
   );
 }
@@ -430,9 +425,19 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
             ? undefined
             : (e) => props.handleMouseDown(e.data.originalEvent as MouseEvent)
         }
+        rightdown={
+          props.isGhost
+            ? undefined
+            : (e) => props.handleMouseDown(e.data.originalEvent as MouseEvent)
+        }
         width={tokenSize}
         height={tokenSize}
         mouseup={
+          props.isGhost
+            ? undefined
+            : (e) => props.handleMouseUp(e.data.originalEvent as MouseEvent)
+        }
+        rightup={
           props.isGhost
             ? undefined
             : (e) => props.handleMouseUp(e.data.originalEvent as MouseEvent)
