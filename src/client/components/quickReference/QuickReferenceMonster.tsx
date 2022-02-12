@@ -34,7 +34,7 @@ export const Monster = React.memo(function Monster({
 }: {
   monster: CompendiumMonster;
 }) {
-  const myself = useMyProps("id");
+  const myself = useMyProps("id", "isGM");
   const dispatch = useServerDispatch();
 
   function parseAC(): number | null {
@@ -192,9 +192,11 @@ export const Monster = React.memo(function Monster({
     <>
       <div className="flex justify-between items-baseline">
         <p className="text-2xl mt-4">{monster.name}</p>
-        <Button className="h-8" onClick={addTemplate}>
-          Add To Templates
-        </Button>
+        {myself.isGM && (
+          <Button className="h-8" onClick={addTemplate}>
+            Add To Templates
+          </Button>
+        )}
       </div>
       <dl>
         <dt>Stat Block</dt>
