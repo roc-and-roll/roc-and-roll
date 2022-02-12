@@ -13,7 +13,11 @@ import {
 import { useMyProps } from "../../myself";
 import { useServerDispatch } from "../../state";
 import { useCompendium } from "../compendium/Compendium";
-import { CompendiumTextEntry } from "../compendium/types";
+import {
+  CompendiumMonster,
+  CompendiumSpell,
+  CompendiumTextEntry,
+} from "../compendium/types";
 import { Dialog, DialogContent, DialogTitle } from "../Dialog";
 import { SmartTextInput } from "../ui/TextInput";
 import "./QuickReference.scss";
@@ -49,6 +53,12 @@ export default function QuickReference({ onClose }: { onClose: () => void }) {
   );
 }
 
+function isSpell(
+  obj: CompendiumMonster | CompendiumSpell
+): obj is CompendiumSpell {
+  return "components" in obj;
+}
+
 function Content({
   search,
   searchIsStale,
@@ -58,20 +68,13 @@ function Content({
 }) {
   const { sources: compendiumSources } = useCompendium();
 
-  const spells = useMemo(
+  const results = useMemo(
     () =>
       matchSorter(
-        compendiumSources.flatMap((source) => source.data.spell),
-        search,
-        { keys: ["name"] }
-      ),
-    [compendiumSources, search]
-  );
-
-  const monsters = useMemo(
-    () =>
-      matchSorter(
-        compendiumSources.flatMap((source) => source.data.monster ?? []),
+        [
+          ...compendiumSources.flatMap((source) => source.data.spell),
+          ...compendiumSources.flatMap((source) => source.data.monster ?? []),
+        ],
         search,
         { keys: ["name"] }
       ),
@@ -82,14 +85,13 @@ function Content({
 
   return (
     <ul style={searchIsStale ? { opacity: 0.7 } : {}}>
-      {spells.map((spell) => (
-        <li key={spell.name}>
-          <Spell spell={spell} />
-        </li>
-      ))}
-      {monsters.map((monster) => (
-        <li key={monster.name}>
-          <Monster monster={monster} />
+      {results.map((result: CompendiumSpell | CompendiumMonster) => (
+        <li key={result.name}>
+          {isSpell(result) ? (
+            <Spell spell={result} />
+          ) : (
+            <Monster monster={result} />
+          )}
         </li>
       ))}
     </ul>
