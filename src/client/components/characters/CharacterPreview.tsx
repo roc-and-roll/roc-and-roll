@@ -76,7 +76,7 @@ export const CharacterPreview = React.forwardRef<
       {dead && shouldDisplayShadow && (
         <RRFontAwesomeIcon
           icon={faTimes}
-          className="dead-marker"
+          className="absolute top-0 left-0 text-red-800"
           style={{
             width: currentSize,
             height: currentSize,
