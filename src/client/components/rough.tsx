@@ -558,7 +558,11 @@ const RoughTextNonMemoized = React.forwardRef<
   return fontLoaded ? (
     <Text
       ref={ref}
-      style={{ fontFamily: ["'Architects Daughter'", "cursive"], ...style }}
+      style={
+        style instanceof PIXI.TextStyle
+          ? style
+          : { fontFamily: ["'Architects Daughter'", "cursive"], ...style }
+      }
       // TODO: Text is blurry when zooming -- thus we render it at 5x the
       // resolution here. There is probably a better way.
       resolution={5}
@@ -570,3 +574,5 @@ const RoughTextNonMemoized = React.forwardRef<
 });
 
 export const RoughText = React.memo(RoughTextNonMemoized);
+
+export const roughTextFontFamily = ["'Architects Daughter'", "cursive"];

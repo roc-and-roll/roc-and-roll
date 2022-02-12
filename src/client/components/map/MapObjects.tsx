@@ -165,6 +165,7 @@ const MapObjectWrapper = React.memo<{
           // additional parameters for tokens
           auraArea={areas.auraArea}
           healthBarArea={areas.healthBarArea}
+          tooltipArea={areas.tooltipArea}
           zoom={zoom}
           contrastColor={contrastColor}
           smartSetTotalHP={smartSetTotalHP}

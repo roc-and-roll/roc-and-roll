@@ -73,6 +73,7 @@ export const MapToken = React.memo<{
   onStartMove: (o: RRMapObject, e: RRMouseEvent) => void;
   auraArea: Container | null;
   healthBarArea: Container | null;
+  tooltipArea: Container | null;
   zoom: number;
   contrastColor: string;
   smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
@@ -83,6 +84,7 @@ export const MapToken = React.memo<{
   onStartMove,
   auraArea,
   healthBarArea,
+  tooltipArea,
   zoom,
   contrastColor,
   smartSetTotalHP,
@@ -104,6 +106,7 @@ export const MapToken = React.memo<{
       onStartMove={onStartMove}
       auraArea={auraArea}
       healthBarArea={healthBarArea}
+      tooltipArea={tooltipArea}
       zoom={zoom}
       contrastColor={contrastColor}
       smartSetTotalHP={smartSetTotalHP}
@@ -120,6 +123,7 @@ function MapTokenInner({
   onStartMove,
   auraArea,
   healthBarArea,
+  tooltipArea,
   zoom,
   contrastColor,
   smartSetTotalHP,
@@ -132,6 +136,7 @@ function MapTokenInner({
   onStartMove: (o: RRMapObject, e: RRMouseEvent) => void;
   auraArea: Container | null;
   healthBarArea: Container | null;
+  tooltipArea: Container | null;
   zoom: number;
   contrastColor: string;
   smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
@@ -235,6 +240,7 @@ function MapTokenInner({
           zoom={zoom}
           contrastColor={contrastColor}
           character={character}
+          tooltipArea={tooltipArea}
         />
       ) : (
         <TokenImageOrPlaceholder
@@ -246,6 +252,7 @@ function MapTokenInner({
           isSelectedOrHovered={isSelectedOrHovered}
           handleMouseDown={handleMouseDown}
           handleMouseUp={handleMouseUp}
+          tooltipArea={tooltipArea}
         />
       )}
     </Container>
@@ -325,7 +332,7 @@ function MapTokenInner({
               />
             )}
             <Container x={x} y={y} name="condition-icons">
-              <ConditionIcons character={character} />
+              <ConditionIcons character={character} tooltipArea={tooltipArea} />
             </Container>
           </>,
           healthBarArea
@@ -365,11 +372,13 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
   zoom,
   contrastColor,
   character,
+  tooltipArea,
   ...props
 }: {
   zoom: number;
   contrastColor: RRColor;
   character: RRCharacter;
+  tooltipArea: Container | null;
 } & (
   | {
       isGhost: false;
@@ -446,7 +455,7 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
       )}
 
       {!props.isGhost && character.visibility !== "everyone" && (
-        <PixiTooltip text="only visible to GMs">
+        <PixiTooltip text="only visible to GMs" tooltipArea={tooltipArea}>
           <RoughText
             x={tokenSize / 2}
             y={tokenSize / 2}
@@ -470,8 +479,10 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
 
 const ConditionIcons = React.memo(function ConditionIcons({
   character,
+  tooltipArea,
 }: {
   character: RRCharacter;
+  tooltipArea: Container | null;
 }) {
   const tinyIcons = character.conditions.length > 12;
   const iconSize = (tinyIcons ? 12 : 16) * character.scale;
@@ -489,7 +500,11 @@ const ConditionIcons = React.memo(function ConditionIcons({
         };
 
         return (
-          <PixiTooltip key={condition} text={condition}>
+          <PixiTooltip
+            key={condition}
+            text={condition}
+            tooltipArea={tooltipArea}
+          >
             {typeof icon === "string" ? (
               <Sprite texture={PIXI.Texture.from(icon)} {...props} />
             ) : (

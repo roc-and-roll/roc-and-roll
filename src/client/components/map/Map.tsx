@@ -111,6 +111,7 @@ export type MapAreas = {
   defaultArea: Container;
   tokenArea: Container;
   healthBarArea: Container;
+  tooltipArea: Container;
 };
 
 const PANNING_BUTTON = 2;
@@ -762,19 +763,26 @@ transform,
   const [defaultArea, setDefaultArea] = useState<Container | null>(null);
   const [tokenArea, setTokenArea] = useState<Container | null>(null);
   const [healthBarArea, setHealthBarArea] = useState<Container | null>(null);
+  const [tooltipArea, setTooltipArea] = useState<Container | null>(null);
 
   const areas = useMemo(
     () =>
-      imageArea && auraArea && defaultArea && tokenArea && healthBarArea
+      imageArea &&
+      auraArea &&
+      defaultArea &&
+      tokenArea &&
+      healthBarArea &&
+      tooltipArea
         ? {
             imageArea,
             auraArea,
             defaultArea,
             tokenArea,
-            healthBarArea: healthBarArea,
+            healthBarArea,
+            tooltipArea,
           }
         : null,
-    [imageArea, auraArea, defaultArea, tokenArea, healthBarArea]
+    [imageArea, auraArea, defaultArea, tokenArea, healthBarArea, tooltipArea]
   );
 
   const viewPortSize = useContext(ViewPortSizeContext);
@@ -949,6 +957,7 @@ transform,
               />
               {toolOverlay}
             </Container>
+            <Container ref={setTooltipArea} name="tooltips" />
           </RecoilBridge>
         </ContextBridge>
       </div>
