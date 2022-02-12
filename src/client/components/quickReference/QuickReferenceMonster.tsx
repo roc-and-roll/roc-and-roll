@@ -7,6 +7,7 @@ import { useServerDispatch } from "../../state";
 import {
   CompendiumMonster,
   CompendiumMonsterSkills,
+  CompendiumTextEntry,
 } from "../compendium/types";
 import { Button } from "../ui/Button";
 import { TextEntry } from "./QuickReference";
@@ -158,6 +159,35 @@ export const Monster = React.memo(function Monster({
     dispatch([assetImageAddAction, templateAddAction]);
   }
 
+  function renderTextEntries(
+    title: string,
+    entries: { name: string; entries: CompendiumTextEntry[] }[]
+  ) {
+    return (
+      <>
+        <dt>{title}</dt>
+        <dd>
+          {entries.map((action, index) => {
+            return (
+              <div key={index}>
+                <p className="font-bold">{action.name}</p>
+                {action.entries.map((entry, index) => {
+                  return (
+                    <TextEntry
+                      key={"textEntry" + index.toString()}
+                      entry={entry}
+                      rollName={`${monster.name} ${action.name} `}
+                    />
+                  );
+                })}
+              </div>
+            );
+          })}
+        </dd>
+      </>
+    );
+  }
+
   return (
     <>
       <div className="flex justify-between items-baseline">
@@ -230,26 +260,10 @@ export const Monster = React.memo(function Monster({
             </dd>
           </>
         )}
-
-        <dt>Actions</dt>
-        <dd>
-          {monster.action?.map((action, index) => {
-            return (
-              <div key={index}>
-                <p className="font-bold">{action.name}</p>
-                {action.entries.map((entry, index) => {
-                  return (
-                    <TextEntry
-                      key={"textEntry" + index.toString()}
-                      entry={entry}
-                      rollName={`${monster.name} ${action.name} `}
-                    />
-                  );
-                })}
-              </div>
-            );
-          })}
-        </dd>
+        {monster.trait && renderTextEntries("Traits", monster.trait)}
+        {monster.legendary &&
+          renderTextEntries("Legendary Actions", monster.legendary)}
+        {monster.action && renderTextEntries("Actions", monster.action)}
       </dl>
     </>
   );
