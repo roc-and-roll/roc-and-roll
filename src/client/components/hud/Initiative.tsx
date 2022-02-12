@@ -67,6 +67,7 @@ import {
   SetTargetTransformContext,
   ViewPortSizeRefContext,
 } from "../map/MapContainer";
+import { makePoint, pointScale, pointSubtract } from "../../../shared/point";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -141,18 +142,21 @@ export function InitiativeHUD() {
             set(selectedMapObjectIdsAtom, ids);
             ids.map((id) => set(selectedMapObjectsFamily(id), true));
           }
-          const size = viewPortSizeRef.current;
+          const viewPortSize = viewPortSizeRef.current;
+          const character =
+            charactersRef.current.entities[tokens[0]!.characterId];
           if (
-            charactersRef.current.entities[tokens[0]!.characterId]
-              ?.visibility === "everyone" ||
-            myself.isGM
+            character &&
+            (character.visibility === "everyone" || myself.isGM)
           ) {
-            setTargetTransform(
-              translate(
-                -tokens[0]!.position.x + size.x / 2,
-                -tokens[0]!.position.y + size.y / 2
-              )
+            const center = pointSubtract(
+              pointSubtract(
+                pointScale(viewPortSize, 0.5),
+                makePoint((character.scale * TOKEN_SIZE) / 2)
+              ),
+              tokens[0]!.position
             );
+            setTargetTransform(translate(center.x, center.y));
           }
         }
       },
