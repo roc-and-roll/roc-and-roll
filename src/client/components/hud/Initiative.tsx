@@ -342,9 +342,13 @@ const InitiativeEntry = React.memo<{
       </>
     );
   } else {
-    const characters = entry.characterIds.map(
-      (id) => characterCollection.entities[id]
-    );
+    const characters = entry.characterIds
+      .map((id) => characterCollection.entities[id])
+      // Sort dead characters to the back of the token stack.
+      .sort(
+        (a, b) =>
+          +(b ? isCharacterDead(b) : true) - +(a ? isCharacterDead(a) : true)
+      );
     const names = new Set(
       characters.map((character) => character?.name ?? "Unknown Character")
     );
