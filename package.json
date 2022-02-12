@@ -21,7 +21,7 @@
     "lint:eslint": "  eslint --cache --cache-strategy content .",
     "format:eslint": "eslint --cache --cache-strategy content . --fix",
     "lint:cspell": "  cspell lint --no-progress --show-suggestions --no-must-find-files --cache --cache-strategy content",
-    "format:cpsell": "cspell lint --no-progress --show-suggestions --no-must-find-files --cache --cache-strategy content",
+    "format:cspell": "cspell lint --no-progress --show-suggestions --no-must-find-files --cache --cache-strategy content",
     "build": "concurrently --names client,server --prefix-colors blue,green yarn:build:client yarn:build:server",
     "build:client": "webpack --config webpack.client.js --env mode=production",
     "build:server": "webpack --config webpack.server.js --env mode=production && bash import-meta-url-hack.sh",
