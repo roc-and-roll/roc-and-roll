@@ -21,6 +21,7 @@ import {
   RRMultipleRoll,
   RRPlayer,
   RRPlayerID,
+  RRToken,
 } from "../../../shared/state";
 import {
   initiativeTrackerSetCurrentEntry,
@@ -112,16 +113,17 @@ export function InitiativeHUD() {
     (state) =>
       state.maps.entities[myself.currentMap]?.objects ?? EMPTY_ENTITY_COLLECTION
   );
+  const charactersRef = useServerStateRef((state) => state.characters);
   const viewPortSizeRef = useContext(ViewPortSizeRefContext);
   const setTargetTransform = useContext(SetTargetTransformContext);
   const setSelection = useRecoilCallback(
     ({ snapshot, set, reset }) =>
       (characterIds: RRCharacterID[]) => {
-        const tokens = characterIds.flatMap(
+        const tokens: RRToken[] = characterIds.flatMap(
           (characterId) =>
-            entries(mapObjectsRef.current).find(
+            (entries(mapObjectsRef.current).find(
               (o) => o.type === "token" && o.characterId === characterId
-            ) ?? []
+            ) as RRToken | undefined) ?? []
         );
         const ids = tokens.map((t) => t.id);
         const currentIds = snapshot
@@ -140,15 +142,28 @@ export function InitiativeHUD() {
             ids.map((id) => set(selectedMapObjectsFamily(id), true));
           }
           const size = viewPortSizeRef.current;
-          setTargetTransform(
-            translate(
-              -tokens[0]!.position.x + size.x / 2,
-              -tokens[0]!.position.y + size.y / 2
-            )
-          );
+          if (
+            charactersRef.current.entities[tokens[0]!.characterId]
+              ?.visibility === "everyone" ||
+            myself.isGM
+          ) {
+            setTargetTransform(
+              translate(
+                -tokens[0]!.position.x + size.x / 2,
+                -tokens[0]!.position.y + size.y / 2
+              )
+            );
+          }
         }
       },
-    [canEdit, mapObjectsRef, viewPortSizeRef, setTargetTransform]
+    [
+      mapObjectsRef,
+      canEdit,
+      viewPortSizeRef,
+      charactersRef,
+      setTargetTransform,
+      myself,
+    ]
   );
 
   const lastRowId = useRef<RRInitiativeTrackerEntryID | null>(null);
