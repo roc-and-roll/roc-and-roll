@@ -484,6 +484,7 @@ export type CompendiumMonster = {
 
   action?: { name: string; entries: CompendiumTextEntry[] }[];
   legendary?: { name: string; entries: CompendiumTextEntry[] }[];
+  legendaryActions?: number;
 
   immune?: Array<
     | NonNullable<RRDamageType["type"]>
@@ -495,6 +496,14 @@ export type CompendiumMonster = {
   >;
   conditionImmune?: Array<RRCharacterCondition>;
   skill?: CompendiumMonsterSkills & { other?: any };
+  save?: {
+    str?: string;
+    dex?: string;
+    con?: string;
+    int?: string;
+    wis?: string;
+    cha?: string;
+  };
 
   type?: any;
   alignment?: any;
@@ -514,9 +523,7 @@ export type CompendiumMonster = {
   hasFluff?: any;
   hasFluffImages?: any;
   srd?: any;
-  save?: any;
-  legendaryActions?: any;
-  legendaryGroup?: any;
+  legendaryGroup?: any; // get the relevant legendary groups to get lair actions
   traitTags?: any;
   actionTags?: any;
   conditionInflict?: any;
@@ -547,6 +554,7 @@ export type CompendiumMonster = {
   legendaryHeader?: any;
   alias?: any;
   isNamedCreature?: any;
+  reprintedAs?: any;
 };
 
 export const isConditionalSpeed = z.strictObject({
@@ -606,6 +614,7 @@ export const isMonster = z.strictObject({
   legendary: z.optional(
     z.array(z.strictObject({ name: z.string(), entries: z.array(isTextEntry) }))
   ),
+  legendaryActions: z.optional(z.number().int()),
   immune: z.optional(
     z.array(
       z.enum(damageTypesWithoutNull).or(
@@ -641,6 +650,16 @@ export const isMonster = z.strictObject({
       other: z.optional(z.any()),
     })
   ),
+  save: z.optional(
+    z.strictObject({
+      str: z.optional(z.string()),
+      dex: z.optional(z.string()),
+      con: z.optional(z.string()),
+      int: z.optional(z.string()),
+      wis: z.optional(z.string()),
+      cha: z.optional(z.string()),
+    })
+  ),
 
   senses: z.any(),
   passive: z.any(),
@@ -657,8 +676,6 @@ export const isMonster = z.strictObject({
   hasFluff: z.any(),
   hasFluffImages: z.any(),
   srd: z.any(),
-  save: z.any(),
-  legendaryActions: z.any(),
   legendaryGroup: z.any(),
   traitTags: z.any(),
   actionTags: z.any(),
@@ -690,6 +707,7 @@ export const isMonster = z.strictObject({
   legendaryHeader: z.any(),
   alias: z.any(),
   isNamedCreature: z.any(),
+  reprintedAs: z.any(),
 });
 
 // Make sure that the schema really matches the Spell type.

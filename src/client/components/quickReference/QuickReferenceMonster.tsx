@@ -47,6 +47,10 @@ export const Monster = React.memo(function Monster({
     const key = monster.skill?.[skillName];
     return key === undefined ? null : parseInt(key);
   }
+  function getSavingThrow(save: "str" | "dex" | "con" | "int" | "wis" | "cha") {
+    const key = monster.save?.[save];
+    return key === undefined ? null : parseInt(key);
+  }
 
   function getTokenSize() {
     return monster.size === undefined ||
@@ -117,12 +121,12 @@ export const Monster = React.memo(function Monster({
         proficiency: null,
       },
       savingThrows: {
-        STR: null,
-        DEX: null,
-        CON: null,
-        INT: null,
-        WIS: null,
-        CHA: null,
+        STR: getSavingThrow("str"),
+        DEX: getSavingThrow("dex"),
+        CON: getSavingThrow("con"),
+        INT: getSavingThrow("int"),
+        WIS: getSavingThrow("wis"),
+        CHA: getSavingThrow("cha"),
       },
       skills: {
         Athletics: getSkill("athletics"),
