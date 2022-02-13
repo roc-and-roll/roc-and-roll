@@ -42,15 +42,19 @@ export function QuickReferenceProvider({
 }
 
 export default function QuickReferenceWrapper() {
-  const { open, setOpen } = useContext(QuickReferenceContext);
+  const { open, setOpen, setSearchString } = useContext(QuickReferenceContext);
   const lastShiftPressRef = useRef(0);
   const [_, startTransition] = useTransition();
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
-      if (isTriggeredByTextInput(e)) {
+      if (e.key === "Escape" && open) {
+        setSearchString("");
+        setOpen(false);
         return;
       }
+
+      if (isTriggeredByTextInput(e)) return;
 
       if (
         e.key === "Shift" &&
@@ -73,7 +77,7 @@ export default function QuickReferenceWrapper() {
     };
     window.addEventListener("keyup", listener, options);
     return () => window.removeEventListener("keyup", listener, options);
-  }, [setOpen, startTransition]);
+  }, [open, setOpen, setSearchString, startTransition]);
 
   return open ? (
     <Suspense fallback={null}>
