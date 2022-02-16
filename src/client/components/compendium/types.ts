@@ -452,7 +452,7 @@ export type CompendiumMonsterSkills = {
 
 type SpellPerLevel = {
   slots: number;
-  spells: string[];
+  spells: CompendiumTextEntry[];
   lower?: number;
 };
 
@@ -517,19 +517,19 @@ export type CompendiumMonster = {
   spellcasting?: {
     name: string;
     headerEntries: CompendiumTextEntry[];
-    will?: string[];
+    will?: CompendiumTextEntry[];
     daily?: {
-      "3e"?: string[];
-      "3"?: string[];
-      "2e"?: string[];
-      "1e"?: string[];
-      "1"?: string[];
+      "3e"?: CompendiumTextEntry[];
+      "3"?: CompendiumTextEntry[];
+      "2e"?: CompendiumTextEntry[];
+      "1e"?: CompendiumTextEntry[];
+      "1"?: CompendiumTextEntry[];
     };
     hidden?: string[];
     ability: string;
     footerEntries?: CompendiumTextEntry[];
     spells?: {
-      0?: { spells: string[] };
+      0?: { spells: CompendiumTextEntry[] };
       1?: SpellPerLevel;
       2?: SpellPerLevel;
       3?: SpellPerLevel;
@@ -598,7 +598,7 @@ export const isConditionalSpeed = z.strictObject({
 
 const spellPerLevel = z.strictObject({
   slots: z.number().int(),
-  spells: z.array(z.string()),
+  spells: z.array(isTextEntry),
   lower: z.optional(z.number().int()),
 });
 
@@ -718,21 +718,21 @@ export const isMonster = z.strictObject({
         name: z.string(),
         headerEntries: z.array(isTextEntry),
         footerEntries: z.optional(z.array(isTextEntry)),
-        will: z.optional(z.array(z.string())),
+        will: z.optional(z.array(isTextEntry)),
         daily: z.optional(
           z.strictObject({
-            "3e": z.optional(z.array(z.string())), // I dont know what the difference between 3 and 3e is, they both seem to mean 3 times per day
-            "3": z.optional(z.array(z.string())),
-            "2e": z.optional(z.array(z.string())),
-            "1e": z.optional(z.array(z.string())),
-            "1": z.optional(z.array(z.string())),
+            "3e": z.optional(z.array(isTextEntry)), // I dont know what the difference between 3 and 3e is, they both seem to mean 3 times per day
+            "3": z.optional(z.array(isTextEntry)),
+            "2e": z.optional(z.array(isTextEntry)),
+            "1e": z.optional(z.array(isTextEntry)),
+            "1": z.optional(z.array(isTextEntry)),
           })
         ),
         ability: z.string(),
         hidden: z.optional(z.array(z.string())),
         spells: z.optional(
           z.strictObject({
-            0: z.optional(z.strictObject({ spells: z.array(z.string()) })),
+            0: z.optional(z.strictObject({ spells: z.array(isTextEntry) })),
             1: z.optional(spellPerLevel),
             2: z.optional(spellPerLevel),
             3: z.optional(spellPerLevel),
