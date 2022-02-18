@@ -17,7 +17,19 @@
     "sourceMap": true,
     "jsx": "react",
     "baseUrl": "./",
-    "typeRoots": ["src/shared/types", "./node_modules/@types"]
+    "typeRoots": ["src/shared/types", "./node_modules/@types"],
+    // Compatibility with Babel and other tools
+    // https://github.com/microsoft/TypeScript/wiki/Performance#isolated-file-emit
+    "isolatedModules": true,
+    // Performance improvements
+    // https://github.com/microsoft/TypeScript/wiki/Performance
+    //
+    // Don't automatically include all `@types` packages, but only these that we
+    // don't manually import.
+    "types": ["node", "webpack-env", "jest"],
+    // Speed up compilation by skipping type checking of Typescript internal
+    // type definitions.
+    "skipDefaultLibCheck": true
   },
   "include": [
     "./jest-setup.ts",

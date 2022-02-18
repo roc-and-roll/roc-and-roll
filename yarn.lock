@@ -2637,15 +2637,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-three/fiber@npm:^7.0.6":
-  version: 7.0.6
-  resolution: "@react-three/fiber@npm:7.0.6"
+"@react-three/fiber@npm:^7.0.26":
+  version: 7.0.26
+  resolution: "@react-three/fiber@npm:7.0.26"
   dependencies:
     "@babel/runtime": ^7.13.10
     react-merge-refs: ^1.1.0
     react-reconciler: ^0.26.2
     react-three-fiber: 0.0.0-deprecated
-    react-use-measure: ^2.0.4
+    react-use-measure: ^2.1.1
     resize-observer-polyfill: ^1.5.1
     scheduler: ^0.20.2
     use-asset: ^1.0.4
@@ -2654,11 +2654,11 @@ __metadata:
   peerDependencies:
     react: ">=17.0"
     react-dom: ">=17.0"
-    three: ">=0.126"
+    three: ">=0.133"
   peerDependenciesMeta:
     react-dom:
       optional: true
-  checksum: f213eef29a600688f03d3ffd2f41ea2ce4da9608326921f3fea15621f86bebbc8154ce5eca071188a78f9684751c7ee824353711e59affb9967f3f7fdeaf2f20
+  checksum: 72548c6d2aaf911f501ff7e53ab685934f734008b6c59a35c2d8941cea5211648e3e9d8ccecc10666f82349c7cc6d2a3eac4f8c581dde63c34ea07650769dc41
   languageName: node
   linkType: hard
 
@@ -3292,11 +3292,21 @@ __metadata:
   linkType: hard
 
 "@types/hast@npm:^2.0.0":
-  version: 2.3.1
-  resolution: "@types/hast@npm:2.3.1"
+  version: 2.3.4
+  resolution: "@types/hast@npm:2.3.4"
   dependencies:
     "@types/unist": "*"
-  checksum: 3e2ec0a56a06cd2fb5474b4ee312b40e70dc82e4e711514b393bb4e5ace2e9912576c9b44c2504bbb46c9b772794be49f1a4c418d01ceac1fafd66d15c158f62
+  checksum: fff47998f4c11e21a7454b58673f70478740ecdafd95aaf50b70a3daa7da9cdc57315545bf9c039613732c40b7b0e9e49d11d03fe9a4304721cdc3b29a88141e
+  languageName: node
+  linkType: hard
+
+"@types/hoist-non-react-statics@npm:^3.3.1":
+  version: 3.3.1
+  resolution: "@types/hoist-non-react-statics@npm:3.3.1"
+  dependencies:
+    "@types/react": "*"
+    hoist-non-react-statics: ^3.3.0
+  checksum: 2c0778570d9a01d05afabc781b32163f28409bb98f7245c38d5eaf082416fdb73034003f5825eb5e21313044e8d2d9e1f3fe2831e345d3d1b1d20bcd12270719
   languageName: node
   linkType: hard
 
@@ -3551,6 +3561,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/react-reconciler@npm:^0.26.4":
+  version: 0.26.4
+  resolution: "@types/react-reconciler@npm:0.26.4"
+  dependencies:
+    "@types/react": "*"
+  checksum: 5ebb72f8aa70824b69030ae7f4c21828c0fb5c1cc5873a606eb7f7ac50cf5dd52502edcd32bf1eead2f149d076ee1798c86f1ffaebfa8b31d523343368d351e0
+  languageName: node
+  linkType: hard
+
 "@types/react-test-renderer@npm:>=16.9.0, @types/react-test-renderer@npm:^17.0.1":
   version: 17.0.1
   resolution: "@types/react-test-renderer@npm:17.0.1"
@@ -3665,10 +3684,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/three@npm:^0.127.1":
-  version: 0.127.1
-  resolution: "@types/three@npm:0.127.1"
-  checksum: 102231781c7e81f906b96e6439e730cacd139c2e0c35317731c28f4eecc274bdc86a0cf3f453361b6f6b7bbdb1a20fcceade9bbe1705954dae6b6eda95a5baee
+"@types/three@npm:^0.137.0":
+  version: 0.137.0
+  resolution: "@types/three@npm:0.137.0"
+  checksum: 32674dd002b0f249b995167b52e0e4d21af314260339ab09cf6898ae7d1bf000442d1da76673a0fcb5f8164878ba62b61202a1e2175afe2d76de8119d9821e04
   languageName: node
   linkType: hard
 
@@ -3696,9 +3715,9 @@ __metadata:
   linkType: hard
 
 "@types/unist@npm:*, @types/unist@npm:^2.0.0":
-  version: 2.0.3
-  resolution: "@types/unist@npm:2.0.3"
-  checksum: 4427306b094561da28164e7e5250c4e6b382cb8eac40bf7e6bb0ff1e6e00c13e47aaf32e4a08fc8ba54602d07f79a39fb9ba304cc9dc886b1e3caf824649edbd
+  version: 2.0.6
+  resolution: "@types/unist@npm:2.0.6"
+  checksum: 25cb860ff10dde48b54622d58b23e66214211a61c84c0f15f88d38b61aa1b53d4d46e42b557924a93178c501c166aa37e28d7f6d994aba13d24685326272d5db
   languageName: node
   linkType: hard
 
@@ -6198,7 +6217,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debounce@npm:^1.2.0":
+"debounce@npm:^1.2.1":
   version: 1.2.1
   resolution: "debounce@npm:1.2.1"
   checksum: 682a89506d9e54fb109526f4da255c5546102fbb8e3ae75eef3b04effaf5d4853756aee97475cd4650641869794e44f410eeb20ace2b18ea592287ab2038519e
@@ -8353,6 +8372,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hast-util-whitespace@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "hast-util-whitespace@npm:2.0.0"
+  checksum: abeb5386075bfb0facfce89eed0e13d2cb27a0910cec8fd234b48821a1538387a73fa7f458842e8c404148dc69434acbc10488d75b02817e460652c2c894c024
+  languageName: node
+  linkType: hard
+
 "he@npm:^1.2.0":
   version: 1.2.0
   resolution: "he@npm:1.2.0"
@@ -8372,7 +8398,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hoist-non-react-statics@npm:^3.3.2":
+"hoist-non-react-statics@npm:^3.3.0, hoist-non-react-statics@npm:^3.3.2":
   version: 3.3.2
   resolution: "hoist-non-react-statics@npm:3.3.2"
   dependencies:
@@ -13301,13 +13327,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-markdown@npm:^7.0.1":
-  version: 7.0.1
-  resolution: "react-markdown@npm:7.0.1"
+"react-markdown@npm:^7.1.2":
+  version: 7.1.2
+  resolution: "react-markdown@npm:7.1.2"
   dependencies:
     "@types/hast": ^2.0.0
     "@types/unist": ^2.0.0
     comma-separated-tokens: ^2.0.0
+    hast-util-whitespace: ^2.0.0
     prop-types: ^15.0.0
     property-information: ^6.0.0
     react-is: ^17.0.0
@@ -13321,7 +13348,7 @@ __metadata:
   peerDependencies:
     "@types/react": ">=16"
     react: ">=16"
-  checksum: fba9f0c8dca9b77a01dac1ecd7d01aef9054127712b77f63d281cd76e8f992b8bddc477ee3cd91c93d88853a2814260676c3220d242ba2caf01d68fa686e8917
+  checksum: 6f6cd6cfee64e936edb31e3aca49dd284fc5f55c018cb4430f9b3f2f1b3df343a6507c8f33714f1bb2f620a5a05650166bc1add951fd6f8623731b689afedcfd
   languageName: node
   linkType: hard
 
@@ -13394,15 +13421,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-use-measure@npm:^2.0.4":
-  version: 2.0.4
-  resolution: "react-use-measure@npm:2.0.4"
+"react-use-measure@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "react-use-measure@npm:2.1.1"
   dependencies:
-    debounce: ^1.2.0
+    debounce: ^1.2.1
   peerDependencies:
     react: ">=16.13"
     react-dom: ">=16.13"
-  checksum: cbaf8896f14bb4b3259a39181b8cd26bf8291cda5f02729f6f977169145acfa1b727d9a99710f20329eb717bad189f599a1616e735053ff07f9ae0a0bd7fd206
+  checksum: b8e8939229d463c3c505f7b617925c0228efae0cd6f651371f463846417b06c9170be57df51293a61027c41770f8a090fdb8a08717c4e36290ccb496e0318f1f
   languageName: node
   linkType: hard
 
@@ -14010,7 +14037,7 @@ resolve@^2.0.0-next.3:
     "@jest/create-cache-key-function": ^27.3.1
     "@playwright/test": ^1.17.1
     "@pmmmwh/react-refresh-webpack-plugin": ^0.5.4
-    "@react-three/fiber": ^7.0.6
+    "@react-three/fiber": ^7.0.26
     "@reduxjs/toolkit": ^1.7.1
     "@rocket.chat/peggy-loader": ^0.30.1
     "@seznam/compose-react-refs": ^1.0.6
@@ -14026,6 +14053,7 @@ resolve@^2.0.0-next.3:
     "@types/express": ^4.17.13
     "@types/favicons": ^6
     "@types/fs-extra": ^9.0.13
+    "@types/hoist-non-react-statics": ^3.3.1
     "@types/howler": ^2.2.4
     "@types/jest": ^27.0.1
     "@types/mini-css-extract-plugin": ^2.2.0
@@ -14036,13 +14064,14 @@ resolve@^2.0.0-next.3:
     "@types/proper-lockfile": ^4
     "@types/react": ^17.0.38
     "@types/react-dom": ^17.0.11
+    "@types/react-reconciler": ^0.26.4
     "@types/react-test-renderer": ^17.0.1
     "@types/sharp": ^0.28.6
     "@types/socket.io": ^3.0.2
     "@types/socket.io-client": ^3.0.0
     "@types/source-map-support": ^0.5.4
     "@types/testing-library__jest-dom": ^5.14.2
-    "@types/three": ^0.127.1
+    "@types/three": ^0.137.0
     "@types/tinycolor2": ^1.4.3
     "@types/webpack-bundle-analyzer": ^4.4.1
     "@types/webpack-env": ^1.16.2
@@ -14114,7 +14143,7 @@ resolve@^2.0.0-next.3:
     react-dom: rc
     react-flip-toolkit: ^7.0.13
     react-lag-radar: ^1.0.0
-    react-markdown: ^7.0.1
+    react-markdown: ^7.1.2
     react-refresh: ^0.11.0
     react-test-renderer: beta
     react-use-gesture: ^9.1.3
@@ -14135,7 +14164,7 @@ resolve@^2.0.0-next.3:
     source-map-support: ^0.5.19
     style-loader: ^3.2.1
     tailwindcss: ^3.0.1
-    three: ^0.127.0
+    three: ^0.137.5
     tinycolor2: ^1.4.2
     transformation-matrix: ^2.9.0
     ts-loader: ^9.2.5
@@ -15531,10 +15560,10 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"three@npm:^0.127.0":
-  version: 0.127.0
-  resolution: "three@npm:0.127.0"
-  checksum: 9c81cf22ffbe751c7b2a5a3298aff255486300da9b3bad042e74c8a65dc34c3dad300423a61a6af30ff5067125f8b3e350a5d34ab5251c7698f67b167097a855
+"three@npm:^0.137.5":
+  version: 0.137.5
+  resolution: "three@npm:0.137.5"
+  checksum: e9fa478f54b50dae2ea745fd97fdec46cea9770292053a80c937ce9549670f4a3dfe238943bd42e535e2d57a10dacb531a51ae12aef42347303270f7f66da8c8
   languageName: node
   linkType: hard
 

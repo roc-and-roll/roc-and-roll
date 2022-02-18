@@ -6,5 +6,6 @@
     "lib": ["esnext", "dom"],
     "noEmit": false
   },
-  "include": ["src/client/**/*", "src/shared/**/*"]
+  "include": ["src/client/**/*", "src/shared/**/*"],
+  "exclude": ["**/node_modules", "**/*.test.*"]
 }

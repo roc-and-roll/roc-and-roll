@@ -60,3 +60,28 @@ jobs:
         run: yarn playwright install ${{ matrix.browser }}
       - name: Run e2e tests
         run: yarn e2e-test:ci --project=${{ matrix.browser }}
+  tooling-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: .nvmrc
+          cache: "yarn"
+      - name: Install Dependencies
+        run: yarn install --immutable
+
+      - name: "[client] compile"
+        run: yarn tsc --project tsconfig.client.json --noEmit --incremental false --listFiles | tee client.files
+      - name: "[server] compile"
+        run: yarn tsc --project tsconfig.server.json --noEmit --incremental false --listFiles | tee server.files
+
+      - name: "[client] check forbidden imports"
+        # The client should not import Express or stuff from server or e2e-tests
+        run: "! grep -E 'src/server|src/e2e-tests|@types/express' client.files"
+      - name: "[server] check forbidden imports"
+        # The server should not import React or stuff from client or e2e-tests
+        run: "! grep -E 'src/client|src/e2e-tests|@types/react'   server.files"
