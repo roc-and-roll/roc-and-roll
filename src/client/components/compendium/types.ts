@@ -450,6 +450,12 @@ export type CompendiumMonsterSkills = {
   survival?: string;
 };
 
+type SpellPerLevel = {
+  slots: number;
+  spells: CompendiumTextEntry[];
+  lower?: number;
+};
+
 export type CompendiumMonster = {
   name: string;
   source: string;
@@ -484,6 +490,8 @@ export type CompendiumMonster = {
 
   action?: { name: string; entries: CompendiumTextEntry[] }[];
   legendary?: { name: string; entries: CompendiumTextEntry[] }[];
+  legendaryActions?: number;
+  legendaryGroup?: { name: string; source: string };
 
   immune?: Array<
     | NonNullable<RRDamageType["type"]>
@@ -495,13 +503,50 @@ export type CompendiumMonster = {
   >;
   conditionImmune?: Array<RRCharacterCondition>;
   skill?: CompendiumMonsterSkills & { other?: any };
+  save?: {
+    str?: string;
+    dex?: string;
+    con?: string;
+    int?: string;
+    wis?: string;
+    cha?: string;
+  };
+
+  trait?: { name: string; entries: CompendiumTextEntry[] }[];
+  //cspell: disable-next-line
+  spellcasting?: {
+    name: string;
+    headerEntries: CompendiumTextEntry[];
+    will?: CompendiumTextEntry[];
+    daily?: {
+      "3e"?: CompendiumTextEntry[];
+      "3"?: CompendiumTextEntry[];
+      "2e"?: CompendiumTextEntry[];
+      "1e"?: CompendiumTextEntry[];
+      "1"?: CompendiumTextEntry[];
+    };
+    hidden?: string[];
+    ability: string;
+    footerEntries?: CompendiumTextEntry[];
+    spells?: {
+      0?: { spells: CompendiumTextEntry[] };
+      1?: SpellPerLevel;
+      2?: SpellPerLevel;
+      3?: SpellPerLevel;
+      4?: SpellPerLevel;
+      5?: SpellPerLevel;
+      6?: SpellPerLevel;
+      7?: SpellPerLevel;
+      8?: SpellPerLevel;
+      9?: SpellPerLevel;
+    };
+  }[];
 
   type?: any;
   alignment?: any;
   hasToken?: boolean;
   senses?: any;
   passive?: any;
-  trait?: any;
   senseTags?: any;
   damageTags?: any;
   miscTags?: any;
@@ -514,9 +559,6 @@ export type CompendiumMonster = {
   hasFluff?: any;
   hasFluffImages?: any;
   srd?: any;
-  save?: any;
-  legendaryActions?: any;
-  legendaryGroup?: any;
   traitTags?: any;
   actionTags?: any;
   conditionInflict?: any;
@@ -535,7 +577,6 @@ export type CompendiumMonster = {
   variant?: any;
   dragonCastingColor?: any;
   basicRules?: any;
-  spellcasting?: any; //cspell: disable-line
   spellcastingTags?: any; //cspell: disable-line
   condition?: any;
   conditionInflictSpell?: any;
@@ -547,11 +588,18 @@ export type CompendiumMonster = {
   legendaryHeader?: any;
   alias?: any;
   isNamedCreature?: any;
+  reprintedAs?: any;
 };
 
 export const isConditionalSpeed = z.strictObject({
   number: z.number(),
   condition: z.string(),
+});
+
+const spellPerLevel = z.strictObject({
+  slots: z.number().int(),
+  spells: z.array(isTextEntry),
+  lower: z.optional(z.number().int()),
 });
 
 export const isMonster = z.strictObject({
@@ -606,6 +654,14 @@ export const isMonster = z.strictObject({
   legendary: z.optional(
     z.array(z.strictObject({ name: z.string(), entries: z.array(isTextEntry) }))
   ),
+  legendaryActions: z.optional(z.number().int()),
+  legendaryGroup: z.optional(
+    z.strictObject({
+      name: z.string(),
+      source: z.string(),
+    })
+  ),
+
   immune: z.optional(
     z.array(
       z.enum(damageTypesWithoutNull).or(
@@ -641,10 +697,59 @@ export const isMonster = z.strictObject({
       other: z.optional(z.any()),
     })
   ),
+  save: z.optional(
+    z.strictObject({
+      str: z.optional(z.string()),
+      dex: z.optional(z.string()),
+      con: z.optional(z.string()),
+      int: z.optional(z.string()),
+      wis: z.optional(z.string()),
+      cha: z.optional(z.string()),
+    })
+  ),
+
+  trait: z.optional(
+    z.array(z.strictObject({ name: z.string(), entries: z.array(isTextEntry) }))
+  ),
+  //cspell: disable-next-line
+  spellcasting: z.optional(
+    z.array(
+      z.strictObject({
+        name: z.string(),
+        headerEntries: z.array(isTextEntry),
+        footerEntries: z.optional(z.array(isTextEntry)),
+        will: z.optional(z.array(isTextEntry)),
+        daily: z.optional(
+          z.strictObject({
+            "3e": z.optional(z.array(isTextEntry)), // I dont know what the difference between 3 and 3e is, they both seem to mean 3 times per day
+            "3": z.optional(z.array(isTextEntry)),
+            "2e": z.optional(z.array(isTextEntry)),
+            "1e": z.optional(z.array(isTextEntry)),
+            "1": z.optional(z.array(isTextEntry)),
+          })
+        ),
+        ability: z.string(),
+        hidden: z.optional(z.array(z.string())),
+        spells: z.optional(
+          z.strictObject({
+            0: z.optional(z.strictObject({ spells: z.array(isTextEntry) })),
+            1: z.optional(spellPerLevel),
+            2: z.optional(spellPerLevel),
+            3: z.optional(spellPerLevel),
+            4: z.optional(spellPerLevel),
+            5: z.optional(spellPerLevel),
+            6: z.optional(spellPerLevel),
+            7: z.optional(spellPerLevel),
+            8: z.optional(spellPerLevel),
+            9: z.optional(spellPerLevel),
+          })
+        ),
+      })
+    )
+  ),
 
   senses: z.any(),
   passive: z.any(),
-  trait: z.any(),
   senseTags: z.any(),
   damageTags: z.any(),
   miscTags: z.any(),
@@ -657,9 +762,6 @@ export const isMonster = z.strictObject({
   hasFluff: z.any(),
   hasFluffImages: z.any(),
   srd: z.any(),
-  save: z.any(),
-  legendaryActions: z.any(),
-  legendaryGroup: z.any(),
   traitTags: z.any(),
   actionTags: z.any(),
   conditionInflict: z.any(),
@@ -678,7 +780,6 @@ export const isMonster = z.strictObject({
   variant: z.any(),
   dragonCastingColor: z.any(),
   basicRules: z.any(),
-  spellcasting: z.any(), //cspell: disable-line
   spellcastingTags: z.any(), //cspell: disable-line
   condition: z.any(),
   conditionInflictSpell: z.any(),
@@ -690,6 +791,7 @@ export const isMonster = z.strictObject({
   legendaryHeader: z.any(),
   alias: z.any(),
   isNamedCreature: z.any(),
+  reprintedAs: z.any(),
 });
 
 // Make sure that the schema really matches the Spell type.

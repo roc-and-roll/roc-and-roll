@@ -7,16 +7,34 @@ import { useServerDispatch } from "../../state";
 import {
   CompendiumMonster,
   CompendiumMonsterSkills,
+  CompendiumTextEntry,
 } from "../compendium/types";
 import { Button } from "../ui/Button";
 import { TextEntry } from "./QuickReference";
+
+export function getMonsterSpeedAsString(monster: CompendiumMonster) {
+  if (!monster.speed) return "";
+  return Object.entries(monster.speed)
+    .map(([speedType, value]) => {
+      return typeof value === "number"
+        ? value.toString() + "ft " + speedType
+        : typeof value === "boolean"
+        ? "can hover" // it's the only boolean that exists
+        : value.number.toString() +
+          " ft " +
+          speedType +
+          " if " +
+          value.condition.slice(1, -1);
+    })
+    .join(", ");
+}
 
 export const Monster = React.memo(function Monster({
   monster,
 }: {
   monster: CompendiumMonster;
 }) {
-  const myself = useMyProps("id");
+  const myself = useMyProps("id", "isGM");
   const dispatch = useServerDispatch();
 
   function parseAC(): number | null {
@@ -28,6 +46,10 @@ export const Monster = React.memo(function Monster({
 
   function getSkill(skillName: keyof CompendiumMonsterSkills) {
     const key = monster.skill?.[skillName];
+    return key === undefined ? null : parseInt(key);
+  }
+  function getSavingThrow(save: "str" | "dex" | "con" | "int" | "wis" | "cha") {
+    const key = monster.save?.[save];
     return key === undefined ? null : parseInt(key);
   }
 
@@ -100,12 +122,12 @@ export const Monster = React.memo(function Monster({
         proficiency: null,
       },
       savingThrows: {
-        STR: null,
-        DEX: null,
-        CON: null,
-        INT: null,
-        WIS: null,
-        CHA: null,
+        STR: getSavingThrow("str"),
+        DEX: getSavingThrow("dex"),
+        CON: getSavingThrow("con"),
+        INT: getSavingThrow("int"),
+        WIS: getSavingThrow("wis"),
+        CHA: getSavingThrow("cha"),
       },
       skills: {
         Athletics: getSkill("athletics"),
@@ -137,13 +159,44 @@ export const Monster = React.memo(function Monster({
     dispatch([assetImageAddAction, templateAddAction]);
   }
 
+  function renderTextEntries(
+    title: string,
+    entries: { name: string; entries: CompendiumTextEntry[] }[]
+  ) {
+    return (
+      <>
+        <dt>{title}</dt>
+        <dd>
+          {entries.map((action, index) => {
+            return (
+              <div key={index}>
+                <p className="font-bold">{action.name}</p>
+                {action.entries.map((entry, index) => {
+                  return (
+                    <TextEntry
+                      key={"textEntry" + index.toString()}
+                      entry={entry}
+                      rollName={`${monster.name} ${action.name} `}
+                    />
+                  );
+                })}
+              </div>
+            );
+          })}
+        </dd>
+      </>
+    );
+  }
+
   return (
     <>
       <div className="flex justify-between items-baseline">
         <p className="text-2xl mt-4">{monster.name}</p>
-        <Button className="h-8" onClick={addTemplate}>
-          Add To Templates
-        </Button>
+        {myself.isGM && (
+          <Button className="h-8" onClick={addTemplate}>
+            Add To Templates
+          </Button>
+        )}
       </div>
       <dl>
         <dt>Stat Block</dt>
@@ -177,6 +230,12 @@ export const Monster = React.memo(function Monster({
             </p>
           )}
         </dd>
+        {monster.speed && (
+          <>
+            <dt>Speed</dt>
+            <dd>{getMonsterSpeedAsString(monster)}</dd>
+          </>
+        )}
         {monster.immune && monster.immune.length > 0 && (
           <>
             <dt>Damage Immunities</dt>
@@ -203,26 +262,95 @@ export const Monster = React.memo(function Monster({
             </dd>
           </>
         )}
-
-        <dt>Actions</dt>
-        <dd>
-          {monster.action?.map((action, index) => {
-            return (
-              <div key={index}>
-                <p className="font-bold">{action.name}</p>
-                {action.entries.map((entry, index) => {
-                  return (
-                    <TextEntry
-                      key={"textEntry" + index.toString()}
-                      entry={entry}
-                      rollName={`${monster.name} ${action.name} `}
-                    />
-                  );
-                })}
-              </div>
-            );
-          })}
-        </dd>
+        {monster.trait && renderTextEntries("Traits", monster.trait)}
+        {monster.legendary &&
+          renderTextEntries("Legendary Actions", monster.legendary)}
+        {monster.action && renderTextEntries("Actions", monster.action)}
+        {monster.spellcasting && ( //cspell: disable-line
+          <>
+            <dt>Spell Casting</dt>
+            <dd>
+              {
+                //cspell: disable-next-line
+                monster.spellcasting.map((spellType) => (
+                  <>
+                    {spellType.headerEntries.map((entry, index) => (
+                      <TextEntry
+                        key={index}
+                        entry={entry}
+                        rollName={monster.name}
+                      ></TextEntry>
+                    ))}
+                    {spellType.daily &&
+                      Object.entries(spellType.daily).map(([key, value]) => (
+                        <>
+                          <dt>{key.substring(0, 1)} / per day</dt>
+                          <dd>
+                            {value.map((x, index) => (
+                              <TextEntry
+                                key={`daily${index}`}
+                                entry={x}
+                                rollName="monster.name"
+                              ></TextEntry>
+                            ))}
+                          </dd>
+                        </>
+                      ))}
+                    {spellType.spells &&
+                      Object.entries(spellType.spells).map(([key, value]) =>
+                        key === "0" ? (
+                          <>
+                            <dt>Cantrips</dt>
+                            <dd>
+                              {value.spells.map((x, index) => (
+                                <TextEntry
+                                  key={index}
+                                  entry={x}
+                                  rollName={monster.name}
+                                ></TextEntry>
+                              ))}
+                            </dd>
+                          </>
+                        ) : (
+                          <>
+                            <dt>
+                              Level {key} (
+                              {"slots" in value ? value.slots : "0"} slot
+                              {"slots" in value && value.slots > 1 ? "s" : ""})
+                            </dt>
+                            <dd>
+                              {value.spells.map((x, index) => (
+                                <TextEntry
+                                  key={index}
+                                  entry={x}
+                                  rollName={monster.name}
+                                ></TextEntry>
+                              ))}
+                            </dd>
+                          </>
+                        )
+                      )}
+                    {spellType.will && <dt>At Will</dt>}
+                    {spellType.will?.map((entry, index) => (
+                      <TextEntry
+                        key={index}
+                        entry={entry}
+                        rollName={monster.name}
+                      ></TextEntry>
+                    ))}
+                    {spellType.footerEntries?.map((entry, index) => (
+                      <TextEntry
+                        key={index}
+                        entry={entry}
+                        rollName={monster.name}
+                      ></TextEntry>
+                    ))}
+                  </>
+                ))
+              }
+            </dd>
+          </>
+        )}
       </dl>
     </>
   );

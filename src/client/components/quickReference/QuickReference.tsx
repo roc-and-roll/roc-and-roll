@@ -1,5 +1,5 @@
 import { matchSorter } from "match-sorter";
-import React, { useDeferredValue, useMemo, useState } from "react";
+import React, { useContext, useDeferredValue, useMemo } from "react";
 import { useEffect, useRef } from "react";
 import { Promisable } from "type-fest";
 import { logEntryDiceRollAdd } from "../../../shared/actions";
@@ -13,21 +13,33 @@ import {
 import { useMyProps } from "../../myself";
 import { useServerDispatch } from "../../state";
 import { useCompendium } from "../compendium/Compendium";
-import { CompendiumTextEntry } from "../compendium/types";
+import {
+  CompendiumMonster,
+  CompendiumSpell,
+  CompendiumTextEntry,
+} from "../compendium/types";
 import { Dialog, DialogContent, DialogTitle } from "../Dialog";
 import { SmartTextInput } from "../ui/TextInput";
 import "./QuickReference.scss";
 import { Monster } from "./QuickReferenceMonster";
 import { Spell } from "./QuickReferenceSpell";
+import { QuickReferenceContext } from "./QuickReferenceWrapper";
 
-export default function QuickReference({ onClose }: { onClose: () => void }) {
+export default function QuickReference() {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [search, setSearch] = useState("");
-  const deferredSearch = useDeferredValue(search);
+  const { setOpen, searchString, setSearchString } = useContext(
+    QuickReferenceContext
+  );
+  const deferredSearch = useDeferredValue(searchString);
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  function onClose() {
+    setOpen(false);
+    setSearchString("");
+  }
 
   return (
     <Dialog open onClose={onClose} className="quick-reference-modal">
@@ -36,17 +48,23 @@ export default function QuickReference({ onClose }: { onClose: () => void }) {
         type="search"
         placeholder="Search..."
         ref={inputRef}
-        value={search}
-        onChange={(search) => setSearch(search)}
+        value={searchString}
+        onChange={(search) => setSearchString(search)}
       />
       <DialogContent>
         <Content
           search={deferredSearch}
-          searchIsStale={search !== deferredSearch}
+          searchIsStale={searchString !== deferredSearch}
         />
       </DialogContent>
     </Dialog>
   );
+}
+
+function isSpell(
+  obj: CompendiumMonster | CompendiumSpell
+): obj is CompendiumSpell {
+  return "components" in obj;
 }
 
 function Content({
@@ -58,20 +76,13 @@ function Content({
 }) {
   const { sources: compendiumSources } = useCompendium();
 
-  const spells = useMemo(
+  const results = useMemo(
     () =>
       matchSorter(
-        compendiumSources.flatMap((source) => source.data.spell),
-        search,
-        { keys: ["name"] }
-      ),
-    [compendiumSources, search]
-  );
-
-  const monsters = useMemo(
-    () =>
-      matchSorter(
-        compendiumSources.flatMap((source) => source.data.monster ?? []),
+        [
+          ...compendiumSources.flatMap((source) => source.data.spell),
+          ...compendiumSources.flatMap((source) => source.data.monster ?? []),
+        ],
         search,
         { keys: ["name"] }
       ),
@@ -82,14 +93,13 @@ function Content({
 
   return (
     <ul style={searchIsStale ? { opacity: 0.7 } : {}}>
-      {spells.map((spell) => (
-        <li key={spell.name}>
-          <Spell spell={spell} />
-        </li>
-      ))}
-      {monsters.map((monster) => (
-        <li key={monster.name}>
-          <Monster monster={monster} />
+      {results.map((result: CompendiumSpell | CompendiumMonster) => (
+        <li key={result.name}>
+          {isSpell(result) ? (
+            <Spell spell={result} />
+          ) : (
+            <Monster monster={result} />
+          )}
         </li>
       ))}
     </ul>
@@ -203,6 +213,28 @@ function RollLink({
             payload: dice,
           })
         );
+      }}
+    >
+      {text}
+    </a>
+  );
+}
+
+function CompendiumLink({
+  text,
+  searchString,
+}: {
+  text: string;
+  searchString: string;
+}) {
+  const { setOpen, setSearchString } = useContext(QuickReferenceContext);
+  return (
+    <a
+      href="#"
+      onClick={(event) => {
+        event.preventDefault();
+        setOpen(true);
+        setSearchString(searchString);
       }}
     >
       {text}
@@ -470,12 +502,24 @@ function TextEntryString({
           case "h": {
             return <em key={key}>Hit: </em>;
           }
-          // TODO: We should also handle these properly.
           case "spell":
+          case "creature": {
+            const [text, label] = args.split("||");
+            return (
+              <CompendiumLink
+                key={key}
+                searchString={text!}
+                text={(label ?? text!)
+                  .split(" ")
+                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(" ")}
+              ></CompendiumLink>
+            );
+          }
+          // TODO: We should also handle these properly.
           case "condition":
           case "sense":
           case "classFeature":
-          case "creature":
           case "item":
           case "action":
           case "skill":

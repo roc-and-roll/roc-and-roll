@@ -84,7 +84,7 @@ export function CharacterHUD() {
             <CombatCardHUD />
           </div>
         )}
-        <div className="flex flex-col items-center pointer-events-auto min-h-min">
+        <div className="flex flex-col items-center pointer-events-none min-h-min">
           <CurrentCharacter character={character} />
           {character && <AC character={character} />}
           {character && <SpellSave character={character} />}
@@ -300,7 +300,7 @@ function HeroPoint() {
 
   return (
     <div
-      className="border-solid rounded-md w-10 h-10 flex justify-center items-center border-white opacity-80 m-2 cursor-pointer"
+      className="border-solid rounded-md w-10 h-10 flex justify-center items-center border-white opacity-80 m-2 cursor-pointer pointer-events-auto"
       style={{
         borderWidth: "5px",
         boxShadow: myself.hasHeroPoint ? "0 0 5px 1px #fff" : "",
@@ -334,7 +334,7 @@ function HeroPoint() {
 
 function AC({ character }: { character: RRCharacterProps }) {
   return (
-    <div className="relative">
+    <div className="relative pointer-events-auto">
       <FontAwesomeIcon
         icon={faShieldAlt}
         fixedWidth
@@ -349,7 +349,7 @@ function AC({ character }: { character: RRCharacterProps }) {
 
 function SpellSave({ character }: { character: RRCharacterProps }) {
   return (
-    <div className="relative">
+    <div className="relative pointer-events-auto">
       <FontAwesomeIcon
         icon={faMagic}
         fixedWidth
@@ -367,7 +367,7 @@ function CurrentCharacter({ character }: { character: RRCharacter | null }) {
   const myself = useMyProps("color");
 
   return (
-    <div>
+    <div className="pointer-events-auto">
       {settingsOpen && (
         <SettingsDialog onClose={() => setSettingsOpen(false)} />
       )}
