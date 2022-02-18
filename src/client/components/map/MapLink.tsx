@@ -5,8 +5,9 @@ import { RRMapID, RRMapLink, RRMapObject } from "../../../shared/state";
 import { useServerState } from "../../state";
 import { MapListEntry } from "../Maps";
 import { RoughCircle, RoughText } from "../rough";
-import { RRMouseEvent, rrToPixiHandler } from "./pixi-utils";
+import { RRMouseEvent } from "./pixi-utils";
 import { Container } from "react-pixi-fiber";
+import { PixiPopover } from "./pixi/PixiPopover";
 
 export const MAP_LINK_SIZE = GRID_SIZE / 2;
 
@@ -30,12 +31,9 @@ export function MapLink({
   const [menuVisible, setMenuVisible] = useState(false);
 
   const onMouseDown = (e: RRMouseEvent) => {
-    if (e.button === 2) {
-      setMenuVisible(true);
-      return;
+    if (e.button === 0) {
+      onStartMove(link, e);
     }
-
-    onStartMove(link, e);
   };
 
   if (!mapName) {
@@ -43,48 +41,42 @@ export function MapLink({
   }
 
   return (
-    // TODO
-    // <Popover
-    //   content={<MapLinkPopover mapId={link.mapId} />}
-    //   visible={menuVisible}
-    //   onClickOutside={() => setMenuVisible(false)}
-    //   interactive
-    //   placement="right"
-    // >
-    <Container
-      // TODO
-      // className="map-link"
-      interactive={canControl}
-      mousedown={canControl ? rrToPixiHandler(onMouseDown) : undefined}
-      // TODO: rotate
-      x={link.position.x}
-      y={link.position.y}
+    <PixiPopover
+      content={<MapLinkPopover mapId={link.mapId} />}
+      visible={menuVisible}
+      onClickOutside={() => setMenuVisible(false)}
     >
-      <RoughCircle
-        x={0}
-        y={0}
-        d={MAP_LINK_SIZE}
-        fill={link.color}
-        fillStyle="solid"
-        roughness={1}
-        seed={link.id}
-        cursor={canControl ? "move" : undefined}
-      />
-      <RoughText
-        x={0}
-        y={-5}
-        style={{
-          stroke: 0xffffff,
-          strokeThickness: 4,
-          lineJoin: "miter",
-          fontWeight: "800",
-        }}
-        text={mapName}
-        // TODO
-        // dominantBaseline="text-bottom">
-      />
-    </Container>
-    // </Popover>
+      <Container
+        // TODO: rotate
+        x={link.position.x}
+        y={link.position.y}
+      >
+        <RoughCircle
+          x={0}
+          y={0}
+          d={MAP_LINK_SIZE}
+          fill={link.color}
+          fillStyle="solid"
+          roughness={1}
+          seed={link.id}
+          cursor={canControl ? "move" : undefined}
+          onMouseDown={canControl ? onMouseDown : undefined}
+          onContextMenu={canControl ? () => setMenuVisible(true) : undefined}
+        />
+        <RoughText
+          x={MAP_LINK_SIZE / 2}
+          y={MAP_LINK_SIZE}
+          anchor={[0.5, 0]}
+          style={{
+            stroke: 0xffffff,
+            strokeThickness: 4,
+            lineJoin: "miter",
+            fontWeight: "800",
+          }}
+          text={mapName}
+        />
+      </Container>
+    </PixiPopover>
   );
 }
 

@@ -8,13 +8,6 @@ import type {
 } from "roughjs/bin/core";
 import { RoughGenerator } from "roughjs/bin/generator";
 import { RRPoint } from "../../shared/state";
-import {
-  pointAdd,
-  pointNormalize,
-  pointScale,
-  pointSubtract,
-  pointLeftRotate,
-} from "../../shared/point";
 import { randomSeed } from "roughjs/bin/math";
 import { assertNever, hashString } from "../../shared/util";
 import {
@@ -31,12 +24,18 @@ import {
   rrToPixiHandler,
 } from "./map/pixi-utils";
 import FontFaceObserver from "fontfaceobserver"; // cspell: disable-line
+import {
+  getLocalBoundingBoxForEllipse,
+  getLocalBoundingBoxForFreehand,
+  getLocalBoundingBoxForLine,
+  getLocalBoundingBoxForPolygon,
+  getLocalBoundingBoxForRectangle,
+  getRotationCenterOfBoundingBox,
+} from "./map/geometry/bounding-boxes";
 
 const DEFAULT_ROUGHNESS = 3;
 
 const STROKE_WIDTH_SIMPLE = 4;
-
-const EPSILON = 5;
 
 export const RoughContext = React.createContext<RoughGenerator | null>(null);
 
@@ -202,10 +201,10 @@ const DrawablePrimitive = React.forwardRef<
   {
     x: number;
     y: number;
-    hitArea: PIXI.IHitArea;
+    hitArea: PIXI.Rectangle | PIXI.Circle | PIXI.Ellipse | PIXI.Polygon;
     drawable: Drawable;
     generator: RoughGenerator;
-  } & Omit<Container, "x" | "y" | "interactiveChildren" | "hitArea"> &
+  } & Omit<Container, "x" | "y" | "interactiveChildren" | "hitArea" | "pivot"> &
     InteractiveComponent
 >(function DrawablePrimitive(
   {
@@ -219,23 +218,28 @@ const DrawablePrimitive = React.forwardRef<
     click,
     mousedown,
     mouseup,
+    rightclick,
     ...props
   },
   ref
 ) {
+  const rotationCenter = getRotationCenterOfBoundingBox(hitArea);
   return (
     <Container
       {...props}
-      x={x}
-      y={y}
+      x={x + rotationCenter.x}
+      y={y + rotationCenter.y}
+      pivot={rotationCenter}
       ref={ref}
       interactive={interactive}
       interactiveChildren={false}
       click={click}
       mousedown={mousedown}
       mouseup={mouseup}
+      // TODO
       rightdown={mousedown}
       rightup={mouseup}
+      rightclick={rightclick}
       hitArea={hitArea}
     >
       {drawable.sets.map((drawing, i) => (
@@ -263,7 +267,9 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
     customProps: C,
     options: PassedThroughOptions & { seed: number }
   ) => Drawable,
-  generateHitArea: (customProps: C) => PIXI.IHitArea
+  generateHitArea: (
+    customProps: C
+  ) => PIXI.Rectangle | PIXI.Circle | PIXI.Ellipse | PIXI.Polygon
 ) {
   const component = React.memo(
     React.forwardRef<
@@ -280,6 +286,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
         > & {
           x: number;
           y: number;
+          angle?: number;
         } & {
           seed?: string;
         }
@@ -307,6 +314,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
           onContextMenu,
           x,
           y,
+          angle,
           cursor,
           ...generatorProps
         } = props;
@@ -369,14 +377,14 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
               generator={generator}
               x={x}
               y={y}
+              angle={angle}
               hitArea={hitArea}
               interactive
               cursor={cursor}
               click={rrToPixiHandler(onClick)}
               mousedown={rrToPixiHandler(onMouseDown)}
               mouseup={rrToPixiHandler(onMouseUp)}
-              // TODO
-              // contextmenu={rrToPixiHandler(onContextMenu)}
+              rightclick={rrToPixiHandler(onContextMenu)}
             >
               {children}
             </DrawablePrimitive>
@@ -402,15 +410,7 @@ export const RoughLine = makeRoughComponent<
 >(
   "RoughLine",
   (generator, { w, h }, options) => generator.line(0, 0, w, h, options),
-  ({ w, h }) => {
-    const perpendicular = pointNormalize(pointLeftRotate({ x: w, y: h }));
-    const tl = pointScale(perpendicular, -0.5 * EPSILON);
-    const tr = pointAdd(tl, { x: w, y: h });
-    const br = pointAdd(tr, pointScale(perpendicular, EPSILON));
-    const bl = pointSubtract(br, { x: w, y: h });
-
-    return new PIXI.Polygon([tl, tr, br, bl]);
-  }
+  ({ w, h }) => getLocalBoundingBoxForLine(w, h, false)
 );
 
 export const RoughRectangle = makeRoughComponent<
@@ -422,8 +422,7 @@ export const RoughRectangle = makeRoughComponent<
 >(
   "RoughRectangle",
   (generator, { w, h }, options) => generator.rectangle(0, 0, w, h, options),
-  ({ w, h }) =>
-    new PIXI.Rectangle(w < 0 ? w : 0, h < 0 ? h : 0, Math.abs(w), Math.abs(h))
+  ({ w, h }) => getLocalBoundingBoxForRectangle(w, h)
 );
 
 export const RoughEllipse = makeRoughComponent<
@@ -436,28 +435,13 @@ export const RoughEllipse = makeRoughComponent<
   "RoughEllipse",
   (generator, { w, h }, options) =>
     generator.ellipse(w / 2, h / 2, w, h, options),
-  ({ w, h }) => {
-    return new PIXI.Ellipse(w / 2, h / 2, Math.abs(w) / 2, Math.abs(h) / 2);
-  }
+  ({ w, h }) => getLocalBoundingBoxForEllipse(w, h)
 );
 
 export const RoughCircle = makeRoughComponent<{ d: number }, SVGCircleElement>(
   "RoughCircle",
   (generator, { d }, options) => generator.circle(d / 2, d / 2, d, options),
-  ({ d }) => {
-    return new PIXI.Ellipse(d / 2, d / 2, Math.abs(d) / 2, Math.abs(d) / 2);
-  }
-);
-
-export const RoughSVGPath = makeRoughComponent<
-  {
-    path: string;
-  },
-  SVGPathElement
->(
-  "RoughSVGPath",
-  (generator, { path }, options) => generator.path(path, options),
-  ({ path }) => new PIXI.Rectangle(0, 0, 100, 100)
+  ({ d }) => getLocalBoundingBoxForEllipse(d, d)
 );
 
 export const RoughLinearPath = makeRoughComponent<
@@ -472,32 +456,7 @@ export const RoughLinearPath = makeRoughComponent<
       [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
       options
     ),
-  ({ points }) => {
-    const thickPoints: RRPoint[] = [];
-    points = [{ x: 0, y: 0 }, ...points];
-
-    for (let i = 0; i < points.length - 1; i++) {
-      const point = points[i]!;
-      const dir = pointSubtract(points[i + 1]!, point);
-      const perpendicular = pointNormalize(pointLeftRotate(dir));
-      const tl = pointAdd(pointScale(perpendicular, 0.5 * EPSILON), point);
-      const tr = pointAdd(tl, dir);
-      thickPoints.push(tl);
-      thickPoints.push(tr);
-    }
-
-    for (let i = points.length - 1; i > 0; i--) {
-      const point = points[i]!;
-      const dir = pointSubtract(points[i - 1]!, point);
-      const perpendicular = pointNormalize(pointLeftRotate(dir));
-      const br = pointAdd(pointScale(perpendicular, 0.5 * EPSILON), point);
-      const bl = pointAdd(br, dir);
-      thickPoints.push(br);
-      thickPoints.push(bl);
-    }
-
-    return new PIXI.Polygon(thickPoints);
-  }
+  ({ points }) => getLocalBoundingBoxForFreehand(points, false)
 );
 
 export const RoughPolygon = makeRoughComponent<
@@ -512,7 +471,7 @@ export const RoughPolygon = makeRoughComponent<
       [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
       options
     ),
-  ({ points }) => new PIXI.Polygon(points)
+  ({ points }) => getLocalBoundingBoxForPolygon(points)
 );
 
 const fontObserver = new (class {

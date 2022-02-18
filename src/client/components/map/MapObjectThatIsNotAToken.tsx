@@ -69,8 +69,10 @@ export const MapObjectThatIsNotAToken = React.memo<{
   const clickPositionRef = useRef<RRPoint>();
 
   const sharedProps = {
+    name: `${object.type}: ${object.id}`,
     x: object.position.x,
     y: object.position.y,
+    angle: object.rotation,
     cursor: canControl ? "move" : undefined,
     onMouseDown: useCallback(
       (event: RRMouseEvent) => {
@@ -139,6 +141,8 @@ export const MapObjectThatIsNotAToken = React.memo<{
             mouseup={rrToPixiHandler(onMouseUp)}
             rightdown={rrToPixiHandler(onMouseDown)}
             rightup={rrToPixiHandler(onMouseUp)}
+            // Make sure to also adjust`getBoundingBoxForText` if you adjust the
+            // style here!
             style={{ fill }}
             text={object.text}
           />
@@ -178,15 +182,15 @@ export const MapObjectThatIsNotAToken = React.memo<{
       visible={editorVisible}
       onClickOutside={() => setEditorVisible(false)}
     >
-      <Container name={`${object.type}: ${object.id}`} angle={object.rotation}>
-        {content()}
-      </Container>
+      {content()}
     </PixiPopover>
   );
 });
 
 function MapObjectImage({
   object,
+  x,
+  y,
   ...rest
 }: {
   object: RRMapDrawingImage;
@@ -194,7 +198,14 @@ function MapObjectImage({
   y: number;
 } & Pick<
   PixiElement<Sprite>,
-  "mousedown" | "mouseup" | "rightdown" | "rightup" | "cursor" | "interactive"
+  | "name"
+  | "mousedown"
+  | "mouseup"
+  | "rightdown"
+  | "rightup"
+  | "cursor"
+  | "interactive"
+  | "angle"
 >) {
   const asset = useRecoilValue(assetFamily(object.imageAssetId));
 
@@ -215,6 +226,9 @@ function MapObjectImage({
         hitArea={new PIXI.Rectangle(0, 0, width, height)}
         interactiveChildren={false}
         {...rest}
+        x={x + width / 2}
+        y={y + height / 2}
+        pivot={{ x: width / 2, y: height / 2 }}
       >
         {Array(rows)
           .fill(0)
@@ -250,18 +264,26 @@ function MapObjectImage({
     );
   }
 
+  // This effectively sets the top left of the image to {x, y}, but applies
+  // rotation to the center of the image.
+  const positionProps = {
+    x: x + width / 2,
+    y: y + height / 2,
+    pivot: { x: width / 2 / scaleFactor, y: height / 2 / scaleFactor },
+    width,
+    height,
+  };
   return (
     <Sprite
       {...rest}
-      width={width}
-      height={height}
+      {...positionProps}
       texture={PIXI.Texture.from(assetUrl(asset))}
     />
   );
   // <SVGBlurHashImage
   //   image={asset}
-  //   width={(asset.width / asset.height) * object.height}
-  //   height={object.height}
+  //   width={width}
+  //   height={height}
   //   {...rest}
   // />
 }

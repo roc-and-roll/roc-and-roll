@@ -76,7 +76,11 @@ import * as PIXI from "pixi.js";
 import { colorValue, RRMouseEvent, rrToPixiHandler } from "./pixi-utils";
 import { MyselfContext } from "../../myself";
 import { ContextBridge } from "./ContextBridge";
-import { ServerStateContext, ServerConnectionContext } from "../../state";
+import {
+  ServerStateContext,
+  ServerConnectionContext,
+  useServerStateRef,
+} from "../../state";
 import { RoughContext, RoughContextProvider } from "../rough";
 import { matrixToPixiTransform } from "./pixi-utils";
 import { MapGrid } from "./MapGrid";
@@ -86,6 +90,8 @@ import { MouseCursors } from "./MouseCursors";
 import { FogOfWar } from "./FogOfWar";
 import { MapReactions } from "./MapReactions";
 import { dialogCtxs } from "../../dialog-boxes";
+import { getBoundingBoxForMapObject } from "./geometry/bounding-boxes";
+import { RotatedShape } from "./geometry/RotatedShape";
 
 type Rectangle = [number, number, number, number];
 
@@ -126,16 +132,33 @@ export const CURSOR_POSITION_SYNC_DEBOUNCE = 300;
 // record the cursor position this many times between each sync to the server
 export const CURSOR_POSITION_SYNC_HISTORY_STEPS = 10;
 
-function mapObjectIntersectsWithRectangle(
-  o: RRMapObject,
-  { x, y, w, h }: { x: number; y: number; w: number; h: number }
+function checkIfShapesIntersect(
+  boundingBox: RotatedShape,
+  selectionArea: PIXI.Rectangle
 ) {
-  // TODO: Currently assumes that every object is exactly GRID_SIZE big.
+  // TODO: Currently assumes that every object is exactly GRID_SIZE big and does
+  // not take rotation nor bounding box into account.
+  let position: RRPoint;
+  if (
+    boundingBox.shape instanceof PIXI.Rectangle ||
+    boundingBox.shape instanceof PIXI.Circle ||
+    boundingBox.shape instanceof PIXI.Ellipse
+  ) {
+    position = { x: boundingBox.shape.x, y: boundingBox.shape.y };
+  } else if (boundingBox.shape instanceof PIXI.Polygon) {
+    position = {
+      x: boundingBox.shape.points[0]!,
+      y: boundingBox.shape.points[1]!,
+    };
+  } else {
+    assertNever(boundingBox.shape);
+  }
+
   return (
-    o.position.x + GRID_SIZE >= x &&
-    x + w >= o.position.x &&
-    o.position.y + GRID_SIZE >= y &&
-    y + h >= o.position.y
+    position.x + GRID_SIZE >= selectionArea.x &&
+    selectionArea.x + selectionArea.width >= position.x &&
+    position.y + GRID_SIZE >= selectionArea.y &&
+    selectionArea.y + selectionArea.height >= position.y
   );
 }
 
@@ -540,6 +563,7 @@ const RRMapViewWithRef = React.forwardRef<
     ]
   );
 
+  const stateRef = useServerStateRef((state) => state);
   const updateHoveredMapObjects = useRecoilCallback(
     ({ snapshot, set, reset }) =>
       (selectionArea: Rectangle | null) => {
@@ -553,6 +577,7 @@ const RRMapViewWithRef = React.forwardRef<
             lastHoveredObjectIds.forEach((hoveredObjectId) =>
               reset(hoveredMapObjectsFamily(hoveredObjectId))
             );
+            const selectionBounds = new PIXI.Rectangle(x, y, w, h);
             const hoveredMapObjectIds = snapshot
               .getLoadable(mapObjectIdsAtom)
               .getValue()
@@ -560,11 +585,20 @@ const RRMapViewWithRef = React.forwardRef<
                 const mapObject = snapshot
                   .getLoadable(mapObjectsFamily(mapObjectId))
                   .getValue();
-                return (
-                  mapObject &&
-                  canControlMapObject(mapObject, myself) &&
-                  mapObjectIntersectsWithRectangle(mapObject, { x, y, w, h })
+                if (!mapObject || !canControlMapObject(mapObject, myself)) {
+                  return false;
+                }
+                const boundingBox = getBoundingBoxForMapObject(
+                  mapObject,
+                  stateRef.current.assets,
+                  stateRef.current.characters,
+                  true
                 );
+                if (!boundingBox) {
+                  return false;
+                }
+
+                return checkIfShapesIntersect(boundingBox, selectionBounds);
               });
 
             hoveredMapObjectIds.forEach((mapObjectId) => {
@@ -583,7 +617,7 @@ const RRMapViewWithRef = React.forwardRef<
           }
         );
       },
-    [myself]
+    [myself, stateRef]
   );
 
   useEffect(() => {

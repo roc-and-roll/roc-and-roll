@@ -64,6 +64,7 @@
     "unstyled",
     "vcxsrv",
     "xvfb",
+    "rightclick",
     "rightdown",
     "rightup"
   ],
