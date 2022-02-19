@@ -5,7 +5,6 @@ import webpack from "webpack";
 import { GitRevisionPlugin } from "git-revision-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
-import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import ReactRefreshWebpackPlugin from "@pmmmwh/react-refresh-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import WorkboxPlugin from "workbox-webpack-plugin";
@@ -228,14 +227,6 @@ export default (webpackEnv) => {
             sockPort: DEV_SERVER_SOCK_PORT,
           },
         }),
-      new ForkTsCheckerWebpackPlugin({
-        typescript: {
-          configFile: "tsconfig.client.json",
-          build: true,
-          mode: "write-references",
-        },
-        async: isEnvDevelopment,
-      }),
       new MiniCssExtractPlugin({
         filename:
           isEnvProduction || isEnvE2E
