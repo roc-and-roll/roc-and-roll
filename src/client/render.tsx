@@ -1,7 +1,3 @@
-// begin alpha react types
-import type {} from "react-dom/next";
-import type {} from "react/next";
-// end alpha react types
 import React, { StrictMode } from "react";
 import ReactDOM from "react-dom";
 import { App } from "./components/App";

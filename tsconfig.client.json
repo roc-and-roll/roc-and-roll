@@ -1,11 +1,15 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "module": "commonjs",
     "target": "esnext",
     "lib": ["esnext", "dom"],
-    "noEmit": false
+
+    "types": ["node", "webpack-env", "react-dom/next", "react/next"],
+
+    "composite": true
   },
-  "include": ["src/client/**/*", "src/shared/**/*"],
-  "exclude": ["**/node_modules", "**/*.test.*"]
+  "include": ["src/client/**/*", "src/shared/shared.d.ts"],
+  "exclude": ["**/node_modules", "**/*.test.*"],
+  "references": [{ "path": "./tsconfig.shared.json" }]
 }

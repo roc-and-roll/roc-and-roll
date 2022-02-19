@@ -1,11 +1,15 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "module": "es2020",
     "target": "es2020",
     "lib": ["es2020"],
-    "noEmit": false
+
+    "types": ["node", "webpack-env"],
+
+    "composite": true
   },
-  "include": ["src/server/**/*", "src/shared/**/*"],
-  "exclude": ["**/node_modules", "**/*.test.*"]
+  "include": ["src/server/**/*", "src/shared/shared.d.ts"],
+  "exclude": ["**/node_modules", "**/*.test.*"],
+  "references": [{ "path": "./tsconfig.shared.json" }]
 }

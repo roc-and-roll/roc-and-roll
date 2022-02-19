@@ -142,7 +142,7 @@ export const isStateVersion = z.number().int().min(0);
 
 const isRollType = z.enum(["initiative", "hit", "attack"] as const).nullable();
 
-interface _RRDiceTemplate {
+export interface _RRDiceTemplate {
   id: RRDiceTemplateID;
   name: string;
   notes: string;

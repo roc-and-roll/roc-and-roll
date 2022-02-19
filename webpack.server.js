@@ -125,7 +125,8 @@ export default (webpackEnv) => {
         new ForkTsCheckerWebpackPlugin({
           typescript: {
             configFile: "tsconfig.server.json",
-            mode: "write-tsbuildinfo",
+            build: true,
+            mode: "write-references",
           },
           async: isEnvDevelopment,
         }),

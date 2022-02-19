@@ -3216,13 +3216,13 @@ __metadata:
   linkType: hard
 
 "@types/express-serve-static-core@npm:^4.17.18":
-  version: 4.17.19
-  resolution: "@types/express-serve-static-core@npm:4.17.19"
+  version: 4.17.28
+  resolution: "@types/express-serve-static-core@npm:4.17.28"
   dependencies:
     "@types/node": "*"
     "@types/qs": "*"
     "@types/range-parser": "*"
-  checksum: fb00b18ab1dc9a4763e88ec2c4000c28e24f3396cf3106498b00320308541b54a2e33e2518c18eb069be4ebb4068b6436a7dc246b1cb093a079e81f9ea31cfc3
+  checksum: 826489811a5b371c10f02443b4ca894ffc05813bfdf2b60c224f5c18ac9a30a2e518cb9ef9fdfcaa2a1bb17f8bfa4ed1859ccdb252e879c9276271b4ee2df5a9
   languageName: node
   linkType: hard
 

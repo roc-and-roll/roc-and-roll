@@ -75,13 +75,15 @@ jobs:
         run: yarn install --immutable
 
       - name: "[client] compile"
-        run: yarn tsc --project tsconfig.client.json --noEmit --incremental false --listFiles | tee client.files
+        run: yarn tsc --build tsconfig.client.json --listFiles | tee client.files
       - name: "[server] compile"
-        run: yarn tsc --project tsconfig.server.json --noEmit --incremental false --listFiles | tee server.files
+        run: yarn tsc --build tsconfig.server.json --listFiles | tee server.files
+      - name: "[all] compile"
+        run: yarn tsc --build tsconfig.json
 
       - name: "[client] check forbidden imports"
-        # The client should not import Express or stuff from server or e2e-tests
-        run: "! grep -E 'src/server|src/e2e-tests|@types/express' client.files"
+        # The client should not import Express
+        run: "! grep -E '@types/express' client.files"
       - name: "[server] check forbidden imports"
-        # The server should not import React or stuff from client or e2e-tests
-        run: "! grep -E 'src/client|src/e2e-tests|@types/react'   server.files"
+        # The server should not import React
+        run: "! grep -E '@types/react'   server.files"
