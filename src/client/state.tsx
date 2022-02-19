@@ -33,10 +33,10 @@ import { useGuaranteedMemo } from "./useGuaranteedMemo";
 
 type DeduplicationKey = Opaque<string, "optimisticDeduplicationKey">;
 
-type OptimisticActionApplierAndCallback = {
+interface OptimisticActionApplierAndCallback {
   applier: OptimisticActionApplier;
   whenDoneOrDiscarded: () => void;
-};
+}
 
 /**
  * This class holds a sorted list of optimistic action appliers. Each applier
@@ -189,10 +189,10 @@ export class OptimisticActionAppliers {
   }
 }
 
-export type StatePatch<D> = {
+export interface StatePatch<D> {
   patch: DeepPartial<D>;
   deletedKeys: string[];
-};
+}
 
 type StateUpdateSubscriber = (newState: SyncedState) => void;
 
@@ -203,12 +203,12 @@ type OptimisticUpdateExecutedSubscriber = (
 export type OptimisticActionApplierDispatcherKey =
   MakeRRID<"optimistic-dispatcher-key">;
 
-export type OptimisticActionApplier = {
+export interface OptimisticActionApplier {
   readonly key?: string;
   readonly optimisticUpdateId: OptimisticUpdateID;
   readonly dispatcherKey: OptimisticActionApplierDispatcherKey;
   readonly actions: ReadonlyArray<SyncedStateAction>;
-};
+}
 
 const DEBUG = false as boolean;
 
@@ -696,11 +696,11 @@ export function useDEBUG__serverState() {
   };
 }
 
-type OptimisticActionsConfig = {
+interface OptimisticActionsConfig {
   actions: SyncedStateAction[];
   optimisticKey: string;
   syncToServerThrottle: number;
-};
+}
 
 function isOptimisticAction(
   action: SyncedStateAction | OptimisticActionsConfig
@@ -714,11 +714,11 @@ function isAction(
   return "payload" in action && !isOptimisticAction(action);
 }
 
-type DispatchActionResult = {
+interface DispatchActionResult {
   optimisticActionsDoneOrDiscarded: Promise<void>;
   discardPendingOptimisticActions: () => void;
   commitPendingOptimisticActionsNow: () => void;
-};
+}
 
 /**
  * Returns a dispatch function that can be used to dispatch an action to the

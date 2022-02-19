@@ -89,13 +89,13 @@ const lerpMatrix = (x: Matrix, y: Matrix, t: number) => {
   };
 };
 
-export type MapAreas = {
+export interface MapAreas {
   imageArea: SVGGElement;
   auraArea: SVGGElement;
   defaultArea: SVGGElement;
   tokenArea: SVGGElement;
   healthBarArea: SVGGElement;
-};
+}
 
 const PANNING_BUTTON = 2;
 const TOOL_BUTTON = 0;
@@ -183,7 +183,9 @@ const localCoords = (
   return { x: e.clientX - rect.left, y: e.clientY - rect.top };
 };
 
-export type RRMapViewRef = { transform: Matrix };
+export interface RRMapViewRef {
+  transform: Matrix;
+}
 
 const RRMapViewWithRef = React.forwardRef<
   RRMapViewRef,

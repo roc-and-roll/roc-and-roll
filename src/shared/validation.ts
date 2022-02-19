@@ -255,6 +255,20 @@ const isDiceTemplateCategory = z.strictObject({
 });
 export type RRDiceTemplateCategory = z.infer<typeof isDiceTemplateCategory>;
 
+const mapObjectBaseSharedValidators = {
+  id: isRRID<RRMapObjectID>(),
+  position: isRRPoint,
+  rotation: z.number(),
+  playerId: isRRID<RRPlayerID>(),
+};
+
+const mapObjectDrawingSharedValidators = {
+  ...mapObjectBaseSharedValidators,
+  visibility: z.enum(["gmOnly", "everyone"] as const),
+  locked: z.boolean(),
+  color: isColor,
+};
+
 export const isSyncedState = z.strictObject({
   version: isStateVersion,
   globalSettings: z.strictObject({
@@ -391,72 +405,49 @@ export const isSyncedState = z.strictObject({
       id: isRRID<RRMapID>(),
 
       objects: isEntityCollection(
-        withDo(
-          // RRMapObjectBase
-          {
-            id: isRRID<RRMapObjectID>(),
-            position: isRRPoint,
-            rotation: z.number(),
-            playerId: isRRID<RRPlayerID>(),
-            visibility: z.enum(["gmOnly", "everyone"] as const),
-          },
-          (sharedValidators) =>
-            z.union([
-              z.strictObject({
-                ...withDo(sharedValidators, ({ visibility, ...v }) => v),
-                type: z.literal("token"),
-                characterId: isRRID<RRCharacterID>(),
-              }),
-              z.strictObject({
-                ...sharedValidators,
-                type: z.literal("mapLink"),
-                locked: z.boolean(),
-                mapId: isRRID<RRMapID>(),
-                color: isColor,
-              }),
-              ...withDo(
-                // RRMapDrawingBase
-                {
-                  ...sharedValidators,
-                  locked: z.boolean(),
-                  color: isColor,
-                },
-                (sharedValidators) => [
-                  z.strictObject({
-                    ...sharedValidators,
-                    type: z.literal("image"),
-                    imageAssetId: isRRID<RRAssetID>(),
-                    height: z.number().int().min(0),
-                  }),
-                  z.strictObject({
-                    ...sharedValidators,
-                    type: z.literal("rectangle"),
-                    size: isRRPoint,
-                  }),
-                  z.strictObject({
-                    ...sharedValidators,
-                    type: z.literal("ellipse"),
-                    size: isRRPoint,
-                  }),
-                  z.strictObject({
-                    ...sharedValidators,
-                    type: z.literal("polygon"),
-                    points: z.array(isRRPoint),
-                  }),
-                  z.strictObject({
-                    ...sharedValidators,
-                    type: z.literal("freehand"),
-                    points: z.array(isRRPoint),
-                  }),
-                  z.strictObject({
-                    ...sharedValidators,
-                    type: z.literal("text"),
-                    text: z.string(),
-                  }),
-                ]
-              ),
-            ])
-        )
+        z.union([
+          z.strictObject({
+            ...mapObjectBaseSharedValidators,
+            type: z.literal("token"),
+            characterId: isRRID<RRCharacterID>(),
+          }),
+          z.strictObject({
+            ...mapObjectDrawingSharedValidators,
+            type: z.literal("mapLink"),
+            mapId: isRRID<RRMapID>(),
+          }),
+          z.strictObject({
+            ...mapObjectDrawingSharedValidators,
+            type: z.literal("image"),
+            imageAssetId: isRRID<RRAssetID>(),
+            height: z.number().int().min(0),
+          }),
+          z.strictObject({
+            ...mapObjectDrawingSharedValidators,
+            type: z.literal("rectangle"),
+            size: isRRPoint,
+          }),
+          z.strictObject({
+            ...mapObjectDrawingSharedValidators,
+            type: z.literal("ellipse"),
+            size: isRRPoint,
+          }),
+          z.strictObject({
+            ...mapObjectDrawingSharedValidators,
+            type: z.literal("polygon"),
+            points: z.array(isRRPoint),
+          }),
+          z.strictObject({
+            ...mapObjectDrawingSharedValidators,
+            type: z.literal("freehand"),
+            points: z.array(isRRPoint),
+          }),
+          z.strictObject({
+            ...mapObjectDrawingSharedValidators,
+            type: z.literal("text"),
+            text: z.string(),
+          }),
+        ])
       ),
 
       settings: z.strictObject({

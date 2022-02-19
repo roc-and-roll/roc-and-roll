@@ -55,7 +55,7 @@ export const BlurHashImage = React.forwardRef<
         if (oldUrl) {
           URL.revokeObjectURL(oldUrl);
         }
-        return URL.createObjectURL(blob);
+        return blob ? URL.createObjectURL(blob) : null;
       });
     });
 

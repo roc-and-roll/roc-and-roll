@@ -6,6 +6,7 @@ import { isSyncedState, RRDiceTemplate } from "./validation";
 import { LAST_MIGRATION_VERSION } from "./constants";
 import { RRDamageType } from "./dice-roll-tree-types-and-validation";
 import { assert, IsExact } from "conditional-type-checks";
+import { ForceNoInlineHelper } from "./typescript-hacks";
 
 export type MakeRRID<K extends string> = `RRID/${K}/${string}`;
 
@@ -34,9 +35,15 @@ export type RRColor = string;
 
 export type RRTimestamp = number;
 
-export type RRPoint = { readonly x: number; readonly y: number };
+export interface RRPoint {
+  readonly x: number;
+  readonly y: number;
+}
 
-export type RRCapPoint = { readonly X: number; readonly Y: number };
+export interface RRCapPoint {
+  readonly X: number;
+  readonly Y: number;
+}
 
 export type RRDiceTemplateID = MakeRRID<"diceTemplate">;
 
@@ -54,38 +61,38 @@ export type RRPlaylistID = MakeRRID<"playlist">;
 
 export type RRPlaylistEntryID = MakeRRID<"playlistEntry">;
 
-type RRFileBase = {
+interface RRFileBase {
   originalFilename: string;
   filename: string;
   mimeType: string;
-};
+}
 
-export type RRFileAudio = RRFileBase & {
+export interface RRFileAudio extends RRFileBase {
   type: "audio";
   duration: number;
-};
+}
 
-export type RRFileImage = RRFileBase & {
+export interface RRFileImage extends RRFileBase {
   type: "image";
   width: number;
   height: number;
   blurHash: string;
-};
+}
 
-export type RRFileOther = RRFileBase & {
+export interface RRFileOther extends RRFileBase {
   type: "other";
-};
+}
 
 export type RRFile = RRFileAudio | RRFileImage | RRFileOther;
 
 // Extracts the entity type from an entity collection
 type ECE<E extends EntityCollection<{ id: RRID }>> = ValueOf<E["entities"]>;
 
-export type RRAura = IterableElement<ECE<SyncedState["characters"]>["auras"]>;
+export interface RRAura
+  extends IterableElement<ECE<SyncedState["characters"]>["auras"]> {}
 
-export type RRLimitedUseSkill = IterableElement<
-  ECE<SyncedState["characters"]>["limitedUseSkills"]
->;
+export interface RRLimitedUseSkill
+  extends IterableElement<ECE<SyncedState["characters"]>["limitedUseSkills"]> {}
 
 export const conditionNames = [
   "blue",
@@ -126,87 +133,89 @@ export const conditionNames = [
 
 export type RRCharacterCondition = IterableElement<typeof conditionNames>;
 
-export type RRInitiativeTrackerEntryCharacter = Extract<
-  ECE<SyncedState["initiativeTracker"]["entries"]>,
-  { type: "character" }
->;
+export interface RRInitiativeTrackerEntryCharacter
+  extends Extract<
+    ECE<SyncedState["initiativeTracker"]["entries"]>,
+    { type: "character" }
+  > {}
 
-export type RRInitiativeTrackerEntryLairAction = Extract<
-  ECE<SyncedState["initiativeTracker"]["entries"]>,
-  { type: "lairAction" }
->;
+export interface RRInitiativeTrackerEntryLairAction
+  extends Extract<
+    ECE<SyncedState["initiativeTracker"]["entries"]>,
+    { type: "lairAction" }
+  > {}
 
 export type RRInitiativeTrackerEntry = ECE<
   SyncedState["initiativeTracker"]["entries"]
 >;
 
-export type RRPlayer = ECE<SyncedState["players"]>;
+export interface RRPlayer extends ECE<SyncedState["players"]> {}
 
 export type RRObjectVisibility = "gmOnly" | "everyone";
 
-export type RRCharacter = ECE<SyncedState["characters"]>;
+export interface RRCharacter extends ECE<SyncedState["characters"]> {}
 
-export type RRToken = Extract<
-  ECE<ECE<SyncedState["maps"]>["objects"]>,
-  { type: "token" }
->;
+export interface RRToken
+  extends Extract<
+    ECE<ECE<SyncedState["maps"]>["objects"]>,
+    { type: "token" }
+  > {}
 
-export type RRMapLink = Extract<
-  ECE<ECE<SyncedState["maps"]>["objects"]>,
-  { type: "mapLink" }
->;
+export interface RRMapLink
+  extends Extract<
+    ECE<ECE<SyncedState["maps"]>["objects"]>,
+    { type: "mapLink" }
+  > {}
 
-export type RRMapDrawingImage = Extract<
-  ECE<ECE<SyncedState["maps"]>["objects"]>,
-  { type: "image" }
->;
+export interface RRMapDrawingImage
+  extends Extract<
+    ECE<ECE<SyncedState["maps"]>["objects"]>,
+    { type: "image" }
+  > {}
 
-export type RRMapDrawingRectangle = Extract<
-  ECE<ECE<SyncedState["maps"]>["objects"]>,
-  { type: "rectangle" }
->;
+export interface RRMapDrawingRectangle
+  extends Extract<
+    ECE<ECE<SyncedState["maps"]>["objects"]>,
+    { type: "rectangle" }
+  > {}
 
-export type RRMapDrawingEllipse = Extract<
-  ECE<ECE<SyncedState["maps"]>["objects"]>,
-  { type: "ellipse" }
->;
+export interface RRMapDrawingEllipse
+  extends Extract<
+    ECE<ECE<SyncedState["maps"]>["objects"]>,
+    { type: "ellipse" }
+  > {}
 
-export type RRMapDrawingPolygon = Extract<
-  ECE<ECE<SyncedState["maps"]>["objects"]>,
-  { type: "polygon" }
->;
+export interface RRMapDrawingPolygon
+  extends Extract<
+    ECE<ECE<SyncedState["maps"]>["objects"]>,
+    { type: "polygon" }
+  > {}
 
-export type RRMapDrawingFreehand = Extract<
-  ECE<ECE<SyncedState["maps"]>["objects"]>,
-  { type: "freehand" }
->;
+export interface RRMapDrawingFreehand
+  extends Extract<
+    ECE<ECE<SyncedState["maps"]>["objects"]>,
+    { type: "freehand" }
+  > {}
 
-export type RRMapDrawingText = Extract<
-  ECE<ECE<SyncedState["maps"]>["objects"]>,
-  { type: "text" }
->;
+export interface RRMapDrawingText
+  extends Extract<ECE<ECE<SyncedState["maps"]>["objects"]>, { type: "text" }> {}
 
 export type RRMapObject = ECE<ECE<SyncedState["maps"]>["objects"]>;
 
-export type RRMap = ECE<SyncedState["maps"]>;
+export interface RRMap extends ECE<SyncedState["maps"]> {}
 
 export type RRMapRevealedAreas = RRMap["settings"]["revealedAreas"];
 
-export type RRPrivateChatMessage = ECE<
-  ECE<SyncedState["privateChats"]>["messages"]
->;
+export interface RRPrivateChatMessage
+  extends ECE<ECE<SyncedState["privateChats"]>["messages"]> {}
 
-export type RRPrivateChat = ECE<SyncedState["privateChats"]>;
+export interface RRPrivateChat extends ECE<SyncedState["privateChats"]> {}
 
-export type RRLogEntryMessage = Extract<
-  ECE<SyncedState["logEntries"]>,
-  { type: "message" }
->;
+export interface RRLogEntryMessage
+  extends Extract<ECE<SyncedState["logEntries"]>, { type: "message" }> {}
 
-export type RRLogEntryAchievement = Extract<
-  ECE<SyncedState["logEntries"]>,
-  { type: "achievement" }
->;
+export interface RRLogEntryAchievement
+  extends Extract<ECE<SyncedState["logEntries"]>, { type: "achievement" }> {}
 
 export const characterAttributeNames = ["proficiency", "initiative"] as const;
 
@@ -296,47 +305,53 @@ assert<
   IsExact<keyof RRCharacter["savingThrows"], typeof characterStatNames[number]>
 >(true);
 
-export type RRDiceTemplatePartTemplate = Extract<
-  IterableElement<RRDiceTemplate["parts"]>,
-  {
-    type: "template";
-  }
->;
+export interface RRDiceTemplatePartTemplate
+  extends Extract<
+    IterableElement<RRDiceTemplate["parts"]>,
+    {
+      type: "template";
+    }
+  > {}
 
-export type RRDiceTemplatePartModifier = Extract<
-  IterableElement<RRDiceTemplate["parts"]>,
-  {
-    type: "modifier";
-  }
->;
+export interface RRDiceTemplatePartModifier
+  extends Extract<
+    IterableElement<RRDiceTemplate["parts"]>,
+    {
+      type: "modifier";
+    }
+  > {}
 
-export type RRDiceTemplatePartLinkedModifier = Extract<
-  IterableElement<RRDiceTemplate["parts"]>,
-  {
-    type: "linkedModifier";
-  }
->;
+export interface RRDiceTemplatePartLinkedModifier
+  extends Extract<
+    IterableElement<RRDiceTemplate["parts"]>,
+    {
+      type: "linkedModifier";
+    }
+  > {}
 
-export type RRDiceTemplatePartLinkedProficiency = Extract<
-  IterableElement<RRDiceTemplate["parts"]>,
-  {
-    type: "linkedProficiency";
-  }
->;
+export interface RRDiceTemplatePartLinkedProficiency
+  extends Extract<
+    IterableElement<RRDiceTemplate["parts"]>,
+    {
+      type: "linkedProficiency";
+    }
+  > {}
 
-export type RRDiceTemplatePartLinkedStat = Extract<
-  IterableElement<RRDiceTemplate["parts"]>,
-  {
-    type: "linkedStat";
-  }
->;
+export interface RRDiceTemplatePartLinkedStat
+  extends Extract<
+    IterableElement<RRDiceTemplate["parts"]>,
+    {
+      type: "linkedStat";
+    }
+  > {}
 
-export type RRDiceTemplatePartDice = Extract<
-  IterableElement<RRDiceTemplate["parts"]>,
-  {
-    type: "dice";
-  }
->;
+export interface RRDiceTemplatePartDice
+  extends Extract<
+    IterableElement<RRDiceTemplate["parts"]>,
+    {
+      type: "dice";
+    }
+  > {}
 
 export type RRDiceTemplatePartWithDamage = Extract<
   IterableElement<RRDiceTemplate["parts"]>,
@@ -439,24 +454,19 @@ export const multipleRollValues = [
 
 export type RRMultipleRoll = IterableElement<typeof multipleRollValues>;
 
-export type RRLogEntryDiceRoll = Extract<
-  ECE<SyncedState["logEntries"]>,
-  { type: "diceRoll" }
->;
+export interface RRLogEntryDiceRoll
+  extends Extract<ECE<SyncedState["logEntries"]>, { type: "diceRoll" }> {}
 
 export type RRLogEntry = ECE<SyncedState["logEntries"]>;
 
-export type RRAssetSong = Extract<ECE<SyncedState["assets"]>, { type: "song" }>;
+export interface RRAssetSong
+  extends Extract<ECE<SyncedState["assets"]>, { type: "song" }> {}
 
-export type RRAssetImage = Extract<
-  ECE<SyncedState["assets"]>,
-  { type: "image" }
->;
+export interface RRAssetImage
+  extends Extract<ECE<SyncedState["assets"]>, { type: "image" }> {}
 
-export type RRAssetOther = Extract<
-  ECE<SyncedState["assets"]>,
-  { type: "other" }
->;
+export interface RRAssetOther
+  extends Extract<ECE<SyncedState["assets"]>, { type: "other" }> {}
 
 export type RRAsset = RRAssetSong | RRAssetImage | RRAssetOther;
 
@@ -483,37 +493,37 @@ export const EMPTY_ENTITY_COLLECTION = {
 
 export type InitiativeTrackerSyncedState = SyncedState["initiativeTracker"];
 
-export type RRSoundSet = ECE<SyncedState["soundSets"]>;
+export interface RRSoundSet extends ECE<SyncedState["soundSets"]> {}
 
-export type RRPlaylist = IterableElement<RRSoundSet["playlists"]>;
+export interface RRPlaylist extends IterableElement<RRSoundSet["playlists"]> {}
 
 export type RRPlaylistEntry = IterableElement<RRPlaylist["entries"]>;
 
-export type RRPlaylistEntrySong = Extract<RRPlaylistEntry, { type: "song" }>;
+export interface RRPlaylistEntrySong
+  extends Extract<RRPlaylistEntry, { type: "song" }> {}
 
-export type RRPlaylistEntrySilence = Extract<
-  RRPlaylistEntry,
-  { type: "silence" }
->;
+export interface RRPlaylistEntrySilence
+  extends Extract<RRPlaylistEntry, { type: "silence" }> {}
 
-export type EphemeralPlayer = ECE<SyncedState["ephemeral"]["players"]>;
+export interface EphemeralPlayer
+  extends ECE<SyncedState["ephemeral"]["players"]> {}
 
 export type RRActiveSongOrSoundSet = ValueOf<
   SyncedState["ephemeral"]["activeMusic"]["entities"]
 >;
 
-export type RRActiveSong = Extract<RRActiveSongOrSoundSet, { type: "song" }>;
+export interface RRActiveSong
+  extends Extract<RRActiveSongOrSoundSet, { type: "song" }> {}
 
-export type RRActiveSoundSet = Extract<
-  RRActiveSongOrSoundSet,
-  { type: "soundSet" }
->;
+export interface RRActiveSoundSet
+  extends Extract<RRActiveSongOrSoundSet, { type: "soundSet" }> {}
 
 export type EphemeralSyncedState = SyncedState["ephemeral"];
 
 export type RRGlobalSettings = SyncedState["globalSettings"];
 
-export type SyncedState = z.infer<typeof isSyncedState>;
+export interface SyncedState
+  extends ForceNoInlineHelper<z.infer<typeof isSyncedState>> {}
 
 export function makeDefaultMap() {
   return {
@@ -558,18 +568,18 @@ export const initialSyncedState: SyncedState = {
   },
 };
 
-export type SyncedStateAction<
+export interface SyncedStateAction<
   P = unknown,
   T extends string = string,
   M extends Record<string, unknown> | undefined =
     | undefined
     | Record<string, unknown>,
   E extends unknown | undefined = undefined
-> = {
+> {
   readonly payload: P;
   readonly type: T;
   readonly meta?: M;
   readonly error?: E;
-};
+}
 
 export type SyncedStateDispatch = Dispatch<SyncedStateAction>;

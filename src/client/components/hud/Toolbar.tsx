@@ -38,7 +38,7 @@ const tooltipProps: Partial<RRTooltipProps> = {
   offset: [0, 16],
 };
 
-type ToolbarElement = {
+interface ToolbarElement {
   id: string;
   content: React.ReactElement;
   collapsed: boolean;
@@ -46,7 +46,7 @@ type ToolbarElement = {
   icon: IconDefinition;
   iconTooltip: string;
   iconClassName?: string;
-};
+}
 
 const getIconClass = (active: boolean) =>
   clsx("block m-[5px] p-[10px] text-[38px] cursor-pointer rounded-full ", {

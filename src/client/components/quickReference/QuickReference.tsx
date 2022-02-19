@@ -3,6 +3,9 @@ import React, { useContext, useDeferredValue, useMemo } from "react";
 import { useEffect, useRef } from "react";
 import { Promisable } from "type-fest";
 import { logEntryDiceRollAdd } from "../../../shared/actions";
+import { CompendiumTextEntry } from "../../../shared/compendium-types/text-entry";
+import { CompendiumMonster } from "../../../shared/compendium-types/monster";
+import { CompendiumSpell } from "../../../shared/compendium-types/spell";
 import { RRLogEntryDiceRoll } from "../../../shared/state";
 import { usePrompt } from "../../dialog-boxes";
 import {
@@ -13,11 +16,6 @@ import {
 import { useMyProps } from "../../myself";
 import { useServerDispatch } from "../../state";
 import { useCompendium } from "../compendium/Compendium";
-import {
-  CompendiumMonster,
-  CompendiumSpell,
-  CompendiumTextEntry,
-} from "../compendium/types";
 import { Dialog, DialogContent, DialogTitle } from "../Dialog";
 import { SmartTextInput } from "../ui/TextInput";
 import "./QuickReference.scss";

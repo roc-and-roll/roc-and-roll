@@ -3,9 +3,9 @@ import { Primitive } from "type-fest";
 import { useImmerState } from "./useImmerState";
 
 describe("useDebounce", () => {
-  type HookArgs<V> = {
+  interface HookArgs<V> {
     initialValue: V;
-  };
+  }
 
   function setup<V extends Primitive | Record<string, unknown>>(
     initialProps: HookArgs<V>

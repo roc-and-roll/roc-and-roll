@@ -8,7 +8,7 @@ import {
   CompendiumSource,
   CompendiumSourceID,
   isCompendiumData,
-} from "./types";
+} from "../../../shared/compendium-types/index";
 import sjson from "secure-json-parse";
 import { useGuaranteedMemo } from "../../useGuaranteedMemo";
 
