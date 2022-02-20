@@ -359,7 +359,7 @@ function RollScaledLink({
   );
 }
 
-function TextEntryString({
+export function TextEntryString({
   text,
   rollName,
 }: {
@@ -517,6 +517,8 @@ function TextEntryString({
               ></CompendiumLink>
             );
           }
+          case "dc":
+            return "DC " + args;
           // TODO: We should also handle these properly.
           case "condition":
           case "sense":
@@ -527,7 +529,6 @@ function TextEntryString({
           case "filter":
           case "book":
           case "i":
-          case "dc":
           case "hitYourSpellAttack":
             return part;
           default:
