@@ -3,7 +3,10 @@
 // https://github.com/streamich/react-use/pull/1438
 // Licensed under the Unlicense.
 import { useState, useCallback, Dispatch, SetStateAction } from "react";
-import { JsonValue } from "type-fest";
+import {
+  Jsonify, //cspell: disable-line
+  JsonValue,
+} from "type-fest";
 import { useLatest } from "./useLatest";
 import { isBrowser, noop } from "./util";
 import sjson from "secure-json-parse";
@@ -34,13 +37,13 @@ export default function useLocalState(
   storage?: Storage
 ): [string, Dispatch<SetStateAction<string>>, () => void];
 
-export default function useLocalState<T extends JsonValue>(
+export default function useLocalState<T>(
   key: string,
-  initializer: T | (() => T),
+  initializer: Jsonify<T> | (() => Jsonify<T>), //cspell: disable-line
   storage?: Storage
 ): [T, Dispatch<SetStateAction<T>>, () => void];
 
-export default function useLocalState<T extends JsonValue>(
+export default function useLocalState<T>(
   key: string,
   initializer: T | (() => T),
   storage: Storage = localStorage
@@ -74,7 +77,9 @@ export default function useLocalState<T extends JsonValue>(
     (valOrFunc: SetStateAction<T>) => {
       setState((prevState) => {
         const newState =
-          typeof valOrFunc === "function" ? valOrFunc(prevState) : valOrFunc;
+          typeof valOrFunc === "function"
+            ? (valOrFunc as (prevState: T) => T)(prevState)
+            : valOrFunc;
 
         try {
           storage.setItem(key, serializer(newState));

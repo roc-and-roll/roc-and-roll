@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "lib": ["esnext", "dom"],
+    "emitDeclarationOnly": true,
+    "declarationMap": true,
+    "incremental": true,
+    "outDir": "lib",
+
+    "module": "es2020",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "useUnknownInCatchVariables": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "jsx": "react",
+    "baseUrl": "./",
+    "typeRoots": ["src/shared/types", "./node_modules/@types"],
+    // Compatibility with Babel and other tools
+    // https://github.com/microsoft/TypeScript/wiki/Performance#isolated-file-emit
+    "isolatedModules": true,
+    // Performance improvements
+    // https://github.com/microsoft/TypeScript/wiki/Performance
+    //
+    // Don't automatically include any `@types` packages.
+    "types": [],
+    // Speed up compilation by skipping type checking of type definition files.
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "./jest-setup.ts",
+    "./playwright.config.ts",
+    "src/client/**/*",
+    "src/server/**/*",
+    "src/shared/**/*",
+    "src/e2e-tests/**/*"
+  ]
+}

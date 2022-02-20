@@ -23,10 +23,10 @@ jobs:
         run: yarn install --immutable
       - name: Tests
         run: yarn test --forceExit
-      - name: Lint
-        run: yarn lint
       - name: Build
         run: yarn build
+      - name: Lint
+        run: yarn lint
       - name: Test migration maker
         run: yarn make migration test
   e2e-tests:
@@ -60,3 +60,30 @@ jobs:
         run: yarn playwright install ${{ matrix.browser }}
       - name: Run e2e tests
         run: yarn e2e-test:ci --project=${{ matrix.browser }}
+  tooling-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: .nvmrc
+          cache: "yarn"
+      - name: Install Dependencies
+        run: yarn install --immutable
+
+      - name: "[client] compile"
+        run: yarn tsc --build tsconfig.client.json --listFiles | tee client.files
+      - name: "[server] compile"
+        run: yarn tsc --build tsconfig.server.json --listFiles | tee server.files
+      - name: "[all] compile"
+        run: yarn tsc --build tsconfig.json
+
+      - name: "[client] check forbidden imports"
+        # The client should not import Express
+        run: "! grep -E '@types/express' client.files"
+      - name: "[server] check forbidden imports"
+        # The server should not import React
+        run: "! grep -E '@types/react'   server.files"

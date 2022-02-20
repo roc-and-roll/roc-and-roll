@@ -20,3 +20,5 @@ if (typeof nodeEnv !== "string") {
   throw new Error(`env is not a string, this should never happen.`);
 }
 eval("process.env.NODE_ENV = nodeEnv;");
+
+export {};

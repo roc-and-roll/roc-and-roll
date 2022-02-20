@@ -1,7 +1,7 @@
 import React from "react";
 import { IterableElement } from "type-fest";
 import { assertNever } from "../../../shared/util";
-import { CompendiumSpell } from "../compendium/types";
+import { CompendiumSpell } from "../../../shared/compendium-types/spell";
 import {
   capitalize,
   pluralizeIfNeeded,

@@ -3,7 +3,6 @@ import { fileURLToPath } from "url";
 import webpack from "webpack";
 import nodeExternals from "webpack-node-externals";
 import { GitRevisionPlugin } from "git-revision-webpack-plugin";
-import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import NodemonPlugin from "nodemon-webpack-plugin";
 import CopyWebpackPlugin from "copy-webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
@@ -120,14 +119,6 @@ export default (webpackEnv) => {
               to: "public",
             },
           ],
-        }),
-      isEnvDevelopment &&
-        new ForkTsCheckerWebpackPlugin({
-          typescript: {
-            configFile: "tsconfig.server.json",
-            mode: "write-tsbuildinfo",
-          },
-          async: isEnvDevelopment,
         }),
       isEnvDevelopment &&
         new NodemonPlugin({

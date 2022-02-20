@@ -122,7 +122,7 @@ const DrawablePrimitive = React.forwardRef<
   );
 });
 
-type PassedThroughOptions = Pick<
+type PassedThroughRoughOptions = Pick<
   Options,
   | "fill"
   | "fillStyle"
@@ -132,50 +132,69 @@ type PassedThroughOptions = Pick<
   | "roughness"
 >;
 
+interface RoughComponentProps
+  extends PassedThroughRoughOptions,
+    Pick<
+      SVGProps<SVGElement>,
+      | "onClick"
+      | "onMouseDown"
+      | "onMouseUp"
+      | "onContextMenu"
+      | "style"
+      | "children"
+    > {
+  x: number;
+  y: number;
+  seed?: string;
+}
+
+type RoughComponent<
+  // C contains the props that are specific to this rough component, e.g., a
+  // rectangle uses {w, h}, but a circle just uses {d}.
+  C extends object,
+  // The type of the ref that is returned if the component is rendered in simple
+  // mode.
+  E extends SVGElement
+> = React.MemoExoticComponent<
+  React.ForwardRefExoticComponent<
+    React.PropsWithoutRef<RoughComponentProps & C> &
+      React.RefAttributes<E & SVGGElement>
+  >
+>;
+
 // eslint-disable-next-line @typescript-eslint/ban-types
-function makeRoughComponent<C extends object, E extends SVGElement>(
+function makeRoughComponent<
+  // C contains the props that are specific to this rough component, e.g., a
+  // rectangle uses {w, h}, but a circle just uses {d}.
+  C extends object,
+  // The type of the ref that is returned if the component is rendered in simple
+  // mode.
+  E extends SVGElement
+>(
   displayName: string,
   generateRough: (
     rc: RoughGenerator,
     customProps: C,
-    options: PassedThroughOptions & { seed: number }
+    options: PassedThroughRoughOptions & { seed: number }
   ) => Drawable,
   generateSimple: (
     customProps: C & {
       x: number;
       y: number;
-      onClick?: (e: React.MouseEvent<SVGElement>) => void;
       children?: React.ReactNode;
+      onClick?: (e: React.MouseEvent<SVGElement>) => void;
       onMouseDown?: (e: React.MouseEvent<SVGElement>) => void;
       onMouseUp?: (e: React.MouseEvent<SVGElement>) => void;
       onContextMenu?: (e: React.MouseEvent<SVGElement>) => void;
     } & Pick<
-        PassedThroughOptions,
+        PassedThroughRoughOptions,
         "fill" | "stroke" | "strokeWidth" | "strokeLineDash"
       >,
-    ref: React.ForwardedRef<E>
+    ref: React.ForwardedRef<E & SVGGElement>
   ) => React.ReactElement
-) {
+): RoughComponent<C, E> {
   const component = React.memo(
-    React.forwardRef<
-      E | SVGGElement,
-      C &
-        PassedThroughOptions &
-        Pick<
-          SVGProps<SVGElement>,
-          | "onClick"
-          | "onMouseDown"
-          | "onMouseUp"
-          | "onContextMenu"
-          | "style"
-          | "children"
-        > & {
-          x: number;
-          y: number;
-        } & {
-          seed?: string;
-        }
-    >(
+    React.forwardRef<E & SVGGElement, RoughComponentProps & C>(
       (
         {
           fill,
@@ -245,7 +264,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
 
           return (
             <DrawablePrimitive
-              ref={ref as React.ForwardedRef<SVGGElement>}
+              ref={ref}
               drawable={drawable}
               generator={generator}
               x={x}
@@ -276,7 +295,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
               strokeWidth: strokeWidth ?? STROKE_WIDTH_SIMPLE,
               ...(generatorProps as C),
             },
-            ref as React.ForwardedRef<E>
+            ref
           );
         }
       }
@@ -287,19 +306,18 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
   return component;
 }
 
-export const RoughLine = makeRoughComponent<
-  {
-    w: number;
-    h: number;
-  },
-  SVGLineElement
->(
-  "RoughLine",
-  (generator, { w, h }, options) => generator.line(0, 0, w, h, options),
-  ({ x, y, w, h, strokeLineDash: _, ...rest }, ref) => (
-    <line x1={x} y1={y} x2={x + w} y2={y + h} ref={ref} {...rest} />
-  )
-);
+interface RoughLineProps {
+  w: number;
+  h: number;
+}
+export const RoughLine: RoughComponent<RoughLineProps, SVGLineElement> =
+  makeRoughComponent<RoughLineProps, SVGLineElement>(
+    "RoughLine",
+    (generator, { w, h }, options) => generator.line(0, 0, w, h, options),
+    ({ x, y, w, h, strokeLineDash: _, ...rest }, ref) => (
+      <line x1={x} y1={y} x2={x + w} y2={y + h} ref={ref} {...rest} />
+    )
+  );
 
 function correctNegativeSize({
   x,
@@ -324,13 +342,14 @@ function correctNegativeSize({
   return { x, y, w, h };
 }
 
-export const RoughRectangle = makeRoughComponent<
-  {
-    w: number;
-    h: number;
-  },
+interface RoughRectangleProps {
+  w: number;
+  h: number;
+}
+export const RoughRectangle: RoughComponent<
+  RoughRectangleProps,
   SVGRectElement
->(
+> = makeRoughComponent<RoughRectangleProps, SVGRectElement>(
   "RoughRectangle",
   (generator, { w, h }, options) => generator.rectangle(0, 0, w, h, options),
   ({ x: ox, y: oy, w: ow, h: oh, strokeLineDash: _, ...rest }, ref) => {
@@ -339,13 +358,14 @@ export const RoughRectangle = makeRoughComponent<
   }
 );
 
-export const RoughEllipse = makeRoughComponent<
-  {
-    w: number;
-    h: number;
-  },
+interface RoughEllipseProps {
+  w: number;
+  h: number;
+}
+export const RoughEllipse: RoughComponent<
+  RoughEllipseProps,
   SVGEllipseElement
->(
+> = makeRoughComponent<RoughEllipseProps, SVGEllipseElement>(
   "RoughEllipse",
   (generator, { w, h }, options) =>
     generator.ellipse(w / 2, h / 2, w, h, options),
@@ -364,36 +384,44 @@ export const RoughEllipse = makeRoughComponent<
   }
 );
 
-export const RoughCircle = makeRoughComponent<{ d: number }, SVGCircleElement>(
-  "RoughCircle",
-  (generator, { d }, options) => generator.circle(d / 2, d / 2, d, options),
-  ({ x: ox, y: oy, d: od, strokeLineDash: _, ...rest }, ref) => {
-    const { x, y, w: d } = correctNegativeSize({ x: ox, y: oy, w: od, h: od });
-    return (
-      <circle cx={x + d / 2} cy={y + d / 2} r={d / 2} ref={ref} {...rest} />
-    );
-  }
-);
+interface RoughCircleProps {
+  d: number;
+}
+export const RoughCircle: RoughComponent<RoughCircleProps, SVGCircleElement> =
+  makeRoughComponent<{ d: number }, SVGCircleElement>(
+    "RoughCircle",
+    (generator, { d }, options) => generator.circle(d / 2, d / 2, d, options),
+    ({ x: ox, y: oy, d: od, strokeLineDash: _, ...rest }, ref) => {
+      const {
+        x,
+        y,
+        w: d,
+      } = correctNegativeSize({ x: ox, y: oy, w: od, h: od });
+      return (
+        <circle cx={x + d / 2} cy={y + d / 2} r={d / 2} ref={ref} {...rest} />
+      );
+    }
+  );
 
-export const RoughSVGPath = makeRoughComponent<
-  {
-    path: string;
-  },
-  SVGPathElement
->(
-  "RoughSVGPath",
-  (generator, { path }, options) => generator.path(path, options),
-  ({ x, y, path, strokeLineDash: _, ...rest }, ref) => (
-    <path x={x} y={y} d={path} ref={ref} {...rest} />
-  )
-);
+interface RoughSVGPathProps {
+  path: string;
+}
+export const RoughSVGPath: RoughComponent<RoughSVGPathProps, SVGPathElement> =
+  makeRoughComponent<RoughSVGPathProps, SVGPathElement>(
+    "RoughSVGPath",
+    (generator, { path }, options) => generator.path(path, options),
+    ({ x, y, path, strokeLineDash: _, ...rest }, ref) => (
+      <path x={x} y={y} d={path} ref={ref} {...rest} />
+    )
+  );
 
-export const RoughLinearPath = makeRoughComponent<
-  {
-    points: RRPoint[];
-  },
+interface RoughLinearPathProps {
+  points: RRPoint[];
+}
+export const RoughLinearPath: RoughComponent<
+  RoughLinearPathProps,
   SVGPolylineElement
->(
+> = makeRoughComponent<RoughLinearPathProps, SVGPolylineElement>(
   "RoughLinearPath",
   (generator, { points }, options) =>
     generator.linearPath(
@@ -412,12 +440,13 @@ export const RoughLinearPath = makeRoughComponent<
   )
 );
 
-export const RoughPolygon = makeRoughComponent<
-  {
-    points: RRPoint[];
-  },
-  SVGPolygonElement
->(
+interface RoughPolygonProps {
+  points: RRPoint[];
+}
+export const RoughPolygon: RoughComponent<
+  RoughPolygonProps,
+  SVGPolylineElement
+> = makeRoughComponent<RoughPolygonProps, SVGPolygonElement>(
   "RoughPolygon",
   (generator, { points }, options) =>
     generator.polygon(

@@ -2,7 +2,7 @@ import React from "react";
 import { useCompendium } from "../compendium/Compendium";
 import { useMyActiveCharacter } from "../../myself";
 import { TextEntry } from "../quickReference/QuickReference";
-import { CompendiumTextEntry } from "../compendium/types";
+import { CompendiumTextEntry } from "../../../shared/compendium-types/text-entry";
 import { getMonsterSpeedAsString } from "../quickReference/QuickReferenceMonster";
 
 export function CombatCardHUD() {

@@ -20,7 +20,15 @@
   },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "project": ["./tsconfig.json"]
+    "project": [
+      "./tsconfig.shared.json",
+      "./tsconfig.client.json",
+      "./tsconfig.server.json",
+      "./tsconfig.shared.test.json",
+      "./tsconfig.client.test.json",
+      "./tsconfig.server.test.json",
+      "./tsconfig.e2e.json"
+    ]
   },
   "plugins": ["react", "react-hooks", "@typescript-eslint", "unused-imports"],
   "rules": {
@@ -36,6 +44,8 @@
     "@typescript-eslint/prefer-string-starts-ends-with": "warn",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/no-empty-interface": "off",
+    "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
     "@typescript-eslint/no-inferrable-types": [
       "error",
       { "ignoreParameters": true }

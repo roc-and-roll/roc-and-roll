@@ -1,6 +1,7 @@
 /.git
 /.yarn
 /dist
+/lib
 /workspace
 /node_modules
 /**/*.ts.hbs

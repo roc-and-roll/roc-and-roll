@@ -60,7 +60,7 @@ export default class extends AbstractMigration {
       });
     });
 
-    type DiceTemplate = {
+    interface DiceTemplate {
       parts: (
         | {
             type: "linkedProficiency";
@@ -69,7 +69,7 @@ export default class extends AbstractMigration {
         | { type: "template"; template: DiceTemplate }
         | { type: "_other" }
       )[];
-    };
+    }
 
     const updateTemplate = (d: DiceTemplate) => {
       d.parts.forEach((part) => {

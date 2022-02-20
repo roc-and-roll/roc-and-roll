@@ -13,10 +13,10 @@ function resolvePath(value: string): string {
   return path.resolve(value);
 }
 
-type SharedOptions = {
+interface SharedOptions {
   readonly workspace: string;
   readonly quiet: boolean;
-};
+}
 
 type StartOptions = SharedOptions & {
   readonly port: number;

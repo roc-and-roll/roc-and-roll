@@ -7,10 +7,10 @@ import { useServerDispatch } from "../../state";
 import {
   CompendiumMonster,
   CompendiumMonsterSkills,
-  CompendiumTextEntry,
-} from "../compendium/types";
+} from "../../../shared/compendium-types/monster";
 import { Button } from "../ui/Button";
 import { TextEntry } from "./QuickReference";
+import { CompendiumTextEntry } from "../../../shared/compendium-types/text-entry";
 
 export function getMonsterSpeedAsString(monster: CompendiumMonster) {
   if (!monster.speed) return "";
