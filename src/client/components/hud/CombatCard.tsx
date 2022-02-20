@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useCompendium } from "../compendium/Compendium";
 import { useMyActiveCharacter } from "../../myself";
 import { TextEntry } from "../quickReference/QuickReference";
@@ -7,6 +7,8 @@ import {
   getMonsterSpeedAsString,
   MonsterSpellcasting,
 } from "../quickReference/QuickReferenceMonster";
+import { Button } from "../ui/Button";
+import { QuickReferenceContext } from "../quickReference/QuickReferenceWrapper";
 
 export function CombatCardHUD() {
   const character = useMyActiveCharacter("name");
@@ -44,10 +46,21 @@ export function CombatCardHUD() {
     );
   };
 
+  const { setOpen, setSearchString } = useContext(QuickReferenceContext);
+
   return monster ? (
     <div className="w-72 text-xs max-h-72 overflow-y-auto hud-panel p-2 rounded pointer-events-auto">
       {monster.speed && (
         <p>
+          <Button
+            className="float-right"
+            onClick={() => {
+              setOpen(true);
+              setSearchString(monster.name);
+            }}
+          >
+            Open Full
+          </Button>
           <b>Speed: </b>
           {getMonsterSpeedAsString(monster)}
         </p>
