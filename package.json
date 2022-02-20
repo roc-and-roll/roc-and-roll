@@ -248,5 +248,5 @@
     "@reduxjs/toolkit": "patch:@reduxjs/toolkit@npm:1.6.1#.yarn/patches/@reduxjs-toolkit-npm-1.6.1-a0999c8262",
     "peggy": "patch:peggy@npm:1.2.0#.yarn/patches/peggy-npm-1.2.0-dcccbe8690"
   },
-  "packageManager": "yarn@3.1.0-rc.2"
+  "packageManager": "yarn@3.1.1"
 }
