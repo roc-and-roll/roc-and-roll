@@ -520,6 +520,7 @@ export const isSyncedState = z.strictObject({
               rollType: isRollType,
               rollName: z.nullable(z.string()),
               diceRollTree: isDiceRollTree(true),
+              characterIds: z.nullable(z.array(isRRID<RRCharacterID>())),
             }),
           }),
         ]

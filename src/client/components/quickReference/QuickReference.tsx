@@ -354,6 +354,7 @@ function RollScaledLink({
           rollType: isDamage ? "hit" : null,
           rollName: `${rollName} (level ${level})`,
           tooltip: null,
+          characterIds: null,
         };
       }}
     />
@@ -416,6 +417,7 @@ function TextEntryString({
                   rollType: command === "damage" ? "attack" : null,
                   rollName,
                   tooltip: null,
+                  characterIds: null,
                 })}
               />
             );
@@ -461,6 +463,7 @@ function TextEntryString({
                   rollType: command === "hit" ? "attack" : null,
                   rollName,
                   tooltip: null,
+                  characterIds: null, // TODO
                 })}
               />
             );

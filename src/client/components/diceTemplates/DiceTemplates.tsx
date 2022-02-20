@@ -133,6 +133,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
                   operator: "+",
                   operands: parts,
                 },
+          characterIds: character ? [character.id] : null,
         },
       })
     );

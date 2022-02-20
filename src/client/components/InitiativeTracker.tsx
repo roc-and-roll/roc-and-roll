@@ -453,7 +453,12 @@ const RollInitiativeDeferredImpl = React.memo<{
       ? allSelectedInitiatives[0]!
       : parseInt(modifier);
     const action = logEntryDiceRollAdd(
-      rollInitiative(isNaN(mod) ? 0 : mod, modified, myselfId)
+      rollInitiative(
+        isNaN(mod) ? 0 : mod,
+        modified,
+        myselfId,
+        selectedCharacterIds
+      )
     );
     dispatch([
       action,

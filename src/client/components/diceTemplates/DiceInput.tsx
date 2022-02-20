@@ -29,6 +29,7 @@ export function DiceInput() {
           rollType: null,
           rollName: null,
           tooltip: null,
+          characterIds: null,
         },
       })
     );

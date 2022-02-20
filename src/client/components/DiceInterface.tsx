@@ -93,6 +93,7 @@ export function DiceInterface() {
           silent: false,
           playerId: myself.id,
           payload: {
+            characterIds: character ? [character.id] : null,
             diceRollTree: rollDiceRollTree(diceRollTree),
             rollType: null,
             rollName: null,
