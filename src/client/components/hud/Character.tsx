@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   conditionNames,
+  conditionTooltip,
   RRCharacter,
   RRCharacterID,
   RRLimitedUseSkill,
@@ -223,7 +224,7 @@ function ConditionsBar({ character }: { character: RRCharacterProps }) {
         return (
           <div
             key={condition}
-            title={condition}
+            title={conditionTooltip(condition)}
             className="h-8 w-8 m-1 my-2 cursor-pointer"
             onClick={() => {
               setConditions((c) => c.filter((c) => c !== condition));
@@ -258,7 +259,7 @@ function ConditionsBar({ character }: { character: RRCharacterProps }) {
                 return (
                   <div
                     key={condition}
-                    title={condition}
+                    title={conditionTooltip(condition)}
                     className="h-14 w-11 m-1 my-2"
                     onClick={() => {
                       setConditions((c) => [...c, condition]);

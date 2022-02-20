@@ -1,12 +1,17 @@
 import * as z from "zod";
 import type { Dispatch } from "redux";
 import type { IterableElement, ValueOf } from "type-fest";
-import { assertNever, rrid } from "./util";
+import { assertNever, rrid, withDo } from "./util";
 import { isSyncedState, RRDiceTemplate } from "./validation";
 import { LAST_MIGRATION_VERSION } from "./constants";
 import { RRDamageType } from "./dice-roll-tree-types-and-validation";
 import { assert, IsExact } from "conditional-type-checks";
 import { ForceNoInlineHelper } from "./typescript-hacks";
+import {
+  srcConditionDescriptions,
+  srcExtraConditionLike as srdExtraConditionLike,
+  srdConditionNames,
+} from "./third-party/srd/conditions";
 
 export type MakeRRID<K extends string> = `RRID/${K}/${string}`;
 
@@ -102,36 +107,19 @@ export const conditionNames = [
   "red",
   "teal",
   "yellow",
-  "blinded",
-  "charmed",
-  "deafened",
-  "exhaustion",
-  "frightened",
-  "grappled",
-  "incapacitated",
-  "invisible",
-  "paralyzed",
-  "petrified",
-  "poisoned",
-  "prone",
-  "restrained",
-  "stunned",
-  "unconscious",
-  "hasted",
-  "polymorphed",
-  "hunters mark",
-  "slowed",
-  "cursed",
-  "concealed",
-  "disarmed",
-  "hidden",
-  "raging",
-  "surprised",
-  "dead",
-  "concentrating",
+  ...srdConditionNames,
+  ...srdExtraConditionLike,
 ] as const;
 
 export type RRCharacterCondition = IterableElement<typeof conditionNames>;
+
+export function conditionTooltip(condition: string): string {
+  const name = (condition[0]?.toUpperCase() ?? "") + condition.slice(1);
+  return `${name}
+${withDo(srcConditionDescriptions[condition], (c) =>
+  c ? `\n#srd\n${c}` : ""
+)}`;
+}
 
 export interface RRInitiativeTrackerEntryCharacter
   extends Extract<

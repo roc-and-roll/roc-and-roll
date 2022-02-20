@@ -1,3 +1,8 @@
+All files except for the following are covered by the MIT license:
+
+- files in src/shared/third-party/
+- files in src/third-party/
+
 MIT License
 
 Copyright (c) 2021 Wanda Baltzer, Tom Beckmann, Christian Flach, Corinna Jaschek, Leonard Pabst

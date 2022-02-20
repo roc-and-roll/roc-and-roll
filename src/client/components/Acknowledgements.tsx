@@ -13,6 +13,10 @@ const licenses = {
     name: "CC0",
     url: "https://creativecommons.org/publicdomain/zero/1.0/",
   },
+  OGL: {
+    name: "OGL",
+    url: "https://media.wizards.com/2016/downloads/DND/SRD-OGL_V5.1.pdf",
+  },
 };
 
 //cspell: disable
@@ -109,6 +113,13 @@ export function Acknowledgements() {
           </li>
         ))}
       </ul>
+      <h3>Systems Reference Document (SRD)</h3>
+      We use content from the SRD from Wizards of the Coast, which is available
+      under the{" "}
+      <a href={licenses.OGL.url} target="_blank" rel="noreferrer">
+        Open Game License (OGL)
+      </a>
+      .
     </>
   );
 }

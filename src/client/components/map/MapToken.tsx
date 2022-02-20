@@ -19,6 +19,7 @@ import {
   RRPoint,
   RRMapID,
   RRColor,
+  conditionTooltip,
 } from "../../../shared/state";
 import { tokenImageUrl } from "../../files";
 import { canControlToken, canViewTokenOnMap } from "../../permissions";
@@ -508,7 +509,7 @@ const ConditionIcons = React.memo(function ConditionIcons({
 
         return typeof icon === "string" ? (
           <image key={condition} href={icon} {...props}>
-            <title>{condition}</title>
+            <title>{conditionTooltip(condition)}</title>
           </image>
         ) : (
           <React.Fragment key={condition}>
@@ -526,7 +527,7 @@ const ConditionIcons = React.memo(function ConditionIcons({
                 ...props.style,
               }}
             >
-              <title>{condition}</title>
+              <title>{conditionTooltip(condition)}</title>
             </use>
           </React.Fragment>
         );
