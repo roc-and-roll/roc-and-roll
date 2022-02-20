@@ -10,7 +10,7 @@
 
     "composite": true
   },
-  "files": ["./playwright.config.ts"],
+  "files": ["playwright.config.ts"],
   "include": ["src/e2e-tests/**/*"],
   "exclude": ["**/node_modules"],
   "references": [{ "path": "./tsconfig.shared.json" }]
