@@ -37,7 +37,7 @@ export interface CompendiumMonsterSkills {
 
 interface SpellPerLevel {
   slots: number;
-  spells: CompendiumTextEntry[];
+  spells: string[];
   lower?: number;
 }
 
@@ -114,7 +114,7 @@ export interface CompendiumMonster {
     ability: string;
     footerEntries?: CompendiumTextEntry[];
     spells?: {
-      0?: { spells: CompendiumTextEntry[] };
+      0?: { spells: string[] };
       1?: SpellPerLevel;
       2?: SpellPerLevel;
       3?: SpellPerLevel;
@@ -183,7 +183,7 @@ export const isConditionalSpeed = z.strictObject({
 
 const spellPerLevel = z.strictObject({
   slots: z.number().int(),
-  spells: z.array(isTextEntry),
+  spells: z.array(z.string()),
   lower: z.optional(z.number().int()),
 });
 
@@ -317,7 +317,7 @@ const _isMonster = z.strictObject({
         hidden: z.optional(z.array(z.string())),
         spells: z.optional(
           z.strictObject({
-            0: z.optional(z.strictObject({ spells: z.array(isTextEntry) })),
+            0: z.optional(z.strictObject({ spells: z.array(z.string()) })),
             1: z.optional(spellPerLevel),
             2: z.optional(spellPerLevel),
             3: z.optional(spellPerLevel),

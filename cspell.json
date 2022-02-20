@@ -62,7 +62,9 @@
     "unnotified",
     "unstyled",
     "vcxsrv",
-    "xvfb"
+    "xvfb",
+    "spellcasting",
+    "Spellcasting"
   ],
   "files": ["**/*.{js,jsx,ts,tsx,html,md,css,scss,peggy}"],
   "ignorePaths": [
