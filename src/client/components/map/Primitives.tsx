@@ -72,6 +72,7 @@ export const PCircle = React.forwardRef<
   return <Graphics ref={composeRefs(internalRef, externalRef)} {...rest} />;
 });
 
+// eslint-disable-next-line react/display-name
 export const ClipperPolygon = React.memo(
   React.forwardRef<
     PIXI.Graphics,

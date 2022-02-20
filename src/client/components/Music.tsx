@@ -43,7 +43,7 @@ import { VolumeSlider } from "./VolumeSlider";
 import { Collapsible, CollapsibleWithButton } from "./Collapsible";
 import { FileInput } from "./FileInput";
 
-export type MusicActions = {
+export interface MusicActions {
   onAdd: (songOrSoundSet: RRAssetSong | RRSoundSet) => void;
   onReplace: (songOrSoundSet: RRAssetSong | RRSoundSet) => void;
   onStop: (activeSongOrSoundSet: RRActiveSongOrSoundSet) => void;
@@ -52,7 +52,7 @@ export type MusicActions = {
     activeSongOrSoundSet: RRActiveSongOrSoundSet,
     volume: number
   ) => void;
-};
+}
 
 export const Music = React.memo(function Music() {
   const myself = useMyProps("favoriteAssetIds", "id");

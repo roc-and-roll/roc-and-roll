@@ -21,11 +21,11 @@ export const colorValue = (color: ColorInput) => {
   return { color: parseInt(t.toHex(), 16), alpha: t.getAlpha() };
 };
 
-export type RRMouseEvent = {
+export interface RRMouseEvent {
   clientX: number;
   clientY: number;
   button: number;
-};
+}
 
 // Based on code from https://github.com/facebook/react/issues/13048
 // by Dan Abramov.                              cspell: disable-line

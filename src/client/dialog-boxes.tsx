@@ -27,7 +27,10 @@ function makeContexts<ID, Data>() {
 
 type AlertID = MakeRRID<"popup/alert">;
 
-type AlertData = { message: ReactNode; onClose: () => void };
+interface AlertData {
+  message: ReactNode;
+  onClose: () => void;
+}
 
 const alertCtxs = makeContexts<AlertID, AlertData>();
 
@@ -49,10 +52,10 @@ export function useAlert() {
 
 type ConfirmID = MakeRRID<"popup/confirm">;
 
-type ConfirmData = {
+interface ConfirmData {
   message: ReactNode;
   onClose: (confirmed: boolean) => void;
-};
+}
 
 const confirmCtxs = makeContexts<ConfirmID, ConfirmData>();
 
@@ -77,12 +80,12 @@ export function useConfirm() {
 
 type PromptID = MakeRRID<"popup/prompt">;
 
-type PromptData = {
+interface PromptData {
   message: ReactNode;
   initialValue: string | undefined;
   multiline: boolean;
   onClose: (result: string | null) => void;
-};
+}
 
 const promptCtxs = makeContexts<PromptID, PromptData>();
 
@@ -109,10 +112,10 @@ export function usePrompt() {
 
 type DialogID = MakeRRID<"popup/dialog">;
 
-type DialogData<T> = {
+interface DialogData<T> {
   content: (onClose: (result: T | null) => void) => ReactNode;
   onClose: (result: T | null) => void;
-};
+}
 
 export const dialogCtxs = makeContexts<DialogID, DialogData<any>>();
 

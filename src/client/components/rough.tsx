@@ -249,7 +249,7 @@ const DrawablePrimitive = React.forwardRef<
   );
 });
 
-type PassedThroughOptions = Pick<
+type PassedThroughRoughOptions = Pick<
   Options,
   | "fill"
   | "fillStyle"
@@ -259,38 +259,48 @@ type PassedThroughOptions = Pick<
   | "roughness"
 >;
 
+interface RoughComponentProps
+  extends PassedThroughRoughOptions,
+    Pick<RRPixiProps<PIXI.Container>, "children" | "name" | "cursor"> {
+  onClick?: (e: RRMouseEvent) => void;
+  onMouseDown?: (e: RRMouseEvent) => void;
+  onMouseUp?: (e: RRMouseEvent) => void;
+  onContextMenu?: (e: RRMouseEvent) => void;
+  x: number;
+  y: number;
+  angle?: number;
+  seed?: string;
+}
+
+type RoughComponent<
+  // C contains the props that are specific to this rough component, e.g., a
+  // rectangle uses {w, h}, but a circle just uses {d}.
+  C extends object
+> = React.MemoExoticComponent<
+  React.ForwardRefExoticComponent<
+    React.PropsWithoutRef<RoughComponentProps & C> &
+      React.RefAttributes<PIXI.Container>
+  >
+>;
+
 // eslint-disable-next-line @typescript-eslint/ban-types
-function makeRoughComponent<C extends object, E extends SVGElement>(
+function makeRoughComponent<
+  // C contains the props that are specific to this rough component, e.g., a
+  // rectangle uses {w, h}, but a circle just uses {d}.
+  C extends object
+>(
   displayName: string,
   generateRough: (
     rc: RoughGenerator,
     customProps: C,
-    options: PassedThroughOptions & { seed: number }
+    options: PassedThroughRoughOptions & { seed: number }
   ) => Drawable,
   generateHitArea: (
     customProps: C
   ) => PIXI.Rectangle | PIXI.Circle | PIXI.Ellipse | PIXI.Polygon
 ) {
   const component = React.memo(
-    React.forwardRef<
-      E | SVGGElement,
-      C &
-        PassedThroughOptions & {
-          onClick?: (e: RRMouseEvent) => void;
-          onMouseDown?: (e: RRMouseEvent) => void;
-          onMouseUp?: (e: RRMouseEvent) => void;
-          onContextMenu?: (e: RRMouseEvent) => void;
-        } & Pick<
-          RRPixiProps<PIXI.Container>,
-          "children" | "name" | "cursor"
-        > & {
-          x: number;
-          y: number;
-          angle?: number;
-        } & {
-          seed?: string;
-        }
-    >(
+    React.forwardRef<PIXI.Container, RoughComponentProps & C>(
       (
         {
           fill,
@@ -371,7 +381,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
 
           return (
             <DrawablePrimitive
-              ref={ref as React.ForwardedRef<PIXI.Graphics>}
+              ref={ref}
               name={name}
               drawable={drawable}
               generator={generator}
@@ -401,78 +411,77 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
   return component;
 }
 
-export const RoughLine = makeRoughComponent<
-  {
-    w: number;
-    h: number;
-  },
-  SVGLineElement
->(
-  "RoughLine",
-  (generator, { w, h }, options) => generator.line(0, 0, w, h, options),
-  ({ w, h }) => getLocalBoundingBoxForLine(w, h, false)
-);
+interface RoughLineProps {
+  w: number;
+  h: number;
+}
+export const RoughLine: RoughComponent<RoughLineProps> =
+  makeRoughComponent<RoughLineProps>(
+    "RoughLine",
+    (generator, { w, h }, options) => generator.line(0, 0, w, h, options),
+    ({ w, h }) => getLocalBoundingBoxForLine(w, h, false)
+  );
 
-export const RoughRectangle = makeRoughComponent<
-  {
-    w: number;
-    h: number;
-  },
-  SVGRectElement
->(
-  "RoughRectangle",
-  (generator, { w, h }, options) => generator.rectangle(0, 0, w, h, options),
-  ({ w, h }) => getLocalBoundingBoxForRectangle(w, h)
-);
+interface RoughRectangleProps {
+  w: number;
+  h: number;
+}
+export const RoughRectangle: RoughComponent<RoughRectangleProps> =
+  makeRoughComponent<RoughRectangleProps>(
+    "RoughRectangle",
+    (generator, { w, h }, options) => generator.rectangle(0, 0, w, h, options),
+    ({ w, h }) => getLocalBoundingBoxForRectangle(w, h)
+  );
 
-export const RoughEllipse = makeRoughComponent<
-  {
-    w: number;
-    h: number;
-  },
-  SVGEllipseElement
->(
-  "RoughEllipse",
-  (generator, { w, h }, options) =>
-    generator.ellipse(w / 2, h / 2, w, h, options),
-  ({ w, h }) => getLocalBoundingBoxForEllipse(w, h)
-);
+interface RoughEllipseProps {
+  w: number;
+  h: number;
+}
+export const RoughEllipse: RoughComponent<RoughEllipseProps> =
+  makeRoughComponent<RoughEllipseProps>(
+    "RoughEllipse",
+    (generator, { w, h }, options) =>
+      generator.ellipse(w / 2, h / 2, w, h, options),
+    ({ w, h }) => getLocalBoundingBoxForEllipse(w, h)
+  );
 
-export const RoughCircle = makeRoughComponent<{ d: number }, SVGCircleElement>(
-  "RoughCircle",
-  (generator, { d }, options) => generator.circle(d / 2, d / 2, d, options),
-  ({ d }) => getLocalBoundingBoxForEllipse(d, d)
-);
+interface RoughCircleProps {
+  d: number;
+}
+export const RoughCircle: RoughComponent<RoughCircleProps> =
+  makeRoughComponent<RoughCircleProps>(
+    "RoughCircle",
+    (generator, { d }, options) => generator.circle(d / 2, d / 2, d, options),
+    ({ d }) => getLocalBoundingBoxForEllipse(d, d)
+  );
 
-export const RoughLinearPath = makeRoughComponent<
-  {
-    points: RRPoint[];
-  },
-  SVGPolylineElement
->(
-  "RoughLinearPath",
-  (generator, { points }, options) =>
-    generator.linearPath(
-      [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
-      options
-    ),
-  ({ points }) => getLocalBoundingBoxForFreehand(points, false)
-);
+interface RoughLinearPathProps {
+  points: RRPoint[];
+}
+export const RoughLinearPath: RoughComponent<RoughLinearPathProps> =
+  makeRoughComponent<RoughLinearPathProps>(
+    "RoughLinearPath",
+    (generator, { points }, options) =>
+      generator.linearPath(
+        [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
+        options
+      ),
+    ({ points }) => getLocalBoundingBoxForFreehand(points, false)
+  );
 
-export const RoughPolygon = makeRoughComponent<
-  {
-    points: RRPoint[];
-  },
-  SVGPolygonElement
->(
-  "RoughPolygon",
-  (generator, { points }, options) =>
-    generator.polygon(
-      [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
-      options
-    ),
-  ({ points }) => getLocalBoundingBoxForPolygon(points)
-);
+interface RoughPolygonProps {
+  points: RRPoint[];
+}
+export const RoughPolygon: RoughComponent<RoughPolygonProps> =
+  makeRoughComponent<RoughPolygonProps>(
+    "RoughPolygon",
+    (generator, { points }, options) =>
+      generator.polygon(
+        [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
+        options
+      ),
+    ({ points }) => getLocalBoundingBoxForPolygon(points)
+  );
 
 const fontObserver = new (class {
   private loaded = false;

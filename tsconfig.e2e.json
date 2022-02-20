@@ -1,0 +1,17 @@
+// E2E tests don't actually use this file; they work automagically. This file is
+// only used for editor Intellisense.
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "target": "es2020",
+    "lib": ["es2020", "dom"],
+
+    "types": ["node"],
+
+    "composite": true
+  },
+  "files": ["playwright.config.ts"],
+  "include": ["src/e2e-tests/**/*"],
+  "exclude": ["**/node_modules"],
+  "references": [{ "path": "./tsconfig.shared.json" }]
+}

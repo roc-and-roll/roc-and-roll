@@ -3,6 +3,9 @@ import React, { useContext, useDeferredValue, useMemo } from "react";
 import { useEffect, useRef } from "react";
 import { Promisable } from "type-fest";
 import { logEntryDiceRollAdd } from "../../../shared/actions";
+import { CompendiumTextEntry } from "../../../shared/compendium-types/text-entry";
+import { CompendiumMonster } from "../../../shared/compendium-types/monster";
+import { CompendiumSpell } from "../../../shared/compendium-types/spell";
 import { RRLogEntryDiceRoll } from "../../../shared/state";
 import { usePrompt } from "../../dialog-boxes";
 import {
@@ -13,11 +16,6 @@ import {
 import { useMyProps } from "../../myself";
 import { useServerDispatch } from "../../state";
 import { useCompendium } from "../compendium/Compendium";
-import {
-  CompendiumMonster,
-  CompendiumSpell,
-  CompendiumTextEntry,
-} from "../compendium/types";
 import { Dialog, DialogContent, DialogTitle } from "../Dialog";
 import { SmartTextInput } from "../ui/TextInput";
 import "./QuickReference.scss";
@@ -354,13 +352,14 @@ function RollScaledLink({
           rollType: isDamage ? "hit" : null,
           rollName: `${rollName} (level ${level})`,
           tooltip: null,
+          characterIds: null,
         };
       }}
     />
   );
 }
 
-function TextEntryString({
+export function TextEntryString({
   text,
   rollName,
 }: {
@@ -416,6 +415,7 @@ function TextEntryString({
                   rollType: command === "damage" ? "attack" : null,
                   rollName,
                   tooltip: null,
+                  characterIds: null,
                 })}
               />
             );
@@ -461,6 +461,7 @@ function TextEntryString({
                   rollType: command === "hit" ? "attack" : null,
                   rollName,
                   tooltip: null,
+                  characterIds: null, // TODO
                 })}
               />
             );
@@ -516,6 +517,8 @@ function TextEntryString({
               ></CompendiumLink>
             );
           }
+          case "dc":
+            return "DC " + args;
           // TODO: We should also handle these properly.
           case "condition":
           case "sense":
@@ -526,7 +529,6 @@ function TextEntryString({
           case "filter":
           case "book":
           case "i":
-          case "dc":
           case "hitYourSpellAttack":
             return part;
           default:

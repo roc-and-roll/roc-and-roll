@@ -22,11 +22,11 @@ import {
 import { batchActions } from "redux-batched-actions";
 import { ClientBuildHashSubject } from "./setupClientBuildHashSubject";
 
-type AdditionalSocketData = {
+interface AdditionalSocketData {
   finishedOptimisticUpdateIds: OptimisticUpdateID[];
   playerId: RRPlayerID | null;
   lastState: SyncedState | null;
-};
+}
 
 const isREDUX_ACTION = z.strictObject({
   actions: z.array(

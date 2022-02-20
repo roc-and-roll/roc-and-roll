@@ -1,4 +1,9 @@
-import { configureStore } from "@reduxjs/toolkit";
+import {
+  configureStore,
+  EnhancedStore,
+  CombinedState,
+  AnyAction,
+} from "@reduxjs/toolkit";
 import { SyncedState } from "../shared/state";
 import { reducer } from "../shared/reducer";
 import { enableBatching } from "redux-batched-actions";
@@ -7,8 +12,12 @@ const options = {
   reducer: enableBatching(reducer),
 };
 
-export function setupReduxStore(preloadedState: SyncedState | undefined) {
-  const store = configureStore({
+export type MyStore = EnhancedStore<CombinedState<SyncedState>, AnyAction, []>;
+
+export function setupReduxStore(
+  preloadedState: SyncedState | undefined
+): MyStore {
+  const store = configureStore<SyncedState, AnyAction, []>({
     ...options,
     preloadedState,
   });
@@ -16,12 +25,7 @@ export function setupReduxStore(preloadedState: SyncedState | undefined) {
   return store;
 }
 
-// just for types
-const __store = configureStore(options);
-
-export type MyStore = typeof __store;
-
 // Use SyncedState from shared/state.ts instead!
 // export type MyState = ReturnType<typeof store.getState>;
 
-export type MyDispatch = typeof __store.dispatch;
+export type MyDispatch = MyStore["dispatch"];

@@ -7,10 +7,10 @@ import { useServerDispatch } from "../../state";
 import {
   CompendiumMonster,
   CompendiumMonsterSkills,
-  CompendiumTextEntry,
-} from "../compendium/types";
+} from "../../../shared/compendium-types/monster";
 import { Button } from "../ui/Button";
-import { TextEntry } from "./QuickReference";
+import { TextEntry, TextEntryString } from "./QuickReference";
+import { CompendiumTextEntry } from "../../../shared/compendium-types/text-entry";
 
 export function getMonsterSpeedAsString(monster: CompendiumMonster) {
   if (!monster.speed) return "";
@@ -116,7 +116,21 @@ export const Monster = React.memo(function Monster({
       spellSaveDC: null,
       scale: getTokenSize(),
       visibility: "everyone",
-      limitedUseSkills: [],
+      // FIXME if there are multiple spellcasting entries this will be tricky
+      limitedUseSkills: monster.spellcasting?.[0]?.spells
+        ? Object.entries(monster.spellcasting[0].spells)
+            .map(([level, s]) =>
+              "slots" in s
+                ? {
+                    name: `Spell Slots Lvl ${level}`,
+                    maxUseCount: s.slots,
+                    currentUseCount: 0,
+                    restoresAt: "longRest" as const,
+                  }
+                : null
+            )
+            .flatMap((x) => (x ? [x] : []))
+        : [],
       attributes: {
         initiative: null,
         proficiency: null,
@@ -266,92 +280,108 @@ export const Monster = React.memo(function Monster({
         {monster.legendary &&
           renderTextEntries("Legendary Actions", monster.legendary)}
         {monster.action && renderTextEntries("Actions", monster.action)}
-        {monster.spellcasting && ( //cspell: disable-line
+        {monster.spellcasting && (
           <>
             <dt>Spell Casting</dt>
-            <dd>
-              {
-                //cspell: disable-next-line
-                monster.spellcasting.map((spellType) => (
-                  <>
-                    {spellType.headerEntries.map((entry, index) => (
-                      <TextEntry
-                        key={index}
-                        entry={entry}
-                        rollName={monster.name}
-                      ></TextEntry>
-                    ))}
-                    {spellType.daily &&
-                      Object.entries(spellType.daily).map(([key, value]) => (
-                        <>
-                          <dt>{key.substring(0, 1)} / per day</dt>
-                          <dd>
-                            {value.map((x, index) => (
-                              <TextEntry
-                                key={`daily${index}`}
-                                entry={x}
-                                rollName="monster.name"
-                              ></TextEntry>
-                            ))}
-                          </dd>
-                        </>
-                      ))}
-                    {spellType.spells &&
-                      Object.entries(spellType.spells).map(([key, value]) =>
-                        key === "0" ? (
-                          <>
-                            <dt>Cantrips</dt>
-                            <dd>
-                              {value.spells.map((x, index) => (
-                                <TextEntry
-                                  key={index}
-                                  entry={x}
-                                  rollName={monster.name}
-                                ></TextEntry>
-                              ))}
-                            </dd>
-                          </>
-                        ) : (
-                          <>
-                            <dt>
-                              Level {key} (
-                              {"slots" in value ? value.slots : "0"} slot
-                              {"slots" in value && value.slots > 1 ? "s" : ""})
-                            </dt>
-                            <dd>
-                              {value.spells.map((x, index) => (
-                                <TextEntry
-                                  key={index}
-                                  entry={x}
-                                  rollName={monster.name}
-                                ></TextEntry>
-                              ))}
-                            </dd>
-                          </>
-                        )
-                      )}
-                    {spellType.will && <dt>At Will</dt>}
-                    {spellType.will?.map((entry, index) => (
-                      <TextEntry
-                        key={index}
-                        entry={entry}
-                        rollName={monster.name}
-                      ></TextEntry>
-                    ))}
-                    {spellType.footerEntries?.map((entry, index) => (
-                      <TextEntry
-                        key={index}
-                        entry={entry}
-                        rollName={monster.name}
-                      ></TextEntry>
-                    ))}
-                  </>
-                ))
-              }
-            </dd>
+            <MonsterSpellcasting monster={monster} />
           </>
         )}
       </dl>
     </>
   );
 });
+
+export function MonsterSpellcasting({
+  monster,
+  short,
+}: {
+  monster: CompendiumMonster;
+  short?: boolean;
+}) {
+  if (!monster.spellcasting) return null;
+
+  const showLevel = (level: string, slots: number) =>
+    short ? (
+      <>
+        {
+          ["I", "II", "III", "IV", "V", "VI", "VI", "VII", "VIII", "IX", "X"][
+            parseInt(level) - 1
+          ]!
+        }{" "}
+        <span title="Spell slots">({slots})</span>
+      </>
+    ) : (
+      `Level ${level} ${
+        slots > 0 ? ` (${slots} slot${slots === 1 ? "" : "s"})` : ""
+      }`
+    );
+
+  return (
+    <>
+      <dd>
+        {monster.spellcasting.map((spellType) => (
+          <>
+            {spellType.headerEntries.map((entry, index) => (
+              <TextEntry
+                key={index}
+                entry={entry}
+                rollName={monster.name}
+              ></TextEntry>
+            ))}
+            {spellType.daily &&
+              Object.entries(spellType.daily).map(([key, value]) => (
+                <>
+                  <dt>{key.substring(0, 1)} / per day</dt>
+                  <dd>
+                    {value.map((x, index) => (
+                      <TextEntry
+                        key={`daily${index}`}
+                        entry={x}
+                        rollName="monster.name"
+                      ></TextEntry>
+                    ))}
+                  </dd>
+                </>
+              ))}
+            {spellType.spells &&
+              Object.entries(spellType.spells).map(([level, value]) => (
+                <div key={level}>
+                  <strong>
+                    {level === "0"
+                      ? "Cantrips"
+                      : showLevel(level, "slots" in value ? value.slots : 0)}
+                    :{" "}
+                  </strong>
+                  {value.spells.map((x, index) => (
+                    <>
+                      <TextEntryString
+                        key={index}
+                        text={x}
+                        rollName={monster.name}
+                      />
+                      {index < value.spells.length - 1 && ", "}
+                    </>
+                  ))}
+                </div>
+              ))}
+            {spellType.will && <dt>At Will</dt>}
+            {spellType.will?.map((entry, index) => (
+              <TextEntry
+                key={index}
+                entry={entry}
+                rollName={monster.name}
+              ></TextEntry>
+            ))}
+            {spellType.footerEntries?.map((entry, index) => (
+              <TextEntry
+                key={index}
+                entry={entry}
+                rollName={monster.name}
+              ></TextEntry>
+            ))}
+          </>
+        ))}
+      </dd>
+    </>
+  );
+}

@@ -5,7 +5,10 @@ import { useAlert } from "../dialog-boxes";
 import { useLatest } from "../useLatest";
 import useLocalState from "../useLocalState";
 import { useCompendium } from "./compendium/Compendium";
-import { CompendiumSource, isCompendiumSource } from "./compendium/types";
+import {
+  CompendiumSource,
+  isCompendiumSource,
+} from "../../shared/compendium-types";
 import { Button } from "./ui/Button";
 import type * as z from "zod";
 

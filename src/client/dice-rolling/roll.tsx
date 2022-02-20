@@ -16,6 +16,7 @@ import {
   RRPlayerID,
   colorForDamageType,
   damageTypes,
+  RRCharacterID,
 } from "../../shared/state";
 import { assertNever } from "../../shared/util";
 import { contrastColor } from "../util";
@@ -80,7 +81,8 @@ export function rollDiceRollTree(diceRollTree: DiceRollTree<false>) {
 export function rollInitiative(
   modifier: number,
   multiple: RRMultipleRoll,
-  playerId: RRPlayerID
+  playerId: RRPlayerID,
+  characterIds: RRCharacterID[]
 ): Omit<RRLogEntryDiceRoll, "id" | "type" | "timestamp"> {
   const d20 = rollD20(multiple);
 
@@ -89,6 +91,7 @@ export function rollInitiative(
       tooltip: null,
       rollType: "initiative",
       rollName: "Initiative",
+      characterIds,
       diceRollTree:
         modifier === 0
           ? d20

@@ -83,11 +83,11 @@ describe("SyncedDebounceMaker", () => {
 });
 
 describe("useDebounce", () => {
-  type HookArgs<A extends unknown[]> = {
+  interface HookArgs<A extends unknown[]> {
     callback: (...args: A) => unknown;
     debounce: Debouncer;
     forceOnUnmount: boolean;
-  };
+  }
 
   const TIME = 100;
 
@@ -175,11 +175,11 @@ describe("useDebounce", () => {
 });
 
 describe("useAggregatedDebounce", () => {
-  type HookArgs<A extends unknown[]> = {
+  interface HookArgs<A extends unknown[]> {
     callback: (args: A[]) => unknown;
     debounce: Debouncer;
     forceOnUnmount: boolean;
-  };
+  }
 
   const TIME = 100;
 

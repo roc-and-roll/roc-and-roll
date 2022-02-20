@@ -1,0 +1,17 @@
+// Tests don't actually use this file; they use swc. This file is only used for
+// editor Intellisense.
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "target": "es2020",
+    "lib": ["es2020", "dom"],
+
+    "types": ["node", "webpack-env", "react-dom/next", "react/next", "jest"],
+
+    "composite": true
+  },
+  "files": ["./jest-setup.ts"],
+  "include": ["src/client/**/*.test.*", "src/shared/shared.d.ts"],
+  "exclude": ["**/node_modules"],
+  "references": [{ "path": "./tsconfig.client.json" }]
+}

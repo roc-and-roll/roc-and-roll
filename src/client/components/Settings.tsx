@@ -110,6 +110,25 @@ export function Settings() {
           }
         />
       </label>
+      <div>
+        <label>
+          Log Entry Titles for Dice Rolls
+          <Select<RRSettings["logNames"]>
+            value={settings.logNames}
+            options={[
+              { label: "character name only", value: "characterName" },
+              { label: "player name only", value: "playerName" },
+              { label: "player and character name", value: "verbose" },
+            ]}
+            onChange={(value) =>
+              setSettings((old) => ({
+                ...old,
+                logNames: value,
+              }))
+            }
+          />
+        </label>
+      </div>
     </>
   );
 }

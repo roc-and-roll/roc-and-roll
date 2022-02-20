@@ -1,33 +1,17 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "esnext",
-    "lib": ["esnext", "dom"],
-    "noEmit": true,
-    "incremental": true,
+    "types": ["node", "webpack-env", "react-dom/next", "react/next"],
 
-    "module": "es2020",
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "strict": true,
-    "useUnknownInCatchVariables": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "jsx": "react",
-    "baseUrl": "./",
-    "typeRoots": ["src/shared/types", "./node_modules/@types"],
-    "paths": {
-      "react-pixi-fiber": ["./src/client/third-party/react-pixi-fiber"]
-    }
+    "composite": true
   },
-  "include": [
-    "./jest-setup.ts",
-    "./playwright.config.ts",
-    "src/client/**/*",
-    "src/server/**/*",
-    "src/shared/**/*",
-    "src/e2e-tests/**/*"
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.client.json" },
+    { "path": "./tsconfig.server.json" },
+    { "path": "./tsconfig.shared.test.json" },
+    { "path": "./tsconfig.client.test.json" },
+    { "path": "./tsconfig.server.test.json" },
+    { "path": "./tsconfig.e2e.json" }
   ]
 }

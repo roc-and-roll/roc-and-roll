@@ -1,4 +1,4 @@
-import { isTextEntry } from "./types";
+import { isTextEntry } from "./text-entry";
 
 describe("text entry schema", () => {
   it.each([

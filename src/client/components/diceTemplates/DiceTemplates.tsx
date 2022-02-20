@@ -30,10 +30,10 @@ import {
   DiceTemplatePartMenuWrapper,
 } from "./DiceTemplatePart";
 
-export type SelectionPair = {
+export interface SelectionPair {
   template: RRDiceTemplate;
   modified: RRMultipleRoll;
-};
+}
 
 export const DiceTemplates = React.memo(function DiceTemplates({
   category,
@@ -133,6 +133,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
                   operator: "+",
                   operands: parts,
                 },
+          characterIds: character ? [character.id] : null,
         },
       })
     );

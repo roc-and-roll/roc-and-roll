@@ -41,7 +41,13 @@ import {
   RRDiceTemplatePartID,
 } from "./state";
 import { rrid, timestamp } from "./util";
-import { RRDiceTemplate, RRDiceTemplateCategory } from "./validation";
+import type {
+  RRDiceTemplate,
+  // We need this import for #reasons, otherwise TypeScript won't compile.
+  // eslint-disable-next-line unused-imports/no-unused-imports
+  _RRDiceTemplate,
+  RRDiceTemplateCategory,
+} from "./validation";
 
 type Update<T extends { id: RRID }> = OriginalUpdate<T, T["id"]>;
 

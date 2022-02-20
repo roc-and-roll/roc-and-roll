@@ -5,7 +5,7 @@
   "tasks": [
     {
       "label": "dev",
-      "dependsOn": ["dev:server", "dev:client"],
+      "dependsOn": ["dev:server", "dev:client", "dev:type-check"],
       "runOptions": {
         "runOn": "folderOpen"
       },
@@ -28,6 +28,19 @@
       "label": "dev:client",
       "type": "shell",
       "command": "yarn run dev:client",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true,
+        "group": "dev"
+      }
+    },
+    {
+      "label": "dev:type-check",
+      "type": "shell",
+      "command": "yarn run dev:type-check",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",

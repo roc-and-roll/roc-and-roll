@@ -10,13 +10,13 @@
  */
 import React from "react";
 
-type ContextBridgeProps<T extends [...React.Context<any>[]]> = {
+interface ContextBridgeProps<T extends [...React.Context<any>[]]> {
   contexts: T;
   barrierRender: (
     children: React.ReactElement | null
   ) => React.ReactElement | null;
   children: React.ReactNode;
-};
+}
 
 export const ContextBridge = <T extends [...React.Context<any>[]]>({
   barrierRender,
@@ -41,6 +41,7 @@ export const ContextBridge = <T extends [...React.Context<any>[]]>({
   };
 
   const consumers = contexts.reduce(
+    // eslint-disable-next-line react/display-name
     (getChildren, Context) => (values: unknown[]) =>
       (
         <Context.Consumer>
