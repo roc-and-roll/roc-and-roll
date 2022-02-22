@@ -13,10 +13,6 @@ const licenses = {
     name: "CC0",
     url: "https://creativecommons.org/publicdomain/zero/1.0/",
   },
-  OGL: {
-    name: "OGL",
-    url: "https://media.wizards.com/2016/downloads/DND/SRD-OGL_V5.1.pdf",
-  },
 };
 
 //cspell: disable
@@ -116,10 +112,23 @@ export function Acknowledgements() {
       <h3>Systems Reference Document (SRD)</h3>
       We use content from the SRD from Wizards of the Coast, which is available
       under the{" "}
-      <a href={licenses.OGL.url} target="_blank" rel="noreferrer">
-        Open Game License (OGL)
+      <a
+        href={"https://media.wizards.com/2016/downloads/DND/SRD-OGL_V5.1.pdf"}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Open Game License (OGL) Version 1.0a.
       </a>
-      .
+      {/*cspell:disable*/}
+      <p>
+        COPYRIGHT NOTICE Open Game License v 1.0a Copyright 2000, Wizards of the
+        Coast, LLC. System Reference Document 5.1 Copyright 2016, Wizards of the
+        Coast, Inc.; Authors Mike Mearls, Jeremy Crawford, Chris Perkins, Rodney
+        Thompson, Peter Lee, James Wyatt, Robert J. Schwalb, Bruce R. Cordell,
+        Chris Sims, and Steve Townshend, based on original material by E. Gary
+        Gygax and Dave Arneson.
+      </p>
+      {/*cspell:enable*/}
     </>
   );
 }

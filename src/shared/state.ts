@@ -9,8 +9,9 @@ import { assert, IsExact } from "conditional-type-checks";
 import { ForceNoInlineHelper } from "./typescript-hacks";
 import {
   srcConditionDescriptions,
-  srcExtraConditionLike as srdExtraConditionLike,
+  srdExtraConditionLike,
   srdConditionNames,
+  SrcCondition,
 } from "./third-party/srd/conditions";
 
 export type MakeRRID<K extends string> = `RRID/${K}/${string}`;
@@ -116,8 +117,10 @@ export type RRCharacterCondition = IterableElement<typeof conditionNames>;
 export function conditionTooltip(condition: string): string {
   const name = (condition[0]?.toUpperCase() ?? "") + condition.slice(1);
   return `${name}
-${withDo(srcConditionDescriptions[condition], (c) =>
-  c ? `\n#srd\n${c}` : ""
+${withDo(srcConditionDescriptions[condition as SrcCondition], (c) =>
+  c
+    ? `\n${c}\n\nOpen Game Content licensed under the Open Game License Version 1.0a (see Acknowledgements)`
+    : ""
 )}`;
 }
 
