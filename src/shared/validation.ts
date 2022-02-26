@@ -452,7 +452,14 @@ export const isSyncedState = z.strictObject({
 
       settings: z.strictObject({
         atmosphere: z.strictObject({
-          type: z.enum(["none", "rain", "snow", "fire", "fog"] as const),
+          type: z.enum([
+            "none",
+            "rain",
+            "snow",
+            "fire",
+            "fog",
+            "thunderstorm",
+          ] as const),
           intensity: z.number().min(0).max(1),
         }),
         name: z.string(),
