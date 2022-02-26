@@ -8,10 +8,10 @@ import { RRDamageType } from "./dice-roll-tree-types-and-validation";
 import { assert, IsExact } from "conditional-type-checks";
 import { ForceNoInlineHelper } from "./typescript-hacks";
 import {
-  srcConditionDescriptions,
+  srdConditionDescriptions,
   srdExtraConditionLike,
   srdConditionNames,
-  SrcCondition,
+  SrdCondition,
 } from "./third-party/srd/conditions";
 
 export type MakeRRID<K extends string> = `RRID/${K}/${string}`;
@@ -117,7 +117,7 @@ export type RRCharacterCondition = IterableElement<typeof conditionNames>;
 export function conditionTooltip(condition: string): string {
   const name = (condition[0]?.toUpperCase() ?? "") + condition.slice(1);
   return `${name}
-${withDo(srcConditionDescriptions[condition as SrcCondition], (c) =>
+${withDo(srdConditionDescriptions[condition as SrdCondition], (c) =>
   c
     ? `\n${c}\n\nOpen Game Content licensed under the Open Game License Version 1.0a (see Acknowledgements)`
     : ""

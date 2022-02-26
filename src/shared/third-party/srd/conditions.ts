@@ -1,11 +1,11 @@
 /*!
-See LICENSE.md for the full license.
-
-@license Open Game License v 1.0a
-
-COPYRIGHT NOTICE Open Game License v 1.0a Copyright 2000, Wizards of the Coast, LLC. 
-System Reference Document 5.1 Copyright 2016, Wizards of the Coast, Inc.; Authors Mike Mearls, Jeremy Crawford, Chris Perkins, Rodney Thompson, Peter Lee, James Wyatt, Robert J. Schwalb, Bruce R. Cordell, Chris Sims, and Steve Townshend, based on original material by E. Gary Gygax and Dave Arneson. 
-*/
+ * @license Open Game License v 1.0a
+ *
+ * See LICENSE.md for the full license.
+ *
+ * COPYRIGHT NOTICE Open Game License v 1.0a Copyright 2000, Wizards of the Coast, LLC.
+ * System Reference Document 5.1 Copyright 2016, Wizards of the Coast, Inc.; Authors Mike Mearls, Jeremy Crawford, Chris Perkins, Rodney Thompson, Peter Lee, James Wyatt, Robert J. Schwalb, Bruce R. Cordell, Chris Sims, and Steve Townshend, based on original material by E. Gary Gygax and Dave Arneson.
+ */
 
 import { IterableElement } from "type-fest";
 
@@ -26,7 +26,7 @@ export const srdConditionNames = [
   "unconscious",
 ] as const;
 
-export type SrcCondition = IterableElement<typeof srdConditionNames>;
+export type SrdCondition = IterableElement<typeof srdConditionNames>;
 
 export const srdExtraConditionLike = [
   "exhaustion",
@@ -44,7 +44,7 @@ export const srdExtraConditionLike = [
   "concentrating",
 ] as const;
 
-export const srcConditionDescriptions: Record<SrcCondition, string> = {
+export const srdConditionDescriptions: Record<SrdCondition, string> = {
   blinded: `\
 * A blinded creature can't see and automatically fails any ability check that requires sight. 
 * Attack rolls against the creature have advantage, and the creature's attack rolls have disadvantage. `,
