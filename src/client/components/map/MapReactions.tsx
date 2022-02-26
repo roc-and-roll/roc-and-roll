@@ -59,7 +59,7 @@ const MapReaction = React.memo(function MapReaction({
     };
   }, [onExpired, reaction]);
 
-  // TODO: Re-add animation.
+  // TODO(pixi): Re-add animation.
   //   <g className="map-reaction">
 
   return (

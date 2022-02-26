@@ -114,14 +114,11 @@ export async function setupWebServer(
               filename: file.filename,
               mimeType,
               ...(isImage
-                ? await (async () => {
-                    const dimensions = await getImageDimensions(file.path);
-                    return {
-                      type: "image" as const,
-                      ...dimensions,
-                      blurHash: await calculateBlurHash(file.path),
-                    };
-                  })()
+                ? {
+                    type: "image" as const,
+                    ...(await getImageDimensions(file.path)),
+                    blurHash: await calculateBlurHash(file.path),
+                  }
                 : isAudio
                 ? {
                     type: "audio" as const,

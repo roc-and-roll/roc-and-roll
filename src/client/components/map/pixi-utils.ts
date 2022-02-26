@@ -1,4 +1,3 @@
-import { Matrix } from "transformation-matrix";
 import * as PIXI from "pixi.js";
 import tinycolor, { ColorInput } from "tinycolor2";
 import { Key, ReactNode, ReactPortal } from "react";
@@ -9,12 +8,6 @@ import {
   InteractiveComponent,
 } from "react-pixi-fiber";
 import { ReactPortal as ReactReconcilerPortal } from "react-reconciler";
-
-export const matrixToPixiTransform = (m: Matrix) => {
-  const t = new PIXI.Transform();
-  t.setFromMatrix(new PIXI.Matrix(m.a, m.b, m.c, m.d, m.e, m.f));
-  return t;
-};
 
 export const colorValue = (color: ColorInput) => {
   const t = tinycolor(color);

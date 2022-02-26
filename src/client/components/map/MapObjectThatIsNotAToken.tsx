@@ -75,22 +75,22 @@ export const MapObjectThatIsNotAToken = React.memo<{
     angle: object.rotation,
     cursor: canControl ? "move" : undefined,
     onMouseDown: useCallback(
-      (event: RRMouseEvent) => {
-        if (canControl && event.button === 0) {
-          onStartMoveRef.current(event);
+      (e: RRMouseEvent) => {
+        if (canControl && e.button === 0) {
+          onStartMoveRef.current(e);
         }
-        clickPositionRef.current = { x: event.clientX, y: event.clientY };
+        clickPositionRef.current = { x: e.clientX, y: e.clientY };
       },
       [onStartMoveRef, canControl]
     ),
     onMouseUp: useCallback(
-      (event: RRMouseEvent) => {
+      (e: RRMouseEvent) => {
         if (
-          event.button === 2 &&
+          e.button === 2 &&
           clickPositionRef.current &&
           pointEquals(clickPositionRef.current, {
-            x: event.clientX,
-            y: event.clientY,
+            x: e.clientX,
+            y: e.clientY,
           }) &&
           canControl
         ) {

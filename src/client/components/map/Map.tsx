@@ -82,7 +82,6 @@ import {
   useServerStateRef,
 } from "../../state";
 import { RoughContext, RoughContextProvider } from "../rough";
-import { matrixToPixiTransform } from "./pixi-utils";
 import { MapGrid } from "./MapGrid";
 import { PRectangle } from "./Primitives";
 import { MeasurePaths } from "./MeasurePaths";
@@ -729,8 +728,6 @@ const RRMapViewWithRef = React.forwardRef<
           const local = localCoords(rootRef.current, event);
 
           (document.activeElement as HTMLElement | null)?.blur();
-          // TODO event.preventDefault();
-          // TODO event.stopPropagation();
           dragStartIdRef.current = object.id;
           dragLastMouseRef.current = local;
 
@@ -881,11 +878,13 @@ transform,
 
   const RecoilBridge = useRecoilBridgeAcrossReactRoots_UNSTABLE();
 
-  // TODO: Remove and use `transform` directly.
-  const pixiTransform = useMemo(
-    () => matrixToPixiTransform(transform),
-    [transform]
-  );
+  // TODO(pixi): Remove and use `transform` directly.
+  const pixiTransform = useMemo(() => {
+    const m = transform;
+    const t = new PIXI.Transform();
+    t.setFromMatrix(new PIXI.Matrix(m.a, m.b, m.c, m.d, m.e, m.f));
+    return t;
+  }, [transform]);
 
   return (
     <RoughContextProvider enabled={true /* TODO: roughEnabled */}>
@@ -963,6 +962,9 @@ transform,
                   zoom={transform.a}
                 />
               )}
+
+              <FogOfWar transform={transform} revealedAreas={revealedAreas} />
+
               {withSelectionAreaDo(
                 selectionArea,
                 (x, y, w, h) => (
@@ -983,7 +985,6 @@ transform,
                 backgroundColor={backgroundColor}
                 players={players}
               />
-              <FogOfWar transform={transform} revealedAreas={revealedAreas} />
               <MapReactions mapId={mapId} />
               <MouseCursors
                 myId={myself.id}

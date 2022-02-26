@@ -454,7 +454,7 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
           r={tokenSize / 2 - character.scale * 1.5}
           fill={0x000000}
           alpha={0}
-          stroke={parseInt(tinycolor(contrastColor).toHex(), 16)}
+          stroke={colorValue(contrastColor).color}
           strokeWidth={character.scale * 2.5 + 2}
         />
       )}
@@ -738,7 +738,7 @@ const HealthBar = React.memo(function HealthBar({
             {token.hp}&thinsp;/&thinsp;{token.maxHP}
           </RoughText>
         */}
-      {/* TODO make editable
+      {/* TODO(pixi): make editable
       <foreignObject x={0} y={2} width={tokenSize / 2 - 4} height={14}>
         <HPInlineEdit hp={character.hp + character.temporaryHP} setHP={setHP} />
       </foreignObject> */}

@@ -72,7 +72,9 @@ export const MapObjects = React.memo<{
 
   return (
     <>
-      {/* <defs>
+      {/*
+      TODO(pixi): Re-add token shadows.
+      <defs>
         {makeBlinkingCharacterFilter("tokenHurtShadow", "4s", "red")}
         {makeBlinkingCharacterFilter("tokenUnconsciousShadow", "0.4s", "red")}
         {makeBlinkingCharacterFilter("tokenOverHealedShadow", "4s", "green")}

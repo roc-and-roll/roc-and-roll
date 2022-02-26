@@ -31,6 +31,7 @@ export function render(socket: Socket) {
 }
 
 function Root({ socket }: { socket: Socket }) {
+  // TODO(pixi): Re-enable <StrictMode>
   // https://reactjs.org/docs/strict-mode.html
   return (
     <RecoilRoot>
