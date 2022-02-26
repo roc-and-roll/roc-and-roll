@@ -60,7 +60,7 @@ import {
   useRecoilState,
 } from "recoil";
 import { useRRSettings } from "../../settings";
-import { assertNever } from "../../../shared/util";
+import { assertNever, lerp } from "../../../shared/util";
 import { useContrastColor } from "../../util";
 import { useLatest } from "../../useLatest";
 import { useGesture } from "react-use-gesture";
@@ -92,14 +92,12 @@ import { MapReactions } from "./MapReactions";
 import { dialogCtxs } from "../../dialog-boxes";
 import { getBoundingBoxForMapObject } from "./geometry/bounding-boxes";
 import { RotatedShape } from "./geometry/RotatedShape";
+import { AtmosphereMap } from "../Atmosphere";
 
 type Rectangle = [number, number, number, number];
 
 const easeInOutCubic = (t: number) =>
   t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
-const lerp = (a: number, b: number, t: number) => {
-  return (b - a) * t + a;
-};
 
 const lerpMatrix = (x: Matrix, y: Matrix, t: number) => {
   return {
@@ -995,6 +993,7 @@ transform,
               />
               {toolOverlay}
             </Container>
+            <AtmosphereMap viewPortSize={viewPortSize} />
             <Container ref={setTooltipArea} name="tooltips" />
           </RecoilBridge>
         </ContextBridge>

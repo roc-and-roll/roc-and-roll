@@ -2908,6 +2908,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@pixi/particle-emitter@npm:^5.0.3":
+  version: 5.0.3
+  resolution: "@pixi/particle-emitter@npm:5.0.3"
+  peerDependencies:
+    "@pixi/constants": ^6.0.4
+    "@pixi/core": ^6.0.4
+    "@pixi/display": ^6.0.4
+    "@pixi/math": ^6.0.4
+    "@pixi/settings": ^6.0.4
+    "@pixi/sprite": ^6.0.4
+    "@pixi/ticker": ^6.0.4
+  checksum: 34184a06c88ee59f53a6118b1a886bf2d14f3955a38691102ac25c5fb4621c026af1344e5958b87bb016de26f31165dda21daae2e2b041b33600498f9d7b6943
+  languageName: node
+  linkType: hard
+
 "@pixi/polyfill@npm:6.2.1":
   version: 6.2.1
   resolution: "@pixi/polyfill@npm:6.2.1"
@@ -15009,6 +15024,7 @@ resolve@^2.0.0-next.3:
     "@fortawesome/free-solid-svg-icons": ^5.15.4
     "@fortawesome/react-fontawesome": ^0.1.15
     "@jest/create-cache-key-function": ^27.3.1
+    "@pixi/particle-emitter": ^5.0.3
     "@playwright/test": ^1.19.1
     "@pmmmwh/react-refresh-webpack-plugin": ^0.5.4
     "@react-three/fiber": ^7.0.26

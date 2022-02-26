@@ -2,6 +2,10 @@ import { nanoid } from "@reduxjs/toolkit";
 import { TOKEN_SIZES } from "./constants";
 import { RRCharacter, RRID, RRTimestamp } from "./state";
 
+export function lerp(a: number, b: number, t: number) {
+  return (b - a) * t + a;
+}
+
 export async function randomName(pattern = "!<s|B|Bv|v><V|s|'|V><s|V|C>") {
   return new (await import("./namegen")).default(pattern).toString();
 }
