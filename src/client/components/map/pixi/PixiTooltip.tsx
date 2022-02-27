@@ -14,6 +14,9 @@ const TEXT_STYLE = new PIXI.TextStyle({
 
 const PADDING = { x: 8, y: 4 };
 
+// TODO(pixi): Tooltips should not "preventDefault" mouse events.
+// TODO: `tooltipArea` should not need to be passed in, but instead be
+// retrieved from React context.
 export function PixiTooltip({
   text,
   tooltipArea,

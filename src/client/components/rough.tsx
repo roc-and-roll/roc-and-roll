@@ -107,7 +107,7 @@ function OpSetToPIXI({
           width: options.strokeWidth,
         });
 
-        // TODO
+        // TODO(pixi)
         // <path
         //   strokeDasharray={options.strokeLineDash?.join(" ").trim()}
         //   strokeDashoffset={options.strokeLineDashOffset}
@@ -122,11 +122,6 @@ function OpSetToPIXI({
         instance.lineStyle({ width: 0 });
         const fillColor = colorValue(options.fill!);
         instance.beginFill(fillColor.color, fillColor.alpha);
-        // TODO
-        // fillRule={
-        //   drawable.shape === "curve" || drawable.shape === "polygon"
-        //     ? "evenodd"
-        //     : undefined
         break;
       }
       case "fillSketch": {
@@ -146,7 +141,7 @@ function OpSetToPIXI({
         });
         break;
 
-        // TODO
+        // TODO(pixi)
         // <path
         //   strokeDasharray={options.fillLineDash?.join(" ").trim()}
         //   strokeDashoffset={options.fillLineDashOffset}
@@ -533,12 +528,10 @@ const RoughTextNonMemoized = React.forwardRef<
           ? style
           : { fontFamily: ["'Architects Daughter'", "cursive"], ...style }
       }
-      // TODO: Text is blurry when zooming -- thus we render it at 5x the
+      // TODO(pixi): Text is blurry when zooming -- thus we render it at 5x the
       // resolution here. There is probably a better way.
       resolution={5}
       {...props}
-      // TODO
-      // dominantBaseline="text-before-edge"
     />
   ) : null;
 });

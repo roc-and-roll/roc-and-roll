@@ -242,6 +242,7 @@ function MapTokenInner({
           zoom={zoom}
           contrastColor={contrastColor}
           character={character}
+          tokenRotation={object.rotation}
           tooltipArea={tooltipArea}
         />
       ) : (
@@ -250,6 +251,7 @@ function MapTokenInner({
           zoom={zoom}
           contrastColor={contrastColor}
           character={character}
+          tokenRotation={object.rotation}
           canControl={canControl}
           isSelectedOrHovered={isSelectedOrHovered}
           handleMouseDown={handleMouseDown}
@@ -370,12 +372,14 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
   contrastColor,
   character,
   tooltipArea,
+  tokenRotation,
   ...props
 }: {
   zoom: number;
   contrastColor: RRColor;
   character: RRCharacter;
   tooltipArea: Container | null;
+  tokenRotation: number;
 } & (
   | {
       isGhost: false;
@@ -469,7 +473,7 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
               fontWeight: "bold",
               letterSpacing: 6,
             }}
-            angle={-30}
+            angle={-30 - tokenRotation}
             anchor={{ x: 0.5, y: 0.5 }}
             text="HIDDEN"
           />
