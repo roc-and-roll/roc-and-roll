@@ -62,6 +62,7 @@ import { RRMouseEvent, createPixiPortal, colorValue } from "./pixi-utils";
 import { PixiTooltip } from "./pixi/PixiTooltip";
 import { PixiFontawesomeIcon } from "./pixi/PixiFontawesomeIcon";
 import { PixiPopover } from "./pixi/PixiPopover";
+import { TokenShadow } from "./TokenShadow";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
@@ -387,27 +388,13 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
   const tokenSize = GRID_SIZE * character.scale;
   const canControl = props.isGhost ? false : props.canControl;
 
-  // TODO
-  const tokenStyle = useMemo(() => {
-    const style: React.CSSProperties = {
-      ...(props.isGhost
-        ? // Do not show any shadows for ghosts and ignore pointer events
-          ({ pointerEvents: "none" } as const)
-        : isCharacterUnconscious(character)
-        ? { filter: "url(#tokenUnconsciousShadow)" }
-        : isCharacterHurt(character) && !isCharacterDead(character)
-        ? { filter: "url(#tokenHurtShadow)" }
-        : isCharacterOverHealed(character)
-        ? { filter: "url(#tokenOverHealedShadow)" }
-        : {}),
-      ...(canControl ? { cursor: "move" } : {}),
-      borderRadius: tokenSize / 2,
-    };
-
-    if (isCharacterDead(character)) style.filter = "grayscale(100%)";
-
-    return style;
-  }, [character, tokenSize, canControl, props.isGhost]);
+  const dead = isCharacterDead(character);
+  const filters = useMemo(() => {
+    if (!dead) return [];
+    const filter = new PIXI.filters.ColorMatrixFilter();
+    filter.desaturate();
+    return [filter];
+  }, [dead]);
 
   const asset = useRecoilValue(assetFamily(character.tokenImageAssetId));
   if (asset?.type !== "image") {
@@ -417,9 +404,18 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
   // TODO tokenStyle
   return (
     <>
+      {!props.isGhost &&
+        (isCharacterUnconscious(character) ? (
+          <TokenShadow color={0xff0000} pulse={0.4} size={tokenSize} />
+        ) : isCharacterHurt(character) && !isCharacterDead(character) ? (
+          <TokenShadow color={0xff0000} pulse={4} size={tokenSize} />
+        ) : isCharacterOverHealed(character) ? (
+          <TokenShadow color={0x00ff00} pulse={4} size={tokenSize} />
+        ) : null)}
       <Sprite
         interactive={!props.isGhost}
         cursor={canControl ? "move" : undefined}
+        filters={filters}
         mousedown={
           props.isGhost
             ? undefined
