@@ -124,7 +124,7 @@ export const HUDToolbar = React.memo(function Toolbar() {
       id: "atmosphere",
       collapsed: true,
       content: <Atmosphere />,
-      gmOnly: true,
+      gmOnly: false,
       icon: faCloud,
       iconTooltip: "Atmosphere",
     },
