@@ -401,7 +401,6 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
     return null;
   }
 
-  // TODO tokenStyle
   return (
     <>
       {!props.isGhost &&
