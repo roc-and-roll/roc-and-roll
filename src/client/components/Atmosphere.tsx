@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -214,7 +215,9 @@ export function AtmosphereMap({
 function ParticleSystem({ config }: { config: particles.EmitterConfigV3 }) {
   const [container, setContainer] = useState<PIXI.Container | null>(null);
 
-  useEffect(() => {
+  // if we useEffect here there seems to be a race condition where some particles
+  // are only partially initialized
+  useLayoutEffect(() => {
     const emitter = container ? new particles.Emitter(container, config) : null;
     return () => {
       if (emitter) emitter.destroy();
