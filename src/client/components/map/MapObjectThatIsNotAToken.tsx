@@ -12,6 +12,7 @@ import {
   RRPoint,
   RRToken,
 } from "../../../shared/state";
+import * as PIXI from "pixi.js";
 import { useServerDispatch } from "../../state";
 import { useLatest } from "../../useLatest";
 import tinycolor from "tinycolor2";
@@ -22,7 +23,6 @@ import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import { useMyProps } from "../../myself";
 import { pointEquals } from "../../../shared/point";
-import * as PIXI from "pixi.js";
 import { Container, PixiElement, Sprite } from "react-pixi-fiber";
 import { assetUrl } from "../../files";
 import { RRMouseEvent, rrToPixiHandler } from "./pixi-utils";
@@ -35,6 +35,7 @@ import {
 } from "../rough";
 import { PixiPopover } from "./pixi/PixiPopover";
 import { assertNever } from "../../../shared/util";
+import { PixiBlurHashSprite } from "../blurHash/PixiBlurHashSprite";
 
 const SELECTED_OR_HOVERED_STROKE_LINE_DASH = [GRID_SIZE / 10, GRID_SIZE / 10];
 
@@ -222,45 +223,58 @@ function MapObjectImage({
     const rows = Math.ceil(asset.height / IMAGE_TILE_SIZE);
     const columns = Math.ceil(asset.width / IMAGE_TILE_SIZE);
     return (
-      <Container
-        hitArea={new PIXI.Rectangle(0, 0, width, height)}
-        interactiveChildren={false}
-        {...rest}
-        x={x + width / 2}
-        y={y + height / 2}
-        pivot={{ x: width / 2, y: height / 2 }}
-      >
-        {Array(rows)
-          .fill(0)
-          .flatMap((_, y) =>
-            Array(columns)
-              .fill(0)
-              .map((_, x) => {
-                const w =
-                  Math.min(IMAGE_TILE_SIZE, asset.width - x * IMAGE_TILE_SIZE) *
-                  scaleFactor;
-                const h =
-                  Math.min(
-                    IMAGE_TILE_SIZE,
-                    asset.height - y * IMAGE_TILE_SIZE
-                  ) * scaleFactor;
-                return (
-                  <Sprite
-                    key={`${x}-${y}`}
-                    width={w}
-                    height={h}
-                    x={x * IMAGE_TILE_SIZE * scaleFactor}
-                    y={y * IMAGE_TILE_SIZE * scaleFactor}
-                    texture={PIXI.Texture.from(
-                      `/api/files/cache/${encodeURIComponent(
-                        filename
-                      )}-tiles/0/${x}_${y}.jpeg`
-                    )}
-                  />
-                );
-              })
-          )}
-      </Container>
+      <>
+        <Container
+          hitArea={new PIXI.Rectangle(0, 0, width, height)}
+          interactiveChildren={false}
+          {...rest}
+          x={x + width / 2}
+          y={y + height / 2}
+          pivot={{ x: width / 2, y: height / 2 }}
+        >
+          <PixiBlurHashSprite
+            x={width / 2}
+            y={height / 2}
+            blurHashOnly
+            width={width}
+            height={height}
+            blurHash={asset.blurHash}
+            url={assetUrl(asset)}
+          />
+          {Array(rows)
+            .fill(0)
+            .flatMap((_, y) =>
+              Array(columns)
+                .fill(0)
+                .map((_, x) => {
+                  const w =
+                    Math.min(
+                      IMAGE_TILE_SIZE,
+                      asset.width - x * IMAGE_TILE_SIZE
+                    ) * scaleFactor;
+                  const h =
+                    Math.min(
+                      IMAGE_TILE_SIZE,
+                      asset.height - y * IMAGE_TILE_SIZE
+                    ) * scaleFactor;
+                  return (
+                    <Sprite
+                      key={`${x}-${y}`}
+                      width={w}
+                      height={h}
+                      x={x * IMAGE_TILE_SIZE * scaleFactor}
+                      y={y * IMAGE_TILE_SIZE * scaleFactor}
+                      texture={PIXI.Texture.from(
+                        `/api/files/cache/${encodeURIComponent(
+                          filename
+                        )}-tiles/0/${x}_${y}.jpeg`
+                      )}
+                    />
+                  );
+                })
+            )}
+        </Container>
+      </>
     );
   }
 
@@ -269,23 +283,18 @@ function MapObjectImage({
   const positionProps = {
     x: x + width / 2,
     y: y + height / 2,
-    pivot: { x: width / 2 / scaleFactor, y: height / 2 / scaleFactor },
     width,
     height,
   };
+
   return (
-    <Sprite
-      {...rest}
+    <PixiBlurHashSprite
+      blurHash={asset.blurHash}
+      url={assetUrl(asset)}
       {...positionProps}
-      texture={PIXI.Texture.from(assetUrl(asset))}
+      {...rest}
     />
   );
-  // <SVGBlurHashImage
-  //   image={asset}
-  //   width={width}
-  //   height={height}
-  //   {...rest}
-  // />
 }
 
 function ObjectEditOptions({

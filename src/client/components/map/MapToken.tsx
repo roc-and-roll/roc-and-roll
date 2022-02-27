@@ -63,6 +63,7 @@ import { PixiTooltip } from "./pixi/PixiTooltip";
 import { PixiFontawesomeIcon } from "./pixi/PixiFontawesomeIcon";
 import { PixiPopover } from "./pixi/PixiPopover";
 import { TokenShadow } from "./TokenShadow";
+import { PixiBlurHashSprite } from "../blurHash/PixiBlurHashSprite";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
@@ -411,10 +412,12 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
         ) : isCharacterOverHealed(character) ? (
           <TokenShadow color={0x00ff00} pulse={4} size={tokenSize} />
         ) : null)}
-      <Sprite
+      <PixiBlurHashSprite
         interactive={!props.isGhost}
         cursor={canControl ? "move" : undefined}
         filters={filters}
+        x={tokenSize / 2}
+        y={tokenSize / 2}
         mousedown={
           props.isGhost
             ? undefined
@@ -437,9 +440,8 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
             ? undefined
             : (e) => props.handleMouseUp(e.data.originalEvent as MouseEvent)
         }
-        texture={PIXI.Texture.from(
-          tokenImageUrl(character, asset, tokenSize * zoom)
-        )}
+        url={tokenImageUrl(character, asset, tokenSize * zoom)}
+        blurHash={asset.blurHash}
       />
 
       {!props.isGhost && props.isSelectedOrHovered && (
