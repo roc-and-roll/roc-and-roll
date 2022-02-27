@@ -92,7 +92,7 @@ import { MapReactions } from "./MapReactions";
 import { dialogCtxs } from "../../dialog-boxes";
 import { getBoundingBoxForMapObject } from "./geometry/bounding-boxes";
 import { RotatedShape } from "./geometry/RotatedShape";
-import { AtmosphereMap } from "../Atmosphere";
+import { PixiGlobalFilters } from "../Atmosphere";
 
 type Rectangle = [number, number, number, number];
 
@@ -925,76 +925,80 @@ transform,
           }}
         >
           <RecoilBridge>
-            <Container
-              x={pixiTransform.position.x}
-              y={pixiTransform.position.y}
-              scale={pixiTransform.scale}
-              rotation={pixiTransform.rotation}
-              skew={pixiTransform.skew}
-              pivot={pixiTransform.pivot}
-              interactive
-              mousedown={rrToPixiHandler(handleMouseDown)}
-              rightdown={rrToPixiHandler(handleMouseDown)}
-              mousemove={rrToPixiHandler(handleMapMouseMove)}
+            <PixiGlobalFilters
+              backgroundColor={colorValue(backgroundColor).color}
+              viewPortSize={viewPortSize}
             >
-              <Container ref={setImageArea} name="images" />
               <Container
-                ref={setAuraArea}
-                interactiveChildren={false}
-                name="auras"
-              />
-              <Container ref={setDefaultArea} name="default" />
-              {gridEnabled && (
-                <MapGrid transform={transform} color={gridColor} />
-              )}
-              <Container ref={setTokenArea} name="tokens" />
-              <Container ref={setHealthBarArea} name="healthBars" />
-
-              {areas && (
-                <MapObjects
-                  mapId={mapId}
-                  areas={areas}
-                  contrastColor={contrastColor}
-                  smartSetTotalHP={onSmartSetTotalHP}
-                  toolButtonState={toolButtonState}
-                  handleStartMoveMapObject={handleStartMoveMapObject}
-                  zoom={transform.a}
+                x={pixiTransform.position.x}
+                y={pixiTransform.position.y}
+                scale={pixiTransform.scale}
+                rotation={pixiTransform.rotation}
+                skew={pixiTransform.skew}
+                pivot={pixiTransform.pivot}
+                interactive
+                mousedown={rrToPixiHandler(handleMouseDown)}
+                rightdown={rrToPixiHandler(handleMouseDown)}
+                mousemove={rrToPixiHandler(handleMapMouseMove)}
+              >
+                <Container ref={setImageArea} name="images" />
+                <Container
+                  ref={setAuraArea}
+                  interactiveChildren={false}
+                  name="auras"
                 />
-              )}
-              {withSelectionAreaDo(
-                selectionArea,
-                (x, y, w, h) => (
-                  <PRectangle
-                    x={x}
-                    y={y}
-                    width={w}
-                    height={h}
-                    fill={colorValue(contrastColor).color}
-                    alpha={0.3}
+                <Container ref={setDefaultArea} name="default" />
+                {gridEnabled && (
+                  <MapGrid transform={transform} color={gridColor} />
+                )}
+                <Container ref={setTokenArea} name="tokens" />
+                <Container ref={setHealthBarArea} name="healthBars" />
+
+                {areas && (
+                  <MapObjects
+                    mapId={mapId}
+                    areas={areas}
+                    contrastColor={contrastColor}
+                    smartSetTotalHP={onSmartSetTotalHP}
+                    toolButtonState={toolButtonState}
+                    handleStartMoveMapObject={handleStartMoveMapObject}
+                    zoom={transform.a}
                   />
-                ),
-                null
-              )}
-              <MeasurePaths
-                mapId={mapId}
-                zoom={transform.a}
-                backgroundColor={backgroundColor}
-                players={players}
-              />
-              <FogOfWar transform={transform} revealedAreas={revealedAreas} />
-              <MapReactions mapId={mapId} />
-              <MouseCursors
-                myId={myself.id}
-                mapId={mapId}
-                transform={transform}
-                viewPortSize={viewPortSize}
-                contrastColor={contrastColor}
-                players={players}
-              />
-              {toolOverlay}
-            </Container>
-            <AtmosphereMap viewPortSize={viewPortSize} />
-            <Container ref={setTooltipArea} name="tooltips" />
+                )}
+                {withSelectionAreaDo(
+                  selectionArea,
+                  (x, y, w, h) => (
+                    <PRectangle
+                      x={x}
+                      y={y}
+                      width={w}
+                      height={h}
+                      fill={colorValue(contrastColor).color}
+                      alpha={0.3}
+                    />
+                  ),
+                  null
+                )}
+                <MeasurePaths
+                  mapId={mapId}
+                  zoom={transform.a}
+                  backgroundColor={backgroundColor}
+                  players={players}
+                />
+                <FogOfWar transform={transform} revealedAreas={revealedAreas} />
+                <MapReactions mapId={mapId} />
+                <MouseCursors
+                  myId={myself.id}
+                  mapId={mapId}
+                  transform={transform}
+                  viewPortSize={viewPortSize}
+                  contrastColor={contrastColor}
+                  players={players}
+                />
+                {toolOverlay}
+              </Container>
+              <Container ref={setTooltipArea} name="tooltips" />
+            </PixiGlobalFilters>
           </RecoilBridge>
         </ContextBridge>
       </div>

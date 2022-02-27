@@ -1,5 +1,6 @@
 import React, {
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -13,7 +14,7 @@ import { useServerDispatch, useServerState } from "../state";
 import { useMyProps } from "../myself";
 import { mapSettingsUpdate } from "../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
-import { assertNever, lerp } from "../../shared/util";
+import { lerp } from "../../shared/util";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBan,
@@ -22,6 +23,8 @@ import {
   faCloudShowersHeavy,
   faFire,
   faSnowflake,
+  faDungeon,
+  IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "./ui/Button";
 import rainImage from "./rain.png";
@@ -29,6 +32,100 @@ import snowImage from "./snow.png";
 import { Point } from "pixi.js";
 import { Particle } from "@pixi/particle-emitter";
 import { PRectangle } from "./map/Primitives";
+
+export const PixiFilterContext = React.createContext<{
+  addFilter: (f: PIXI.Filter) => void;
+  removeFilter: (f: PIXI.Filter) => void;
+  getFilters: () => PIXI.Filter[];
+}>({
+  addFilter: () => {},
+  removeFilter: () => {},
+  getFilters: () => [],
+});
+
+export function PixiGlobalFilters({
+  children,
+  backgroundColor,
+  viewPortSize,
+}: {
+  children: React.ReactNode;
+  backgroundColor: number;
+  viewPortSize: RRPoint;
+}) {
+  const [filters, setFilters] = useState<PIXI.Filter[]>([]);
+  const addFilter = useCallback((filter: PIXI.Filter) => {
+    setFilters((filters) => [...filters, filter]);
+  }, []);
+  const removeFilter = useCallback((filter: PIXI.Filter) => {
+    // FIXME may only want to remove one occurrence
+    setFilters((filters) => filters.filter((f) => f !== filter));
+  }, []);
+
+  const getFilters = useCallback(() => filters, [filters]);
+
+  console.log(backgroundColor);
+  return (
+    <PixiFilterContext.Provider value={{ addFilter, removeFilter, getFilters }}>
+      <Container filters={filters}>
+        <PRectangle
+          x={0}
+          y={0}
+          width={viewPortSize.x}
+          height={viewPortSize.y}
+          fill={backgroundColor}
+        />
+        {children}
+      </Container>
+      <AtmosphereMap viewPortSize={viewPortSize} />
+    </PixiFilterContext.Provider>
+  );
+}
+
+const effects: {
+  [key in RRMap["settings"]["atmosphere"]["type"]]: {
+    icon: IconDefinition;
+    build: (intensity: number, size: RRPoint) => JSX.Element;
+  };
+} = {
+  none: {
+    icon: faBan,
+    build: (intensity, size) => <></>,
+  },
+  rain: {
+    icon: faCloudShowersHeavy,
+    build: (intensity, size) => <Rain intensity={intensity} size={size} />,
+  },
+  snow: {
+    icon: faSnowflake,
+    build: (intensity, size) => <Snow intensity={intensity} size={size} />,
+  },
+  fog: {
+    icon: faCloud,
+    build: (intensity, size) => <Fog intensity={intensity} size={size} />,
+  },
+  thunderstorm: {
+    icon: faBolt,
+    build: (intensity, size) => (
+      <>
+        <Rain intensity={intensity} size={size} />
+        <Thunder intensity={intensity} size={size} />
+      </>
+    ),
+  },
+  fire: {
+    icon: faFire,
+    build: (intensity, size) => <Fire intensity={intensity} size={size} />,
+  },
+  dungeon: {
+    icon: faDungeon,
+    build: (intensity, size) => (
+      <>
+        <Fog intensity={intensity * 2} size={size} />
+        <Vignette intensity={intensity} size={size} />
+      </>
+    ),
+  },
+};
 
 export function Atmosphere() {
   const dispatch = useServerDispatch();
@@ -83,24 +180,19 @@ export function Atmosphere() {
         />
       </div>
       <div>
-        <Button onClick={() => setType("none")}>
-          <FontAwesomeIcon icon={faBan} />
-        </Button>
-        <Button onClick={() => setType("snow")}>
-          <FontAwesomeIcon icon={faSnowflake} />
-        </Button>
-        <Button onClick={() => setType("rain")}>
-          <FontAwesomeIcon icon={faCloudShowersHeavy} />
-        </Button>
-        <Button onClick={() => setType("fire")}>
-          <FontAwesomeIcon icon={faFire} />
-        </Button>
-        <Button onClick={() => setType("fog")}>
-          <FontAwesomeIcon icon={faCloud} />
-        </Button>
-        <Button onClick={() => setType("thunderstorm")}>
-          <FontAwesomeIcon icon={faBolt} />
-        </Button>
+        {Object.entries(effects).map(([type, effect]) => (
+          <Button
+            key={type}
+            className={
+              type === map.settings.atmosphere.type ? "bg-rrOrange" : ""
+            }
+            onClick={() =>
+              setType(type as RRMap["settings"]["atmosphere"]["type"])
+            }
+          >
+            <FontAwesomeIcon icon={effect.icon} />
+          </Button>
+        ))}
       </div>
     </>
   );
@@ -116,27 +208,7 @@ export function AtmosphereMap({
     (s) => s.maps.entities[myself.currentMap]!.settings.atmosphere
   );
 
-  switch (atmosphere.type) {
-    case "rain":
-      return <Rain intensity={atmosphere.intensity} size={size} />;
-    case "snow":
-      return <Snow intensity={atmosphere.intensity} size={size} />;
-    case "fire":
-      return <Fire intensity={atmosphere.intensity} size={size} />;
-    case "fog":
-      return <Fog intensity={atmosphere.intensity} size={size} />;
-    case "thunderstorm":
-      return (
-        <>
-          <Rain intensity={atmosphere.intensity} size={size} />
-          <Thunder intensity={atmosphere.intensity} size={size} />
-        </>
-      );
-    case "none":
-      return <></>;
-    default:
-      return assertNever(atmosphere.type);
-  }
+  return effects[atmosphere.type].build(atmosphere.intensity, size);
 }
 
 function ParticleSystem({ config }: { config: particles.EmitterConfigV3 }) {
@@ -383,7 +455,7 @@ function Fire({ intensity, size }: { intensity: number; size: RRPoint }) {
 function Fog({ intensity, size }: { intensity: number; size: RRPoint }) {
   const config = useMemo(() => {
     const lifetime = 30;
-    const alpha = lerp(0.1, 0.2, 1 - intensity);
+    const alpha = lerp(0.2, 0.1, intensity > 1 ? 0 : intensity);
     return {
       emit: true,
       autoUpdate: true,
@@ -393,7 +465,7 @@ function Fog({ intensity, size }: { intensity: number; size: RRPoint }) {
       },
       frequency: lerp(0.6, 0.2, intensity),
       emitterLifetime: 0,
-      maxParticles: 300,
+      maxParticles: 600,
       addAtBack: false,
       pos: {
         x: 0,
@@ -427,7 +499,7 @@ function Fog({ intensity, size }: { intensity: number; size: RRPoint }) {
           type: "rotatedSpeed",
           config: {
             min: -30,
-            max: lerp(-60, -150, intensity),
+            max: lerp(-60, -150, Math.min(intensity, 1)),
           },
         },
         {
@@ -462,20 +534,26 @@ function Fog({ intensity, size }: { intensity: number; size: RRPoint }) {
 }
 
 function Thunder({ intensity, size }: { intensity: number; size: RRPoint }) {
-  const [visible, setVisible] = useState(true);
+  const [opacity, setOpacity] = useState(0);
   const rafId = useRef<number | null>(null);
   const activatedTime = useRef<number>(0);
+  const duration = 300;
 
   const step = useCallback(
     (now) => {
-      if (visible && now - activatedTime.current > 100) setVisible(false);
+      const visible = opacity !== 0;
+      const elapsed = now - activatedTime.current;
+      if (visible) {
+        if (elapsed > duration) setOpacity(0);
+        else setOpacity(1 - elapsed / duration);
+      }
       if (!visible && Math.random() < 0.005 * intensity) {
-        setVisible((t) => !t);
+        setOpacity(1);
         activatedTime.current = now;
       }
       rafId.current = requestAnimationFrame(step);
     },
-    [intensity, visible]
+    [intensity, opacity]
   );
 
   useEffect(() => {
@@ -485,11 +563,53 @@ function Thunder({ intensity, size }: { intensity: number; size: RRPoint }) {
     };
   }, [step]);
 
-  return visible ? (
-    <PRectangle x={0} y={0} width={size.x} height={size.y} fill={0xffffff} />
-  ) : (
-    <></>
+  return (
+    <PRectangle
+      x={0}
+      y={0}
+      width={size.x}
+      height={size.y}
+      alpha={opacity}
+      fill={0xffffff}
+    />
   );
+}
+
+function Vignette({ intensity, size }: { intensity: number; size: RRPoint }) {
+  const { addFilter, removeFilter } = useContext(PixiFilterContext);
+  useEffect(() => {
+    // pixi takes care of caching the resulting program for the same shader code
+    const filter = new PIXI.Filter(
+      undefined,
+      /*cspell:disable*/
+      `
+precision mediump float;
+varying vec2 vTextureCoord;
+uniform sampler2D uSampler;
+uniform float size;
+uniform float amount;
+uniform float focalPointX;
+uniform float focalPointY;
+void main() {
+  vec4 rgba = texture2D(uSampler, vTextureCoord);
+  vec3 rgb = rgba.xyz;
+  float dist = distance(vTextureCoord, vec2(focalPointX, focalPointY));
+  rgb *= smoothstep(0.8, size * 0.799, dist * (0.5 * amount + size));
+  gl_FragColor = vec4(vec3(rgb), rgba.a);
+}`,
+      /*cspell:enable*/
+      {
+        amount: lerp(1.5, 2.4, intensity),
+        size: 0.5,
+        focalPointX: 0.5,
+        focalPointY: 0.5,
+      }
+    );
+
+    addFilter(filter);
+    return () => removeFilter(filter);
+  }, [addFilter, intensity, removeFilter]);
+  return <></>;
 }
 
 export class RotatedSpeedBehavior

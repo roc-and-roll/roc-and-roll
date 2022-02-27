@@ -459,6 +459,7 @@ export const isSyncedState = z.strictObject({
             "fire",
             "fog",
             "thunderstorm",
+            "dungeon",
           ] as const),
           intensity: z.number().min(0).max(1),
         }),
