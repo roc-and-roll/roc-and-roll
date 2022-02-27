@@ -3,7 +3,6 @@ import "../global.css";
 import React, { Suspense, useState } from "react";
 import { useLoginLogout } from "../myself";
 import { JoinGame } from "./JoinGame";
-import { BottomFloats } from "./BottomFloats";
 import { NotificationAreaPortal } from "./Notifications";
 import { ActiveMusicPlayer } from "../sound";
 import QuickReferenceWrapper from "./quickReference/QuickReferenceWrapper";
@@ -63,9 +62,6 @@ const Game = React.memo<{
         <main className="app-map">
           <ErrorBoundary>
             <MapContainer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <BottomFloats />
           </ErrorBoundary>
           <QuickReferenceWrapper />
         </main>
