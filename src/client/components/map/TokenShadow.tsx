@@ -42,7 +42,9 @@ export function TokenShadow({
         width={totalSize}
         height={totalSize}
         tint={color}
-        texture={PIXI.Texture.from(haloImage)}
+        texture={PIXI.Texture.from(haloImage, {
+          scaleMode: PIXI.SCALE_MODES.LINEAR,
+        })}
       />
     </Container>
   );
