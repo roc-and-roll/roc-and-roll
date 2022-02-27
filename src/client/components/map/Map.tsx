@@ -876,14 +876,6 @@ transform,
 
   const RecoilBridge = useRecoilBridgeAcrossReactRoots_UNSTABLE();
 
-  // TODO(pixi): Remove and use `transform` directly.
-  const pixiTransform = useMemo(() => {
-    const m = transform;
-    const t = new PIXI.Transform();
-    t.setFromMatrix(new PIXI.Matrix(m.a, m.b, m.c, m.d, m.e, m.f));
-    return t;
-  }, [transform]);
-
   return (
     <RoughContextProvider enabled={true /* TODO: roughEnabled */}>
       <div
@@ -930,14 +922,7 @@ transform,
               mousedown={rrToPixiHandler(handleMouseDown)}
               mousemove={rrToPixiHandler(handleMapMouseMove)}
             >
-              <Container
-                x={pixiTransform.position.x}
-                y={pixiTransform.position.y}
-                scale={pixiTransform.scale}
-                rotation={pixiTransform.rotation}
-                skew={pixiTransform.skew}
-                pivot={pixiTransform.pivot}
-              >
+              <Container x={transform.e} y={transform.f} scale={transform.a}>
                 <Container ref={setImageArea} name="images" />
                 <Container
                   ref={setAuraArea}
