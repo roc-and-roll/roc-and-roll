@@ -1,7 +1,7 @@
 # Roc & Roll
 
-[![CI](https://github.com/cmfcmf/roc-and-roll/actions/workflows/main.yml/badge.svg)](https://github.com/cmfcmf/roc-and-roll/actions/workflows/main.yml)
-[![CodeQL](https://github.com/cmfcmf/roc-and-roll/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/cmfcmf/roc-and-roll/actions/workflows/codeql-analysis.yml)
+[![CI](https://github.com/roc-and-roll/roc-and-roll/actions/workflows/main.yml/badge.svg)](https://github.com/roc-and-roll/roc-and-roll/actions/workflows/main.yml)
+[![CodeQL](https://github.com/roc-and-roll/roc-and-roll/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/roc-and-roll/roc-and-roll/actions/workflows/codeql-analysis.yml)
 [![Heroku Deploy](https://heroku-badge.herokuapp.com/?app=roc-and-roll&svg=1)](https://roc-and-roll.herokuapp.com/)
 
 ## Demo

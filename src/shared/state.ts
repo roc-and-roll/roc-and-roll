@@ -521,6 +521,7 @@ export function makeDefaultMap() {
     id: rrid<RRMap>(),
     objects: EMPTY_ENTITY_COLLECTION,
     settings: {
+      atmosphere: { type: "none" as const, intensity: 0 },
       backgroundColor: "#000",
       gmWorldPosition: { x: 0, y: 0 },
       gridEnabled: true,

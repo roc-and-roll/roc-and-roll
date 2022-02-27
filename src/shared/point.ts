@@ -2,6 +2,11 @@ import { GRID_SIZE } from "./constants";
 import { RRCapPoint, RRPoint } from "./state";
 import { clamp } from "./util";
 
+export const pointLeftRotate = (p: RRPoint) => ({
+  x: p.y,
+  y: -p.x,
+});
+
 export const pointSubtract = (p1: RRPoint, p2: RRPoint) => ({
   x: p1.x - p2.x,
   y: p1.y - p2.y,
@@ -25,6 +30,14 @@ export const pointScale = (p: RRPoint, s: number) => ({
   y: p.y * s,
 });
 
+export const pointNormalize = (p: RRPoint) => {
+  const length = pointDistance(p, { x: 0, y: 0 });
+  return {
+    x: p.x / length,
+    y: p.y / length,
+  };
+};
+
 export const pointRotate = (p: RRPoint, degrees: number, origin: RRPoint) => {
   return pointAdd(pointRotate00(pointSubtract(p, origin), degrees), origin);
 };
@@ -40,7 +53,7 @@ const pointRotate00 = (p: RRPoint, degrees: number) => {
 export const pointDistance = (p1: RRPoint, p2: RRPoint) => {
   const dx = p1.x - p2.x;
   const dy = p1.y - p2.y;
-  return Math.sqrt(dx * dx + dy * dy);
+  return Math.hypot(dx, dy);
 };
 
 export const pointSign = (p: RRPoint) => ({

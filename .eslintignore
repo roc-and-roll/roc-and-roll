@@ -18,6 +18,8 @@
 !/src/client/**/*.ts
 !/src/client/**/*.tsx
 
+/src/client/third-party/**/*
+
 !/src/server/**/*.js
 !/src/server/**/*.jsx
 !/src/server/**/*.ts

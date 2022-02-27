@@ -14,7 +14,6 @@ import {
   compose,
   applyToPoint,
   Matrix,
-  toSVG,
   inverse,
   identity,
   rotateDEG,
@@ -44,8 +43,6 @@ import {
   selectedMapObjectIdsAtom,
   selectedMapObjectsFamily,
 } from "./recoil";
-import { RoughContextProvider } from "../rough";
-import tinycolor from "tinycolor2";
 import {
   makePoint,
   pointAdd,
@@ -54,29 +51,52 @@ import {
   snapPointToGrid,
 } from "../../../shared/point";
 import { MapMouseHandler } from "./useMapToolHandler";
-import { MapGrid } from "./MapGrid";
 import { MapObjects } from "./MapObjects";
-import { atom, atomFamily, useRecoilCallback, useRecoilState } from "recoil";
+import {
+  atom,
+  atomFamily,
+  useRecoilBridgeAcrossReactRoots_UNSTABLE,
+  useRecoilCallback,
+  useRecoilState,
+} from "recoil";
 import { useRRSettings } from "../../settings";
-import { assertNever } from "../../../shared/util";
-import { FogOfWar } from "./FogOfWar";
-import { MapReactions } from "./MapReactions";
+import { assertNever, lerp } from "../../../shared/util";
 import { useContrastColor } from "../../util";
-import { MeasurePaths } from "./MeasurePaths";
-import { MouseCursors } from "./MouseCursors";
 import { useLatest } from "../../useLatest";
 import { useGesture } from "react-use-gesture";
-import { RRMessage, useServerMessages } from "../../serverMessages";
+import {
+  RRMessage,
+  ServerMessagesContext,
+  useServerMessages,
+} from "../../serverMessages";
 import { getPathWithNewPoint } from "./mapHelpers";
 import useRafLoop from "../../useRafLoop";
+import { Container, Stage } from "react-pixi-fiber";
+import * as PIXI from "pixi.js";
+import { colorValue, RRMouseEvent, rrToPixiHandler } from "./pixi-utils";
+import { MyselfContext } from "../../myself";
+import { ContextBridge } from "./ContextBridge";
+import {
+  ServerStateContext,
+  ServerConnectionContext,
+  useServerStateRef,
+} from "../../state";
+import { RoughContext, RoughContextProvider } from "../rough";
+import { MapGrid } from "./MapGrid";
+import { PRectangle } from "./Primitives";
+import { MeasurePaths } from "./MeasurePaths";
+import { MouseCursors } from "./MouseCursors";
+import { FogOfWar } from "./FogOfWar";
+import { MapReactions } from "./MapReactions";
+import { dialogCtxs } from "../../dialog-boxes";
+import { getBoundingBoxForMapObject } from "./geometry/bounding-boxes";
+import { RotatedShape } from "./geometry/RotatedShape";
+import { PixiGlobalFilters } from "./atmosphere/Atmosphere";
 
 type Rectangle = [number, number, number, number];
 
 const easeInOutCubic = (t: number) =>
   t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
-const lerp = (a: number, b: number, t: number) => {
-  return (b - a) * t + a;
-};
 
 const lerpMatrix = (x: Matrix, y: Matrix, t: number) => {
   return {
@@ -90,11 +110,12 @@ const lerpMatrix = (x: Matrix, y: Matrix, t: number) => {
 };
 
 export interface MapAreas {
-  imageArea: SVGGElement;
-  auraArea: SVGGElement;
-  defaultArea: SVGGElement;
-  tokenArea: SVGGElement;
-  healthBarArea: SVGGElement;
+  imageArea: Container;
+  auraArea: Container;
+  defaultArea: Container;
+  tokenArea: Container;
+  healthBarArea: Container;
+  tooltipArea: Container;
 }
 
 const PANNING_BUTTON = 2;
@@ -108,16 +129,33 @@ export const CURSOR_POSITION_SYNC_DEBOUNCE = 300;
 // record the cursor position this many times between each sync to the server
 export const CURSOR_POSITION_SYNC_HISTORY_STEPS = 10;
 
-function mapObjectIntersectsWithRectangle(
-  o: RRMapObject,
-  { x, y, w, h }: { x: number; y: number; w: number; h: number }
+function checkIfShapesIntersect(
+  boundingBox: RotatedShape,
+  selectionArea: PIXI.Rectangle
 ) {
-  // TODO: Currently assumes that every object is exactly GRID_SIZE big.
+  // TODO: Currently assumes that every object is exactly GRID_SIZE big and does
+  // not take rotation nor bounding box into account.
+  let position: RRPoint;
+  if (
+    boundingBox.shape instanceof PIXI.Rectangle ||
+    boundingBox.shape instanceof PIXI.Circle ||
+    boundingBox.shape instanceof PIXI.Ellipse
+  ) {
+    position = { x: boundingBox.shape.x, y: boundingBox.shape.y };
+  } else if (boundingBox.shape instanceof PIXI.Polygon) {
+    position = {
+      x: boundingBox.shape.points[0]!,
+      y: boundingBox.shape.points[1]!,
+    };
+  } else {
+    assertNever(boundingBox.shape);
+  }
+
   return (
-    o.position.x + GRID_SIZE >= x &&
-    x + w >= o.position.x &&
-    o.position.y + GRID_SIZE >= y &&
-    y + h >= o.position.y
+    position.x + GRID_SIZE >= selectionArea.x &&
+    selectionArea.x + selectionArea.width >= position.x &&
+    position.y + GRID_SIZE >= selectionArea.y &&
+    selectionArea.y + selectionArea.height >= position.y
   );
 }
 
@@ -175,7 +213,7 @@ function matrixRotationDEG(matrix: Matrix): number {
 }
 
 const localCoords = (
-  svg: SVGSVGElement | null,
+  svg: HTMLElement | null,
   e: { clientX: number; clientY: number }
 ) => {
   if (!svg) return { x: 0, y: 0 };
@@ -327,7 +365,7 @@ const RRMapViewWithRef = React.forwardRef<
 
   const [selectionArea, setSelectionArea] = useState<Rectangle | null>(null);
 
-  const svgRef = useRef<SVGSVGElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const handleWheel = useCallback(
     (e: WheelEvent) => {
@@ -347,7 +385,7 @@ const RRMapViewWithRef = React.forwardRef<
 
       if (mouseActionRef.current !== MouseAction.NONE) return;
 
-      const { x, y } = localCoords(svgRef.current, e);
+      const { x, y } = localCoords(rootRef.current, e);
       setTransform((t) =>
         compose(
           translate(x, y),
@@ -376,7 +414,7 @@ const RRMapViewWithRef = React.forwardRef<
           return;
         }
 
-        const { x, y } = localCoords(svgRef.current, e);
+        const { x, y } = localCoords(rootRef.current, e);
         const frameDelta = {
           // we must not use dragLastMouse here, because it might not have
           // updated to reflect the value set during the last frame (since React
@@ -462,7 +500,7 @@ const RRMapViewWithRef = React.forwardRef<
   );
 
   const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
+    (e: RRMouseEvent) => {
       if (mouseActionRef.current !== MouseAction.NONE) {
         // Ignore additional mouse downs while we are currently handling another
         // mouse down action (e.g., ignore right clicks while drawing a
@@ -471,8 +509,6 @@ const RRMapViewWithRef = React.forwardRef<
       }
 
       (document.activeElement as HTMLElement | null)?.blur();
-      e.preventDefault();
-      e.stopPropagation();
       const newMouseAction =
         e.button === PANNING_BUTTON
           ? MouseAction.PAN
@@ -495,7 +531,7 @@ const RRMapViewWithRef = React.forwardRef<
         setRoughEnabled(false);
       }
 
-      const local = localCoords(svgRef.current, e);
+      const local = localCoords(rootRef.current, e);
       dragLastMouseRef.current = local;
 
       const innerLocal = globalToLocal(transformRef.current, local);
@@ -526,6 +562,7 @@ const RRMapViewWithRef = React.forwardRef<
     ]
   );
 
+  const stateRef = useServerStateRef((state) => state);
   const updateHoveredMapObjects = useRecoilCallback(
     ({ snapshot, set, reset }) =>
       (selectionArea: Rectangle | null) => {
@@ -539,6 +576,7 @@ const RRMapViewWithRef = React.forwardRef<
             lastHoveredObjectIds.forEach((hoveredObjectId) =>
               reset(hoveredMapObjectsFamily(hoveredObjectId))
             );
+            const selectionBounds = new PIXI.Rectangle(x, y, w, h);
             const hoveredMapObjectIds = snapshot
               .getLoadable(mapObjectIdsAtom)
               .getValue()
@@ -546,11 +584,20 @@ const RRMapViewWithRef = React.forwardRef<
                 const mapObject = snapshot
                   .getLoadable(mapObjectsFamily(mapObjectId))
                   .getValue();
-                return (
-                  mapObject &&
-                  canControlMapObject(mapObject, myself) &&
-                  mapObjectIntersectsWithRectangle(mapObject, { x, y, w, h })
+                if (!mapObject || !canControlMapObject(mapObject, myself)) {
+                  return false;
+                }
+                const boundingBox = getBoundingBoxForMapObject(
+                  mapObject,
+                  stateRef.current.assets,
+                  stateRef.current.characters,
+                  true
                 );
+                if (!boundingBox) {
+                  return false;
+                }
+
+                return checkIfShapesIntersect(boundingBox, selectionBounds);
               });
 
             hoveredMapObjectIds.forEach((mapObjectId) => {
@@ -569,7 +616,7 @@ const RRMapViewWithRef = React.forwardRef<
           }
         );
       },
-    [myself]
+    [myself, stateRef]
   );
 
   useEffect(() => {
@@ -614,7 +661,7 @@ const RRMapViewWithRef = React.forwardRef<
             toolHandler.onMouseUp(
               globalToLocal(
                 transformRef.current,
-                localCoords(svgRef.current, e)
+                localCoords(rootRef.current, e)
               )
             );
             break;
@@ -649,7 +696,7 @@ const RRMapViewWithRef = React.forwardRef<
     window.addEventListener("mouseup", handleMouseUp);
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("keydown", handleKeyDown);
-    const svg = svgRef.current;
+    const svg = rootRef.current;
     svg?.addEventListener("wheel", handleWheel, { passive: false });
     return () => {
       window.removeEventListener("mouseup", handleMouseUp);
@@ -660,9 +707,9 @@ const RRMapViewWithRef = React.forwardRef<
   }, [handleMouseMove, handleWheel, handleMouseUp, handleKeyDown]);
 
   const handleMapMouseMove = useCallback(
-    (e: React.MouseEvent<SVGSVGElement>) => {
+    (e: RRMouseEvent) => {
       onMousePositionChanged(
-        globalToLocal(transformRef.current, localCoords(svgRef.current, e))
+        globalToLocal(transformRef.current, localCoords(rootRef.current, e))
       );
     },
     [onMousePositionChanged, transformRef]
@@ -670,17 +717,15 @@ const RRMapViewWithRef = React.forwardRef<
 
   const handleStartMoveMapObject = useRecoilCallback(
     ({ snapshot }) =>
-      (object: RRMapObject, event: React.MouseEvent) => {
+      (object: RRMapObject, event: RRMouseEvent) => {
         if (
           event.button === TOOL_BUTTON &&
           toolButtonState === "select" &&
           canControlMapObject(object, myself)
         ) {
-          const local = localCoords(svgRef.current, event);
+          const local = localCoords(rootRef.current, event);
 
           (document.activeElement as HTMLElement | null)?.blur();
-          event.preventDefault();
-          event.stopPropagation();
           dragStartIdRef.current = object.id;
           dragLastMouseRef.current = local;
 
@@ -745,31 +790,38 @@ transform,
     }
   }, [settings.renderMode]);
 
-  const [imageArea, setImageArea] = useState<SVGGElement | null>(null);
-  const [auraArea, setAuraArea] = useState<SVGGElement | null>(null);
-  const [defaultArea, setDefaultArea] = useState<SVGGElement | null>(null);
-  const [tokenArea, setTokenArea] = useState<SVGGElement | null>(null);
-  const [healthBarArea, setHealthBarArea] = useState<SVGGElement | null>(null);
+  const [imageArea, setImageArea] = useState<Container | null>(null);
+  const [auraArea, setAuraArea] = useState<Container | null>(null);
+  const [defaultArea, setDefaultArea] = useState<Container | null>(null);
+  const [tokenArea, setTokenArea] = useState<Container | null>(null);
+  const [healthBarArea, setHealthBarArea] = useState<Container | null>(null);
+  const [tooltipArea, setTooltipArea] = useState<Container | null>(null);
 
   const areas = useMemo(
     () =>
-      imageArea && auraArea && defaultArea && tokenArea && healthBarArea
+      imageArea &&
+      auraArea &&
+      defaultArea &&
+      tokenArea &&
+      healthBarArea &&
+      tooltipArea
         ? {
             imageArea,
             auraArea,
             defaultArea,
             tokenArea,
-            healthBarArea: healthBarArea,
+            healthBarArea,
+            tooltipArea,
           }
         : null,
-    [imageArea, auraArea, defaultArea, tokenArea, healthBarArea]
+    [imageArea, auraArea, defaultArea, tokenArea, healthBarArea, tooltipArea]
   );
 
   const viewPortSize = useContext(ViewPortSizeContext);
   const setViewPortSize = useContext(SetViewPortSizeContext);
 
   useEffect(() => {
-    if (!svgRef.current) {
+    if (!rootRef.current) {
       return;
     }
 
@@ -794,7 +846,7 @@ transform,
     // For some reason, we MUST NOT use svgRef.current here.
     // This causes the ResizeObserver to constantly fire events (at least in
     // Chrome).
-    resizeObserver.observe(svgRef.current.parentElement!);
+    resizeObserver.observe(rootRef.current.parentElement!);
 
     return () => resizeObserver.disconnect();
   }, [setViewPortSize]);
@@ -806,7 +858,7 @@ transform,
     },
     onPinch: (e) => {
       const delta = e.delta[0];
-      const { x, y } = localCoords(svgRef.current, {
+      const { x, y } = localCoords(rootRef.current, {
         clientX: e.origin[0],
         clientY: e.origin[1],
       });
@@ -822,76 +874,125 @@ transform,
     },
   });
 
+  const RecoilBridge = useRecoilBridgeAcrossReactRoots_UNSTABLE();
+
   return (
-    <RoughContextProvider enabled={roughEnabled}>
-      <svg
+    <RoughContextProvider enabled={true /* TODO: roughEnabled */}>
+      <div
+        ref={rootRef}
         {...bind()}
-        ref={svgRef}
-        className="map-svg"
-        onContextMenu={(e) => e.preventDefault()}
-        onMouseDown={handleMouseDown}
         style={{
-          backgroundColor,
           touchAction: "none",
           cursor: toolButtonState === "tool" ? "crosshair" : "inherit",
         }}
-        onMouseMove={handleMapMouseMove}
+        onContextMenu={(e) => e.preventDefault()}
       >
-        <g transform={toSVG(transform)}>
-          <g ref={setImageArea} />
-          <g ref={setAuraArea} />
-          <g ref={setDefaultArea} />
-          {gridEnabled && <MapGrid transform={transform} color={gridColor} />}
-          <g ref={setTokenArea} />
-          <g ref={setHealthBarArea} />
+        <ContextBridge
+          contexts={[
+            ServerStateContext,
+            ServerConnectionContext,
+            ServerMessagesContext,
+            MyselfContext,
+            RoughContext,
+            ViewPortSizeContext,
+            dialogCtxs.set,
+          ]}
+          barrierRender={(children) => {
+            const color = colorValue(backgroundColor);
+            return (
+              <Stage
+                className="map-svg"
+                options={{
+                  height: viewPortSize.y,
+                  width: viewPortSize.x,
+                  antialias: true,
+                  backgroundColor: color.color,
+                  backgroundAlpha: color.alpha,
+                }}
+              >
+                {children}
+              </Stage>
+            );
+          }}
+        >
+          <RecoilBridge>
+            <PixiGlobalFilters
+              backgroundColor={colorValue(backgroundColor).color}
+              viewPortSize={viewPortSize}
+              mousedown={rrToPixiHandler(handleMouseDown)}
+              mousemove={rrToPixiHandler(handleMapMouseMove)}
+            >
+              <Container x={transform.e} y={transform.f} scale={transform.a}>
+                <Container ref={setImageArea} name="images" />
+                <Container
+                  ref={setAuraArea}
+                  interactiveChildren={false}
+                  name="auras"
+                />
+                <Container ref={setDefaultArea} name="default" />
+                {gridEnabled && (
+                  <MapGrid transform={transform} color={gridColor} />
+                )}
+                <Container ref={setTokenArea} name="tokens" />
+                <Container ref={setHealthBarArea} name="healthBars" />
 
-          {areas && (
-            <MapObjects
-              mapId={mapId}
-              areas={areas}
-              contrastColor={contrastColor}
-              smartSetTotalHP={onSmartSetTotalHP}
-              toolButtonState={toolButtonState}
-              handleStartMoveMapObject={handleStartMoveMapObject}
-              zoom={transform.a}
-            />
-          )}
+                {areas && (
+                  <MapObjects
+                    mapId={mapId}
+                    areas={areas}
+                    contrastColor={contrastColor}
+                    smartSetTotalHP={onSmartSetTotalHP}
+                    toolButtonState={toolButtonState}
+                    handleStartMoveMapObject={handleStartMoveMapObject}
+                    zoom={transform.a}
+                  />
+                )}
 
-          <FogOfWar transform={transform} revealedAreas={revealedAreas} />
+                <FogOfWar transform={transform} revealedAreas={revealedAreas} />
 
-          {withSelectionAreaDo(
-            selectionArea,
-            (x, y, w, h) => (
-              <rect
-                x={x}
-                y={y}
-                width={w}
-                height={h}
-                fill={tinycolor(contrastColor).setAlpha(0.3).toRgbString()}
-              />
-            ),
-            null
-          )}
-          <MeasurePaths
-            mapId={mapId}
-            zoom={transform.a}
-            backgroundColor={backgroundColor}
-            players={players}
-          />
-          <MapReactions mapId={mapId} />
-          <MouseCursors
-            myId={myself.id}
-            mapId={mapId}
-            transform={transform}
-            viewPortSize={viewPortSize}
-            contrastColor={contrastColor}
-            players={players}
-          />
-          {toolOverlay}
-        </g>
-      </svg>
+                {withSelectionAreaDo(
+                  selectionArea,
+                  (x, y, w, h) => (
+                    <PRectangle
+                      x={x}
+                      y={y}
+                      width={w}
+                      height={h}
+                      fill={colorValue(contrastColor).color}
+                      alpha={0.3}
+                    />
+                  ),
+                  null
+                )}
+                <MeasurePaths
+                  mapId={mapId}
+                  zoom={transform.a}
+                  backgroundColor={backgroundColor}
+                  players={players}
+                />
+                <MapReactions mapId={mapId} />
+                <MouseCursors
+                  myId={myself.id}
+                  mapId={mapId}
+                  transform={transform}
+                  viewPortSize={viewPortSize}
+                  contrastColor={contrastColor}
+                  players={players}
+                />
+                {toolOverlay}
+              </Container>
+              <Container ref={setTooltipArea} name="tooltips" />
+            </PixiGlobalFilters>
+          </RecoilBridge>
+        </ContextBridge>
+      </div>
     </RoughContextProvider>
   );
 });
 
 export const RRMapView = React.memo(RRMapViewWithRef);
+
+// Let Pixi Inspector know about PIXI: https://github.com/bfanger/pixi-inspector
+// @ts-expect-error TypeScript does not know about the Pixi Inspector.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+window.__PIXI_INSPECTOR_GLOBAL_HOOK__?.register({ PIXI });

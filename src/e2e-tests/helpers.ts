@@ -1,4 +1,4 @@
-import { Page } from "playwright-core";
+import type { Page } from "@playwright/test";
 
 export async function joinAs(playerName: string, page: Page) {
   await page.click("text=join as new player");

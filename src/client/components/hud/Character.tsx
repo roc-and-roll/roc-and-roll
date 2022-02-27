@@ -6,8 +6,8 @@ import {
   RRCharacterID,
   RRLimitedUseSkill,
 } from "../../../shared/state";
-import { useMyProps, useMySelectedCharacters } from "../../myself";
-import { useServerDispatch, useServerState } from "../../state";
+import { useMyActiveCharacter, useMyProps } from "../../myself";
+import { useServerDispatch } from "../../state";
 import { CharacterPreview } from "../characters/CharacterPreview";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -29,7 +29,7 @@ import {
 } from "../../../client/util";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 import { characterUpdate, playerUpdate } from "../../../shared/actions";
-import { conditionIcons } from "../characters/CharacterEditor";
+import { CharacterEditor, conditionIcons } from "../characters/CharacterEditor";
 import { Popover } from "../Popover";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import { useDrag } from "react-dnd";
@@ -56,16 +56,9 @@ export type RRCharacterProps = Pick<RRCharacter, typeof characterProps[number]>;
 export function CharacterHUD() {
   const myself = useMyProps("mainCharacterId", "isGM");
 
-  const selectedCharacters = useMySelectedCharacters(...characterProps);
-  const mainCharacter = useServerState((state) =>
-    myself.mainCharacterId
-      ? state.characters.entities[myself.mainCharacterId] ?? null
-      : null
-  );
+  const character = useMyActiveCharacter();
 
   const healthWidth = 250;
-  const character =
-    selectedCharacters.length === 1 ? selectedCharacters[0]! : mainCharacter;
 
   const [skillsVisible, setSkillsVisible] = useState(false);
 
@@ -370,13 +363,10 @@ function SpellSave({ character }: { character: RRCharacterProps }) {
   );
 }
 
-function CurrentCharacter({
-  character,
-}: {
-  character: RRCharacterProps | null;
-}) {
+function CurrentCharacter({ character }: { character: RRCharacter | null }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const myself = useMyProps("color");
+
   return (
     <div className="pointer-events-auto">
       {settingsOpen && (
@@ -408,11 +398,7 @@ function CurrentCharacter({
   );
 }
 
-function DraggableCharacterPreview({
-  character,
-}: {
-  character: RRCharacterProps;
-}) {
+function DraggableCharacterPreview({ character }: { character: RRCharacter }) {
   const [, dragRef] = useDrag<{ id: RRCharacterID }, void, null>(
     () => ({
       type: "token",
@@ -420,14 +406,36 @@ function DraggableCharacterPreview({
     }),
     [character.id]
   );
+  const [editorVisible, setEditorVisible] = useState(false);
 
   return (
-    <div ref={dragRef} className="token-preview">
-      <CharacterPreview
-        character={character}
-        size={128}
-        shouldDisplayShadow={false}
-      />
+    <div
+      ref={dragRef}
+      className="token-preview"
+      onClick={() => setEditorVisible(true)}
+    >
+      <Popover
+        content={
+          <div onMouseDown={(e) => e.stopPropagation()}>
+            <CharacterEditor
+              character={character}
+              wasJustCreated={false}
+              onNameFirstEdited={() => {}}
+              onClose={() => setEditorVisible(false)}
+            />
+          </div>
+        }
+        visible={editorVisible}
+        onClickOutside={() => setEditorVisible(false)}
+        interactive
+        placement="right"
+      >
+        <CharacterPreview
+          character={character}
+          size={128}
+          shouldDisplayShadow={false}
+        />
+      </Popover>
     </div>
   );
 }

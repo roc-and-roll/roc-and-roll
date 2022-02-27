@@ -12,6 +12,9 @@ import { RoughLine, RoughText } from "../rough";
 import { ephemeralPlayersFamily } from "./recoil";
 import { useContrastColor } from "../../util";
 import { pathLength, shortestDistance } from "./mapHelpers";
+import { PCircle, PRectangle } from "./Primitives";
+import { Container } from "react-pixi-fiber";
+import { colorValue } from "./pixi-utils";
 
 const overlappingPairsMap = <T, U>(a: T[], f: (a: T, b: T, i: number) => U) => {
   const res: U[] = [];
@@ -64,8 +67,10 @@ const MapMeasurePathInner = React.memo<{
   mapBackgroundColor: string;
   zoom: number;
 }>(function MapMeasurePathInner({ path, color, mapBackgroundColor, zoom }) {
-  const pathContrastColor = useContrastColor(color);
-  const mapContrastColor = useContrastColor(mapBackgroundColor);
+  const pathContrastColor = colorValue(useContrastColor(color)).color;
+  const mapContrastColor = colorValue(
+    useContrastColor(mapBackgroundColor)
+  ).color;
 
   const last = pointAdd(pointScale(path[path.length - 1]!, GRID_SIZE), {
     x: GRID_SIZE * 1.5,
@@ -90,7 +95,13 @@ const MapMeasurePathInner = React.memo<{
       {path.map((p, i) => {
         const r = centered(p);
         return (
-          <circle key={i} r={dotSize / 2} fill={color} cx={r.x} cy={r.y} />
+          <PCircle
+            key={i}
+            r={dotSize / 2}
+            fill={colorValue(color).color}
+            cx={r.x}
+            cy={r.y}
+          />
         );
       })}
       {overlappingPairsMap(path, (a, b, i) => {
@@ -108,12 +119,12 @@ const MapMeasurePathInner = React.memo<{
           />
         );
       })}
-      <g
-        transform={`translate(${last.x},${
-          last.y - FEET_BOX_HEIGHT / 2 / zoom
-        }) scale(${1 / zoom})`}
+      <Container
+        x={last.x}
+        y={last.y - FEET_BOX_HEIGHT / 2 / zoom}
+        scale={1 / zoom}
       >
-        <rect
+        <PRectangle
           x={0}
           y={0}
           width={FEET_BOX_WIDTH}
@@ -124,14 +135,16 @@ const MapMeasurePathInner = React.memo<{
         <RoughText
           x={FEET_BOX_WIDTH / 2}
           y={PADDING}
-          fill={color}
-          fontSize={FONT_SIZE}
-          fontWeight="bold"
-          textAnchor="middle"
-        >
-          {length * 5}&thinsp;ft
-        </RoughText>
-      </g>
+          style={{
+            fill: color,
+            fontSize: FONT_SIZE,
+            fontWeight: "bold",
+          }}
+          // \u2009 == &thinsp;
+          text={`${length * 5}\u2009ft`}
+          anchor={{ x: 0.5, y: 0 }}
+        />
+      </Container>
     </>
   );
 });

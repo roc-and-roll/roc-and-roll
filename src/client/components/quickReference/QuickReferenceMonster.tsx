@@ -312,7 +312,7 @@ export function MonsterSpellcasting({
       </>
     ) : (
       `Level ${level} ${
-        slots > 0 ? slots.toString() + "slot" + (slots === 1 ? "" : "s") : ""
+        slots > 0 ? ` (${slots} slot${slots === 1 ? "" : "s"})` : ""
       }`
     );
 

@@ -1,7 +1,8 @@
-import React, { ImgHTMLAttributes, useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
   GRID_SIZE,
+  IMAGE_TILE_SIZE,
 } from "../../../shared/constants";
 import {
   RRMapDrawingImage,
@@ -11,33 +12,36 @@ import {
   RRPoint,
   RRToken,
 } from "../../../shared/state";
-import {
-  RoughEllipse,
-  RoughRectangle,
-  RoughText,
-  RoughLinearPath,
-  RoughPolygon,
-} from "../rough";
+import * as PIXI from "pixi.js";
 import { useServerDispatch } from "../../state";
 import { useLatest } from "../../useLatest";
 import tinycolor from "tinycolor2";
-import { assertNever } from "../../../shared/util";
 import { useRecoilValue } from "recoil";
 import { hoveredMapObjectsFamily } from "./Map";
 import { assetFamily, selectedMapObjectsFamily } from "./recoil";
-import { Popover } from "../Popover";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import { useMyProps } from "../../myself";
-import { SVGBlurHashImage } from "../blurHash/SVGBlurHashImage";
 import { pointEquals } from "../../../shared/point";
+import { Container, PixiElement, Sprite } from "react-pixi-fiber";
+import { assetUrl } from "../../files";
+import { RRMouseEvent, rrToPixiHandler } from "./pixi-utils";
+import {
+  RoughEllipse,
+  RoughLinearPath,
+  RoughPolygon,
+  RoughRectangle,
+  RoughText,
+} from "../rough";
+import { PixiPopover } from "./pixi/PixiPopover";
+import { assertNever } from "../../../shared/util";
+import { PixiBlurHashSprite } from "../blurHash/PixiBlurHashSprite";
 
-const CAN_CONTROL_STYLE = { cursor: "move" };
 const SELECTED_OR_HOVERED_STROKE_LINE_DASH = [GRID_SIZE / 10, GRID_SIZE / 10];
 
 export const MapObjectThatIsNotAToken = React.memo<{
   object: Exclude<RRMapObject, RRToken | RRMapLink>;
-  onStartMove: (object: RRMapObject, event: React.MouseEvent) => void;
+  onStartMove: (object: RRMapObject, event: RRMouseEvent) => void;
   mapId: RRMapID;
   canStartMoving: boolean;
 }>(function MapObjectThatIsNotAToken({
@@ -59,19 +63,21 @@ export const MapObjectThatIsNotAToken = React.memo<{
     canStartMoving &&
     (myself.isGM || object.playerId === myself.id);
 
-  const onStartMoveRef = useLatest((e: React.MouseEvent) => {
+  const onStartMoveRef = useLatest((e: RRMouseEvent) => {
     onStartMove(object, e);
   });
 
   const clickPositionRef = useRef<RRPoint>();
 
   const sharedProps = {
+    name: `${object.type}: ${object.id}`,
     x: object.position.x,
     y: object.position.y,
-    style: canControl ? CAN_CONTROL_STYLE : undefined,
+    angle: object.rotation,
+    cursor: canControl ? "move" : undefined,
     onMouseDown: useCallback(
-      (e: React.MouseEvent) => {
-        if (canControl) {
+      (e: RRMouseEvent) => {
+        if (canControl && e.button === 0) {
           onStartMoveRef.current(e);
         }
         clickPositionRef.current = { x: e.clientX, y: e.clientY };
@@ -79,7 +85,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
       [onStartMoveRef, canControl]
     ),
     onMouseUp: useCallback(
-      (e: React.MouseEvent) => {
+      (e: RRMouseEvent) => {
         if (
           e.button === 2 &&
           clickPositionRef.current &&
@@ -98,10 +104,6 @@ export const MapObjectThatIsNotAToken = React.memo<{
       ? object.color
       : tinycolor(object.color).setAlpha(0.3).toRgbString(),
     stroke: object.color,
-    strokeLineDash: isSelectedOrHovered
-      ? SELECTED_OR_HOVERED_STROKE_LINE_DASH
-      : undefined,
-    seed: object.id,
   };
 
   const content = () => {
@@ -125,27 +127,50 @@ export const MapObjectThatIsNotAToken = React.memo<{
       case "text": {
         const {
           fill: _1,
-          stroke: _2,
-          strokeLineDash: _3,
-          seed: _4,
+          stroke: fill,
+          onMouseDown,
+          onMouseUp,
+          // strokeLineDash: _3,
+          // seed: _4,
           ...textProps
         } = sharedProps;
         return (
-          <RoughText {...textProps} fill={sharedProps.stroke}>
-            {object.text}
-          </RoughText>
+          <RoughText
+            {...textProps}
+            interactive
+            mousedown={rrToPixiHandler(onMouseDown)}
+            mouseup={rrToPixiHandler(onMouseUp)}
+            rightdown={rrToPixiHandler(onMouseDown)}
+            rightup={rrToPixiHandler(onMouseUp)}
+            // Make sure to also adjust`getBoundingBoxForText` if you adjust the
+            // style here!
+            style={{ fill }}
+            text={object.text}
+          />
         );
       }
       case "image": {
         const {
-          strokeLineDash: _1,
-          seed: _2,
-          fill: _3,
-          stroke: _4,
-          ...imageProps
+          onMouseDown,
+          onMouseUp,
+          fill: _1,
+          stroke: _2,
+          // strokeLineDash: _3,
+          // seed: _4,
+          ...rest
         } = sharedProps;
 
-        return <MapObjectImage object={object} {...imageProps} />;
+        return (
+          <MapObjectImage
+            object={object}
+            interactive
+            mousedown={rrToPixiHandler(onMouseDown)}
+            mouseup={rrToPixiHandler(onMouseUp)}
+            rightdown={rrToPixiHandler(onMouseDown)}
+            rightup={rrToPixiHandler(onMouseUp)}
+            {...rest}
+          />
+        );
       }
       default:
         assertNever(object);
@@ -153,41 +178,123 @@ export const MapObjectThatIsNotAToken = React.memo<{
   };
 
   return (
-    <Popover
+    <PixiPopover
       content={<ObjectEditOptions object={object} mapId={mapId} />}
       visible={editorVisible}
       onClickOutside={() => setEditorVisible(false)}
-      interactive
-      placement="right"
     >
-      <g
-        transform={`rotate(${object.rotation}, 0, 0)`}
-        style={{ transformBox: "fill-box", transformOrigin: "center" }}
-      >
-        {content()}
-      </g>
-    </Popover>
+      {content()}
+    </PixiPopover>
   );
 });
 
 function MapObjectImage({
   object,
+  x,
+  y,
   ...rest
 }: {
   object: RRMapDrawingImage;
   x: number;
   y: number;
-} & Omit<ImgHTMLAttributes<HTMLImageElement>, "width" | "height" | "src">) {
+} & Pick<
+  PixiElement<Sprite>,
+  | "name"
+  | "mousedown"
+  | "mouseup"
+  | "rightdown"
+  | "rightup"
+  | "cursor"
+  | "interactive"
+  | "angle"
+>) {
   const asset = useRecoilValue(assetFamily(object.imageAssetId));
 
-  return asset?.type === "image" && asset.location.type === "local" ? (
-    <SVGBlurHashImage
-      image={asset}
-      width={(asset.width / asset.height) * object.height}
-      height={object.height}
+  if (asset?.type !== "image" || asset.location.type !== "local") {
+    return null;
+  }
+
+  const scaleFactor = object.height / asset.height;
+  const width = asset.width * scaleFactor;
+  const height = asset.height * scaleFactor;
+
+  if (asset.width > 2048 || asset.height > 2048) {
+    const filename = asset.location.filename;
+    const rows = Math.ceil(asset.height / IMAGE_TILE_SIZE);
+    const columns = Math.ceil(asset.width / IMAGE_TILE_SIZE);
+    return (
+      <>
+        <Container
+          hitArea={new PIXI.Rectangle(0, 0, width, height)}
+          interactiveChildren={false}
+          {...rest}
+          x={x + width / 2}
+          y={y + height / 2}
+          pivot={{ x: width / 2, y: height / 2 }}
+        >
+          <PixiBlurHashSprite
+            x={width / 2}
+            y={height / 2}
+            blurHashOnly
+            width={width}
+            height={height}
+            blurHash={asset.blurHash}
+            url={assetUrl(asset)}
+          />
+          {Array(rows)
+            .fill(0)
+            .flatMap((_, y) =>
+              Array(columns)
+                .fill(0)
+                .map((_, x) => {
+                  const w =
+                    Math.min(
+                      IMAGE_TILE_SIZE,
+                      asset.width - x * IMAGE_TILE_SIZE
+                    ) * scaleFactor;
+                  const h =
+                    Math.min(
+                      IMAGE_TILE_SIZE,
+                      asset.height - y * IMAGE_TILE_SIZE
+                    ) * scaleFactor;
+                  return (
+                    <Sprite
+                      key={`${x}-${y}`}
+                      width={w}
+                      height={h}
+                      x={x * IMAGE_TILE_SIZE * scaleFactor}
+                      y={y * IMAGE_TILE_SIZE * scaleFactor}
+                      texture={PIXI.Texture.from(
+                        `/api/files/cache/${encodeURIComponent(
+                          filename
+                        )}-tiles/0/${x}_${y}.jpeg`
+                      )}
+                    />
+                  );
+                })
+            )}
+        </Container>
+      </>
+    );
+  }
+
+  // This effectively sets the top left of the image to {x, y}, but applies
+  // rotation to the center of the image.
+  const positionProps = {
+    x: x + width / 2,
+    y: y + height / 2,
+    width,
+    height,
+  };
+
+  return (
+    <PixiBlurHashSprite
+      blurHash={asset.blurHash}
+      url={assetUrl(asset)}
+      {...positionProps}
       {...rest}
     />
-  ) : null;
+  );
 }
 
 function ObjectEditOptions({

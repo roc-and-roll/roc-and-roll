@@ -3,6 +3,7 @@ import {
   faBug,
   faChevronDown,
   faChevronUp,
+  faCloud,
   faCog,
   faMapSigns,
   faMusic,
@@ -32,6 +33,7 @@ import { AssetLibrary } from "../assetLibrary/AssetLibrary";
 import { Player } from "../Player";
 import { DebugSettings } from "./DebugSettings";
 import clsx from "clsx";
+import { Atmosphere } from "../map/atmosphere/Atmosphere";
 
 const tooltipProps: Partial<RRTooltipProps> = {
   placement: "right",
@@ -117,6 +119,14 @@ export const HUDToolbar = React.memo(function Toolbar() {
       gmOnly: true,
       icon: faMapSigns,
       iconTooltip: "Maps",
+    },
+    {
+      id: "atmosphere",
+      collapsed: true,
+      content: <Atmosphere />,
+      gmOnly: false,
+      icon: faCloud,
+      iconTooltip: "Atmosphere",
     },
     {
       id: "music",

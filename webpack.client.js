@@ -147,6 +147,12 @@ export default (webpackEnv) => {
         crypto: false,
         assert: require.resolve("assert"),
       },
+      alias: {
+        "react-pixi-fiber": path.resolve(
+          __dirname,
+          "src/client/third-party/react-pixi-fiber/src"
+        ),
+      },
     },
     plugins: [
       new BuildHashPlugin(),
@@ -267,7 +273,7 @@ export default (webpackEnv) => {
           ],
         },
         {
-          test: /\.tsx?$/,
+          test: /\.(js|ts)x?$/,
           include: path.resolve("src"),
           use: [babelLoader],
         },
