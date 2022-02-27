@@ -30,7 +30,11 @@
     "types": [],
     // Speed up compilation by skipping type checking of type definition files.
     "skipDefaultLibCheck": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+
+    "paths": {
+      "react-pixi-fiber": ["./src/client/third-party/react-pixi-fiber"]
+    }
   },
   "include": [
     "./jest-setup.ts",

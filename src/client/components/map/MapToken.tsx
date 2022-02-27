@@ -32,8 +32,6 @@ import {
   isCharacterOverHealed,
 } from "../../../shared/util";
 import { useMyProps } from "../../myself";
-import ReactDOM from "react-dom";
-import { HPInlineEdit } from "./HPInlineEdit";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { CURSOR_POSITION_SYNC_DEBOUNCE, hoveredMapObjectsFamily } from "./Map";
 import {
@@ -43,7 +41,6 @@ import {
   assetFamily,
   mapObjectGhostPositionsFamily,
 } from "./recoil";
-import { Popover } from "../Popover";
 import { CharacterEditor, conditionIcons } from "../characters/CharacterEditor";
 import {
   pointAdd,
@@ -57,9 +54,16 @@ import { useLatest } from "../../useLatest";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import useRafLoop from "../../useRafLoop";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useHealthBarMeasurements } from "../../../client/util";
-import { SVGBlurHashImage } from "../blurHash/SVGBlurHashImage";
+import { PCircle, PRectangle } from "./Primitives";
+import * as PIXI from "pixi.js";
+import { Container, Sprite } from "react-pixi-fiber";
+import { RRMouseEvent, createPixiPortal, colorValue } from "./pixi-utils";
+import { PixiTooltip } from "./pixi/PixiTooltip";
+import { PixiFontawesomeIcon } from "./pixi/PixiFontawesomeIcon";
+import { PixiPopover } from "./pixi/PixiPopover";
+import { TokenShadow } from "./TokenShadow";
+import { PixiBlurHashSprite } from "../blurHash/PixiBlurHashSprite";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
@@ -68,9 +72,10 @@ export const MapToken = React.memo<{
   mapId: RRMapID;
   object: RRToken;
   canStartMoving: boolean;
-  onStartMove: (o: RRMapObject, e: React.MouseEvent) => void;
-  auraArea: SVGGElement | null;
-  healthBarArea: SVGGElement | null;
+  onStartMove: (o: RRMapObject, e: RRMouseEvent) => void;
+  auraArea: Container | null;
+  healthBarArea: Container | null;
+  tooltipArea: Container | null;
   zoom: number;
   contrastColor: string;
   smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
@@ -80,7 +85,8 @@ export const MapToken = React.memo<{
   canStartMoving,
   onStartMove,
   auraArea,
-  healthBarArea: healthBarArea,
+  healthBarArea,
+  tooltipArea,
   zoom,
   contrastColor,
   smartSetTotalHP,
@@ -102,6 +108,7 @@ export const MapToken = React.memo<{
       onStartMove={onStartMove}
       auraArea={auraArea}
       healthBarArea={healthBarArea}
+      tooltipArea={tooltipArea}
       zoom={zoom}
       contrastColor={contrastColor}
       smartSetTotalHP={smartSetTotalHP}
@@ -118,6 +125,7 @@ function MapTokenInner({
   onStartMove,
   auraArea,
   healthBarArea,
+  tooltipArea,
   zoom,
   contrastColor,
   smartSetTotalHP,
@@ -127,9 +135,10 @@ function MapTokenInner({
   myself: Pick<RRPlayer, "id" | "isGM" | "characterIds">;
   object: RRToken;
   canStartMoving: boolean;
-  onStartMove: (o: RRMapObject, e: React.MouseEvent) => void;
-  auraArea: SVGGElement | null;
-  healthBarArea: SVGGElement | null;
+  onStartMove: (o: RRMapObject, e: RRMouseEvent) => void;
+  auraArea: Container | null;
+  healthBarArea: Container | null;
+  tooltipArea: Container | null;
   zoom: number;
   contrastColor: string;
   smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
@@ -159,7 +168,7 @@ function MapTokenInner({
   const canControl = canStartMoving && canControlToken(character, myself);
 
   const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
+    (e: RRMouseEvent) => {
       if (e.button === 0) {
         onStartMove(objectRef.current, e);
       }
@@ -167,7 +176,7 @@ function MapTokenInner({
     },
     [onStartMove, objectRef]
   );
-  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+  const handleMouseUp = useCallback((e: RRMouseEvent) => {
     if (
       e.button === 2 &&
       firstMouseDownPos.current &&
@@ -218,13 +227,14 @@ function MapTokenInner({
   const fullTokenRepresentation = (
     position: RRPoint,
     isGhost = false,
-    ref: React.LegacyRef<SVGGElement> | undefined = undefined
+    ref: React.LegacyRef<Container> | undefined = undefined
   ) => (
-    <g
+    <Container
       ref={ref}
-      transform={`translate(${position.x}, ${position.y}), rotate(${
-        object.rotation
-      }, ${tokenSize / 2}, ${tokenSize / 2})`}
+      angle={object.rotation}
+      pivot={{ x: tokenSize / 2, y: tokenSize / 2 }}
+      x={position.x + tokenSize / 2}
+      y={position.y + tokenSize / 2}
     >
       {isGhost ? (
         <TokenImageOrPlaceholder
@@ -232,6 +242,8 @@ function MapTokenInner({
           zoom={zoom}
           contrastColor={contrastColor}
           character={character}
+          tokenRotation={object.rotation}
+          tooltipArea={tooltipArea}
         />
       ) : (
         <TokenImageOrPlaceholder
@@ -239,13 +251,15 @@ function MapTokenInner({
           zoom={zoom}
           contrastColor={contrastColor}
           character={character}
+          tokenRotation={object.rotation}
           canControl={canControl}
           isSelectedOrHovered={isSelectedOrHovered}
           handleMouseDown={handleMouseDown}
           handleMouseUp={handleMouseUp}
+          tooltipArea={tooltipArea}
         />
       )}
-    </g>
+    </Container>
   );
 
   const [startAnimation, stopAnimation] = useRafLoop();
@@ -255,17 +269,14 @@ function MapTokenInner({
     }
     if (!ghostPosition.fade) {
       if (ghostTokenRef.current) {
-        ghostTokenRef.current.style.opacity = GHOST_OPACITY.toString();
+        ghostTokenRef.current.alpha = GHOST_OPACITY;
       }
       return;
     }
 
     startAnimation((amount) => {
       if (ghostTokenRef.current) {
-        ghostTokenRef.current.style.opacity = (
-          GHOST_OPACITY *
-          (1 - amount ** 3)
-        ).toString();
+        ghostTokenRef.current.alpha = GHOST_OPACITY * (1 - amount ** 3);
       }
       if (amount === 1) {
         setGhostPosition(null);
@@ -276,17 +287,17 @@ function MapTokenInner({
     };
   }, [ghostPosition, setGhostPosition, startAnimation, stopAnimation]);
 
-  const ghostTokenRef = useRef<SVGGElement>(null);
+  const ghostTokenRef = useRef<Container>(null);
 
   return (
     <>
       {ghostPosition &&
         fullTokenRepresentation(ghostPosition.position, true, ghostTokenRef)}
       {auraArea &&
-        // we need to render the auras as the very first thing in the SVG so
+        // we need to render the auras as the very first thing in the game so
         // that they are located in the background and still allow users to
         // interact with objects that would otherwise be beneath the auras
-        ReactDOM.createPortal(
+        createPixiPortal(
           character.auras.map((aura, i) => (
             <Aura
               key={i}
@@ -300,19 +311,19 @@ function MapTokenInner({
           auraArea
         )}
       {healthBarArea &&
-        ReactDOM.createPortal(
+        createPixiPortal(
           <>
             {isCharacterDead(character) && (
               <DeadMarker x={x} y={y} scale={character.scale} />
             )}
             {canControl && character.maxHP > 0 && (
-              <g transform={`translate(${x},${y - 16})`}>
+              <Container x={x} y={y - 16} name="healthBar">
                 <HealthBar
                   character={character}
                   setHP={setHP}
                   contrastColor={contrastColor}
                 />
-              </g>
+              </Container>
             )}
             {isHighlighted && (
               <RoughRectangle
@@ -324,19 +335,15 @@ function MapTokenInner({
                 fill="none"
               />
             )}
-            <g transform={`translate(${x},${y})`}>
-              <ConditionIcons
-                character={character}
-                canControl={canControl}
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
-              />
-            </g>
+            <Container x={x} y={y} name="condition-icons">
+              <ConditionIcons character={character} tooltipArea={tooltipArea} />
+            </Container>
           </>,
           healthBarArea
         )}
+
       {canControl ? (
-        <Popover
+        <PixiPopover
           content={
             <div onMouseDown={(e) => e.stopPropagation()}>
               <CharacterEditor
@@ -350,11 +357,9 @@ function MapTokenInner({
           }
           visible={editorVisible}
           onClickOutside={() => setEditorVisible(false)}
-          interactive
-          placement="right"
         >
-          <g>{fullTokenRepresentation({ x, y })}</g>
-        </Popover>
+          {fullTokenRepresentation({ x, y })}
+        </PixiPopover>
       ) : (
         fullTokenRepresentation({ x, y })
       )}
@@ -366,45 +371,35 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
   zoom,
   contrastColor,
   character,
+  tooltipArea,
+  tokenRotation,
   ...props
 }: {
   zoom: number;
   contrastColor: RRColor;
   character: RRCharacter;
+  tooltipArea: Container | null;
+  tokenRotation: number;
 } & (
   | {
       isGhost: false;
       canControl: boolean;
       isSelectedOrHovered: boolean;
-      handleMouseDown: (e: React.MouseEvent) => void;
-      handleMouseUp: (e: React.MouseEvent) => void;
+      handleMouseDown: (e: RRMouseEvent) => void;
+      handleMouseUp: (e: RRMouseEvent) => void;
     }
   | { isGhost: true }
 )) {
   const tokenSize = GRID_SIZE * character.scale;
-  const extraSpace = tokenSize / 2;
   const canControl = props.isGhost ? false : props.canControl;
 
-  const tokenStyle = useMemo(() => {
-    const style: React.CSSProperties = {
-      ...(props.isGhost
-        ? // Do not show any shadows for ghosts and ignore pointer events
-          ({ pointerEvents: "none" } as const)
-        : isCharacterUnconscious(character)
-        ? { filter: "url(#tokenUnconsciousShadow)" }
-        : isCharacterHurt(character) && !isCharacterDead(character)
-        ? { filter: "url(#tokenHurtShadow)" }
-        : isCharacterOverHealed(character)
-        ? { filter: "url(#tokenOverHealedShadow)" }
-        : {}),
-      ...(canControl ? { cursor: "move" } : {}),
-      borderRadius: tokenSize / 2,
-    };
-
-    if (isCharacterDead(character)) style.filter = "grayscale(100%)";
-
-    return style;
-  }, [character, tokenSize, canControl, props.isGhost]);
+  const dead = isCharacterDead(character);
+  const filters = useMemo(() => {
+    if (!dead) return [];
+    const filter = new PIXI.filters.ColorMatrixFilter();
+    filter.desaturate();
+    return [filter];
+  }, [dead]);
 
   const asset = useRecoilValue(assetFamily(character.tokenImageAssetId));
   if (asset?.type !== "image") {
@@ -413,58 +408,76 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
 
   return (
     <>
-      <SVGBlurHashImage
-        onMouseDown={!props.isGhost ? props.handleMouseDown : undefined}
-        onMouseUp={!props.isGhost ? props.handleMouseUp : undefined}
-        tokenSize={extraSpace}
-        x={-extraSpace}
-        y={-extraSpace}
-        style={tokenStyle}
-        width={tokenSize + extraSpace * 2}
-        height={tokenSize + extraSpace * 2}
-        image={{
-          url: tokenImageUrl(character, asset, tokenSize * zoom),
-          blurHash: asset.blurHash,
-        }}
+      {!props.isGhost &&
+        (isCharacterUnconscious(character) ? (
+          <TokenShadow color={0xff0000} pulse={0.4} size={tokenSize} />
+        ) : isCharacterHurt(character) && !isCharacterDead(character) ? (
+          <TokenShadow color={0xff0000} pulse={4} size={tokenSize} />
+        ) : isCharacterOverHealed(character) ? (
+          <TokenShadow color={0x00ff00} pulse={4} size={tokenSize} />
+        ) : null)}
+      <PixiBlurHashSprite
+        interactive={!props.isGhost}
+        cursor={canControl ? "move" : undefined}
+        filters={filters}
+        x={tokenSize / 2}
+        y={tokenSize / 2}
+        mousedown={
+          props.isGhost
+            ? undefined
+            : (e) => props.handleMouseDown(e.data.originalEvent as MouseEvent)
+        }
+        rightdown={
+          props.isGhost
+            ? undefined
+            : (e) => props.handleMouseDown(e.data.originalEvent as MouseEvent)
+        }
+        width={tokenSize}
+        height={tokenSize}
+        mouseup={
+          props.isGhost
+            ? undefined
+            : (e) => props.handleMouseUp(e.data.originalEvent as MouseEvent)
+        }
+        rightup={
+          props.isGhost
+            ? undefined
+            : (e) => props.handleMouseUp(e.data.originalEvent as MouseEvent)
+        }
+        url={tokenImageUrl(character, asset, tokenSize * zoom)}
+        blurHash={asset.blurHash}
       />
 
       {!props.isGhost && props.isSelectedOrHovered && (
-        <circle
-          // do not block pointer events
-          pointerEvents="none"
+        <PCircle
           cx={tokenSize / 2}
           cy={tokenSize / 2}
           r={tokenSize / 2 - character.scale * 1.5}
-          fill="transparent"
-          stroke={contrastColor}
-          strokeWidth={`${character.scale * 2.5 + 2}px`}
+          fill={0x000000}
+          alpha={0}
+          stroke={colorValue(contrastColor).color}
+          strokeWidth={character.scale * 2.5 + 2}
         />
       )}
 
       {!props.isGhost && character.visibility !== "everyone" && (
-        <>
-          <title>only visible to GMs</title>
+        <PixiTooltip text="only visible to GMs" tooltipArea={tooltipArea}>
           <RoughText
-            // do not block pointer events
-            pointerEvents="none"
             x={tokenSize / 2}
             y={tokenSize / 2}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="red"
-            stroke="black"
-            strokeWidth={5}
-            paintOrder="stroke"
-            fontSize={`calc(1.2rem * ${tokenSize / GRID_SIZE})`}
-            fontWeight="bold"
-            transform={`rotate(-30, ${tokenSize / 2}, ${tokenSize / 2})`}
             style={{
-              letterSpacing: ".3rem",
+              fill: "red",
+              stroke: "black",
+              strokeThickness: 5,
+              fontSize: `calc(1.2rem * ${tokenSize / GRID_SIZE})`,
+              fontWeight: "bold",
+              letterSpacing: 6,
             }}
-          >
-            HIDDEN
-          </RoughText>
-        </>
+            angle={-30 - tokenRotation}
+            anchor={{ x: 0.5, y: 0.5 }}
+            text="HIDDEN"
+          />
+        </PixiTooltip>
       )}
     </>
   );
@@ -472,14 +485,10 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
 
 const ConditionIcons = React.memo(function ConditionIcons({
   character,
-  onMouseDown,
-  onMouseUp,
-  canControl,
+  tooltipArea,
 }: {
   character: RRCharacter;
-  onMouseDown: (e: React.MouseEvent) => void;
-  onMouseUp: (e: React.MouseEvent) => void;
-  canControl: boolean;
+  tooltipArea: Container | null;
 }) {
   const tinyIcons = character.conditions.length > 12;
   const iconSize = (tinyIcons ? 12 : 16) * character.scale;
@@ -494,41 +503,26 @@ const ConditionIcons = React.memo(function ConditionIcons({
           y: Math.floor(index / iconsPerRow) * iconSize,
           width: iconSize,
           height: iconSize,
-          onMouseDown,
-          onMouseUp,
-          style: canControl ? { cursor: "move" } : {},
         };
 
-        // TODO: Normally, we'd want to disable pointer events on
-        // condition icons, so that clicking on them will still allow
-        // you to select and move your token. However, this causes the
-        // <title> not to show when hovering the condition icon.
-        //
-        // pointerEvents="none"
-
-        return typeof icon === "string" ? (
-          <image key={condition} href={icon} {...props}>
-            <title>{condition}</title>
-          </image>
-        ) : (
-          <React.Fragment key={condition}>
-            <FontAwesomeIcon
-              icon={icon}
-              symbol={`${character.id}/condition-icon/${condition}`}
-            />
-            <use
-              {...props}
-              xlinkHref={`#${character.id}/condition-icon/${condition}`}
-              color="black"
-              style={{
-                stroke: "white",
-                strokeWidth: 18,
-                ...props.style,
-              }}
-            >
-              <title>{condition}</title>
-            </use>
-          </React.Fragment>
+        return (
+          <PixiTooltip
+            key={condition}
+            text={condition}
+            tooltipArea={tooltipArea}
+          >
+            {typeof icon === "string" ? (
+              <Sprite texture={PIXI.Texture.from(icon)} {...props} />
+            ) : (
+              <PixiFontawesomeIcon
+                icon={icon}
+                fill="black"
+                stroke="white"
+                strokeWidth={18}
+                {...props}
+              />
+            )}
+          </PixiTooltip>
         );
       })}
     </>
@@ -562,14 +556,14 @@ function DeadMarker({ x, y, scale }: { x: number; y: number; scale: number }) {
   };
 
   return (
-    <g pointerEvents="none">
+    <Container interactiveChildren={false} name="deadMarker">
       {[outerProps, innerProps].map((props, i) => (
         <React.Fragment key={i}>
           <RoughLine y={y} h={TOKEN_SIZE} {...props} />
           <RoughLine y={y + TOKEN_SIZE} h={-TOKEN_SIZE} {...props} />
         </React.Fragment>
       ))}
-    </g>
+    </Container>
   );
 }
 
@@ -627,15 +621,16 @@ function Aura({
   const tokenSize = GRID_SIZE * character.scale;
 
   const size = (aura.size * GRID_SIZE) / 5 + tokenSize / 2;
-  const fill = tinycolor(aura.color).setAlpha(0.3).toRgbString();
+  const fill = colorValue(tinycolor(aura.color).setAlpha(0.3));
   switch (aura.shape) {
     case "circle":
       return (
         <>
-          <circle
+          <PCircle
             cx={x + tokenSize / 2}
             cy={y + tokenSize / 2}
-            fill={tinycolor(fill).setAlpha(0.15).toRgbString()}
+            fill={fill.color}
+            alpha={fill.alpha / 2}
             r={size}
           />
           <EmanationArea
@@ -650,10 +645,11 @@ function Aura({
       );
     case "square":
       return (
-        <rect
+        <PRectangle
           x={x - size + tokenSize / 2}
           y={y - size + tokenSize / 2}
-          fill={fill}
+          fill={fill.color}
+          alpha={fill.alpha}
           height={size * 2}
           width={size * 2}
         />
@@ -688,7 +684,7 @@ const HealthBar = React.memo(function HealthBar({
         y={0}
         w={tokenSize}
         h={16}
-        stroke="transparent"
+        stroke="none"
         fill="white"
         fillStyle="solid"
         roughness={1}
@@ -700,7 +696,7 @@ const HealthBar = React.memo(function HealthBar({
             y={0}
             w={hpBarWidth}
             h={16}
-            stroke="transparent"
+            stroke="none"
             fill={hpColor}
             fillStyle="solid"
             roughness={0}
@@ -711,7 +707,7 @@ const HealthBar = React.memo(function HealthBar({
               y={0}
               w={temporaryHPBarWidth}
               h={16}
-              stroke="transparent"
+              stroke="none"
               fill={temporaryHPColor}
               fillStyle="solid"
               roughness={0}
@@ -725,7 +721,7 @@ const HealthBar = React.memo(function HealthBar({
         w={tokenSize}
         h={16}
         stroke={tinycolor(contrastColor).setAlpha(0.5).toRgbString()}
-        fill="transparent"
+        fill="none"
         roughness={1}
       />
       {/*
@@ -743,19 +739,30 @@ const HealthBar = React.memo(function HealthBar({
             {token.hp}&thinsp;/&thinsp;{token.maxHP}
           </RoughText>
         */}
+      {/* TODO(pixi): make editable
       <foreignObject x={0} y={2} width={tokenSize / 2 - 4} height={14}>
         <HPInlineEdit hp={character.hp + character.temporaryHP} setHP={setHP} />
-      </foreignObject>
+      </foreignObject> */}
+      <RoughText
+        x={4}
+        y={-1}
+        style={{
+          fontWeight: "bold",
+          fontSize: 14,
+        }}
+        text={`${character.hp + character.temporaryHP}`}
+      />
       <RoughText
         x={tokenSize / 2 - 3}
         y={-1}
-        width={tokenSize}
-        fontWeight="bold"
-        fontSize={14}
-        style={{ cursor: "default" }}
-      >
-        /&thinsp;{totalMaxHP}
-      </RoughText>
+        cursor="default"
+        style={{
+          fontWeight: "bold",
+          fontSize: 14,
+        }}
+        // \u2009 == &thinsp;
+        text={`/\u2009${totalMaxHP}`}
+      />
     </>
   );
 });

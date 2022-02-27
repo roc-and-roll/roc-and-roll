@@ -117,7 +117,7 @@ interface DialogData<T> {
   onClose: (result: T | null) => void;
 }
 
-const dialogCtxs = makeContexts<DialogID, DialogData<any>>();
+export const dialogCtxs = makeContexts<DialogID, DialogData<any>>();
 
 export function useDialog() {
   const setDialogs = useContext(dialogCtxs.set);
@@ -125,14 +125,27 @@ export function useDialog() {
   return useCallback(
     function <T>(content: DialogData<T>["content"]) {
       const id = rrid<{ id: DialogID }>();
-      return new Promise<T | null>((resolve) =>
-        setDialogs((dialogs) =>
-          mapSetImmutably(dialogs, id, {
-            content,
-            onClose: resolve,
-          })
-        )
-      );
+      return {
+        updateContent: (content: DialogData<T>["content"]) => {
+          setDialogs((dialogs) => {
+            const curr = dialogs.get(id);
+            return curr
+              ? mapSetImmutably(dialogs, id, {
+                  content,
+                  onClose: curr.onClose,
+                })
+              : dialogs;
+          });
+        },
+        result: new Promise<T | null>((resolve) =>
+          setDialogs((dialogs) =>
+            mapSetImmutably(dialogs, id, {
+              content,
+              onClose: resolve,
+            })
+          )
+        ),
+      };
     },
     [setDialogs]
   );

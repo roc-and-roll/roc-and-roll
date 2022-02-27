@@ -19,7 +19,7 @@ import {
   DEFAULT_BACKGROUND_IMAGE_HEIGHT,
   GRID_SIZE,
 } from "../../../shared/constants";
-import { assertNever, rrid } from "../../../shared/util";
+import { assertNever, rrid, withDo } from "../../../shared/util";
 import { askAndUploadImages } from "../../files";
 import {
   pointAdd,
@@ -33,6 +33,8 @@ import tinycolor from "tinycolor2";
 import { RRMessage, useServerMessages } from "../../serverMessages";
 import { RRMapViewRef } from "./Map";
 import { usePrompt } from "../../dialog-boxes";
+import { PRectangle } from "./Primitives";
+import { colorValue } from "./pixi-utils";
 
 const SERVER_SYNC_THROTTLE_TIME = 100;
 
@@ -506,14 +508,17 @@ export function useMapToolHandler(
         toolHandlerRef.current.onMouseWheel?.(delta);
       },
     }).current,
-    editState.tool === "reveal" && mouseDown ? (
-      <rect
-        x={mousePosition.x - scaledRevealSize / 2}
-        y={mousePosition.y - scaledRevealSize / 2}
-        width={scaledRevealSize}
-        height={scaledRevealSize}
-        fill={contrastColor}
-      />
-    ) : null,
+    editState.tool === "reveal" && mouseDown
+      ? withDo(colorValue(contrastColor), ({ color, alpha }) => (
+          <PRectangle
+            x={mousePosition.x - scaledRevealSize / 2}
+            y={mousePosition.y - scaledRevealSize / 2}
+            width={scaledRevealSize}
+            height={scaledRevealSize}
+            fill={color}
+            alpha={alpha}
+          />
+        ))
+      : null,
   ];
 }

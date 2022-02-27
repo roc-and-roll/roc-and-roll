@@ -94,6 +94,7 @@ describe("applyStatePatch", () => {
         gridEnabled: true,
         gridColor: "#808080",
         revealedAreas: null,
+        atmosphere: { type: "none", intensity: 0 },
       },
       objects: EMPTY_ENTITY_COLLECTION,
     };

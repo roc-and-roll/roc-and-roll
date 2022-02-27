@@ -58,6 +58,7 @@ export const Maps = React.memo(function Maps() {
               dispatch(
                 mapAdd({
                   settings: {
+                    atmosphere: { intensity: 0, type: "none" },
                     backgroundColor: randomColor(),
                     gridEnabled: true,
                     gridColor: "#808080",

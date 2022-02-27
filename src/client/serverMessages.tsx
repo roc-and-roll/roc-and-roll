@@ -40,17 +40,22 @@ export const useServerMessages = () => {
   return useContext(ServerMessagesContext);
 };
 
-const ServerMessagesContext = React.createContext<{
+export const ServerMessagesContext = React.createContext<{
   subscribe: (subscriber: MessageSubscriber) => void;
   unsubscribe: (subscriber: MessageSubscriber) => void;
   send: (message: RRMessage) => void;
   socket: Socket | null;
 }>({
-  subscribe: () => {},
+  subscribe: () => {
+    throw new Error("ServerMessagesContext not available.");
+  },
   unsubscribe: () => {},
-  send: () => {},
+  send: () => {
+    throw new Error("ServerMessagesContext not available.");
+  },
   socket: null,
 });
+
 ServerMessagesContext.displayName = "ServerMessagesContext";
 
 export function ServerMessagesProvider({

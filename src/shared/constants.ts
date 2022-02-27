@@ -14,7 +14,7 @@ export const FORCE_COMMIT_FIELD_VALUE_AFTER = 5 * 1000;
 
 export const STORE_SUBSCRIPTION_THROTTLE = 100;
 
-export const LAST_MIGRATION_VERSION = 33;
+export const LAST_MIGRATION_VERSION = 34;
 
 export const SYNC_MY_MOUSE_POSITION = true as boolean;
 
@@ -33,3 +33,5 @@ export const SOCKET_BROADCAST_MSG = "MESSAGE";
 export const SOCKET_SERVER_INFO = "SERVER_INFO";
 
 export const DEFAULT_VOLUME = 0.5;
+
+export const IMAGE_TILE_SIZE = 256;

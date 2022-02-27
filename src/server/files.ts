@@ -1,3 +1,5 @@
+import path from "path";
+import fs from "fs";
 import { encode } from "blurhash"; //cspell: disable-line
 import { spawn } from "child_process";
 import fileType, { MimeType } from "file-type";
@@ -82,6 +84,21 @@ export async function getImageDimensions(path: string) {
     width: metadata.width,
     height: metadata.height,
   };
+}
+
+export async function tileImage(
+  uploadedFilesDir: string,
+  uploadedFilesCacheDir: string,
+  fileName: string
+) {
+  const inputPath = path.join(uploadedFilesDir, fileName);
+  const outputPath = path.join(uploadedFilesCacheDir, fileName);
+  await sharp(inputPath)
+    .toFormat("jpeg")
+    .tile({ depth: "one" })
+    .toFile(outputPath + ".dz");
+  await fs.promises.rm(outputPath + ".dzi");
+  await fs.promises.rename(outputPath + "_files", outputPath + "-tiles");
 }
 
 export function isMimeTypeImage(mimeType: MimeType) {

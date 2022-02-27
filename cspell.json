@@ -37,6 +37,7 @@
     "namegen",
     "Nygård",
     "pathinfo",
+    "PIXI",
     "pmmmwh",
     "polymorphed",
     "Preet",
@@ -63,8 +64,13 @@
     "unstyled",
     "vcxsrv",
     "xvfb",
+    "rightclick",
+    "rightdown",
+    "rightup",
+    "xvfb",
     "spellcasting",
-    "Spellcasting"
+    "Spellcasting",
+    "desaturate"
   ],
   "files": ["**/*.{js,jsx,ts,tsx,html,md,css,scss,peggy}"],
   "ignorePaths": [

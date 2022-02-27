@@ -1,4 +1,4 @@
-import React, { StrictMode } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 import { App } from "./components/App";
 import { ServerStateProvider } from "./state";
@@ -31,32 +31,31 @@ export function render(socket: Socket) {
 }
 
 function Root({ socket }: { socket: Socket }) {
+  // TODO(pixi): Re-enable <StrictMode>
   // https://reactjs.org/docs/strict-mode.html
   return (
-    <StrictMode>
-      <RecoilRoot>
-        <DialogProvider>
-          <DebugSettingsContextProvider>
-            <SettingsProvider>
-              <ServerStateProvider socket={socket}>
-                <ServerMessagesProvider socket={socket}>
-                  <MyselfProvider>
-                    <CompendiumProvider>
-                      <QuickReferenceProvider>
-                        <DndProvider backend={HTML5Backend}>
-                          <ModApi />
-                          <App />
-                          <DialogBoxes />
-                        </DndProvider>
-                      </QuickReferenceProvider>
-                    </CompendiumProvider>
-                  </MyselfProvider>
-                </ServerMessagesProvider>
-              </ServerStateProvider>
-            </SettingsProvider>
-          </DebugSettingsContextProvider>
-        </DialogProvider>
-      </RecoilRoot>
-    </StrictMode>
+    <RecoilRoot>
+      <DialogProvider>
+        <DebugSettingsContextProvider>
+          <SettingsProvider>
+            <ServerStateProvider socket={socket}>
+              <ServerMessagesProvider socket={socket}>
+                <MyselfProvider>
+                  <CompendiumProvider>
+                    <QuickReferenceProvider>
+                      <DndProvider backend={HTML5Backend}>
+                        <ModApi />
+                        <App />
+                        <DialogBoxes />
+                      </DndProvider>
+                    </QuickReferenceProvider>
+                  </CompendiumProvider>
+                </MyselfProvider>
+              </ServerMessagesProvider>
+            </ServerStateProvider>
+          </SettingsProvider>
+        </DebugSettingsContextProvider>
+      </DialogProvider>
+    </RecoilRoot>
   );
 }
