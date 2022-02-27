@@ -8,6 +8,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "concurrently --handle-input --kill-others --names server,client,type-check --prefix-colors green,blue,yellow yarn:dev:server yarn:dev:client yarn:dev:type-check",
+    "dev:lean": "concurrently --handle-input --kill-others --names server,client --prefix-colors green,blue,yellow yarn:dev:server yarn:dev:client",
     "dev:client": "webpack serve   --config webpack.client.js --env mode=development",
     "dev:server": "webpack --watch --config webpack.server.js --env mode=development",
     "dev:type-check": "tsc --build tsconfig.json --watch --preserveWatchOutput",
@@ -41,6 +42,7 @@
     "@fortawesome/free-regular-svg-icons": "^5.15.4",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "@fortawesome/react-fontawesome": "^0.1.15",
+    "@pixi/particle-emitter": "^5.0.3",
     "@react-three/fiber": "^7.0.26",
     "@reduxjs/toolkit": "^1.7.1",
     "@seznam/compose-react-refs": "^1.0.6",
