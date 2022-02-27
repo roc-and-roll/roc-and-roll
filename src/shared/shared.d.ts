@@ -2,11 +2,6 @@ declare const __VERSION__: string;
 
 declare const IMPORT_META_URL: string;
 
-declare module "!!raw-loader!*" {
-  const contents: string;
-  export = contents;
-}
-
 declare module "*.css" {
   const classNames: Record<string, string>;
   export = classNames;
@@ -15,6 +10,11 @@ declare module "*.css" {
 declare module "*.scss" {
   const classNames: Record<string, string>;
   export = classNames;
+}
+
+declare module "*LICENSE.md" {
+  const license: string;
+  export = license;
 }
 
 declare module "*.mp3" {

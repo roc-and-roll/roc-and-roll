@@ -19,6 +19,7 @@ import {
   RRPoint,
   RRMapID,
   RRColor,
+  conditionTooltip,
 } from "../../../shared/state";
 import { tokenImageUrl } from "../../files";
 import { canControlToken, canViewTokenOnMap } from "../../permissions";
@@ -508,7 +509,7 @@ const ConditionIcons = React.memo(function ConditionIcons({
         return (
           <PixiTooltip
             key={condition}
-            text={condition}
+            text={conditionTooltip(condition)}
             tooltipArea={tooltipArea}
           >
             {typeof icon === "string" ? (

@@ -6,7 +6,7 @@ import { logEntryDiceRollAdd } from "../../../shared/actions";
 import { CompendiumTextEntry } from "../../../shared/compendium-types/text-entry";
 import { CompendiumMonster } from "../../../shared/compendium-types/monster";
 import { CompendiumSpell } from "../../../shared/compendium-types/spell";
-import { RRLogEntryDiceRoll } from "../../../shared/state";
+import { conditionTooltip, RRLogEntryDiceRoll } from "../../../shared/state";
 import { usePrompt } from "../../dialog-boxes";
 import {
   roll,
@@ -517,10 +517,15 @@ export function TextEntryString({
               ></CompendiumLink>
             );
           }
+          case "condition":
+            return (
+              <span className="underline" title={conditionTooltip(args)}>
+                {args}
+              </span>
+            );
           case "dc":
             return "DC " + args;
           // TODO: We should also handle these properly.
-          case "condition":
           case "sense":
           case "classFeature":
           case "item":

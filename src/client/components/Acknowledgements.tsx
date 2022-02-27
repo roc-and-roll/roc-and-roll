@@ -1,4 +1,5 @@
 import React from "react";
+import srdLicense from "../../shared/third-party/srd/LICENSE.md";
 
 const licenses = {
   "CC-BY-NC-ND 4.0": {
@@ -109,6 +110,17 @@ export function Acknowledgements() {
           </li>
         ))}
       </ul>
+      <h3>Systems Reference Document (SRD)</h3>
+      We use content from the SRD from Wizards of the Coast, which is available
+      under the{" "}
+      <a
+        href={"https://media.wizards.com/2016/downloads/DND/SRD-OGL_V5.1.pdf"}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Open Game License (OGL) Version 1.0a.
+      </a>
+      <pre className="whitespace-pre-wrap">{srdLicense}</pre>
     </>
   );
 }
