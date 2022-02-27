@@ -8,7 +8,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "concurrently --handle-input --kill-others --names server,client,type-check --prefix-colors green,blue,yellow yarn:dev:server yarn:dev:client yarn:dev:type-check",
-    "dev:lean": "concurrently --handle-input --kill-others --names server,client --prefix-colors green,blue,yellow yarn:dev:server yarn:dev:client",
+    "dev:lean": "concurrently --handle-input --kill-others --names server,client --prefix-colors green,blue yarn:dev:server yarn:dev:client",
     "dev:client": "webpack serve   --config webpack.client.js --env mode=development",
     "dev:server": "webpack --watch --config webpack.server.js --env mode=development",
     "dev:type-check": "tsc --build tsconfig.json --watch --preserveWatchOutput",

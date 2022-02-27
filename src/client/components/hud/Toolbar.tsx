@@ -33,7 +33,7 @@ import { AssetLibrary } from "../assetLibrary/AssetLibrary";
 import { Player } from "../Player";
 import { DebugSettings } from "./DebugSettings";
 import clsx from "clsx";
-import { Atmosphere } from "../Atmosphere";
+import { Atmosphere } from "../map/atmosphere/Atmosphere";
 
 const tooltipProps: Partial<RRTooltipProps> = {
   placement: "right",

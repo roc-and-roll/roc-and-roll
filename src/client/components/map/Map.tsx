@@ -91,7 +91,7 @@ import { MapReactions } from "./MapReactions";
 import { dialogCtxs } from "../../dialog-boxes";
 import { getBoundingBoxForMapObject } from "./geometry/bounding-boxes";
 import { RotatedShape } from "./geometry/RotatedShape";
-import { PixiGlobalFilters } from "../Atmosphere";
+import { PixiGlobalFilters } from "./atmosphere/Atmosphere";
 
 type Rectangle = [number, number, number, number];
 
@@ -927,6 +927,8 @@ transform,
             <PixiGlobalFilters
               backgroundColor={colorValue(backgroundColor).color}
               viewPortSize={viewPortSize}
+              mousedown={rrToPixiHandler(handleMouseDown)}
+              mousemove={rrToPixiHandler(handleMapMouseMove)}
             >
               <Container
                 x={pixiTransform.position.x}
@@ -935,10 +937,6 @@ transform,
                 rotation={pixiTransform.rotation}
                 skew={pixiTransform.skew}
                 pivot={pixiTransform.pivot}
-                interactive
-                mousedown={rrToPixiHandler(handleMouseDown)}
-                rightdown={rrToPixiHandler(handleMouseDown)}
-                mousemove={rrToPixiHandler(handleMapMouseMove)}
               >
                 <Container ref={setImageArea} name="images" />
                 <Container

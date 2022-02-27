@@ -9,13 +9,13 @@ import React, {
 } from "react";
 import * as particles from "@pixi/particle-emitter";
 import * as PIXI from "pixi.js";
-import { Container } from "react-pixi-fiber";
-import { RRMap, RRPoint } from "../../shared/state";
-import { useServerDispatch, useServerState } from "../state";
-import { useMyProps } from "../myself";
-import { mapSettingsUpdate } from "../../shared/actions";
-import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
-import { lerp } from "../../shared/util";
+import { AppContext, Container } from "react-pixi-fiber";
+import { RRMap, RRPoint } from "../../../../shared/state";
+import { useServerDispatch, useServerState } from "../../../state";
+import { useMyProps } from "../../../myself";
+import { mapSettingsUpdate } from "../../../../shared/actions";
+import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../../shared/constants";
+import { lerp } from "../../../../shared/util";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBan,
@@ -27,12 +27,13 @@ import {
   faDungeon,
   IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
-import { Button } from "./ui/Button";
+import { Button } from "../../ui/Button";
 import rainImage from "./rain.png";
 import snowImage from "./snow.png";
 import { Point } from "pixi.js";
 import { Particle } from "@pixi/particle-emitter";
-import { PRectangle } from "./map/Primitives";
+import { PRectangle } from "../Primitives";
+import { Vignette } from "./Vignette";
 
 export const PixiFilterContext = React.createContext<{
   addFilter: (f: PIXI.Filter) => void;
@@ -48,15 +49,21 @@ export function PixiGlobalFilters({
   children,
   backgroundColor,
   viewPortSize,
+  mousedown,
+  mousemove,
 }: {
   children: React.ReactNode;
   backgroundColor: number;
   viewPortSize: RRPoint;
+  mousedown?: (e: PIXI.InteractionEvent) => void;
+  mousemove?: (e: PIXI.InteractionEvent) => void;
 }) {
   const [filters, setFilters] = useState<PIXI.Filter[]>([]);
+
   const addFilter = useCallback((filter: PIXI.Filter) => {
     setFilters((filters) => [...filters, filter]);
   }, []);
+
   const removeFilter = useCallback((filter: PIXI.Filter) => {
     // FIXME may only want to remove one occurrence
     setFilters((filters) => filters.filter((f) => f !== filter));
@@ -64,10 +71,15 @@ export function PixiGlobalFilters({
 
   const getFilters = useCallback(() => filters, [filters]);
 
-  console.log(backgroundColor);
   return (
     <PixiFilterContext.Provider value={{ addFilter, removeFilter, getFilters }}>
-      <Container filters={filters}>
+      <Container
+        filters={filters}
+        mousedown={mousedown}
+        rightdown={mousedown}
+        mousemove={mousemove}
+        interactive
+      >
         <PRectangle
           x={0}
           y={0}
@@ -537,103 +549,61 @@ function Fog({ intensity, size }: { intensity: number; size: RRPoint }) {
 }
 
 function Thunder({ intensity, size }: { intensity: number; size: RRPoint }) {
-  const [opacity, setOpacity] = useState(0);
-  const rafId = useRef<number | null>(null);
+  const rectangleRef = useRef<PIXI.Graphics>(null);
   const activatedTime = useRef<number>(0);
   const duration = 300;
 
-  const step = useCallback(
-    (now) => {
-      const visible = opacity !== 0;
+  const step = useCallback(() => {
+    if (rectangleRef.current) {
+      const now = performance.now();
+      const visible = rectangleRef.current.alpha !== 0;
       const elapsed = now - activatedTime.current;
       if (visible) {
-        if (elapsed > duration) setOpacity(0);
-        else setOpacity(1 - elapsed / duration);
+        const completed = elapsed > duration;
+        if (completed) rectangleRef.current.alpha = 0;
+        else rectangleRef.current.alpha = 1 - elapsed / duration;
       }
       if (!visible && Math.random() < 0.005 * intensity) {
-        setOpacity(1);
+        rectangleRef.current.alpha = 1;
         activatedTime.current = now;
       }
-      rafId.current = requestAnimationFrame(step);
-    },
-    [intensity, opacity]
-  );
+    }
+  }, [intensity]);
+
+  const app = useContext(AppContext);
 
   useEffect(() => {
-    rafId.current = requestAnimationFrame(step);
+    app.ticker.add(step);
     return () => {
-      if (rafId.current) cancelAnimationFrame(rafId.current);
+      app.ticker.remove(step);
     };
-  }, [step]);
+  }, [app.ticker, step]);
+
+  useEffect(() => {
+    if (rectangleRef.current) rectangleRef.current.alpha = 0;
+  }, []);
 
   return (
     <PRectangle
+      ref={rectangleRef}
       x={0}
       y={0}
       width={size.x}
       height={size.y}
-      alpha={opacity}
       fill={0xffffff}
     />
   );
-}
-
-function Vignette({ intensity, size }: { intensity: number; size: RRPoint }) {
-  const { addFilter, removeFilter } = useContext(PixiFilterContext);
-  useEffect(() => {
-    // pixi takes care of caching the resulting program for the same shader code
-    const filter = new PIXI.Filter(
-      undefined,
-      /*cspell:disable*/
-      `
-precision mediump float;
-varying vec2 vTextureCoord;
-uniform sampler2D uSampler;
-uniform float size;
-uniform float amount;
-uniform float focalPointX;
-uniform float focalPointY;
-void main() {
-  vec4 rgba = texture2D(uSampler, vTextureCoord);
-  vec3 rgb = rgba.xyz;
-  float dist = distance(vTextureCoord, vec2(focalPointX, focalPointY));
-  rgb *= smoothstep(0.8, size * 0.799, dist * (0.5 * amount + size));
-  gl_FragColor = vec4(vec3(rgb), rgba.a);
-}`,
-      /*cspell:enable*/
-      {
-        amount: lerp(1.5, 2.4, intensity),
-        size: 0.5,
-        focalPointX: 0.5,
-        focalPointY: 0.5,
-      }
-    );
-
-    addFilter(filter);
-    return () => removeFilter(filter);
-  }, [addFilter, intensity, removeFilter]);
-  return <></>;
 }
 
 export class RotatedSpeedBehavior
   implements particles.behaviors.IEmitterBehavior
 {
   public static type = "rotatedSpeed";
-  // public static editorConfig: BehaviorEditorConfig = null;
 
   public order = particles.behaviors.BehaviorOrder.Late;
   private min: number;
   private max: number;
-  constructor(config: {
-    /**
-     * Minimum speed when initializing the particle.
-     */
-    min: number;
-    /**
-     * Maximum speed when initializing the particle.
-     */
-    max: number;
-  }) {
+  constructor(config: { min: number; max: number }) {
     this.min = config.min;
     this.max = config.max;
   }
