@@ -17,6 +17,11 @@ declare module "*.scss" {
   export = classNames;
 }
 
+declare module "LICENSE.md" {
+  const license: string;
+  export = license;
+}
+
 declare module "*.mp3" {
   const mp3: string;
   export = mp3;

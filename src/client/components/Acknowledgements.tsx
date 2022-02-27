@@ -1,4 +1,5 @@
 import React from "react";
+import srdLicense from "../../shared/third-party/srd/LICENSE.md";
 
 const licenses = {
   "CC-BY-NC-ND 4.0": {
@@ -119,16 +120,7 @@ export function Acknowledgements() {
       >
         Open Game License (OGL) Version 1.0a.
       </a>
-      {/*cspell:disable*/}
-      <p>
-        COPYRIGHT NOTICE Open Game License v 1.0a Copyright 2000, Wizards of the
-        Coast, LLC. System Reference Document 5.1 Copyright 2016, Wizards of the
-        Coast, Inc.; Authors Mike Mearls, Jeremy Crawford, Chris Perkins, Rodney
-        Thompson, Peter Lee, James Wyatt, Robert J. Schwalb, Bruce R. Cordell,
-        Chris Sims, and Steve Townshend, based on original material by E. Gary
-        Gygax and Dave Arneson.
-      </p>
-      {/*cspell:enable*/}
+      <pre className="whitespace-pre-wrap">{srdLicense}</pre>
     </>
   );
 }

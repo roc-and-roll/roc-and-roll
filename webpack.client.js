@@ -262,6 +262,10 @@ export default (webpackEnv) => {
           type: "asset",
         },
         {
+          test: /LICENSE\.md$/,
+          type: "asset/source",
+        },
+        {
           test: /\.peggy$/,
           include: path.resolve("src"),
           use: [
