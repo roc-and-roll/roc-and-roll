@@ -94,7 +94,7 @@ export async function tileImage(
   const inputPath = path.join(uploadedFilesDir, fileName);
   const outputPath = path.join(uploadedFilesCacheDir, fileName);
   await sharp(inputPath)
-    .toFormat("jpeg")
+    .toFormat("png")
     .tile({ depth: "one" })
     .toFile(outputPath + ".dz");
   await fs.promises.rm(outputPath + ".dzi");

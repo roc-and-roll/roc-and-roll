@@ -1,10 +1,11 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
   GRID_SIZE,
   IMAGE_TILE_SIZE,
 } from "../../../shared/constants";
 import {
+  RRAssetImage,
   RRMapDrawingImage,
   RRMapID,
   RRMapLink,
@@ -219,62 +220,16 @@ function MapObjectImage({
   const height = asset.height * scaleFactor;
 
   if (asset.width > 2048 || asset.height > 2048) {
-    const filename = asset.location.filename;
-    const rows = Math.ceil(asset.height / IMAGE_TILE_SIZE);
-    const columns = Math.ceil(asset.width / IMAGE_TILE_SIZE);
     return (
-      <>
-        <Container
-          hitArea={new PIXI.Rectangle(0, 0, width, height)}
-          interactiveChildren={false}
-          {...rest}
-          x={x + width / 2}
-          y={y + height / 2}
-          pivot={{ x: width / 2, y: height / 2 }}
-        >
-          <PixiBlurHashSprite
-            x={width / 2}
-            y={height / 2}
-            blurHashOnly
-            width={width}
-            height={height}
-            blurHash={asset.blurHash}
-            url={assetUrl(asset)}
-          />
-          {Array(rows)
-            .fill(0)
-            .flatMap((_, y) =>
-              Array(columns)
-                .fill(0)
-                .map((_, x) => {
-                  const w =
-                    Math.min(
-                      IMAGE_TILE_SIZE,
-                      asset.width - x * IMAGE_TILE_SIZE
-                    ) * scaleFactor;
-                  const h =
-                    Math.min(
-                      IMAGE_TILE_SIZE,
-                      asset.height - y * IMAGE_TILE_SIZE
-                    ) * scaleFactor;
-                  return (
-                    <Sprite
-                      key={`${x}-${y}`}
-                      width={w}
-                      height={h}
-                      x={x * IMAGE_TILE_SIZE * scaleFactor}
-                      y={y * IMAGE_TILE_SIZE * scaleFactor}
-                      texture={PIXI.Texture.from(
-                        `/api/files/cache/${encodeURIComponent(
-                          filename
-                        )}-tiles/0/${x}_${y}.jpeg`
-                      )}
-                    />
-                  );
-                })
-            )}
-        </Container>
-      </>
+      <TiledImage
+        asset={asset as RRAssetImage & { location: { type: "local" } }}
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        scaleFactor={scaleFactor}
+        {...rest}
+      />
     );
   }
 
@@ -294,6 +249,129 @@ function MapObjectImage({
       {...positionProps}
       {...rest}
     />
+  );
+}
+
+function TiledImage({
+  asset,
+  x,
+  y,
+  width,
+  height,
+  scaleFactor,
+  ...rest
+}: {
+  asset: RRAssetImage & { location: { type: "local" } };
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  scaleFactor: number;
+} & Pick<
+  PixiElement<Sprite>,
+  | "name"
+  | "mousedown"
+  | "mouseup"
+  | "rightdown"
+  | "rightup"
+  | "cursor"
+  | "interactive"
+  | "angle"
+>) {
+  const filename = asset.location.filename;
+  const rows = Math.ceil(asset.height / IMAGE_TILE_SIZE);
+  const columns = Math.ceil(asset.width / IMAGE_TILE_SIZE);
+
+  const [allTexturesLoaded, setAllTexturesLoaded] = useState(false);
+  const [textures, setTextures] = useState<Array<PIXI.Texture | null>>(() =>
+    Array(rows * columns).fill(null)
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    setAllTexturesLoaded(false);
+    setTextures(Array(rows * columns).fill(null));
+    Promise.all(
+      Array(rows)
+        .fill(0)
+        .flatMap((_, y) =>
+          Array(columns)
+            .fill(0)
+            .map(async (_, x) => {
+              const loadedTexture = await PIXI.Texture.fromURL(
+                `/api/files/cache/${encodeURIComponent(
+                  filename
+                )}-tiles/0/${x}_${y}.png`
+              );
+              if (!controller.signal.aborted) {
+                setTextures((textures) =>
+                  textures.map((texture, i) =>
+                    i === y * columns + x ? loadedTexture : texture
+                  )
+                );
+              }
+            })
+        )
+    )
+      .then(() => {
+        if (!controller.signal.aborted) {
+          setAllTexturesLoaded(true);
+        }
+      })
+      .catch((err) => console.error(err));
+
+    return () => {
+      controller.abort();
+    };
+  }, [columns, rows, filename]);
+
+  return (
+    <Container
+      hitArea={new PIXI.Rectangle(0, 0, width, height)}
+      interactiveChildren={false}
+      {...rest}
+      x={x + width / 2}
+      y={y + height / 2}
+      pivot={{ x: width / 2, y: height / 2 }}
+    >
+      {!allTexturesLoaded && (
+        <PixiBlurHashSprite
+          x={width / 2}
+          y={height / 2}
+          blurHashOnly
+          width={width}
+          height={height}
+          blurHash={asset.blurHash}
+          url={assetUrl(asset)}
+        />
+      )}
+      {Array(rows)
+        .fill(0)
+        .flatMap((_, y) =>
+          Array(columns)
+            .fill(0)
+            .map((_, x) => {
+              const texture = textures[y * columns + x];
+              const w =
+                Math.min(IMAGE_TILE_SIZE, asset.width - x * IMAGE_TILE_SIZE) *
+                scaleFactor;
+              const h =
+                Math.min(IMAGE_TILE_SIZE, asset.height - y * IMAGE_TILE_SIZE) *
+                scaleFactor;
+              return texture ? (
+                <Sprite
+                  key={`${x}-${y}`}
+                  width={w}
+                  height={h}
+                  x={x * IMAGE_TILE_SIZE * scaleFactor}
+                  y={y * IMAGE_TILE_SIZE * scaleFactor}
+                  texture={texture}
+                />
+              ) : null;
+            })
+        )}
+    </Container>
   );
 }
 

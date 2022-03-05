@@ -149,7 +149,7 @@ export async function setupWebServer(
   const lock = new AsyncLock();
 
   app.get<{ fileName: string; x: string; y: string }>(
-    `/api/files/cache/:fileName(${VALID_FILE_NAME})-tiles/0/:x([0-9]+)_:y([0-9]+).jpeg`,
+    `/api/files/cache/:fileName(${VALID_FILE_NAME})-tiles/0/:x([0-9]+)_:y([0-9]+).png`,
     async (req, res, next) => {
       try {
         const fileName = req.params.fileName;
