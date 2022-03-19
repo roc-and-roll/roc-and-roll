@@ -78,7 +78,7 @@ function Content({
     () =>
       matchSorter(
         [
-          ...compendiumSources.flatMap((source) => source.data.spell),
+          ...compendiumSources.flatMap((source) => source.data.spell ?? []),
           ...compendiumSources.flatMap((source) => source.data.monster ?? []),
         ],
         search,
