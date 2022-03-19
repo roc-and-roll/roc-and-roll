@@ -19,7 +19,6 @@
     "sourceMap": true,
     "jsx": "react",
     "baseUrl": "./",
-    "typeRoots": ["src/shared/types", "./node_modules/@types"],
     // Compatibility with Babel and other tools
     // https://github.com/microsoft/TypeScript/wiki/Performance#isolated-file-emit
     "isolatedModules": true,
@@ -35,13 +34,5 @@
     "paths": {
       "react-pixi-fiber": ["./src/client/third-party/react-pixi-fiber"]
     }
-  },
-  "include": [
-    "./jest-setup.ts",
-    "./playwright.config.ts",
-    "src/client/**/*",
-    "src/server/**/*",
-    "src/shared/**/*",
-    "src/e2e-tests/**/*"
-  ]
+  }
 }
