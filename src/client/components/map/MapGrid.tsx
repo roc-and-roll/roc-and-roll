@@ -25,7 +25,7 @@ export const MapGrid = React.memo<{
       ? STROKE_WIDTH
       : transform.a < 1 / 4
       ? null
-      : Math.ceil(STROKE_WIDTH / transform.a);
+      : Math.min(Math.ceil(STROKE_WIDTH / transform.a), STROKE_WIDTH * 2);
   const scaleMode =
     transform.a > 0.5 ? PIXI.SCALE_MODES.NEAREST : PIXI.SCALE_MODES.LINEAR;
 
