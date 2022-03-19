@@ -128,8 +128,13 @@ export function Compendium() {
         {sources.map((source, i) => (
           <li key={i}>
             <p>{source.title}</p>
-            <p>Spells: {source.data.spell.length}</p>
-            <p>Monsters: {source.data.monster?.length ?? 0}</p>
+            {source.data.spell && <p>Spells: {source.data.spell.length}</p>}
+            {source.data.monster && (
+              <p>Monsters: {source.data.monster.length}</p>
+            )}
+            {source.data.legendaryGroups && (
+              <p>Legendary Groups: {source.data.legendaryGroups.length}</p>
+            )}
             <Button onClick={() => removeSource(source.id)}>remove</Button>
           </li>
         ))}

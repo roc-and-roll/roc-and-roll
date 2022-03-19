@@ -22,24 +22,37 @@ export function CombatCardHUD() {
       )
     : [];
   const monster = matchingMonsters[0];
+  const legendaryGroups = monster?.legendaryGroup
+    ? compendiumSources.flatMap((source) => {
+        return source.data.legendaryGroups
+          ? source.data.legendaryGroups.filter(
+              (group) => group.name === monster.legendaryGroup!.name
+            )
+          : [];
+      })
+    : [];
+  const legendaryGroup = legendaryGroups[0];
 
   const showAction = (
     action: {
-      name: string;
+      name?: string;
       entries: CompendiumTextEntry[];
     },
     key: React.Key
   ) => {
     return (
       <div key={key}>
-        <p className="font-bold">{action.name}</p>
+        {action.name && <p className="font-bold">{action.name}</p>}
         {action.entries.map((entry, index) => {
           return (
-            <TextEntry
-              key={"textEntry" + index.toString()}
-              entry={entry}
-              rollName={`${monster!.name} ${action.name} `}
-            />
+            <div className="flex" key={index}>
+              {!action.name && <p className="pr-1">•</p>}
+              <TextEntry
+                key={"textEntry" + index.toString()}
+                entry={entry}
+                rollName={`${monster!.name} ${action.name ?? ""} `}
+              />
+            </div>
           );
         })}
       </div>
@@ -81,6 +94,23 @@ export function CombatCardHUD() {
           {monster.action?.map((action, index) => {
             return showAction(action, index);
           })}
+        </>
+      )}
+
+      {legendaryGroup?.lairActions && (
+        <>
+          <h2 className="text-xl">Lair Actions</h2>
+          <p>
+            {legendaryGroup.lairActions.map((action, index) =>
+              typeof action === "string" ? (
+                <p key={index}>{action}</p>
+              ) : action.type === "entries" ? (
+                showAction(action, index)
+              ) : (
+                showAction({ entries: action.items }, index)
+              )
+            )}
+          </p>
         </>
       )}
 

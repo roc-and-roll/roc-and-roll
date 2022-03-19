@@ -6,15 +6,18 @@ import { isRRID } from "../validation";
 import { MakeRRID } from "../state";
 import { CompendiumSpell, isSpell } from "./spell";
 import { CompendiumMonster, isMonster } from "./monster";
+import { CompendiumLegendaryGroup, isLegendaryGroup } from "./legendaryGroups";
 
 export const isCompendiumData = z.strictObject({
-  spell: z.array(isSpell),
+  spell: z.optional(z.array(isSpell)),
   monster: z.optional(z.array(isMonster)),
+  legendaryGroups: z.optional(z.array(isLegendaryGroup)),
 });
 
 export interface CompendiumData {
-  spell: CompendiumSpell[];
+  spell?: CompendiumSpell[];
   monster?: CompendiumMonster[];
+  legendaryGroups?: CompendiumLegendaryGroup[];
 }
 
 // Make sure that the schema really matches the CompendiumData type.
