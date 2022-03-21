@@ -5,6 +5,7 @@ import { spawn } from "child_process";
 import fileType, { MimeType } from "file-type";
 import sharp from "sharp";
 import { clamp } from "../shared/util";
+import { IMAGE_TILE_SIZE } from "../shared/constants";
 
 export async function getMimeType(path: string) {
   return (await fileType.fromFile(path))?.mime;
@@ -95,7 +96,7 @@ export async function tileImage(
   const outputPath = path.join(uploadedFilesCacheDir, fileName);
   await sharp(inputPath)
     .toFormat("png")
-    .tile({ depth: "one" })
+    .tile({ size: IMAGE_TILE_SIZE, depth: "one" })
     .toFile(outputPath + ".dz");
   await fs.promises.rm(outputPath + ".dzi");
   await fs.promises.rename(outputPath + "_files", outputPath + "-tiles");
