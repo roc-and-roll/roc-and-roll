@@ -51,7 +51,8 @@ export const MapGrid = React.memo<{
 
     graphics.clear();
     const strokeColor = colorValue(color);
-    graphics.lineStyle(strokeWidth / 2, strokeColor.color, strokeColor.alpha);
+    //TODO: allow picking a color with transparency from color input
+    graphics.lineStyle(strokeWidth / 2, strokeColor.color, 0.6);
     graphics.drawRect(
       0,
       0,
