@@ -179,7 +179,7 @@ export async function setupWebServer(
           console.log("Finished generating image tiles");
         });
 
-        res.sendFile(path.join(tilesDirectory, "0", `${x}_${y}.jpeg`));
+        res.sendFile(path.join(tilesDirectory, "0", `${x}_${y}.png`));
       } catch (err) {
         next(err);
       }
