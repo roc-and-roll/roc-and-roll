@@ -27,6 +27,23 @@ export function Settings() {
         />
       </p>
       <label>
+        Notification Sound{" "}
+        <Select<RRSettings["notificationSound"]>
+          value={settings.notificationSound}
+          options={[
+            { label: "all", value: "all" },
+            { label: "messages only", value: "messages-only" },
+            { label: "none", value: "none" },
+          ]}
+          onChange={(value) =>
+            setSettings((old) => ({
+              ...old,
+              notificationSound: value,
+            }))
+          }
+        />
+      </label>
+      <label>
         Mute{" "}
         <input
           type="checkbox"

@@ -19,9 +19,13 @@ import { useRRSimpleSound } from "../sound";
 import { useServerState } from "../state";
 //cspell: disable-next-line
 import tada from "../../third-party/freesound.org/60443__jobro__tada1.mp3";
+//cspell: disable-next-line
+import newMessageSound from "../../third-party/freesound.org/545373__stwime__up3.mp3";
 import { achievements } from "./achievementList";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { useRRSettings } from "../settings";
+import { useMyProps } from "../myself";
 
 const DiceDisplay = React.lazy(
   () => import(/* webpackPrefetch: true */ "./diceRoller/DiceDisplay")
@@ -102,6 +106,8 @@ function Notification({
   );
   const [timerStartTime, setTimerStartTime] = useState(() => new Date());
   const [timeLeft, setTimeLeft] = useState(NOTIFICATION_TIMEOUT);
+  const [settings] = useRRSettings();
+  const myself = useMyProps("id");
 
   useEffect(() => {
     expiredRef.current = onExpired;
@@ -191,10 +197,30 @@ function Notification({
     </>
   );
 
-  const [play] = useRRSimpleSound(tada);
+  const [playAchievement] = useRRSimpleSound(tada);
+  const [playNewMessage] = useRRSimpleSound(newMessageSound);
   useEffect(() => {
-    if (notification.type === "achievement") play();
-  }, [notification.type, play]);
+    if (notification.type === "achievement") playAchievement();
+    else if (
+      notification.type === "message" &&
+      settings.notificationSound !== "none" &&
+      notification.playerId !== myself.id
+    )
+      playNewMessage();
+    else if (
+      notification.type === "diceRoll" &&
+      settings.notificationSound === "all" &&
+      notification.playerId !== myself.id
+    )
+      playNewMessage();
+  }, [
+    myself.id,
+    notification.playerId,
+    notification.type,
+    playAchievement,
+    playNewMessage,
+    settings.notificationSound,
+  ]);
 
   const viewAchievement = (notification: RRLogEntryAchievement) => {
     const achievement = achievements.find(

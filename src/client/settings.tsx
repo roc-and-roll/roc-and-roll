@@ -10,6 +10,7 @@ export type RRSettings = ReadonlyDeep<{
   version: number;
   volume: number;
   mute: boolean;
+  notificationSound: "all" | "messages-only" | "none";
   renderMode: "fast" | "mostly-fancy" | "fancy";
   enableExperimental25D: boolean;
   collapseDiceTemplates: boolean;
@@ -21,6 +22,7 @@ const initialSettings: RRSettings = {
   version: CURRENT_SETTINGS_VERSION,
   volume: 1,
   mute: false,
+  notificationSound: "messages-only",
   renderMode: "fancy",
   enableExperimental25D: false,
   collapseDiceTemplates: false,
