@@ -262,6 +262,8 @@ function MapTokenInner({
       )}
     </Container>
   );
+  const recentlyRolled = true;
+  const lastRolled = 14;
 
   const [startAnimation, stopAnimation] = useRafLoop();
   useEffect(() => {
@@ -311,6 +313,41 @@ function MapTokenInner({
           )),
           auraArea
         )}
+      {recentlyRolled && (
+        <>
+          <RoughRectangle
+            x={x + tokenSize + 4}
+            y={y + tokenSize / 2 - 18}
+            w={50 + 6}
+            h={30 + 6}
+            stroke="none"
+            fill="white"
+            fillStyle="solid"
+            roughness={0}
+          />
+          <RoughRectangle
+            x={x + tokenSize + 7}
+            y={y + tokenSize / 2 - 15}
+            w={50}
+            h={30}
+            stroke="none"
+            fill="black"
+            fillStyle="solid"
+            roughness={0}
+          />
+          <RoughText
+            x={x + tokenSize + 13}
+            y={y + tokenSize / 2 - 8 - 14}
+            style={{
+              fontWeight: "bolder",
+              fontSize: 30,
+              fill: "white",
+              align: "center", //TODO center text
+            }}
+            text={lastRolled.toString()}
+          />
+        </>
+      )}
       {healthBarArea &&
         createPixiPortal(
           <>
