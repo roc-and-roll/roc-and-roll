@@ -111,6 +111,7 @@ async function makeNewCharacter(
     localToMap: null,
     isTemplate,
     diceTemplateCategories: [],
+    notes: "",
   });
 
   return {

@@ -168,6 +168,7 @@ export const Monster = React.memo(function Monster({
       localToMap: null,
       isTemplate: true,
       diceTemplateCategories: [],
+      notes: "",
     });
 
     dispatch([assetImageAddAction, templateAddAction]);

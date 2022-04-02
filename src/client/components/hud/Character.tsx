@@ -12,6 +12,7 @@ import { CharacterPreview } from "../characters/CharacterPreview";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBed,
+  faClipboard,
   faCog,
   faDragon,
   faMagic,
@@ -36,6 +37,7 @@ import { useDrag } from "react-dnd";
 import clsx from "clsx";
 import { Button } from "../ui/Button";
 import { CombatCardHUD } from "./CombatCard";
+import { TextareaInput } from "../ui/TextInput";
 
 const characterProps = [
   "id",
@@ -50,6 +52,7 @@ const characterProps = [
   "tokenBorderColor",
   "spellSaveDC",
   "limitedUseSkills",
+  "notes",
 ] as const;
 export type RRCharacterProps = Pick<RRCharacter, typeof characterProps[number]>;
 
@@ -61,6 +64,7 @@ export function CharacterHUD() {
   const healthWidth = 250;
 
   const [skillsVisible, setSkillsVisible] = useState(false);
+  const [notesVisible, setNotesVisible] = useState(false);
 
   return (
     <div className="absolute top-0 right-0 pointer-events-none">
@@ -73,13 +77,26 @@ export function CharacterHUD() {
               width={healthWidth}
             />
             <ConditionsBar character={character} />
-            <div className="pointer-events-auto my-2 flex items-end flex-col">
-              <FontAwesomeIcon
-                title="Your skills"
-                icon={faScroll}
-                size="1x"
-                onClick={() => setSkillsVisible(!skillsVisible)}
-              />
+            <div>
+              <div className="flex justify-end">
+                <div className="pointer-events-auto m-1 flex items-end flex-col">
+                  <FontAwesomeIcon
+                    title="Your skills"
+                    icon={faScroll}
+                    size="1x"
+                    onClick={() => setSkillsVisible(!skillsVisible)}
+                  />
+                </div>
+                <div className="pointer-events-auto m-1 flex items-end flex-col">
+                  <FontAwesomeIcon
+                    title="Notes"
+                    icon={faClipboard}
+                    size="1x"
+                    onClick={() => setNotesVisible(!notesVisible)}
+                  />
+                </div>
+              </div>
+              {notesVisible && <Notes character={character} />}
               {skillsVisible && <LimitedUse character={character} />}
             </div>
             <CombatCardHUD />
@@ -92,6 +109,28 @@ export function CharacterHUD() {
           {<HeroPoint />}
         </div>
       </div>
+    </div>
+  );
+}
+
+function Notes({ character }: { character: RRCharacterProps }) {
+  const dispatch = useServerDispatch();
+
+  return (
+    <div className="min-w-full mt-2 bg-black/25 p-1 rounded pointer-events-auto">
+      <TextareaInput
+        placeholder="Character Notes"
+        value={character.notes}
+        onChange={(notes) =>
+          dispatch({
+            actions: [
+              characterUpdate({ id: character.id, changes: { notes } }),
+            ],
+            optimisticKey: "notes",
+            syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+          })
+        }
+      />
     </div>
   );
 }

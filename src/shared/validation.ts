@@ -398,6 +398,7 @@ export const isSyncedState = z.strictObject({
       visibility: z.enum(["gmOnly", "everyone"] as const),
       localToMap: z.nullable(isRRID<RRMapID>()),
       diceTemplateCategories: z.array(isDiceTemplateCategory),
+      notes: z.string(),
     })
   ),
   maps: isEntityCollection(
