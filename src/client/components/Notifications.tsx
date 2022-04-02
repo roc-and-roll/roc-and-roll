@@ -26,6 +26,7 @@ import { Flipper, Flipped } from "react-flip-toolkit";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { useRRSettings } from "../settings";
 import { useMyProps } from "../myself";
+import { getLogRollName } from "../util";
 
 const DiceDisplay = React.lazy(
   () => import(/* webpackPrefetch: true */ "./diceRoller/DiceDisplay")
@@ -107,6 +108,8 @@ function Notification({
   const [timerStartTime, setTimerStartTime] = useState(() => new Date());
   const [timeLeft, setTimeLeft] = useState(NOTIFICATION_TIMEOUT);
   const [settings] = useRRSettings();
+  const [{ logNames }] = useRRSettings();
+  const characters = useServerState((s) => s.characters);
   const myself = useMyProps("id");
 
   useEffect(() => {
@@ -145,7 +148,12 @@ function Notification({
   const viewDiceRoll = (notification: RRLogEntryDiceRoll) => (
     <>
       <span className={PLAYER_NAME_CLASS} style={{ color: player!.color }}>
-        {player!.name}
+        {getLogRollName(
+          player!.name,
+          characters,
+          logNames,
+          notification.payload.characterIds
+        )}
       </span>
       {" rolled "}
       {notification.payload.rollName && (

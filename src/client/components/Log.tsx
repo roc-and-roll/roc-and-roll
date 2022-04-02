@@ -1,13 +1,13 @@
 import React from "react";
 import { logEntryMessageAdd } from "../../shared/actions";
-import { entries, RRCharacterID, RRLogEntry } from "../../shared/state";
+import { entries, RRLogEntry } from "../../shared/state";
 import { assertNever } from "../../shared/util";
 import { useMyProps } from "../myself";
 import { usePrompt } from "../dialog-boxes";
 import { diceResultString, DiceResultWithTypes } from "../dice-rolling/roll";
 import { useServerDispatch, useServerState } from "../state";
 import { useScrollToBottom } from "../useScrollToBottom";
-import { formatTimestamp, linkify, nl2br } from "../util";
+import { formatTimestamp, getLogRollName, linkify, nl2br } from "../util";
 import { achievements } from "./achievementList";
 import { Button } from "./ui/Button";
 import { useRRSettings } from "../settings";
@@ -21,27 +21,21 @@ const LogEntry = React.memo<{ logEntry: RRLogEntry }>(function LogEntry({
     ) ?? "Unknown Player";
 
   const [{ logNames }] = useRRSettings();
-  const characters = useServerState((s) => s.characters).entities;
+  const characters = useServerState((s) => s.characters);
 
   let content;
-
-  function getLogRollName(characterIds: RRCharacterID[] | null) {
-    if (!characterIds) return playerName;
-    const characterNames = characterIds
-      .map((id) => (characters[id] ? characters[id]!.name : ""))
-      .join(", ");
-    return logNames === "playerName"
-      ? playerName
-      : logNames === "characterName"
-      ? characterNames
-      : characterNames + " (" + playerName + ")";
-  }
 
   switch (logEntry.type) {
     case "diceRoll":
       content = (
         <>
-          {getLogRollName(logEntry.payload.characterIds)} rolled
+          {getLogRollName(
+            playerName,
+            characters,
+            logNames,
+            logEntry.payload.characterIds
+          )}{" "}
+          rolled
           {logEntry.payload.rollName && ` ${logEntry.payload.rollName}`}:{" "}
           {diceResultString(logEntry.payload.diceRollTree)} ={" "}
           <u>

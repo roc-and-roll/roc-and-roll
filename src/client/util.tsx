@@ -5,6 +5,7 @@ import tinycolor from "tinycolor2";
 import { applyToPoint, inverse, Matrix } from "transformation-matrix";
 import { makePoint } from "../shared/point";
 import {
+  EntityCollection,
   proficiencyValues,
   RRCharacter,
   RRCharacterID,
@@ -307,4 +308,22 @@ export function getProficiencyValueString(
     : proficiency === "doublyProficient"
     ? "Expertise"
     : signedModifierString(proficiency);
+}
+
+export function getLogRollName(
+  playerName: string,
+  characters: EntityCollection<RRCharacter>,
+  logNames: string,
+  characterIds: RRCharacterID[] | null
+) {
+  if (!characterIds) return playerName;
+  const characterEntities = characters.entities;
+  const characterNames = characterIds
+    .map((id) => (characterEntities[id] ? characterEntities[id]!.name : ""))
+    .join(", ");
+  return logNames === "playerName"
+    ? playerName
+    : logNames === "characterName"
+    ? characterNames
+    : characterNames + " (" + playerName + ")";
 }
