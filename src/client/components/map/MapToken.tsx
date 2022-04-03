@@ -65,6 +65,8 @@ import { PixiFontawesomeIcon } from "./pixi/PixiFontawesomeIcon";
 import { PixiPopover } from "./pixi/PixiPopover";
 import { TokenShadow } from "./TokenShadow";
 import { PixiBlurHashSprite } from "../blurHash/PixiBlurHashSprite";
+import { randomInt } from "crypto";
+import { randInt } from "three/src/math/MathUtils";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
@@ -263,7 +265,7 @@ function MapTokenInner({
     </Container>
   );
   const recentlyRolled = true;
-  const lastRolled = 14;
+  const lastRolled = randInt(-5, 25);
 
   const [startAnimation, stopAnimation] = useRafLoop();
   useEffect(() => {
@@ -314,10 +316,10 @@ function MapTokenInner({
           auraArea
         )}
       {recentlyRolled && (
-        <>
+        <Container x={x + tokenSize} y={y + tokenSize / 2}>
           <RoughRectangle
-            x={x + tokenSize + 4}
-            y={y + tokenSize / 2 - 18}
+            x={4}
+            y={-18}
             w={50 + 6}
             h={30 + 6}
             stroke="none"
@@ -326,27 +328,27 @@ function MapTokenInner({
             roughness={0}
           />
           <RoughRectangle
-            x={x + tokenSize + 7}
-            y={y + tokenSize / 2 - 15}
+            x={7}
+            y={-15}
             w={50}
             h={30}
             stroke="none"
             fill="black"
             fillStyle="solid"
             roughness={0}
-          />
+          ></RoughRectangle>
           <RoughText
-            x={x + tokenSize + 13}
-            y={y + tokenSize / 2 - 8 - 14}
+            x={32}
+            y={0}
             style={{
               fontWeight: "bolder",
               fontSize: 30,
               fill: "white",
-              align: "center", //TODO center text
             }}
+            anchor={{ x: 0.5, y: 0.5 }}
             text={lastRolled.toString()}
           />
-        </>
+        </Container>
       )}
       {healthBarArea &&
         createPixiPortal(
