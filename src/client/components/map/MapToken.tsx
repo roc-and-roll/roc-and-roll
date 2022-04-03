@@ -20,6 +20,9 @@ import {
   RRMapID,
   RRColor,
   conditionTooltip,
+  entries,
+  RRLogEntry,
+  RRLogEntryDiceRoll,
 } from "../../../shared/state";
 import { tokenImageUrl } from "../../files";
 import { canControlToken, canViewTokenOnMap } from "../../permissions";
@@ -50,7 +53,7 @@ import {
   pointSubtract,
 } from "../../../shared/point";
 import { EmanationArea } from "./Areas";
-import { useServerDispatch } from "../../state";
+import { useServerDispatch, useServerState } from "../../state";
 import { useLatest } from "../../useLatest";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
@@ -65,11 +68,11 @@ import { PixiFontawesomeIcon } from "./pixi/PixiFontawesomeIcon";
 import { PixiPopover } from "./pixi/PixiPopover";
 import { TokenShadow } from "./TokenShadow";
 import { PixiBlurHashSprite } from "../blurHash/PixiBlurHashSprite";
-import { randomInt } from "crypto";
-import { randInt } from "three/src/math/MathUtils";
+import { diceResult } from "../../dice-rolling/roll";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
+const ENTRY_DURATION = 90 * 1000;
 
 export const MapToken = React.memo<{
   mapId: RRMapID;
@@ -264,8 +267,42 @@ function MapTokenInner({
       )}
     </Container>
   );
-  const recentlyRolled = true;
-  const lastRolled = randInt(-5, 25);
+  const notifications = useServerState((state) => state.logEntries);
+  const [lastRolled, setLastRolled] = useState<RRLogEntryDiceRoll | null>();
+  useEffect(() => {
+    const list = entries(notifications);
+
+    function checkEntrySuitable(
+      entry: RRLogEntry
+    ): entry is RRLogEntryDiceRoll {
+      return (
+        entry.type === "diceRoll" &&
+        entry.payload.characterIds !== null &&
+        entry.payload.characterIds.includes(character.id) &&
+        Date.now() - entry.timestamp < ENTRY_DURATION
+      );
+    }
+
+    let i = list.length - 1;
+    let entry: RRLogEntry | null = list[i] ?? null;
+    while (entry && !checkEntrySuitable(entry)) {
+      if (Date.now() - entry.timestamp > ENTRY_DURATION) {
+        entry = null;
+        break;
+      }
+      entry = list[i--] ?? null;
+    }
+    setLastRolled(entry);
+  }, [character.id, notifications]);
+
+  useEffect(() => {
+    if (lastRolled?.id) {
+      const id = setTimeout(function () {
+        setLastRolled(null);
+      }, ENTRY_DURATION);
+      return () => clearTimeout(id);
+    }
+  }, [lastRolled?.id]);
 
   const [startAnimation, stopAnimation] = useRafLoop();
   useEffect(() => {
@@ -315,7 +352,7 @@ function MapTokenInner({
           )),
           auraArea
         )}
-      {recentlyRolled && (
+      {lastRolled && (
         <Container x={x + tokenSize} y={y + tokenSize / 2}>
           <RoughRectangle
             x={4}
@@ -346,7 +383,7 @@ function MapTokenInner({
               fill: "white",
             }}
             anchor={{ x: 0.5, y: 0.5 }}
-            text={lastRolled.toString()}
+            text={diceResult(lastRolled.payload.diceRollTree).toString()}
           />
         </Container>
       )}

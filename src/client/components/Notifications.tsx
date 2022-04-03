@@ -39,13 +39,13 @@ export const NotificationAreaPortal = React.createContext<
 >([null, () => {}]);
 
 export function Notifications() {
-  const notifications = entries(useServerState((state) => state.logEntries));
+  const notifications = useServerState((state) => state.logEntries);
   const [lastShownID, setLastShownID] = useState<RRLogEntryID>();
   const [newNotifications, setNewNotifications] = useState<RRLogEntry[]>([]);
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
-    const list = notifications;
+    const list = entries(notifications);
     if (lastShownID === undefined && list.length > 1) {
       setLastShownID(list[list.length - 1]?.id);
       return;
