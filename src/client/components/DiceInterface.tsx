@@ -27,6 +27,40 @@ export function DiceInterface() {
   const alert = useAlert();
   const prompt = usePrompt();
 
+  const [focusIndex, setFocusIndex] = useState(0);
+  const secondaryDiceTypes = [4, 6, 8, 10, 12];
+  const diceTypeRefs = [
+    React.useRef<HTMLButtonElement>(null),
+    React.useRef<HTMLButtonElement>(null),
+    React.useRef<HTMLButtonElement>(null),
+    React.useRef<HTMLButtonElement>(null),
+    React.useRef<HTMLButtonElement>(null),
+  ];
+  const d20 = React.useRef<HTMLButtonElement>(null);
+  diceTypeRefs.push(d20);
+
+  // todo: hook use, um
+  //       bei setFocus directly den Focus auf dem Element zu set
+
+  // TODO: check for key pressed
+  // TODO: when opening dice roller, set focus directly to a button?
+  // TODO: add shortcut to switch focus to dice roller window?
+  //       (and open it in the first place)
+
+  function handleKeyDown(e: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    e.preventDefault();
+    console.log(
+      "diceTypeRefs[focusIndex]?.current",
+      diceTypeRefs[focusIndex]?.current
+    );
+    console.log("focusIndex", focusIndex);
+    setFocusIndex((focusIndex + 1) % secondaryDiceTypes.length);
+    if (diceTypeRefs[focusIndex]?.current) {
+      diceTypeRefs[focusIndex]!.current!.focus();
+    }
+  }
+
   const doRoll = async (addTemplate: boolean) => {
     const bonusesString =
       bonuses === null
@@ -149,7 +183,7 @@ export function DiceInterface() {
 
   return (
     <>
-      <div id="pane">
+      <div id="pane" onKeyDown={handleKeyDown}>
         <div>
           <table className="w-full h-full">
             <tbody>
@@ -160,11 +194,12 @@ export function DiceInterface() {
               </tr>
               <tr>
                 <td>
-                  {[4, 6, 8, 10, 12].map((dice) => (
+                  {secondaryDiceTypes.map((dice) => (
                     <Button
                       key={dice}
                       onClick={() => addDiceType(`d${dice}`)}
                       className="w-full"
+                      ref={diceTypeRefs[secondaryDiceTypes.indexOf(dice)]}
                     >
                       d{dice}
                     </Button>
@@ -173,6 +208,7 @@ export function DiceInterface() {
                     <Button
                       className="w-2/5"
                       onClick={() => addDiceType("d20")}
+                      ref={diceTypeRefs[secondaryDiceTypes.length]}
                     >
                       d20
                     </Button>
