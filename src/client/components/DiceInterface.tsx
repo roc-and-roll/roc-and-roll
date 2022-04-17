@@ -27,17 +27,51 @@ export function DiceInterface() {
   const alert = useAlert();
   const prompt = usePrompt();
 
-  const [focusIndex, setFocusIndex] = useState(0);
+  const [focusIndex, setFocusIndex] = useState({ col: 0, row: 0 });
   const secondaryDiceTypes = [4, 6, 8, 10, 12];
+
   const d4Ref = React.useRef<HTMLButtonElement>(null);
   const d6Ref = React.useRef<HTMLButtonElement>(null);
   const d8Ref = React.useRef<HTMLButtonElement>(null);
   const d10Ref = React.useRef<HTMLButtonElement>(null);
   const d12Ref = React.useRef<HTMLButtonElement>(null);
   const d20Ref = React.useRef<HTMLButtonElement>(null);
+
+  const modTypesLeft = [-2, -1, 1, 2, 3, 4];
+  const modTypesRight = [5, 6, 7, 8, 9, 10];
+  const modTypes = [...modTypesLeft, ...modTypesRight];
+
+  const modM2Ref = React.useRef<HTMLButtonElement>(null);
+  const modM1Ref = React.useRef<HTMLButtonElement>(null);
+  const modP1Ref = React.useRef<HTMLButtonElement>(null);
+  const modP2Ref = React.useRef<HTMLButtonElement>(null);
+  const modP3Ref = React.useRef<HTMLButtonElement>(null);
+  const modP4Ref = React.useRef<HTMLButtonElement>(null);
+  const modP5Ref = React.useRef<HTMLButtonElement>(null);
+  const modP6Ref = React.useRef<HTMLButtonElement>(null);
+  const modP7Ref = React.useRef<HTMLButtonElement>(null);
+  const modP8Ref = React.useRef<HTMLButtonElement>(null);
+  const modP9Ref = React.useRef<HTMLButtonElement>(null);
+  const modP10Ref = React.useRef<HTMLButtonElement>(null);
+
   const diceTypeRefs = useMemo(
     () => [d4Ref, d6Ref, d8Ref, d10Ref, d12Ref, d20Ref],
     []
+  );
+
+  const modRefsLeft = useMemo(
+    () => [modM2Ref, modM1Ref, modP1Ref, modP2Ref, modP3Ref, modP4Ref],
+    []
+  );
+  const modRefsRight = useMemo(
+    () => [modP5Ref, modP6Ref, modP7Ref, modP8Ref, modP9Ref, modP10Ref],
+    []
+  );
+  const modRefs = [...modRefsLeft, ...modRefsRight];
+
+  const allRefs = useMemo(
+    () => [diceTypeRefs, modRefsLeft, modRefsRight],
+    [diceTypeRefs, modRefsLeft, modRefsRight]
   );
 
   // TODO: when opening dice roller, set focus directly to a button?
@@ -62,23 +96,24 @@ export function DiceInterface() {
     down: d6
   } ...
 
-  d20, a, d: Fallunterscheidung bei "moveLeft" and "moveRight" functions
+  d20, a, d: make distinction bei "moveLeft" and "moveRight" functions
   */
 
   useEffect(() => {
-    if (diceTypeRefs[focusIndex]?.current) {
-      diceTypeRefs[focusIndex]!.current!.focus();
+    console.log("row", focusIndex.row);
+    const currentRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
+    console.log("btn", currentRef?.innerHTML);
+    if (currentRef) {
+      currentRef.focus();
     }
-  }, [diceTypeRefs, focusIndex]);
+  }, [allRefs, focusIndex]);
 
   const moveFocusUp = () => {
-    const upperLimit = secondaryDiceTypes.length + 1;
-    const newFocusIndex = (focusIndex - 1 + upperLimit) % upperLimit;
-    console.log("newFocusIndex", newFocusIndex);
-    setFocusIndex(newFocusIndex);
-    // if (diceTypeRefs[focusIndex]?.current) {
-    //   diceTypeRefs[focusIndex]!.current!.focus();
-    // }
+    const upperLimit = allRefs[focusIndex.col]!.length;
+    const newRow = (focusIndex.row - 1 + upperLimit) % upperLimit;
+    setFocusIndex((prevState) => {
+      return { ...prevState, row: newRow };
+    });
   };
 
   // const moveFocusLeft = () => {
@@ -91,10 +126,19 @@ export function DiceInterface() {
   // };
 
   const moveFocusDown = () => {
-    const upperLimit = secondaryDiceTypes.length + 1;
-    const newFocusIndex = (focusIndex + 1) % upperLimit;
-    console.log("newFocusIndex", newFocusIndex);
-    setFocusIndex(newFocusIndex);
+    const upperLimit = allRefs[focusIndex.col]!.length;
+    const newRow = (focusIndex.row + 1) % upperLimit;
+    setFocusIndex((prevState) => {
+      return { ...prevState, row: newRow };
+    });
+  };
+
+  const moveFocusRight = () => {
+    const upperLimit = allRefs.length;
+    const newCol = (focusIndex.col + 1) % upperLimit;
+    setFocusIndex((prevState) => {
+      return { ...prevState, col: newCol };
+    });
   };
 
   // const moveFocusRight = () => {
@@ -121,7 +165,7 @@ export function DiceInterface() {
         moveFocusDown();
         break;
       case "KeyD":
-        moveFocusUp();
+        moveFocusRight();
         break;
       default:
         break;
@@ -275,7 +319,7 @@ export function DiceInterface() {
                     <Button
                       className="w-2/5"
                       onClick={() => addDiceType("d20")}
-                      ref={d20Ref}
+                      ref={diceTypeRefs[diceTypeRefs.length - 1]}
                     >
                       d20
                     </Button>
@@ -296,11 +340,12 @@ export function DiceInterface() {
                   </div>
                 </td>
                 <td className="flex flex-wrap flex-col h-[182px]">
-                  {[-1, -2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((bonus) => (
+                  {modTypes.map((bonus) => (
                     <Button
                       className="h-1/6 w-1/2 flex-1"
                       key={bonus}
                       onClick={() => addBonus(bonus)}
+                      ref={modRefs[modTypes.indexOf(bonus)]}
                     >
                       {bonus > 0 ? "+" + bonus.toString() : bonus}
                     </Button>
