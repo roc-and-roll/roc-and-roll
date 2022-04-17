@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "./ui/Button";
 import {
   logEntryDiceRollAdd,
@@ -29,35 +29,102 @@ export function DiceInterface() {
 
   const [focusIndex, setFocusIndex] = useState(0);
   const secondaryDiceTypes = [4, 6, 8, 10, 12];
-  const diceTypeRefs = [
-    React.useRef<HTMLButtonElement>(null),
-    React.useRef<HTMLButtonElement>(null),
-    React.useRef<HTMLButtonElement>(null),
-    React.useRef<HTMLButtonElement>(null),
-    React.useRef<HTMLButtonElement>(null),
-  ];
-  const d20 = React.useRef<HTMLButtonElement>(null);
-  diceTypeRefs.push(d20);
+  const d4Ref = React.useRef<HTMLButtonElement>(null);
+  const d6Ref = React.useRef<HTMLButtonElement>(null);
+  const d8Ref = React.useRef<HTMLButtonElement>(null);
+  const d10Ref = React.useRef<HTMLButtonElement>(null);
+  const d12Ref = React.useRef<HTMLButtonElement>(null);
+  const d20Ref = React.useRef<HTMLButtonElement>(null);
+  const diceTypeRefs = useMemo(
+    () => [d4Ref, d6Ref, d8Ref, d10Ref, d12Ref, d20Ref],
+    []
+  );
 
-  // todo: hook use, um
-  //       bei setFocus directly den Focus auf dem Element zu set
-
-  // TODO: check for key pressed
   // TODO: when opening dice roller, set focus directly to a button?
   // TODO: add shortcut to switch focus to dice roller window?
   //       (and open it in the first place)
+  // TODO: useEffect to set focus on d4
+  // TODO: Arrays for each col of buttons and switch columns on <- + ->
+  /* 
+  d4     |-1|+5|temp
+  d6     |-2|+5|roll1
+  d8     |+1|+7|roll2
+  d10    |+2|+8|roll3
+  d12    |+3|+9|roll4
+  d20|a|d|+4|10|clear
+  */
+
+  /* 
+  d4: {
+    left: temp
+    right: -1
+    up: d20
+    down: d6
+  } ...
+
+  d20, a, d: Fallunterscheidung bei "moveLeft" and "moveRight" functions
+  */
+
+  useEffect(() => {
+    if (diceTypeRefs[focusIndex]?.current) {
+      diceTypeRefs[focusIndex]!.current!.focus();
+    }
+  }, [diceTypeRefs, focusIndex]);
+
+  const moveFocusUp = () => {
+    const upperLimit = secondaryDiceTypes.length + 1;
+    const newFocusIndex = (focusIndex - 1 + upperLimit) % upperLimit;
+    console.log("newFocusIndex", newFocusIndex);
+    setFocusIndex(newFocusIndex);
+    // if (diceTypeRefs[focusIndex]?.current) {
+    //   diceTypeRefs[focusIndex]!.current!.focus();
+    // }
+  };
+
+  // const moveFocusLeft = () => {
+  //   const upperLimit = secondaryDiceTypes.length;
+  //   const newFocusIndex = (focusIndex - 1 + upperLimit) % upperLimit;
+  //   setFocusIndex(newFocusIndex);
+  //   if (diceTypeRefs[focusIndex]?.current) {
+  //     diceTypeRefs[focusIndex]!.current!.focus();
+  //   }
+  // };
+
+  const moveFocusDown = () => {
+    const upperLimit = secondaryDiceTypes.length + 1;
+    const newFocusIndex = (focusIndex + 1) % upperLimit;
+    console.log("newFocusIndex", newFocusIndex);
+    setFocusIndex(newFocusIndex);
+  };
+
+  // const moveFocusRight = () => {
+  //   const upperLimit = secondaryDiceTypes.length;
+  //   const newFocusIndex = (focusIndex - 1 + upperLimit) % upperLimit;
+  //   setFocusIndex(newFocusIndex);
+  //   if (diceTypeRefs[focusIndex]?.current) {
+  //     diceTypeRefs[focusIndex]!.current!.focus();
+  //   }
+  // };
 
   function handleKeyDown(e: any) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     e.preventDefault();
-    console.log(
-      "diceTypeRefs[focusIndex]?.current",
-      diceTypeRefs[focusIndex]?.current
-    );
-    console.log("focusIndex", focusIndex);
-    setFocusIndex((focusIndex + 1) % secondaryDiceTypes.length);
-    if (diceTypeRefs[focusIndex]?.current) {
-      diceTypeRefs[focusIndex]!.current!.focus();
+
+    switch (e.code) {
+      case "KeyW":
+        moveFocusUp();
+        break;
+      case "KeyA":
+        moveFocusUp();
+        break;
+      case "KeyS":
+        moveFocusDown();
+        break;
+      case "KeyD":
+        moveFocusUp();
+        break;
+      default:
+        break;
     }
   }
 
@@ -208,7 +275,7 @@ export function DiceInterface() {
                     <Button
                       className="w-2/5"
                       onClick={() => addDiceType("d20")}
-                      ref={diceTypeRefs[secondaryDiceTypes.length]}
+                      ref={d20Ref}
                     >
                       d20
                     </Button>
