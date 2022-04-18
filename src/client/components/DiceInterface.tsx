@@ -28,19 +28,22 @@ export function DiceInterface() {
   const prompt = usePrompt();
 
   const [focusIndex, setFocusIndex] = useState({ col: 0, row: 0 });
-  const secondaryDiceTypes = [4, 6, 8, 10, 12];
 
+  const secondaryDiceTypes = [4, 6, 8, 10, 12];
   const d4Ref = React.useRef<HTMLButtonElement>(null);
   const d6Ref = React.useRef<HTMLButtonElement>(null);
   const d8Ref = React.useRef<HTMLButtonElement>(null);
   const d10Ref = React.useRef<HTMLButtonElement>(null);
   const d12Ref = React.useRef<HTMLButtonElement>(null);
   const d20Ref = React.useRef<HTMLButtonElement>(null);
+  const diceTypeRefs = useMemo(
+    () => [d4Ref, d6Ref, d8Ref, d10Ref, d12Ref, d20Ref],
+    []
+  );
 
   const modTypesLeft = [-2, -1, 1, 2, 3, 4];
   const modTypesRight = [5, 6, 7, 8, 9, 10];
   const modTypes = [...modTypesLeft, ...modTypesRight];
-
   const modM2Ref = React.useRef<HTMLButtonElement>(null);
   const modM1Ref = React.useRef<HTMLButtonElement>(null);
   const modP1Ref = React.useRef<HTMLButtonElement>(null);
@@ -53,12 +56,6 @@ export function DiceInterface() {
   const modP8Ref = React.useRef<HTMLButtonElement>(null);
   const modP9Ref = React.useRef<HTMLButtonElement>(null);
   const modP10Ref = React.useRef<HTMLButtonElement>(null);
-
-  const diceTypeRefs = useMemo(
-    () => [d4Ref, d6Ref, d8Ref, d10Ref, d12Ref, d20Ref],
-    []
-  );
-
   const modRefsLeft = useMemo(
     () => [modM2Ref, modM1Ref, modP1Ref, modP2Ref, modP3Ref, modP4Ref],
     []
@@ -69,19 +66,27 @@ export function DiceInterface() {
   );
   const modRefs = [...modRefsLeft, ...modRefsRight];
 
-  const allRefs = useMemo(
-    () => [diceTypeRefs, modRefsLeft, modRefsRight],
-    [diceTypeRefs, modRefsLeft, modRefsRight]
+  const tempRef = React.useRef<HTMLButtonElement>(null);
+  const rollRef = React.useRef<HTMLButtonElement>(null);
+  const clearRef = React.useRef<HTMLButtonElement>(null);
+
+  const controlRefs = useMemo(
+    () => [tempRef, rollRef, rollRef, rollRef, rollRef, clearRef],
+    []
   );
 
-  // TODO: when opening dice roller, set focus directly to a button?
+  const allRefs = useMemo(
+    () => [diceTypeRefs, modRefsLeft, modRefsRight, controlRefs],
+    [diceTypeRefs, modRefsLeft, modRefsRight, controlRefs]
+  );
+
   // TODO: add shortcut to switch focus to dice roller window?
-  //       (and open it in the first place)
-  // TODO: useEffect to set focus on d4
-  // TODO: Arrays for each col of buttons and switch columns on <- + ->
+  //       (and open it if it isn't currently open)
+
+  // TODO: previous rolls!
   /* 
   d4     |-1|+5|temp
-  d6     |-2|+5|roll1
+  d6     |-2|+6|roll1
   d8     |+1|+7|roll2
   d10    |+2|+8|roll3
   d12    |+3|+9|roll4
@@ -89,6 +94,7 @@ export function DiceInterface() {
   */
 
   /* 
+  optional button objects:
   d4: {
     left: temp
     right: -1
@@ -96,7 +102,9 @@ export function DiceInterface() {
     down: d6
   } ...
 
-  d20, a, d: make distinction bei "moveLeft" and "moveRight" functions
+  for d20, adv, dis: 
+    make distinction bei "moveLeft" and "moveRight" functions or
+    make own columns (compare roll button)
   */
 
   useEffect(() => {
@@ -118,8 +126,16 @@ export function DiceInterface() {
   }
 
   const moveFocusUp = () => {
+    const startRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
     const upperLimit = allRefs[focusIndex.col]!.length;
-    const newRow = (focusIndex.row - 1 + upperLimit) % upperLimit;
+
+    let currentRef;
+    let newRow = focusIndex.row;
+    do {
+      newRow = (newRow - 1 + upperLimit) % upperLimit;
+      currentRef = allRefs[focusIndex.col]![newRow]!.current;
+    } while (currentRef === startRef);
+
     setFocusIndex((prevState) => {
       return { ...prevState, row: newRow };
     });
@@ -134,8 +150,16 @@ export function DiceInterface() {
   };
 
   const moveFocusDown = () => {
+    const startRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
     const upperLimit = allRefs[focusIndex.col]!.length;
-    const newRow = (focusIndex.row + 1) % upperLimit;
+
+    let currentRef;
+    let newRow = focusIndex.row;
+    do {
+      newRow = (newRow + 1) % upperLimit;
+      currentRef = allRefs[focusIndex.col]![newRow]!.current;
+    } while (currentRef === startRef);
+
     setFocusIndex((prevState) => {
       return { ...prevState, row: newRow };
     });
@@ -149,10 +173,7 @@ export function DiceInterface() {
     });
   };
 
-  function handleKeyDown(e: any) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    e.preventDefault();
-
+  async function handleKeyDown(e: any) {
     console.log("code", e.code);
     switch (e.code) {
       case "KeyW":
@@ -179,9 +200,17 @@ export function DiceInterface() {
       case "ArrowRight":
         moveFocusRight();
         break;
+      case "Enter":
+        // TODO: shift + enter for template?
+        await doRoll(false);
+        break;
+      case "Space":
+        return true;
       default:
         break;
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    e.preventDefault();
   }
 
   const doRoll = async (addTemplate: boolean) => {
@@ -383,14 +412,22 @@ export function DiceInterface() {
                   <Button
                     className="w-full"
                     disabled={!character}
-                    onClick={() => doRoll(true)}
+                    onClick={async () => {
+                      await doRoll(true);
+                      focusIndexFromRef(tempRef);
+                    }}
+                    ref={tempRef}
                     title={character ? undefined : "No character selected"}
                   >
                     <p>Template</p>
                   </Button>
                   <Button
                     className="w-full h-[120px]"
-                    onClick={() => doRoll(false)}
+                    onClick={async () => {
+                      await doRoll(false);
+                      focusIndexFromRef(rollRef);
+                    }}
+                    ref={rollRef}
                     disabled={bonuses === null && diceTypes.length === 0}
                   >
                     <p>ROLL IT</p>
@@ -403,7 +440,14 @@ export function DiceInterface() {
                         : bonuses.toString()}
                     </div>
                   </Button>
-                  <Button className="w-full" onClick={() => clear()}>
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      clear();
+                      focusIndexFromRef(clearRef);
+                    }}
+                    ref={clearRef}
+                  >
                     Clear Input
                   </Button>
                 </td>
