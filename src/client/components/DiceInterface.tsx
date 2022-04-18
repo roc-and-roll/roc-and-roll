@@ -100,13 +100,22 @@ export function DiceInterface() {
   */
 
   useEffect(() => {
-    console.log("row", focusIndex.row);
     const currentRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
-    console.log("btn", currentRef?.innerHTML);
     if (currentRef) {
       currentRef.focus();
     }
   }, [allRefs, focusIndex]);
+
+  function focusIndexFromRef(
+    searchedRef: React.RefObject<HTMLButtonElement> | undefined
+  ) {
+    if (searchedRef === undefined) return;
+    const col = allRefs.findIndex((refs) =>
+      refs.find((ref) => ref === searchedRef)
+    );
+    const row = allRefs[col]!.findIndex((ref) => ref === searchedRef);
+    setFocusIndex({ col: col, row: row });
+  }
 
   const moveFocusUp = () => {
     const upperLimit = allRefs[focusIndex.col]!.length;
@@ -116,14 +125,13 @@ export function DiceInterface() {
     });
   };
 
-  // const moveFocusLeft = () => {
-  //   const upperLimit = secondaryDiceTypes.length;
-  //   const newFocusIndex = (focusIndex - 1 + upperLimit) % upperLimit;
-  //   setFocusIndex(newFocusIndex);
-  //   if (diceTypeRefs[focusIndex]?.current) {
-  //     diceTypeRefs[focusIndex]!.current!.focus();
-  //   }
-  // };
+  const moveFocusLeft = () => {
+    const upperLimit = allRefs.length;
+    const newCol = (focusIndex.col - 1 + upperLimit) % upperLimit;
+    setFocusIndex((prevState) => {
+      return { ...prevState, col: newCol };
+    });
+  };
 
   const moveFocusDown = () => {
     const upperLimit = allRefs[focusIndex.col]!.length;
@@ -141,30 +149,34 @@ export function DiceInterface() {
     });
   };
 
-  // const moveFocusRight = () => {
-  //   const upperLimit = secondaryDiceTypes.length;
-  //   const newFocusIndex = (focusIndex - 1 + upperLimit) % upperLimit;
-  //   setFocusIndex(newFocusIndex);
-  //   if (diceTypeRefs[focusIndex]?.current) {
-  //     diceTypeRefs[focusIndex]!.current!.focus();
-  //   }
-  // };
-
   function handleKeyDown(e: any) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     e.preventDefault();
 
+    console.log("code", e.code);
     switch (e.code) {
       case "KeyW":
         moveFocusUp();
         break;
-      case "KeyA":
+      case "ArrowUp":
         moveFocusUp();
+        break;
+      case "KeyA":
+        moveFocusLeft();
+        break;
+      case "ArrowLeft":
+        moveFocusLeft();
         break;
       case "KeyS":
         moveFocusDown();
         break;
+      case "ArrowDown":
+        moveFocusDown();
+        break;
       case "KeyD":
+        moveFocusRight();
+        break;
+      case "ArrowRight":
         moveFocusRight();
         break;
       default:
@@ -305,21 +317,30 @@ export function DiceInterface() {
               </tr>
               <tr>
                 <td>
-                  {secondaryDiceTypes.map((dice) => (
-                    <Button
-                      key={dice}
-                      onClick={() => addDiceType(`d${dice}`)}
-                      className="w-full"
-                      ref={diceTypeRefs[secondaryDiceTypes.indexOf(dice)]}
-                    >
-                      d{dice}
-                    </Button>
-                  ))}
+                  {secondaryDiceTypes.map((dice) => {
+                    const ref = diceTypeRefs[secondaryDiceTypes.indexOf(dice)];
+                    return (
+                      <Button
+                        key={dice}
+                        onClick={() => {
+                          addDiceType(`d${dice}`);
+                          focusIndexFromRef(ref);
+                        }}
+                        className="w-full"
+                        ref={ref}
+                      >
+                        d{dice}
+                      </Button>
+                    );
+                  })}
                   <div className="flex">
                     <Button
                       className="w-2/5"
-                      onClick={() => addDiceType("d20")}
-                      ref={diceTypeRefs[diceTypeRefs.length - 1]}
+                      onClick={() => {
+                        addDiceType("d20");
+                        focusIndexFromRef(d20Ref);
+                      }}
+                      ref={d20Ref} // diceTypeRefs[diceTypeRefs.length - 1]
                     >
                       d20
                     </Button>
@@ -340,16 +361,22 @@ export function DiceInterface() {
                   </div>
                 </td>
                 <td className="flex flex-wrap flex-col h-[182px]">
-                  {modTypes.map((bonus) => (
-                    <Button
-                      className="h-1/6 w-1/2 flex-1"
-                      key={bonus}
-                      onClick={() => addBonus(bonus)}
-                      ref={modRefs[modTypes.indexOf(bonus)]}
-                    >
-                      {bonus > 0 ? "+" + bonus.toString() : bonus}
-                    </Button>
-                  ))}
+                  {modTypes.map((bonus) => {
+                    const ref = modRefs[modTypes.indexOf(bonus)];
+                    return (
+                      <Button
+                        className="h-1/6 w-1/2 flex-1"
+                        key={bonus}
+                        onClick={() => {
+                          addBonus(bonus);
+                          focusIndexFromRef(ref);
+                        }}
+                        ref={ref}
+                      >
+                        {bonus > 0 ? "+" + bonus.toString() : bonus}
+                      </Button>
+                    );
+                  })}
                 </td>
 
                 <td>
