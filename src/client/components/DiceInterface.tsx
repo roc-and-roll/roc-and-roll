@@ -21,6 +21,9 @@ import {
 export function DiceInterface() {
   const [diceTypes, setDiceTypes] = useState<string[]>([]);
   const [bonuses, setBonuses] = useState<number | null>(null);
+  const [previousRolls, setPreviousRolls] = useState<
+    { diceTypes: string[]; bonuses: number | null }[]
+  >([]);
   const myself = useMyProps("id");
   const character = useMySelectedCharacters("id", "diceTemplateCategories")[0];
   const dispatch = useServerDispatch();
@@ -29,6 +32,24 @@ export function DiceInterface() {
 
   const [focusIndex, setFocusIndex] = useState({ col: 0, row: 0 });
 
+  const prevRoll1Ref = React.useRef<HTMLButtonElement>(null);
+  const prevRoll2Ref = React.useRef<HTMLButtonElement>(null);
+  const prevRoll3Ref = React.useRef<HTMLButtonElement>(null);
+  const prevRoll4Ref = React.useRef<HTMLButtonElement>(null);
+  const prevRoll5Ref = React.useRef<HTMLButtonElement>(null);
+  const prevRoll6Ref = React.useRef<HTMLButtonElement>(null);
+  const prevRollRefs = useMemo(
+    () => [
+      prevRoll1Ref,
+      prevRoll2Ref,
+      prevRoll3Ref,
+      prevRoll4Ref,
+      prevRoll5Ref,
+      prevRoll6Ref,
+    ],
+    []
+  );
+
   const secondaryDiceTypes = [4, 6, 8, 10, 12];
   const d4Ref = React.useRef<HTMLButtonElement>(null);
   const d6Ref = React.useRef<HTMLButtonElement>(null);
@@ -36,8 +57,17 @@ export function DiceInterface() {
   const d10Ref = React.useRef<HTMLButtonElement>(null);
   const d12Ref = React.useRef<HTMLButtonElement>(null);
   const d20Ref = React.useRef<HTMLButtonElement>(null);
-  const diceTypeRefs = useMemo(
-    () => [d4Ref, d6Ref, d8Ref, d10Ref, d12Ref, d20Ref],
+  const col1Refs = useMemo(
+    () => [
+      d4Ref,
+      d6Ref,
+      d8Ref,
+      d10Ref,
+      d12Ref,
+      d20Ref,
+      prevRoll1Ref,
+      prevRoll4Ref,
+    ],
     []
   );
 
@@ -65,25 +95,42 @@ export function DiceInterface() {
     []
   );
   const modRefs = [...modRefsLeft, ...modRefsRight];
+  const col2Refs = useMemo(
+    () => [...modRefsLeft, prevRoll2Ref, prevRoll5Ref],
+    [modRefsLeft]
+  );
+  const col3Refs = useMemo(
+    () => [...modRefsRight, prevRoll2Ref, prevRoll5Ref],
+    [modRefsRight]
+  );
 
   const tempRef = React.useRef<HTMLButtonElement>(null);
   const rollRef = React.useRef<HTMLButtonElement>(null);
   const clearRef = React.useRef<HTMLButtonElement>(null);
 
-  const controlRefs = useMemo(
-    () => [tempRef, rollRef, rollRef, rollRef, rollRef, clearRef],
+  const col4Refs = useMemo(
+    () => [
+      tempRef,
+      rollRef,
+      rollRef,
+      rollRef,
+      rollRef,
+      clearRef,
+      prevRoll3Ref,
+      prevRoll6Ref,
+    ],
     []
   );
 
   const allRefs = useMemo(
-    () => [diceTypeRefs, modRefsLeft, modRefsRight, controlRefs],
-    [diceTypeRefs, modRefsLeft, modRefsRight, controlRefs]
+    () => [col1Refs, col2Refs, col3Refs, col4Refs],
+    [col1Refs, col2Refs, col3Refs, col4Refs]
   );
 
   // TODO: add shortcut to switch focus to dice roller window?
   //       (and open it if it isn't currently open)
 
-  // TODO: previous rolls!
+  // TODO: previous rolls in higher state
   /* 
   d4     |-1|+5|temp
   d6     |-2|+6|roll1
@@ -91,6 +138,8 @@ export function DiceInterface() {
   d10    |+2|+8|roll3
   d12    |+3|+9|roll4
   d20|a|d|+4|10|clear
+  prev1  |prev2|prev3
+  prev4  |prev5|prev6
   */
 
   /* 
@@ -134,7 +183,11 @@ export function DiceInterface() {
     do {
       newRow = (newRow - 1 + upperLimit) % upperLimit;
       currentRef = allRefs[focusIndex.col]![newRow]!.current;
-    } while (currentRef === startRef);
+    } while (
+      currentRef === startRef ||
+      currentRef === null ||
+      currentRef.disabled
+    );
 
     setFocusIndex((prevState) => {
       return { ...prevState, row: newRow };
@@ -142,8 +195,20 @@ export function DiceInterface() {
   };
 
   const moveFocusLeft = () => {
+    const startRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
     const upperLimit = allRefs.length;
-    const newCol = (focusIndex.col - 1 + upperLimit) % upperLimit;
+
+    let currentRef;
+    let newCol = focusIndex.col;
+    do {
+      newCol = (newCol - 1 + upperLimit) % upperLimit;
+      currentRef = allRefs[newCol]![focusIndex.row]!.current;
+    } while (
+      currentRef === startRef ||
+      currentRef === null ||
+      currentRef.disabled
+    );
+
     setFocusIndex((prevState) => {
       return { ...prevState, col: newCol };
     });
@@ -158,7 +223,11 @@ export function DiceInterface() {
     do {
       newRow = (newRow + 1) % upperLimit;
       currentRef = allRefs[focusIndex.col]![newRow]!.current;
-    } while (currentRef === startRef);
+    } while (
+      currentRef === startRef ||
+      currentRef === null ||
+      currentRef.disabled
+    );
 
     setFocusIndex((prevState) => {
       return { ...prevState, row: newRow };
@@ -166,15 +235,26 @@ export function DiceInterface() {
   };
 
   const moveFocusRight = () => {
+    const startRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
     const upperLimit = allRefs.length;
-    const newCol = (focusIndex.col + 1) % upperLimit;
+
+    let currentRef;
+    let newCol = focusIndex.col;
+    do {
+      newCol = (newCol + 1) % upperLimit;
+      currentRef = allRefs[newCol]![focusIndex.row]!.current;
+    } while (
+      currentRef === startRef ||
+      currentRef === null ||
+      currentRef.disabled
+    );
+
     setFocusIndex((prevState) => {
       return { ...prevState, col: newCol };
     });
   };
 
   async function handleKeyDown(e: any) {
-    console.log("code", e.code);
     switch (e.code) {
       case "KeyW":
         moveFocusUp();
@@ -213,14 +293,22 @@ export function DiceInterface() {
     e.preventDefault();
   }
 
-  const doRoll = async (addTemplate: boolean) => {
+  const doRoll = async (
+    addTemplate: boolean,
+    roll?: { diceTypes: string[]; bonuses: number | null }
+  ) => {
+    const localBonuses = roll ? roll.bonuses : bonuses;
+    const localDiceTypes = roll ? roll.diceTypes : diceTypes;
+
     const bonusesString =
-      bonuses === null
+      localBonuses === null
         ? ""
-        : bonuses >= 0
-        ? "+" + bonuses.toString()
-        : bonuses.toString();
-    const rollString = diceTypes.join("+") + bonusesString;
+        : localBonuses >= 0
+        ? "+" + localBonuses.toString()
+        : localBonuses.toString();
+    const rollString = localDiceTypes.join("+") + bonusesString;
+
+    if (rollString === "") return;
 
     let diceRollTree: DiceRollTree<false>;
     try {
@@ -288,6 +376,16 @@ export function DiceInterface() {
         })
       );
     }
+    const justRolled = { diceTypes: localDiceTypes, bonuses: localBonuses };
+    let newPreviousRolls = previousRolls.filter(
+      (roll) =>
+        !(
+          roll.diceTypes.join("/") === justRolled.diceTypes.join("/") &&
+          roll.bonuses === justRolled.bonuses
+        )
+    );
+    newPreviousRolls = [justRolled, ...newPreviousRolls].slice(0, 6);
+    setPreviousRolls(newPreviousRolls);
     setDiceTypes([]);
     setBonuses(null);
   };
@@ -347,7 +445,7 @@ export function DiceInterface() {
               <tr>
                 <td>
                   {secondaryDiceTypes.map((dice) => {
-                    const ref = diceTypeRefs[secondaryDiceTypes.indexOf(dice)];
+                    const ref = col1Refs[secondaryDiceTypes.indexOf(dice)];
                     return (
                       <Button
                         key={dice}
@@ -454,6 +552,29 @@ export function DiceInterface() {
               </tr>
             </tbody>
           </table>
+          <p>
+            {previousRolls.map((roll) => {
+              const ref = prevRollRefs[previousRolls.indexOf(roll)];
+              return (
+                <Button
+                  key={roll.diceTypes.join("") + String(roll.bonuses)}
+                  onClick={async () => {
+                    await doRoll(false, roll);
+                    focusIndexFromRef(prevRoll1Ref);
+                  }}
+                  ref={ref}
+                  style={{ width: "33.3%" }}
+                >
+                  {roll.diceTypes.join(" + ")}{" "}
+                  {roll.bonuses === null
+                    ? ""
+                    : roll.bonuses >= 0
+                    ? "+" + roll.bonuses.toString()
+                    : roll.bonuses.toString()}
+                </Button>
+              );
+            })}
+          </p>
         </div>
       </div>
     </>
