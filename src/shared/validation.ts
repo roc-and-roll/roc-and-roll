@@ -260,6 +260,7 @@ const mapObjectBaseSharedValidators = {
   position: isRRPoint,
   rotation: z.number(),
   playerId: isRRID<RRPlayerID>(),
+  roughness: z.number(),
 };
 
 const mapObjectDrawingSharedValidators = {

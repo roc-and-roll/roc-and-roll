@@ -98,12 +98,14 @@ export type MapEditState =
       color: RRColor;
       snap: MapSnap;
       visibility: RRObjectVisibility;
+      roughness: number;
     }
   | {
       tool: "draw";
       type: "text" | "freehand";
       color: RRColor;
       visibility: RRObjectVisibility;
+      roughness: number;
     };
 
 const playerToolProps = ["id", "currentMap", "color", "isGM"] as const;
@@ -190,6 +192,7 @@ export default function MapContainer() {
               locked: false,
               visibility: "everyone",
 
+              roughness: 0,
               type: "image",
               height: DEFAULT_BACKGROUND_IMAGE_HEIGHT,
               imageAssetId: assetAddAction.payload.id,
@@ -248,6 +251,7 @@ export default function MapContainer() {
               locked: false,
               color: "#000",
               visibility: "everyone",
+              roughness: 0,
             })
           );
           return;
@@ -281,6 +285,7 @@ export default function MapContainer() {
             // the map by the GM can not be controlled by the player.
             playerId: (getOwnerOfCharacter(characterId) ?? myself).id,
             characterId,
+            roughness: 0,
           })
         );
       },

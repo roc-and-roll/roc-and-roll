@@ -156,6 +156,7 @@ export const MapToolbar = React.memo<{
   >("map/toolbar/drawType", "freehand");
   const [drawColor, setDrawColor] = useState(myself.color);
   const [snap, setSnap] = useLocalState<MapSnap>("map/toolbar/snap", "grid");
+  const [roughness, setRoughness] = useLocalState("map/toolbar/roughness", 3);
   const [defaultVisibility, setDefaultVisibility] =
     useLocalState<RRObjectVisibility>(
       "map/toolbar/defaultVisibility",
@@ -224,6 +225,7 @@ export const MapToolbar = React.memo<{
                 type: drawType,
                 color: drawColor,
                 visibility: defaultVisibility,
+                roughness,
               }
             : {
                 tool,
@@ -231,6 +233,7 @@ export const MapToolbar = React.memo<{
                 color: drawColor,
                 snap,
                 visibility: defaultVisibility,
+                roughness,
               };
         case "react":
           return { tool, reactionCode };
@@ -238,7 +241,7 @@ export const MapToolbar = React.memo<{
           assertNever(tool);
       }
     });
-  }, [tool, drawColor, drawType, snap, setEditState, revealType, defaultVisibility, reactionCode, measureType]);
+  }, [tool, drawColor, drawType, snap, setEditState, revealType, defaultVisibility, reactionCode, measureType, roughness]);
 
   const locked = useIndeterminateBoolean({
     mapId,
@@ -343,6 +346,19 @@ export const MapToolbar = React.memo<{
                   { value: "grid-center", label: "grid center" },
                   { value: "grid-corner", label: "grid corners" },
                 ]}
+              />
+            </label>
+          )}
+          {drawType !== "image" && drawType !== "text" && (
+            <label>
+              roughness{" "}
+              <input
+                type="range"
+                value={roughness}
+                min={0}
+                max={5}
+                step={1}
+                onChange={(e) => setRoughness(e.target.valueAsNumber)}
               />
             </label>
           )}

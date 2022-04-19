@@ -74,6 +74,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
     name: `${object.type}: ${object.id}`,
     x: object.position.x,
     y: object.position.y,
+    roughness: object.roughness,
     angle: object.rotation,
     cursor: canControl ? "move" : undefined,
     onMouseDown: useCallback(
