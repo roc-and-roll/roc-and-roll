@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Button } from "./ui/Button";
 import {
   logEntryDiceRollAdd,
@@ -17,13 +17,15 @@ import {
   RRDiceTemplate,
   RRDiceTemplateCategory,
 } from "../../shared/validation";
+import { useLatest } from "../useLatest";
+import useLocalState from "../useLocalState";
 
 export function DiceInterface() {
   const [diceTypes, setDiceTypes] = useState<string[]>([]);
   const [bonuses, setBonuses] = useState<number | null>(null);
-  const [previousRolls, setPreviousRolls] = useState<
+  const [previousRolls, setPreviousRolls] = useLocalState<
     { diceTypes: string[]; bonuses: number | null }[]
-  >([]);
+  >("DiceInterface/previousRolls", []);
   const myself = useMyProps("id");
   const character = useMySelectedCharacters("id", "diceTemplateCategories")[0];
   const dispatch = useServerDispatch();
@@ -32,132 +34,82 @@ export function DiceInterface() {
 
   const [focusIndex, setFocusIndex] = useState({ col: 0, row: 0 });
 
-  const prevRoll1Ref = React.useRef<HTMLButtonElement>(null);
-  const prevRoll2Ref = React.useRef<HTMLButtonElement>(null);
-  const prevRoll3Ref = React.useRef<HTMLButtonElement>(null);
-  const prevRoll4Ref = React.useRef<HTMLButtonElement>(null);
-  const prevRoll5Ref = React.useRef<HTMLButtonElement>(null);
-  const prevRoll6Ref = React.useRef<HTMLButtonElement>(null);
-  const prevRollRefs = useMemo(
-    () => [
-      prevRoll1Ref,
-      prevRoll2Ref,
-      prevRoll3Ref,
-      prevRoll4Ref,
-      prevRoll5Ref,
-      prevRoll6Ref,
-    ],
-    []
+  const prevRollRefs = Array.from({ length: 6 }).map(() =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useRef<HTMLButtonElement>(null)
   );
 
   const secondaryDiceTypes = [4, 6, 8, 10, 12];
-  const d4Ref = React.useRef<HTMLButtonElement>(null);
-  const d6Ref = React.useRef<HTMLButtonElement>(null);
-  const d8Ref = React.useRef<HTMLButtonElement>(null);
-  const d10Ref = React.useRef<HTMLButtonElement>(null);
-  const d12Ref = React.useRef<HTMLButtonElement>(null);
-  const d20Ref = React.useRef<HTMLButtonElement>(null);
-  const col1Refs = useMemo(
-    () => [
-      d4Ref,
-      d6Ref,
-      d8Ref,
-      d10Ref,
-      d12Ref,
-      d20Ref,
-      prevRoll1Ref,
-      prevRoll4Ref,
-    ],
-    []
+  const secondaryDiceRefs = secondaryDiceTypes.map(() =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useRef<HTMLButtonElement>(null)
   );
+  const d20Ref = React.useRef<HTMLButtonElement>(null);
+  const col1Refs = [
+    ...secondaryDiceRefs,
+    d20Ref,
+    prevRollRefs[0],
+    prevRollRefs[3],
+  ];
 
   const modTypesLeft = [-2, -1, 1, 2, 3, 4];
   const modTypesRight = [5, 6, 7, 8, 9, 10];
   const modTypes = [...modTypesLeft, ...modTypesRight];
-  const modM2Ref = React.useRef<HTMLButtonElement>(null);
-  const modM1Ref = React.useRef<HTMLButtonElement>(null);
-  const modP1Ref = React.useRef<HTMLButtonElement>(null);
-  const modP2Ref = React.useRef<HTMLButtonElement>(null);
-  const modP3Ref = React.useRef<HTMLButtonElement>(null);
-  const modP4Ref = React.useRef<HTMLButtonElement>(null);
-  const modP5Ref = React.useRef<HTMLButtonElement>(null);
-  const modP6Ref = React.useRef<HTMLButtonElement>(null);
-  const modP7Ref = React.useRef<HTMLButtonElement>(null);
-  const modP8Ref = React.useRef<HTMLButtonElement>(null);
-  const modP9Ref = React.useRef<HTMLButtonElement>(null);
-  const modP10Ref = React.useRef<HTMLButtonElement>(null);
-  const modRefsLeft = useMemo(
-    () => [modM2Ref, modM1Ref, modP1Ref, modP2Ref, modP3Ref, modP4Ref],
-    []
+  const modRefsLeft = modTypesLeft.map(() =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useRef<HTMLButtonElement>(null)
   );
-  const modRefsRight = useMemo(
-    () => [modP5Ref, modP6Ref, modP7Ref, modP8Ref, modP9Ref, modP10Ref],
-    []
+  const modRefsRight = modTypesRight.map(() =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useRef<HTMLButtonElement>(null)
   );
   const modRefs = [...modRefsLeft, ...modRefsRight];
-  const col2Refs = useMemo(
-    () => [...modRefsLeft, prevRoll2Ref, prevRoll5Ref],
-    [modRefsLeft]
-  );
-  const col3Refs = useMemo(
-    () => [...modRefsRight, prevRoll2Ref, prevRoll5Ref],
-    [modRefsRight]
-  );
+  const col2Refs = [...modRefsLeft, prevRollRefs[1], prevRollRefs[4]];
+  const col3Refs = [...modRefsRight, prevRollRefs[1], prevRollRefs[4]];
 
   const tempRef = React.useRef<HTMLButtonElement>(null);
   const rollRef = React.useRef<HTMLButtonElement>(null);
   const clearRef = React.useRef<HTMLButtonElement>(null);
 
-  const col4Refs = useMemo(
-    () => [
-      tempRef,
-      rollRef,
-      rollRef,
-      rollRef,
-      rollRef,
-      clearRef,
-      prevRoll3Ref,
-      prevRoll6Ref,
-    ],
-    []
-  );
+  const col4Refs = [
+    tempRef,
+    rollRef,
+    rollRef,
+    rollRef,
+    rollRef,
+    clearRef,
+    prevRollRefs[2],
+    prevRollRefs[5],
+  ];
 
-  const allRefs = useMemo(
-    () => [col1Refs, col2Refs, col3Refs, col4Refs],
-    [col1Refs, col2Refs, col3Refs, col4Refs]
-  );
+  /*
+   * d4     |-1|+5|temp
+   * d6     |-2|+6|roll1
+   * d8     |+1|+7|roll2
+   * d10    |+2|+8|roll3
+   * d12    |+3|+9|roll4
+   * d20|a|d|+4|10|clear
+   * prev1  |prev2|prev3
+   * prev4  |prev5|prev6
+   */
+  const allRefs = useLatest([col1Refs, col2Refs, col3Refs, col4Refs]);
 
   // TODO: add shortcut to switch focus to dice roller window?
   //       (and open it if it isn't currently open)
 
   // TODO: previous rolls in higher state
-  /* 
-  d4     |-1|+5|temp
-  d6     |-2|+6|roll1
-  d8     |+1|+7|roll2
-  d10    |+2|+8|roll3
-  d12    |+3|+9|roll4
-  d20|a|d|+4|10|clear
-  prev1  |prev2|prev3
-  prev4  |prev5|prev6
-  */
+
+  // TODO: different color (css) on focus
 
   /* 
-  optional button objects:
-  d4: {
-    left: temp
-    right: -1
-    up: d20
-    down: d6
-  } ...
-
   for d20, adv, dis: 
     make distinction bei "moveLeft" and "moveRight" functions or
     make own columns (compare roll button)
   */
 
   useEffect(() => {
-    const currentRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
+    const currentRef =
+      allRefs.current[focusIndex.col]![focusIndex.row]!.current;
     if (currentRef) {
       currentRef.focus();
     }
@@ -167,22 +119,22 @@ export function DiceInterface() {
     searchedRef: React.RefObject<HTMLButtonElement> | undefined
   ) {
     if (searchedRef === undefined) return;
-    const col = allRefs.findIndex((refs) =>
+    const col = allRefs.current.findIndex((refs) =>
       refs.find((ref) => ref === searchedRef)
     );
-    const row = allRefs[col]!.findIndex((ref) => ref === searchedRef);
+    const row = allRefs.current[col]!.findIndex((ref) => ref === searchedRef);
     setFocusIndex({ col: col, row: row });
   }
 
   const moveFocusUp = () => {
-    const startRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
-    const upperLimit = allRefs[focusIndex.col]!.length;
+    const startRef = allRefs.current[focusIndex.col]![focusIndex.row]!.current;
+    const upperLimit = allRefs.current[focusIndex.col]!.length;
 
     let currentRef;
     let newRow = focusIndex.row;
     do {
       newRow = (newRow - 1 + upperLimit) % upperLimit;
-      currentRef = allRefs[focusIndex.col]![newRow]!.current;
+      currentRef = allRefs.current[focusIndex.col]![newRow]!.current;
     } while (
       currentRef === startRef ||
       currentRef === null ||
@@ -195,14 +147,14 @@ export function DiceInterface() {
   };
 
   const moveFocusLeft = () => {
-    const startRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
-    const upperLimit = allRefs.length;
+    const startRef = allRefs.current[focusIndex.col]![focusIndex.row]!.current;
+    const upperLimit = allRefs.current.length;
 
     let currentRef;
     let newCol = focusIndex.col;
     do {
       newCol = (newCol - 1 + upperLimit) % upperLimit;
-      currentRef = allRefs[newCol]![focusIndex.row]!.current;
+      currentRef = allRefs.current[newCol]![focusIndex.row]!.current;
     } while (
       currentRef === startRef ||
       currentRef === null ||
@@ -215,14 +167,14 @@ export function DiceInterface() {
   };
 
   const moveFocusDown = () => {
-    const startRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
-    const upperLimit = allRefs[focusIndex.col]!.length;
+    const startRef = allRefs.current[focusIndex.col]![focusIndex.row]!.current;
+    const upperLimit = allRefs.current[focusIndex.col]!.length;
 
     let currentRef;
     let newRow = focusIndex.row;
     do {
       newRow = (newRow + 1) % upperLimit;
-      currentRef = allRefs[focusIndex.col]![newRow]!.current;
+      currentRef = allRefs.current[focusIndex.col]![newRow]!.current;
     } while (
       currentRef === startRef ||
       currentRef === null ||
@@ -235,14 +187,14 @@ export function DiceInterface() {
   };
 
   const moveFocusRight = () => {
-    const startRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
-    const upperLimit = allRefs.length;
+    const startRef = allRefs.current[focusIndex.col]![focusIndex.row]!.current;
+    const upperLimit = allRefs.current.length;
 
     let currentRef;
     let newCol = focusIndex.col;
     do {
       newCol = (newCol + 1) % upperLimit;
-      currentRef = allRefs[newCol]![focusIndex.row]!.current;
+      currentRef = allRefs.current[newCol]![focusIndex.row]!.current;
     } while (
       currentRef === startRef ||
       currentRef === null ||
@@ -254,29 +206,21 @@ export function DiceInterface() {
     });
   };
 
-  async function handleKeyDown(e: any) {
+  async function handleKeyDown(e: React.KeyboardEvent) {
     switch (e.code) {
       case "KeyW":
-        moveFocusUp();
-        break;
       case "ArrowUp":
         moveFocusUp();
         break;
       case "KeyA":
-        moveFocusLeft();
-        break;
       case "ArrowLeft":
         moveFocusLeft();
         break;
       case "KeyS":
-        moveFocusDown();
-        break;
       case "ArrowDown":
         moveFocusDown();
         break;
       case "KeyD":
-        moveFocusRight();
-        break;
       case "ArrowRight":
         moveFocusRight();
         break;
@@ -560,7 +504,7 @@ export function DiceInterface() {
                   key={roll.diceTypes.join("") + String(roll.bonuses)}
                   onClick={async () => {
                     await doRoll(false, roll);
-                    focusIndexFromRef(prevRoll1Ref);
+                    focusIndexFromRef(prevRollRefs[0]);
                   }}
                   ref={ref}
                   style={{ width: "33.3%" }}
