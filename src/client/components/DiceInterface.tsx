@@ -45,12 +45,11 @@ export function DiceInterface() {
     useRef<HTMLButtonElement>(null)
   );
   const d20Ref = React.useRef<HTMLButtonElement>(null);
-  const col1Refs = [
-    ...secondaryDiceRefs,
-    d20Ref,
-    prevRollRefs[0],
-    prevRollRefs[3],
-  ];
+  const d20AdvRef = React.useRef<HTMLButtonElement>(null);
+  const d20DisRef = React.useRef<HTMLButtonElement>(null);
+  const [col1Refs, col2Refs, col3Refs] = [d20Ref, d20AdvRef, d20DisRef].map(
+    (ref) => [...secondaryDiceRefs, ref, prevRollRefs[0], prevRollRefs[3]]
+  );
 
   const modTypesLeft = [-2, -1, 1, 2, 3, 4];
   const modTypesRight = [5, 6, 7, 8, 9, 10];
@@ -64,14 +63,14 @@ export function DiceInterface() {
     useRef<HTMLButtonElement>(null)
   );
   const modRefs = [...modRefsLeft, ...modRefsRight];
-  const col2Refs = [...modRefsLeft, prevRollRefs[1], prevRollRefs[4]];
-  const col3Refs = [...modRefsRight, prevRollRefs[1], prevRollRefs[4]];
+  const col4Refs = [...modRefsLeft, prevRollRefs[1], prevRollRefs[4]];
+  const col5Refs = [...modRefsRight, prevRollRefs[1], prevRollRefs[4]];
 
   const tempRef = React.useRef<HTMLButtonElement>(null);
   const rollRef = React.useRef<HTMLButtonElement>(null);
   const clearRef = React.useRef<HTMLButtonElement>(null);
 
-  const col4Refs = [
+  const col6Refs = [
     tempRef,
     rollRef,
     rollRef,
@@ -92,7 +91,14 @@ export function DiceInterface() {
    * prev1  |prev2|prev3
    * prev4  |prev5|prev6
    */
-  const allRefs = useLatest([col1Refs, col2Refs, col3Refs, col4Refs]);
+  const allRefs = useLatest([
+    col1Refs,
+    col2Refs,
+    col3Refs,
+    col4Refs,
+    col5Refs,
+    col6Refs,
+  ]);
 
   // TODO: add shortcut to switch focus to dice roller window?
   //       (and open it if it isn't currently open)
@@ -100,12 +106,6 @@ export function DiceInterface() {
   // TODO: previous rolls in higher state
 
   // TODO: different color (css) on focus
-
-  /* 
-  for d20, adv, dis: 
-    make distinction bei "moveLeft" and "moveRight" functions or
-    make own columns (compare roll button)
-  */
 
   useEffect(() => {
     const currentRef =
@@ -120,7 +120,7 @@ export function DiceInterface() {
   ) {
     if (searchedRef === undefined) return;
     const col = allRefs.current.findIndex((refs) =>
-      refs.find((ref) => ref === searchedRef)
+      refs!.find((ref) => ref === searchedRef)
     );
     const row = allRefs.current[col]!.findIndex((ref) => ref === searchedRef);
     setFocusIndex({ col: col, row: row });
@@ -389,7 +389,7 @@ export function DiceInterface() {
               <tr>
                 <td>
                   {secondaryDiceTypes.map((dice) => {
-                    const ref = col1Refs[secondaryDiceTypes.indexOf(dice)];
+                    const ref = col1Refs![secondaryDiceTypes.indexOf(dice)];
                     return (
                       <Button
                         key={dice}
@@ -419,6 +419,7 @@ export function DiceInterface() {
                       style={{ width: "30%", fontSize: "0.7rem" }}
                       className="green"
                       onClick={() => addDiceType("a20")}
+                      ref={d20AdvRef}
                     >
                       ADV
                     </Button>
@@ -426,6 +427,7 @@ export function DiceInterface() {
                       style={{ width: "30%", fontSize: "0.7rem" }}
                       className="red"
                       onClick={() => addDiceType("i20")}
+                      ref={d20DisRef}
                     >
                       DIS
                     </Button>
