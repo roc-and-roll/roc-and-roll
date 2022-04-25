@@ -285,7 +285,6 @@ export default function MapContainer() {
             // the map by the GM can not be controlled by the player.
             playerId: (getOwnerOfCharacter(characterId) ?? myself).id,
             characterId,
-            roughness: 0,
           })
         );
       },

@@ -260,7 +260,6 @@ const mapObjectBaseSharedValidators = {
   position: isRRPoint,
   rotation: z.number(),
   playerId: isRRID<RRPlayerID>(),
-  roughness: z.number(),
 };
 
 const mapObjectDrawingSharedValidators = {
@@ -268,6 +267,7 @@ const mapObjectDrawingSharedValidators = {
   visibility: z.enum(["gmOnly", "everyone"] as const),
   locked: z.boolean(),
   color: isColor,
+  roughness: z.number(),
 };
 
 export const isSyncedState = z.strictObject({
