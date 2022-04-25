@@ -437,6 +437,28 @@ function ObjectEditOptions({
           }
         />
       </label>
+      <label>
+        Roughness
+        <input
+          type="range"
+          value={object.roughness}
+          min={0}
+          max={5}
+          step={1}
+          onChange={(event) =>
+            dispatch({
+              actions: [
+                mapObjectUpdate(mapId, {
+                  id: object.id,
+                  changes: { roughness: event.target.valueAsNumber },
+                }),
+              ],
+              optimisticKey: "roughness",
+              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+            })
+          }
+        />
+      </label>
       {extraPopupContent()}
     </div>
   );
