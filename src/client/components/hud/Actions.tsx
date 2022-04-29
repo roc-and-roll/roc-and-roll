@@ -106,6 +106,13 @@ const activeClass = (active: boolean) =>
 const highlightClass = (shouldHighlight: boolean, active: boolean) =>
   shouldHighlight ? (active ? "bg-green-400" : "bg-green-600") : "";
 
+const wrapperClasses =
+  "absolute bottom-2 top-24 left-20 right-[500px] flex flex-col justify-end items-start z-10 pointer-events-none";
+const contentClasses =
+  "hud-panel w-[370px] rounded-b-none pointer-events-auto overflow-y-auto";
+const buttonClasses =
+  "hud-panel max-w-full shrink-0 inline-flex overflow-x-auto snap-x pointer-events-auto";
+
 export const ActionsHUD = React.memo(function ActionsHUDMemoed() {
   const character = useMyActiveCharacter(
     "id",
@@ -113,8 +120,39 @@ export const ActionsHUD = React.memo(function ActionsHUDMemoed() {
     "skills",
     "diceTemplateCategories"
   );
-  return character ? <InnerActionsHUD character={character} /> : <></>;
+  return character ? (
+    <InnerActionsHUD character={character} />
+  ) : (
+    <DicePanelOnly />
+  );
 });
+
+export const DicePanelOnly = function () {
+  const [active, setActive] = useState(false);
+
+  return (
+    <div className={wrapperClasses}>
+      <div className={`${contentClasses} rounded-br`}>
+        {active ? <DicePanel /> : <></>}
+      </div>
+      <div
+        className={clsx(buttonClasses, {
+          "rounded-tl-none rounded-tr-none": active,
+        })}
+      >
+        <RRTooltip content="Dice Input" placement="top">
+          <Button
+            unstyled
+            className={actionClasses}
+            onClick={() => setActive(!active)}
+          >
+            <FontAwesomeIcon size="lg" icon={faDiceD20} fixedWidth />
+          </Button>
+        </RRTooltip>
+      </div>
+    </div>
+  );
+};
 
 export const InnerActionsHUD = function ({
   character,
@@ -271,17 +309,14 @@ export const InnerActionsHUD = function ({
     false;
 
   return (
-    <div className="absolute bottom-2 top-24 left-20 right-[500px] flex flex-col justify-end items-start z-10 pointer-events-none">
-      <div className="hud-panel w-[370px] rounded-b-none pointer-events-auto overflow-y-auto">
-        {renderContent(active)}
-      </div>
+    <div className={wrapperClasses}>
+      <div className={contentClasses}>{renderContent(active)}</div>
 
       {/* TODO: The layout is a bit messed up when the scrollbar is shown. */}
       <div
-        className={clsx(
-          "hud-panel max-w-full shrink-0 inline-flex overflow-x-auto snap-x pointer-events-auto",
-          { "rounded-tl-none": active !== "closed" }
-        )}
+        className={clsx(buttonClasses, {
+          "rounded-tl-none": active !== "closed",
+        })}
       >
         <RRTooltip content="Dice Input" placement="top">
           <Button
