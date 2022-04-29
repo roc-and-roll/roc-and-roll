@@ -244,7 +244,7 @@ export const InnerActionsHUD = function ({
 
         return {
           id: rrid<RRDiceTemplate>(),
-          name: `${statName} Saving Throw`,
+          name: `${statName} Save`,
           notes: "",
           parts,
           rollType: null,
