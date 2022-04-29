@@ -124,6 +124,7 @@ export function useMapToolHandler(
       rotation: 0,
       locked: false,
       visibility: editState.visibility,
+      roughness: editState.roughness,
     });
 
     switch (editState.type) {
