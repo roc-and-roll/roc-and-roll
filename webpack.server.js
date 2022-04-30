@@ -34,6 +34,7 @@ export default (webpackEnv) => {
     externalsType: "module",
     externals: [
       nodeExternals({
+        allowlist: ["core-js/stable"],
         modulesFromFile: true,
         importType: (moduleId) => {
           // Many dependencies do not (yet?) work as ES modules. Thus, we only opt
@@ -63,6 +64,8 @@ export default (webpackEnv) => {
       // Make sure to also change `package.json` -> `jest` -> `setupFiles` when
       // you change these files.
       server: [
+        // Polyfills
+        "core-js/stable",
         // Set process.env correctly
         "./src/server/env.ts",
         // Support for sourcemaps
@@ -85,10 +88,11 @@ export default (webpackEnv) => {
           include: path.resolve("src"),
           use: [
             {
-              loader: "ts-loader",
+              loader: "swc-loader",
               options: {
-                transpileOnly: true,
-                configFile: "tsconfig.server.json",
+                env: {
+                  targets: "current node",
+                },
               },
             },
           ],
@@ -137,6 +141,7 @@ export default (webpackEnv) => {
         }),
     ].filter(Boolean),
     optimization: {
+      minimize: isEnvProduction,
       nodeEnv: isEnvE2E ? "e2e-test" : undefined,
     },
     resolve: {
