@@ -83,23 +83,21 @@ This should not have happened!
   setInterval(() => {
     const now = Date.now();
     const state = store.getState();
-    store.dispatch(
-      batchActions(
-        entries(state.ephemeral.players)
-          .filter(
-            (each) =>
-              each.mapMouse &&
-              now - each.mapMouse.lastUpdate >
-                DELETE_MOUSE_POSITION_TIME_THRESHOLD
-          )
-          .map((each) =>
-            ephemeralPlayerUpdate({
-              id: each.id,
-              changes: { mapMouse: null },
-            })
-          )
+    const actions = entries(state.ephemeral.players)
+      .filter(
+        (each) =>
+          each.mapMouse &&
+          now - each.mapMouse.lastUpdate > DELETE_MOUSE_POSITION_TIME_THRESHOLD
       )
-    );
+      .map((each) =>
+        ephemeralPlayerUpdate({
+          id: each.id,
+          changes: { mapMouse: null },
+        })
+      );
+    if (actions.length > 0) {
+      store.dispatch(batchActions(actions));
+    }
   }, 2000);
 
   console.log(`Roc & Roll started at ${url}.`);

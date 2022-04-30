@@ -76,7 +76,8 @@ export const setupStateSync = (
   const sendStateUpdate = (
     socket: SocketIOSocket,
     currentState: SyncedState,
-    player: RRPlayer | null
+    player: RRPlayer | null,
+    updateDelay: number
   ) => {
     const data = additionalSocketData.get(socket.id);
     if (!data) {
@@ -89,7 +90,7 @@ export const setupStateSync = (
       log(
         `[${Date.now() / 1000}] sending state to ${socket.id} (${
           player?.name ?? "not logged in"
-        })`
+        }) - delay: ${updateDelay}`
       );
       socket.emit(SOCKET_SET_STATE, {
         state: JSON.stringify(currentState),
@@ -113,12 +114,14 @@ export const setupStateSync = (
         log(
           `[${Date.now() / 1000}] sending state to ${socket.id} (${
             player?.name ?? "not logged in"
-          })`
+          }) - delay: ${updateDelay}`
         );
         socket.emit(SOCKET_PATCH_STATE, {
           patch: JSON.stringify(patch),
           finishedOptimisticUpdateIds: data.finishedOptimisticUpdateIds,
         });
+      } else {
+        // console.log("Skipping empty patch");
       }
     }
     data.finishedOptimisticUpdateIds = [];
@@ -167,7 +170,7 @@ export const setupStateSync = (
 
     log("A client connected");
     sendServerInfo(socket);
-    sendStateUpdate(socket, store.getState(), null);
+    sendStateUpdate(socket, store.getState(), null, 0);
 
     socket.on("disconnect", () => {
       log("A client disconnected");
@@ -207,7 +210,9 @@ export const setupStateSync = (
           }
         }
 
+        // console.log(`[${timestamp() / 1000}] Processing client actions`);
         store.dispatch(batchActions(actions));
+        // console.log(`[${timestamp() / 1000}] Done processing client actions`);
       }
     );
     socket.on(
@@ -241,17 +246,28 @@ export const setupStateSync = (
   io.sockets.sockets.forEach(setupSocket);
   io.on("connection", setupSocket);
 
-  store.subscribe(
-    throttled(() => {
-      const state = store.getState();
-      io.sockets.sockets.forEach((socket) => {
-        const data = additionalSocketData.get(socket.id);
-        const player = data?.playerId
-          ? state.players.entities[data.playerId] ?? null
-          : null;
+  // For debugging, keep track of the delay between the actual state update and
+  // its propagation to clients.
+  const originalStateUpdateTime: { current: number | null } = { current: null };
 
-        sendStateUpdate(socket, state, player);
-      });
-    }, 100)
-  );
+  const throttledStateUpdate = throttled(() => {
+    const updateDelay = (Date.now() - originalStateUpdateTime.current!) / 1000;
+    originalStateUpdateTime.current = null;
+
+    const state = store.getState();
+    io.sockets.sockets.forEach((socket) => {
+      const data = additionalSocketData.get(socket.id);
+      const player = data?.playerId
+        ? state.players.entities[data.playerId] ?? null
+        : null;
+
+      sendStateUpdate(socket, state, player, updateDelay);
+    });
+  }, 100);
+
+  store.subscribe(() => {
+    // console.log("Store update");
+    originalStateUpdateTime.current ??= Date.now();
+    throttledStateUpdate();
+  });
 };
