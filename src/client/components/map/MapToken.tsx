@@ -72,7 +72,7 @@ import { diceResult } from "../../dice-rolling/roll";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
-const ENTRY_DURATION = 90 * 1000;
+const DICE_ROLL_DISPLAY_DURATION = 90 * 1000;
 
 export const MapToken = React.memo<{
   mapId: RRMapID;
@@ -279,14 +279,14 @@ function MapTokenInner({
         entry.type === "diceRoll" &&
         entry.payload.characterIds !== null &&
         entry.payload.characterIds.includes(character.id) &&
-        Date.now() - entry.timestamp < ENTRY_DURATION
+        Date.now() - entry.timestamp < DICE_ROLL_DISPLAY_DURATION
       );
     }
 
     let i = list.length - 1;
     let entry: RRLogEntry | null = list[i] ?? null;
     while (entry && !checkEntrySuitable(entry)) {
-      if (Date.now() - entry.timestamp > ENTRY_DURATION) {
+      if (Date.now() - entry.timestamp > DICE_ROLL_DISPLAY_DURATION) {
         entry = null;
         break;
       }
@@ -299,7 +299,7 @@ function MapTokenInner({
     if (lastRolled?.id) {
       const id = setTimeout(function () {
         setLastRolled(null);
-      }, ENTRY_DURATION);
+      }, DICE_ROLL_DISPLAY_DURATION);
       return () => clearTimeout(id);
     }
   }, [lastRolled?.id]);
