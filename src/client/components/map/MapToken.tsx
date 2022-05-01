@@ -331,6 +331,10 @@ function MapTokenInner({
 
   const ghostTokenRef = useRef<Container>(null);
 
+  const diceRollDisplayHeight = 24;
+  const diceRollDisplayWidth = 42;
+  const diceRollBorderWidth = 6;
+
   return (
     <>
       {ghostPosition &&
@@ -352,41 +356,6 @@ function MapTokenInner({
           )),
           auraArea
         )}
-      {lastRolled && (
-        <Container x={x + tokenSize} y={y + tokenSize / 2}>
-          <RoughRectangle
-            x={4}
-            y={-18}
-            w={50 + 6}
-            h={30 + 6}
-            stroke="none"
-            fill="white"
-            fillStyle="solid"
-            roughness={0}
-          />
-          <RoughRectangle
-            x={7}
-            y={-15}
-            w={50}
-            h={30}
-            stroke="none"
-            fill="black"
-            fillStyle="solid"
-            roughness={0}
-          ></RoughRectangle>
-          <RoughText
-            x={32}
-            y={0}
-            style={{
-              fontWeight: "bolder",
-              fontSize: 30,
-              fill: "white",
-            }}
-            anchor={{ x: 0.5, y: 0.5 }}
-            text={diceResult(lastRolled.payload.diceRollTree).toString()}
-          />
-        </Container>
-      )}
       {healthBarArea &&
         createPixiPortal(
           <>
@@ -439,6 +408,44 @@ function MapTokenInner({
         </PixiPopover>
       ) : (
         fullTokenRepresentation({ x, y })
+      )}
+      {lastRolled && (
+        <Container
+          x={x + tokenSize / 2 - diceRollDisplayWidth / 2 - diceRollBorderWidth}
+          y={y + tokenSize - diceRollDisplayHeight / 2}
+        >
+          <RoughRectangle
+            x={4}
+            y={-18}
+            w={diceRollDisplayWidth + diceRollBorderWidth}
+            h={diceRollDisplayHeight + diceRollBorderWidth}
+            stroke="none"
+            fill="white"
+            fillStyle="solid"
+            roughness={0}
+          />
+          <RoughRectangle
+            x={7}
+            y={-15}
+            w={diceRollDisplayWidth}
+            h={diceRollDisplayHeight}
+            stroke="none"
+            fill="black"
+            fillStyle="solid"
+            roughness={0}
+          ></RoughRectangle>
+          <RoughText
+            x={(diceRollDisplayWidth + 2 * diceRollBorderWidth) / 2}
+            y={-3}
+            style={{
+              fontWeight: "bolder",
+              fontSize: 24,
+              fill: "white",
+            }}
+            anchor={{ x: 0.5, y: 0.5 }}
+            text={diceResult(lastRolled.payload.diceRollTree).toString()}
+          />
+        </Container>
       )}
     </>
   );
