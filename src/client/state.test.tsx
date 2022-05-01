@@ -132,6 +132,7 @@ describe("applyStatePatch", () => {
       rotation: 0,
       size: { x: 0, y: 0 },
       visibility: "everyone",
+      roughness: 3,
     };
 
     nextState = applyStatePatch((prevState = nextState), {
@@ -178,6 +179,7 @@ describe("applyStatePatch", () => {
       rotation: 0,
       size: { x: 0, y: 0 },
       visibility: "everyone",
+      roughness: 3,
     };
 
     nextState = applyStatePatch((prevState = nextState), {

@@ -1,7 +1,12 @@
 import clsx from "clsx";
 import React from "react";
 import { useDrag, useDrop } from "react-dnd";
-import { mapAdd, mapSettingsUpdate, playerUpdate } from "../../shared/actions";
+import {
+  mapAdd,
+  mapRemove,
+  mapSettingsUpdate,
+  playerUpdate,
+} from "../../shared/actions";
 import { randomColor } from "../../shared/colors";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 import {
@@ -168,6 +173,17 @@ export function MapListEntry({
           >
             <FontAwesomeIcon icon={faMapSigns} />
           </div>
+        )}
+        {!players.some((p) => p.currentMap === mapId) && (
+          <Button
+            className="ui-button red"
+            onClick={() => {
+              dispatch(mapRemove(mapId));
+            }}
+            title="Delete Map"
+          >
+            {"Delete"}
+          </Button>
         )}
       </h3>
       <div

@@ -267,6 +267,7 @@ const mapObjectDrawingSharedValidators = {
   visibility: z.enum(["gmOnly", "everyone"] as const),
   locked: z.boolean(),
   color: isColor,
+  roughness: z.number(),
 };
 
 export const isSyncedState = z.strictObject({
