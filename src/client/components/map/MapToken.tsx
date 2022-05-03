@@ -413,6 +413,7 @@ function MapTokenInner({
         <Container
           x={x + tokenSize / 2 - diceRollDisplayWidth / 2 - diceRollBorderWidth}
           y={y + tokenSize - diceRollDisplayHeight / 2}
+          interactiveChildren={false}
         >
           <RoughRectangle
             x={4}
