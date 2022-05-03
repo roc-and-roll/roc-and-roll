@@ -18,6 +18,7 @@ export interface RRMouseEvent {
   clientX: number;
   clientY: number;
   button: number;
+  shiftKey: boolean;
 }
 
 // Based on code from https://github.com/facebook/react/issues/13048
