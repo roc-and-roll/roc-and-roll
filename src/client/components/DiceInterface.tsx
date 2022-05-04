@@ -84,10 +84,10 @@ export function DiceInterface() {
 
   /*
    * d4     |-1|+5|temp
-   * d6     |-2|+6|roll1
-   * d8     |+1|+7|roll2
-   * d10    |+2|+8|roll3
-   * d12    |+3|+9|roll4
+   * d6     |-2|+6|roll
+   * d8     |+1|+7|roll
+   * d10    |+2|+8|roll
+   * d12    |+3|+9|roll
    * d20|a|d|+4|10|clear
    * prev1  |prev2|prev3
    * prev4  |prev5|prev6
@@ -246,11 +246,7 @@ export function DiceInterface() {
     const localDiceTypes = roll ? roll.diceTypes : diceTypes;
 
     const bonusesString =
-      localBonuses === null
-        ? ""
-        : localBonuses >= 0
-        ? signedModifierString(localBonuses)
-        : localBonuses.toString();
+      localBonuses === null ? "" : signedModifierString(localBonuses);
     const rollString = localDiceTypes.join("+") + bonusesString;
 
     if (rollString === "") return;
@@ -398,7 +394,7 @@ export function DiceInterface() {
                           addDiceType(`d${dice}`);
                           focusIndexFromRef(ref);
                         }}
-                        className="w-full"
+                        className="w-full diceInterface-btn"
                         ref={ref}
                       >
                         d{dice}
@@ -453,7 +449,7 @@ export function DiceInterface() {
                         }}
                         ref={ref}
                       >
-                        {bonus > 0 ? signedModifierString(bonus) : bonus}
+                        {signedModifierString(bonus)}
                       </Button>
                     );
                   })}
@@ -484,11 +480,7 @@ export function DiceInterface() {
                     <p>ROLL IT</p>
                     <p>{diceTypes.join(" + ")}</p>
                     <div>
-                      {bonuses === null
-                        ? ""
-                        : bonuses >= 0
-                        ? signedModifierString(bonuses)
-                        : bonuses.toString()}
+                      {bonuses === null ? "" : signedModifierString(bonuses)}
                     </div>
                   </Button>
                   <Button
@@ -521,9 +513,7 @@ export function DiceInterface() {
                   {roll.diceTypes.join(" + ")}{" "}
                   {roll.bonuses === null
                     ? ""
-                    : roll.bonuses >= 0
-                    ? signedModifierString(roll.bonuses)
-                    : roll.bonuses.toString()}
+                    : signedModifierString(roll.bonuses)}
                 </Button>
               );
             })}
