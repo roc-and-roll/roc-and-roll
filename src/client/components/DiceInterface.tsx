@@ -19,6 +19,7 @@ import {
 } from "../../shared/validation";
 import { useLatest } from "../useLatest";
 import useLocalState from "../useLocalState";
+import { signedModifierString } from "../util";
 
 export function DiceInterface() {
   const [diceTypes, setDiceTypes] = useState<string[]>([]);
@@ -248,7 +249,7 @@ export function DiceInterface() {
       localBonuses === null
         ? ""
         : localBonuses >= 0
-        ? "+" + localBonuses.toString()
+        ? signedModifierString(localBonuses)
         : localBonuses.toString();
     const rollString = localDiceTypes.join("+") + bonusesString;
 
@@ -418,7 +419,10 @@ export function DiceInterface() {
                     <Button
                       style={{ width: "30%", fontSize: "0.7rem" }}
                       className="green"
-                      onClick={() => addDiceType("a20")}
+                      onClick={() => {
+                        addDiceType("a20");
+                        focusIndexFromRef(d20AdvRef);
+                      }}
                       ref={d20AdvRef}
                     >
                       ADV
@@ -426,7 +430,10 @@ export function DiceInterface() {
                     <Button
                       style={{ width: "30%", fontSize: "0.7rem" }}
                       className="red"
-                      onClick={() => addDiceType("i20")}
+                      onClick={() => {
+                        addDiceType("i20");
+                        focusIndexFromRef(d20DisRef);
+                      }}
                       ref={d20DisRef}
                     >
                       DIS
@@ -446,7 +453,7 @@ export function DiceInterface() {
                         }}
                         ref={ref}
                       >
-                        {bonus > 0 ? "+" + bonus.toString() : bonus}
+                        {bonus > 0 ? signedModifierString(bonus) : bonus}
                       </Button>
                     );
                   })}
@@ -457,8 +464,8 @@ export function DiceInterface() {
                     className="w-full"
                     disabled={!character}
                     onClick={async () => {
-                      await doRoll(true);
                       focusIndexFromRef(tempRef);
+                      await doRoll(true);
                     }}
                     ref={tempRef}
                     title={character ? undefined : "No character selected"}
@@ -468,8 +475,8 @@ export function DiceInterface() {
                   <Button
                     className="w-full h-[120px]"
                     onClick={async () => {
-                      await doRoll(false);
                       focusIndexFromRef(rollRef);
+                      await doRoll(false);
                     }}
                     ref={rollRef}
                     disabled={bonuses === null && diceTypes.length === 0}
@@ -480,7 +487,7 @@ export function DiceInterface() {
                       {bonuses === null
                         ? ""
                         : bonuses >= 0
-                        ? "+" + bonuses.toString()
+                        ? signedModifierString(bonuses)
                         : bonuses.toString()}
                     </div>
                   </Button>
@@ -505,17 +512,17 @@ export function DiceInterface() {
                 <Button
                   key={roll.diceTypes.join("") + String(roll.bonuses)}
                   onClick={async () => {
-                    await doRoll(false, roll);
                     focusIndexFromRef(prevRollRefs[0]);
+                    await doRoll(false, roll);
                   }}
                   ref={ref}
-                  style={{ width: "33.3%" }}
+                  className="w-1/3"
                 >
                   {roll.diceTypes.join(" + ")}{" "}
                   {roll.bonuses === null
                     ? ""
                     : roll.bonuses >= 0
-                    ? "+" + roll.bonuses.toString()
+                    ? signedModifierString(roll.bonuses)
                     : roll.bonuses.toString()}
                 </Button>
               );
