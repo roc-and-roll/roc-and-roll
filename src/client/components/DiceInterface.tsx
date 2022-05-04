@@ -394,7 +394,7 @@ export function DiceInterface() {
                           addDiceType(`d${dice}`);
                           focusIndexFromRef(ref);
                         }}
-                        className="w-full diceInterface-btn"
+                        className="w-full diceInterface-button"
                         ref={ref}
                       >
                         d{dice}
@@ -403,7 +403,7 @@ export function DiceInterface() {
                   })}
                   <div className="flex">
                     <Button
-                      className="w-2/5"
+                      className="w-2/5 diceInterface-button"
                       onClick={() => {
                         addDiceType("d20");
                         focusIndexFromRef(d20Ref);
@@ -414,7 +414,7 @@ export function DiceInterface() {
                     </Button>
                     <Button
                       style={{ width: "30%", fontSize: "0.7rem" }}
-                      className="green"
+                      className="green diceInterface-button"
                       onClick={() => {
                         addDiceType("a20");
                         focusIndexFromRef(d20AdvRef);
@@ -425,7 +425,7 @@ export function DiceInterface() {
                     </Button>
                     <Button
                       style={{ width: "30%", fontSize: "0.7rem" }}
-                      className="red"
+                      className="red diceInterface-button"
                       onClick={() => {
                         addDiceType("i20");
                         focusIndexFromRef(d20DisRef);
@@ -441,7 +441,7 @@ export function DiceInterface() {
                     const ref = modRefs[modTypes.indexOf(bonus)];
                     return (
                       <Button
-                        className="h-1/6 w-1/2 flex-1"
+                        className="h-1/6 w-1/2 flex-1 diceInterface-button"
                         key={bonus}
                         onClick={() => {
                           addBonus(bonus);
@@ -457,7 +457,7 @@ export function DiceInterface() {
 
                 <td>
                   <Button
-                    className="w-full"
+                    className="w-full diceInterface-button"
                     disabled={!character}
                     onClick={async () => {
                       focusIndexFromRef(tempRef);
@@ -469,7 +469,7 @@ export function DiceInterface() {
                     <p>Template</p>
                   </Button>
                   <Button
-                    className="w-full h-[120px]"
+                    className="w-full h-[120px] diceInterface-button"
                     onClick={async () => {
                       focusIndexFromRef(rollRef);
                       await doRoll(false);
@@ -484,7 +484,7 @@ export function DiceInterface() {
                     </div>
                   </Button>
                   <Button
-                    className="w-full"
+                    className="w-full diceInterface-button"
                     onClick={() => {
                       clear();
                       focusIndexFromRef(clearRef);
@@ -508,7 +508,7 @@ export function DiceInterface() {
                     await doRoll(false, roll);
                   }}
                   ref={ref}
-                  className="w-1/3"
+                  className="w-1/3 diceInterface-button"
                 >
                   {roll.diceTypes.join(" + ")}{" "}
                   {roll.bonuses === null
