@@ -72,7 +72,7 @@ import { diceResult } from "../../dice-rolling/roll";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
-const DICE_ROLL_DISPLAY_DURATION = 90 * 1000;
+const DICE_ROLL_DISPLAY_DURATION = 9 * 1000;
 
 export const MapToken = React.memo<{
   mapId: RRMapID;
@@ -272,27 +272,24 @@ function MapTokenInner({
   useEffect(() => {
     const list = entries(notifications);
 
-    function checkEntrySuitable(
-      entry: RRLogEntry
-    ): entry is RRLogEntryDiceRoll {
-      return (
-        entry.type === "diceRoll" &&
-        entry.payload.characterIds !== null &&
-        entry.payload.characterIds.includes(character.id) &&
-        Date.now() - entry.timestamp < DICE_ROLL_DISPLAY_DURATION
-      );
+    function isNotTooOld(entry: RRLogEntry) {
+      return Date.now() - entry.timestamp < DICE_ROLL_DISPLAY_DURATION;
     }
 
-    let i = list.length - 1;
-    let entry: RRLogEntry | null = list[i] ?? null;
-    while (entry && !checkEntrySuitable(entry)) {
-      if (Date.now() - entry.timestamp > DICE_ROLL_DISPLAY_DURATION) {
-        entry = null;
-        break;
-      }
-      entry = list[i--] ?? null;
+    function hasRightCharacter(entry: RRLogEntryDiceRoll) {
+      return entry.payload.characterIds?.includes(character.id);
     }
-    setLastRolled(entry);
+
+    let selectedEntry: RRLogEntry | null = null;
+    for (
+      let i = list.length - 1, entry = list[i];
+      entry && !selectedEntry && isNotTooOld(entry);
+      entry = list[--i]
+    )
+      if (entry.type === "diceRoll" && hasRightCharacter(entry)) {
+        selectedEntry = entry;
+      }
+    setLastRolled(selectedEntry);
   }, [character.id, notifications]);
 
   useEffect(() => {
