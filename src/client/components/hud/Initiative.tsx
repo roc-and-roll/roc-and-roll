@@ -64,10 +64,19 @@ import ReactDOM from "react-dom";
 import { translate } from "transformation-matrix";
 import { useRRSettings } from "../../settings";
 import {
+  GetViewPortTranslationContext,
   SetTargetTransformContext,
   ViewPortSizeRefContext,
 } from "../map/MapContainer";
-import { makePoint, pointScale, pointSubtract } from "../../../shared/point";
+import {
+  makePoint,
+  pointAdd,
+  pointDistance,
+  pointMax,
+  pointMin,
+  pointScale,
+  pointSubtract,
+} from "../../../shared/point";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -117,56 +126,125 @@ export function InitiativeHUD() {
   const charactersRef = useServerStateRef((state) => state.characters);
   const viewPortSizeRef = useContext(ViewPortSizeRefContext);
   const setTargetTransform = useContext(SetTargetTransformContext);
+  const getViewportTranslation = useContext(GetViewPortTranslationContext);
   const setSelection = useRecoilCallback(
     ({ snapshot, set, reset }) =>
       (characterIds: RRCharacterID[]) => {
-        const tokens: RRToken[] = characterIds.flatMap(
-          (characterId) =>
-            (entries(mapObjectsRef.current).find(
-              (o) => o.type === "token" && o.characterId === characterId
-            ) as RRToken | undefined) ?? []
+        // Step 1: Get characters from the current entry of the initiative
+        // tracker and remove all characters that the player can't see.
+        const characters = characterIds
+          .flatMap(
+            (characterId) => charactersRef.current.entities[characterId] ?? []
+          )
+          .filter(
+            (character) => character.visibility === "everyone" || myself.isGM
+          );
+        if (characters.length === 0) {
+          return;
+        }
+
+        // Step 2: Find the map tokens of the characters. Note that a character
+        // can have multiple map tokens. In this case, we only take the map token
+        // that is closest to the center of the player's current viewport.
+        const viewPortSize = viewPortSizeRef.current;
+        const viewPortCenter = pointSubtract(
+          pointScale(viewPortSize, 0.5),
+          getViewportTranslation()
         );
-        const ids = tokens.map((t) => t.id);
-        const currentIds = snapshot
-          .getLoadable(selectedMapObjectIdsAtom)
-          .getValue();
-        if (
-          (tokens.length > 0 && ids.length !== currentIds.length) ||
-          ids.some((id) => !currentIds.includes(id))
-        ) {
-          if (canEdit) {
+        const mapObjects = entries(mapObjectsRef.current);
+        const mapTokens = characters.flatMap((character) => {
+          const mapTokens = mapObjects.filter(
+            (mapObject) =>
+              mapObject.type === "token" &&
+              mapObject.characterId === character.id
+          ) as RRToken[];
+
+          if (mapTokens.length <= 1) {
+            return mapTokens;
+          }
+
+          let closestMapToken = mapTokens[0]!;
+          for (let i = 1; i < mapTokens.length; i++) {
+            const mapToken = mapTokens[i]!;
+            if (
+              pointDistance(mapToken.position, viewPortCenter) <
+              pointDistance(closestMapToken.position, viewPortCenter)
+            ) {
+              closestMapToken = mapToken;
+            }
+          }
+          return [closestMapToken];
+        });
+        if (mapTokens.length === 0) {
+          return;
+        }
+
+        // Step 3: If the player can control at least one of the characters,
+        // select the corresponding map tokens of the characters they control.
+        if (canEdit) {
+          // Check if the player already has all matching map tokens selected.
+          // If that is the case, then we don't need to do anything.
+          const selectedMapObjectIds = snapshot
+            .getLoadable(selectedMapObjectIdsAtom)
+            .getValue();
+          if (
+            !mapTokens.every((mapToken) =>
+              selectedMapObjectIds.includes(mapToken.id)
+            )
+          ) {
+            // Deselect currently selected map objects.
             snapshot
               .getLoadable(selectedMapObjectIdsAtom)
               .getValue()
               .forEach((id) => reset(selectedMapObjectsFamily(id)));
-            set(selectedMapObjectIdsAtom, ids);
-            ids.map((id) => set(selectedMapObjectsFamily(id), true));
-          }
-          const viewPortSize = viewPortSizeRef.current;
-          const character =
-            charactersRef.current.entities[tokens[0]!.characterId];
-          if (
-            character &&
-            (character.visibility === "everyone" || myself.isGM)
-          ) {
-            const center = pointSubtract(
-              pointSubtract(
-                pointScale(viewPortSize, 0.5),
-                makePoint((character.scale * TOKEN_SIZE) / 2)
-              ),
-              tokens[0]!.position
+
+            // Get the ids of the map objects that the player can control.
+            const newSelectedMapObjectIds = mapTokens.flatMap((mapToken) => {
+              const character =
+                charactersRef.current.entities[mapToken.characterId]!;
+              return canControlToken(character, {
+                isGM: myself.isGM,
+                characterIds: myself.characterIds,
+              })
+                ? [mapToken.id]
+                : [];
+            });
+            set(selectedMapObjectIdsAtom, newSelectedMapObjectIds);
+            newSelectedMapObjectIds.map((id) =>
+              set(selectedMapObjectsFamily(id), true)
             );
-            setTargetTransform(translate(center.x, center.y));
           }
         }
+
+        // Step 4: Find the center of the map tokens.
+        let min = makePoint(Infinity);
+        let max = makePoint(-Infinity);
+        mapTokens.forEach((mapToken) => {
+          const character =
+            charactersRef.current.entities[mapToken.characterId]!;
+          const tl = mapToken.position;
+          const br = pointAdd(tl, makePoint(character.scale * TOKEN_SIZE));
+          min = pointMin(min, tl);
+          max = pointMax(max, br);
+        });
+        const center = pointAdd(min, pointScale(pointSubtract(max, min), 0.5));
+
+        // Step 5: Reposition the viewport to the center of the tokens.
+        const newViewPortCenter = pointSubtract(
+          pointScale(viewPortSize, 0.5),
+          center
+        );
+        setTargetTransform(translate(newViewPortCenter.x, newViewPortCenter.y));
       },
     [
+      viewPortSizeRef,
+      getViewportTranslation,
       mapObjectsRef,
       canEdit,
-      viewPortSizeRef,
-      charactersRef,
       setTargetTransform,
-      myself,
+      charactersRef,
+      myself.isGM,
+      myself.characterIds,
     ]
   );
 

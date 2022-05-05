@@ -64,28 +64,21 @@ export default (webpackEnv) => {
     },
   };
 
-  const babelLoader = {
-    loader: "babel-loader",
+  const swcLoader = {
+    loader: "swc-loader",
     options: {
-      cacheDirectory: true,
-      cacheCompression: false,
-      compact: isEnvProduction,
-      babelrc: false,
-      plugins: [
-        "@babel/plugin-syntax-dynamic-import",
-        isEnvDevelopment && require.resolve("react-refresh/babel"),
-      ].filter(Boolean),
-      presets: [
-        [
-          "@babel/preset-env",
-          {
-            useBuiltIns: "entry",
-            corejs: 3,
+      jsc: {
+        transform: {
+          react: {
+            runtime: "automatic",
+            refresh: isEnvDevelopment,
+            development: !isEnvProduction,
           },
-        ],
-        ["@babel/preset-react", { development: isEnvDevelopment }],
-        "@babel/preset-typescript",
-      ],
+        },
+      },
+      env: {
+        targets: "defaults",
+      },
     },
   };
 
@@ -100,13 +93,8 @@ export default (webpackEnv) => {
     entry: {
       client: [
         // Polyfills
-        // https://github.com/zloirock/core-js/blob/master/docs/2019-03-19-core-js-3-babel-and-a-look-into-the-future.md
         "core-js/stable",
         "regenerator-runtime/runtime",
-        // Polyfills for import()
-        // https://babeljs.io/docs/en/next/babel-plugin-syntax-dynamic-import.html#working-with-webpack-and-babel-preset-env
-        "core-js/features/promise",
-        "core-js/features/array/iterator",
         // Entrypoint
         "./src/client/client.ts",
       ],
@@ -270,7 +258,7 @@ export default (webpackEnv) => {
           test: /\.peggy$/,
           include: path.resolve("src"),
           use: [
-            babelLoader,
+            swcLoader,
             {
               loader: "@rocket.chat/peggy-loader",
               options: {},
@@ -280,7 +268,7 @@ export default (webpackEnv) => {
         {
           test: /\.(js|ts)x?$/,
           include: path.resolve("src"),
-          use: [babelLoader],
+          use: [swcLoader],
         },
       ],
     },

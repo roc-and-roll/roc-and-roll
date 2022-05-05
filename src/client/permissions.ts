@@ -7,7 +7,7 @@ import {
 
 export const canControlToken = (
   character: RRCharacter,
-  player: Pick<RRPlayer, "id" | "isGM" | "characterIds">
+  player: Pick<RRPlayer, "isGM" | "characterIds">
 ) => {
   return player.isGM || player.characterIds.includes(character.id);
 };

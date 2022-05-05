@@ -732,7 +732,17 @@ const RRMapViewWithRef = React.forwardRef<
           let selectedMapObjectIds = snapshot
             .getLoadable(selectedMapObjectIdsAtom)
             .getValue();
-          if (!selectedMapObjectIds.includes(object.id)) {
+          if (event.shiftKey) {
+            if (!selectedMapObjectIds.includes(object.id)) {
+              selectedMapObjectIds = [...selectedMapObjectIds, object.id];
+              setSelectedMapObjectIds([...selectedMapObjectIds]);
+            } else {
+              selectedMapObjectIds = selectedMapObjectIds.filter(
+                (id) => id !== object.id
+              );
+              setSelectedMapObjectIds([...selectedMapObjectIds]);
+            }
+          } else if (!selectedMapObjectIds.includes(object.id)) {
             selectedMapObjectIds = [object.id];
             // This update will not be reflected in the snapshot, so we also
             // need to update the local variable selectedMapObjectIds instead

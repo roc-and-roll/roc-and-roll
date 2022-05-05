@@ -121,6 +121,10 @@ export const SetViewPortSizeContext = React.createContext<
   React.Dispatch<React.SetStateAction<RRPoint>>
 >(() => {});
 
+export const GetViewPortTranslationContext = React.createContext<() => RRPoint>(
+  () => ({ x: 0, y: 0 })
+);
+
 export const SetTargetTransformContext = React.createContext<
   React.Dispatch<React.SetStateAction<Matrix>>
 >(() => {});
@@ -732,62 +736,72 @@ export default function MapContainer() {
     <ViewPortSizeContext.Provider value={viewPortSize}>
       <ViewPortSizeRefContext.Provider value={viewPortSizeRef}>
         <SetViewPortSizeContext.Provider value={setViewPortSize}>
-          <SetTargetTransformContext.Provider value={setTargetTransform}>
-            <div ref={dropRef} className="map-container">
-              <ReduxToRecoilBridge mapObjects={map.objects} />
-              <RRMapView
-                ref={mapViewRef}
-                targetTransform={targetTransform}
-                // map settings
-                mapId={map.id}
-                gridEnabled={map.settings.gridEnabled}
-                gridColor={map.settings.gridColor}
-                backgroundColor={map.settings.backgroundColor}
-                revealedAreas={map.settings.revealedAreas}
-                // other entities
-                myself={myself}
-                // toolbar / tool
-                toolButtonState={toolButtonState}
-                toolHandler={toolHandler}
-                // mouse position and token path sync
-                onMousePositionChanged={sendMousePositionToServer}
-                players={players}
-                onUpdateMeasurePath={updateMeasurePath}
-                // map objects
-                onStartMoveMapObjects={onStartMoveMapObjects}
-                onMoveMapObjects={onMoveMapObjects}
-                onStopMoveMapObjects={onStopMoveMapObjects}
-                onSmartSetTotalHP={onSmartSetTotalHP}
-                // misc
-                handleKeyDown={handleKeyDown}
-                toolOverlay={toolOverlay}
-              />
-              {
-                //<PlayerToolbar myself={myself} players={players} />
+          <GetViewPortTranslationContext.Provider
+            value={() => {
+              const transform = mapViewRef.current?.transform;
+              if (!transform) {
+                return { x: 0, y: 0 };
               }
-              <MapToolbar
-                mapId={map.id}
-                mapSettings={map.settings}
-                myself={myself}
-                setEditState={setEditState}
-              />
-              {!noHUD && (
-                <HUD mapBackgroundColor={map.settings.backgroundColor} />
-              )}
-              {dropProps.nativeFileHovered && (
-                <DropIndicator>
-                  <p>drop background images here</p>
-                </DropIndicator>
-              )}
-              {process.env.NODE_ENV === "development" &&
-                mapDebugOverlayActive && (
-                  <DebugMapContainerOverlay
-                    mapId={map.id}
-                    mapObjects={entries(map.objects)}
-                  />
+              return { x: transform.e, y: transform.f };
+            }}
+          >
+            <SetTargetTransformContext.Provider value={setTargetTransform}>
+              <div ref={dropRef} className="map-container">
+                <ReduxToRecoilBridge mapObjects={map.objects} />
+                <RRMapView
+                  ref={mapViewRef}
+                  targetTransform={targetTransform}
+                  // map settings
+                  mapId={map.id}
+                  gridEnabled={map.settings.gridEnabled}
+                  gridColor={map.settings.gridColor}
+                  backgroundColor={map.settings.backgroundColor}
+                  revealedAreas={map.settings.revealedAreas}
+                  // other entities
+                  myself={myself}
+                  // toolbar / tool
+                  toolButtonState={toolButtonState}
+                  toolHandler={toolHandler}
+                  // mouse position and token path sync
+                  onMousePositionChanged={sendMousePositionToServer}
+                  players={players}
+                  onUpdateMeasurePath={updateMeasurePath}
+                  // map objects
+                  onStartMoveMapObjects={onStartMoveMapObjects}
+                  onMoveMapObjects={onMoveMapObjects}
+                  onStopMoveMapObjects={onStopMoveMapObjects}
+                  onSmartSetTotalHP={onSmartSetTotalHP}
+                  // misc
+                  handleKeyDown={handleKeyDown}
+                  toolOverlay={toolOverlay}
+                />
+                {
+                  //<PlayerToolbar myself={myself} players={players} />
+                }
+                <MapToolbar
+                  mapId={map.id}
+                  mapSettings={map.settings}
+                  myself={myself}
+                  setEditState={setEditState}
+                />
+                {!noHUD && (
+                  <HUD mapBackgroundColor={map.settings.backgroundColor} />
                 )}
-            </div>
-          </SetTargetTransformContext.Provider>
+                {dropProps.nativeFileHovered && (
+                  <DropIndicator>
+                    <p>drop background images here</p>
+                  </DropIndicator>
+                )}
+                {process.env.NODE_ENV === "development" &&
+                  mapDebugOverlayActive && (
+                    <DebugMapContainerOverlay
+                      mapId={map.id}
+                      mapObjects={entries(map.objects)}
+                    />
+                  )}
+              </div>
+            </SetTargetTransformContext.Provider>
+          </GetViewPortTranslationContext.Provider>
         </SetViewPortSizeContext.Provider>
       </ViewPortSizeRefContext.Provider>
     </ViewPortSizeContext.Provider>

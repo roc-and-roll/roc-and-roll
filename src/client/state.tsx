@@ -471,7 +471,7 @@ export function ServerStateProvider({
         process.env.NODE_ENV === "development" &&
           DEBUG &&
           console.log(
-            "Server -> Client | SET_STATE | state = ",
+            `[${Date.now() / 1000}] | Server -> Client | SET_STATE | state = `,
             state,
             "finishedOptimisticUpdateIds = ",
             msg.finishedOptimisticUpdateIds
@@ -490,7 +490,9 @@ export function ServerStateProvider({
         process.env.NODE_ENV === "development" &&
           DEBUG &&
           console.log(
-            "Server -> Client | PATCH_STATE | patch = ",
+            `[${
+              Date.now() / 1000
+            }] | Server -> Client | PATCH_STATE | patch = `,
             patch,
             "finishedOptimisticUpdateIds = ",
             msg.finishedOptimisticUpdateIds
@@ -608,7 +610,10 @@ export function applyStatePatch(
   });
   process.env.NODE_ENV === "development" &&
     DEBUG &&
-    console.log("Server -> Client | PATCH_STATE | state = ", patchedState);
+    console.log(
+      `[${Date.now() / 1000}] | Server -> Client | PATCH_STATE | state = `,
+      patchedState
+    );
   return patchedState;
 }
 
@@ -721,6 +726,29 @@ interface DispatchActionResult {
   commitPendingOptimisticActionsNow: () => void;
 }
 
+function dispatchActions(
+  socket: Socket | undefined | null,
+  actions: SyncedStateAction[],
+  optimisticUpdateId: OptimisticUpdateID | null
+) {
+  if (!socket) {
+    return;
+  }
+
+  process.env.NODE_ENV === "development" &&
+    DEBUG &&
+    console.log(
+      `[${Date.now() / 1000}] | Client -> Server | REDUX_ACTION | actions = `,
+      actions,
+      "optimisticUpdateId = ",
+      optimisticUpdateId
+    );
+  socket.emit(SOCKET_DISPATCH_ACTION, {
+    actions,
+    optimisticUpdateId,
+  });
+}
+
 /**
  * Returns a dispatch function that can be used to dispatch an action to the
  * server.
@@ -761,10 +789,7 @@ export function useServerDispatch() {
         if (timeoutId !== null) {
           clearTimeout(timeoutId);
 
-          socket?.emit(SOCKET_DISPATCH_ACTION, {
-            actions: actions,
-            optimisticUpdateId,
-          });
+          dispatchActions(socket, actions, optimisticUpdateId);
         }
       }
     };
@@ -898,10 +923,12 @@ export function useServerDispatch() {
                   const { actions, optimisticUpdateId } =
                     throttledSyncToServerRef.current.get(optimisticKey)!;
                   throttledSyncToServerRef.current.delete(optimisticKey);
-                  socketRef.current?.emit(SOCKET_DISPATCH_ACTION, {
+
+                  dispatchActions(
+                    socketRef.current,
                     actions,
-                    optimisticUpdateId,
-                  });
+                    optimisticUpdateId
+                  );
                 }, syncToServerThrottle);
               }
 
@@ -932,10 +959,11 @@ export function useServerDispatch() {
             actionsToSyncToServerImmediately
           );
         }
-        socketRef.current?.emit(SOCKET_DISPATCH_ACTION, {
-          actions: actionsToSyncToServerImmediately,
-          optimisticUpdateId: immediateOptimisticUpdateId,
-        });
+        dispatchActions(
+          socketRef.current,
+          actionsToSyncToServerImmediately,
+          immediateOptimisticUpdateId
+        );
       }
 
       return {
@@ -962,10 +990,7 @@ export function useServerDispatch() {
             }
             throttledSyncToServerRef.current.delete(throttledOptimisticKey);
 
-            socketRef.current?.emit(SOCKET_DISPATCH_ACTION, {
-              actions,
-              optimisticUpdateId,
-            });
+            dispatchActions(socketRef.current, actions, optimisticUpdateId);
           }
         },
       };
