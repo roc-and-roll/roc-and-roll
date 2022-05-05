@@ -181,7 +181,7 @@ function LimitedUse({ character }: { character: RRCharacterProps }) {
   }
 
   return (
-    <div className="min-w-full select-none mt-2 bg-black/25 p-1 rounded">
+    <div className="min-w-full select-none mt-2 bg-black/25 p-1 rounded pointer-events-auto">
       <div className="flex justify-end">
         <Button onClick={() => takeRest(true)}>
           <FontAwesomeIcon fixedWidth icon={faBed} />
@@ -197,7 +197,7 @@ function LimitedUse({ character }: { character: RRCharacterProps }) {
             key={index}
             className={clsx(
               "flex items-center",
-              skillUsed ? "line-through opacity-50" : ""
+              skillUsed ? "line-through opacity-50" : "cursor-pointer"
             )}
             onClick={() => {
               if (skillUsed) return;
