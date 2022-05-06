@@ -183,7 +183,7 @@ export const DiceTemplate = React.memo(function DiceTemplate({
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
       className={clsx(
-        "dice-template",
+        "dice-template select-none",
         {
           created: template,
           selected: selectionCount > 0,

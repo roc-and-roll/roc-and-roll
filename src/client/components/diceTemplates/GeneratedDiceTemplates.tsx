@@ -93,7 +93,10 @@ function GeneratedDiceTemplate({ template }: { template: RRDiceTemplate }) {
       title="Click to Roll"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMoueLeave}
-      className={clsx("generated-dice-templates", isHovered ? "hovered" : "")}
+      className={clsx(
+        "generated-dice-templates select-none",
+        isHovered ? "hovered" : ""
+      )}
     >
       <p className="template-name">{template.name}</p>
       <p className="modifier-value">{modifierString}</p>
