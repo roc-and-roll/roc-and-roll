@@ -77,7 +77,7 @@ export default function QuickReferenceWrapper() {
     };
     window.addEventListener("keyup", listener, options);
     return () => window.removeEventListener("keyup", listener, options);
-  }, [open, setOpen, setSearchString, startTransition]);
+  }, [open, setOpen, setSearchString]);
 
   return open ? (
     <Suspense fallback={null}>

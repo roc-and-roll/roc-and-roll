@@ -34,6 +34,7 @@ import { Point } from "pixi.js";
 import { Particle } from "@pixi/particle-emitter";
 import { PRectangle } from "../Primitives";
 import { Vignette } from "./Vignette";
+import { useEvent } from "../../../useEvent";
 
 export const PixiFilterContext = React.createContext<{
   addFilter: (f: PIXI.Filter) => void;
@@ -69,7 +70,7 @@ export function PixiGlobalFilters({
     setFilters((filters) => filters.filter((f) => f !== filter));
   }, []);
 
-  const getFilters = useCallback(() => filters, [filters]);
+  const getFilters = useEvent(() => filters);
 
   return (
     <PixiFilterContext.Provider value={{ addFilter, removeFilter, getFilters }}>

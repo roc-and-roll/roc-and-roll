@@ -107,7 +107,7 @@ export function DiceInterface() {
 
   useEffect(() => {
     onFocusIndexChange();
-  }, [focusIndex, onFocusIndexChange]);
+  }, [focusIndex]);
 
   function focusIndexFromRef(
     searchedRef: React.RefObject<HTMLButtonElement> | undefined

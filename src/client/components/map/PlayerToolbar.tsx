@@ -102,7 +102,7 @@ function ToolbarChat({
       const action = privateChatAdd(myself.id, player.id);
       dispatch(action);
     }
-  }, [dispatch, myChats, myself.id, player.id]);
+  }, [myChats, myself.id, player.id]);
 
   if (myChats.length < 1) return null;
   return <Chat id={myChats[0]!.id}></Chat>;

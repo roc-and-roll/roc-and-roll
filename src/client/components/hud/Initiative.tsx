@@ -239,10 +239,8 @@ export function InitiativeHUD() {
     [
       viewPortSizeRef,
       getViewportTranslation,
-      mapObjectsRef,
       canEdit,
       setTargetTransform,
-      charactersRef,
       myself.isGM,
       myself.characterIds,
     ]
@@ -466,7 +464,7 @@ const InitiativeEntry = React.memo<{
       }
   );
 
-  const onHover = useRecoilCallback((args) => handleHover(args), [handleHover]);
+  const onHover = useRecoilCallback((args) => handleHover(args), []);
 
   useEffect(() => {
     // If the user clicks the "remove" button, we never get the onMouseLeave

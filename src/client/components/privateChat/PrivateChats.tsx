@@ -74,7 +74,7 @@ export function Chat({
         );
       }
     }
-  }, [chat, chat?.messages, dispatch, myself.id, tabFocused]);
+  }, [chat, chat?.messages, myself.id, tabFocused]);
 
   if (!chat || !otherId || !otherPlayer) {
     return <>Loading...</>;

@@ -157,7 +157,7 @@ export default function MapContainer() {
       entries(stateRef.current).find((player) =>
         player.characterIds.includes(characterId)
       ),
-    [stateRef]
+    []
   );
 
   const addBackgroundImages = async (files: File[], point: RRPoint) => {
@@ -448,7 +448,7 @@ export default function MapContainer() {
           e.stopPropagation();
         }
       },
-    [dispatch, initiativeTracker.entries, map.objects, mapId]
+    [initiativeTracker.entries, map.objects, mapId]
   );
 
   const [editState, setEditState] = useState<MapEditState>({
@@ -479,7 +479,7 @@ export default function MapContainer() {
           );
         }
       },
-    [dispatch, mapId]
+    [mapId]
   );
 
   useEffect(() => {
@@ -513,7 +513,7 @@ export default function MapContainer() {
           })
         );
       },
-      [dispatch, myself.id]
+      [myself.id]
     ),
     syncedDebounceMakerRef.current,
     CURSOR_POSITION_SYNC_HISTORY_STEPS,
@@ -548,7 +548,7 @@ export default function MapContainer() {
           syncToServerThrottle: syncedDebounceMakerRef.current.getTime(),
         };
       }),
-    [dispatch, myself.id]
+    [myself.id]
   );
 
   const convertToolButtonState = (): ToolButtonState => {
@@ -593,7 +593,7 @@ export default function MapContainer() {
         syncToServerThrottle: CURSOR_POSITION_SYNC_DEBOUNCE,
       }));
     },
-    [dispatch, mapId]
+    [mapId]
   );
 
   const [toolHandler, toolOverlay] = useMapToolHandler(
@@ -657,7 +657,7 @@ export default function MapContainer() {
             });
         });
       },
-    [dispatch, mapId]
+    [mapId]
   );
 
   const onStopMoveMapObjects = useRecoilCallback(
@@ -718,7 +718,7 @@ export default function MapContainer() {
               return [];
             });
         }),
-    [dispatch, mapId]
+    [mapId]
   );
 
   const players = useServerState((state) => state.players);

@@ -127,7 +127,7 @@ export function MapListEntry({
       }),
       canDrop: (item) => players.every((player) => player.id !== item.id),
     }),
-    [dispatch, mapId, players]
+    [mapId, players]
   );
 
   const { send } = useServerMessages();

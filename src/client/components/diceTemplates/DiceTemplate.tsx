@@ -107,7 +107,7 @@ export const DiceTemplate = React.memo(function DiceTemplate({
       },
       canDrop: (_item, monitor) => monitor.isOver({ shallow: true }),
     }),
-    [categoryId, dispatch, character.id, template.id]
+    [categoryId, character.id, template.id]
   );
 
   useEffect(() => {

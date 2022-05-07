@@ -7638,12 +7638,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-react-hooks@npm:rc":
+"eslint-plugin-react-hooks@npm:4.2.1-rc.0":
   version: 4.2.1-rc.0
   resolution: "eslint-plugin-react-hooks@npm:4.2.1-rc.0"
   peerDependencies:
     eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
   checksum: e4f569ad3faf6863c24755c44350ad95a7d467e32ad37d927e609d9b28816a9ed849a2842519c55bdd8efe2ef3eba6a0525b0b2868385830d4f8d9a4194f4667
+  languageName: node
+  linkType: hard
+
+"eslint-plugin-react-hooks@patch:eslint-plugin-react-hooks@npm:4.2.1-rc.0#.yarn/patches/eslint-plugin-react-hooks-npm-4.2.1-rc.0-3bbd1464a1::locator=roc-and-roll%40workspace%3A.":
+  version: 4.2.1-rc.0
+  resolution: "eslint-plugin-react-hooks@patch:eslint-plugin-react-hooks@npm%3A4.2.1-rc.0#.yarn/patches/eslint-plugin-react-hooks-npm-4.2.1-rc.0-3bbd1464a1::version=4.2.1-rc.0&hash=e4d53a&locator=roc-and-roll%40workspace%3A."
+  peerDependencies:
+    eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
+  checksum: 3275a92902f9af221b4b9bcf9baedd0f84f0ee051e031639ffca3b4de212fb3459f6df51839bda195cb06f7e0003afe98e62dfb4203041fd3083a6626a1a8d5a
   languageName: node
   linkType: hard
 

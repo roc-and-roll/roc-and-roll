@@ -81,7 +81,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
       },
       canDrop: (_item, monitor) => monitor.isOver({ shallow: true }),
     }),
-    [category, dispatch, character]
+    [category, character]
   );
 
   const doRoll = (crit: boolean = false) => {

@@ -134,7 +134,7 @@ export function useDebounce<A extends unknown[]>(
     return () => {
       onDisposeDebouncer(debouncer);
     };
-  }, [debouncer, onDisposeDebouncer]);
+  }, [debouncer]);
 
   return [
     debouncer.debouncedCallback,

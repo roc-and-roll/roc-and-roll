@@ -195,7 +195,7 @@ export function useSmartChangeHP(myselfIsGM: boolean) {
         );
       }
     },
-    [dialog, dispatch, myselfIsGM]
+    [dialog, myselfIsGM]
   );
 }
 

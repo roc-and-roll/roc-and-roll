@@ -151,7 +151,7 @@ export const CharacterManager = React.memo(function CharacterManager() {
         setIsAddingToken(false);
       }
     },
-    [dispatch, myself.id]
+    [myself.id]
   );
 
   return (

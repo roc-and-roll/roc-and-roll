@@ -93,7 +93,7 @@ export function useMySelectedCharacters<T extends (keyof RRCharacter)[]>(
         })
       )
     );
-  }, [myself.currentMap, selectedMapObjectIds, stateRef]);
+  }, [myself.currentMap, selectedMapObjectIds]);
 
   return useServerState(
     (state) =>

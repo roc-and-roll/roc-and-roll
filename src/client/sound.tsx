@@ -214,7 +214,7 @@ export function useRRComplexSound(
       howlRef.current?.unload();
       howlRef.current = null;
     };
-  }, [id, setLoadingSounds]);
+  }, [setLoadingSounds]);
 
   useEffect(() => {
     howlRef.current?.volume(volume);
@@ -237,14 +237,14 @@ export function useRRComplexSound(
   // Stop playback if the url or duration changes.
   useEffect(() => {
     stop();
-  }, [stop, url, duration]);
+  }, [url, duration]);
 
   // Update lockedSounds if the state of this sound changes.
   const setLockedSounds = useSetRecoilState(lockedSoundsAtom);
   useEffect(() => {
     setLockedSounds(updateLockedSounds(id, state === "error-needs-unlock"));
     return () => setLockedSounds(updateLockedSounds(id, false));
-  }, [state, setLockedSounds, id]);
+  }, [state]);
 
   useDebugValue({
     url,
@@ -385,7 +385,7 @@ function ActivePlaylistPlayerImpl({
   return null;
 }
 
-type CurrentlyPlaylingPlaylistEntryAndSongResult =
+type CurrentlyPlayingPlaylistEntryAndSongResult =
   | null
   | ({
       startedAt: number;
@@ -407,7 +407,7 @@ type CurrentlyPlaylingPlaylistEntryAndSongResult =
 export function useCurrentlyPlayingPlaylistEntryAndSong(
   playlist: RRPlaylist,
   activeSoundSet?: RRActiveSoundSet
-): CurrentlyPlaylingPlaylistEntryAndSongResult {
+): CurrentlyPlayingPlaylistEntryAndSongResult {
   const assetsRef = useServerStateRef((state) => state.assets);
 
   const calculate = useCallback(() => {
@@ -487,7 +487,7 @@ export function useCurrentlyPlayingPlaylistEntryAndSong(
   }, [activeSoundSet?.startedAt, assetsRef, playlist.entries]);
 
   const [current, setCurrent] =
-    useState<CurrentlyPlaylingPlaylistEntryAndSongResult>(() => calculate());
+    useState<CurrentlyPlayingPlaylistEntryAndSongResult>(() => calculate());
 
   useEffect(() => setCurrent(calculate()), [calculate]);
 

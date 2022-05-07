@@ -226,7 +226,7 @@ function SoundSetDetails({
         );
       }
     },
-    [dispatch, prompt, soundSet.id]
+    [prompt, soundSet.id]
   );
 
   return (

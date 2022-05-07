@@ -71,12 +71,9 @@ export const Music = React.memo(function Music() {
     (song) => isTabletopAudioAsset.safeParse(song).success
   );
 
-  const onStop = useCallback(
-    (s: RRActiveSongOrSoundSet) => {
-      dispatch(ephemeralMusicRemove(s.id));
-    },
-    [dispatch]
-  );
+  const onStop = useCallback((s: RRActiveSongOrSoundSet) => {
+    dispatch(ephemeralMusicRemove(s.id));
+  }, []);
 
   const onFavorite = useCallback(
     (song: RRAssetSong) => {
@@ -93,7 +90,7 @@ export const Music = React.memo(function Music() {
         syncToServerThrottle: 0,
       });
     },
-    [dispatch, myself.id, myself.favoriteAssetIds]
+    [myself.id, myself.favoriteAssetIds]
   );
 
   const onReplace = useCallback(
@@ -114,7 +111,7 @@ export const Music = React.memo(function Music() {
         }),
       ]);
     },
-    [dispatch, myself.id]
+    [myself.id]
   );
 
   const onAdd = useCallback(
@@ -131,7 +128,7 @@ export const Music = React.memo(function Music() {
         })
       );
     },
-    [dispatch, myself.id]
+    [myself.id]
   );
 
   const onSetVolume = useCallback(
@@ -141,7 +138,7 @@ export const Music = React.memo(function Music() {
         optimisticKey: `volume/${t.id}`,
         syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
       }),
-    [dispatch]
+    []
   );
 
   const actions = useMemo(

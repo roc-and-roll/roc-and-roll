@@ -40,7 +40,7 @@ export function PixiPopover({
         close(null);
       };
     }
-  }, [dialog, visible, onClickOutsideRef]);
+  }, [dialog, visible]);
 
   useEffect(() => {
     updateContentRef.current?.(() => <DialogContent>{content}</DialogContent>);

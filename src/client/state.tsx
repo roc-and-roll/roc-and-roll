@@ -666,12 +666,12 @@ export function useServerStateRef<T>(
   useEffect(() => {
     subscribe(handleChange);
     return () => unsubscribe(handleChange);
-  }, [subscribe, unsubscribe, handleChange]);
+  }, [subscribe, unsubscribe]);
 
   // Re-execute the `onChange` callback if the selector changes.
   useEffect(() => {
     handleChange(stateRef.current);
-  }, [selector, stateRef, handleChange]);
+  }, [selector, stateRef]);
 
   return selectedStateRef;
 }
@@ -781,7 +781,7 @@ export function useServerDispatch() {
     return () => {
       onUnmount();
     };
-  }, [onUnmount]);
+  }, []);
 
   return useEvent(
     <

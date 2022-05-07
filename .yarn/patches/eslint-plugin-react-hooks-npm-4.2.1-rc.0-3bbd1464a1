@@ -1,0 +1,28 @@
+diff --git a/cjs/eslint-plugin-react-hooks.development.js b/cjs/eslint-plugin-react-hooks.development.js
+index cff0f40c8056721f661911099a05552e0ed2f8b6..581e0c06f1fe58070ebfe26ec231325e9899ae23 100644
+--- a/cjs/eslint-plugin-react-hooks.development.js
++++ b/cjs/eslint-plugin-react-hooks.development.js
+@@ -904,7 +904,7 @@ var ExhaustiveDeps = {
+         var _callee = callee,
+             name = _callee.name;
+
+-        if (name === 'useRef' && id.type === 'Identifier') {
++        if ((name === 'useRef' || name === 'useLatest' || name === 'useEvent' || name === 'useConstant' || name === 'useServerStateRef' || name === 'useSetRecoilState' || name === 'useServerDispatch') && id.type === 'Identifier') {
+           // useRef() return value is stable.
+           return true;
+         } else if (name === 'useState' || name === 'useReducer') {
+diff --git a/index.js b/index.js
+index 0e91baf6cd189a428d0d96bd5bf60c98a5127c06..7e86d469a8ccc0a15ade3aea580729a798d5eb0c 100644
+--- a/index.js
++++ b/index.js
+@@ -1,9 +1,3 @@
+ 'use strict';
+
+-// TODO: this doesn't make sense for an ESLint rule.
+-// We need to fix our build process to not create bundles for "raw" packages like this.
+-if (process.env.NODE_ENV === 'production') {
+-  module.exports = require('./cjs/eslint-plugin-react-hooks.production.min.js');
+-} else {
+-  module.exports = require('./cjs/eslint-plugin-react-hooks.development.js');
+-}
++module.exports = require('./cjs/eslint-plugin-react-hooks.development.js');

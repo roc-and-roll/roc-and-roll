@@ -310,7 +310,7 @@ const RRMapViewWithRef = React.forwardRef<
     return () => {
       rafStop();
     };
-  }, [targetTransform, transformRef, rafStart, rafStop, setTransform]);
+  }, [targetTransform, rafStart, rafStop, setTransform]);
 
   const { subscribe, unsubscribe } = useServerMessages();
   useEffect(() => {
@@ -616,7 +616,7 @@ const RRMapViewWithRef = React.forwardRef<
           }
         );
       },
-    [myself, stateRef]
+    [myself]
   );
 
   useEffect(() => {

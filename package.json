@@ -249,7 +249,8 @@
   },
   "resolutions": {
     "@reduxjs/toolkit": "patch:@reduxjs/toolkit@npm:1.6.1#.yarn/patches/@reduxjs-toolkit-npm-1.6.1-a0999c8262",
-    "peggy": "patch:peggy@npm:1.2.0#.yarn/patches/peggy-npm-1.2.0-dcccbe8690"
+    "peggy": "patch:peggy@npm:1.2.0#.yarn/patches/peggy-npm-1.2.0-dcccbe8690",
+    "eslint-plugin-react-hooks": "patch:eslint-plugin-react-hooks@npm:4.2.1-rc.0#.yarn/patches/eslint-plugin-react-hooks-npm-4.2.1-rc.0-3bbd1464a1"
   },
   "packageManager": "yarn@3.1.1"
 }

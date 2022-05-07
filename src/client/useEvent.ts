@@ -11,6 +11,5 @@ export function useEvent<A extends any[], R>(
   fn: (...args: A) => R
 ): (...args: A) => R {
   const fnRef = useLatest(fn);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useCallback((...args: A): R => fnRef.current(...args), []);
 }

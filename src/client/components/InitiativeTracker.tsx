@@ -137,10 +137,10 @@ const InitiativeEntry = React.memo<{
   );
 
   const onHover = useRecoilCallback(
-    handleHover,
+    (args) => handleHover(args),
     // The useEffect below assumes that this callback never changes, therefore
-    // no dependencies are allowed (except handleHover, which never changes).
-    [handleHover]
+    // no dependencies are allowed.
+    []
   );
 
   useEffect(() => {
