@@ -2,14 +2,14 @@
 // Based on the code from a PR by @Svish to react-use
 // https://github.com/streamich/react-use/pull/1438
 // Licensed under the Unlicense.
-import { useState, useCallback, Dispatch, SetStateAction } from "react";
+import { useState, Dispatch, SetStateAction } from "react";
 import {
   Jsonify, //cspell: disable-line
   JsonValue,
 } from "type-fest";
-import { useLatest } from "./useLatest";
 import { isBrowser, noop } from "./util";
 import sjson from "secure-json-parse";
+import { useEvent } from "./useEvent";
 
 const deserializer = sjson.parse;
 
@@ -73,38 +73,33 @@ export default function useLocalState<T>(
     }
   });
 
-  const set = useCallback(
-    (valOrFunc: SetStateAction<T>) => {
-      setState((prevState) => {
-        const newState =
-          typeof valOrFunc === "function"
-            ? (valOrFunc as (prevState: T) => T)(prevState)
-            : valOrFunc;
+  const set = useEvent((valOrFunc: SetStateAction<T>) => {
+    setState((prevState) => {
+      const newState =
+        typeof valOrFunc === "function"
+          ? (valOrFunc as (prevState: T) => T)(prevState)
+          : valOrFunc;
 
-        try {
-          storage.setItem(key, serializer(newState));
-          return newState;
-        } catch {
-          // If the user is in private mode or has storage restriction
-          // localStorage can throw. Also JSON.stringify can throw.
-          return prevState;
-        }
-      });
-    },
-    [key, storage]
-  );
+      try {
+        storage.setItem(key, serializer(newState));
+        return newState;
+      } catch {
+        // If the user is in private mode or has storage restriction
+        // localStorage can throw. Also JSON.stringify can throw.
+        return prevState;
+      }
+    });
+  });
 
-  const initializerRef = useLatest(initializer);
-
-  const remove = useCallback(() => {
+  const remove = useEvent(() => {
     try {
       storage.removeItem(key);
-      setState(getInitialValue(initializerRef.current));
+      setState(getInitialValue(initializer));
     } catch {
       // If the user is in private mode or has storage restriction
       // localStorage can throw.
     }
-  }, [initializerRef, key, storage]);
+  });
 
   return [state, set, remove];
 }

@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { Flipped, Flipper } from "react-flip-toolkit";
-import { useRecoilCallback, useRecoilValue } from "recoil";
+import { CallbackInterface, useRecoilCallback, useRecoilValue } from "recoil";
 import {
   EMPTY_ENTITY_COLLECTION,
   EntityCollection,
@@ -39,7 +39,6 @@ import {
   useServerState,
   useServerStateRef,
 } from "../../state";
-import { useLatest } from "../../useLatest";
 import { CharacterStack } from "../characters/CharacterPreview";
 import {
   highlightedCharactersFamily,
@@ -77,6 +76,7 @@ import {
   pointScale,
   pointSubtract,
 } from "../../../shared/point";
+import { useEvent } from "../../useEvent";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -451,24 +451,22 @@ const InitiativeEntry = React.memo<{
 
   const characterIds =
     entry.type === "character" ? entry.characterIds : EMPTY_ARRAY;
-  const characterIdsRef = useLatest(characterIds);
 
-  const onHover = useRecoilCallback(
-    ({ set, reset }) =>
+  const handleHover = useEvent(
+    ({ set, reset }: CallbackInterface) =>
       (hovered: boolean) => {
         setHovered(hovered);
-        characterIdsRef.current.forEach((characterId) => {
+        characterIds.forEach((characterId) => {
           if (hovered) {
             set(highlightedCharactersFamily(characterId), true);
           } else {
             reset(highlightedCharactersFamily(characterId));
           }
         });
-      },
-    // The useEffect below assumes that this callback never changes, therefore
-    // all dependencies must be refs.
-    [characterIdsRef]
+      }
   );
+
+  const onHover = useRecoilCallback((args) => handleHover(args), [handleHover]);
 
   useEffect(() => {
     // If the user clicks the "remove" button, we never get the onMouseLeave

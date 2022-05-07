@@ -26,10 +26,10 @@ import {
   SyncedStateAction,
 } from "../shared/state";
 import { mapGetAndSetIfMissing, mergeDeep, rrid } from "../shared/util";
-import { useLatest } from "./useLatest";
 import sjson from "secure-json-parse";
 import { measureTime } from "./debug";
 import { useGuaranteedMemo } from "./useGuaranteedMemo";
+import { useEvent } from "./useEvent";
 
 type DeduplicationKey = Opaque<string, "optimisticDeduplicationKey">;
 
@@ -655,36 +655,23 @@ export function useServerStateRef<T>(
 
   const selectedStateRef = useRef(selector(stateRef.current));
 
-  const onChangeRef = useLatest(onChange);
-  const selectorRef = useLatest(selector);
-  const equalityFnRef = useLatest(equalityFn);
-
-  useEffect(() => {
-    const subscriber = (newState: SyncedState) => {
-      const newSelectedState = selectorRef.current(newState);
-      if (!equalityFnRef.current(selectedStateRef.current, newSelectedState)) {
-        selectedStateRef.current = newSelectedState;
-        onChangeRef.current?.(newSelectedState);
-      }
-    };
-    subscribe(subscriber);
-    return () => unsubscribe(subscriber);
-  }, [
-    equalityFnRef,
-    onChangeRef,
-    selectedStateRef,
-    selectorRef,
-    subscribe,
-    unsubscribe,
-  ]);
-
-  useEffect(() => {
-    const newSelectedState = selector(stateRef.current);
+  const handleChange = useEvent((newState: SyncedState) => {
+    const newSelectedState = selector(newState);
     if (!equalityFn(selectedStateRef.current, newSelectedState)) {
       selectedStateRef.current = newSelectedState;
-      onChangeRef.current?.(newSelectedState);
+      onChange?.(newSelectedState);
     }
-  }, [onChangeRef, selectedStateRef, selector, stateRef, equalityFn]);
+  });
+
+  useEffect(() => {
+    subscribe(handleChange);
+    return () => unsubscribe(handleChange);
+  }, [subscribe, unsubscribe, handleChange]);
+
+  // Re-execute the `onChange` callback if the selector changes.
+  useEffect(() => {
+    handleChange(stateRef.current);
+  }, [selector, stateRef, handleChange]);
 
   return selectedStateRef;
 }
@@ -758,8 +745,6 @@ function dispatchActions(
 export function useServerDispatch() {
   const { socket, addLocalOptimisticActionAppliers, stateRef } =
     useContext(ServerStateContext);
-  const socketRef = useLatest(socket);
-
   const dispatcherKey = useGuaranteedMemo(
     () => rrid<{ id: OptimisticActionApplierDispatcherKey }>(),
     []
@@ -776,26 +761,29 @@ export function useServerDispatch() {
     >
   >(new Map());
 
-  useEffect(() => {
-    const socket = socketRef.current;
-    const throttledSyncToServer = throttledSyncToServerRef.current;
+  const onUnmount = useEvent(() => {
+    // Make sure that all throttled actions are dispatched on unmount.
+    // Otherwise, they would be lost.
+    for (const {
+      timeoutId,
+      actions,
+      optimisticUpdateId,
+    } of throttledSyncToServerRef.current.values()) {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
 
-    return () => {
-      for (const {
-        timeoutId,
-        actions,
-        optimisticUpdateId,
-      } of throttledSyncToServer.values()) {
-        if (timeoutId !== null) {
-          clearTimeout(timeoutId);
-
-          dispatchActions(socket, actions, optimisticUpdateId);
-        }
+        dispatchActions(socket, actions, optimisticUpdateId);
       }
-    };
-  }, [socketRef]);
+    }
+  });
 
-  return useCallback(
+  useEffect(() => {
+    return () => {
+      onUnmount();
+    };
+  }, [onUnmount]);
+
+  return useEvent(
     <
       A extends SyncedStateAction | OptimisticActionsConfig,
       R extends A | Array<A>
@@ -924,11 +912,7 @@ export function useServerDispatch() {
                     throttledSyncToServerRef.current.get(optimisticKey)!;
                   throttledSyncToServerRef.current.delete(optimisticKey);
 
-                  dispatchActions(
-                    socketRef.current,
-                    actions,
-                    optimisticUpdateId
-                  );
+                  dispatchActions(socket, actions, optimisticUpdateId);
                 }, syncToServerThrottle);
               }
 
@@ -960,7 +944,7 @@ export function useServerDispatch() {
           );
         }
         dispatchActions(
-          socketRef.current,
+          socket,
           actionsToSyncToServerImmediately,
           immediateOptimisticUpdateId
         );
@@ -990,12 +974,11 @@ export function useServerDispatch() {
             }
             throttledSyncToServerRef.current.delete(throttledOptimisticKey);
 
-            dispatchActions(socketRef.current, actions, optimisticUpdateId);
+            dispatchActions(socket, actions, optimisticUpdateId);
           }
         },
       };
-    },
-    [stateRef, socketRef, addLocalOptimisticActionAppliers, dispatcherKey]
+    }
   );
 }
 

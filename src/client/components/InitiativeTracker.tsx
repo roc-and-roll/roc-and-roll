@@ -26,13 +26,12 @@ import { useMyProps } from "../myself";
 import { canControlToken } from "../permissions";
 import { diceResult, rollInitiative } from "../dice-rolling/roll";
 import { useServerDispatch, useServerState } from "../state";
-import { useLatest } from "../useLatest";
 import useLocalState from "../useLocalState";
 import { GMArea } from "./GMArea";
 import { CharacterStack } from "./characters/CharacterPreview";
 import { Button } from "./ui/Button";
 import { Flipper, Flipped } from "react-flip-toolkit";
-import { useRecoilCallback, useRecoilValue } from "recoil";
+import { CallbackInterface, useRecoilCallback, useRecoilValue } from "recoil";
 import {
   highlightedCharactersFamily,
   selectedMapObjectIdsAtom,
@@ -42,6 +41,7 @@ import ReactDOM from "react-dom";
 import { SmartIntegerInput } from "./ui/TextInput";
 import { usePrompt } from "../dialog-boxes";
 import { NotificationAreaPortal } from "./Notifications";
+import { useEvent } from "../useEvent";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -122,22 +122,25 @@ const InitiativeEntry = React.memo<{
 
   const characterIds =
     entry.type === "character" ? entry.characterIds : EMPTY_ARRAY;
-  const characterIdsRef = useLatest(characterIds);
 
-  const onHover = useRecoilCallback(
-    ({ set, reset }) =>
+  const handleHover = useEvent(
+    ({ set, reset }: CallbackInterface) =>
       (hovered: boolean) => {
-        characterIdsRef.current.forEach((characterId) => {
+        characterIds.forEach((characterId) => {
           if (hovered) {
             set(highlightedCharactersFamily(characterId), true);
           } else {
             reset(highlightedCharactersFamily(characterId));
           }
         });
-      },
+      }
+  );
+
+  const onHover = useRecoilCallback(
+    handleHover,
     // The useEffect below assumes that this callback never changes, therefore
-    // all dependencies must be refs.
-    [characterIdsRef]
+    // no dependencies are allowed (except handleHover, which never changes).
+    [handleHover]
   );
 
   useEffect(() => {

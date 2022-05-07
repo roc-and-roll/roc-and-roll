@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useDrop } from "react-dnd";
+import { DropTargetMonitor, useDrop } from "react-dnd";
 import {
   ephemeralPlayerUpdate,
   mapObjectAdd,
@@ -29,7 +29,6 @@ import {
   useServerState,
   useServerStateRef,
 } from "../../state";
-import { useLatest } from "../../useLatest";
 import {
   SyncedDebounceMaker,
   useAggregatedDoubleDebounce,
@@ -78,6 +77,7 @@ import { HUD } from "../hud/HUD";
 import { useDebugSettings } from "../hud/DebugSettings";
 import { useStateWithRef } from "../../useRefState";
 import { identity, Matrix } from "transformation-matrix";
+import { useEvent } from "../../useEvent";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -209,14 +209,84 @@ export default function MapContainer() {
       await alert("File upload failed.");
     }
   };
-  const addBackgroundImagesRef = useLatest(addBackgroundImages);
 
   const getTransform = useRecoilCallback(
     ({ snapshot }) =>
-      () => {
-        return snapshot.getLoadable(mapTransformAtom).getValue();
-      },
+      () =>
+        snapshot.getLoadable(mapTransformAtom).getValue(),
     []
+  );
+
+  const onDrop = useEvent(
+    (
+      item: { id: RRCharacterID | RRMapID } | { files: File[] },
+      monitor: DropTargetMonitor<unknown, unknown>
+    ) => {
+      const topLeft = dropRef2.current!.getBoundingClientRect();
+      const dropPosition = monitor.getClientOffset();
+      const x = dropPosition!.x - topLeft.x;
+      const y = dropPosition!.y - topLeft.y;
+      const point = globalToLocal(getTransform(), {
+        x,
+        y,
+      });
+
+      if ("files" in item) {
+        void addBackgroundImages(item.files, point);
+        return;
+      }
+
+      if (monitor.getItemType() === "map") {
+        dispatch(
+          mapObjectAdd(mapId, {
+            type: "mapLink",
+            position: pointSubtract(
+              point,
+              pointScale(makePoint(MAP_LINK_SIZE), 0.5)
+            ),
+            rotation: 0,
+            playerId: myself.id,
+            mapId: item.id as RRMapID,
+            locked: false,
+            color: "#000",
+            visibility: "everyone",
+            roughness: 0,
+          })
+        );
+        return;
+      }
+
+      let characterId = item.id as RRCharacterID;
+
+      const character = getCharacter(characterId);
+
+      if (!character) return;
+
+      // first create copy
+      if (character.isTemplate) {
+        const { id: _, ...copy } = character;
+        const action = characterAdd({
+          ...copy,
+          localToMap: mapId,
+          isTemplate: false,
+        });
+        dispatch(action);
+        characterId = action.payload.id;
+      }
+
+      dispatch(
+        mapObjectAdd(mapId, {
+          type: "token",
+          position: snapPointToGrid(point),
+          rotation: 0,
+          // Always pretend that the player the character belongs to has
+          // created the token on the map. Otherwise, characters dragged onto
+          // the map by the GM can not be controlled by the player.
+          playerId: (getOwnerOfCharacter(characterId) ?? myself).id,
+          characterId,
+        })
+      );
+    }
   );
 
   const [dropProps, dropRef1] = useDrop<
@@ -226,86 +296,13 @@ export default function MapContainer() {
   >(
     () => ({
       accept: ["token", "tokenTemplate", "map", NativeTypes.FILE],
-      drop: (item, monitor) => {
-        const topLeft = dropRef2.current!.getBoundingClientRect();
-        const dropPosition = monitor.getClientOffset();
-        const x = dropPosition!.x - topLeft.x;
-        const y = dropPosition!.y - topLeft.y;
-        const point = globalToLocal(getTransform(), {
-          x,
-          y,
-        });
-
-        if ("files" in item) {
-          void addBackgroundImagesRef.current(item.files, point);
-          return;
-        }
-
-        if (monitor.getItemType() === "map") {
-          dispatch(
-            mapObjectAdd(mapId, {
-              type: "mapLink",
-              position: pointSubtract(
-                point,
-                pointScale(makePoint(MAP_LINK_SIZE), 0.5)
-              ),
-              rotation: 0,
-              playerId: myself.id,
-              mapId: item.id as RRMapID,
-              locked: false,
-              color: "#000",
-              visibility: "everyone",
-              roughness: 0,
-            })
-          );
-          return;
-        }
-
-        let characterId = item.id as RRCharacterID;
-
-        const character = getCharacter(characterId);
-
-        if (!character) return;
-
-        // first create copy
-        if (character.isTemplate) {
-          const { id: _, ...copy } = character;
-          const action = characterAdd({
-            ...copy,
-            localToMap: mapId,
-            isTemplate: false,
-          });
-          dispatch(action);
-          characterId = action.payload.id;
-        }
-
-        dispatch(
-          mapObjectAdd(mapId, {
-            type: "token",
-            position: snapPointToGrid(point),
-            rotation: 0,
-            // Always pretend that the player the character belongs to has
-            // created the token on the map. Otherwise, characters dragged onto
-            // the map by the GM can not be controlled by the player.
-            playerId: (getOwnerOfCharacter(characterId) ?? myself).id,
-            characterId,
-          })
-        );
-      },
+      drop: onDrop,
       collect: (monitor) => ({
         nativeFileHovered:
           monitor.canDrop() && monitor.getItemType() === NativeTypes.FILE,
       }),
     }),
-    [
-      addBackgroundImagesRef,
-      dispatch,
-      getCharacter,
-      getOwnerOfCharacter,
-      getTransform,
-      mapId,
-      myself,
-    ]
+    [onDrop]
   );
   const dropRef = composeRefs<HTMLDivElement>(dropRef2, dropRef1);
   const initiativeTracker = useServerState((state) => state.initiativeTracker);

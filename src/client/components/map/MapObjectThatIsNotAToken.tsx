@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
   GRID_SIZE,
@@ -15,7 +15,6 @@ import {
 } from "../../../shared/state";
 import * as PIXI from "pixi.js";
 import { useServerDispatch } from "../../state";
-import { useLatest } from "../../useLatest";
 import tinycolor from "tinycolor2";
 import { useRecoilValue } from "recoil";
 import { hoveredMapObjectsFamily } from "./Map";
@@ -37,6 +36,7 @@ import {
 import { PixiPopover } from "./pixi/PixiPopover";
 import { assertNever } from "../../../shared/util";
 import { PixiBlurHashSprite } from "../blurHash/PixiBlurHashSprite";
+import { useEvent } from "../../useEvent";
 
 const SELECTED_OR_HOVERED_STROKE_LINE_DASH = [GRID_SIZE / 10, GRID_SIZE / 10];
 
@@ -64,10 +64,6 @@ export const MapObjectThatIsNotAToken = React.memo<{
     canStartMoving &&
     (myself.isGM || object.playerId === myself.id);
 
-  const onStartMoveRef = useLatest((e: RRMouseEvent) => {
-    onStartMove(object, e);
-  });
-
   const clickPositionRef = useRef<RRPoint>();
 
   const sharedProps = {
@@ -77,31 +73,25 @@ export const MapObjectThatIsNotAToken = React.memo<{
     roughness: object.roughness,
     angle: object.rotation,
     cursor: canControl ? "move" : undefined,
-    onMouseDown: useCallback(
-      (e: RRMouseEvent) => {
-        if (canControl && e.button === 0) {
-          onStartMoveRef.current(e);
-        }
-        clickPositionRef.current = { x: e.clientX, y: e.clientY };
-      },
-      [onStartMoveRef, canControl]
-    ),
-    onMouseUp: useCallback(
-      (e: RRMouseEvent) => {
-        if (
-          e.button === 2 &&
-          clickPositionRef.current &&
-          pointEquals(clickPositionRef.current, {
-            x: e.clientX,
-            y: e.clientY,
-          }) &&
-          canControl
-        ) {
-          setEditorVisible(true);
-        }
-      },
-      [canControl]
-    ),
+    onMouseDown: useEvent((e: RRMouseEvent) => {
+      if (canControl && e.button === 0) {
+        onStartMove(object, e);
+      }
+      clickPositionRef.current = { x: e.clientX, y: e.clientY };
+    }),
+    onMouseUp: useEvent((e: RRMouseEvent) => {
+      if (
+        e.button === 2 &&
+        clickPositionRef.current &&
+        pointEquals(clickPositionRef.current, {
+          x: e.clientX,
+          y: e.clientY,
+        }) &&
+        canControl
+      ) {
+        setEditorVisible(true);
+      }
+    }),
     fill: isSelectedOrHovered
       ? object.color
       : tinycolor(object.color).setAlpha(0.3).toRgbString(),

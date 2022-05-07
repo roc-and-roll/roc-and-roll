@@ -1,4 +1,4 @@
-import React, { useDebugValue, useMemo } from "react";
+import React, { useDebugValue } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   entries,
@@ -12,14 +12,14 @@ import {
 } from "../shared/state";
 import { useRRSettings } from "./settings";
 import { useServerState, useServerStateRef } from "./state";
-import { useLatest } from "./useLatest";
 import { Howl } from "howler";
 import { assetUrl } from "./files";
 import { atom, useRecoilValue, useSetRecoilState } from "recoil";
 import { nanoid } from "@reduxjs/toolkit";
 import { volumeLinear2Log } from "./components/VolumeSlider";
 import { setAddImmutably, setDeleteImmutably } from "./immutable-helpers";
-import { useEventCallback } from "./useEventCallback";
+import { useEvent } from "./useEvent";
+import { useConstant } from "./useConstant";
 
 const lockedSoundsAtom = atom<string[]>({
   key: "lockedSounds",
@@ -59,7 +59,7 @@ export function useRRSimpleSound(url: string): [() => void, () => void] {
 
   const [{ volume: globalVolume, mute: globalMute }] = useRRSettings();
 
-  const play = useEventCallback(() => {
+  const play = useEvent(() => {
     if (!howlRef.current) {
       howlRef.current = new Howl({
         src: url,
@@ -78,9 +78,9 @@ export function useRRSimpleSound(url: string): [() => void, () => void] {
     howlRef.current?.mute(globalMute);
   }, [globalVolume, globalMute]);
 
-  const pause = useCallback(() => {
+  const pause = useEvent(() => {
     howlRef.current?.pause();
-  }, []);
+  });
 
   return [play, pause];
 }
@@ -94,7 +94,10 @@ type SoundState =
   | "error-needs-unlock";
 
 export function useRRComplexSound(
-  urlAndDuration: { url: string; duration: number } | null,
+  {
+    url,
+    duration,
+  }: { url: string; duration: number } | { url: null; duration: null },
   soundVolume: number,
   {
     loop,
@@ -102,30 +105,23 @@ export function useRRComplexSound(
     loop: boolean;
   }
 ): readonly [(startedAt: number) => void, () => void, () => void, SoundState] {
-  const urlRef = useLatest(urlAndDuration?.url);
-  const loopRef = useLatest(loop);
-
   const setLoadingSounds = useSetRecoilState(loadingSoundsAtom);
 
   const howlRef = useRef<Howl | null>(null);
 
   const [{ volume: globalUserVolume, mute: globalUserMute }] = useRRSettings();
   const volume = volumeLinear2Log(globalUserVolume * soundVolume);
-  const volumeRef = useLatest(volume);
-  const globalUserMuteRef = useLatest(globalUserMute);
 
   const [state, setState] = useState<SoundState>("stopped");
-  const lastUrlRef = useRef<string | undefined>("");
+  const lastUrlRef = useRef<string | null>("");
 
-  const durationRef = useLatest(urlAndDuration?.duration);
   const soundIdRef = useRef<number | undefined>(undefined);
   const startedAtRef = useRef<number | undefined>(undefined);
 
-  const id = useMemo(() => nanoid(), []);
-  const idRef = useLatest(id);
+  const id = useConstant(() => nanoid());
 
-  const _play = useCallback(() => {
-    if (!howlRef.current || durationRef.current === undefined) {
+  const _play = useEvent(() => {
+    if (!howlRef.current || duration === null) {
       return;
     }
 
@@ -143,97 +139,82 @@ export function useRRComplexSound(
       // start playing the song at the correct seek position if we know
       // the duration of the song.
       const seekSeconds =
-        ((Date.now() - startedAtRef.current) % durationRef.current) / 1000;
+        ((Date.now() - startedAtRef.current) % duration) / 1000;
       howlRef.current.seek(seekSeconds, soundIdRef.current);
     }
-  }, [durationRef]);
+  });
 
-  const play = useCallback(
-    (startedAt?: number) => {
-      if (urlRef.current === undefined || durationRef.current === undefined) {
-        return;
-      }
+  const play = useEvent((startedAt?: number) => {
+    if (url === null) {
+      return;
+    }
 
-      startedAtRef.current = startedAt;
+    startedAtRef.current = startedAt;
 
-      // Unload the previous sound if the url changes.
-      if (lastUrlRef.current !== urlRef.current) {
-        howlRef.current?.unload();
-        soundIdRef.current = undefined;
-        howlRef.current = null;
-      }
-      lastUrlRef.current = urlRef.current;
+    // Unload the previous sound if the url changes.
+    if (lastUrlRef.current !== url) {
+      howlRef.current?.unload();
+      soundIdRef.current = undefined;
+      howlRef.current = null;
+    }
+    lastUrlRef.current = url;
 
-      if (!howlRef.current) {
-        const id = idRef.current;
+    if (!howlRef.current) {
+      setState("loading");
 
-        setState("loading");
+      setLoadingSounds((loadingSounds) => setAddImmutably(loadingSounds, id));
 
-        setLoadingSounds((loadingSounds) => setAddImmutably(loadingSounds, id));
-
-        howlRef.current = new Howl({
-          src: urlRef.current,
-          html5: false, // never enable html5, Howler is buggy with html5
-          autoplay: false,
-          preload: true,
-          // We need to initialize volume, mute, and loop both here and in the
-          // effect below, because howlRef.current is null when the effect is
-          // executed before calling play for the first time.
-          volume: volumeRef.current,
-          mute: globalUserMuteRef.current,
-          loop: loopRef.current,
-          onplay: () => setState("playing"),
-          onpause: () => setState("paused"),
-          onstop: () => setState("stopped"),
-          onend: () => setState("stopped"),
-          onloaderror: () => setState("error"), //cspell: disable-line
-          onload: () => {
-            setLoadingSounds((loadingSounds) =>
-              setDeleteImmutably(loadingSounds, id)
-            );
-            _play();
-          },
-          //cspell: disable-next-line
-          onplayerror: () => {
-            // https://github.com/goldfire/howler.js/#mobilechrome-playback
-            setState("error-needs-unlock");
-          },
-          //cspell: disable-next-line
-          onunlock: () => {
-            _play();
-          },
-        });
-      } else {
-        _play();
-      }
-    },
-    [
-      globalUserMuteRef,
-      volumeRef,
-      loopRef,
-      urlRef,
-      durationRef,
-      idRef,
-      _play,
-      setLoadingSounds,
-    ]
-  );
+      howlRef.current = new Howl({
+        src: url,
+        html5: false, // never enable html5, Howler is buggy with html5
+        autoplay: false,
+        preload: true,
+        // We need to initialize volume, mute, and loop both here and in the
+        // effect below, because howlRef.current is null when the effect is
+        // executed before calling play for the first time.
+        volume,
+        mute: globalUserMute,
+        loop,
+        onplay: () => setState("playing"),
+        onpause: () => setState("paused"),
+        onstop: () => setState("stopped"),
+        onend: () => setState("stopped"),
+        onloaderror: () => setState("error"), //cspell: disable-line
+        onload: () => {
+          setLoadingSounds((loadingSounds) =>
+            setDeleteImmutably(loadingSounds, id)
+          );
+          _play();
+        },
+        //cspell: disable-next-line
+        onplayerror: () => {
+          // https://github.com/goldfire/howler.js/#mobilechrome-playback
+          setState("error-needs-unlock");
+        },
+        //cspell: disable-next-line
+        onunlock: () => {
+          _play();
+        },
+      });
+    } else {
+      _play();
+    }
+  });
 
   useEffect(() => {
-    const id = idRef.current;
     return () => {
       setLoadingSounds((loadingSounds) =>
         setDeleteImmutably(loadingSounds, id)
       );
 
-      // turn off the "stop" event handler, which would otherwise call setState,
+      // Turn off the "stop" event handler, which would otherwise call setState,
       // which triggers an error when done during unmounting.
       howlRef.current?.off("stop");
 
       howlRef.current?.unload();
       howlRef.current = null;
     };
-  }, [idRef, setLoadingSounds]);
+  }, [id, setLoadingSounds]);
 
   useEffect(() => {
     howlRef.current?.volume(volume);
@@ -241,25 +222,24 @@ export function useRRComplexSound(
     howlRef.current?.loop(loop);
   }, [globalUserMute, volume, loop]);
 
-  const pause = useCallback(() => {
+  const pause = useEvent(() => {
     howlRef.current?.pause();
-  }, []);
+  });
 
-  const stop = useCallback(() => {
+  const stop = useEvent(() => {
     howlRef.current?.stop();
     soundIdRef.current = undefined;
     startedAtRef.current = undefined;
 
-    setLoadingSounds((loadingSounds) =>
-      setDeleteImmutably(loadingSounds, idRef.current)
-    );
-  }, [idRef, setLoadingSounds]);
+    setLoadingSounds((loadingSounds) => setDeleteImmutably(loadingSounds, id));
+  });
 
+  // Stop playback if the url or duration changes.
   useEffect(() => {
-    // Stop playback if the url or duration changes.
     stop();
-  }, [stop, urlAndDuration?.url, urlAndDuration?.duration]);
+  }, [stop, url, duration]);
 
+  // Update lockedSounds if the state of this sound changes.
   const setLockedSounds = useSetRecoilState(lockedSoundsAtom);
   useEffect(() => {
     setLockedSounds(updateLockedSounds(id, state === "error-needs-unlock"));
@@ -267,8 +247,8 @@ export function useRRComplexSound(
   }, [state, setLockedSounds, id]);
 
   useDebugValue({
-    url: urlAndDuration?.url,
-    duration: urlAndDuration?.duration,
+    url,
+    duration,
     startedAt: startedAtRef.current,
     soundId: soundIdRef.current,
     state,
@@ -380,7 +360,7 @@ function ActivePlaylistPlayerImpl({
   const [play, _pause, stop] = useRRComplexSound(
     current?.type === "song"
       ? { url: assetUrl(current.song), duration: current.song.duration }
-      : null,
+      : { url: null, duration: null },
     current?.type === "song"
       ? activeSoundSet.volume * playlist.volume * current.playlistEntry.volume
       : 1,

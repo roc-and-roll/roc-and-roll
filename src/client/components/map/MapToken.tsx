@@ -51,7 +51,6 @@ import {
 } from "../../../shared/point";
 import { EmanationArea } from "./Areas";
 import { useServerDispatch } from "../../state";
-import { useLatest } from "../../useLatest";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
 import useRafLoop from "../../useRafLoop";
@@ -65,6 +64,7 @@ import { PixiFontawesomeIcon } from "./pixi/PixiFontawesomeIcon";
 import { PixiPopover } from "./pixi/PixiPopover";
 import { TokenShadow } from "./TokenShadow";
 import { PixiBlurHashSprite } from "../blurHash/PixiBlurHashSprite";
+import { useEvent } from "../../useEvent";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
@@ -144,7 +144,6 @@ function MapTokenInner({
   contrastColor: string;
   smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
 }) {
-  const objectRef = useLatest(object);
   const isHovered = useRecoilValue(hoveredMapObjectsFamily(object.id));
   const isSelected = useRecoilValue(selectedMapObjectsFamily(object.id));
   const isHighlighted = useRecoilValue(
@@ -168,16 +167,13 @@ function MapTokenInner({
 
   const canControl = canStartMoving && canControlToken(character, myself);
 
-  const handleMouseDown = useCallback(
-    (e: RRMouseEvent) => {
-      if (e.button === 0) {
-        onStartMove(objectRef.current, e);
-      }
-      firstMouseDownPos.current = { x: e.clientX, y: e.clientY };
-    },
-    [onStartMove, objectRef]
-  );
-  const handleMouseUp = useCallback((e: RRMouseEvent) => {
+  const handleMouseDown = useEvent((e: RRMouseEvent) => {
+    if (e.button === 0) {
+      onStartMove(object, e);
+    }
+    firstMouseDownPos.current = { x: e.clientX, y: e.clientY };
+  });
+  const handleMouseUp = useEvent((e: RRMouseEvent) => {
     if (
       e.button === 2 &&
       firstMouseDownPos.current &&
@@ -185,7 +181,7 @@ function MapTokenInner({
     ) {
       setEditorVisible(true);
     }
-  }, []);
+  });
 
   const [lerpedPosition, setLerpedPosition] = useState(object.position);
   const prevPositionRef = useRef(object.position);

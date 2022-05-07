@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { RRID } from "../../shared/state";
 import { rrid } from "../../shared/util";
 import { useAlert } from "../dialog-boxes";
-import { useLatest } from "../useLatest";
 import useLocalState from "../useLocalState";
 import { useCompendium } from "./compendium/Compendium";
 import {
@@ -11,6 +10,7 @@ import {
 } from "../../shared/compendium-types";
 import { Button } from "./ui/Button";
 import type * as z from "zod";
+import { useEvent } from "../useEvent";
 
 export function Modding() {
   return (
@@ -70,31 +70,31 @@ export interface MODDING {
 export function ModApi() {
   const { sources: compendiumSources, addSource: addCompendiumSource } =
     useCompendium();
-  const compendiumSourcesRef = useLatest(compendiumSources);
+
+  const addSource = useEvent((source: unknown) => {
+    const validationResult = isCompendiumSource.safeParse(source);
+    if (validationResult.success) {
+      addCompendiumSource(validationResult.data);
+      return null;
+    }
+    return validationResult.error;
+  });
+
+  const getSources = useEvent((): CompendiumSource[] => {
+    return compendiumSources;
+  });
 
   useEffect(() => {
     const modInterface: MODDING = {
       rrid,
-      compendium: {
-        addSource: (source: unknown) => {
-          const validationResult = isCompendiumSource.safeParse(source);
-          if (validationResult.success) {
-            addCompendiumSource(validationResult.data);
-            return null;
-          }
-          return validationResult.error;
-        },
-        getSources: (): CompendiumSource[] => {
-          return compendiumSourcesRef.current;
-        },
-      },
+      compendium: { addSource, getSources },
     };
 
     window.MODDING = modInterface;
     return () => {
       delete window.MODDING;
     };
-  }, [compendiumSourcesRef, addCompendiumSource]);
+  }, [addSource, getSources]);
 
   return null;
 }

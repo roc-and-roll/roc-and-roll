@@ -1,12 +1,6 @@
-import React, {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-} from "react";
+import React, { useEffect, useRef, useState, useTransition } from "react";
+import { useEvent } from "./useEvent";
 import { useGuaranteedMemo } from "./useGuaranteedMemo";
-import { useLatest } from "./useLatest";
 
 type PendingChangeSubscriber = (pending: boolean) => void;
 
@@ -120,8 +114,6 @@ export function useDebounce<A extends unknown[]>(
   executePending: () => void,
   onPendingChanges: (s: (p: boolean) => void) => () => void
 ] {
-  const forceOnUnmountRef = useLatest(forceOnUnmount);
-
   const syncedDebounceMaker = useGuaranteedMemo(
     () => ensureSyncedDebounceMaker(debounce),
     [debounce]
@@ -132,12 +124,17 @@ export function useDebounce<A extends unknown[]>(
     [callback, syncedDebounceMaker]
   );
 
-  useEffect(() => {
-    const forceOnUnmount = forceOnUnmountRef.current;
-    return () => {
+  const onDisposeDebouncer = useEvent(
+    (debouncer: DebouncerImpl<A, unknown>) => {
       debouncer.dispose(forceOnUnmount);
+    }
+  );
+
+  useEffect(() => {
+    return () => {
+      onDisposeDebouncer(debouncer);
     };
-  }, [debouncer, forceOnUnmountRef]);
+  }, [debouncer, onDisposeDebouncer]);
 
   return [
     debouncer.debouncedCallback,
@@ -160,25 +157,20 @@ export function useAggregatedDebounce<A extends unknown[]>(
 ): (...args: A) => void {
   const argHistory = useRef<A[]>([]);
 
-  const callbackRef = useLatest(callback);
-
   const [serverCallback] = useDebounce(
-    useCallback(() => {
+    useEvent(() => {
       const args = argHistory.current;
       argHistory.current = [];
-      callbackRef.current(args);
-    }, [callbackRef]),
+      callback(args);
+    }),
     debounce,
     forceOnUnmount
   );
 
-  const localCallback = useCallback(
-    (...args: A) => {
-      argHistory.current.push(args);
-      serverCallback();
-    },
-    [serverCallback]
-  );
+  const localCallback = useEvent((...args: A) => {
+    argHistory.current.push(args);
+    serverCallback();
+  });
 
   return localCallback;
 }
@@ -232,19 +224,14 @@ export function useIsolatedValue<V>({
     }
   }, [externalValue]);
 
-  const setExternalValueRef = useLatest(setExternalValue);
-
   return [
     internalValue,
-    useCallback(
-      (value: V) => {
-        setInternalValue(value);
-        if (reportChangesRef.current) {
-          setExternalValueRef.current(value);
-        }
-      },
-      [setExternalValueRef]
-    ),
+    useEvent((value: V) => {
+      setInternalValue(value);
+      if (reportChangesRef.current) {
+        setExternalValue(value);
+      }
+    }),
     { takeValueRef, reportChangesRef },
   ];
 }
@@ -261,9 +248,6 @@ export function useFieldWithSmartOnChangeTransitions<V, E extends HTMLElement>({
   React.HTMLAttributes<E>,
   "value" | "onChange"
 >) {
-  const externalOnChangeRef = useLatest(externalOnChange);
-  const debounceTimeRef = useLatest(debounceTime);
-
   const [value, setValue, { takeValueRef }] = useIsolatedValue({
     value: externalValue,
     onChange: externalOnChange,
@@ -290,57 +274,45 @@ export function useFieldWithSmartOnChangeTransitions<V, E extends HTMLElement>({
     }
   }, [isTransitionPending]);
 
-  const executePending = useCallback(() => {
+  const executePending = useEvent(() => {
     if (changedValueRef.current.dirtyTimeoutId !== null) {
       clearTimeout(changedValueRef.current.dirtyTimeoutId);
       changedValueRef.current.dirtyTimeoutId = null;
 
-      externalOnChangeRef.current(changedValueRef.current.value);
+      externalOnChange(changedValueRef.current.value);
     }
-  }, [externalOnChangeRef]);
+  });
 
   return [
     {
       value,
-      onChange: useCallback(
-        (value: V) => {
-          setValue(value);
-          changedValueRef.current = {
-            value,
-            dirtyTimeoutId:
-              changedValueRef.current.dirtyTimeoutId ??
-              setTimeout(executePending, debounceTimeRef.current),
-          };
-          // Immediately propagate the change to the outside as part of a
-          // transition.
-          startTransition(() => externalOnChangeRef.current(value));
-        },
-        [setValue, debounceTimeRef, executePending, externalOnChangeRef]
-      ),
-      onKeyPress: useCallback(
-        (e: React.KeyboardEvent<E>) => {
-          if (e.key === "Enter") {
-            executePending();
-          }
-          onKeyPress?.(e);
-        },
-        [onKeyPress, executePending]
-      ),
-      onFocus: useCallback(
-        (e: React.FocusEvent<E>) => {
-          takeValueRef.current = false;
-          onFocus?.(e);
-        },
-        [onFocus, takeValueRef]
-      ),
-      onBlur: useCallback(
-        (e: React.FocusEvent<E>) => {
-          takeValueRef.current = true;
+      onChange: useEvent((value: V) => {
+        setValue(value);
+        changedValueRef.current = {
+          value,
+          dirtyTimeoutId:
+            changedValueRef.current.dirtyTimeoutId ??
+            setTimeout(executePending, debounceTime),
+        };
+        // Immediately propagate the change to the outside as part of a
+        // transition.
+        startTransition(() => externalOnChange(value));
+      }),
+      onKeyPress: useEvent((e: React.KeyboardEvent<E>) => {
+        if (e.key === "Enter") {
           executePending();
-          onBlur?.(e);
-        },
-        [onBlur, takeValueRef, executePending]
-      ),
+        }
+        onKeyPress?.(e);
+      }),
+      onFocus: useEvent((e: React.FocusEvent<E>) => {
+        takeValueRef.current = false;
+        onFocus?.(e);
+      }),
+      onBlur: useEvent((e: React.FocusEvent<E>) => {
+        takeValueRef.current = true;
+        executePending();
+        onBlur?.(e);
+      }),
       ...props,
     },
     ref,

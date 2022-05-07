@@ -17,9 +17,9 @@ import {
   RRDiceTemplate,
   RRDiceTemplateCategory,
 } from "../../shared/validation";
-import { useLatest } from "../useLatest";
 import useLocalState from "../useLocalState";
 import { signedModifierString } from "../util";
+import { useEvent } from "../useEvent";
 
 export function DiceInterface() {
   const [diceTypes, setDiceTypes] = useState<string[]>([]);
@@ -92,14 +92,7 @@ export function DiceInterface() {
    * prev1  |prev2|prev3
    * prev4  |prev5|prev6
    */
-  const allRefs = useLatest([
-    col1Refs,
-    col2Refs,
-    col3Refs,
-    col4Refs,
-    col5Refs,
-    col6Refs,
-  ]);
+  const allRefs = [col1Refs, col2Refs, col3Refs, col4Refs, col5Refs, col6Refs];
 
   // TODO: add shortcut to switch focus to dice roller window?
   //       (and open it if it isn't currently open)
@@ -108,34 +101,34 @@ export function DiceInterface() {
 
   // TODO: different color (css) on focus
 
+  const onFocusIndexChange = useEvent(() => {
+    allRefs[focusIndex.col]![focusIndex.row]!.current?.focus();
+  });
+
   useEffect(() => {
-    const currentRef =
-      allRefs.current[focusIndex.col]![focusIndex.row]!.current;
-    if (currentRef) {
-      currentRef.focus();
-    }
-  }, [allRefs, focusIndex]);
+    onFocusIndexChange();
+  }, [focusIndex, onFocusIndexChange]);
 
   function focusIndexFromRef(
     searchedRef: React.RefObject<HTMLButtonElement> | undefined
   ) {
     if (searchedRef === undefined) return;
-    const col = allRefs.current.findIndex((refs) =>
+    const col = allRefs.findIndex((refs) =>
       refs!.find((ref) => ref === searchedRef)
     );
-    const row = allRefs.current[col]!.findIndex((ref) => ref === searchedRef);
+    const row = allRefs[col]!.findIndex((ref) => ref === searchedRef);
     setFocusIndex({ col: col, row: row });
   }
 
   const moveFocusUp = () => {
-    const startRef = allRefs.current[focusIndex.col]![focusIndex.row]!.current;
-    const upperLimit = allRefs.current[focusIndex.col]!.length;
+    const startRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
+    const upperLimit = allRefs[focusIndex.col]!.length;
 
     let currentRef;
     let newRow = focusIndex.row;
     do {
       newRow = (newRow - 1 + upperLimit) % upperLimit;
-      currentRef = allRefs.current[focusIndex.col]![newRow]!.current;
+      currentRef = allRefs[focusIndex.col]![newRow]!.current;
     } while (
       currentRef === startRef ||
       currentRef === null ||
@@ -148,14 +141,14 @@ export function DiceInterface() {
   };
 
   const moveFocusLeft = () => {
-    const startRef = allRefs.current[focusIndex.col]![focusIndex.row]!.current;
-    const upperLimit = allRefs.current.length;
+    const startRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
+    const upperLimit = allRefs.length;
 
     let currentRef;
     let newCol = focusIndex.col;
     do {
       newCol = (newCol - 1 + upperLimit) % upperLimit;
-      currentRef = allRefs.current[newCol]![focusIndex.row]!.current;
+      currentRef = allRefs[newCol]![focusIndex.row]!.current;
     } while (
       currentRef === startRef ||
       currentRef === null ||
@@ -168,14 +161,14 @@ export function DiceInterface() {
   };
 
   const moveFocusDown = () => {
-    const startRef = allRefs.current[focusIndex.col]![focusIndex.row]!.current;
-    const upperLimit = allRefs.current[focusIndex.col]!.length;
+    const startRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
+    const upperLimit = allRefs[focusIndex.col]!.length;
 
     let currentRef;
     let newRow = focusIndex.row;
     do {
       newRow = (newRow + 1) % upperLimit;
-      currentRef = allRefs.current[focusIndex.col]![newRow]!.current;
+      currentRef = allRefs[focusIndex.col]![newRow]!.current;
     } while (
       currentRef === startRef ||
       currentRef === null ||
@@ -188,14 +181,14 @@ export function DiceInterface() {
   };
 
   const moveFocusRight = () => {
-    const startRef = allRefs.current[focusIndex.col]![focusIndex.row]!.current;
-    const upperLimit = allRefs.current.length;
+    const startRef = allRefs[focusIndex.col]![focusIndex.row]!.current;
+    const upperLimit = allRefs.length;
 
     let currentRef;
     let newCol = focusIndex.col;
     do {
       newCol = (newCol + 1) % upperLimit;
-      currentRef = allRefs.current[newCol]![focusIndex.row]!.current;
+      currentRef = allRefs[newCol]![focusIndex.row]!.current;
     } while (
       currentRef === startRef ||
       currentRef === null ||
