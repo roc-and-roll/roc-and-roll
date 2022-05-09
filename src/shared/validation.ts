@@ -345,6 +345,13 @@ export const isSyncedState = z.strictObject({
           name: z.string(),
         })
       ),
+      spells: z.array(
+        z.strictObject({
+          name: z.string(),
+          level: z.number().int().min(0).max(9),
+          prepared: z.boolean(), // or "yes" | "no" | "always" ?
+        })
+      ),
       hp: z.number().int(),
       temporaryHP: z.number().int().min(0),
       maxHP: z.number().int().min(0),

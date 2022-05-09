@@ -100,6 +100,9 @@ export interface RRAura
 export interface RRLimitedUseSkill
   extends IterableElement<ECE<SyncedState["characters"]>["limitedUseSkills"]> {}
 
+export interface RRSpell
+  extends IterableElement<ECE<SyncedState["characters"]>["spells"]> {}
+
 export const conditionNames = [
   "blue",
   "green",

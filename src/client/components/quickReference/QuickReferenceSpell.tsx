@@ -8,6 +8,12 @@ import {
   stndrdth,
   TextEntry,
 } from "./QuickReference";
+import { useMyActiveCharacter } from "../../myself";
+import { Button } from "../ui/Button";
+import { useServerDispatch } from "../../state";
+import { characterUpdate } from "../../../shared/actions";
+import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
+import { RRCharacter } from "../../../shared/state";
 
 function MaterialComponents({ m }: { m: CompendiumSpell["components"]["m"] }) {
   if (!m) {
@@ -94,9 +100,53 @@ export const Spell = React.memo(function Spell({
 }: {
   spell: CompendiumSpell;
 }) {
+  const selectedCharacter = useMyActiveCharacter("id");
+  const dispatch = useServerDispatch();
+  const setSpells = (updater: React.SetStateAction<RRCharacter["spells"]>) =>
+    dispatch((state) => {
+      const oldSpells =
+        state.characters.entities[selectedCharacter!.id]?.spells;
+
+      if (oldSpells === undefined) {
+        return []; // can this happen?
+      }
+      const newSpells =
+        typeof updater === "function" ? updater(oldSpells) : updater;
+
+      return {
+        actions: [
+          characterUpdate({
+            id: selectedCharacter!.id,
+            changes: { spells: newSpells },
+          }),
+        ],
+        optimisticKey: "spells",
+        syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+      };
+    });
+
   return (
     <>
-      <p className="text-2xl mt-4">{spell.name}</p>
+      <div className="flex justify-between items-baseline">
+        <p className="text-2xl mt-4">{spell.name}</p>
+        {selectedCharacter && (
+          <Button
+            className="h-8"
+            onClick={() => {
+              setSpells((old) => [
+                ...old,
+                {
+                  name: spell.name,
+                  level: spell.level,
+                  prepared: false,
+                },
+              ]);
+            }}
+          >
+            Add To Character
+          </Button>
+        )}
+      </div>
       <dl>
         <dt>Level</dt>
         <dd>

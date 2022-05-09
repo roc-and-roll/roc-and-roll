@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { SetStateAction, useState } from "react";
 import {
   conditionNames,
   conditionTooltip,
   RRCharacter,
   RRCharacterID,
   RRLimitedUseSkill,
+  RRSpell,
 } from "../../../shared/state";
 import { useMyActiveCharacter, useMyProps } from "../../myself";
 import { useServerDispatch } from "../../state";
@@ -53,6 +54,7 @@ const characterProps = [
   "spellSaveDC",
   "limitedUseSkills",
   "notes",
+  "spells",
 ] as const;
 export type RRCharacterProps = Pick<RRCharacter, typeof characterProps[number]>;
 
@@ -65,6 +67,7 @@ export function CharacterHUD() {
 
   const [skillsVisible, setSkillsVisible] = useState(false);
   const [notesVisible, setNotesVisible] = useState(false);
+  const [spellsVisible, setSpellsVisible] = useState(false);
 
   return (
     <div className="absolute top-0 right-0 pointer-events-none">
@@ -95,9 +98,18 @@ export function CharacterHUD() {
                     onClick={() => setNotesVisible(!notesVisible)}
                   />
                 </div>
+                <div className="pointer-events-auto m-1 flex items-end flex-col">
+                  <FontAwesomeIcon
+                    title="Spells"
+                    icon={faMagic}
+                    size="1x"
+                    onClick={() => setSpellsVisible(!spellsVisible)}
+                  />
+                </div>
               </div>
               {notesVisible && <Notes character={character} />}
               {skillsVisible && <LimitedUse character={character} />}
+              {spellsVisible && <Spells character={character} />}
             </div>
             <CombatCardHUD />
           </div>
@@ -109,6 +121,92 @@ export function CharacterHUD() {
           {<HeroPoint />}
         </div>
       </div>
+    </div>
+  );
+}
+
+function Spells({ character }: { character: RRCharacterProps }) {
+  const dispatch = useServerDispatch();
+  //Todo this code is duplicated in QuickReferenceSpell
+  const setSpells = (updater: React.SetStateAction<RRCharacter["spells"]>) =>
+    dispatch((state) => {
+      const oldSpells = state.characters.entities[character.id]?.spells;
+
+      if (oldSpells === undefined) {
+        return [];
+      }
+      const newSpells =
+        typeof updater === "function" ? updater(oldSpells) : updater;
+
+      return {
+        actions: [
+          characterUpdate({
+            id: character.id,
+            changes: { spells: newSpells },
+          }),
+        ],
+        optimisticKey: "spells",
+        syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+      };
+    });
+  return (
+    <div className="min-w-full mt-2 bg-black/25 p-1 rounded pointer-events-auto select-none">
+      {buildSpells(character, true, setSpells)}
+      <div className="border-t-2"></div>
+      {buildSpells(character, false, setSpells)}
+    </div>
+  );
+}
+
+function buildSpells(
+  character: RRCharacterProps,
+  prepared: boolean,
+  setSpells: (
+    updater: SetStateAction<RRCharacter["spells"]>
+  ) => DispatchActionResult
+) {
+  function togglePrepareSpell(index: number, spell: RRSpell) {
+    //TODO function
+    setSpells((old) => [...old]);
+  }
+
+  return (
+    <div>
+      {[...Array(10)].map((_x, i) =>
+        character.spells.some(
+          (spell) => spell.level === i && spell.prepared === prepared
+        ) ? (
+          <div key={i} className={clsx(prepared ? "" : "opacity-50")}>
+            <div className="flex flex-row">
+              <em>{i === 0 ? "Cantrips" : `Level ${i}`}</em>
+              <em className="flex-grow text-right">Prepared</em>
+            </div>
+            {character.spells
+              .filter(
+                (spell: RRSpell) =>
+                  spell.level === i && spell.prepared === prepared
+              )
+              .map((spell: RRSpell) => {
+                return (
+                  <div
+                    key={spell.name}
+                    className="flex flex-row justify-between"
+                  >
+                    {spell.name}
+                    <input
+                      type="checkbox"
+                      checked={spell.prepared}
+                      onChange={() => {}}
+                    />
+                  </div>
+                );
+              })}
+            <div className="border-t w-full" />
+          </div>
+        ) : (
+          <div key={i}></div>
+        )
+      )}
     </div>
   );
 }
