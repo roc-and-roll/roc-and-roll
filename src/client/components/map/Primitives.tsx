@@ -7,6 +7,26 @@ import Shape from "@doodle3d/clipper-js";
 
 type CustomGraphicsProps<T> = T & Omit<Graphics, "geometry" | keyof T>;
 
+export const PPrimitive = React.forwardRef<
+  PIXI.Graphics,
+  CustomGraphicsProps<{
+    generator: (g: PIXI.Graphics) => void;
+  }>
+>(function PPrimitive({ generator, ...rest }, externalRef) {
+  const internalRef = useRef<PIXI.Graphics>(null);
+
+  useEffect(() => {
+    const instance = internalRef.current;
+    if (!instance) {
+      return;
+    }
+    instance.clear();
+    generator(instance);
+  }, [generator]);
+
+  return <Graphics ref={composeRefs(internalRef, externalRef)} {...rest} />;
+});
+
 export const PRectangle = React.forwardRef<
   PIXI.Graphics,
   CustomGraphicsProps<{

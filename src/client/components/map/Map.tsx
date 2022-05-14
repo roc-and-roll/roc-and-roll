@@ -887,7 +887,7 @@ transform,
   const RecoilBridge = useRecoilBridgeAcrossReactRoots_UNSTABLE();
 
   return (
-    <RoughContextProvider enabled={true /* TODO: roughEnabled */}>
+    <RoughContextProvider enabled={roughEnabled}>
       <div
         ref={rootRef}
         {...bind()}

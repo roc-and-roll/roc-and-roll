@@ -1,4 +1,11 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import rough from "roughjs/bin/rough";
 import type {
   Drawable,
@@ -32,6 +39,8 @@ import {
   getLocalBoundingBoxForRectangle,
   getRotationCenterOfBoundingBox,
 } from "./map/geometry/bounding-boxes";
+import { PPrimitive } from "./map/Primitives";
+import tinycolor from "tinycolor2";
 
 const DEFAULT_ROUGHNESS = 3;
 
@@ -254,6 +263,14 @@ type PassedThroughRoughOptions = Pick<
   | "roughness"
 >;
 
+interface PassedThroughSimpleOptions {
+  fill: number;
+  fillAlpha: number;
+  stroke: number;
+  strokeAlpha: number;
+  strokeWidth: number;
+}
+
 interface RoughComponentProps
   extends PassedThroughRoughOptions,
     Pick<RRPixiProps<PIXI.Container>, "children" | "name" | "cursor"> {
@@ -290,6 +307,11 @@ function makeRoughComponent<
     customProps: C,
     options: PassedThroughRoughOptions & { seed: number }
   ) => Drawable,
+  generateSimple: (
+    instance: PIXI.Graphics,
+    customProps: C,
+    options: PassedThroughSimpleOptions
+  ) => void,
   generateHitArea: (
     customProps: C
   ) => PIXI.Rectangle | PIXI.Circle | PIXI.Ellipse | PIXI.Polygon
@@ -329,6 +351,20 @@ function makeRoughComponent<
             // Watchout: seed should never be 0
             seed === undefined ? randomSeed() + 1 : hashString(seed),
           [seed]
+        );
+        const generateSimpleFunc = useCallback(
+          (instance: PIXI.Graphics) => {
+            const pixiFill = colorValue(tinycolor(fill));
+            const pixiStroke = colorValue(tinycolor(stroke));
+            return generateSimple(instance, generatorProps as C, {
+              fill: pixiFill.color,
+              fillAlpha: pixiFill.alpha,
+              stroke: pixiStroke.color,
+              strokeAlpha: pixiStroke.alpha,
+              strokeWidth: strokeWidth ?? 4,
+            });
+          },
+          [fill, generatorProps, stroke, strokeWidth]
         );
         const drawable = useMemo(
           () =>
@@ -395,8 +431,28 @@ function makeRoughComponent<
             </DrawablePrimitive>
           );
         } else {
-          // TODO: Maybe support simple display mode again.
-          return null;
+          const rotationCenter = getRotationCenterOfBoundingBox(hitArea);
+          return (
+            <Container
+              {...props}
+              x={x + rotationCenter.x}
+              y={y + rotationCenter.y}
+              pivot={rotationCenter}
+              ref={ref}
+              interactive={true}
+              interactiveChildren={false}
+              click={rrToPixiHandler(onClick)}
+              mousedown={rrToPixiHandler(onMouseDown)}
+              mouseup={rrToPixiHandler(onMouseUp)}
+              // TODO
+              rightdown={rrToPixiHandler(onMouseDown)}
+              rightup={rrToPixiHandler(onMouseUp)}
+              rightclick={rrToPixiHandler(onContextMenu)}
+              hitArea={hitArea}
+            >
+              <PPrimitive generator={generateSimpleFunc} />
+            </Container>
+          );
         }
       }
     )
@@ -404,6 +460,27 @@ function makeRoughComponent<
 
   component.displayName = displayName;
   return component;
+}
+
+function drawSimpleShape(
+  instance: PIXI.Graphics,
+  options: PassedThroughSimpleOptions,
+  filled: boolean,
+  shape: () => void
+) {
+  instance.beginFill(
+    filled ? options.fill : 0x000000,
+    filled ? options.fillAlpha : 0
+  );
+  if (options.stroke) {
+    instance.lineStyle(
+      options.strokeWidth,
+      options.stroke,
+      options.strokeAlpha
+    );
+  }
+  shape();
+  instance.endFill();
 }
 
 interface RoughLineProps {
@@ -414,6 +491,7 @@ export const RoughLine: RoughComponent<RoughLineProps> =
   makeRoughComponent<RoughLineProps>(
     "RoughLine",
     (generator, { w, h }, options) => generator.line(0, 0, w, h, options),
+    (instance, { w, h }, options) => {},
     ({ w, h }) => getLocalBoundingBoxForLine(w, h, false)
   );
 
@@ -425,6 +503,10 @@ export const RoughRectangle: RoughComponent<RoughRectangleProps> =
   makeRoughComponent<RoughRectangleProps>(
     "RoughRectangle",
     (generator, { w, h }, options) => generator.rectangle(0, 0, w, h, options),
+    (instance, { w, h }, options) =>
+      drawSimpleShape(instance, options, true, () =>
+        instance.drawRect(0, 0, w, h)
+      ),
     ({ w, h }) => getLocalBoundingBoxForRectangle(w, h)
   );
 
@@ -437,6 +519,10 @@ export const RoughEllipse: RoughComponent<RoughEllipseProps> =
     "RoughEllipse",
     (generator, { w, h }, options) =>
       generator.ellipse(w / 2, h / 2, w, h, options),
+    (instance, { w, h }, options) =>
+      drawSimpleShape(instance, options, true, () =>
+        instance.drawEllipse(w / 2, h / 2, w / 2, h / 2)
+      ),
     ({ w, h }) => getLocalBoundingBoxForEllipse(w, h)
   );
 
@@ -447,6 +533,10 @@ export const RoughCircle: RoughComponent<RoughCircleProps> =
   makeRoughComponent<RoughCircleProps>(
     "RoughCircle",
     (generator, { d }, options) => generator.circle(d / 2, d / 2, d, options),
+    (instance, { d }, options) =>
+      drawSimpleShape(instance, options, true, () =>
+        instance.drawCircle(d / 2, d / 2, d / 2)
+      ),
     ({ d }) => getLocalBoundingBoxForEllipse(d, d)
   );
 
@@ -461,6 +551,13 @@ export const RoughLinearPath: RoughComponent<RoughLinearPathProps> =
         [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
         options
       ),
+    (instance, { points }, options) =>
+      drawSimpleShape(instance, options, false, () => {
+        instance.moveTo(0, 0);
+        for (let i = 0; i < points.length; i++) {
+          instance.lineTo(points[i]!.x, points[i]!.y);
+        }
+      }),
     ({ points }) => getLocalBoundingBoxForFreehand(points, false)
   );
 
@@ -475,6 +572,15 @@ export const RoughPolygon: RoughComponent<RoughPolygonProps> =
         [[0, 0], ...points.map((each) => [each.x, each.y] as [number, number])],
         options
       ),
+    (instance, { points }, options) => {
+      drawSimpleShape(instance, options, true, () => {
+        instance.moveTo(0, 0);
+        for (let i = 0; i < points.length; i++) {
+          instance.lineTo(points[i]!.x, points[i]!.y);
+        }
+        instance.closePath();
+      });
+    },
     ({ points }) => getLocalBoundingBoxForPolygon(points)
   );
 
