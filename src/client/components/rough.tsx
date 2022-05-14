@@ -358,10 +358,10 @@ function makeRoughComponent<
             const pixiStroke = colorValue(tinycolor(stroke));
             return generateSimple(instance, generatorProps as C, {
               fill: pixiFill.color,
-              fillAlpha: pixiFill.alpha,
+              fillAlpha: fill === "none" ? 0 : pixiFill.alpha,
               stroke: pixiStroke.color,
               strokeAlpha: pixiStroke.alpha,
-              strokeWidth: strokeWidth ?? 4,
+              strokeWidth: strokeWidth ?? 2,
             });
           },
           [fill, generatorProps, stroke, strokeWidth]
@@ -472,7 +472,7 @@ function drawSimpleShape(
     filled ? options.fill : 0x000000,
     filled ? options.fillAlpha : 0
   );
-  if (options.stroke) {
+  if (options.strokeWidth) {
     instance.lineStyle(
       options.strokeWidth,
       options.stroke,
