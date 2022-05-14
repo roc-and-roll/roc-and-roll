@@ -491,7 +491,11 @@ export const RoughLine: RoughComponent<RoughLineProps> =
   makeRoughComponent<RoughLineProps>(
     "RoughLine",
     (generator, { w, h }, options) => generator.line(0, 0, w, h, options),
-    (instance, { w, h }, options) => {},
+    (instance, { w, h }, options) =>
+      drawSimpleShape(instance, options, false, () => {
+        instance.moveTo(0, 0);
+        instance.lineTo(w, h);
+      }),
     ({ w, h }) => getLocalBoundingBoxForLine(w, h, false)
   );
 

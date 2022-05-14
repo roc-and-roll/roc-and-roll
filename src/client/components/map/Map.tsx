@@ -886,6 +886,40 @@ transform,
 
   const RecoilBridge = useRecoilBridgeAcrossReactRoots_UNSTABLE();
 
+  // hide objects that are not in the viewport
+  useEffect(() => {
+    // FIXME note that when react notices a change to the transform, it first
+    // has to tell PIXI about it, so our computations will be off-by-one frame
+    // (just adding a request animation frame didn't magically fix it, probably
+    // gonna have to see how we can schedule ourselves after PIXI's bounds update)
+    const mapObjects = [
+      ...((areas?.defaultArea as PIXI.Container | undefined)?.children ?? []),
+      ...((areas?.tokenArea as PIXI.Container | undefined)?.children ?? []),
+      ...((areas?.healthBarArea as PIXI.Container | undefined)?.children ?? []),
+      ...((areas?.imageArea as PIXI.Container | undefined)?.children ?? []),
+    ];
+    for (const object of mapObjects) {
+      const bounds = object.getBounds();
+      const left = bounds.x;
+      const right = bounds.x + bounds.width;
+      const top = bounds.y;
+      const bottom = bounds.y + bounds.height;
+      object.visible = !(
+        left > viewPortSize.x ||
+        right < 0 ||
+        top > viewPortSize.y ||
+        bottom < 0
+      );
+    }
+  }, [
+    viewPortSize,
+    transform,
+    areas?.defaultArea,
+    areas?.tokenArea,
+    areas?.healthBarArea,
+    areas?.imageArea,
+  ]);
+
   return (
     <RoughContextProvider enabled={roughEnabled}>
       <div
