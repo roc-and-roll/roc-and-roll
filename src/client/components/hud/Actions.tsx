@@ -119,7 +119,8 @@ export const ActionsHUD = React.memo(function ActionsHUDMemoed() {
     "id",
     "savingThrows",
     "skills",
-    "diceTemplateCategories"
+    "diceTemplateCategories",
+    "stats"
   );
   return character ? (
     <InnerActionsHUD character={character} />
