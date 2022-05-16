@@ -58,6 +58,7 @@ import {
   useMySelectedCharacters,
 } from "../../myself";
 import { useServerDispatch } from "../../state";
+import { modifierFromStat } from "../../util";
 import { DicePanel } from "../diceTemplates/DicePanel";
 import { DiceTemplates } from "../diceTemplates/DiceTemplates";
 import { GeneratedDiceTemplates } from "../diceTemplates/GeneratedDiceTemplates";
@@ -118,7 +119,8 @@ export const ActionsHUD = React.memo(function ActionsHUDMemoed() {
     "id",
     "savingThrows",
     "skills",
-    "diceTemplateCategories"
+    "diceTemplateCategories",
+    "stats"
   );
   return character ? (
     <InnerActionsHUD character={character} />
@@ -159,7 +161,7 @@ export const InnerActionsHUD = function ({
 }: {
   character: Pick<
     RRCharacter,
-    "diceTemplateCategories" | "id" | "savingThrows" | "skills"
+    "diceTemplateCategories" | "id" | "savingThrows" | "skills" | "stats"
   >;
 }) {
   const [active, setActive] = useState<Section>("closed");
@@ -226,7 +228,11 @@ export const InnerActionsHUD = function ({
         const proficiency = character.savingThrows[statName] ?? "notProficient";
 
         const parts: RRDiceTemplatePart[] = [createD20Part()];
-        if (typeof proficiency !== "number")
+        if (
+          typeof proficiency !== "number" &&
+          character.stats[statName] &&
+          modifierFromStat(character.stats[statName]!) !== 0
+        )
           parts.push({
             id: rrid<RRDiceTemplatePart>(),
             type: "linkedStat",
@@ -234,7 +240,7 @@ export const InnerActionsHUD = function ({
             damage: { type: null },
           });
 
-        if (proficiency !== 0)
+        if (proficiency !== "notProficient")
           parts.push({
             id: rrid<RRDiceTemplatePart>(),
             type: "linkedProficiency",
@@ -250,7 +256,7 @@ export const InnerActionsHUD = function ({
           rollType: null,
         };
       }),
-    [character.savingThrows]
+    [character.savingThrows, character.stats]
   );
 
   const skillTemplates = useMemo(
@@ -258,7 +264,11 @@ export const InnerActionsHUD = function ({
       [...skillNames].sort().map((skill) => {
         const proficiency = character.skills[skill] ?? "notProficient";
         const parts: RRDiceTemplatePart[] = [createD20Part()];
-        if (typeof proficiency !== "number")
+        if (
+          typeof proficiency !== "number" &&
+          character.stats[skillMap[skill]] &&
+          modifierFromStat(character.stats[skillMap[skill]]!) !== 0
+        )
           parts.push({
             id: rrid<RRDiceTemplatePart>(),
             type: "linkedStat",
@@ -281,7 +291,7 @@ export const InnerActionsHUD = function ({
           rollType: null,
         };
       }),
-    [character.skills]
+    [character.skills, character.stats]
   );
 
   function renderContent(active: string) {

@@ -72,10 +72,9 @@ export function evaluateDiceTemplatePart(
       return [
         {
           type: "num",
-          value:
-            character?.stats[part.name] === undefined
-              ? 0
-              : modifierFromStat(character.stats[part.name]!),
+          value: character?.stats[part.name]
+            ? modifierFromStat(character.stats[part.name]!)
+            : 0,
           damage: part.damage,
         },
       ];
