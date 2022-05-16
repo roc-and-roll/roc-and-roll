@@ -108,7 +108,7 @@ export const Spell = React.memo(function Spell({
         state.characters.entities[selectedCharacter!.id]?.spells;
 
       if (oldSpells === undefined) {
-        return []; // can this happen?
+        return [];
       }
       const newSpells =
         typeof updater === "function" ? updater(oldSpells) : updater;

@@ -8,7 +8,7 @@ import {
   RRSpell,
 } from "../../../shared/state";
 import { useMyActiveCharacter, useMyProps } from "../../myself";
-import { useServerDispatch } from "../../state";
+import { DispatchActionResult, useServerDispatch } from "../../state";
 import { CharacterPreview } from "../characters/CharacterPreview";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -151,23 +151,38 @@ function Spells({ character }: { character: RRCharacterProps }) {
     });
   return (
     <div className="min-w-full mt-2 bg-black/25 p-1 rounded pointer-events-auto select-none">
-      {buildSpells(character, true, setSpells)}
-      <div className="border-t-2"></div>
-      {buildSpells(character, false, setSpells)}
+      {character.spells.length < 1 && (
+        <em>No spells yet. Add some from the Quick Reference.</em>
+      )}
+      {buildSpells({ character, prepared: true, setSpells })}
+      {character.spells.some((spell) => spell.prepared) &&
+        character.spells.some((spell) => !spell.prepared) && (
+          <div className="border-t-2"></div>
+        )}
+      {buildSpells({ character, prepared: false, setSpells })}
     </div>
   );
 }
 
-function buildSpells(
-  character: RRCharacterProps,
-  prepared: boolean,
+function buildSpells({
+  character,
+  prepared,
+  setSpells,
+}: {
+  character: RRCharacterProps;
+  prepared: boolean;
   setSpells: (
     updater: SetStateAction<RRCharacter["spells"]>
-  ) => DispatchActionResult
-) {
-  function togglePrepareSpell(index: number, spell: RRSpell) {
+  ) => DispatchActionResult;
+}) {
+  function togglePrepareSpell(prepared: boolean, spell: RRSpell) {
     //TODO function
-    setSpells((old) => [...old]);
+    setSpells((old) => {
+      const list = old.map((s) =>
+        s.name === spell.name ? { ...s, prepared: prepared } : s
+      );
+      return list;
+    });
   }
 
   return (
@@ -196,7 +211,9 @@ function buildSpells(
                     <input
                       type="checkbox"
                       checked={spell.prepared}
-                      onChange={() => {}}
+                      onChange={(event) =>
+                        togglePrepareSpell(event.target.checked, spell)
+                      }
                     />
                   </div>
                 );
