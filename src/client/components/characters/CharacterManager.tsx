@@ -112,6 +112,7 @@ async function makeNewCharacter(
     isTemplate,
     diceTemplateCategories: [],
     notes: "",
+    spells: [],
   });
 
   return {
