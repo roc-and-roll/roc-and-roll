@@ -285,10 +285,11 @@ function MapTokenInner({
       let i = list.length - 1, entry = list[i];
       entry && !selectedEntry && isNotTooOld(entry);
       entry = list[--i]
-    )
+    ) {
       if (entry.type === "diceRoll" && hasRightCharacter(entry)) {
         selectedEntry = entry;
       }
+    }
     setLastRolled(selectedEntry);
   }, [character.id, notifications]);
 
