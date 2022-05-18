@@ -20,6 +20,9 @@ import {
   RRMapID,
   RRColor,
   conditionTooltip,
+  entries,
+  RRLogEntry,
+  RRLogEntryDiceRoll,
 } from "../../../shared/state";
 import { tokenImageUrl } from "../../files";
 import { canControlToken, canViewTokenOnMap } from "../../permissions";
@@ -50,7 +53,7 @@ import {
   pointSubtract,
 } from "../../../shared/point";
 import { EmanationArea } from "./Areas";
-import { useServerDispatch } from "../../state";
+import { useServerDispatch, useServerState } from "../../state";
 import { useLatest } from "../../useLatest";
 import { mapObjectUpdate } from "../../../shared/actions";
 import { SmartIntegerInput } from "../ui/TextInput";
@@ -65,9 +68,11 @@ import { PixiFontawesomeIcon } from "./pixi/PixiFontawesomeIcon";
 import { PixiPopover } from "./pixi/PixiPopover";
 import { TokenShadow } from "./TokenShadow";
 import { PixiBlurHashSprite } from "../blurHash/PixiBlurHashSprite";
+import { diceResult } from "../../dice-rolling/roll";
 
 const GHOST_TIMEOUT = 6 * 1000;
 const GHOST_OPACITY = 0.3;
+const DICE_ROLL_DISPLAY_DURATION = 9 * 1000;
 
 export const MapToken = React.memo<{
   mapId: RRMapID;
@@ -262,6 +267,40 @@ function MapTokenInner({
       )}
     </Container>
   );
+  const notifications = useServerState((state) => state.logEntries);
+  const [lastRolled, setLastRolled] = useState<RRLogEntryDiceRoll | null>();
+  useEffect(() => {
+    const list = entries(notifications);
+
+    function isNotTooOld(entry: RRLogEntry) {
+      return Date.now() - entry.timestamp < DICE_ROLL_DISPLAY_DURATION;
+    }
+
+    function hasRightCharacter(entry: RRLogEntryDiceRoll) {
+      return entry.payload.characterIds?.includes(character.id);
+    }
+
+    let selectedEntry: RRLogEntry | null = null;
+    for (
+      let i = list.length - 1, entry = list[i];
+      entry && !selectedEntry && isNotTooOld(entry);
+      entry = list[--i]
+    ) {
+      if (entry.type === "diceRoll" && hasRightCharacter(entry)) {
+        selectedEntry = entry;
+      }
+    }
+    setLastRolled(selectedEntry);
+  }, [character.id, notifications]);
+
+  useEffect(() => {
+    if (lastRolled?.id) {
+      const id = setTimeout(function () {
+        setLastRolled(null);
+      }, DICE_ROLL_DISPLAY_DURATION);
+      return () => clearTimeout(id);
+    }
+  }, [lastRolled?.id]);
 
   const [startAnimation, stopAnimation] = useRafLoop();
   useEffect(() => {
@@ -289,6 +328,10 @@ function MapTokenInner({
   }, [ghostPosition, setGhostPosition, startAnimation, stopAnimation]);
 
   const ghostTokenRef = useRef<Container>(null);
+
+  const diceRollDisplayHeight = 24;
+  const diceRollDisplayWidth = 42;
+  const diceRollBorderWidth = 6;
 
   return (
     <>
@@ -363,6 +406,45 @@ function MapTokenInner({
         </PixiPopover>
       ) : (
         fullTokenRepresentation({ x, y })
+      )}
+      {lastRolled && (
+        <Container
+          x={x + tokenSize / 2 - diceRollDisplayWidth / 2 - diceRollBorderWidth}
+          y={y + tokenSize - diceRollDisplayHeight / 2}
+          interactiveChildren={false}
+        >
+          <RoughRectangle
+            x={4}
+            y={-18}
+            w={diceRollDisplayWidth + diceRollBorderWidth}
+            h={diceRollDisplayHeight + diceRollBorderWidth}
+            stroke="none"
+            fill="white"
+            fillStyle="solid"
+            roughness={0}
+          />
+          <RoughRectangle
+            x={7}
+            y={-15}
+            w={diceRollDisplayWidth}
+            h={diceRollDisplayHeight}
+            stroke="none"
+            fill="black"
+            fillStyle="solid"
+            roughness={0}
+          ></RoughRectangle>
+          <RoughText
+            x={(diceRollDisplayWidth + 2 * diceRollBorderWidth) / 2}
+            y={-3}
+            style={{
+              fontWeight: "bolder",
+              fontSize: 24,
+              fill: "white",
+            }}
+            anchor={{ x: 0.5, y: 0.5 }}
+            text={diceResult(lastRolled.payload.diceRollTree).toString()}
+          />
+        </Container>
       )}
     </>
   );
