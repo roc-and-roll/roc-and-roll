@@ -270,6 +270,14 @@ export default (webpackEnv) => {
           include: path.resolve("src"),
           use: [swcLoader],
         },
+        // Workaround for https://github.com/react-dnd/react-dnd/issues/3425
+        {
+          test: /\.m?js$/,
+          include: path.resolve("node_modules"),
+          resolve: {
+            fullySpecified: false,
+          },
+        },
       ],
     },
     devServer: isEnvDevelopment

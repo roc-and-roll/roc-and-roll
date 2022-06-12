@@ -207,7 +207,7 @@ function isPartOfTransition(): boolean {
     // @ts-expect-error There are no types for
     // __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED :)
     React["__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED"]
-      .ReactCurrentBatchConfig.transition === 1
+      .ReactCurrentBatchConfig.transition !== null
   );
 }
 
