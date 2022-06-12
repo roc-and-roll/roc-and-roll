@@ -16,76 +16,79 @@ import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
 
 const DEFAULT_CHARACTER_SIZE = 32;
 
-export const CharacterPreview = React.forwardRef<
-  HTMLSpanElement,
-  {
-    character: Pick<
-      RRCharacter,
-      | "name"
-      | "temporaryHP"
-      | "hp"
-      | "maxHP"
-      | "maxHPAdjustment"
-      | "conditions"
-      | "tokenImageAssetId"
-      | "tokenBorderColor"
-    >;
-    title?: string;
-    size?: number;
-    shouldDisplayShadow?: boolean;
-  }
->(function CharacterPreview(
-  { character, title, size, shouldDisplayShadow = true },
-  ref
-) {
-  const hurt = isCharacterHurt(character);
-  const dead = isCharacterDead(character);
-  const unconscious = isCharacterUnconscious(character);
-  const overHealed = isCharacterOverHealed(character);
+// eslint-disable-next-line react/display-name
+export const CharacterPreview = React.memo(
+  React.forwardRef<
+    HTMLSpanElement,
+    {
+      character: Pick<
+        RRCharacter,
+        | "name"
+        | "temporaryHP"
+        | "hp"
+        | "maxHP"
+        | "maxHPAdjustment"
+        | "conditions"
+        | "tokenImageAssetId"
+        | "tokenBorderColor"
+      >;
+      title?: string;
+      size?: number;
+      shouldDisplayShadow?: boolean;
+    }
+  >(function CharacterPreview(
+    { character, title, size, shouldDisplayShadow = true },
+    ref
+  ) {
+    const hurt = isCharacterHurt(character);
+    const dead = isCharacterDead(character);
+    const unconscious = isCharacterUnconscious(character);
+    const overHealed = isCharacterOverHealed(character);
 
-  const asset = useServerState(
-    (state) => state.assets.entities[character.tokenImageAssetId]
-  );
+    const asset = useServerState(
+      (state) => state.assets.entities[character.tokenImageAssetId]
+    );
 
-  if (asset?.type !== "image") {
-    return null;
-  }
+    if (asset?.type !== "image") {
+      return null;
+    }
 
-  const currentSize = size ?? DEFAULT_CHARACTER_SIZE;
-  return (
-    <span className="character-image" ref={ref}>
-      <BlurHashImage
-        image={{
-          blurHash: asset.blurHash,
-          url: tokenImageUrl(character, asset, currentSize),
-        }}
-        className={clsx(
-          shouldDisplayShadow && { hurt, unconscious, overHealed, dead }
-        )}
-        width={currentSize}
-        height={currentSize}
-        loading="lazy"
-        style={{
-          width: currentSize,
-          height: currentSize,
-          borderRadius: currentSize,
-          filter: dead ? "grayscale(100%)" : undefined,
-        }}
-        title={title ?? character.name}
-      />
-      {dead && shouldDisplayShadow && (
-        <RRFontAwesomeIcon
-          icon={faTimes}
-          className="absolute top-0 left-0 text-red-800"
+    const currentSize = size ?? DEFAULT_CHARACTER_SIZE;
+    return (
+      <span className="character-image" ref={ref}>
+        <BlurHashImage
+          image={{
+            blurHash: asset.blurHash,
+            url: tokenImageUrl(character, asset, currentSize),
+          }}
+          className={clsx(
+            shouldDisplayShadow && { hurt, unconscious, overHealed, dead }
+          )}
+          width={currentSize}
+          height={currentSize}
+          loading="lazy"
           style={{
             width: currentSize,
             height: currentSize,
+            borderRadius: currentSize,
+            filter: dead ? "grayscale(100%)" : undefined,
           }}
+          title={title ?? character.name}
         />
-      )}
-    </span>
-  );
-});
+        {dead && shouldDisplayShadow && (
+          <RRFontAwesomeIcon
+            icon={faTimes}
+            className="absolute top-0 left-0 text-red-800"
+            style={{
+              width: currentSize,
+              height: currentSize,
+            }}
+          />
+        )}
+      </span>
+    );
+  })
+);
 
 const STACK_FAN_OUT_SIZE = 24;
 

@@ -275,6 +275,15 @@ function CharacterList({
     [addCharacter]
   );
 
+  const onNameFirstEdited = useCallback(
+    (characterId: RRCharacterID) => {
+      setNewCharacterIds((newCharacterIds) =>
+        newCharacterIds.filter((id) => id !== characterId)
+      );
+    },
+    [setNewCharacterIds]
+  );
+
   return (
     <div className="token-list" ref={dropRef}>
       {dropProps.nativeFileHovered && (
@@ -288,9 +297,7 @@ function CharacterList({
           character={character}
           isTemplate={isTemplate}
           wasJustCreated={newCharacterIds.includes(character.id)}
-          onNameFirstEdited={() =>
-            setNewCharacterIds((l) => l.filter((id) => id !== character.id))
-          }
+          onNameFirstEdited={onNameFirstEdited}
         />
       ))}
     </div>
@@ -304,7 +311,7 @@ const EditableCharacterPreview = React.memo(function EditableCharacterPreview({
   isTemplate,
 }: {
   character: RRCharacter;
-  onNameFirstEdited: () => void;
+  onNameFirstEdited: (characterId: RRCharacterID) => void;
   wasJustCreated: boolean;
   isTemplate?: boolean;
 }) {
@@ -324,7 +331,7 @@ const EditableCharacterPreview = React.memo(function EditableCharacterPreview({
         <CharacterEditor
           character={character}
           wasJustCreated={wasJustCreated}
-          onNameFirstEdited={onNameFirstEdited}
+          onNameFirstEdited={() => onNameFirstEdited(character.id)}
           onClose={() => setSelected(false)}
         />
       }
