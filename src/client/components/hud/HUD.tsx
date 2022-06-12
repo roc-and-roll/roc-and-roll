@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { CharacterHUD } from "./Character";
 import { LogHUD } from "./Log";
 import { InitiativeHUD } from "./Initiative";
@@ -13,11 +13,21 @@ export const HUD = React.memo(function HUD({
 }) {
   return (
     <>
-      <HUDToolbar />
-      <InitiativeHUD />
-      <CharacterHUD />
-      <LogHUD mapBackgroundColor={mapBackgroundColor} />
-      <ActionsHUD />
+      <Suspense fallback={null}>
+        <HUDToolbar />
+      </Suspense>
+      <Suspense fallback={null}>
+        <InitiativeHUD />
+      </Suspense>
+      <Suspense fallback={null}>
+        <CharacterHUD />
+      </Suspense>
+      <Suspense fallback={null}>
+        <LogHUD mapBackgroundColor={mapBackgroundColor} />
+      </Suspense>
+      <Suspense fallback={null}>
+        <ActionsHUD />
+      </Suspense>
     </>
   );
 });
