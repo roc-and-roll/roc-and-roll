@@ -12,7 +12,6 @@ export type RRSettings = ReadonlyDeep<{
   mute: boolean;
   notificationSound: "all" | "messages-only" | "none";
   renderMode: "fast" | "mostly-fancy" | "fancy";
-  enableExperimental25D: boolean;
   collapseDiceTemplates: boolean;
   focusTokenOnTurnStart: boolean;
   logNames: "verbose" | "playerName" | "characterName";
@@ -24,7 +23,6 @@ const initialSettings: RRSettings = {
   mute: false,
   notificationSound: "messages-only",
   renderMode: "fancy",
-  enableExperimental25D: false,
   collapseDiceTemplates: false,
   focusTokenOnTurnStart: false,
   logNames: "characterName",

@@ -72,19 +72,6 @@ export function Settings() {
           />
         </label>
       </div>
-      <label>
-        Enable Experimental Isometric Rendering{" "}
-        <input
-          type="checkbox"
-          checked={settings.enableExperimental25D}
-          onChange={(e) =>
-            setSettings((old) => ({
-              ...old,
-              enableExperimental25D: e.target.checked,
-            }))
-          }
-        />
-      </label>
       {myself.isGM && (
         <GMArea>
           <label>

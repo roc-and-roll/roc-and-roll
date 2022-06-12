@@ -3,7 +3,6 @@ import React, {
   useContext,
   useEffect,
   useImperativeHandle,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -333,24 +332,6 @@ const RRMapViewWithRef = React.forwardRef<
     }),
     [transform]
   );
-
-  useLayoutEffect(() => {
-    if (settings.enableExperimental25D) {
-      setTransform((old) => {
-        if (matrixRotationDEG(old) === matrixRotationDEG(isometricMatrix)) {
-          return old;
-        }
-        return compose(old, isometricMatrix);
-      });
-    } else {
-      setTransform((old) => {
-        if (matrixRotationDEG(old) === 0) {
-          return old;
-        }
-        return compose(old, inverse(isometricMatrix));
-      });
-    }
-  }, [settings.enableExperimental25D, setTransform]);
 
   const contrastColor = useContrastColor(backgroundColor);
 
