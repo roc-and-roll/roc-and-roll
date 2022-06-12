@@ -51,12 +51,14 @@ const removePartAction = (
     },
   });
 
-export const DiceTemplatePartMenuWrapper: React.FC<{
-  part: RRDiceTemplatePart;
-  template: RRDiceTemplate;
-  categoryId: RRDiceTemplateCategoryID;
-  isTopLevel?: boolean;
-}> = ({ part, template, children, categoryId, isTopLevel }) => {
+export const DiceTemplatePartMenuWrapper: React.FC<
+  React.PropsWithChildren<{
+    part: RRDiceTemplatePart;
+    template: RRDiceTemplate;
+    categoryId: RRDiceTemplateCategoryID;
+    isTopLevel?: boolean;
+  }>
+> = ({ part, template, children, categoryId, isTopLevel }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const dispatch = useServerDispatch();
   const character = useMyActiveCharacter("id")!;

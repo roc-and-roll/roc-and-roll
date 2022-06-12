@@ -109,12 +109,12 @@ const lerpMatrix = (x: Matrix, y: Matrix, t: number) => {
 };
 
 export interface MapAreas {
-  imageArea: Container;
-  auraArea: Container;
-  defaultArea: Container;
-  tokenArea: Container;
-  healthBarArea: Container;
-  tooltipArea: Container;
+  imageArea: PIXI.Container;
+  auraArea: PIXI.Container;
+  defaultArea: PIXI.Container;
+  tokenArea: PIXI.Container;
+  healthBarArea: PIXI.Container;
+  tooltipArea: PIXI.Container;
 }
 
 const PANNING_BUTTON = 2;
@@ -781,12 +781,14 @@ transform,
     }
   }, [settings.renderMode]);
 
-  const [imageArea, setImageArea] = useState<Container | null>(null);
-  const [auraArea, setAuraArea] = useState<Container | null>(null);
-  const [defaultArea, setDefaultArea] = useState<Container | null>(null);
-  const [tokenArea, setTokenArea] = useState<Container | null>(null);
-  const [healthBarArea, setHealthBarArea] = useState<Container | null>(null);
-  const [tooltipArea, setTooltipArea] = useState<Container | null>(null);
+  const [imageArea, setImageArea] = useState<PIXI.Container | null>(null);
+  const [auraArea, setAuraArea] = useState<PIXI.Container | null>(null);
+  const [defaultArea, setDefaultArea] = useState<PIXI.Container | null>(null);
+  const [tokenArea, setTokenArea] = useState<PIXI.Container | null>(null);
+  const [healthBarArea, setHealthBarArea] = useState<PIXI.Container | null>(
+    null
+  );
+  const [tooltipArea, setTooltipArea] = useState<PIXI.Container | null>(null);
 
   const areas = useMemo(
     () =>
@@ -874,10 +876,10 @@ transform,
     // (just adding a request animation frame didn't magically fix it, probably
     // gonna have to see how we can schedule ourselves after PIXI's bounds update)
     const mapObjects = [
-      ...((areas?.defaultArea as PIXI.Container | undefined)?.children ?? []),
-      ...((areas?.tokenArea as PIXI.Container | undefined)?.children ?? []),
-      ...((areas?.healthBarArea as PIXI.Container | undefined)?.children ?? []),
-      ...((areas?.imageArea as PIXI.Container | undefined)?.children ?? []),
+      ...(areas?.defaultArea.children ?? []),
+      ...(areas?.tokenArea.children ?? []),
+      ...(areas?.healthBarArea.children ?? []),
+      ...(areas?.imageArea.children ?? []),
     ];
     for (const object of mapObjects) {
       const bounds = object.getBounds();

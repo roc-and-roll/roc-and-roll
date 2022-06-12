@@ -79,9 +79,9 @@ export const MapToken = React.memo<{
   object: RRToken;
   canStartMoving: boolean;
   onStartMove: (o: RRMapObject, e: RRMouseEvent) => void;
-  auraArea: Container | null;
-  healthBarArea: Container | null;
-  tooltipArea: Container | null;
+  auraArea: PIXI.Container | null;
+  healthBarArea: PIXI.Container | null;
+  tooltipArea: PIXI.Container | null;
   zoom: number;
   contrastColor: string;
   smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
@@ -142,9 +142,9 @@ function MapTokenInner({
   object: RRToken;
   canStartMoving: boolean;
   onStartMove: (o: RRMapObject, e: RRMouseEvent) => void;
-  auraArea: Container | null;
-  healthBarArea: Container | null;
-  tooltipArea: Container | null;
+  auraArea: PIXI.Container | null;
+  healthBarArea: PIXI.Container | null;
+  tooltipArea: PIXI.Container | null;
   zoom: number;
   contrastColor: string;
   smartSetTotalHP: (characterId: RRCharacterID, hp: number) => void;
@@ -233,7 +233,7 @@ function MapTokenInner({
   const fullTokenRepresentation = (
     position: RRPoint,
     isGhost = false,
-    ref: React.LegacyRef<Container> | undefined = undefined
+    ref: React.Ref<PIXI.Container> | undefined = undefined
   ) => (
     <Container
       ref={ref}
@@ -327,7 +327,7 @@ function MapTokenInner({
     };
   }, [ghostPosition, setGhostPosition, startAnimation, stopAnimation]);
 
-  const ghostTokenRef = useRef<Container>(null);
+  const ghostTokenRef = useRef<PIXI.Container>(null);
 
   const diceRollDisplayHeight = 24;
   const diceRollDisplayWidth = 42;
@@ -461,7 +461,7 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
   zoom: number;
   contrastColor: RRColor;
   character: RRCharacter;
-  tooltipArea: Container | null;
+  tooltipArea: PIXI.Container | null;
   tokenRotation: number;
 } & (
   | {
@@ -571,7 +571,7 @@ const ConditionIcons = React.memo(function ConditionIcons({
   tooltipArea,
 }: {
   character: RRCharacter;
-  tooltipArea: Container | null;
+  tooltipArea: PIXI.Container | null;
 }) {
   const tinyIcons = character.conditions.length > 12;
   const iconSize = (tinyIcons ? 12 : 16) * character.scale;

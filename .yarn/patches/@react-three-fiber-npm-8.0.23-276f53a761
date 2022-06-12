@@ -1,0 +1,24 @@
+diff --git a/dist/declarations/src/core/hooks.d.ts b/dist/declarations/src/core/hooks.d.ts
+index f57c870e2714ec2279d88eb2612d7e4df26f44fd..e6be0b231fc373ec08489b41a485ceb7a725b20c 100644
+--- a/dist/declarations/src/core/hooks.d.ts
++++ b/dist/declarations/src/core/hooks.d.ts
+@@ -1,6 +1,7 @@
+ import * as THREE from 'three';
+ import { StateSelector, EqualityChecker } from 'zustand';
+ import { RootState, RenderCallback } from './store';
++import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader'
+ import { ObjectMap } from './utils';
+ export interface Loader<T> extends THREE.Loader {
+     load(url: string, onLoad?: (result: T) => void, onProgress?: (event: ProgressEvent) => void, onError?: (event: ErrorEvent) => void): unknown;
+@@ -13,10 +14,7 @@ export declare function useStore(): import("zustand").UseBoundStore<RootState, i
+ export declare function useThree<T = RootState>(selector?: StateSelector<RootState, T>, equalityFn?: EqualityChecker<T>): T;
+ export declare function useFrame(callback: RenderCallback, renderPriority?: number): null;
+ export declare function useGraph(object: THREE.Object3D): ObjectMap;
+-interface GLTFLike {
+-    scene: THREE.Object3D;
+-}
+-export declare function useLoader<T, U extends string | string[]>(Proto: new () => LoaderResult<T>, input: U, extensions?: Extensions, onProgress?: (event: ProgressEvent<EventTarget>) => void): U extends any[] ? BranchingReturn<T, GLTFLike, GLTFLike & ObjectMap>[] : BranchingReturn<T, GLTFLike, GLTFLike & ObjectMap>;
++export declare function useLoader<T, U extends string | string[]>(Proto: new () => LoaderResult<T>, input: U, extensions?: Extensions, onProgress?: (event: ProgressEvent<EventTarget>) => void): U extends any[] ? BranchingReturn<T, GLTF, GLTF & ObjectMap>[] : BranchingReturn<T, GLTF, GLTF & ObjectMap>;
+ export declare namespace useLoader {
+     var preload: <T, U extends string | string[]>(Proto: new () => LoaderResult<T>, input: U, extensions?: Extensions | undefined) => undefined;
+     var clear: <T, U extends string | string[]>(Proto: new () => LoaderResult<T>, input: U) => void;

@@ -240,7 +240,7 @@ function ParticleSystem({ config }: { config: particles.EmitterConfigV3 }) {
     (container: PIXI.Container) => setContainer(container),
     []
   );
-  return <Container ref={updateContainer}></Container>;
+  return <Container ref={updateContainer} />;
 }
 
 function Rain({ intensity, size }: { intensity: number; size: RRPoint }) {

@@ -15,7 +15,7 @@ export function PixiBlurHashSprite({
       url: string;
       blurHashOnly?: boolean;
     } & Pick<
-      PixiElement<Sprite>,
+      PixiElement<Sprite, PIXI.Sprite>,
       | "x"
       | "y"
       | "width"

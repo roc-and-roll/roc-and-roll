@@ -200,7 +200,7 @@ function MapObjectImage({
   x: number;
   y: number;
 } & Pick<
-  PixiElement<Sprite>,
+  PixiElement<Sprite, PIXI.Sprite>,
   | "name"
   | "mousedown"
   | "mouseup"
@@ -269,7 +269,7 @@ function TiledImage({
   height: number;
   scaleFactor: number;
 } & Pick<
-  PixiElement<Sprite>,
+  PixiElement<Sprite, PIXI.Sprite>,
   | "name"
   | "mousedown"
   | "mouseup"

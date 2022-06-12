@@ -3,7 +3,6 @@ import tinycolor, { ColorInput } from "tinycolor2";
 import { Key, ReactNode, ReactPortal } from "react";
 import * as ReactIs from "react-is";
 import {
-  Container,
   DisplayObjectProps,
   InteractiveComponent,
 } from "react-pixi-fiber";
@@ -25,7 +24,7 @@ export interface RRMouseEvent {
 // by Dan Abramov.                              cspell: disable-line
 export function createPixiPortal(
   children: ReactNode,
-  containerInfo: Container,
+  containerInfo: PIXI.Container,
   key: Key | null = null
 ): ReactPortal {
   const portal: ReactReconcilerPortal = {

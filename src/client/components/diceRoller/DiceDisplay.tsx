@@ -5,7 +5,6 @@ import { colorForDamageType, RRLogEntryDiceRoll } from "../../../shared/state";
 import { Dice } from "./Dice";
 import clsx from "clsx";
 import { contrastColor } from "../../util";
-import { USE_CONCURRENT_MODE } from "../../../shared/constants";
 import { RRDamageType } from "../../../shared/dice-roll-tree-types-and-validation";
 import { RollSlots, SlotsVisitor } from "./SlotsVisitor";
 
@@ -142,7 +141,6 @@ export default function DiceDisplay({
           far: 50,
         }}
         frameloop="demand"
-        mode={USE_CONCURRENT_MODE ? "concurrent" : "blocking"}
       >
         <ambientLight intensity={0.2} />
         <pointLight position={[4, 4, 10]} intensity={1} />

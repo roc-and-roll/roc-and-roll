@@ -1,12 +1,11 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
 import { App } from "./components/App";
 import { ServerStateProvider } from "./state";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { SettingsProvider } from "./settings";
 import { RecoilRoot } from "recoil";
-import { USE_CONCURRENT_MODE } from "../shared/constants";
 import { MyselfProvider } from "./myself";
 import { CompendiumProvider } from "./components/compendium/Compendium";
 import { ModApi } from "./components/Modding";
@@ -22,12 +21,7 @@ export function render(socket: Socket) {
   container.className = "root";
   document.body.appendChild(container);
 
-  const element = <Root socket={socket} />;
-  if (USE_CONCURRENT_MODE) {
-    ReactDOM.createRoot(container).render(element);
-  } else {
-    ReactDOM.render(element, container);
-  }
+  ReactDOM.createRoot(container).render(<Root socket={socket} />);
 }
 
 function Root({ socket }: { socket: Socket }) {

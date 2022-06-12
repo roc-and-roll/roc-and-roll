@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as PIXI from "pixi.js";
 import { RoughText, roughTextFontFamily } from "../../rough";
-import { Container, InteractiveComponent } from "react-pixi-fiber";
+import { InteractiveComponent } from "react-pixi-fiber";
 import { createPixiPortal } from "../pixi-utils";
 import { PRectangle } from "../Primitives";
 
@@ -23,7 +23,7 @@ export function PixiTooltip({
   children,
 }: {
   text: string;
-  tooltipArea: Container | null;
+  tooltipArea: PIXI.Container | null;
   children: React.ReactElement;
 }) {
   const ref = useRef<InteractiveComponent & PIXI.DisplayObject>();

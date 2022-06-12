@@ -6,7 +6,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import ReactDOM from "react-dom";
 import { Socket } from "socket.io-client";
 import { Opaque } from "type-fest";
 import {
@@ -14,7 +13,6 @@ import {
   SOCKET_SET_PLAYER_ID,
   SOCKET_SET_STATE,
   SOCKET_DISPATCH_ACTION,
-  USE_CONCURRENT_MODE,
 } from "../shared/constants";
 import { reducer } from "../shared/reducer";
 import {
@@ -333,16 +331,6 @@ function ServerConnectionProvider({
   );
 }
 
-const batchUpdatesIfNotConcurrentMode = (cb: () => void) => {
-  if (USE_CONCURRENT_MODE) {
-    return cb();
-  } else {
-    ReactDOM.unstable_batchedUpdates(() => {
-      cb();
-    });
-  }
-};
-
 export function ServerStateProvider({
   socket,
   children,
@@ -371,13 +359,9 @@ export function ServerStateProvider({
           finishedOptimisticUpdateIdsRef.current;
         finishedOptimisticUpdateIdsRef.current = [];
 
-        batchUpdatesIfNotConcurrentMode(() =>
-          subscribers.current.forEach((subscriber) => subscriber(state))
-        );
-        batchUpdatesIfNotConcurrentMode(() =>
-          subscribersToOptimisticUpdatesExecuted.current.forEach((subscriber) =>
-            subscriber(finishedOptimisticUpdateIds)
-          )
+        subscribers.current.forEach((subscriber) => subscriber(state));
+        subscribersToOptimisticUpdatesExecuted.current.forEach((subscriber) =>
+          subscriber(finishedOptimisticUpdateIds)
         );
       });
     };
