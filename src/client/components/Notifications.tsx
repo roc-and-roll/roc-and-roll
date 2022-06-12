@@ -6,7 +6,6 @@ import React, {
   useState,
 } from "react";
 import {
-  entries,
   RRLogEntry,
   RRLogEntryAchievement,
   RRLogEntryDiceRoll,
@@ -39,29 +38,38 @@ export const NotificationAreaPortal = React.createContext<
 >([null, () => {}]);
 
 export function Notifications() {
-  const notifications = useServerState((state) => state.logEntries);
-  const [lastShownID, setLastShownID] = useState<RRLogEntryID>();
-  const [newNotifications, setNewNotifications] = useState<RRLogEntry[]>([]);
+  const logEntries = useServerState((state) => state.logEntries);
+  const [lastShownID, setLastShownID] = useState<RRLogEntryID | undefined>(
+    logEntries.ids[logEntries.ids.length - 1]
+  );
+  const [notifications, setNotifications] = useState<RRLogEntry[]>([]);
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
-    const list = entries(notifications);
-    if (lastShownID === undefined && list.length > 1) {
-      setLastShownID(list[list.length - 1]?.id);
+    if (logEntries.ids.length === 0) {
       return;
     }
 
-    const lastIndex =
-      lastShownID !== undefined
-        ? list.findIndex((e) => e.id === lastShownID)
-        : 0;
+    const newNotifications: RRLogEntry[] = [];
+    for (let i = logEntries.ids.length - 1; i >= 0; i--) {
+      const id = logEntries.ids[i]!;
+      if (id === lastShownID) {
+        break;
+      }
+      const logEntry = logEntries.entities[id]!;
+      if (!logEntry.silent) {
+        newNotifications.push(logEntry);
+      }
+    }
 
-    const newNotifications = list.slice(lastIndex + 1).filter((n) => !n.silent);
     if (newNotifications.length > 0) {
-      setNewNotifications((l) => [...l, ...newNotifications]);
+      setNotifications((oldNotifications) => [
+        ...oldNotifications,
+        ...newNotifications,
+      ]);
       setLastShownID(newNotifications[newNotifications.length - 1]!.id);
     }
-  }, [lastShownID, notifications]);
+  }, [lastShownID, logEntries]);
 
   const [_portal, setPortal] = useContext(NotificationAreaPortal);
 
@@ -71,17 +79,17 @@ export function Notifications() {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <Flipper flipKey={newNotifications.map((n) => n.id).join("")}>
-        {newNotifications.map((notification) => (
+      <Flipper flipKey={notifications.map((n) => n.id).join(",")}>
+        {notifications.map((notification) => (
           <Notification
-            frozen={hovered}
             key={notification.id}
+            notification={notification}
+            frozen={hovered}
             onExpired={() =>
-              setNewNotifications((l) =>
-                l.filter((n) => n.id !== notification.id)
+              setNotifications((notifications) =>
+                notifications.filter((n) => n.id !== notification.id)
               )
             }
-            notification={notification}
           />
         ))}
       </Flipper>

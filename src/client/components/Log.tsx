@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { logEntryMessageAdd } from "../../shared/actions";
-import { entries, RRLogEntry } from "../../shared/state";
+import { RRLogEntry } from "../../shared/state";
 import { assertNever } from "../../shared/util";
 import { useMyProps } from "../myself";
 import { usePrompt } from "../dialog-boxes";
@@ -80,10 +80,7 @@ const LogEntry = React.memo<{ logEntry: RRLogEntry }>(function LogEntry({
 export function CollapsedLog() {
   const lastLogEntry = useServerState((state) => {
     const lastId = state.logEntries.ids[state.logEntries.ids.length - 1];
-    if (!lastId) {
-      return null;
-    }
-    return state.logEntries.entities[lastId];
+    return !lastId ? null : state.logEntries.entities[lastId]!;
   });
 
   return (
@@ -97,50 +94,70 @@ export function CollapsedLog() {
   );
 }
 
+export const ENTRIES_PER_PAGE = 100;
+
 export const Log = React.memo(function Log() {
-  const logEntriesCollection = useServerState((state) => state.logEntries);
+  const logEntries = useServerState((state) => state.logEntries);
+  const [offset, setOffset] = useState(() =>
+    Math.max(0, logEntries.ids.length - ENTRIES_PER_PAGE)
+  );
   const myself = useMyProps("id");
   const dispatch = useServerDispatch();
   const [scrollRef] = useScrollToBottom<HTMLUListElement>([false]);
   const prompt = usePrompt();
 
+  const rows = [];
+  for (let i = offset; i < logEntries.ids.length; i++) {
+    const id = logEntries.ids[i]!;
+    const logEntry = logEntries.entities[id]!;
+    const previousId = logEntries.ids[i - 1];
+    const previousLogEntry =
+      previousId !== undefined ? logEntries.entities[previousId] : null;
+
+    const diff = logEntry.timestamp - (previousLogEntry?.timestamp ?? 0);
+
+    if (diff >= 1000 * 60 * 60 * 3) {
+      // >=3 hours distance
+      rows.push(
+        <li
+          key={`${logEntry.id} ${previousLogEntry?.id ?? "---"}`}
+          className="log-divider-timestamp"
+        >
+          {formatTimestamp(logEntry.timestamp)}
+        </li>
+      );
+    } else if (diff >= 1000 * 90) {
+      // >=90 seconds distance
+      rows.push(
+        <li
+          key={`${logEntry.id} ${previousLogEntry?.id ?? "--"}`}
+          className="log-divider-small"
+        />
+      );
+    }
+
+    rows.push(
+      <li key={logEntry.id}>
+        <LogEntry logEntry={logEntry} />
+      </li>
+    );
+  }
+
   return (
     <div className="py-2">
       <ul ref={scrollRef} className="log-text px-2 mb-2">
-        {entries(logEntriesCollection).flatMap((logEntry, i, logEntries) => {
-          const lastLogEntry = logEntries[i - 1] ?? null;
-          const diff = logEntry.timestamp - (lastLogEntry?.timestamp ?? 0);
-
-          const elements = [];
-
-          if (diff >= 1000 * 60 * 60 * 3) {
-            // >=3 hours distance
-            elements.push(
-              <li
-                key={`${logEntry.id} ${lastLogEntry?.id ?? "---"}`}
-                className="log-divider-timestamp"
-              >
-                {formatTimestamp(logEntry.timestamp)}
-              </li>
-            );
-          } else if (diff >= 1000 * 90) {
-            // >=90 seconds distance
-            elements.push(
-              <li
-                key={`${logEntry.id} ${lastLogEntry?.id ?? "--"}`}
-                className="log-divider-small"
-              />
-            );
-          }
-
-          elements.push(
-            <li key={logEntry.id}>
-              <LogEntry logEntry={logEntry} />
-            </li>
-          );
-
-          return elements;
-        })}
+        {offset > 0 && (
+          <li className="text-center text-orange-300">
+            <Button
+              onClick={() =>
+                setOffset((offset) => Math.max(0, offset - ENTRIES_PER_PAGE))
+              }
+            >
+              load older entries
+            </Button>
+          </li>
+        )}
+        {rows}
       </ul>
       <Button
         className="mx-2"
@@ -153,9 +170,7 @@ export const Log = React.memo(function Log() {
             logEntryMessageAdd({
               playerId: myself.id,
               silent: false,
-              payload: {
-                text,
-              },
+              payload: { text },
             })
           );
         }}
