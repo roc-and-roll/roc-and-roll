@@ -43,7 +43,7 @@
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "@fortawesome/react-fontawesome": "^0.1.15",
     "@pixi/particle-emitter": "^5.0.7",
-    "@react-three/fiber": "^8.0.23",
+    "@react-three/fiber": "^8.0.26",
     "@reduxjs/toolkit": "^1.7.1",
     "@seznam/compose-react-refs": "^1.0.6",
     "@tailwindcss/line-clamp": "^0.2.2",
@@ -249,8 +249,7 @@
   },
   "resolutions": {
     "@reduxjs/toolkit": "patch:@reduxjs/toolkit@npm:1.6.1#.yarn/patches/@reduxjs-toolkit-npm-1.6.1-a0999c8262",
-    "peggy": "patch:peggy@npm:1.2.0#.yarn/patches/peggy-npm-1.2.0-dcccbe8690",
-    "@react-three/fiber@8.0.23": "patch:@react-three/fiber@npm:8.0.23#.yarn/patches/@react-three-fiber-npm-8.0.23-276f53a761"
+    "peggy": "patch:peggy@npm:1.2.0#.yarn/patches/peggy-npm-1.2.0-dcccbe8690"
   },
   "packageManager": "yarn@3.1.1"
 }
