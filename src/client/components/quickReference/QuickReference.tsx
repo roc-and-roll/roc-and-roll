@@ -526,6 +526,8 @@ export function TextEntryString({
           case "dc":
             return "DC " + args;
           // TODO: We should also handle these properly.
+          // cspell:disable-next-line
+          case "quickref":
           case "sense":
           case "classFeature":
           case "item":

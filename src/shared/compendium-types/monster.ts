@@ -46,7 +46,7 @@ export interface CompendiumMonster {
   source: string;
   imageUrl?: string;
   page: number;
-  size?: "G" | "H" | "M" | "L" | "S" | "T";
+  size?: Array<"G" | "H" | "M" | "L" | "S" | "T">;
   ac?: (
     | {
         ac?: number;
@@ -134,6 +134,8 @@ export interface CompendiumMonster {
   passive?: any;
   senseTags?: any;
   damageTags?: any;
+  damageTagsLegendary?: any;
+  damageTagsSpell?: any;
   miscTags?: any;
   otherSources?: any;
   languages?: any;
@@ -174,6 +176,8 @@ export interface CompendiumMonster {
   alias?: any;
   isNamedCreature?: any;
   reprintedAs?: any;
+  summonedBySpellLevel?: any;
+  dragonAge?: any;
 }
 
 export const isConditionalSpeed = z.strictObject({
@@ -192,7 +196,7 @@ const _isMonster = z.strictObject({
   source: z.string(),
   page: z.number().int().min(0),
   imageUrl: z.optional(z.string()),
-  size: z.optional(z.enum(["G", "H", "M", "L", "S", "T"])),
+  size: z.optional(z.array(z.enum(["G", "H", "M", "L", "S", "T"]))),
   type: z.any(),
   alignment: z.optional(z.any()),
   ac: z.optional(
@@ -337,6 +341,8 @@ const _isMonster = z.strictObject({
   passive: z.any(),
   senseTags: z.any(),
   damageTags: z.any(),
+  damageTagsLegendary: z.any(),
+  damageTagsSpell: z.any(),
   miscTags: z.any(),
   otherSources: z.any(),
   languages: z.any(),
@@ -377,6 +383,8 @@ const _isMonster = z.strictObject({
   alias: z.any(),
   isNamedCreature: z.any(),
   reprintedAs: z.any(),
+  summonedBySpellLevel: z.any(),
+  dragonAge: z.any(),
 });
 // TypeScript hack to avoid inlining.
 // https://github.com/microsoft/TypeScript/issues/34119
