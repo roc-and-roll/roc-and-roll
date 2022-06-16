@@ -2,10 +2,7 @@ import * as PIXI from "pixi.js";
 import tinycolor, { ColorInput } from "tinycolor2";
 import { Key, ReactNode, ReactPortal } from "react";
 import * as ReactIs from "react-is";
-import {
-  DisplayObjectProps,
-  InteractiveComponent,
-} from "react-pixi-fiber";
+import { DisplayObjectProps, InteractiveComponent } from "react-pixi-fiber";
 import { ReactPortal as ReactReconcilerPortal } from "react-reconciler";
 
 export const colorValue = (color: ColorInput) => {

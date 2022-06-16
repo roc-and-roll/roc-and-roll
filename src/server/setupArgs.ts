@@ -50,7 +50,12 @@ export async function setupArgs() {
       .option("-p, --port <port>", "http port", myParseInt, 3000)
       .option("-h, --host <host>", "http host", "127.0.0.1")
       .action((options: { port: number; host: string }, command: Command) => {
-        resolve({ ...command.parent!.opts(), ...options, command: "start" });
+        resolve({
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          ...command.parent!.opts(),
+          ...options,
+          command: "start",
+        });
       });
 
     program
@@ -70,6 +75,7 @@ export async function setupArgs() {
           command: Command
         ) => {
           resolve({
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             ...command.parent!.opts(),
             outputFilePath,
             ...options,
