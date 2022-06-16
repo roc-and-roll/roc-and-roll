@@ -1,76 +1,71 @@
 import React, { useContext, useMemo } from "react";
-import { AppContext, TilingSprite } from "react-pixi-fiber";
 import { Matrix } from "transformation-matrix";
-import { GRID_SIZE } from "../../../shared/constants";
 import { RRColor } from "../../../shared/state";
-import { getViewportCorners } from "../../util";
 import { ViewPortSizeContext } from "./MapContainer";
 import * as PIXI from "pixi.js";
-import { colorValue } from "./pixi-utils";
-import { snapPointToGrid } from "../../../shared/point";
-
-const STROKE_WIDTH = 2;
+import { PRectangle } from "./Primitives";
+import { GRID_SIZE } from "../../../shared/constants";
+import tinycolor from "tinycolor2";
 
 export const MapGrid = React.memo<{
   transform: Matrix;
   color: RRColor;
 }>(function MapGrid({ transform, color }) {
   const viewPortSize = useContext(ViewPortSizeContext);
-  const corners = getViewportCorners(transform, viewPortSize);
 
-  const app = useContext(AppContext);
+  const filter = useMemo(() => {
+    const rgba = tinycolor(color).toRgb();
+    return new PIXI.Filter(
+      undefined,
+      `
+//cspell: disable-next-line
+precision mediump float;
 
-  const strokeWidth =
-    transform.a >= 1
-      ? STROKE_WIDTH
-      : transform.a < 1 / 4
-      ? null
-      : Math.min(Math.ceil(STROKE_WIDTH / transform.a), STROKE_WIDTH * 2);
-  const scaleMode =
-    transform.a > 0.5 ? PIXI.SCALE_MODES.NEAREST : PIXI.SCALE_MODES.LINEAR;
+uniform vec4 color;
 
-  const graphics = useMemo(() => {
-    const graphics = new PIXI.Graphics();
-    graphics.name = "grid-texture";
-    return graphics;
-  }, []);
+uniform float scale;
+uniform vec2 offset;
 
-  // TODO: There is a leak somewhere: When toggling the grid on and off,
-  // additional PIXI.Graphics objects are created.
-  // This does not help:
-  // useEffect(() => {
-  //   return () => {
-  //     graphics.destroy(true);
-  //   };
-  // }, [graphics]);
+vec2 pitch = scale * ${GRID_SIZE}. * vec2(1.);
 
-  const texture = useMemo(() => {
-    if (strokeWidth === null) {
-      return null;
-    }
+void main() {
+  if (scale < .25) {
+    pitch *= 10.;
+  }
 
-    graphics.clear();
-    const strokeColor = colorValue(color);
-    //TODO: allow picking a color with transparency from color input
-    graphics.lineStyle(strokeWidth / 2, strokeColor.color, 0.6);
-    graphics.drawRect(
-      0,
-      0,
-      GRID_SIZE - strokeWidth / 2,
-      GRID_SIZE - strokeWidth / 2
+  vec2 coord = gl_FragCoord.xy - offset;
+
+  if (mod(coord.x, pitch.x) < 1. ||
+      mod(coord.y, pitch.y) < 1.) {
+    gl_FragColor = color;
+  } else {
+    gl_FragColor = vec4(0.);
+  }
+}
+  `,
+      {
+        //TODO: allow picking a color with transparency from color input
+        color: [rgba.r / 0xff, rgba.g / 0xff, rgba.b / 0xff, 0.6],
+        scale: transform.a,
+        // The origin of the coordinate system used by the shader is at the
+        // bottom left, but PIXI's origin is at the top left. In theory, we
+        // should be able to specify `origin_upper_left` in the shader to fix
+        // this inconsistency, but I couldn't get it to work. This is why the
+        // y-coordinate here isn't just `transform.f`, and why we need the
+        // viewport height.
+        offset: [transform.e, -transform.f + viewPortSize.y],
+      }
     );
-    return app.renderer.generateTexture(graphics, { scaleMode });
-  }, [graphics, color, strokeWidth, app.renderer, scaleMode]);
+  }, [color, transform.a, transform.e, transform.f, viewPortSize.y]);
 
-  const topLeft = snapPointToGrid(corners[0]);
-
-  return texture ? (
-    <TilingSprite
-      texture={texture}
-      x={topLeft.x}
-      y={topLeft.y}
-      width={corners[2].x - topLeft.x}
-      height={corners[1].y - topLeft.y}
+  return (
+    <PRectangle
+      name="grid"
+      x={-transform.e / transform.a}
+      y={-transform.f / transform.a}
+      width={viewPortSize.x / transform.a}
+      height={viewPortSize.y / transform.a}
+      filters={[filter]}
     />
-  ) : null;
+  );
 });
