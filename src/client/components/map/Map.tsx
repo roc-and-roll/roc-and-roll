@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -15,7 +16,6 @@ import {
   Matrix,
   inverse,
   identity,
-  rotateDEG,
 } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
 import {
@@ -56,12 +56,10 @@ import {
   atomFamily,
   useRecoilBridgeAcrossReactRoots_UNSTABLE,
   useRecoilCallback,
-  useRecoilState,
 } from "recoil";
 import { useRRSettings } from "../../settings";
 import { assertNever, lerp } from "../../../shared/util";
 import { useContrastColor } from "../../util";
-import { useLatest } from "../../useLatest";
 import { useGesture } from "react-use-gesture";
 import {
   RRMessage,
@@ -91,6 +89,7 @@ import { dialogCtxs } from "../../dialog-boxes";
 import { getBoundingBoxForMapObject } from "./geometry/bounding-boxes";
 import { RotatedShape } from "./geometry/RotatedShape";
 import { PixiGlobalFilters } from "./atmosphere/Atmosphere";
+import { MapTransformRef } from "../MapTransformContext";
 
 type Rectangle = [number, number, number, number];
 
@@ -183,11 +182,6 @@ export const hoveredMapObjectIdsAtom = atom<RRMapObjectID[]>({
   default: [],
 });
 
-export const mapTransformAtom = atom<Matrix>({
-  key: "mapTransform",
-  default: identity(),
-});
-
 const withSelectionAreaDo = <T,>(
   selectionArea: Rectangle | null,
   cb: (x: number, y: number, w: number, h: number) => T,
@@ -204,12 +198,6 @@ const withSelectionAreaDo = <T,>(
   const bottom = Math.max(selectionArea[1], selectionArea[3]);
   return cb(left, top, right - left, bottom - top);
 };
-
-const isometricMatrix = compose(scale(1, 0.5), rotateDEG(-45));
-
-function matrixRotationDEG(matrix: Matrix): number {
-  return (Math.atan2(-matrix.b, matrix.a) * 180) / Math.PI;
-}
 
 const localCoords = (
   svg: HTMLElement | null,
@@ -277,8 +265,11 @@ const RRMapViewWithRef = React.forwardRef<
   // because we want transformRef to reflect the currently rendered transform,
   // instead of the committed (using setTransform), but potentially not yet
   // rendered transform.
-  const [transform, setTransform] = useRecoilState(mapTransformAtom);
-  const transformRef = useLatest(transform);
+  const [transform, setTransform] = useState(identity());
+  const transformRef = useContext(MapTransformRef);
+  useLayoutEffect(() => {
+    transformRef.current = transform;
+  }, [transformRef, transform]);
 
   const [rafStart, rafStop] = useRafLoop();
 

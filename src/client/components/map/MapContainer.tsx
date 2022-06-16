@@ -1,6 +1,7 @@
 import React, {
   Suspense,
   useCallback,
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -44,7 +45,6 @@ import {
   CURSOR_POSITION_SYNC_DEBOUNCE,
   CURSOR_POSITION_SYNC_HISTORY_STEPS,
   globalToLocal,
-  mapTransformAtom,
   RRMapView,
   RRMapViewRef,
 } from "./Map";
@@ -84,6 +84,7 @@ import { HUD } from "../hud/HUD";
 import { useDebugSettings } from "../hud/DebugSettings";
 import { useStateWithRef } from "../../useRefState";
 import { identity, Matrix } from "transformation-matrix";
+import { MapTransformRef } from "../MapTransformContext";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -217,13 +218,7 @@ export default function MapContainer() {
   };
   const addBackgroundImagesRef = useLatest(addBackgroundImages);
 
-  const getTransform = useRecoilCallback(
-    ({ snapshot }) =>
-      () => {
-        return snapshot.getLoadable(mapTransformAtom).getValue();
-      },
-    []
-  );
+  const transformRef = useContext(MapTransformRef);
 
   const [dropProps, dropRef1] = useDrop<
     { id: RRCharacterID | RRMapID } | { files: File[] },
@@ -237,7 +232,7 @@ export default function MapContainer() {
         const dropPosition = monitor.getClientOffset();
         const x = dropPosition!.x - topLeft.x;
         const y = dropPosition!.y - topLeft.y;
-        const point = globalToLocal(getTransform(), {
+        const point = globalToLocal(transformRef.current, {
           x,
           y,
         });
@@ -308,7 +303,7 @@ export default function MapContainer() {
       dispatch,
       getCharacter,
       getOwnerOfCharacter,
-      getTransform,
+      transformRef,
       mapId,
       myself,
     ]

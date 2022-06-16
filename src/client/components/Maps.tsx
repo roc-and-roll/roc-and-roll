@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React from "react";
+import React, { useCallback, useContext } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import {
   mapAdd,
@@ -32,8 +32,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { RRMessage, useServerMessages } from "../serverMessages";
 import { rrid } from "../../shared/util";
-import { mapTransformAtom } from "./map/Map";
-import { useRecoilCallback } from "recoil";
+import { MapTransformRef } from "./MapTransformContext";
 
 export const Maps = React.memo(function Maps() {
   const dispatch = useServerDispatch();
@@ -132,14 +131,15 @@ export function MapListEntry({
 
   const { send } = useServerMessages();
 
-  const sendSnapView = useRecoilCallback(({ snapshot }) => () => {
+  const transformRef = useContext(MapTransformRef);
+  const sendSnapView = useCallback(() => {
     send({
       type: "snap_view",
-      transform: snapshot.getLoadable(mapTransformAtom).getValue(),
+      transform: transformRef.current,
       mapId,
       id: rrid<RRMessage>(),
     });
-  });
+  }, [transformRef, mapId, send]);
 
   if (!mapSettings) {
     return null;

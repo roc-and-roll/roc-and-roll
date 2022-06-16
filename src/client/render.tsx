@@ -14,6 +14,7 @@ import { Socket } from "socket.io-client";
 import { DialogBoxes, DialogProvider } from "./dialog-boxes";
 import { DebugSettingsContextProvider } from "./components/hud/DebugSettings";
 import { QuickReferenceProvider } from "./components/quickReference/QuickReferenceWrapper";
+import { MapTransformRefProvider } from "./components/MapTransformContext";
 
 export function render(socket: Socket) {
   // Create a new div element, add it to the DOM, and render our app into it.
@@ -38,9 +39,11 @@ function Root({ socket }: { socket: Socket }) {
                   <CompendiumProvider>
                     <QuickReferenceProvider>
                       <DndProvider backend={HTML5Backend}>
-                        <ModApi />
-                        <App />
-                        <DialogBoxes />
+                        <MapTransformRefProvider>
+                          <ModApi />
+                          <App />
+                          <DialogBoxes />
+                        </MapTransformRefProvider>
                       </DndProvider>
                     </QuickReferenceProvider>
                   </CompendiumProvider>
