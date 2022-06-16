@@ -1,7 +1,6 @@
 import React from "react";
-import { useRecoilValue } from "recoil";
 import { GRID_SIZE } from "../../../shared/constants";
-import { RRPlayerID, RRPoint } from "../../../shared/state";
+import { EphemeralPlayer, RRPoint } from "../../../shared/state";
 import {
   makePoint,
   pointAdd,
@@ -9,7 +8,6 @@ import {
   pointSubtract,
 } from "../../../shared/point";
 import { RoughLine, RoughText } from "../rough";
-import { ephemeralPlayersFamily } from "./recoil";
 import { useContrastColor } from "../../util";
 import { pathLength, shortestDistance } from "./mapHelpers";
 import { PCircle, PRectangle } from "./Primitives";
@@ -30,30 +28,19 @@ const centered = (p: RRPoint) =>
   pointScale(pointAdd(p, makePoint(0.5)), GRID_SIZE);
 
 export const MapMeasurePath = React.memo<{
-  ephemeralPlayerId: RRPlayerID;
+  measurePath: EphemeralPlayer["measurePath"];
   color: string;
   mapBackgroundColor: string;
   zoom: number;
-}>(function MapMeasurePath({
-  ephemeralPlayerId,
-  color,
-  mapBackgroundColor,
-  zoom,
-}) {
-  const ephemeralPlayer = useRecoilValue(
-    ephemeralPlayersFamily(ephemeralPlayerId)
-  );
-
-  const path = ephemeralPlayer?.measurePath ?? [];
-  if (path.length === 0) {
+}>(function MapMeasurePath({ measurePath, color, mapBackgroundColor, zoom }) {
+  if (measurePath.length === 0) {
     return null;
   }
 
-  // Split this off into a separate component so that we avoid re-rendering if
-  // something other than the path of the ephemeral player changes.
+  // Split this off into a separate component due to the early return above.
   return (
     <MapMeasurePathInner
-      path={path}
+      path={measurePath}
       color={color}
       mapBackgroundColor={mapBackgroundColor}
       zoom={zoom}
@@ -61,12 +48,17 @@ export const MapMeasurePath = React.memo<{
   );
 });
 
-const MapMeasurePathInner = React.memo<{
+function MapMeasurePathInner({
+  path,
+  color,
+  mapBackgroundColor,
+  zoom,
+}: {
   path: RRPoint[];
   color: string;
   mapBackgroundColor: string;
   zoom: number;
-}>(function MapMeasurePathInner({ path, color, mapBackgroundColor, zoom }) {
+}) {
   const pathContrastColor = colorValue(useContrastColor(color)).color;
   const mapContrastColor = colorValue(
     useContrastColor(mapBackgroundColor)
@@ -147,4 +139,4 @@ const MapMeasurePathInner = React.memo<{
       </Container>
     </>
   );
-});
+}

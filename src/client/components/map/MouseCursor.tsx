@@ -1,13 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
-import { useRecoilValue } from "recoil";
 import { Matrix } from "transformation-matrix";
 import { GRID_SIZE } from "../../../shared/constants";
-import {
-  EphemeralPlayer,
-  RRColor,
-  RRPlayerID,
-  RRPoint,
-} from "../../../shared/state";
+import { EphemeralPlayer, RRColor, RRPoint } from "../../../shared/state";
 import {
   makePoint,
   pointAdd,
@@ -18,37 +12,31 @@ import {
 import useRafLoop from "../../useRafLoop";
 import { RoughPolygon, RoughText } from "../rough";
 import { CURSOR_POSITION_SYNC_DEBOUNCE } from "./Map";
-import { ephemeralPlayersFamily } from "./recoil";
 import { getViewportCorners } from "../../util";
 import { Container } from "react-pixi-fiber";
 
 export const MouseCursor = React.memo<{
-  playerId: RRPlayerID;
+  mapMouse: EphemeralPlayer["mapMouse"];
   playerName: string;
   playerColor: RRColor;
   transform: Matrix;
   viewPortSize: RRPoint;
   contrastColor: RRColor;
-}>(function MouseCursor(props) {
-  const ephemeralPlayer = useRecoilValue(
-    ephemeralPlayersFamily(props.playerId)
-  );
-
-  if (ephemeralPlayer === null || ephemeralPlayer.mapMouse === null) {
+}>(function MouseCursor({ mapMouse, ...props }) {
+  if (mapMouse === null) {
     return null;
   }
 
-  return <MouseCursorInner {...props} mapMouse={ephemeralPlayer.mapMouse} />;
+  return <MouseCursorInner {...props} mapMouse={mapMouse} />;
 });
 
 const MouseCursorInner = React.memo<{
-  playerId: RRPlayerID;
+  mapMouse: NonNullable<EphemeralPlayer["mapMouse"]>;
   playerName: string;
   playerColor: RRColor;
   transform: Matrix;
   viewPortSize: RRPoint;
   contrastColor: RRColor;
-  mapMouse: NonNullable<EphemeralPlayer["mapMouse"]>;
 }>(function MouseCursorInner({ transform, viewPortSize, ...props }) {
   const [rafStart, rafStop] = useRafLoop();
 

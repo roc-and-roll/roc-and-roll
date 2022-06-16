@@ -1,8 +1,12 @@
 import React from "react";
-import { EntityCollection, RRMapID, RRPlayer } from "../../../shared/state";
-import { ephemeralPlayerIdsAtom } from "./recoil";
+import {
+  EntityCollection,
+  entries,
+  RRMapID,
+  RRPlayer,
+} from "../../../shared/state";
 import { MapMeasurePath } from "./MapMeasurePath";
-import { useRecoilValue } from "recoil";
+import { useServerState } from "../../state";
 
 export function MeasurePaths({
   mapId,
@@ -15,18 +19,18 @@ export function MeasurePaths({
   backgroundColor: string;
   players: EntityCollection<RRPlayer>;
 }) {
-  const ephemeralPlayerIds = useRecoilValue(ephemeralPlayerIdsAtom);
+  const ephemeralPlayers = useServerState((state) => state.ephemeral.players);
   return (
     <>
-      {ephemeralPlayerIds.map((ephemeralPlayerId) => {
-        const player = players.entities[ephemeralPlayerId];
+      {entries(ephemeralPlayers).map((ephemeralPlayer) => {
+        const player = players.entities[ephemeralPlayer.id];
         if (!player || player.currentMap !== mapId) {
           return null;
         }
         return (
           <MapMeasurePath
-            key={ephemeralPlayerId}
-            ephemeralPlayerId={ephemeralPlayerId}
+            key={ephemeralPlayer.id}
+            measurePath={ephemeralPlayer.measurePath}
             zoom={zoom}
             color={player.color}
             mapBackgroundColor={backgroundColor}

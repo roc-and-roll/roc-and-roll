@@ -1,8 +1,6 @@
 import {
-  EphemeralPlayer,
   RRMapObject,
   RRMapObjectID,
-  RRPlayerID,
   RRCharacter,
   RRCharacterID,
   EntityCollection,
@@ -78,19 +76,6 @@ export const assetIdsAtom = atom<ReadonlyArray<RRAssetID>>({
   default: [],
 });
 
-export const ephemeralPlayersFamily = atomFamily<
-  EphemeralPlayer | null,
-  RRPlayerID
->({
-  key: "EphemeralPlayer",
-  default: null,
-});
-
-export const ephemeralPlayerIdsAtom = atom<ReadonlyArray<RRPlayerID>>({
-  key: "EphemeralPlayerIds",
-  default: [],
-});
-
 function useReduxToRecoilBridge<E extends { id: RRID }>(
   debugIdentifier: string,
   entities: EntityCollection<E>,
@@ -151,12 +136,6 @@ export const ReduxToRecoilBridge = React.memo(function ReduxToRecoilBridge({
     useServerState((s) => s.assets),
     assetIdsAtom,
     assetFamily
-  );
-  useReduxToRecoilBridge(
-    "ephemeral players",
-    useServerState((s) => s.ephemeral.players),
-    ephemeralPlayerIdsAtom,
-    ephemeralPlayersFamily
   );
 
   return null;

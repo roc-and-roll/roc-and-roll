@@ -2,14 +2,14 @@ import React from "react";
 import { Matrix } from "transformation-matrix";
 import {
   EntityCollection,
+  entries,
   RRMapID,
   RRPlayer,
   RRPlayerID,
   RRPoint,
 } from "../../../shared/state";
-import { ephemeralPlayerIdsAtom } from "./recoil";
 import { MouseCursor } from "./MouseCursor";
-import { useRecoilValue } from "recoil";
+import { useServerState } from "../../state";
 
 export function MouseCursors({
   myId,
@@ -26,23 +26,23 @@ export function MouseCursors({
   contrastColor: string;
   players: EntityCollection<RRPlayer>;
 }) {
-  const ephemeralPlayerIds = useRecoilValue(ephemeralPlayerIdsAtom);
+  const ephemeralPlayers = useServerState((state) => state.ephemeral.players);
   return (
     <>
-      {ephemeralPlayerIds.map((ephemeralPlayerId) => {
-        if (ephemeralPlayerId === myId) {
+      {entries(ephemeralPlayers).map((ephemeralPlayer) => {
+        if (ephemeralPlayer.id === myId) {
           return null;
         }
 
-        const player = players.entities[ephemeralPlayerId];
+        const player = players.entities[ephemeralPlayer.id];
         if (!player || player.currentMap !== mapId) {
           return null;
         }
 
         return (
           <MouseCursor
-            key={ephemeralPlayerId}
-            playerId={player.id}
+            key={ephemeralPlayer.id}
+            mapMouse={ephemeralPlayer.mapMouse}
             playerColor={player.color}
             playerName={player.name}
             transform={transform}
