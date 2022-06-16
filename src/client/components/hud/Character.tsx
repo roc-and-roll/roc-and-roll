@@ -1,14 +1,15 @@
-import React, { SetStateAction, useState } from "react";
+import React, { useState } from "react";
 import {
   conditionNames,
   conditionTooltip,
   RRCharacter,
   RRCharacterID,
   RRLimitedUseSkill,
-  RRSpell,
+  RRCharacterSpell,
+  RRCharacterSpellID,
 } from "../../../shared/state";
 import { useMyActiveCharacter, useMyProps } from "../../myself";
-import { DispatchActionResult, useServerDispatch } from "../../state";
+import { useServerDispatch } from "../../state";
 import { CharacterPreview } from "../characters/CharacterPreview";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -30,7 +31,11 @@ import {
   useHealthBarMeasurements,
 } from "../../../client/util";
 import { RRFontAwesomeIcon } from "../RRFontAwesomeIcon";
-import { characterUpdate, playerUpdate } from "../../../shared/actions";
+import {
+  characterUpdate,
+  characterUpdateSpell,
+  playerUpdate,
+} from "../../../shared/actions";
 import { CharacterEditor, conditionIcons } from "../characters/CharacterEditor";
 import { Popover } from "../Popover";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
@@ -127,39 +132,28 @@ export function CharacterHUD() {
 
 function Spells({ character }: { character: RRCharacterProps }) {
   const dispatch = useServerDispatch();
-  //Todo this code is duplicated in QuickReferenceSpell
-  const setSpells = (updater: React.SetStateAction<RRCharacter["spells"]>) =>
-    dispatch((state) => {
-      const oldSpells = state.characters.entities[character.id]?.spells;
-
-      if (oldSpells === undefined) {
-        return [];
-      }
-      const newSpells =
-        typeof updater === "function" ? updater(oldSpells) : updater;
-
-      return {
-        actions: [
-          characterUpdate({
-            id: character.id,
-            changes: { spells: newSpells },
-          }),
-        ],
-        optimisticKey: "spells",
-        syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-      };
+  const togglePrepareSpell = (prepared: boolean, spellId: RRCharacterSpellID) =>
+    dispatch({
+      actions: [
+        characterUpdateSpell({
+          id: character.id,
+          spell: { id: spellId, changes: { prepared } },
+        }),
+      ],
+      optimisticKey: `spells/${character.id}/${spellId}`,
+      syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
     });
   return (
     <div className="min-w-full mt-2 bg-black/25 p-1 rounded pointer-events-auto select-none">
       {character.spells.length < 1 && (
         <em>No spells yet. Add some from the Quick Reference.</em>
       )}
-      {buildSpells({ character, prepared: true, setSpells })}
+      {buildSpells({ character, prepared: true, togglePrepareSpell })}
       {character.spells.some((spell) => spell.prepared) &&
         character.spells.some((spell) => !spell.prepared) && (
           <div className="border-t-2"></div>
         )}
-      {buildSpells({ character, prepared: false, setSpells })}
+      {buildSpells({ character, prepared: false, togglePrepareSpell })}
     </div>
   );
 }
@@ -167,52 +161,37 @@ function Spells({ character }: { character: RRCharacterProps }) {
 function buildSpells({
   character,
   prepared,
-  setSpells,
+  togglePrepareSpell,
 }: {
   character: RRCharacterProps;
   prepared: boolean;
-  setSpells: (
-    updater: SetStateAction<RRCharacter["spells"]>
-  ) => DispatchActionResult;
+  togglePrepareSpell: (prepared: boolean, spellId: RRCharacterSpellID) => void;
 }) {
-  function togglePrepareSpell(prepared: boolean, spell: RRSpell) {
-    //TODO function
-    setSpells((old) => {
-      const list = old.map((s) =>
-        s.name === spell.name ? { ...s, prepared: prepared } : s
-      );
-      return list;
-    });
-  }
-
   return (
     <div>
-      {[...Array(10)].map((_x, i) =>
+      {[...Array(10)].map((_x, level) =>
         character.spells.some(
-          (spell) => spell.level === i && spell.prepared === prepared
+          (spell) => spell.level === level && spell.prepared === prepared
         ) ? (
-          <div key={i} className={clsx(prepared ? "" : "opacity-50")}>
+          <div key={level} className={clsx(prepared ? "" : "opacity-50")}>
             <div className="flex flex-row">
-              <em>{i === 0 ? "Cantrips" : `Level ${i}`}</em>
+              <em>{level === 0 ? "Cantrips" : `Level ${level}`}</em>
               <em className="flex-grow text-right">Prepared</em>
             </div>
             {character.spells
               .filter(
-                (spell: RRSpell) =>
-                  spell.level === i && spell.prepared === prepared
+                (spell: RRCharacterSpell) =>
+                  spell.level === level && spell.prepared === prepared
               )
-              .map((spell: RRSpell) => {
+              .map((spell: RRCharacterSpell) => {
                 return (
-                  <div
-                    key={spell.name}
-                    className="flex flex-row justify-between"
-                  >
+                  <div key={spell.id} className="flex flex-row justify-between">
                     {spell.name}
                     <input
                       type="checkbox"
                       checked={spell.prepared}
                       onChange={(event) =>
-                        togglePrepareSpell(event.target.checked, spell)
+                        togglePrepareSpell(event.target.checked, spell.id)
                       }
                     />
                   </div>
@@ -221,7 +200,7 @@ function buildSpells({
             <div className="border-t w-full" />
           </div>
         ) : (
-          <div key={i}></div>
+          <div key={level} />
         )
       )}
     </div>

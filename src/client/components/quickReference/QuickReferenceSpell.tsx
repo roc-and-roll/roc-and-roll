@@ -1,6 +1,6 @@
 import React from "react";
 import { IterableElement } from "type-fest";
-import { assertNever } from "../../../shared/util";
+import { assertNever, rrid } from "../../../shared/util";
 import { CompendiumSpell } from "../../../shared/compendium-types/spell";
 import {
   capitalize,
@@ -11,9 +11,9 @@ import {
 import { useMyActiveCharacter } from "../../myself";
 import { Button } from "../ui/Button";
 import { useServerDispatch } from "../../state";
-import { characterUpdate } from "../../../shared/actions";
+import { characterAddSpell } from "../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
-import { RRCharacter } from "../../../shared/state";
+import { RRCharacterSpell } from "../../../shared/state";
 
 function MaterialComponents({ m }: { m: CompendiumSpell["components"]["m"] }) {
   if (!m) {
@@ -100,52 +100,46 @@ export const Spell = React.memo(function Spell({
 }: {
   spell: CompendiumSpell;
 }) {
-  const selectedCharacter = useMyActiveCharacter("id");
+  const selectedCharacter = useMyActiveCharacter("id", "spells");
   const dispatch = useServerDispatch();
-  const setSpells = (updater: React.SetStateAction<RRCharacter["spells"]>) =>
-    dispatch((state) => {
-      const oldSpells =
-        state.characters.entities[selectedCharacter!.id]?.spells;
 
-      if (oldSpells === undefined) {
-        return [];
-      }
-      const newSpells =
-        typeof updater === "function" ? updater(oldSpells) : updater;
-
-      return {
-        actions: [
-          characterUpdate({
-            id: selectedCharacter!.id,
-            changes: { spells: newSpells },
-          }),
-        ],
-        optimisticKey: "spells",
-        syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-      };
-    });
+  const selectedCharacterKnowsSpell =
+    selectedCharacter?.spells.some(
+      (oldSpell) =>
+        oldSpell.name === spell.name && oldSpell.level === spell.level
+    ) ?? false;
 
   return (
     <>
       <div className="flex justify-between items-baseline">
         <p className="text-2xl mt-4">{spell.name}</p>
-        {selectedCharacter && (
-          <Button
-            className="h-8"
-            onClick={() => {
-              setSpells((old) => [
-                ...old,
-                {
-                  name: spell.name,
-                  level: spell.level,
-                  prepared: false,
-                },
-              ]);
-            }}
-          >
-            Add To Character
-          </Button>
-        )}
+        {selectedCharacter &&
+          (selectedCharacterKnowsSpell ? (
+            <em>Already Known</em>
+          ) : (
+            <Button
+              className="h-8"
+              onClick={() => {
+                dispatch({
+                  actions: [
+                    characterAddSpell({
+                      id: selectedCharacter.id,
+                      spell: {
+                        id: rrid<RRCharacterSpell>(),
+                        name: spell.name,
+                        level: spell.level,
+                        prepared: false,
+                      },
+                    }),
+                  ],
+                  optimisticKey: "spells",
+                  syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+                });
+              }}
+            >
+              Add To Character
+            </Button>
+          ))}
       </div>
       <dl>
         <dt>Level</dt>

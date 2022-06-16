@@ -13,6 +13,9 @@ import {
   characterRemoveDiceTemplatePart,
   characterUpdateDiceTemplate,
   characterDeleteDiceTemplateCategory,
+  characterAddSpell,
+  characterDeleteSpell,
+  characterUpdateSpell,
 } from "../actions";
 import {
   EntityCollection,
@@ -42,6 +45,28 @@ export const charactersReducer = createReducer(
           );
         }
         return state;
+      })
+
+      .addCase(characterAddSpell, (state, action) => {
+        const character = state.entities[action.payload.id];
+        character?.spells.push(action.payload.spell);
+      })
+      .addCase(characterUpdateSpell, (state, action) => {
+        const character = state.entities[action.payload.id];
+        const spell = character?.spells.find(
+          (spell) => spell.id === action.payload.spell.id
+        );
+        if (!spell) return;
+        Object.assign(spell, action.payload.spell.changes);
+      })
+      .addCase(characterDeleteSpell, (state, action) => {
+        const character = state.entities[action.payload.id];
+        const index = character?.spells.findIndex(
+          (spell) => spell.id === action.payload.spellId
+        );
+        if (index !== undefined && index >= 0) {
+          character?.spells.splice(index, 1);
+        }
       })
 
       .addCase(characterAddDiceTemplate, (state, action) => {
