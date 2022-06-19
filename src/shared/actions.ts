@@ -39,6 +39,8 @@ import {
   RRDiceTemplateID,
   RRDiceTemplatePart,
   RRDiceTemplatePartID,
+  RRCharacterSpellID,
+  RRCharacterSpell,
 } from "./state";
 import { rrid, timestamp } from "./util";
 import type {
@@ -106,6 +108,21 @@ export const playerUpdateAddCharacterId = createAction<{
   id: RRPlayerID;
   characterId: RRCharacterID;
 }>("player/update/characterId");
+
+export const characterAddSpell = createAction<{
+  id: RRCharacterID;
+  spell: RRCharacterSpell;
+}>("character/spell/add");
+
+export const characterUpdateSpell = createAction<{
+  id: RRCharacterID;
+  spell: Update<RRCharacterSpell>;
+}>("character/spell/update");
+
+export const characterDeleteSpell = createAction<{
+  id: RRCharacterID;
+  spellId: RRCharacterSpellID;
+}>("character/spell/delete");
 
 export const characterAddDiceTemplateCategory = createAction<{
   id: RRCharacterID;

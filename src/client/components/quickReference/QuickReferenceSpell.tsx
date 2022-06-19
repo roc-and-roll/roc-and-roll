@@ -1,6 +1,6 @@
 import React from "react";
 import { IterableElement } from "type-fest";
-import { assertNever } from "../../../shared/util";
+import { assertNever, rrid } from "../../../shared/util";
 import { CompendiumSpell } from "../../../shared/compendium-types/spell";
 import {
   capitalize,
@@ -8,6 +8,12 @@ import {
   stndrdth,
   TextEntry,
 } from "./QuickReference";
+import { useMyActiveCharacter } from "../../myself";
+import { Button } from "../ui/Button";
+import { useServerDispatch } from "../../state";
+import { characterAddSpell } from "../../../shared/actions";
+import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
+import { RRCharacterSpell } from "../../../shared/state";
 
 function MaterialComponents({ m }: { m: CompendiumSpell["components"]["m"] }) {
   if (!m) {
@@ -94,9 +100,47 @@ export const Spell = React.memo(function Spell({
 }: {
   spell: CompendiumSpell;
 }) {
+  const selectedCharacter = useMyActiveCharacter("id", "spells");
+  const dispatch = useServerDispatch();
+
+  const selectedCharacterKnowsSpell =
+    selectedCharacter?.spells.some(
+      (oldSpell) =>
+        oldSpell.name === spell.name && oldSpell.level === spell.level
+    ) ?? false;
+
   return (
     <>
-      <p className="text-2xl mt-4">{spell.name}</p>
+      <div className="flex justify-between items-baseline">
+        <p className="text-2xl mt-4">{spell.name}</p>
+        {selectedCharacter &&
+          (selectedCharacterKnowsSpell ? (
+            <em>Already Known</em>
+          ) : (
+            <Button
+              className="h-8"
+              onClick={() => {
+                dispatch({
+                  actions: [
+                    characterAddSpell({
+                      id: selectedCharacter.id,
+                      spell: {
+                        id: rrid<RRCharacterSpell>(),
+                        name: spell.name,
+                        level: spell.level,
+                        prepared: false,
+                      },
+                    }),
+                  ],
+                  optimisticKey: "spells",
+                  syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+                });
+              }}
+            >
+              Add To Character
+            </Button>
+          ))}
+      </div>
       <dl>
         <dt>Level</dt>
         <dd>

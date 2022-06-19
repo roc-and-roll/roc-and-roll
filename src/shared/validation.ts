@@ -25,6 +25,7 @@ import {
   categoryIcons,
   RRDiceTemplateCategoryID,
   isProficiencyValue,
+  RRCharacterSpellID,
 } from "./state";
 import { withDo } from "./util";
 import tinycolor from "tinycolor2";
@@ -343,6 +344,14 @@ export const isSyncedState = z.strictObject({
           currentUseCount: z.number().int().min(0),
           restoresAt: z.enum(["shortRest", "longRest"] as const),
           name: z.string(),
+        })
+      ),
+      spells: z.array(
+        z.strictObject({
+          id: isRRID<RRCharacterSpellID>(),
+          name: z.string(),
+          level: z.number().int().min(0).max(9),
+          prepared: z.boolean(), // or "yes" | "no" | "always" ?
         })
       ),
       hp: z.number().int(),

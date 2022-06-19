@@ -22,6 +22,8 @@ export type RRPlayerID = MakeRRID<"player">;
 
 export type RRCharacterID = MakeRRID<"character">;
 
+export type RRCharacterSpellID = MakeRRID<"character/spell">;
+
 export type RRMapID = MakeRRID<"map">;
 
 export type RRMapObjectID = MakeRRID<"mapObject">;
@@ -99,6 +101,9 @@ export interface RRAura
 
 export interface RRLimitedUseSkill
   extends IterableElement<ECE<SyncedState["characters"]>["limitedUseSkills"]> {}
+
+export interface RRCharacterSpell
+  extends IterableElement<ECE<SyncedState["characters"]>["spells"]> {}
 
 export const conditionNames = [
   "blue",

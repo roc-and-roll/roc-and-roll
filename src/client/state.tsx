@@ -704,7 +704,7 @@ function isAction(
   return "payload" in action && !isOptimisticAction(action);
 }
 
-interface DispatchActionResult {
+export interface DispatchActionResult {
   optimisticActionsDoneOrDiscarded: Promise<void>;
   discardPendingOptimisticActions: () => void;
   commitPendingOptimisticActionsNow: () => void;
