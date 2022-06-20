@@ -228,7 +228,12 @@ function MapTokenInner({
 
   const tokenSize = GRID_SIZE * character.scale;
 
-  const { x, y } = lerpedPosition;
+  function getSmallTokenOffset() {
+    return character.scale < 1 ? ((1 - character.scale) / 2) * GRID_SIZE : 0;
+  }
+  let { x, y } = lerpedPosition;
+  x += getSmallTokenOffset();
+  y += getSmallTokenOffset();
 
   const fullTokenRepresentation = (
     position: RRPoint,
@@ -239,8 +244,8 @@ function MapTokenInner({
       ref={ref}
       angle={object.rotation}
       pivot={{ x: tokenSize / 2, y: tokenSize / 2 }}
-      x={position.x + tokenSize / 2}
-      y={position.y + tokenSize / 2}
+      x={position.x + tokenSize / 2 + (isGhost ? getSmallTokenOffset() : 0)}
+      y={position.y + tokenSize / 2 + (isGhost ? getSmallTokenOffset() : 0)}
     >
       {isGhost ? (
         <TokenImageOrPlaceholder
