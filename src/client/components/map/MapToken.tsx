@@ -47,6 +47,7 @@ import {
 } from "./recoil";
 import { CharacterEditor, conditionIcons } from "../characters/CharacterEditor";
 import {
+  makePoint,
   pointAdd,
   pointEquals,
   pointScale,
@@ -244,8 +245,8 @@ function MapTokenInner({
       ref={ref}
       angle={object.rotation}
       pivot={{ x: tokenSize / 2, y: tokenSize / 2 }}
-      x={position.x + tokenSize / 2 + (isGhost ? getSmallTokenOffset() : 0)}
-      y={position.y + tokenSize / 2 + (isGhost ? getSmallTokenOffset() : 0)}
+      x={position.x + tokenSize / 2}
+      y={position.y + tokenSize / 2}
     >
       {isGhost ? (
         <TokenImageOrPlaceholder
@@ -341,7 +342,11 @@ function MapTokenInner({
   return (
     <>
       {ghostPosition &&
-        fullTokenRepresentation(ghostPosition.position, true, ghostTokenRef)}
+        fullTokenRepresentation(
+          pointAdd(ghostPosition.position, makePoint(getSmallTokenOffset())),
+          true,
+          ghostTokenRef
+        )}
       {auraArea &&
         // we need to render the auras as the very first thing in the game so
         // that they are located in the background and still allow users to
@@ -353,8 +358,8 @@ function MapTokenInner({
               character={character}
               aura={aura}
               myself={myself}
-              x={x}
-              y={y}
+              x={lerpedPosition.x}
+              y={lerpedPosition.y}
             />
           )),
           auraArea
@@ -437,7 +442,7 @@ function MapTokenInner({
             fill="black"
             fillStyle="solid"
             roughness={0}
-          ></RoughRectangle>
+          />
           <RoughText
             x={(diceRollDisplayWidth + 2 * diceRollBorderWidth) / 2}
             y={-3}
@@ -686,7 +691,7 @@ function MapTokenEditor({ mapId, token }: { mapId: RRMapID; token: RRToken }) {
 function Aura({
   x,
   y,
-  character,
+  character: { scale, id },
   aura,
   myself,
 }: {
@@ -697,16 +702,16 @@ function Aura({
   myself: Pick<RRPlayer, "id" | "isGM" | "characterIds">;
 }) {
   if (
-    (aura.visibility === "playerOnly" &&
-      !myself.characterIds.includes(character.id)) ||
+    (aura.visibility === "playerOnly" && !myself.characterIds.includes(id)) ||
     (aura.visibility === "playerAndGM" &&
       !myself.isGM &&
-      !myself.characterIds.includes(character.id))
+      !myself.characterIds.includes(id))
   ) {
     return null;
   }
 
-  const tokenSize = GRID_SIZE * character.scale;
+  scale = Math.max(1, scale);
+  const tokenSize = GRID_SIZE * scale;
 
   const size = (aura.size * GRID_SIZE) / 5 + tokenSize / 2;
   const fill = colorValue(tinycolor(aura.color).setAlpha(0.3));
@@ -725,8 +730,8 @@ function Aura({
             r={Math.round(aura.size / 5)}
             creatureX={x / GRID_SIZE}
             creatureY={y / GRID_SIZE}
-            creatureW={character.scale}
-            creatureH={character.scale}
+            creatureW={scale}
+            creatureH={scale}
             fill={fill}
           />
         </>
