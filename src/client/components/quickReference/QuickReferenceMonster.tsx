@@ -57,11 +57,12 @@ export const Monster = React.memo(function Monster({
     // TODO: Why can some monsters have multiple sizes?
     const size = monster.size?.[0];
 
-    return size === undefined ||
-      size === "T" || // technically these would be a quarter of a square only
-      size === "S" ||
-      size === "M"
+    return size === undefined || size === "M"
       ? 1
+      : size === "T"
+      ? 0.5
+      : size === "S"
+      ? 0.7
       : size === "L"
       ? 2
       : size === "H"
