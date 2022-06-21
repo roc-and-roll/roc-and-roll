@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   conditionNames,
   conditionTooltip,
@@ -44,6 +44,7 @@ import clsx from "clsx";
 import { Button } from "../ui/Button";
 import { CombatCardHUD } from "./CombatCard";
 import { TextareaInput } from "../ui/TextInput";
+import { QuickReferenceContext } from "../quickReference/QuickReferenceWrapper";
 
 const characterProps = [
   "id",
@@ -132,6 +133,8 @@ export function CharacterHUD() {
 
 function Spells({ character }: { character: RRCharacterProps }) {
   const dispatch = useServerDispatch();
+  const { setOpen, setSearchString } = useContext(QuickReferenceContext);
+
   const togglePrepareSpell = (prepared: boolean, spellId: RRCharacterSpellID) =>
     dispatch({
       actions: [
@@ -143,17 +146,32 @@ function Spells({ character }: { character: RRCharacterProps }) {
       optimisticKey: `spells/${character.id}/${spellId}`,
       syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
     });
+
+  const openSpellReference = (spellName: string) => {
+    setOpen(true);
+    setSearchString(spellName);
+  };
   return (
     <div className="min-w-full mt-2 bg-black/25 p-1 rounded pointer-events-auto select-none">
       {character.spells.length < 1 && (
         <em>No spells yet. Add some from the Quick Reference.</em>
       )}
-      {buildSpells({ character, prepared: true, togglePrepareSpell })}
+      {buildSpells({
+        character,
+        prepared: true,
+        togglePrepareSpell,
+        openSpellReference,
+      })}
       {character.spells.some((spell) => spell.prepared) &&
         character.spells.some((spell) => !spell.prepared) && (
           <div className="border-t-2"></div>
         )}
-      {buildSpells({ character, prepared: false, togglePrepareSpell })}
+      {buildSpells({
+        character,
+        prepared: false,
+        togglePrepareSpell,
+        openSpellReference,
+      })}
     </div>
   );
 }
@@ -162,10 +180,12 @@ function buildSpells({
   character,
   prepared,
   togglePrepareSpell,
+  openSpellReference,
 }: {
   character: RRCharacterProps;
   prepared: boolean;
   togglePrepareSpell: (prepared: boolean, spellId: RRCharacterSpellID) => void;
+  openSpellReference: (spellName: string) => void;
 }) {
   return (
     <div>
@@ -186,7 +206,9 @@ function buildSpells({
               .map((spell: RRCharacterSpell) => {
                 return (
                   <div key={spell.id} className="flex flex-row justify-between">
-                    {spell.name}
+                    <p onClick={() => openSpellReference(spell.name)}>
+                      {spell.name}
+                    </p>
                     <input
                       type="checkbox"
                       checked={spell.prepared}
