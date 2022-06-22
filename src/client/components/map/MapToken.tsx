@@ -1,9 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
   GRID_SIZE,
@@ -357,9 +352,6 @@ function MapTokenInner({
       {healthBarArea &&
         createPixiPortal(
           <>
-            {isCharacterDead(character) && (
-              <DeadMarker x={x} y={y} scale={character.scale} />
-            )}
             {canControl && character.maxHP > 0 && (
               <Container x={x} y={y - 16} name="healthBar">
                 <HealthBar
@@ -379,13 +371,9 @@ function MapTokenInner({
                 fill="none"
               />
             )}
-            <Container x={x} y={y} name="condition-icons">
-              <ConditionIcons character={character} tooltipArea={tooltipArea} />
-            </Container>
           </>,
           healthBarArea
         )}
-
       {canControl ? (
         <PixiPopover
           content={
@@ -407,6 +395,12 @@ function MapTokenInner({
       ) : (
         fullTokenRepresentation({ x, y })
       )}
+      {isCharacterDead(character) && (
+        <DeadMarker x={x} y={y} scale={character.scale} />
+      )}
+      <Container x={x} y={y} name="condition-icons">
+        <ConditionIcons character={character} tooltipArea={tooltipArea} />
+      </Container>
       {lastRolled && (
         <Container
           x={x + tokenSize / 2 - diceRollDisplayWidth / 2 - diceRollBorderWidth}
