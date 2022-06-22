@@ -66,7 +66,10 @@ export const MapGrid = React.memo<{
   }, [gridShader, transform.a]);
 
   useEffect(() => {
-    gridShader.uniforms["offset"] = [transform.e, transform.f];
+    gridShader.uniforms["offset"] = [
+      transform.e,
+      -transform.f + viewPortSize.y,
+    ];
   }, [gridShader, transform.e, transform.f, viewPortSize.y]);
 
   return (
