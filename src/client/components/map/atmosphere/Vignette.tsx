@@ -5,26 +5,17 @@
  * https://github.com/samgiles/pixi-vignette
  */
 
-import React, { useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { RRPoint } from "../../../../shared/state";
 import { lerp } from "../../../../shared/util";
 import { PixiFilterContext } from "./Atmosphere";
 import * as PIXI from "pixi.js";
 
-export function Vignette({
-  intensity,
-  size,
-}: {
-  intensity: number;
-  size: RRPoint;
-}) {
-  const { addFilter, removeFilter } = useContext(PixiFilterContext);
-  useEffect(() => {
-    // pixi takes care of caching the resulting program for the same shader code
-    const filter = new PIXI.Filter(
-      undefined,
-      /*cspell:disable*/
-      `
+const makeVignetteShader = () =>
+  new PIXI.Filter(
+    undefined,
+    /*cspell:disable*/
+    `
 precision mediump float;
 varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
@@ -39,17 +30,33 @@ void main() {
   rgb *= smoothstep(0.8, size * 0.799, dist * (0.5 * amount + size));
   gl_FragColor = vec4(vec3(rgb), rgba.a);
 }`,
-      /*cspell:enable*/
-      {
-        amount: lerp(1.5, 2.4, intensity),
-        size: 0.5,
-        focalPointX: 0.5,
-        focalPointY: 0.5,
-      }
-    );
+    /*cspell:enable*/
+    {
+      amount: 1.5,
+      size: 0.5,
+      focalPointX: 0.5,
+      focalPointY: 0.5,
+    }
+  );
 
-    addFilter(filter);
-    return () => removeFilter(filter);
-  }, [addFilter, intensity, removeFilter]);
-  return <></>;
+export function Vignette({
+  intensity,
+  size,
+}: {
+  intensity: number;
+  size: RRPoint;
+}) {
+  const { addFilter, removeFilter } = useContext(PixiFilterContext);
+  const vignetteShader = useMemo(() => makeVignetteShader(), []);
+
+  useEffect(() => {
+    addFilter(vignetteShader);
+    return () => removeFilter(vignetteShader);
+  }, [addFilter, removeFilter, vignetteShader]);
+
+  useEffect(() => {
+    vignetteShader.uniforms["amount"] = lerp(1.5, 2.4, intensity);
+  }, [intensity, vignetteShader.uniforms]);
+
+  return null;
 }

@@ -1,7 +1,6 @@
 import React, {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -34,6 +33,7 @@ import {
   isCharacterHurt,
   isCharacterUnconscious,
   isCharacterOverHealed,
+  EMPTY_ARRAY,
 } from "../../../shared/util";
 import { useMyProps } from "../../myself";
 import { useRecoilState, useRecoilValue } from "recoil";
@@ -450,6 +450,10 @@ function MapTokenInner({
   );
 }
 
+const DEAD_SHADER = new PIXI.filters.ColorMatrixFilter();
+DEAD_SHADER.desaturate();
+const DEAD_SHADERS = [DEAD_SHADER];
+
 const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
   zoom,
   contrastColor,
@@ -473,21 +477,14 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
     }
   | { isGhost: true }
 )) {
-  const tokenSize = GRID_SIZE * character.scale;
-  const canControl = props.isGhost ? false : props.canControl;
-
-  const dead = isCharacterDead(character);
-  const filters = useMemo(() => {
-    if (!dead) return [];
-    const filter = new PIXI.filters.ColorMatrixFilter();
-    filter.desaturate();
-    return [filter];
-  }, [dead]);
-
   const asset = useRecoilValue(assetFamily(character.tokenImageAssetId));
   if (asset?.type !== "image") {
     return null;
   }
+
+  const tokenSize = GRID_SIZE * character.scale;
+  const canControl = props.isGhost ? false : props.canControl;
+  const filters = !isCharacterDead(character) ? EMPTY_ARRAY : DEAD_SHADERS;
 
   return (
     <>
