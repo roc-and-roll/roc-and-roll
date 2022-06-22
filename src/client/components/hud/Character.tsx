@@ -420,10 +420,11 @@ function ConditionsBar({ character }: { character: RRCharacterProps }) {
                       <FontAwesomeIcon
                         icon={icon}
                         color="black"
-                        size={"2x"}
+                        fixedWidth
                         style={{
                           stroke: "white",
                           strokeWidth: 18,
+                          fontSize: "calc(2.75rem / 1.25em)",
                         }}
                       />
                     )}
