@@ -60,6 +60,7 @@ import { Collapsible } from "../Collapsible";
 import { Auras } from "./Auras";
 import { FileInput } from "../FileInput";
 import { LimitedUseSkillEditor } from "./LimitedUseItemEditor";
+import { Select } from "../ui/Select";
 
 export interface ConditionWithIcon {
   name: RRCharacterCondition;
@@ -301,20 +302,29 @@ export function CharacterEditor({
         </div>
         <div>
           <label>
-            Size in #squares:{" "}
-            <SmartIntegerInput
-              value={character.scale}
-              min={1}
-              placeholder="scale"
-              onChange={(scale) =>
+            Size:{" "}
+            <Select
+              value={character.scale.toString()}
+              onChange={(scale: string) =>
                 dispatch({
                   actions: [
-                    characterUpdate({ id: character.id, changes: { scale } }),
+                    characterUpdate({
+                      id: character.id,
+                      changes: { scale: parseFloat(scale) },
+                    }),
                   ],
                   optimisticKey: "scale",
                   syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
                 })
               }
+              options={[
+                { value: "0.5", label: "tiny" },
+                { value: "0.7", label: "small" },
+                { value: "1", label: "medium" },
+                { value: "2", label: "large" },
+                { value: "3", label: "huge" },
+                { value: "4", label: "gargantuan" },
+              ]}
             />
           </label>
         </div>

@@ -323,7 +323,7 @@ export const isSyncedState = z.strictObject({
 
       tokenImageAssetId: isRRID<RRAssetID>(),
       tokenBorderColor: isColor,
-      scale: z.number().min(1),
+      scale: z.number().min(0),
 
       auras: z.array(
         z.strictObject({
