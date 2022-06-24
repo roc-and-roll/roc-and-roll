@@ -15,10 +15,11 @@ export function CombatCardHUD() {
   const { sources: compendiumSources } = useCompendium();
 
   const matchingMonsters = character
-    ? compendiumSources.flatMap((source) =>
-        source.data.monster?.filter(
-          (monster) => monster.name === character.name
-        )
+    ? compendiumSources.flatMap(
+        (source) =>
+          source.data.monster?.filter(
+            (monster) => monster.name === character.name
+          ) ?? []
       )
     : [];
   const monster = matchingMonsters[0];

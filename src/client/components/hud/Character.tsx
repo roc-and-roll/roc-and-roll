@@ -22,6 +22,7 @@ import {
   faPlus,
   faScroll,
   faShieldAlt,
+  faSkull,
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { SettingsDialog } from "./Toolbar";
@@ -45,6 +46,7 @@ import { Button } from "../ui/Button";
 import { CombatCardHUD } from "./CombatCard";
 import { TextareaInput } from "../ui/TextInput";
 import { QuickReferenceContext } from "../quickReference/QuickReferenceWrapper";
+import { useCompendium } from "../compendium/Compendium";
 
 const characterProps = [
   "id",
@@ -68,12 +70,23 @@ export function CharacterHUD() {
   const myself = useMyProps("mainCharacterId", "isGM");
 
   const character = useMyActiveCharacter();
+  const { sources: compendiumSources } = useCompendium();
 
   const healthWidth = 250;
 
   const [skillsVisible, setSkillsVisible] = useState(false);
   const [notesVisible, setNotesVisible] = useState(false);
   const [spellsVisible, setSpellsVisible] = useState(false);
+  const [combatCardVisible, setCombatCardVisible] = useState(true);
+
+  const hasMatchingMonster =
+    character &&
+    compendiumSources.flatMap(
+      (source) =>
+        source.data.monster?.filter(
+          (monster) => monster.name === character.name
+        ) ?? []
+    ).length > 0;
 
   return (
     <div className="absolute top-0 right-0 pointer-events-none">
@@ -112,12 +125,22 @@ export function CharacterHUD() {
                     onClick={() => setSpellsVisible(!spellsVisible)}
                   />
                 </div>
+                {hasMatchingMonster && (
+                  <div className="pointer-events-auto m-1 flex items-end flex-col">
+                    <FontAwesomeIcon
+                      title="Combat Card"
+                      icon={faSkull}
+                      size="1x"
+                      onClick={() => setCombatCardVisible(!combatCardVisible)}
+                    />
+                  </div>
+                )}
               </div>
               {notesVisible && <Notes character={character} />}
               {skillsVisible && <LimitedUse character={character} />}
               {spellsVisible && <Spells character={character} />}
+              {combatCardVisible && <CombatCardHUD />}
             </div>
-            <CombatCardHUD />
           </div>
         )}
         <div className="flex flex-col items-center pointer-events-none min-h-min">
