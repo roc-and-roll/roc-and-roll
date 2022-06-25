@@ -63,7 +63,7 @@ export function CombatCardHUD() {
   const { setOpen, setSearchString } = useContext(QuickReferenceContext);
 
   return monster ? (
-    <div className="w-72 text-xs max-h-72 overflow-y-auto hud-panel p-2 rounded pointer-events-auto">
+    <div className="text-xs max-h-72 overflow-y-auto hud-panel p-2 rounded pointer-events-auto">
       {monster.speed && (
         <p>
           <Button

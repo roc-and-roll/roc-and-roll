@@ -28,7 +28,7 @@ export function Spells({ character }: { character: RRCharacterProps }) {
     setSearchString(spellName);
   };
   return (
-    <div className="min-w-full mt-2 bg-black/25 p-1 rounded pointer-events-auto select-none">
+    <div className="min-w-full mt-2 bg-black/25 p-2 rounded pointer-events-auto select-none overflow-y-auto max-h-72">
       {character.spells.length < 1 && (
         <em>No spells yet. Add some from the Quick Reference.</em>
       )}
