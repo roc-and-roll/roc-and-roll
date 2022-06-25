@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { CharacterHUD } from "./Character";
+import { CharacterHUD } from "./characterHud/Character";
 import { LogHUD } from "./Log";
 import { InitiativeHUD } from "./Initiative";
 import { HUDToolbar } from "./Toolbar";

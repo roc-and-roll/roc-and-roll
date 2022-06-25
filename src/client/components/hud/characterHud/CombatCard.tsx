@@ -1,14 +1,14 @@
 import React, { useContext } from "react";
-import { useCompendium } from "../compendium/Compendium";
-import { useMyActiveCharacter } from "../../myself";
-import { TextEntry } from "../quickReference/QuickReference";
-import { CompendiumTextEntry } from "../../../shared/compendium-types/text-entry";
+import { useMyActiveCharacter } from "../../../myself";
+import { TextEntry } from "../../quickReference/QuickReference";
+import { CompendiumTextEntry } from "../../../../shared/compendium-types/text-entry";
 import {
   getMonsterSpeedAsString,
   MonsterSpellcasting,
-} from "../quickReference/QuickReferenceMonster";
-import { Button } from "../ui/Button";
-import { QuickReferenceContext } from "../quickReference/QuickReferenceWrapper";
+} from "../../quickReference/QuickReferenceMonster";
+import { Button } from "../../ui/Button";
+import { QuickReferenceContext } from "../../quickReference/QuickReferenceWrapper";
+import { useCompendium } from "../../compendium/Compendium";
 
 export function CombatCardHUD() {
   const character = useMyActiveCharacter("name");
