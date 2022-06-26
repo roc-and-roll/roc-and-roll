@@ -519,7 +519,11 @@ export function TextEntryString({
           }
           case "condition":
             return (
-              <span className="underline" title={conditionTooltip(args)}>
+              <span
+                key={key}
+                className="underline"
+                title={conditionTooltip(args)}
+              >
                 {args}
               </span>
             );

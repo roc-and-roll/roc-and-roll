@@ -323,71 +323,69 @@ export function MonsterSpellcasting({
     );
 
   return (
-    <>
-      <dd>
-        {monster.spellcasting.map((spellType) => (
-          <>
-            {spellType.headerEntries.map((entry, index) => (
-              <TextEntry
-                key={index}
-                entry={entry}
-                rollName={monster.name}
-              ></TextEntry>
-            ))}
-            {spellType.daily &&
-              Object.entries(spellType.daily).map(([key, value]) => (
-                <>
-                  <dt>{key.substring(0, 1)} / per day</dt>
-                  <dd>
-                    {value.map((x, index) => (
-                      <TextEntry
-                        key={`daily${index}`}
-                        entry={x}
-                        rollName="monster.name"
-                      ></TextEntry>
-                    ))}
-                  </dd>
-                </>
-              ))}
-            {spellType.spells &&
-              Object.entries(spellType.spells).map(([level, value]) => (
-                <div key={level}>
-                  <strong>
-                    {level === "0"
-                      ? "Cantrips"
-                      : showLevel(level, "slots" in value ? value.slots : 0)}
-                    :{" "}
-                  </strong>
-                  {value.spells.map((x, index) => (
-                    <>
-                      <TextEntryString
-                        key={index}
-                        text={x}
-                        rollName={monster.name}
-                      />
-                      {index < value.spells.length - 1 && ", "}
-                    </>
+    <div>
+      {monster.spellcasting.map((spellType) => (
+        <div key={spellType.name}>
+          {spellType.headerEntries.map((entry, index) => (
+            <TextEntry
+              key={index}
+              entry={entry}
+              rollName={monster.name}
+            ></TextEntry>
+          ))}
+          {spellType.daily &&
+            Object.entries(spellType.daily).map(([key, value]) => (
+              <div key={key}>
+                <dt>{key.substring(0, 1)} / per day</dt>
+                <dd>
+                  {value.map((x, index) => (
+                    <TextEntry
+                      key={`daily${index}`}
+                      entry={x}
+                      rollName="monster.name"
+                    ></TextEntry>
                   ))}
-                </div>
-              ))}
-            {spellType.will && <dt>At Will</dt>}
-            {spellType.will?.map((entry, index) => (
-              <TextEntry
-                key={index}
-                entry={entry}
-                rollName={monster.name}
-              ></TextEntry>
+                </dd>
+              </div>
             ))}
-            {spellType.footerEntries?.map((entry, index) => (
-              <TextEntry
-                key={index}
-                entry={entry}
-                rollName={monster.name}
-              ></TextEntry>
+          {spellType.spells &&
+            Object.entries(spellType.spells).map(([level, value]) => (
+              <div key={level}>
+                <strong>
+                  {level === "0"
+                    ? "Cantrips"
+                    : showLevel(level, "slots" in value ? value.slots : 0)}
+                  :{" "}
+                </strong>
+                {value.spells.map((x, index) => (
+                  <div key={index}>
+                    <TextEntryString
+                      key={index}
+                      text={x}
+                      rollName={monster.name}
+                    />
+                    {index < value.spells.length - 1 && ", "}
+                  </div>
+                ))}
+              </div>
             ))}
-          </>
-        ))}
-      </dd>
-    </>
+          {spellType.will && <dt>At Will</dt>}
+          {spellType.will?.map((entry, index) => (
+            <TextEntry
+              key={index}
+              entry={entry}
+              rollName={monster.name}
+            ></TextEntry>
+          ))}
+          {spellType.footerEntries?.map((entry, index) => (
+            <TextEntry
+              key={index}
+              entry={entry}
+              rollName={monster.name}
+            ></TextEntry>
+          ))}
+        </div>
+      ))}
+    </div>
   );
 }

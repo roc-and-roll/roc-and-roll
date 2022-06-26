@@ -101,7 +101,7 @@ export function CombatCardHUD() {
       {legendaryGroup?.lairActions && (
         <>
           <h2 className="text-xl">Lair Actions</h2>
-          <p>
+          <>
             {legendaryGroup.lairActions.map((action, index) =>
               typeof action === "string" ? (
                 <p key={index}>{action}</p>
@@ -111,7 +111,7 @@ export function CombatCardHUD() {
                 showAction({ entries: action.items }, index)
               )
             )}
-          </p>
+          </>
         </>
       )}
 
