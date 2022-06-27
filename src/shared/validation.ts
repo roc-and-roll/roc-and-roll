@@ -352,6 +352,7 @@ export const isSyncedState = z.strictObject({
           name: z.string(),
           level: z.number().int().min(0).max(9),
           prepared: z.boolean(), // or "yes" | "no" | "always" ?
+          concentrationRounds: z.number().int().min(0),
         })
       ),
       hp: z.number().int(),
@@ -377,6 +378,12 @@ export const isSyncedState = z.strictObject({
         CHA: z.number().int().nullable(),
       }),
       conditions: z.array(z.enum(conditionNames)),
+      currentlyConcentratingOnSpell: z.nullable(
+        z.strictObject({
+          spellId: isRRID<RRCharacterSpellID>(),
+          roundsLeft: z.number().int().min(0),
+        })
+      ),
       skills: z.strictObject({
         Athletics: isProficiencyValue.nullable(),
         Acrobatics: isProficiencyValue.nullable(),

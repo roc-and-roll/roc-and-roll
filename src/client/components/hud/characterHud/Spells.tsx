@@ -1,8 +1,14 @@
+import { faCompressArrowsAlt } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React, { useContext } from "react";
-import { characterUpdateSpell } from "../../../../shared/actions";
+import {
+  characterUpdate,
+  characterUpdateSpell,
+} from "../../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../../shared/constants";
 import { RRCharacterSpellID, RRCharacterSpell } from "../../../../shared/state";
+import { useConfirm } from "../../../dialog-boxes";
 import { useServerDispatch } from "../../../state";
 import { QuickReferenceContext } from "../../quickReference/QuickReferenceWrapper";
 import { RRCharacterProps } from "./Character";
@@ -82,7 +88,13 @@ function buildSpells({
               .map((spell: RRCharacterSpell) => {
                 return (
                   <div key={spell.id} className="flex flex-row justify-between">
-                    <p onClick={() => openSpellReference(spell.name)}>
+                    {spell.concentrationRounds > 0 && (
+                      <ConcentrationIcon spell={spell} character={character} />
+                    )}
+                    <p
+                      onClick={() => openSpellReference(spell.name)}
+                      className="flex-grow"
+                    >
                       {spell.name}
                     </p>
                     <input
@@ -102,5 +114,60 @@ function buildSpells({
         )
       )}
     </div>
+  );
+}
+
+function ConcentrationIcon({
+  spell,
+  character,
+}: {
+  spell: RRCharacterSpell;
+  character: RRCharacterProps;
+}) {
+  const confirm = useConfirm();
+  const dispatch = useServerDispatch();
+
+  return (
+    <FontAwesomeIcon
+      title={`Concentration: ${spell.concentrationRounds} rounds`}
+      onClick={async () => {
+        if (
+          await confirm(
+            `Start concentrating on ${spell.name}? ${
+              character.currentlyConcentratingOnSpell
+                ? `This will end your concentration on ${
+                    character.spells.filter(
+                      (s) =>
+                        character.currentlyConcentratingOnSpell!.spellId ===
+                        s.id
+                    )[0]!.name
+                  }.`
+                : ""
+            }`
+          )
+        ) {
+          dispatch((state) => {
+            return {
+              actions: [
+                characterUpdate({
+                  id: character.id,
+                  changes: {
+                    currentlyConcentratingOnSpell: {
+                      roundsLeft: spell.concentrationRounds,
+                      spellId: spell.id,
+                    },
+                  },
+                }),
+              ],
+              optimisticKey: "concentration",
+              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+            };
+          });
+        }
+      }}
+      fixedWidth
+      icon={faCompressArrowsAlt}
+      className="h-4 self-center mr-1 cursor-pointer"
+    />
   );
 }

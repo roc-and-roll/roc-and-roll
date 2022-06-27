@@ -44,6 +44,7 @@ const characterProps = [
   "limitedUseSkills",
   "notes",
   "spells",
+  "currentlyConcentratingOnSpell",
 ] as const;
 export type RRCharacterProps = Pick<RRCharacter, typeof characterProps[number]>;
 

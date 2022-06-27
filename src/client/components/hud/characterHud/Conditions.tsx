@@ -1,4 +1,4 @@
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faCompressArrowsAlt, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useState } from "react";
 import { characterUpdate } from "../../../../shared/actions";
@@ -44,6 +44,20 @@ export function ConditionsBar({ character }: { character: RRCharacterProps }) {
 
   return (
     <div className="flex flex-wrap flex-row-reverse pointer-events-auto">
+      {character.currentlyConcentratingOnSpell && (
+        <div
+          className="self-center select-none bg-gray-200 rounded-lg p-1 text-black"
+          title={`${
+            character.spells.filter(
+              (s) => character.currentlyConcentratingOnSpell!.spellId === s.id
+            )[0]!.name
+          }\n${character.currentlyConcentratingOnSpell.roundsLeft} rounds left`}
+        >
+          <FontAwesomeIcon icon={faCompressArrowsAlt} />{" "}
+          {character.currentlyConcentratingOnSpell.roundsLeft}
+        </div>
+      )}
+
       {character.conditions.map((condition) => {
         const icon = conditionIcons[condition];
         return (

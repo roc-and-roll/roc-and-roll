@@ -299,6 +299,7 @@ export function InitiativeHUD() {
         if (!nextRow) {
           return;
         }
+        //Todo start next turn
         dispatch(initiativeTrackerSetCurrentEntry(nextRow.id));
       }}
     />
