@@ -4,6 +4,7 @@ import clsx from "clsx";
 import React, { useContext } from "react";
 import {
   characterUpdate,
+  characterDeleteSpell,
   characterUpdateSpell,
 } from "../../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../../shared/constants";
@@ -14,25 +15,6 @@ import { QuickReferenceContext } from "../../quickReference/QuickReferenceWrappe
 import { RRCharacterProps } from "./Character";
 
 export function Spells({ character }: { character: RRCharacterProps }) {
-  const dispatch = useServerDispatch();
-  const { setOpen, setSearchString } = useContext(QuickReferenceContext);
-
-  const togglePrepareSpell = (prepared: boolean, spellId: RRCharacterSpellID) =>
-    dispatch({
-      actions: [
-        characterUpdateSpell({
-          id: character.id,
-          spell: { id: spellId, changes: { prepared } },
-        }),
-      ],
-      optimisticKey: `spells/${character.id}/${spellId}`,
-      syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-    });
-
-  const openSpellReference = (spellName: string) => {
-    setOpen(true);
-    setSearchString(spellName);
-  };
   return (
     <div className="min-w-full mt-2 bg-black/25 p-2 rounded pointer-events-auto select-none overflow-y-auto max-h-72">
       {character.spells.length < 1 && (
@@ -41,8 +23,6 @@ export function Spells({ character }: { character: RRCharacterProps }) {
       {buildSpells({
         character,
         prepared: true,
-        togglePrepareSpell,
-        openSpellReference,
       })}
       {character.spells.some((spell) => spell.prepared) &&
         character.spells.some((spell) => !spell.prepared) && (
@@ -51,8 +31,6 @@ export function Spells({ character }: { character: RRCharacterProps }) {
       {buildSpells({
         character,
         prepared: false,
-        togglePrepareSpell,
-        openSpellReference,
       })}
     </div>
   );
@@ -61,13 +39,9 @@ export function Spells({ character }: { character: RRCharacterProps }) {
 function buildSpells({
   character,
   prepared,
-  togglePrepareSpell,
-  openSpellReference,
 }: {
   character: RRCharacterProps;
   prepared: boolean;
-  togglePrepareSpell: (prepared: boolean, spellId: RRCharacterSpellID) => void;
-  openSpellReference: (spellName: string) => void;
 }) {
   return (
     <div>
@@ -85,28 +59,9 @@ function buildSpells({
                 (spell: RRCharacterSpell) =>
                   spell.level === level && spell.prepared === prepared
               )
-              .map((spell: RRCharacterSpell) => {
-                return (
-                  <div key={spell.id} className="flex flex-row justify-between">
-                    {spell.concentrationRounds > 0 && (
-                      <ConcentrationIcon spell={spell} character={character} />
-                    )}
-                    <p
-                      onClick={() => openSpellReference(spell.name)}
-                      className="flex-grow"
-                    >
-                      {spell.name}
-                    </p>
-                    <input
-                      type="checkbox"
-                      checked={spell.prepared}
-                      onChange={(event) =>
-                        togglePrepareSpell(event.target.checked, spell.id)
-                      }
-                    />
-                  </div>
-                );
-              })}
+              .map((spell: RRCharacterSpell, index) => (
+                <Spell key={index} spell={spell} character={character} />
+              ))}
             <div className="border-t w-full" />
           </div>
         ) : (
@@ -169,5 +124,62 @@ function ConcentrationIcon({
       icon={faCompressArrowsAlt}
       className="h-4 self-center mr-1 cursor-pointer"
     />
+  );
+}
+
+function Spell({
+  spell,
+  character,
+}: {
+  spell: RRCharacterSpell;
+  character: RRCharacterProps;
+}) {
+  const { setOpen, setSearchString } = useContext(QuickReferenceContext);
+  const openSpellReference = (spellName: string) => {
+    setOpen(true);
+    setSearchString(spellName);
+  };
+  const dispatch = useServerDispatch();
+  const confirm = useConfirm();
+
+  const togglePrepareSpell = (prepared: boolean, spellId: RRCharacterSpellID) =>
+    dispatch({
+      actions: [
+        characterUpdateSpell({
+          id: character.id,
+          spell: { id: spellId, changes: { prepared } },
+        }),
+      ],
+      optimisticKey: `spells/${character.id}/${spellId}`,
+      syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+    });
+  return (
+    <div
+      key={spell.id}
+      className="flex flex-row justify-between cursor-pointer"
+    >
+      {spell.concentrationRounds > 0 && (
+        <ConcentrationIcon spell={spell} character={character} />
+      )}
+      <p
+        className="flex-grow"
+        onClick={() => openSpellReference(spell.name)}
+        onContextMenu={async (e) => {
+          e.preventDefault();
+          if (await confirm(`Are you sure you want to delete ${spell.name}?`)) {
+            dispatch(
+              characterDeleteSpell({ id: character.id, spellId: spell.id })
+            );
+          }
+        }}
+      >
+        {spell.name}
+      </p>
+      <input
+        type="checkbox"
+        checked={spell.prepared}
+        onChange={(event) => togglePrepareSpell(event.target.checked, spell.id)}
+      />
+    </div>
   );
 }
