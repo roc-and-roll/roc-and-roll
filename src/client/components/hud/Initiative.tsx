@@ -61,7 +61,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { rollInitiative, diceResult } from "../../dice-rolling/roll";
 import useLocalState from "../../useLocalState";
-import { usePrompt } from "../../dialog-boxes";
+import { useAlert, usePrompt } from "../../dialog-boxes";
 import ReactDOM from "react-dom";
 import { translate } from "transformation-matrix";
 import { useRRSettings } from "../../settings";
@@ -79,7 +79,6 @@ import {
   pointScale,
   pointSubtract,
 } from "../../../shared/point";
-import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -106,6 +105,11 @@ export function InitiativeHUD() {
   const characterCollection = useServerState((state) => state.characters);
   const playerCollection = useServerState((state) => state.players);
   const rows = entries(initiativeTracker.entries);
+  const alert = useAlert();
+
+  const myCharacters = useServerState(
+    (state) => state.players.entities[myself.id]!.characterIds
+  );
 
   const currentRowIndex = rows.findIndex(
     (row) => row.id === initiativeTracker.currentEntryId
@@ -255,17 +259,14 @@ export function InitiativeHUD() {
 
   const focusTokenOnTurnStart = useRRSettings()[0].focusTokenOnTurnStart;
 
-  const updateConcentrationCount = useCallback(
+  const updateConcentration = useCallback(
     (
       character: RRCharacter,
-      updater: React.SetStateAction<
-        RRCharacter["currentlyConcentratingOnSpell"]
-      >
+      updater: React.SetStateAction<RRCharacter["currentlyConcentratingOn"]>
     ) => {
       dispatch((state) => {
         const old =
-          state.characters.entities[character.id]
-            ?.currentlyConcentratingOnSpell;
+          state.characters.entities[character.id]?.currentlyConcentratingOn;
 
         if (old === undefined) return [];
         const newConcentration =
@@ -275,15 +276,24 @@ export function InitiativeHUD() {
           actions: [
             characterUpdate({
               id: character.id,
-              changes: { currentlyConcentratingOnSpell: newConcentration },
+              changes: { currentlyConcentratingOn: newConcentration },
             }),
           ],
           optimisticKey: "concentration",
-          syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+          syncToServerThrottle: 0,
         };
       });
     },
     [dispatch]
+  );
+
+  const alertPlayer = useCallback(
+    async (characterName: string, concentrationObject: string) => {
+      await alert(
+        `${characterName}'s concentration on ${concentrationObject} has expired.`
+      );
+    },
+    [alert]
   );
 
   useEffect(() => {
@@ -295,23 +305,41 @@ export function InitiativeHUD() {
       if (focusTokenOnTurnStart) setSelection(currentRow.characterIds);
       currentRow.characterIds.forEach((characterId) => {
         const character = charactersRef.current.entities[characterId];
-        if (character?.currentlyConcentratingOnSpell) {
-          updateConcentrationCount(character, {
-            ...character.currentlyConcentratingOnSpell,
-            roundsLeft: character.currentlyConcentratingOnSpell.roundsLeft - 1,
+        if (character?.currentlyConcentratingOn) {
+          updateConcentration(character, {
+            ...character.currentlyConcentratingOn,
+            roundsLeft: character.currentlyConcentratingOn.roundsLeft - 1,
           });
+
+          if (character.currentlyConcentratingOn.roundsLeft <= 1) {
+            console.log(character);
+            console.log(myCharacters);
+            if (
+              myCharacters.includes(character.id) ||
+              (character.localToMap && myself.isGM)
+            ) {
+              void alertPlayer(
+                character.name,
+                character.currentlyConcentratingOn.name
+              );
+            }
+            updateConcentration(character, null);
+          }
         }
       });
     }
     lastRowId.current = currentRow?.id ?? null;
   }, [
+    alertPlayer,
     charactersRef,
     currentRow,
     currentRowIndex,
     dispatch,
     focusTokenOnTurnStart,
+    myCharacters,
+    myself.isGM,
     setSelection,
-    updateConcentrationCount,
+    updateConcentration,
   ]);
 
   function findNextRow() {

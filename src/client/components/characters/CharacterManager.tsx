@@ -113,7 +113,7 @@ async function makeNewCharacter(
     diceTemplateCategories: [],
     notes: "",
     spells: [],
-    currentlyConcentratingOnSpell: null,
+    currentlyConcentratingOn: null,
   });
 
   return {

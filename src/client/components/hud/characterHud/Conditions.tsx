@@ -1,5 +1,6 @@
 import { faCompressArrowsAlt, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import clsx from "clsx";
 import React, { useState } from "react";
 import { characterUpdate } from "../../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../../shared/constants";
@@ -44,17 +45,21 @@ export function ConditionsBar({ character }: { character: RRCharacterProps }) {
 
   return (
     <div className="flex flex-wrap flex-row-reverse pointer-events-auto">
-      {character.currentlyConcentratingOnSpell && (
+      {character.currentlyConcentratingOn && (
         <div
-          className="self-center select-none bg-gray-200 rounded-lg p-1 text-black ml-1"
-          title={`${
-            character.spells.filter(
-              (s) => character.currentlyConcentratingOnSpell!.spellId === s.id
-            )[0]!.name
-          }\n${character.currentlyConcentratingOnSpell.roundsLeft} rounds left`}
+          className={clsx(
+            character.currentlyConcentratingOn.roundsLeft <= 1
+              ? "bg-red-700"
+              : character.currentlyConcentratingOn.roundsLeft <= 3
+              ? "bg-orange-500"
+              : "bg-gray-200",
+            "self-center select-none rounded-lg p-1 text-black ml-1"
+          )}
+          title={`${character.currentlyConcentratingOn.name}
+          \n${character.currentlyConcentratingOn.roundsLeft} rounds left`}
         >
           <FontAwesomeIcon icon={faCompressArrowsAlt} />{" "}
-          {character.currentlyConcentratingOnSpell.roundsLeft}
+          {character.currentlyConcentratingOn.roundsLeft}
         </div>
       )}
 

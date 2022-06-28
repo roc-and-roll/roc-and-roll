@@ -8,14 +8,14 @@ export default class extends AbstractMigration {
     Object.values(
       state.characters.entities as Record<
         string,
-        { spells: any[]; currentlyConcentratingOnSpell: any }
+        { spells: any[]; currentlyConcentratingOn: any }
       >
     ).forEach((character) => {
       character.spells.forEach((spell) => {
         spell.concentrationRounds ??= 0;
       });
 
-      character.currentlyConcentratingOnSpell ??= null;
+      character.currentlyConcentratingOn ??= null;
     });
 
     return state;

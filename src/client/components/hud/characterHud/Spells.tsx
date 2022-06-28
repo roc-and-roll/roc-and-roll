@@ -89,35 +89,23 @@ function ConcentrationIcon({
         if (
           await confirm(
             `Start concentrating on ${spell.name}? ${
-              character.currentlyConcentratingOnSpell
-                ? `This will end your concentration on ${
-                    character.spells.filter(
-                      (s) =>
-                        character.currentlyConcentratingOnSpell!.spellId ===
-                        s.id
-                    )[0]!.name
-                  }.`
+              character.currentlyConcentratingOn
+                ? `This will end your concentration on ${character.currentlyConcentratingOn.name}.`
                 : ""
             }`
           )
         ) {
-          dispatch((state) => {
-            return {
-              actions: [
-                characterUpdate({
-                  id: character.id,
-                  changes: {
-                    currentlyConcentratingOnSpell: {
-                      roundsLeft: spell.concentrationRounds,
-                      spellId: spell.id,
-                    },
-                  },
-                }),
-              ],
-              optimisticKey: "concentration",
-              syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-            };
-          });
+          dispatch(
+            characterUpdate({
+              id: character.id,
+              changes: {
+                currentlyConcentratingOn: {
+                  roundsLeft: spell.concentrationRounds,
+                  name: spell.name,
+                },
+              },
+            })
+          );
         }
       }}
       fixedWidth

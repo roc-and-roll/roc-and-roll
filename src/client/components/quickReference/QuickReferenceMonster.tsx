@@ -174,7 +174,7 @@ export const Monster = React.memo(function Monster({
       diceTemplateCategories: [],
       notes: "",
       spells: [], // TODO add spells potentially
-      currentlyConcentratingOnSpell: null,
+      currentlyConcentratingOn: null,
     });
 
     dispatch([assetImageAddAction, templateAddAction]);

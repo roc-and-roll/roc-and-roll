@@ -378,9 +378,9 @@ export const isSyncedState = z.strictObject({
         CHA: z.number().int().nullable(),
       }),
       conditions: z.array(z.enum(conditionNames)),
-      currentlyConcentratingOnSpell: z.nullable(
+      currentlyConcentratingOn: z.nullable(
         z.strictObject({
-          spellId: isRRID<RRCharacterSpellID>(),
+          name: z.string(),
           roundsLeft: z.number().int().min(0),
         })
       ),
