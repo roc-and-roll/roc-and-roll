@@ -308,7 +308,6 @@ function InitiativeTrackerInner({
         if (!nextRow) {
           return;
         }
-        //TODO start next turn
         dispatch(initiativeTrackerSetCurrentEntry(nextRow.id));
       }}
     />

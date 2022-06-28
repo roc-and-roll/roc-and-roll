@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import React, {
+  useCallback,
   useContext,
   useDeferredValue,
   useEffect,
@@ -31,6 +32,7 @@ import {
   initiativeTrackerEntryCharacterAdd,
   logEntryDiceRollAdd,
   initiativeTrackerEntryLairActionAdd,
+  characterUpdate,
 } from "../../../shared/actions";
 import { EMPTY_ARRAY, isCharacterDead } from "../../../shared/util";
 import { useMyProps } from "../../myself";
@@ -77,6 +79,7 @@ import {
   pointScale,
   pointSubtract,
 } from "../../../shared/point";
+import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 
 function canEditEntry(
   entry: RRInitiativeTrackerEntry,
@@ -252,17 +255,64 @@ export function InitiativeHUD() {
 
   const focusTokenOnTurnStart = useRRSettings()[0].focusTokenOnTurnStart;
 
+  const updateConcentrationCount = useCallback(
+    (
+      character: RRCharacter,
+      updater: React.SetStateAction<
+        RRCharacter["currentlyConcentratingOnSpell"]
+      >
+    ) => {
+      dispatch((state) => {
+        const old =
+          state.characters.entities[character.id]
+            ?.currentlyConcentratingOnSpell;
+
+        if (old === undefined) return [];
+        const newConcentration =
+          typeof updater === "function" ? updater(old) : updater;
+
+        return {
+          actions: [
+            characterUpdate({
+              id: character.id,
+              changes: { currentlyConcentratingOnSpell: newConcentration },
+            }),
+          ],
+          optimisticKey: "concentration",
+          syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+        };
+      });
+    },
+    [dispatch]
+  );
+
   useEffect(() => {
     if (
-      focusTokenOnTurnStart &&
       currentRow &&
       currentRow.id !== lastRowId.current &&
       currentRow.type === "character"
     ) {
-      setSelection(currentRow.characterIds);
+      if (focusTokenOnTurnStart) setSelection(currentRow.characterIds);
+      currentRow.characterIds.forEach((characterId) => {
+        const character = charactersRef.current.entities[characterId];
+        if (character?.currentlyConcentratingOnSpell) {
+          updateConcentrationCount(character, {
+            ...character.currentlyConcentratingOnSpell,
+            roundsLeft: character.currentlyConcentratingOnSpell.roundsLeft - 1,
+          });
+        }
+      });
     }
     lastRowId.current = currentRow?.id ?? null;
-  }, [currentRow, currentRowIndex, focusTokenOnTurnStart, setSelection]);
+  }, [
+    charactersRef,
+    currentRow,
+    currentRowIndex,
+    dispatch,
+    focusTokenOnTurnStart,
+    setSelection,
+    updateConcentrationCount,
+  ]);
 
   function findNextRow() {
     if (currentRowIndex < 0) {
@@ -299,7 +349,6 @@ export function InitiativeHUD() {
         if (!nextRow) {
           return;
         }
-        //Todo start next turn
         dispatch(initiativeTrackerSetCurrentEntry(nextRow.id));
       }}
     />
