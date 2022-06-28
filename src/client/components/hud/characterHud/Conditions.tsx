@@ -46,7 +46,7 @@ export function ConditionsBar({ character }: { character: RRCharacterProps }) {
     <div className="flex flex-wrap flex-row-reverse pointer-events-auto">
       {character.currentlyConcentratingOnSpell && (
         <div
-          className="self-center select-none bg-gray-200 rounded-lg p-1 text-black"
+          className="self-center select-none bg-gray-200 rounded-lg p-1 text-black ml-1"
           title={`${
             character.spells.filter(
               (s) => character.currentlyConcentratingOnSpell!.spellId === s.id
