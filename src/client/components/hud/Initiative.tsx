@@ -306,14 +306,7 @@ export function InitiativeHUD() {
       currentRow.characterIds.forEach((characterId) => {
         const character = charactersRef.current.entities[characterId];
         if (character?.currentlyConcentratingOn) {
-          updateConcentration(character, {
-            ...character.currentlyConcentratingOn,
-            roundsLeft: character.currentlyConcentratingOn.roundsLeft - 1,
-          });
-
           if (character.currentlyConcentratingOn.roundsLeft <= 1) {
-            console.log(character);
-            console.log(myCharacters);
             if (
               myCharacters.includes(character.id) ||
               (character.localToMap && myself.isGM)
@@ -324,6 +317,11 @@ export function InitiativeHUD() {
               );
             }
             updateConcentration(character, null);
+          } else {
+            updateConcentration(character, {
+              ...character.currentlyConcentratingOn,
+              roundsLeft: character.currentlyConcentratingOn.roundsLeft - 1,
+            });
           }
         }
       });
