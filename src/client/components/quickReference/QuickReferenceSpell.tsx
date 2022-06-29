@@ -119,7 +119,7 @@ export const Spell = React.memo(function Spell({
       ? duration.duration.amount
       : duration.duration.type === "minute"
       ? duration.duration.amount * 10
-      : Infinity; //spells lasting longer than minutes are basically infinite in combat
+      : 999999; //spells lasting longer than minutes are basically infinite in combat
   }
 
   return (

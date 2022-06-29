@@ -43,6 +43,12 @@ export function ConditionsBar({ character }: { character: RRCharacterProps }) {
       };
     });
 
+  const roundsLeftShortened: string = !character.currentlyConcentratingOn
+    ? ""
+    : character.currentlyConcentratingOn.roundsLeft > 9000
+    ? "∞"
+    : character.currentlyConcentratingOn.roundsLeft.toString();
+
   return (
     <div className="flex flex-wrap flex-row-reverse pointer-events-auto">
       {character.currentlyConcentratingOn && (
@@ -55,11 +61,9 @@ export function ConditionsBar({ character }: { character: RRCharacterProps }) {
               : "bg-gray-200",
             "self-center select-none rounded-lg p-1 text-black ml-1"
           )}
-          title={`${character.currentlyConcentratingOn.name}
-          \n${character.currentlyConcentratingOn.roundsLeft} rounds left`}
+          title={`${character.currentlyConcentratingOn.name}\n${roundsLeftShortened} rounds left`}
         >
-          <FontAwesomeIcon icon={faCompressArrowsAlt} />{" "}
-          {character.currentlyConcentratingOn.roundsLeft}
+          <FontAwesomeIcon icon={faCompressArrowsAlt} /> {roundsLeftShortened}
         </div>
       )}
 
