@@ -14,9 +14,11 @@ export function CollapseButton(props: {
   collapsed: boolean;
   size?: 32 | 20;
   side?: "left" | "right";
+  disabled?: boolean;
 }) {
   return (
     <Button
+      disabled={props.disabled ?? false}
       className={clsx("collapse-button", props.className, {
         "size-20": props.size === 20,
         "size-32": props.size === 32,
