@@ -28,6 +28,7 @@ import {
   RRMapRevealedAreas,
   RRPlayer,
   RRMapObjectID,
+  RRAssetImage,
   SyncedStateAction,
 } from "../../../shared/state";
 import { useMyProps } from "../../myself";
@@ -50,12 +51,8 @@ import {
 } from "./Map";
 import composeRefs from "@seznam/compose-react-refs";
 import { MapToolbar } from "../MapToolbar";
-import {
-  DEFAULT_BACKGROUND_IMAGE_HEIGHT,
-  GRID_SIZE,
-  SYNC_MY_MOUSE_POSITION,
-} from "../../../shared/constants";
-import { assertNever, timestamp, withDo } from "../../../shared/util";
+import { GRID_SIZE, SYNC_MY_MOUSE_POSITION } from "../../../shared/constants";
+import { assertNever, rrid, timestamp, withDo } from "../../../shared/util";
 import {
   makePoint,
   pointAdd,
@@ -66,7 +63,12 @@ import {
 import { useMapToolHandler } from "./useMapToolHandler";
 import { useRecoilCallback } from "recoil";
 import { DebugMapContainerOverlay } from "./DebugMapContainerOverlay";
-import { isTriggeredByFormElement, useSmartChangeHP } from "../../util";
+import {
+  isTriggeredByFormElement,
+  mapObjectImageHeightFromAsset,
+  useAskForDPI,
+  useSmartChangeHP,
+} from "../../util";
 import { NativeTypes } from "react-dnd-html5-backend";
 import { uploadFiles } from "../../files";
 import { MAP_LINK_SIZE } from "./MapLink";
@@ -167,14 +169,18 @@ export default function MapContainer() {
     [stateRef]
   );
 
+  const askForDPI = useAskForDPI();
+
   const addBackgroundImages = async (files: File[], point: RRPoint) => {
+    const dpi = await askForDPI();
+
     try {
       const uploadedFiles = await uploadFiles(files, "image");
 
       dispatch(
         uploadedFiles.flatMap((uploadedFile, i) => {
           const assetAddAction = assetImageAdd({
-            name: uploadedFile.filename,
+            name: uploadedFile.originalFilename,
             description: null,
             tags: [],
             location: {
@@ -190,6 +196,7 @@ export default function MapContainer() {
             blurHash: uploadedFile.blurHash,
             width: uploadedFile.width,
             height: uploadedFile.height,
+            dpi,
             originalFunction: "map",
           });
 
@@ -205,7 +212,10 @@ export default function MapContainer() {
 
               roughness: 0,
               type: "image",
-              height: DEFAULT_BACKGROUND_IMAGE_HEIGHT,
+              height: mapObjectImageHeightFromAsset({
+                height: uploadedFile.height,
+                dpi,
+              }),
               imageAssetId: assetAddAction.payload.id,
             }),
           ];
@@ -221,12 +231,20 @@ export default function MapContainer() {
   const transformRef = useContext(MapTransformRef);
 
   const [dropProps, dropRef1] = useDrop<
-    { id: RRCharacterID | RRMapID } | { files: File[] },
+    | { id: RRCharacterID | RRMapID }
+    | { files: File[] }
+    | { imageAsset: RRAssetImage },
     void,
     { nativeFileHovered: boolean }
   >(
     () => ({
-      accept: ["token", "tokenTemplate", "map", NativeTypes.FILE],
+      accept: [
+        "token",
+        "tokenTemplate",
+        "map",
+        "asset/image",
+        NativeTypes.FILE,
+      ],
       drop: (item, monitor) => {
         const topLeft = dropRef2.current!.getBoundingClientRect();
         const dropPosition = monitor.getClientOffset();
@@ -242,8 +260,21 @@ export default function MapContainer() {
           return;
         }
 
+        // Helper function that optimistically dispatches an action. It uses a
+        // random rrid() as the optimistic key so that further optimistic
+        // dispatches do not overwrite previous dispatches.
+        const optimisticDispatch = (action: SyncedStateAction) =>
+          dispatch({
+            actions: [action],
+            optimisticKey: rrid(),
+            syncToServerThrottle: 0,
+          });
+
         if (monitor.getItemType() === "map") {
-          dispatch(
+          if (!("id" in item)) {
+            return;
+          }
+          optimisticDispatch(
             mapObjectAdd(mapId, {
               type: "mapLink",
               position: pointSubtract(
@@ -261,7 +292,30 @@ export default function MapContainer() {
           );
           return;
         }
+        if (monitor.getItemType() === "asset/image") {
+          if (!("imageAsset" in item)) {
+            return;
+          }
+          optimisticDispatch(
+            mapObjectAdd(mapId, {
+              type: "image",
+              position: snapPointToGrid(point),
+              rotation: 0,
+              playerId: myself.id,
+              imageAssetId: item.imageAsset.id,
+              height: mapObjectImageHeightFromAsset(item.imageAsset),
+              locked: false,
+              color: "#000",
+              visibility: "everyone",
+              roughness: 0,
+            })
+          );
+          return;
+        }
 
+        if (!("id" in item)) {
+          return;
+        }
         let characterId = item.id as RRCharacterID;
 
         const character = getCharacter(characterId);
@@ -276,11 +330,11 @@ export default function MapContainer() {
             localToMap: mapId,
             isTemplate: false,
           });
-          dispatch(action);
+          optimisticDispatch(action);
           characterId = action.payload.id;
         }
 
-        dispatch(
+        optimisticDispatch(
           mapObjectAdd(mapId, {
             type: "token",
             position: snapPointToGrid(point),

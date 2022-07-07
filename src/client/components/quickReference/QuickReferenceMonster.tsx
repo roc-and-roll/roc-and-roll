@@ -93,6 +93,7 @@ export const Monster = React.memo(function Monster({
       blurHash: image.blurHash,
       width: image.width,
       height: image.height,
+      dpi: null,
 
       playerId: myself.id,
     });
