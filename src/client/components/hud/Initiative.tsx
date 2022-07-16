@@ -1,13 +1,7 @@
 import clsx from "clsx";
-import React, {
-  useContext,
-  useDeferredValue,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Flipped, Flipper } from "react-flip-toolkit";
-import { useRecoilCallback, useRecoilValue } from "recoil";
+import { useRecoilCallback } from "recoil";
 import {
   EMPTY_ENTITY_COLLECTION,
   EntityCollection,
@@ -17,7 +11,6 @@ import {
   RRCharacterID,
   RRInitiativeTrackerEntry,
   RRInitiativeTrackerEntryID,
-  RRMapObject,
   RRMultipleRoll,
   RRPlayer,
   RRPlayerID,
@@ -33,7 +26,10 @@ import {
   initiativeTrackerEntryLairActionAdd,
 } from "../../../shared/actions";
 import { EMPTY_ARRAY, isCharacterDead } from "../../../shared/util";
-import { useMyProps } from "../../myself";
+import {
+  useMyProps,
+  useMySelectedCharactersOrMainCharacter,
+} from "../../myself";
 import {
   useServerDispatch,
   useServerState,
@@ -316,7 +312,6 @@ export function InitiativeHUD() {
               )
             }
             initiativeTracker={initiativeTracker}
-            characterCollection={characterCollection}
             myselfId={myself.id}
           />
           {sortedRows.map((entry, idx) => (
@@ -554,56 +549,15 @@ const InitiativeEntry = React.memo<{
   );
 });
 
-function RollInitiative({
-  initiativeTracker,
-  characterCollection,
-  myselfId,
-  clearInitiative,
-  isGM,
-}: {
-  initiativeTracker: InitiativeTrackerSyncedState;
-  characterCollection: EntityCollection<RRCharacter>;
-  myselfId: RRPlayerID;
-  clearInitiative: () => void;
-  isGM: boolean;
-}) {
-  const myself = useMyProps(...myMapProps);
-  // Avoid re-rendering the RollInitiative component repeatedly when people are
-  // moving map objects around the map.
-  const upToDateMapObjects = useServerState(
-    (state) =>
-      state.maps.entities[myself.currentMap]?.objects ?? EMPTY_ENTITY_COLLECTION
-  );
-  const deferredMapObjects = useDeferredValue(upToDateMapObjects);
-
-  return (
-    <RollInitiativeDeferredImpl
-      initiativeTracker={initiativeTracker}
-      characterCollection={characterCollection}
-      myselfId={myselfId}
-      mapObjects={deferredMapObjects}
-      mapObjectsOutdated={upToDateMapObjects !== deferredMapObjects}
-      clearInitiative={clearInitiative}
-      isGM={isGM}
-    />
-  );
-}
-
-const RollInitiativeDeferredImpl = React.memo<{
+const RollInitiative = React.memo<{
   initiativeTracker: InitiativeTrackerSyncedState;
   isGM: boolean;
-  characterCollection: EntityCollection<RRCharacter>;
   myselfId: RRPlayerID;
-  mapObjects: EntityCollection<RRMapObject>;
-  mapObjectsOutdated: boolean;
   clearInitiative: () => void;
-}>(function RollInitiativeDeferredImpl({
+}>(function RollInitiative({
   initiativeTracker,
-  characterCollection,
   myselfId,
   isGM,
-  mapObjects,
-  mapObjectsOutdated,
   clearInitiative,
 }) {
   const dispatch = useServerDispatch();
@@ -611,18 +565,11 @@ const RollInitiativeDeferredImpl = React.memo<{
 
   const [modifier, setModifier, _] = useLocalState("initiative-modifier", "0");
 
-  const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom).filter(
-    Boolean
+  const selectedCharacters = useMySelectedCharactersOrMainCharacter(
+    "id",
+    "attributes"
   );
-
-  const selectedCharacterIds = [
-    ...new Set(
-      selectedMapObjectIds.flatMap((mapObjectId) => {
-        const mapObject = mapObjects.entities[mapObjectId];
-        return mapObject?.type === "token" ? mapObject.characterId : [];
-      })
-    ),
-  ];
+  const selectedCharacterIds = selectedCharacters.map((each) => each.id);
 
   const characterIdsInTracker = entries(initiativeTracker.entries).flatMap(
     (entry) => (entry.type === "character" ? entry.characterIds : [])
@@ -633,10 +580,6 @@ const RollInitiativeDeferredImpl = React.memo<{
   );
 
   const hasSelection = selectedCharacterIds.length !== 0;
-
-  const selectedCharacters = selectedCharacterIds.flatMap(
-    (characterId) => characterCollection.entities[characterId] ?? []
-  );
 
   const allSelectedInitiatives = [
     ...new Set(
@@ -701,25 +644,16 @@ const RollInitiativeDeferredImpl = React.memo<{
             style={{ width: TOKEN_SIZE, height: TOKEN_SIZE }}
             className="rounded-full"
             title="Roll initiative"
-            disabled={mapObjectsOutdated}
             onClick={() => roll("none")}
           >
             <FontAwesomeIcon icon={faDiceD20} />
           </Button>
           <div className="flex flex-col mx-2 justify-center">
             <div className="flex flex-row">
-              <Button
-                className="p-0 w-8"
-                disabled={mapObjectsOutdated}
-                onClick={() => roll("advantage")}
-              >
+              <Button className="p-0 w-8" onClick={() => roll("advantage")}>
                 Adv
               </Button>
-              <Button
-                className="p-0 w-8"
-                disabled={mapObjectsOutdated}
-                onClick={() => roll("disadvantage")}
-              >
+              <Button className="p-0 w-8" onClick={() => roll("disadvantage")}>
                 Dis
               </Button>
             </div>
@@ -728,7 +662,7 @@ const RollInitiativeDeferredImpl = React.memo<{
               value={
                 allHaveSameInitiative ? allSelectedInitiatives[0]! : modifier
               }
-              disabled={allHaveSameInitiative || mapObjectsOutdated}
+              disabled={allHaveSameInitiative}
               onChange={(e) => setModifier(e.target.value)}
               placeholder="mod"
               title={
