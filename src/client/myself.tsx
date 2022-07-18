@@ -58,15 +58,31 @@ export function useMyActiveCharacter<T extends (keyof RRCharacter)[]>(
 ): [] extends T
   ? RRCharacter | null
   : Pick<RRCharacter, IterableElement<T>> | null {
-  const selected = useMySelectedCharacters(...fields)[0] ?? null;
-  const myself = useMyProps("mainCharacterId");
-  const characters = useServerState((s) => s.characters).entities;
+  const selectedCharacters = useMySelectedCharacters(...fields)[0] ?? null;
+  const mainCharacter = useMyMainCharacter(...fields);
 
   return (
-    (selected as [] extends T
+    (selectedCharacters as [] extends T
       ? RRCharacter | null
-      : Pick<RRCharacter, IterableElement<T>> | null) ??
-    (myself.mainCharacterId ? characters[myself.mainCharacterId] ?? null : null)
+      : Pick<RRCharacter, IterableElement<T>> | null) ?? mainCharacter
+  );
+}
+
+function useMyMainCharacter<T extends (keyof RRCharacter)[]>(
+  ...fields: T
+): [] extends T
+  ? RRCharacter | null
+  : Pick<RRCharacter, IterableElement<T>> | null {
+  const myself = useMyProps("mainCharacterId");
+  return useServerState(
+    (s) =>
+      myself.mainCharacterId
+        ? s.characters.entities[myself.mainCharacterId] ?? null
+        : null,
+    fields.length === 0
+      ? Object.is
+      : (current, next) =>
+          fields.every((field) => Object.is(current?.[field], next?.[field]))
   );
 }
 
@@ -103,14 +119,32 @@ export function useMySelectedCharacters<T extends (keyof RRCharacter)[]>(
     fields.length === 0
       ? (current, next) =>
           current.length === next.length &&
-          current.every((each, i) => each === next[i])
+          current.every((each, i) => Object.is(each, next[i]))
       : (current, next) =>
           current.length === next.length &&
           current.every((each, i) => each.id === next[i]!.id) &&
           fields.every((field) =>
-            current.every((each, i) => each[field] === next[i]![field])
+            current.every((each, i) => Object.is(each[field], next[i]![field]))
           )
   );
+}
+
+// Returns the currently selected characters, or, if none are selected, an array
+// with just the main character of the player.
+export function useMySelectedCharactersOrMainCharacter<
+  T extends (keyof RRCharacter)[]
+>(
+  ...fields: T
+): [] extends T ? RRCharacter[] : Pick<RRCharacter, IterableElement<T>>[] {
+  const selectedCharacters = useMySelectedCharacters(...fields);
+  const mainCharacter = useMyMainCharacter(...fields);
+  return selectedCharacters.length > 0
+    ? selectedCharacters
+    : mainCharacter
+    ? ([mainCharacter] as [] extends T
+        ? RRCharacter[]
+        : Pick<RRCharacter, IterableElement<T>>[])
+    : [];
 }
 
 export function useMyProps<T extends (keyof RRPlayer)[]>(
