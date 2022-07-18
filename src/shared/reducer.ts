@@ -71,14 +71,8 @@ const beforeInitiativeChangedCharactersReducer = createReducer(
         state.initiativeTracker.entries.entities[
           state.initiativeTracker.currentEntryId
         ];
-      if (state.initiativeTracker.currentEntryId === action.payload) {
-        //TODO do we need this? It would fail if we only have one entry I assume
-        throw new Error(
-          "Current initiative entry matches action payload.\
-          This should run before the initiative entry is updated."
-        );
-      }
       if (
+        state.initiativeTracker.currentEntryId === action.payload ||
         !currentInitiativeEntry ||
         currentInitiativeEntry.type === "lairAction"
       )
@@ -96,7 +90,7 @@ const beforeInitiativeChangedCharactersReducer = createReducer(
   }
 );
 
-function anotherCrossSlideReducer(state: SyncedState, action: AnyAction) {
+function aCrossSlideReducer(state: SyncedState, action: AnyAction) {
   switch (action.type) {
     case initiativeTrackerSetCurrentEntry.toString(): {
       return {
@@ -110,7 +104,7 @@ function anotherCrossSlideReducer(state: SyncedState, action: AnyAction) {
   }
 }
 
-function crossSliceReducer(state: SyncedState, action: AnyAction) {
+function anotherCrossSlideReducer(state: SyncedState, action: AnyAction) {
   switch (action.type) {
     case initiativeTrackerSetCurrentEntry.toString(): {
       return {
@@ -128,8 +122,7 @@ export function reducer(
   state: SyncedState = initialSyncedState,
   action: AnyAction
 ): SyncedState {
-  const firstIntermediateState = anotherCrossSlideReducer(state, action);
-  const intermediateState = singleSliceReducers(firstIntermediateState, action);
-  const finalState = crossSliceReducer(intermediateState, action);
-  return finalState;
+  let reducedState = aCrossSlideReducer(state, action);
+  reducedState = singleSliceReducers(reducedState, action);
+  return anotherCrossSlideReducer(reducedState, action);
 }
