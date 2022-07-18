@@ -316,61 +316,9 @@ a {
   }
 }
 
-.collapsible-header {
-  padding: 0.5rem 0;
-  display: flex;
-  cursor: pointer;
-
-  .collapse-button {
-    margin: 0.19rem 0.7rem 0 0;
-  }
-}
-
-.collapsed {
-  background-color: #888;
-  margin: 0 -1rem;
-  padding: 0.5rem 1rem;
-}
-
 .collapsible-content {
-  padding: 0 1.35rem;
-
   & > * {
     padding: 0.25rem 0;
-  }
-}
-
-.toolbar-panel {
-  .collapsible-header {
-    padding: 0.1rem 0;
-    display: flex;
-    cursor: pointer;
-
-    .collapse-button {
-      margin: 0.25rem 0.7rem 0 0;
-    }
-
-    & > h4 {
-      flex-grow: 1;
-    }
-  }
-
-  .collapsed {
-    background-color: #888;
-    padding: 0.1rem 1rem;
-    margin: 0 -0.8rem 0 -0.7rem;
-
-    .collapse-button {
-      margin: 0.25rem 0.7rem 0 -0.3rem;
-    }
-  }
-
-  .collapsible-content {
-    padding: 0;
-
-    & > * {
-      padding: 0;
-    }
   }
 }
 

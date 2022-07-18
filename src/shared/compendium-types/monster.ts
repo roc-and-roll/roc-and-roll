@@ -9,6 +9,19 @@ import { RRDamageType } from "../dice-roll-tree-types-and-validation";
 import { ForceNoInlineHelper } from "../typescript-hacks";
 import { CompendiumTextEntry, isTextEntry } from "./text-entry";
 
+// TODO also handle hidden entries some how, right now they are displayed as normal text entries
+export type PotentiallyHiddenCompendiumTextEntry =
+  | CompendiumTextEntry
+  | { hidden: boolean; entry: CompendiumTextEntry };
+
+export const isPotentiallyHiddenTextEntry = z.union([
+  isTextEntry,
+  z.strictObject({
+    hidden: z.boolean(),
+    entry: isTextEntry,
+  }),
+]);
+
 export interface ConditionalSpeed {
   number: number;
   condition: string;
@@ -36,7 +49,7 @@ export interface CompendiumMonsterSkills {
 }
 
 interface SpellPerLevel {
-  slots: number;
+  slots?: number;
   spells: string[];
   lower?: number;
 }
@@ -73,7 +86,7 @@ export interface CompendiumMonster {
   wis?: number;
   cha?: number;
 
-  action?: { name: string; entries: CompendiumTextEntry[] }[];
+  action?: { name: string; entries: CompendiumTextEntry[] }[] | null;
   legendary?: { name: string; entries: CompendiumTextEntry[] }[];
   legendaryActions?: number;
   legendaryGroup?: { name: string; source: string };
@@ -82,8 +95,9 @@ export interface CompendiumMonster {
     | NonNullable<RRDamageType["type"]>
     | {
         immune: Array<NonNullable<RRDamageType["type"]>>;
-        cond: boolean;
-        note: string;
+        cond?: boolean;
+        note?: string;
+        preNote?: string;
       }
   >;
   conditionImmune?: Array<RRCharacterCondition>;
@@ -97,21 +111,22 @@ export interface CompendiumMonster {
     cha?: string;
   };
 
-  trait?: { name: string; entries: CompendiumTextEntry[] }[];
+  trait?: { name: string; entries: CompendiumTextEntry[]; type?: any }[];
   //cspell: disable-next-line
   spellcasting?: {
     name: string;
     headerEntries: CompendiumTextEntry[];
-    will?: CompendiumTextEntry[];
+    will?: PotentiallyHiddenCompendiumTextEntry[];
     daily?: {
-      "3e"?: CompendiumTextEntry[];
-      "3"?: CompendiumTextEntry[];
-      "2e"?: CompendiumTextEntry[];
-      "1e"?: CompendiumTextEntry[];
-      "1"?: CompendiumTextEntry[];
+      "3e"?: PotentiallyHiddenCompendiumTextEntry[];
+      "3"?: PotentiallyHiddenCompendiumTextEntry[];
+      "2e"?: PotentiallyHiddenCompendiumTextEntry[];
+      "2"?: PotentiallyHiddenCompendiumTextEntry[];
+      "1e"?: PotentiallyHiddenCompendiumTextEntry[];
+      "1"?: PotentiallyHiddenCompendiumTextEntry[];
     };
     hidden?: string[];
-    ability: string;
+    ability?: string;
     footerEntries?: CompendiumTextEntry[];
     spells?: {
       0?: { spells: string[] };
@@ -125,6 +140,10 @@ export interface CompendiumMonster {
       8?: SpellPerLevel;
       9?: SpellPerLevel;
     };
+    displayAs?: any;
+    type?: any;
+    charges?: any;
+    chargesItem?: any;
   }[];
 
   type?: any;
@@ -178,6 +197,9 @@ export interface CompendiumMonster {
   reprintedAs?: any;
   summonedBySpellLevel?: any;
   dragonAge?: any;
+  isNpc?: any;
+  alignmentPrefix?: any;
+  mythic?: any;
 }
 
 export const isConditionalSpeed = z.strictObject({
@@ -186,7 +208,7 @@ export const isConditionalSpeed = z.strictObject({
 });
 
 const spellPerLevel = z.strictObject({
-  slots: z.number().int(),
+  slots: z.optional(z.number().int()),
   spells: z.array(z.string()),
   lower: z.optional(z.number().int()),
 });
@@ -237,9 +259,13 @@ const _isMonster = z.strictObject({
   cha: z.optional(z.number()),
   hasToken: z.optional(z.boolean()),
 
-  action: z.optional(
-    z.array(z.strictObject({ name: z.string(), entries: z.array(isTextEntry) }))
-  ),
+  action: z
+    .optional(
+      z.array(
+        z.strictObject({ name: z.string(), entries: z.array(isTextEntry) })
+      )
+    )
+    .nullable(),
   legendary: z.optional(
     z.array(z.strictObject({ name: z.string(), entries: z.array(isTextEntry) }))
   ),
@@ -256,8 +282,9 @@ const _isMonster = z.strictObject({
       z.enum(damageTypesWithoutNull).or(
         z.strictObject({
           immune: z.array(z.enum(damageTypesWithoutNull)),
-          cond: z.boolean(),
-          note: z.string(),
+          cond: z.optional(z.boolean()),
+          note: z.optional(z.string()),
+          preNote: z.optional(z.string()),
         })
       )
     )
@@ -298,7 +325,13 @@ const _isMonster = z.strictObject({
   ),
 
   trait: z.optional(
-    z.array(z.strictObject({ name: z.string(), entries: z.array(isTextEntry) }))
+    z.array(
+      z.strictObject({
+        name: z.string(),
+        entries: z.array(isTextEntry),
+        type: z.any(),
+      })
+    )
   ),
   //cspell: disable-next-line
   spellcasting: z.optional(
@@ -307,17 +340,18 @@ const _isMonster = z.strictObject({
         name: z.string(),
         headerEntries: z.array(isTextEntry),
         footerEntries: z.optional(z.array(isTextEntry)),
-        will: z.optional(z.array(isTextEntry)),
+        will: z.optional(z.array(isPotentiallyHiddenTextEntry)),
         daily: z.optional(
           z.strictObject({
-            "3e": z.optional(z.array(isTextEntry)), // I dont know what the difference between 3 and 3e is, they both seem to mean 3 times per day
-            "3": z.optional(z.array(isTextEntry)),
-            "2e": z.optional(z.array(isTextEntry)),
-            "1e": z.optional(z.array(isTextEntry)),
-            "1": z.optional(z.array(isTextEntry)),
+            "3e": z.optional(z.array(isPotentiallyHiddenTextEntry)), // I dont know what the difference between 3 and 3e is, they both seem to mean 3 times per day
+            "3": z.optional(z.array(isPotentiallyHiddenTextEntry)),
+            "2e": z.optional(z.array(isPotentiallyHiddenTextEntry)),
+            "2": z.optional(z.array(isPotentiallyHiddenTextEntry)),
+            "1e": z.optional(z.array(isPotentiallyHiddenTextEntry)),
+            "1": z.optional(z.array(isPotentiallyHiddenTextEntry)),
           })
         ),
-        ability: z.string(),
+        ability: z.optional(z.string()),
         hidden: z.optional(z.array(z.string())),
         spells: z.optional(
           z.strictObject({
@@ -333,6 +367,10 @@ const _isMonster = z.strictObject({
             9: z.optional(spellPerLevel),
           })
         ),
+        displayAs: z.any(),
+        type: z.any(),
+        charges: z.any(),
+        chargesItem: z.any(),
       })
     )
   ),
@@ -385,6 +423,9 @@ const _isMonster = z.strictObject({
   reprintedAs: z.any(),
   summonedBySpellLevel: z.any(),
   dragonAge: z.any(),
+  isNpc: z.any(),
+  alignmentPrefix: z.any(),
+  mythic: z.any(),
 });
 // TypeScript hack to avoid inlining.
 // https://github.com/microsoft/TypeScript/issues/34119

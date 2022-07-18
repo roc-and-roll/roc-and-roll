@@ -83,18 +83,25 @@ function CollapsibleImpl(
   return (
     <div>
       <div
-        className={clsx("collapsible-header", {
-          collapsed: !props.collapsed,
-        })}
+        className={clsx(
+          "cursor-pointer p-0 flex select-none py-2 hover:bg-neutral-500",
+          {
+            "bg-neutral-500 ": !props.collapsed,
+          }
+        )}
         onClick={() => {
           props.setCollapsed((collapsed) => !collapsed);
         }}
       >
-        <CollapseButton collapsed={props.collapsed} setCollapsed={() => {}} />
-        <h4>{props.title}</h4>
+        <CollapseButton
+          className="mt-[0.19rem] mr-[0.7rem] cursor-pointer"
+          disabled={true}
+          collapsed={props.collapsed}
+          setCollapsed={() => {}}
+        />
+        <h4 className="flex-1">{props.title}</h4>
         {props.buttonIcon && props.buttonOnClick && (
           <div
-            className="collapsible-action-button"
             onClick={(event) => {
               event.stopPropagation();
               if (props.buttonOnClick) props.buttonOnClick();
@@ -104,7 +111,7 @@ function CollapsibleImpl(
           </div>
         )}
       </div>
-      <div className={"collapsible-content"}>
+      <div className={"py-0 px-5"}>
         {!props.collapsed && <ErrorBoundary>{props.children}</ErrorBoundary>}
       </div>
     </div>

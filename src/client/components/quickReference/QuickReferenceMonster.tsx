@@ -127,7 +127,7 @@ export const Monster = React.memo(function Monster({
               "slots" in s
                 ? {
                     name: `Spell Slots Lvl ${level}`,
-                    maxUseCount: s.slots,
+                    maxUseCount: s.slots ? s.slots : 0,
                     currentUseCount: 0,
                     restoresAt: "longRest" as const,
                   }
@@ -339,13 +339,19 @@ export function MonsterSpellcasting({
               <div key={key}>
                 <dt>{key.substring(0, 1)} / per day</dt>
                 <dd>
-                  {value.map((x, index) => (
-                    <TextEntry
-                      key={`daily${index}`}
-                      entry={x}
-                      rollName="monster.name"
-                    ></TextEntry>
-                  ))}
+                  {value.map((entry, index) => {
+                    entry =
+                      typeof entry !== "string" && "hidden" in entry
+                        ? entry.entry
+                        : entry;
+                    return (
+                      <TextEntry
+                        key={`daily${index}`}
+                        entry={entry}
+                        rollName="monster.name"
+                      ></TextEntry>
+                    );
+                  })}
                 </dd>
               </div>
             ))}
@@ -355,7 +361,10 @@ export function MonsterSpellcasting({
                 <strong>
                   {level === "0"
                     ? "Cantrips"
-                    : showLevel(level, "slots" in value ? value.slots : 0)}
+                    : showLevel(
+                        level,
+                        "slots" in value ? (value.slots ? value.slots : 0) : 0
+                      )}
                   :{" "}
                 </strong>
                 {value.spells.map((x, index) => (
@@ -371,13 +380,19 @@ export function MonsterSpellcasting({
               </div>
             ))}
           {spellType.will && <dt>At Will</dt>}
-          {spellType.will?.map((entry, index) => (
-            <TextEntry
-              key={index}
-              entry={entry}
-              rollName={monster.name}
-            ></TextEntry>
-          ))}
+          {spellType.will?.map((entry, index) => {
+            entry =
+              typeof entry !== "string" && "hidden" in entry
+                ? entry.entry
+                : entry;
+            return (
+              <TextEntry
+                key={index}
+                entry={entry}
+                rollName={monster.name}
+              ></TextEntry>
+            );
+          })}
           {spellType.footerEntries?.map((entry, index) => (
             <TextEntry
               key={index}
