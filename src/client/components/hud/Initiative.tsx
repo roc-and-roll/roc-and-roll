@@ -305,24 +305,20 @@ export function InitiativeHUD() {
       if (focusTokenOnTurnStart) setSelection(currentRow.characterIds);
       currentRow.characterIds.forEach((characterId) => {
         const character = charactersRef.current.entities[characterId];
-        if (character?.currentlyConcentratingOn) {
-          if (character.currentlyConcentratingOn.roundsLeft <= 1) {
-            if (
-              myCharacters.includes(character.id) ||
-              (character.localToMap && myself.isGM)
-            ) {
-              void alertPlayer(
-                character.name,
-                character.currentlyConcentratingOn.name
-              );
-            }
-            updateConcentration(character, null);
-          } else {
-            updateConcentration(character, {
-              ...character.currentlyConcentratingOn,
-              roundsLeft: character.currentlyConcentratingOn.roundsLeft - 1,
-            });
+        if (
+          character?.currentlyConcentratingOn &&
+          character.currentlyConcentratingOn.roundsLeft <= 1
+        ) {
+          if (
+            myCharacters.includes(character.id) ||
+            (character.localToMap && myself.isGM)
+          ) {
+            void alertPlayer(
+              character.name,
+              character.currentlyConcentratingOn.name
+            );
           }
+          updateConcentration(character, null);
         }
       });
     }
