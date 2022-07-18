@@ -13,10 +13,9 @@ import {
 import { assetsReducer } from "../shared/features/assets";
 import { globalSettingsReducer } from "../shared/features/globalSettings";
 import { soundSetsReducer } from "./features/soundSets";
-import assert from "assert";
 import { initiativeTrackerSetCurrentEntry } from "./actions";
 
-const combinedReducer = combineReducers({
+const singleSliceReducers = combineReducers({
   // Add new slices of state here.
   // You need to edit SyncedState and initialSyncedState in shared/state.ts
   // when adding a new slice.
@@ -36,31 +35,40 @@ const combinedReducer = combineReducers({
   }),
 });
 
-const specialCharacterReducer = createReducer(initialSyncedState, (builder) => {
-  builder.addCase(initiativeTrackerSetCurrentEntry, (state, action) => {
-    if (!state.initiativeTracker.currentEntryId) return;
-    const newInitiativeEntry =
-      state.initiativeTracker.entries.entities[
-        state.initiativeTracker.currentEntryId
-      ];
-    // should have already been updated by the call to `intermediateState = combinedReducer(state, action)` at the bottom
-    assert(state.initiativeTracker.currentEntryId === action.payload);
-    if (!newInitiativeEntry || newInitiativeEntry.type === "lairAction") return;
-    newInitiativeEntry.characterIds.map((id) => {
-      const characterEntry = state.characters.entities[id];
-      if (characterEntry?.currentlyConcentratingOn) {
-        characterEntry.currentlyConcentratingOn.roundsLeft--;
+const onInitiativeChangedCharactersReducer = createReducer(
+  initialSyncedState,
+  (builder) => {
+    builder.addCase(initiativeTrackerSetCurrentEntry, (state, action) => {
+      if (!state.initiativeTracker.currentEntryId) return;
+      const newInitiativeEntry =
+        state.initiativeTracker.entries.entities[
+          state.initiativeTracker.currentEntryId
+        ];
+      if (state.initiativeTracker.currentEntryId !== action.payload) {
+        throw new Error(
+          "Current initiative entry does not match action payload.\
+          This should have been updated by the single slice reducers already."
+        );
       }
+      if (!newInitiativeEntry || newInitiativeEntry.type === "lairAction")
+        return;
+      newInitiativeEntry.characterIds.map((id) => {
+        const characterEntry = state.characters.entities[id];
+        if (characterEntry?.currentlyConcentratingOn) {
+          characterEntry.currentlyConcentratingOn.roundsLeft--;
+        }
+      });
     });
-  });
-});
+  }
+);
 
 function crossSliceReducer(state: SyncedState, action: AnyAction) {
   switch (action.type) {
     case initiativeTrackerSetCurrentEntry.toString(): {
       return {
         ...state,
-        characters: specialCharacterReducer(state, action).characters,
+        characters: onInitiativeChangedCharactersReducer(state, action)
+          .characters,
       };
     }
     default:
@@ -68,8 +76,11 @@ function crossSliceReducer(state: SyncedState, action: AnyAction) {
   }
 }
 
-export function reducer(state: SyncedState, action: AnyAction): SyncedState {
-  const intermediateState = combinedReducer(state, action);
+export function reducer(
+  state: SyncedState = initialSyncedState,
+  action: AnyAction
+): SyncedState {
+  const intermediateState = singleSliceReducers(state, action);
   const finalState = crossSliceReducer(intermediateState, action);
   return finalState;
 }

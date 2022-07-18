@@ -107,10 +107,6 @@ export function InitiativeHUD() {
   const rows = entries(initiativeTracker.entries);
   const alert = useAlert();
 
-  const myCharacters = useServerState(
-    (state) => state.players.entities[myself.id]!.characterIds
-  );
-
   const currentRowIndex = rows.findIndex(
     (row) => row.id === initiativeTracker.currentEntryId
   );
@@ -259,30 +255,14 @@ export function InitiativeHUD() {
 
   const focusTokenOnTurnStart = useRRSettings()[0].focusTokenOnTurnStart;
 
-  const updateConcentration = useCallback(
-    (
-      character: RRCharacter,
-      updater: React.SetStateAction<RRCharacter["currentlyConcentratingOn"]>
-    ) => {
-      dispatch((state) => {
-        const old =
-          state.characters.entities[character.id]?.currentlyConcentratingOn;
-
-        if (old === undefined) return [];
-        const newConcentration =
-          typeof updater === "function" ? updater(old) : updater;
-
-        return {
-          actions: [
-            characterUpdate({
-              id: character.id,
-              changes: { currentlyConcentratingOn: newConcentration },
-            }),
-          ],
-          optimisticKey: "concentration",
-          syncToServerThrottle: 0,
-        };
-      });
+  const resetConcentration = useCallback(
+    (character: RRCharacter) => {
+      dispatch(
+        characterUpdate({
+          id: character.id,
+          changes: { currentlyConcentratingOn: null },
+        })
+      );
     },
     [dispatch]
   );
@@ -307,18 +287,19 @@ export function InitiativeHUD() {
         const character = charactersRef.current.entities[characterId];
         if (
           character?.currentlyConcentratingOn &&
-          character.currentlyConcentratingOn.roundsLeft <= 1
+          character.currentlyConcentratingOn.roundsLeft <= 0
         ) {
           if (
-            myCharacters.includes(character.id) ||
+            myself.characterIds.includes(character.id) ||
             (character.localToMap && myself.isGM)
           ) {
+            //TODO trigger this alert from the server and reset concentration there
             void alertPlayer(
               character.name,
               character.currentlyConcentratingOn.name
             );
           }
-          updateConcentration(character, null);
+          resetConcentration(character);
         }
       });
     }
@@ -330,10 +311,10 @@ export function InitiativeHUD() {
     currentRowIndex,
     dispatch,
     focusTokenOnTurnStart,
-    myCharacters,
+    myself.characterIds,
     myself.isGM,
+    resetConcentration,
     setSelection,
-    updateConcentration,
   ]);
 
   function findNextRow() {
