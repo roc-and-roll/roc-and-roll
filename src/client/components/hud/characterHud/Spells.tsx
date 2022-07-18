@@ -1,15 +1,14 @@
+import { faCompressArrowsAlt } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React, { useContext } from "react";
 import {
+  characterUpdate,
   characterDeleteSpell,
   characterUpdateSpell,
 } from "../../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../../shared/constants";
-import {
-  RRCharacterSpellID,
-  RRCharacterSpell,
-  RRCharacterID,
-} from "../../../../shared/state";
+import { RRCharacterSpellID, RRCharacterSpell } from "../../../../shared/state";
 import { useConfirm } from "../../../dialog-boxes";
 import { useServerDispatch } from "../../../state";
 import { QuickReferenceContext } from "../../quickReference/QuickReferenceWrapper";
@@ -61,7 +60,7 @@ function buildSpells({
                   spell.level === level && spell.prepared === prepared
               )
               .map((spell: RRCharacterSpell, index) => (
-                <Spell key={index} spell={spell} characterId={character.id} />
+                <Spell key={index} spell={spell} character={character} />
               ))}
             <div className="border-t w-full" />
           </div>
@@ -73,12 +72,55 @@ function buildSpells({
   );
 }
 
-function Spell({
+function ConcentrationIcon({
   spell,
-  characterId,
+  character,
 }: {
   spell: RRCharacterSpell;
-  characterId: RRCharacterID;
+  character: RRCharacterProps;
+}) {
+  const confirm = useConfirm();
+  const dispatch = useServerDispatch();
+
+  return (
+    <FontAwesomeIcon
+      title={`Concentration: ${spell.concentrationRounds} rounds`}
+      onClick={async () => {
+        if (
+          await confirm(
+            `Start concentrating on ${spell.name}? ${
+              character.currentlyConcentratingOn
+                ? `This will end your concentration on ${character.currentlyConcentratingOn.name}.`
+                : ""
+            }`
+          )
+        ) {
+          dispatch(
+            characterUpdate({
+              id: character.id,
+              changes: {
+                currentlyConcentratingOn: {
+                  roundsLeft: spell.concentrationRounds,
+                  name: spell.name,
+                },
+              },
+            })
+          );
+        }
+      }}
+      fixedWidth
+      icon={faCompressArrowsAlt}
+      className="h-4 self-center mr-1 cursor-pointer"
+    />
+  );
+}
+
+function Spell({
+  spell,
+  character,
+}: {
+  spell: RRCharacterSpell;
+  character: RRCharacterProps;
 }) {
   const { setOpen, setSearchString } = useContext(QuickReferenceContext);
   const openSpellReference = (spellName: string) => {
@@ -92,11 +134,11 @@ function Spell({
     dispatch({
       actions: [
         characterUpdateSpell({
-          id: characterId,
+          id: character.id,
           spell: { id: spellId, changes: { prepared } },
         }),
       ],
-      optimisticKey: `spells/${characterId}/${spellId}`,
+      optimisticKey: `spells/${character.id}/${spellId}`,
       syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
     });
   return (
@@ -104,13 +146,17 @@ function Spell({
       key={spell.id}
       className="flex flex-row justify-between cursor-pointer"
     >
+      {spell.concentrationRounds > 0 && (
+        <ConcentrationIcon spell={spell} character={character} />
+      )}
       <p
+        className="flex-grow"
         onClick={() => openSpellReference(spell.name)}
         onContextMenu={async (e) => {
           e.preventDefault();
           if (await confirm(`Are you sure you want to delete ${spell.name}?`)) {
             dispatch(
-              characterDeleteSpell({ id: characterId, spellId: spell.id })
+              characterDeleteSpell({ id: character.id, spellId: spell.id })
             );
           }
         }}

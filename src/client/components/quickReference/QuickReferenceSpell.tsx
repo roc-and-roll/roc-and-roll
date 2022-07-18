@@ -109,6 +109,19 @@ export const Spell = React.memo(function Spell({
         oldSpell.name === spell.name && oldSpell.level === spell.level
     ) ?? false;
 
+  function calculateConcentrationRounds(
+    duration: IterableElement<CompendiumSpell["duration"]> | undefined
+  ) {
+    if (!duration || duration.type !== "timed" || !duration.concentration) {
+      return 0;
+    }
+    return duration.duration.type === "round"
+      ? duration.duration.amount
+      : duration.duration.type === "minute"
+      ? duration.duration.amount * 10
+      : 999999; //spells lasting longer than minutes are basically infinite in combat
+  }
+
   return (
     <>
       <div className="flex justify-between items-baseline">
@@ -129,6 +142,9 @@ export const Spell = React.memo(function Spell({
                         name: spell.name,
                         level: spell.level,
                         prepared: false,
+                        concentrationRounds: calculateConcentrationRounds(
+                          spell.duration[0]
+                        ),
                       },
                     }),
                   ],

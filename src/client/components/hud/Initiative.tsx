@@ -1,5 +1,11 @@
 import clsx from "clsx";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Flipped, Flipper } from "react-flip-toolkit";
 import { useRecoilCallback } from "recoil";
 import {
@@ -55,7 +61,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { rollInitiative, diceResult } from "../../dice-rolling/roll";
 import useLocalState from "../../useLocalState";
-import { usePrompt } from "../../dialog-boxes";
+import { useAlert, usePrompt } from "../../dialog-boxes";
 import ReactDOM from "react-dom";
 import { translate } from "transformation-matrix";
 import { useRRSettings } from "../../settings";
@@ -99,6 +105,7 @@ export function InitiativeHUD() {
   const characterCollection = useServerState((state) => state.characters);
   const playerCollection = useServerState((state) => state.players);
   const rows = entries(initiativeTracker.entries);
+  const alert = useAlert();
 
   const currentRowIndex = rows.findIndex(
     (row) => row.id === initiativeTracker.currentEntryId
@@ -248,17 +255,52 @@ export function InitiativeHUD() {
 
   const focusTokenOnTurnStart = useRRSettings()[0].focusTokenOnTurnStart;
 
+  const alertPlayer = useCallback(
+    async (characterName: string, concentrationObject: string) => {
+      await alert(
+        `${characterName}'s concentration on ${concentrationObject} has expired.`
+      );
+    },
+    [alert]
+  );
+
   useEffect(() => {
     if (
-      focusTokenOnTurnStart &&
       currentRow &&
       currentRow.id !== lastRowId.current &&
       currentRow.type === "character"
     ) {
-      setSelection(currentRow.characterIds);
+      if (focusTokenOnTurnStart) setSelection(currentRow.characterIds);
+      currentRow.characterIds.forEach((characterId) => {
+        const character = charactersRef.current.entities[characterId];
+        if (
+          character?.currentlyConcentratingOn &&
+          character.currentlyConcentratingOn.roundsLeft <= 0
+        ) {
+          if (
+            myself.characterIds.includes(character.id) ||
+            (character.localToMap && myself.isGM)
+          ) {
+            void alertPlayer(
+              character.name,
+              character.currentlyConcentratingOn.name
+            );
+          }
+        }
+      });
     }
     lastRowId.current = currentRow?.id ?? null;
-  }, [currentRow, currentRowIndex, focusTokenOnTurnStart, setSelection]);
+  }, [
+    alertPlayer,
+    charactersRef,
+    currentRow,
+    currentRowIndex,
+    dispatch,
+    focusTokenOnTurnStart,
+    myself.characterIds,
+    myself.isGM,
+    setSelection,
+  ]);
 
   function findNextRow() {
     if (currentRowIndex < 0) {
