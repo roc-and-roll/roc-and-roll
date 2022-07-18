@@ -47,7 +47,7 @@ const onInitiativeChangedCharactersReducer = createReducer(
       if (state.initiativeTracker.currentEntryId !== action.payload) {
         throw new Error(
           "Current initiative entry does not match action payload.\
-          This should have been updated by the single slice reducers already."
+        This should have been updated by the single slice reducers already."
         );
       }
       if (!newInitiativeEntry || newInitiativeEntry.type === "lairAction")
@@ -61,6 +61,54 @@ const onInitiativeChangedCharactersReducer = createReducer(
     });
   }
 );
+
+const beforeInitiativeChangedCharactersReducer = createReducer(
+  initialSyncedState,
+  (builder) => {
+    builder.addCase(initiativeTrackerSetCurrentEntry, (state, action) => {
+      if (!state.initiativeTracker.currentEntryId) return;
+      const currentInitiativeEntry =
+        state.initiativeTracker.entries.entities[
+          state.initiativeTracker.currentEntryId
+        ];
+      if (state.initiativeTracker.currentEntryId === action.payload) {
+        //TODO do we need this? It would fail if we only have one entry I assume
+        throw new Error(
+          "Current initiative entry matches action payload.\
+          This should run before the initiative entry is updated."
+        );
+      }
+      if (
+        !currentInitiativeEntry ||
+        currentInitiativeEntry.type === "lairAction"
+      )
+        return;
+      currentInitiativeEntry.characterIds.map((id) => {
+        const characterEntry = state.characters.entities[id];
+        if (
+          characterEntry?.currentlyConcentratingOn &&
+          characterEntry.currentlyConcentratingOn.roundsLeft <= 0
+        ) {
+          characterEntry.currentlyConcentratingOn = null;
+        }
+      });
+    });
+  }
+);
+
+function anotherCrossSlideReducer(state: SyncedState, action: AnyAction) {
+  switch (action.type) {
+    case initiativeTrackerSetCurrentEntry.toString(): {
+      return {
+        ...state,
+        characters: beforeInitiativeChangedCharactersReducer(state, action)
+          .characters,
+      };
+    }
+    default:
+      return state;
+  }
+}
 
 function crossSliceReducer(state: SyncedState, action: AnyAction) {
   switch (action.type) {
@@ -80,7 +128,8 @@ export function reducer(
   state: SyncedState = initialSyncedState,
   action: AnyAction
 ): SyncedState {
-  const intermediateState = singleSliceReducers(state, action);
+  const firstIntermediateState = anotherCrossSlideReducer(state, action);
+  const intermediateState = singleSliceReducers(firstIntermediateState, action);
   const finalState = crossSliceReducer(intermediateState, action);
   return finalState;
 }

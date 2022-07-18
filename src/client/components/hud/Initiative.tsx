@@ -32,7 +32,6 @@ import {
   initiativeTrackerEntryCharacterAdd,
   logEntryDiceRollAdd,
   initiativeTrackerEntryLairActionAdd,
-  characterUpdate,
 } from "../../../shared/actions";
 import { EMPTY_ARRAY, isCharacterDead } from "../../../shared/util";
 import { useMyProps } from "../../myself";
@@ -255,18 +254,6 @@ export function InitiativeHUD() {
 
   const focusTokenOnTurnStart = useRRSettings()[0].focusTokenOnTurnStart;
 
-  const resetConcentration = useCallback(
-    (character: RRCharacter) => {
-      dispatch(
-        characterUpdate({
-          id: character.id,
-          changes: { currentlyConcentratingOn: null },
-        })
-      );
-    },
-    [dispatch]
-  );
-
   const alertPlayer = useCallback(
     async (characterName: string, concentrationObject: string) => {
       await alert(
@@ -293,13 +280,11 @@ export function InitiativeHUD() {
             myself.characterIds.includes(character.id) ||
             (character.localToMap && myself.isGM)
           ) {
-            //TODO trigger this alert from the server and reset concentration there
             void alertPlayer(
               character.name,
               character.currentlyConcentratingOn.name
             );
           }
-          resetConcentration(character);
         }
       });
     }
@@ -313,7 +298,6 @@ export function InitiativeHUD() {
     focusTokenOnTurnStart,
     myself.characterIds,
     myself.isGM,
-    resetConcentration,
     setSelection,
   ]);
 
