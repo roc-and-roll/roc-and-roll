@@ -4,7 +4,7 @@ import { ReadonlyDeep } from "type-fest";
 import useLocalState from "./useLocalState";
 
 // increase this whenever the Settings type changes
-const CURRENT_SETTINGS_VERSION = 7;
+const CURRENT_SETTINGS_VERSION = 8;
 
 export type RRSettings = ReadonlyDeep<{
   version: number;
@@ -15,6 +15,7 @@ export type RRSettings = ReadonlyDeep<{
   collapseDiceTemplates: boolean;
   focusTokenOnTurnStart: boolean;
   logNames: "verbose" | "playerName" | "characterName";
+  yourTurnAnimation: "none" | "color" | "width";
 }>;
 
 const initialSettings: RRSettings = {
@@ -26,6 +27,7 @@ const initialSettings: RRSettings = {
   collapseDiceTemplates: false,
   focusTokenOnTurnStart: false,
   logNames: "characterName",
+  yourTurnAnimation: "width",
 };
 
 const RRSettingsContext = React.createContext<

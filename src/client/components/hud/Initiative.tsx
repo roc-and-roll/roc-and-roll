@@ -407,9 +407,22 @@ function EndTurnButton({
 }
 
 function YourTurn({ endTurnButton }: { endTurnButton: React.ReactNode }) {
+  const [{ yourTurnAnimation }] = useRRSettings();
   return ReactDOM.createPortal(
     <>
-      <div className="absolute inset-0 h-full w-full opacity-70 border-rr-500 border animate-border-wiggle pointer-events-none flex justify-center items-start z-20 your-turn-border"></div>
+      <div
+        className={clsx(
+          "absolute inset-0 h-full w-full pointer-events-none flex justify-center items-start z-20 your-turn-border",
+          {
+            "animate-border-color border-[16px] opacity-100":
+              yourTurnAnimation === "color",
+            "animate-border-wiggle opacity-70 border-rr-500 border":
+              yourTurnAnimation === "width",
+            "border-yellow-400 border-[16px] opacity-100":
+              yourTurnAnimation === "none",
+          }
+        )}
+      ></div>
       {endTurnButton}
     </>,
     document.body

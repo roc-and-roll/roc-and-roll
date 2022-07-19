@@ -133,6 +133,25 @@ export function Settings() {
           />
         </label>
       </div>
+      <div>
+        <label>
+          Your Turn Animation
+          <Select<RRSettings["yourTurnAnimation"]>
+            value={settings.yourTurnAnimation}
+            options={[
+              { label: "animate width", value: "width" },
+              { label: "animate color", value: "color" },
+              { label: "animate none", value: "none" },
+            ]}
+            onChange={(value) =>
+              setSettings((old) => ({
+                ...old,
+                yourTurnAnimation: value,
+              }))
+            }
+          />
+        </label>
+      </div>
     </>
   );
 }

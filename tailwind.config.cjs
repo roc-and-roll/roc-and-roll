@@ -14,9 +14,14 @@ module.exports = {
           "0%, 100%": { "border-width": "1px" },
           "50%": { "border-width": "30px" },
         },
+        "border-color": {
+          "0%, 100%": { "border-color": "gold" },
+          "50%": { "border-color": "orangered" },
+        },
       },
       animation: {
         "border-wiggle": "border-wiggle 2s ease-in-out infinite",
+        "border-color": "border-color 4s ease-in-out infinite",
       },
     },
   },
