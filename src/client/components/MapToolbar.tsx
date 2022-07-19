@@ -461,7 +461,7 @@ export const MapToolbar = React.memo<{
   }
 
   return (
-    <div className="map-toolbar">
+    <div className="map-toolbar z-10">
       <div className="map-toolbar-combined">
         <div className="map-toolbar-submenu">
           {tool === "move" && selectedMapObjectIds.length > 0 && (
