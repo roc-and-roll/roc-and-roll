@@ -23,7 +23,7 @@ import { Monster } from "./QuickReferenceMonster";
 import { Spell } from "./QuickReferenceSpell";
 import { QuickReferenceContext } from "./QuickReferenceWrapper";
 
-export default function QuickReference({ onClose }: { onClose: () => void }) {
+export default function QuickReference({ onClose }: { onClose?: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { setOpen, searchString, setSearchString } = useContext(
     QuickReferenceContext
@@ -40,7 +40,9 @@ export default function QuickReference({ onClose }: { onClose: () => void }) {
       onClose={() => {
         setOpen(false);
         setSearchString("");
-        onClose();
+        if (onClose) {
+          onClose();
+        }
       }}
       className="quick-reference-modal"
     >
