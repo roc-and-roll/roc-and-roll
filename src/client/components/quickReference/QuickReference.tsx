@@ -23,7 +23,7 @@ import { Monster } from "./QuickReferenceMonster";
 import { Spell } from "./QuickReferenceSpell";
 import { QuickReferenceContext } from "./QuickReferenceWrapper";
 
-export default function QuickReference() {
+export default function QuickReference({ onClose }: { onClose: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { setOpen, searchString, setSearchString } = useContext(
     QuickReferenceContext
@@ -34,13 +34,16 @@ export default function QuickReference() {
     inputRef.current?.focus();
   }, []);
 
-  function onClose() {
-    setOpen(false);
-    setSearchString("");
-  }
-
   return (
-    <Dialog open onClose={onClose} className="quick-reference-modal">
+    <Dialog
+      open
+      onClose={() => {
+        setOpen(false);
+        setSearchString("");
+        onClose();
+      }}
+      className="quick-reference-modal"
+    >
       <DialogTitle>Quick Reference</DialogTitle>
       <SmartTextInput
         type="search"

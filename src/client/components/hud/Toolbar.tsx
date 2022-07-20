@@ -9,6 +9,7 @@ import {
   faMusic,
   faPhotoVideo,
   faStreetView,
+  faSearch,
   IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
 import React from "react";
@@ -34,6 +35,7 @@ import { Player } from "../Player";
 import { DebugSettings } from "./DebugSettings";
 import clsx from "clsx";
 import { Atmosphere } from "../map/atmosphere/Atmosphere";
+import QuickReference from "../quickReference/QuickReference";
 
 const tooltipProps: Partial<RRTooltipProps> = {
   placement: "right",
@@ -48,6 +50,7 @@ interface ToolbarElement {
   icon: IconDefinition;
   iconTooltip: string;
   iconClassName?: string;
+  hidePanel?: boolean;
 }
 
 const getIconClass = (active: boolean) =>
@@ -95,6 +98,24 @@ export const HUDToolbar = React.memo(function Toolbar() {
       gmOnly: false,
       icon: faCog,
       iconTooltip: "Settings",
+      hidePanel: true,
+    },
+    {
+      id: "quickReference",
+      collapsed: true,
+      content: (
+        <QuickReference
+          onClose={() =>
+            setActiveToolbarElements((activeToolbarElements) =>
+              activeToolbarElements.filter((id) => id !== "quickReference")
+            )
+          }
+        />
+      ),
+      gmOnly: false,
+      icon: faSearch,
+      iconTooltip: "Quick Reference",
+      hidePanel: true,
     },
     {
       id: "achievements",
@@ -213,7 +234,9 @@ export const HUDToolbar = React.memo(function Toolbar() {
             (!toolbarElement.gmOnly || myself.isGM) && (
               <div
                 key={toolbarElement.id}
-                className="m-2 last:mb-0 p-3 hud-panel"
+                className={clsx("last:mb-0 hud-panel m-2", {
+                  "p-3": !toolbarElement.hidePanel,
+                })}
               >
                 {toolbarElement.content}
               </div>
