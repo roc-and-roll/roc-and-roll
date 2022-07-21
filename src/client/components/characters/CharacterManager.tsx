@@ -6,6 +6,7 @@ import {
 } from "../../../shared/actions";
 import {
   entries,
+  makeCharacter,
   RRCharacter,
   RRCharacterID,
   RRFileImage,
@@ -52,68 +53,13 @@ async function makeNewCharacter(
 
     playerId: myId,
   });
-
   const addAction = characterAdd({
-    auras: [],
-    conditions: [],
-    hp: 0,
-    maxHP: 0,
-    temporaryHP: 0,
-    maxHPAdjustment: 0,
-    ac: null,
-    spellSaveDC: null,
-    scale: 1,
-    visibility: "everyone",
-    limitedUseSkills: [],
-    attributes: {
-      initiative: null,
-      proficiency: null,
-    },
-    stats: {
-      STR: null,
-      DEX: null,
-      CON: null,
-      INT: null,
-      WIS: null,
-      CHA: null,
-    },
-    savingThrows: {
-      STR: null,
-      DEX: null,
-      CON: null,
-      INT: null,
-      WIS: null,
-      CHA: null,
-    },
-    skills: {
-      Athletics: null,
-      Acrobatics: null,
-      "Sleight of Hand": null,
-      Stealth: null,
-      Arcana: null,
-      History: null,
-      Investigation: null,
-      Nature: null,
-      Religion: null,
-      "Animal Handling": null,
-      Insight: null,
-      Medicine: null,
-      Perception: null,
-      Survival: null,
-      Deception: null,
-      Intimidation: null,
-      Performance: null,
-      Persuasion: null,
-    },
-    name: await randomName(),
-    tokenImageAssetId: assetImageAddAction.payload.id,
-    tokenBorderColor: randomColor(),
-    localToMap: null,
+    ...makeCharacter(
+      await randomName(),
+      assetImageAddAction.payload.id,
+      randomColor()
+    ),
     isTemplate,
-    diceTemplateCategories: [],
-    notes: "",
-    spells: [],
-    currentlyConcentratingOn: null,
   });
 
   return {

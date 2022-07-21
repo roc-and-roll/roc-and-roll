@@ -1,11 +1,17 @@
-import { AnyAction, combineReducers, createReducer } from "@reduxjs/toolkit";
+import {
+  AnyAction,
+  combineReducers,
+  createNextState,
+  Reducer,
+  Draft,
+} from "@reduxjs/toolkit";
 import { initiativeTrackerReducer } from "../shared/features/initiativeTracker";
 import { playersReducer } from "../shared/features/players";
 import { charactersReducer } from "../shared/features/characters";
 import { mapsReducer } from "../shared/features/maps";
 import { privateChatsReducer } from "../shared/features/privateChats";
 import { logEntriesReducer } from "../shared/features/logEntries";
-import { initialSyncedState, SyncedState } from "../shared/state";
+import { initialSyncedState, RRCharacter, SyncedState } from "../shared/state";
 import {
   ephemeralPlayersReducer,
   ephemeralMusicReducer,
@@ -15,7 +21,7 @@ import { globalSettingsReducer } from "../shared/features/globalSettings";
 import { soundSetsReducer } from "./features/soundSets";
 import { initiativeTrackerSetCurrentEntry } from "./actions";
 
-const singleSliceReducers = combineReducers({
+const baseReducer = combineReducers({
   // Add new slices of state here.
   // You need to edit SyncedState and initialSyncedState in shared/state.ts
   // when adding a new slice.
@@ -35,94 +41,81 @@ const singleSliceReducers = combineReducers({
   }),
 });
 
-const onInitiativeChangedCharactersReducer = createReducer(
-  initialSyncedState,
-  (builder) => {
-    builder.addCase(initiativeTrackerSetCurrentEntry, (state, action) => {
-      if (!state.initiativeTracker.currentEntryId) return;
-      const newInitiativeEntry =
-        state.initiativeTracker.entries.entities[
-          state.initiativeTracker.currentEntryId
-        ];
-      if (state.initiativeTracker.currentEntryId !== action.payload) {
-        throw new Error(
-          "Current initiative entry does not match action payload.\
-        This should have been updated by the single slice reducers already."
-        );
-      }
-      if (!newInitiativeEntry || newInitiativeEntry.type === "lairAction")
-        return;
-      newInitiativeEntry.characterIds.map((id) => {
-        const characterEntry = state.characters.entities[id];
-        if (characterEntry?.currentlyConcentratingOn) {
-          characterEntry.currentlyConcentratingOn.roundsLeft--;
-        }
-      });
-    });
-  }
-);
-
-const beforeInitiativeChangedCharactersReducer = createReducer(
-  initialSyncedState,
-  (builder) => {
-    builder.addCase(initiativeTrackerSetCurrentEntry, (state, action) => {
-      if (!state.initiativeTracker.currentEntryId) return;
-      const currentInitiativeEntry =
-        state.initiativeTracker.entries.entities[
-          state.initiativeTracker.currentEntryId
-        ];
-      if (
-        state.initiativeTracker.currentEntryId === action.payload ||
-        !currentInitiativeEntry ||
-        currentInitiativeEntry.type === "lairAction"
-      )
-        return;
-      currentInitiativeEntry.characterIds.map((id) => {
-        const characterEntry = state.characters.entities[id];
-        if (
-          characterEntry?.currentlyConcentratingOn &&
-          characterEntry.currentlyConcentratingOn.roundsLeft <= 0
-        ) {
-          characterEntry.currentlyConcentratingOn = null;
-        }
-      });
-    });
-  }
-);
-
-function aCrossSlideReducer(state: SyncedState, action: AnyAction) {
-  switch (action.type) {
-    case initiativeTrackerSetCurrentEntry.toString(): {
-      return {
-        ...state,
-        characters: beforeInitiativeChangedCharactersReducer(state, action)
-          .characters,
-      };
-    }
-    default:
-      return state;
-  }
-}
-
-function anotherCrossSlideReducer(state: SyncedState, action: AnyAction) {
-  switch (action.type) {
-    case initiativeTrackerSetCurrentEntry.toString(): {
-      return {
-        ...state,
-        characters: onInitiativeChangedCharactersReducer(state, action)
-          .characters,
-      };
-    }
-    default:
-      return state;
-  }
-}
-
-export function reducer(
-  state: SyncedState = initialSyncedState,
-  action: AnyAction
+function forEachCharacterInCurrentInitiativeEntry(
+  state: SyncedState,
+  updater: (character: Draft<RRCharacter>) => void
 ): SyncedState {
-  let reducedState = aCrossSlideReducer(state, action);
-  reducedState = singleSliceReducers(reducedState, action);
-  return anotherCrossSlideReducer(reducedState, action);
+  if (!state.initiativeTracker.currentEntryId) return state;
+
+  const currentInitiativeEntry =
+    state.initiativeTracker.entries.entities[
+      state.initiativeTracker.currentEntryId
+    ];
+  if (!currentInitiativeEntry || currentInitiativeEntry.type === "lairAction")
+    return state;
+
+  return createNextState(state, (state) => {
+    currentInitiativeEntry.characterIds.forEach((id) => {
+      const characterEntry = state.characters.entities[id];
+      if (characterEntry) {
+        updater(characterEntry);
+      }
+    });
+  });
 }
+
+// This higher order reducer enhances the provided reducer with support for
+// automatically decrementing the number of rounds left on concentration spells
+// when the initiative tracker advances to the next entry.
+const withCharacterConcentrationReducer =
+  (reducer: Reducer<SyncedState, AnyAction>): Reducer<SyncedState, AnyAction> =>
+  (state = initialSyncedState, action) => {
+    if (!initiativeTrackerSetCurrentEntry.match(action)) {
+      return reducer(state, action);
+    }
+    if (
+      !action.payload ||
+      !state.initiativeTracker.currentEntryId ||
+      state.initiativeTracker.currentEntryId === action.payload ||
+      !state.initiativeTracker.entries.entities[
+        state.initiativeTracker.currentEntryId
+      ]
+    ) {
+      // If initiative starts or ends, or is set to the same entry that was
+      // already selected, do nothing in regard to concentration spells.
+      return reducer(state, action);
+    }
+
+    // At the end of the turn, delete all concentration spells that have reached
+    // their end.
+    state = forEachCharacterInCurrentInitiativeEntry(state, (character) => {
+      if (
+        character.currentlyConcentratingOn &&
+        character.currentlyConcentratingOn.roundsLeft <= 0
+      ) {
+        character.currentlyConcentratingOn = null;
+      }
+    });
+
+    // Update initiative tracker to the new initiative entry.
+    state = reducer(state, action);
+    if (state.initiativeTracker.currentEntryId !== action.payload) {
+      throw new Error(
+        "Current initiative entry does not match action payload.\
+           This should never happen."
+      );
+    }
+
+    // At the start of the turn, decrement the rounds left for all active
+    // concentration spells.
+    state = forEachCharacterInCurrentInitiativeEntry(state, (character) => {
+      if (character.currentlyConcentratingOn) {
+        character.currentlyConcentratingOn.roundsLeft--;
+      }
+    });
+
+    return state;
+  };
+
+export const reducer: Reducer<SyncedState, AnyAction> =
+  withCharacterConcentrationReducer(baseReducer);
