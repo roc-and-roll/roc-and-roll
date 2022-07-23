@@ -11,6 +11,7 @@ import {
   RRDiceTemplateID,
   RRMultipleRoll,
   RRDiceTemplatePart,
+  RRCharacter,
 } from "../../../shared/state";
 import { rrid } from "../../../shared/util";
 import { RRDiceTemplate } from "../../../shared/validation";
@@ -25,16 +26,7 @@ import {
 } from "./DiceTemplatePart";
 import { SelectionPair } from "./DiceTemplates";
 
-export const DiceTemplate = React.memo(function DiceTemplate({
-  className,
-  template,
-  categoryId,
-  newIds,
-  onRoll,
-  selectedTemplateIds,
-  editable,
-  isChildTemplate,
-}: {
+interface DiceTemplateProps {
   className?: string;
   template: RRDiceTemplate;
   categoryId: RRDiceTemplateCategoryID;
@@ -47,8 +39,28 @@ export const DiceTemplate = React.memo(function DiceTemplate({
   selectedTemplateIds: SelectionPair[];
   editable: boolean;
   isChildTemplate: boolean;
-}) {
-  const character = useMyActiveCharacter("id")!;
+}
+
+export const DiceTemplate = React.memo(function DiceTemplate(
+  props: DiceTemplateProps
+) {
+  const character = useMyActiveCharacter("id");
+  return character ? (
+    <DiceTemplateImpl {...props} character={character} />
+  ) : null;
+});
+
+function DiceTemplateImpl({
+  character,
+  className,
+  template,
+  categoryId,
+  newIds,
+  onRoll,
+  selectedTemplateIds,
+  editable,
+  isChildTemplate,
+}: DiceTemplateProps & { character: Pick<RRCharacter, "id"> }) {
   const dispatch = useServerDispatch();
 
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -283,4 +295,4 @@ export const DiceTemplate = React.memo(function DiceTemplate({
       {!expanded && <p>{template.name}</p>}
     </div>
   );
-});
+}

@@ -1,9 +1,8 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useMemo } from "react";
 import { useRecoilValue } from "recoil";
 import { IterableElement } from "type-fest";
 import {
   RRCharacter,
-  RRCharacterID,
   RRPlayer,
   RRPlayerID,
 } from "../shared/state";
@@ -94,27 +93,23 @@ export function useMySelectedCharacters<T extends (keyof RRCharacter)[]>(
 
   const selectedMapObjectIds = useRecoilValue(selectedMapObjectIdsAtom);
 
-  const [selectedCharacterIds, setSelectedCharacterIds] = useState<
-    Set<RRCharacterID>
-  >(() => new Set());
-
-  useEffect(() => {
+  const selectedCharacterIds = useMemo(() => {
     const mapObjects =
       myself.currentMap &&
       stateRef.current.maps.entities[myself.currentMap]?.objects;
-    setSelectedCharacterIds(
-      new Set(
+    return [
+      ...new Set(
         selectedMapObjectIds.flatMap((mapObjectId) => {
           const mapObject = mapObjects?.entities[mapObjectId];
           return mapObject?.type === "token" ? mapObject.characterId : [];
         })
-      )
-    );
+      ).values(),
+    ];
   }, [myself.currentMap, selectedMapObjectIds, stateRef]);
 
   return useServerState(
     (state) =>
-      [...selectedCharacterIds.values()].flatMap(
+      selectedCharacterIds.flatMap(
         (characterId) => state.characters.entities[characterId] ?? []
       ),
     fields.length === 0
