@@ -143,7 +143,12 @@ const effects: {
 export function Atmosphere() {
   const dispatch = useServerDispatch();
   const myself = useMyProps("currentMap");
-  const map = useServerState((s) => s.maps.entities[myself.currentMap]!);
+  const map = useServerState(
+    (s) => myself.currentMap && s.maps.entities[myself.currentMap]
+  );
+  if (!map) {
+    return null;
+  }
 
   const setType = (type: RRMap["settings"]["atmosphere"]["type"]) => {
     dispatch({
@@ -218,10 +223,14 @@ export function AtmosphereMap({
 }) {
   const myself = useMyProps("currentMap");
   const atmosphere = useServerState(
-    (s) => s.maps.entities[myself.currentMap]!.settings.atmosphere
+    (s) =>
+      myself.currentMap &&
+      s.maps.entities[myself.currentMap]?.settings.atmosphere
   );
 
-  return effects[atmosphere.type].build(atmosphere.intensity, size);
+  return atmosphere
+    ? effects[atmosphere.type].build(atmosphere.intensity, size)
+    : null;
 }
 
 function ParticleSystem({ config }: { config: particles.EmitterConfigV3 }) {

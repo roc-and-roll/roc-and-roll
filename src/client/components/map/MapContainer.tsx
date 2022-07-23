@@ -138,7 +138,9 @@ export const SetTargetTransformContext = React.createContext<
 
 export default function MapContainer() {
   const myself: RRPlayerToolProps = useMyProps(...playerToolProps);
-  const map = useServerState((s) => s.maps.entities[myself.currentMap]!);
+  // TODO: Properly handle when `myself.currentMap` is `null` or references a no
+  // longer existing map.
+  const map = useServerState((s) => s.maps.entities[myself.currentMap!]!);
   const mapId = map.id;
   const dispatch = useServerDispatch();
   const syncedDebounceMakerRef = useRef(

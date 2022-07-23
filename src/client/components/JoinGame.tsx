@@ -24,7 +24,7 @@ export const JoinGame = React.memo(function JoinGame({
     const action = playerAdd({
       name,
       color: randomColor(),
-      currentMap: maps.ids[0]!,
+      currentMap: maps.ids[0] ?? null,
       isGM: false,
       characterIds: [],
       favoriteAssetIds: [],

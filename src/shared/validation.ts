@@ -308,7 +308,7 @@ export const isSyncedState = z.strictObject({
       name: z.string(),
       color: isColor,
       isGM: z.boolean(),
-      currentMap: isRRID<RRMapID>(),
+      currentMap: z.nullable(isRRID<RRMapID>()),
       characterIds: z.array(isRRID<RRCharacterID>()),
       mainCharacterId: z.nullable(isRRID<RRCharacterID>()),
       favoriteAssetIds: z.array(isRRID<RRAssetID>()),

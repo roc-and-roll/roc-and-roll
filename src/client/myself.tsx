@@ -100,6 +100,7 @@ export function useMySelectedCharacters<T extends (keyof RRCharacter)[]>(
 
   useEffect(() => {
     const mapObjects =
+      myself.currentMap &&
       stateRef.current.maps.entities[myself.currentMap]?.objects;
     setSelectedCharacterIds(
       new Set(

@@ -124,7 +124,8 @@ export function InitiativeHUD() {
 
   const mapObjectsRef = useServerStateRef(
     (state) =>
-      state.maps.entities[myself.currentMap]?.objects ?? EMPTY_ENTITY_COLLECTION
+      (myself.currentMap && state.maps.entities[myself.currentMap]?.objects) ??
+      EMPTY_ENTITY_COLLECTION
   );
   const charactersRef = useServerStateRef((state) => state.characters);
   const viewPortSizeRef = useContext(ViewPortSizeRefContext);
