@@ -1,11 +1,7 @@
 import React, { useContext, useMemo } from "react";
 import { useRecoilValue } from "recoil";
 import { IterableElement } from "type-fest";
-import {
-  RRCharacter,
-  RRPlayer,
-  RRPlayerID,
-} from "../shared/state";
+import { RRCharacter, RRPlayer, RRPlayerID } from "../shared/state";
 import { selectedMapObjectIdsAtom } from "./components/map/recoil";
 import { useGuaranteedMemo } from "./useGuaranteedMemo";
 import {
