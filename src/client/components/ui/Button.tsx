@@ -5,7 +5,7 @@ import { useRRSimpleSound } from "../../sound";
 import click from "../../../third-party/freesound.org/256116__kwahmah-02__click.mp3";
 import clsx from "clsx";
 
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   unstyled?: boolean;
   small?: boolean;
 };
