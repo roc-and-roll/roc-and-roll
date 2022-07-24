@@ -5,7 +5,7 @@ import {
   characterAddDiceTemplate,
   characterAddDiceTemplateCategory,
 } from "../../shared/actions";
-import { useMyProps, useMySelectedCharacters } from "../myself";
+import { useMyActiveCharacter, useMyProps } from "../myself";
 import { useServerDispatch } from "../state";
 import { tryConvertDiceRollTreeToDiceTemplateParts } from "../dice-rolling/dice-template-interop";
 import { parseDiceString } from "../dice-rolling/grammar";
@@ -29,7 +29,11 @@ export function DiceInterface() {
     { diceTypes: string[]; bonuses: number | null }[]
   >("DiceInterface/previousRolls", []);
   const myself = useMyProps("id");
-  const character = useMySelectedCharacters("id", "diceTemplateCategories")[0];
+  const character = useMyActiveCharacter(
+    "id",
+    "diceTemplateCategories",
+    "name"
+  );
   const dispatch = useServerDispatch();
   const alert = useAlert();
   const prompt = usePrompt();
@@ -457,13 +461,19 @@ export function DiceInterface() {
                 <td>
                   <DiceInterfaceButton
                     className="w-full"
-                    disabled={!character}
+                    disabled={
+                      !character || (bonuses === null && diceTypes.length === 0)
+                    }
                     onClick={async () => {
                       focusIndexFromRef(tempRef);
                       await doRoll(true);
                     }}
                     ref={tempRef}
-                    title={character ? undefined : "No character selected"}
+                    title={
+                      character
+                        ? `Creating for ${character.name}`
+                        : "No character selected"
+                    }
                   >
                     <p>Template</p>
                   </DiceInterfaceButton>
