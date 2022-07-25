@@ -141,7 +141,9 @@ export const Spell = React.memo(function Spell({
                         id: rrid<RRCharacterSpell>(),
                         name: spell.name,
                         level: spell.level,
-                        prepared: false,
+                        prepared: spell.level === 0,
+                        alwaysPrepared: spell.level === 0,
+                        isRitual: spell.meta?.ritual ?? false,
                         concentrationRounds: calculateConcentrationRounds(
                           spell.duration[0]
                         ),

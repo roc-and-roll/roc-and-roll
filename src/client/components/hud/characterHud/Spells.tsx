@@ -1,17 +1,24 @@
-import { faCompressArrowsAlt } from "@fortawesome/free-solid-svg-icons";
+import { faBook, faCompressArrowsAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import {
   characterUpdate,
   characterDeleteSpell,
   characterUpdateSpell,
 } from "../../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../../shared/constants";
-import { RRCharacterSpellID, RRCharacterSpell } from "../../../../shared/state";
+import {
+  RRCharacterSpellID,
+  RRCharacterSpell,
+  RRCharacterID,
+} from "../../../../shared/state";
 import { useConfirm } from "../../../dialog-boxes";
 import { useServerDispatch } from "../../../state";
+import { Dialog, DialogTitle, DialogContent } from "../../Dialog";
 import { QuickReferenceContext } from "../../quickReference/QuickReferenceWrapper";
+import { Button } from "../../ui/Button";
+import { SmartIntegerInput } from "../../ui/TextInput";
 import { RRCharacterProps } from "./Character";
 
 export function Spells({ character }: { character: RRCharacterProps }) {
@@ -128,7 +135,7 @@ function Spell({
     setSearchString(spellName);
   };
   const dispatch = useServerDispatch();
-  const confirm = useConfirm();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const togglePrepareSpell = (prepared: boolean, spellId: RRCharacterSpellID) =>
     dispatch({
@@ -146,6 +153,12 @@ function Spell({
       key={spell.id}
       className="flex flex-row justify-between cursor-pointer"
     >
+      <SettingsDialog
+        onClose={() => setSettingsOpen(false)}
+        open={settingsOpen}
+        spell={spell}
+        characterId={character.id}
+      />
       {spell.concentrationRounds > 0 && (
         <ConcentrationIcon spell={spell} character={character} />
       )}
@@ -154,20 +167,121 @@ function Spell({
         onClick={() => openSpellReference(spell.name)}
         onContextMenu={async (e) => {
           e.preventDefault();
-          if (await confirm(`Are you sure you want to delete ${spell.name}?`)) {
-            dispatch(
-              characterDeleteSpell({ id: character.id, spellId: spell.id })
-            );
-          }
+          setSettingsOpen(true);
         }}
       >
-        {spell.name}
+        {spell.name}{" "}
+        {spell.isRitual && (
+          <FontAwesomeIcon icon={faBook} className="text-xs" />
+        )}
       </p>
       <input
         type="checkbox"
+        disabled={spell.alwaysPrepared}
         checked={spell.prepared}
         onChange={(event) => togglePrepareSpell(event.target.checked, spell.id)}
       />
     </div>
+  );
+}
+
+export function SettingsDialog({
+  spell,
+  open,
+  characterId,
+  onClose,
+}: {
+  spell: RRCharacterSpell;
+  open: boolean;
+  characterId: RRCharacterID;
+  onClose: () => void;
+}) {
+  const dispatch = useServerDispatch();
+  return (
+    <Dialog open={open} onClose={onClose}>
+      <DialogTitle>Settings for {spell.name}</DialogTitle>
+      <DialogContent>
+        <label>
+          Ritual Spell:{" "}
+          <input
+            type="checkbox"
+            checked={spell.isRitual}
+            onChange={(e) =>
+              dispatch({
+                actions: [
+                  characterUpdateSpell({
+                    id: characterId,
+                    spell: {
+                      id: spell.id,
+                      changes: { isRitual: e.target.checked },
+                    },
+                  }),
+                ],
+                optimisticKey: "hasHeroPoint",
+                syncToServerThrottle: 0,
+              })
+            }
+          />
+        </label>
+        <label>
+          Always Prepared:{" "}
+          <input
+            type="checkbox"
+            checked={spell.alwaysPrepared}
+            onChange={(e) =>
+              dispatch({
+                actions: [
+                  characterUpdateSpell({
+                    id: characterId,
+                    spell: {
+                      id: spell.id,
+                      changes: {
+                        alwaysPrepared: e.target.checked,
+                        prepared: e.target.checked || spell.prepared,
+                      },
+                    },
+                  }),
+                ],
+                optimisticKey: "hasHeroPoint",
+                syncToServerThrottle: 0,
+              })
+            }
+          />
+        </label>
+        <label>
+          Concentration Rounds:{" "}
+          <SmartIntegerInput
+            value={spell.concentrationRounds}
+            min={0}
+            placeholder="Concentration Rounds"
+            onChange={(concentrationRounds) =>
+              dispatch({
+                actions: [
+                  characterUpdateSpell({
+                    id: characterId,
+                    spell: {
+                      id: spell.id,
+                      changes: { concentrationRounds },
+                    },
+                  }),
+                ],
+                optimisticKey: "concentrationRounds",
+                syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+              })
+            }
+          />
+        </label>
+        <Button
+          className="red"
+          onClick={() =>
+            dispatch(
+              characterDeleteSpell({ id: characterId, spellId: spell.id })
+            )
+          }
+        >
+          Delete
+        </Button>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -351,7 +351,9 @@ export const isSyncedState = z.strictObject({
           id: isRRID<RRCharacterSpellID>(),
           name: z.string(),
           level: z.number().int().min(0).max(9),
-          prepared: z.boolean(), // or "yes" | "no" | "always" ?
+          prepared: z.boolean(),
+          isRitual: z.boolean(),
+          alwaysPrepared: z.boolean(),
           concentrationRounds: z.number().int().min(0),
         })
       ),
