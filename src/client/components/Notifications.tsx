@@ -39,21 +39,17 @@ export const NotificationAreaPortal = React.createContext<
 
 export function Notifications() {
   const logEntries = useServerState((state) => state.logEntries);
-  const [lastShownID, setLastShownID] = useState<RRLogEntryID | undefined>(
+  const lastShownIDRef = useRef<RRLogEntryID | undefined>(
     logEntries.ids[logEntries.ids.length - 1]
   );
   const [notifications, setNotifications] = useState<RRLogEntry[]>([]);
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
-    if (logEntries.ids.length === 0) {
-      return;
-    }
-
     const newNotifications: RRLogEntry[] = [];
     for (let i = logEntries.ids.length - 1; i >= 0; i--) {
       const id = logEntries.ids[i]!;
-      if (id === lastShownID) {
+      if (id === lastShownIDRef.current) {
         break;
       }
       const logEntry = logEntries.entities[id]!;
@@ -63,13 +59,14 @@ export function Notifications() {
     }
 
     if (newNotifications.length > 0) {
+      lastShownIDRef.current =
+        newNotifications[newNotifications.length - 1]!.id;
       setNotifications((oldNotifications) => [
         ...oldNotifications,
         ...newNotifications,
       ]);
-      setLastShownID(newNotifications[newNotifications.length - 1]!.id);
     }
-  }, [lastShownID, logEntries]);
+  }, [logEntries]);
 
   const [_portal, setPortal] = useContext(NotificationAreaPortal);
 
