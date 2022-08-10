@@ -344,7 +344,7 @@ export function InitiativeHUD() {
   );
 
   return (
-    <div className="absolute inset-2 h-24 pointer-events-none">
+    <div className="absolute inset-2 h-24 pointer-events-none mr-[400px] select-none">
       <Flipper flipKey={sortedRows.map((row) => row.id).join("-")}>
         <ul role="list" className="inline-flex flex-wrap pointer-events-auto">
           <RollInitiative
