@@ -591,12 +591,17 @@ const InitiativeEntry = React.memo<{
                 }
               />
             ) : (
-              <p className="font-bold text-xl">{entry.initiative}</p>
+              <p
+                className="font-bold text-xl"
+                style={{ textShadow: "0 0 3px black" }}
+              >
+                {entry.initiative}
+              </p>
             )}
           </div>
         )}
         {active && (
-          <div className="absolute -bottom-6 text-center pointer-events-none w-full font-bold">
+          <div className="absolute -bottom-6 text-center pointer-events-none w-full font-bold z-10">
             {label}
           </div>
         )}
