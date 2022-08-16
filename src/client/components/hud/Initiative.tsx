@@ -346,7 +346,7 @@ export function InitiativeHUD() {
   return (
     <div className="absolute inset-2 h-24 pointer-events-none mr-[400px] select-none">
       <Flipper flipKey={sortedRows.map((row) => row.id).join("-")}>
-        <ul role="list" className="inline-flex flex-wrap pointer-events-auto">
+        <ul role="list" className="inline-flex flex-wrap pointer-events-none">
           <RollInitiative
             isGM={myself.isGM}
             clearInitiative={() =>
@@ -536,7 +536,7 @@ const InitiativeEntry = React.memo<{
     >
       <li
         key={entry.id}
-        className={clsx("flex-shrink-0", "m-1", "relative")}
+        className={clsx("flex-shrink-0", "m-1", "relative pointer-events-auto")}
         onMouseOver={() => onHover(true)}
         onMouseLeave={() => onHover(false)}
       >
@@ -698,7 +698,7 @@ const RollInitiative = React.memo<{
   };
 
   return (
-    <div className="flex m-1 items-center">
+    <div className="flex m-1 items-center pointer-events-auto">
       {!selectionAlreadyInList && hasSelection && (
         <div className="flex">
           <Button
