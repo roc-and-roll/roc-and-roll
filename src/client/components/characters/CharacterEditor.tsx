@@ -206,7 +206,13 @@ export function CharacterEditor({
 
   return (
     <div className="token-popup" onMouseDown={(e) => e.stopPropagation()}>
-      <Button className="popover-close" onClick={onClose}>
+      <Button
+        className="popover-close"
+        onClick={(e) => {
+          onClose();
+          e.stopPropagation();
+        }}
+      >
         ×
       </Button>
       <CharacterPreview character={character} />
