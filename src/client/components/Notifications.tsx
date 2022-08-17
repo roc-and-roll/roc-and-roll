@@ -57,10 +57,11 @@ export function Notifications() {
         newNotifications.push(logEntry);
       }
     }
+    lastShownIDRef.current = logEntries.ids[logEntries.ids.length - 1];
 
     if (newNotifications.length > 0) {
-      lastShownIDRef.current =
-        newNotifications[newNotifications.length - 1]!.id;
+      // Make sure that the newest notification is last in the array
+      newNotifications.reverse();
       setNotifications((oldNotifications) => [
         ...oldNotifications,
         ...newNotifications,
