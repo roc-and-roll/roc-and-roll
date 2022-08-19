@@ -280,6 +280,13 @@ function DicePicker() {
     name: "initiative",
   };
 
+  const levelPart: RRDiceTemplatePartLinkedModifier = {
+    id: rrid<RRDiceTemplatePart>(),
+    type: "linkedModifier" as const,
+    damage: { type: null },
+    name: "level",
+  };
+
   return (
     <div className="dice-picker">
       {diceParts.map((part) => {
@@ -321,6 +328,10 @@ function DicePicker() {
       <PickerDiceTemplatePart
         part={proficiencyPart}
         onClick={() => setDiceHolder([...diceHolder, proficiencyPart])}
+      />
+      <PickerDiceTemplatePart
+        part={levelPart}
+        onClick={() => setDiceHolder([...diceHolder, levelPart])}
       />
       {characterStatNames.map((name) => {
         const part = {

@@ -168,7 +168,7 @@ export interface _RRDiceTemplate {
         id: RRDiceTemplatePartID;
         type: "linkedModifier";
         damage: RRDamageType;
-        name: "initiative";
+        name: "initiative" | "level";
       }
     | {
         id: RRDiceTemplatePartID;
@@ -221,7 +221,7 @@ const isDiceTemplate = z.strictObject({
           z.strictObject({
             ...sharedValidators,
             type: z.literal("linkedModifier"),
-            name: z.literal("initiative"),
+            name: z.union([z.literal("initiative"), z.literal("level")]),
             damage: isDamageType,
           }),
           z.strictObject({
@@ -370,6 +370,7 @@ export const isSyncedState = z.strictObject({
       attributes: z.strictObject({
         initiative: z.number().int().nullable(),
         proficiency: z.number().int().nullable(),
+        level: z.number().int().nullable(),
       }),
       stats: z.strictObject({
         STR: z.number().int().nullable(),

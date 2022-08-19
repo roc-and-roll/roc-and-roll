@@ -213,7 +213,11 @@ export interface RRLogEntryMessage
 export interface RRLogEntryAchievement
   extends Extract<ECE<SyncedState["logEntries"]>, { type: "achievement" }> {}
 
-export const characterAttributeNames = ["proficiency", "initiative"] as const;
+export const characterAttributeNames = [
+  "proficiency",
+  "initiative",
+  "level",
+] as const;
 
 assert<
   IsExact<
@@ -605,6 +609,7 @@ export function makeCharacter(
     attributes: {
       initiative: null,
       proficiency: null,
+      level: null,
     },
     stats: {
       STR: null,

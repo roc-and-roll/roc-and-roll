@@ -207,7 +207,8 @@ export const DiceTemplatePart = React.forwardRef<
             {character?.attributes[part.name] ?? null}
           </div>
           <div className="dice-option-linked-modifier-name">
-            {part.name[0]!.toUpperCase() + part.name.substring(1, 4)}
+            {part.name[0]!.toUpperCase() +
+              part.name.substring(1, part.name === "level" ? 5 : 4)}
           </div>
         </div>
       );
