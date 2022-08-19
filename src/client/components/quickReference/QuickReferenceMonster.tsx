@@ -138,6 +138,7 @@ export const Monster = React.memo(function Monster({
       attributes: {
         initiative: null,
         proficiency: null,
+        level: null,
       },
       savingThrows: {
         STR: getSavingThrow("str"),
