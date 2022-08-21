@@ -5,6 +5,7 @@ import { CompendiumTextEntry } from "../../../../shared/compendium-types/text-en
 import {
   getMonsterSpeedAsString,
   MonsterSpellcasting,
+  useLairActions,
 } from "../../quickReference/QuickReferenceMonster";
 import { Button } from "../../ui/Button";
 import { QuickReferenceContext } from "../../quickReference/QuickReferenceWrapper";
@@ -23,16 +24,6 @@ export function CombatCardHUD() {
       )
     : [];
   const monster = matchingMonsters[0];
-  const legendaryGroups = monster?.legendaryGroup
-    ? compendiumSources.flatMap((source) => {
-        return source.data.legendaryGroups
-          ? source.data.legendaryGroups.filter(
-              (group) => group.name === monster.legendaryGroup!.name
-            )
-          : [];
-      })
-    : [];
-  const legendaryGroup = legendaryGroups[0];
 
   const showAction = (
     action: {
@@ -61,8 +52,12 @@ export function CombatCardHUD() {
   };
 
   const { setOpen, setSearchString } = useContext(QuickReferenceContext);
+  console.log(monster);
+  const lairActions = useLairActions(monster);
+  console.log(lairActions);
 
-  return monster ? (
+  if (!monster) return null;
+  return (
     <div className="text-xs max-h-72 overflow-y-auto hud-panel p-2 rounded pointer-events-auto">
       {monster.speed && (
         <p>
@@ -98,11 +93,11 @@ export function CombatCardHUD() {
         </>
       )}
 
-      {legendaryGroup?.lairActions && (
+      {lairActions && (
         <>
           <h2 className="text-xl">Lair Actions</h2>
           <>
-            {legendaryGroup.lairActions.map((action, index) =>
+            {lairActions.map((action, index) =>
               typeof action === "string" ? (
                 <p key={index}>{action}</p>
               ) : action.type === "entries" ? (
@@ -122,7 +117,5 @@ export function CombatCardHUD() {
         </>
       )}
     </div>
-  ) : (
-    <></>
   );
 }

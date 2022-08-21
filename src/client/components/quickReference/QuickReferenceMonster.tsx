@@ -11,6 +11,7 @@ import {
 import { Button } from "../ui/Button";
 import { TextEntry, TextEntryString } from "./QuickReference";
 import { CompendiumTextEntry } from "../../../shared/compendium-types/text-entry";
+import { useCompendium } from "../compendium/Compendium";
 
 export function getMonsterSpeedAsString(monster: CompendiumMonster) {
   if (!monster.speed) return "";
@@ -29,6 +30,23 @@ export function getMonsterSpeedAsString(monster: CompendiumMonster) {
     .join(", ");
 }
 
+export function useLairActions(monster: CompendiumMonster | undefined) {
+  const { sources: compendiumSources } = useCompendium();
+
+  if (!monster) return null;
+  const legendaryGroups = monster.legendaryGroup
+    ? compendiumSources.flatMap((source) => {
+        return source.data.legendaryGroups
+          ? source.data.legendaryGroups.filter(
+              (group) => group.name === monster.legendaryGroup!.name
+            )
+          : [];
+      })
+    : [];
+  const legendaryGroup = legendaryGroups[0];
+  return legendaryGroup?.lairActions ?? null;
+}
+
 export const Monster = React.memo(function Monster({
   monster,
 }: {
@@ -36,6 +54,7 @@ export const Monster = React.memo(function Monster({
 }) {
   const myself = useMyProps("id", "isGM");
   const dispatch = useServerDispatch();
+  const lairActions = useLairActions(monster);
 
   function parseAC(): number | null {
     if (monster.ac === undefined) return null;
@@ -210,6 +229,32 @@ export const Monster = React.memo(function Monster({
     );
   }
 
+  const renderLairAction = (
+    action: {
+      name?: string;
+      entries: CompendiumTextEntry[];
+    },
+    key: React.Key
+  ) => {
+    return (
+      <div key={key}>
+        {action.name && <p className="font-bold">{action.name}</p>}
+        {action.entries.map((entry, index) => {
+          return (
+            <div className="flex" key={index}>
+              {!action.name && <p className="pr-1">•</p>}
+              <TextEntry
+                key={"textEntry" + index.toString()}
+                entry={entry}
+                rollName={`${monster.name} ${action.name ?? ""} `}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="flex justify-between items-baseline">
@@ -288,6 +333,22 @@ export const Monster = React.memo(function Monster({
         {monster.legendary &&
           renderTextEntries("Legendary Actions", monster.legendary)}
         {monster.action && renderTextEntries("Actions", monster.action)}
+        {lairActions && (
+          <>
+            <dt>Lair Actions</dt>
+            <dd>
+              {lairActions.map((action, index) =>
+                typeof action === "string" ? (
+                  <p key={index}>{action}</p>
+                ) : action.type === "entries" ? (
+                  renderLairAction(action, index)
+                ) : (
+                  renderLairAction({ entries: action.items }, index)
+                )
+              )}
+            </dd>
+          </>
+        )}
         {monster.spellcasting && (
           <>
             <dt>Spell Casting</dt>

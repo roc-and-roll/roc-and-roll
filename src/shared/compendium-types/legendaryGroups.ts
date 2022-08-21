@@ -11,7 +11,7 @@ export interface CompendiumLegendaryGroup {
     | { type: "list"; style?: string; items: CompendiumTextEntry[] }
     | {
         type: "entries";
-        source: string;
+        source?: string;
         name: string;
         entries: CompendiumTextEntry[];
       }
@@ -37,7 +37,7 @@ const _isLegendaryGroup = z.strictObject({
         z.strictObject({
           type: z.literal("entries"),
           name: z.string(),
-          source: z.string(),
+          source: z.optional(z.string()),
           entries: z.array(isTextEntry),
         }),
       ])
