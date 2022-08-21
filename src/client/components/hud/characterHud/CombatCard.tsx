@@ -52,9 +52,7 @@ export function CombatCardHUD() {
   };
 
   const { setOpen, setSearchString } = useContext(QuickReferenceContext);
-  console.log(monster);
   const lairActions = useLairActions(monster);
-  console.log(lairActions);
 
   if (!monster) return null;
   return (
