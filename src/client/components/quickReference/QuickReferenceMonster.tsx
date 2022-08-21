@@ -12,6 +12,8 @@ import { Button } from "../ui/Button";
 import { TextEntry, TextEntryString } from "./QuickReference";
 import { CompendiumTextEntry } from "../../../shared/compendium-types/text-entry";
 import { useCompendium } from "../compendium/Compendium";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSkull } from "@fortawesome/free-solid-svg-icons";
 
 export function getMonsterSpeedAsString(monster: CompendiumMonster) {
   if (!monster.speed) return "";
@@ -258,7 +260,8 @@ export const Monster = React.memo(function Monster({
   return (
     <>
       <div className="flex justify-between items-baseline">
-        <p className="text-2xl">{monster.name}</p>
+        <FontAwesomeIcon icon={faSkull} className="mr-2" />
+        <p className="text-2xl flex-1">{monster.name}</p>
         {myself.isGM && (
           <Button className="h-8" onClick={addTemplate}>
             Add To Templates

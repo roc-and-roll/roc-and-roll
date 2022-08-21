@@ -14,6 +14,8 @@ import { useServerDispatch } from "../../state";
 import { characterAddSpell } from "../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import { RRCharacterSpell } from "../../../shared/state";
+import { faMagic } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 function MaterialComponents({ m }: { m: CompendiumSpell["components"]["m"] }) {
   if (!m) {
@@ -125,7 +127,8 @@ export const Spell = React.memo(function Spell({
   return (
     <>
       <div className="flex justify-between items-baseline">
-        <p className="text-2xl">{spell.name}</p>
+        <FontAwesomeIcon icon={faMagic} className="mr-2" />
+        <p className="text-2xl flex-1">{spell.name}</p>
         {selectedCharacter &&
           (selectedCharacterKnowsSpell ? (
             <em>Already Known</em>
