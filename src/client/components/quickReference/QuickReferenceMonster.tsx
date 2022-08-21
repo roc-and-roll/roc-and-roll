@@ -258,7 +258,7 @@ export const Monster = React.memo(function Monster({
   return (
     <>
       <div className="flex justify-between items-baseline">
-        <p className="text-2xl mt-4">{monster.name}</p>
+        <p className="text-2xl">{monster.name}</p>
         {myself.isGM && (
           <Button className="h-8" onClick={addTemplate}>
             Add To Templates
@@ -278,7 +278,10 @@ export const Monster = React.memo(function Monster({
               CHA: monster.cha,
             }).map(([key, value]) => {
               return (
-                <div className="border m-1 p-1 text-center w-24" key={key}>
+                <div
+                  className="border m-1 p-1 text-center flex-1 max-w-24"
+                  key={key}
+                >
                   <p>{value ?? null}</p>
                   <p className="font-bold">{key}</p>
                 </div>
@@ -305,8 +308,12 @@ export const Monster = React.memo(function Monster({
         )}
         {monster.immune && monster.immune.length > 0 && (
           <>
-            <dt>Damage Immunities</dt>
-            <dd>
+            <dt>
+              Damage
+              <br />
+              Immunities
+            </dt>
+            <dd className="my-auto mx-0">
               {monster.immune.map(
                 (immunity, index) =>
                   typeof immunity === "string"
@@ -319,8 +326,12 @@ export const Monster = React.memo(function Monster({
         )}
         {monster.conditionImmune && monster.conditionImmune.length > 0 && (
           <>
-            <dt>Condition Immunities</dt>
-            <dd>
+            <dt>
+              Condition
+              <br />
+              Immunities
+            </dt>
+            <dd className="my-auto mx-0">
               {monster.conditionImmune.map(
                 (immunity, index) =>
                   immunity +

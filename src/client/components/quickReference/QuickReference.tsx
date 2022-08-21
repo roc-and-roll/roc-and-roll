@@ -97,7 +97,7 @@ function Content({
   return (
     <ul style={searchIsStale ? { opacity: 0.7 } : {}}>
       {results.map((result: CompendiumSpell | CompendiumMonster) => (
-        <li key={result.name}>
+        <li key={result.name} className="even:bg-neutral-600 p-3">
           {isSpell(result) ? (
             <Spell spell={result} />
           ) : (

@@ -125,7 +125,7 @@ export const Spell = React.memo(function Spell({
   return (
     <>
       <div className="flex justify-between items-baseline">
-        <p className="text-2xl mt-4">{spell.name}</p>
+        <p className="text-2xl">{spell.name}</p>
         {selectedCharacter &&
           (selectedCharacterKnowsSpell ? (
             <em>Already Known</em>
