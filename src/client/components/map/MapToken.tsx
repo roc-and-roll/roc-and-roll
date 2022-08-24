@@ -291,7 +291,7 @@ function MapTokenInner({
         selectedEntry = entry;
       }
     }
-    setLastRolled(selectedEntry);
+    if (selectedEntry) setLastRolled(selectedEntry);
   }, [character.id, notifications]);
 
   //Temporarily let last rolls be visible forever, to see if they are useful overall
