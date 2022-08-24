@@ -500,6 +500,13 @@ const TokenImageOrPlaceholder = React.memo(function TokenImageOrPlaceholder({
         ) : isCharacterOverHealed(character) ? (
           <TokenShadow color={0x00ff00} pulse={4} size={tokenSize} />
         ) : null)}
+      <PCircle
+        cx={tokenSize / 2}
+        cy={tokenSize / 2}
+        r={tokenSize / 2 - character.scale * 1.5}
+        fill={0x888888}
+        alpha={0.7}
+      ></PCircle>
       <PixiBlurHashSprite
         interactive={!props.isGhost}
         cursor={canControl ? "move" : undefined}
