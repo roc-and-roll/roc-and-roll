@@ -294,14 +294,15 @@ function MapTokenInner({
     setLastRolled(selectedEntry);
   }, [character.id, notifications]);
 
-  useEffect(() => {
-    if (lastRolled?.id) {
-      const id = setTimeout(function () {
-        setLastRolled(null);
-      }, DICE_ROLL_DISPLAY_DURATION);
-      return () => clearTimeout(id);
-    }
-  }, [lastRolled?.id]);
+  //Temporarily let last rolls be visible forever, to see if they are useful overall
+  //useEffect(() => {
+  //if (lastRolled?.id) {
+  //const id = setTimeout(function () {
+  //setLastRolled(null);
+  //}, DICE_ROLL_DISPLAY_DURATION);
+  //return () => clearTimeout(id);
+  //}
+  //}, [lastRolled?.id]);
 
   const [startAnimation, stopAnimation] = useRafLoop();
   useEffect(() => {
