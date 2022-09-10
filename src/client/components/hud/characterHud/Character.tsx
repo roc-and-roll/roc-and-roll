@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { RRCharacter, RRCharacterID } from "../../../../shared/state";
-import { useMyActiveCharacter, useMyProps } from "../../../myself";
+import { useMyActiveCharacters, useMyProps } from "../../../myself";
 import { useServerDispatch } from "../../../state";
 import { CharacterPreview } from "../../characters/CharacterPreview";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -51,7 +51,7 @@ export type RRCharacterProps = Pick<RRCharacter, typeof characterProps[number]>;
 export function CharacterHUD() {
   const myself = useMyProps("mainCharacterId", "isGM");
 
-  const character = useMyActiveCharacter();
+  const character = useMyActiveCharacters()[0] ?? null;
   const { sources: compendiumSources } = useCompendium();
 
   const healthWidth = 250;

@@ -20,7 +20,7 @@ import {
   RRDiceTemplate,
   RRDiceTemplateCategory,
 } from "../../../shared/validation";
-import { useMyProps, useMyActiveCharacter } from "../../myself";
+import { useMyProps, useMyActiveCharacters } from "../../myself";
 import { useServerDispatch } from "../../state";
 import { Button } from "../ui/Button";
 import { evaluateDiceTemplatePart } from "../../diceUtils";
@@ -49,7 +49,8 @@ export const DiceTemplates = React.memo(function DiceTemplates({
     []
   );
 
-  const character = useMyActiveCharacter("id", "stats", "attributes");
+  const character =
+    useMyActiveCharacters("id", "stats", "attributes")[0] ?? null;
 
   const [, dropRef] = useDrop<
     RRDiceTemplatePart | RRDiceTemplatePart[],

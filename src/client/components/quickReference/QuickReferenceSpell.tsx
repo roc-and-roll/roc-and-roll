@@ -8,7 +8,7 @@ import {
   stndrdth,
   TextEntry,
 } from "./QuickReference";
-import { useMyActiveCharacter } from "../../myself";
+import { useMyActiveCharacters } from "../../myself";
 import { Button } from "../ui/Button";
 import { useServerDispatch } from "../../state";
 import { characterAddSpell } from "../../../shared/actions";
@@ -102,7 +102,7 @@ export const Spell = React.memo(function Spell({
 }: {
   spell: CompendiumSpell;
 }) {
-  const selectedCharacter = useMyActiveCharacter("id", "spells");
+  const selectedCharacter = useMyActiveCharacters("id", "spells")[0] ?? null;
   const dispatch = useServerDispatch();
 
   const selectedCharacterKnowsSpell =

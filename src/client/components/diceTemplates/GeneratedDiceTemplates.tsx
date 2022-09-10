@@ -1,80 +1,96 @@
-import { faMinusCircle, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faMinusCircle,
+  faPlusCircle,
+  faUsers,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
 import React, { useState } from "react";
 import { logEntryDiceRollAdd } from "../../../shared/actions";
-import { RRMultipleRoll } from "../../../shared/state";
+import {
+  characterStatNames,
+  RRCharacter,
+  RRMultipleRoll,
+  skillNames,
+} from "../../../shared/state";
 import { RRDiceTemplate } from "../../../shared/validation";
 import {
   evaluateDiceTemplatePart,
   getModifierForTemplate,
 } from "../../diceUtils";
-import { useMyProps, useMySelectedCharacters } from "../../myself";
-import { useServerState, useServerDispatch } from "../../state";
+import { useMyProps } from "../../myself";
+import { useServerDispatch } from "../../state";
 import { signedModifierString } from "../../util";
 
 export const GeneratedDiceTemplates = React.memo(
   function GeneratedDiceTemplates({
-    templates,
+    templates: abilityTemplates,
   }: {
-    templates: RRDiceTemplate[];
+    templates: {
+      ability: typeof skillNames[number] | typeof characterStatNames[number];
+      templates: {
+        character: Pick<RRCharacter, "id" | "attributes" | "stats">;
+        template: RRDiceTemplate;
+      }[];
+    }[];
   }) {
     return (
       <div className="grid grid-cols-2 gap-2 p-2">
-        {templates.map((template) => (
-          <GeneratedDiceTemplate key={template.id} template={template} />
+        {abilityTemplates.map((template) => (
+          <GeneratedDiceTemplate
+            key={template.ability}
+            abilityTemplate={template}
+          />
         ))}
       </div>
     );
   }
 );
 
-function GeneratedDiceTemplate({ template }: { template: RRDiceTemplate }) {
-  const myself = useMyProps("id", "mainCharacterId");
-
-  const selectedCharacters = useMySelectedCharacters(
-    "id",
-    "stats",
-    "attributes"
-  );
-  const mainCharacter = useServerState((state) =>
-    myself.mainCharacterId
-      ? state.characters.entities[myself.mainCharacterId] ?? null
-      : null
-  );
-
-  const character =
-    selectedCharacters.length === 1 ? selectedCharacters[0]! : mainCharacter;
-
+function GeneratedDiceTemplate({
+  abilityTemplate,
+}: {
+  abilityTemplate: {
+    ability: typeof skillNames[number] | typeof characterStatNames[number];
+    templates: {
+      character: Pick<RRCharacter, "id" | "attributes" | "stats">;
+      template: RRDiceTemplate;
+    }[];
+  };
+}) {
   const dispatch = useServerDispatch();
   const [isHovered, setIsHovered] = useState(false);
+  const myself = useMyProps("id");
 
-  const doRoll = (template: RRDiceTemplate, modified: RRMultipleRoll) => {
-    const parts = template.parts.flatMap((p) =>
-      evaluateDiceTemplatePart(p, modified, false, character)
-    );
-    if (parts.length < 1) return;
+  const doRoll = (modified: RRMultipleRoll) => {
+    const rolls = abilityTemplate.templates.flatMap(
+      ({ character, template }) => {
+        const parts = template.parts.flatMap((p) =>
+          evaluateDiceTemplatePart(p, modified, false, character)
+        );
+        if (parts.length < 1) return [];
 
-    dispatch(
-      logEntryDiceRollAdd({
-        silent: false,
-        playerId: myself.id,
-        payload: {
-          characterIds: character ? [character.id] : null,
-          tooltip: null,
-          rollType: "attack", // TODO
-          rollName: template.name,
-          diceRollTree:
-            parts.length === 1
-              ? parts[0]!
-              : {
-                  type: "term",
-                  operator: "+",
-                  operands: parts,
-                },
-        },
-      })
+        return logEntryDiceRollAdd({
+          silent: false,
+          playerId: myself.id,
+          payload: {
+            characterIds: [character.id],
+            tooltip: null,
+            rollType: "attack", // TODO
+            rollName: template.name,
+            diceRollTree:
+              parts.length === 1
+                ? parts[0]!
+                : {
+                    type: "term",
+                    operator: "+",
+                    operands: parts,
+                  },
+          },
+        });
+      }
     );
+    dispatch(rolls);
   };
   function handleMoueLeave() {
     setIsHovered(false);
@@ -83,13 +99,26 @@ function GeneratedDiceTemplate({ template }: { template: RRDiceTemplate }) {
     setIsHovered(true);
   }
 
-  const modifierString = signedModifierString(
-    getModifierForTemplate(template, character)
-  );
+  const modifierUI =
+    abilityTemplate.templates.length === 1 ? (
+      signedModifierString(
+        getModifierForTemplate(
+          abilityTemplate.templates[0]!.template,
+          abilityTemplate.templates[0]!.character
+        )
+      )
+    ) : (
+      <>
+        {
+          // TODO: Use faPeopleGroup once we upgrade to FontAwesome 6
+        }
+        {abilityTemplate.templates.length} <FontAwesomeIcon icon={faUsers} />
+      </>
+    );
 
   return (
     <div
-      onClick={() => doRoll(template, "none")}
+      onClick={() => doRoll("none")}
       title="Click to Roll"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMoueLeave}
@@ -98,14 +127,14 @@ function GeneratedDiceTemplate({ template }: { template: RRDiceTemplate }) {
         isHovered ? "hovered" : ""
       )}
     >
-      <p className="template-name">{template.name}</p>
-      <p className="modifier-value">{modifierString}</p>
+      <p className="template-name">{abilityTemplate.ability}</p>
+      <p className="modifier-value">{modifierUI}</p>
       {isHovered && (
         <div
           className="modifier-button disadvantage"
           onClick={(event) => {
             event.stopPropagation();
-            doRoll(template, "disadvantage");
+            doRoll("disadvantage");
           }}
         >
           <FontAwesomeIcon icon={faMinusCircle} />
@@ -116,7 +145,7 @@ function GeneratedDiceTemplate({ template }: { template: RRDiceTemplate }) {
           className="modifier-button advantage"
           onClick={(event) => {
             event.stopPropagation();
-            doRoll(template, "advantage");
+            doRoll("advantage");
           }}
         >
           <FontAwesomeIcon icon={faPlusCircle} />

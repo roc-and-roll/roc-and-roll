@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { useMyActiveCharacter } from "../../../myself";
+import { useMyActiveCharacters } from "../../../myself";
 import { TextEntry } from "../../quickReference/QuickReference";
 import { CompendiumTextEntry } from "../../../../shared/compendium-types/text-entry";
 import {
@@ -12,7 +12,7 @@ import { QuickReferenceContext } from "../../quickReference/QuickReferenceWrappe
 import { useCompendium } from "../../compendium/Compendium";
 
 export function CombatCardHUD() {
-  const character = useMyActiveCharacter("name");
+  const character = useMyActiveCharacters("name")[0] ?? null;
   const { sources: compendiumSources } = useCompendium();
 
   const matchingMonsters = character

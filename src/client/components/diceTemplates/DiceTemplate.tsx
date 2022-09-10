@@ -15,7 +15,7 @@ import {
 } from "../../../shared/state";
 import { rrid } from "../../../shared/util";
 import { RRDiceTemplate } from "../../../shared/validation";
-import { useMyActiveCharacter } from "../../myself";
+import { useMyActiveCharacters } from "../../myself";
 import { useRRSettings } from "../../settings";
 import { useServerDispatch } from "../../state";
 import { Button } from "../ui/Button";
@@ -44,7 +44,8 @@ interface DiceTemplateProps {
 export const DiceTemplate = React.memo(function DiceTemplate(
   props: DiceTemplateProps
 ) {
-  const character = useMyActiveCharacter("id");
+  const characters = useMyActiveCharacters("id");
+  const character = characters.length === 1 ? characters[0] : null;
   return character ? (
     <DiceTemplateImpl {...props} character={character} />
   ) : null;
