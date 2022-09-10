@@ -36,29 +36,24 @@ import {
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import {
   categoryIcons,
-  characterStatNames,
   fixedCategoryIcons,
   RRCharacter,
   RRDiceTemplateCategoryID,
-  RRDiceTemplatePart,
-  RRDiceTemplatePartDice,
-  skillMap,
-  skillNames,
   userCategoryIcons,
 } from "../../../shared/state";
 import { rrid } from "../../../shared/util";
-import {
-  RRDiceTemplate,
-  RRDiceTemplateCategory,
-} from "../../../shared/validation";
+import { RRDiceTemplateCategory } from "../../../shared/validation";
 import { useConfirm } from "../../dialog-boxes";
+import {
+  generateSavingThrowTemplates,
+  generateSkillTemplates,
+} from "../../diceUtils";
 import {
   useMyActiveCharacters,
   useMyProps,
   useMySelectedCharacters,
 } from "../../myself";
 import { useServerDispatch } from "../../state";
-import { modifierFromStat } from "../../util";
 import { DicePanel } from "../diceTemplates/DicePanel";
 import { DiceTemplates } from "../diceTemplates/DiceTemplates";
 import { GeneratedDiceTemplates } from "../diceTemplates/GeneratedDiceTemplates";
@@ -218,103 +213,12 @@ export const InnerActionsHUD = function ({
     });
   }
 
-  function createD20Part(): RRDiceTemplatePartDice {
-    return {
-      id: rrid<RRDiceTemplatePart>(),
-      type: "dice",
-      faces: 20,
-      count: 1,
-      negated: false,
-      modified: "none",
-      damage: { type: null },
-    };
-  }
-
-  const savingThrowTemplates = useMemo(
-    () =>
-      characterStatNames.map((statName: typeof characterStatNames[number]) => {
-        const templates = characters.map((character) => {
-          const proficiency =
-            character.savingThrows[statName] ?? "notProficient";
-
-          const parts: RRDiceTemplatePart[] = [createD20Part()];
-          if (
-            typeof proficiency !== "number" &&
-            character.stats[statName] &&
-            modifierFromStat(character.stats[statName]!) !== 0
-          )
-            parts.push({
-              id: rrid<RRDiceTemplatePart>(),
-              type: "linkedStat",
-              name: statName,
-              damage: { type: null },
-            });
-
-          if (proficiency !== "notProficient")
-            parts.push({
-              id: rrid<RRDiceTemplatePart>(),
-              type: "linkedProficiency",
-              damage: { type: null },
-              proficiency,
-            });
-
-          return {
-            character,
-            template: {
-              id: rrid<RRDiceTemplate>(),
-              name: `${statName} Save`,
-              notes: "",
-              parts,
-              rollType: null,
-            },
-          };
-        });
-        return {
-          ability: statName,
-          templates,
-        };
-      }),
+  const skillTemplates = useMemo(
+    () => generateSkillTemplates(characters),
     [characters]
   );
-
-  const skillTemplates = useMemo(
-    () =>
-      [...skillNames].sort().map((skill) => {
-        const templates = characters.map((character) => {
-          const proficiency = character.skills[skill] ?? "notProficient";
-          const parts: RRDiceTemplatePart[] = [createD20Part()];
-          if (
-            typeof proficiency !== "number" &&
-            character.stats[skillMap[skill]] &&
-            modifierFromStat(character.stats[skillMap[skill]]!) !== 0
-          )
-            parts.push({
-              id: rrid<RRDiceTemplatePart>(),
-              type: "linkedStat",
-              name: skillMap[skill],
-              damage: { type: null },
-            });
-          if (proficiency !== "notProficient")
-            parts.push({
-              id: rrid<RRDiceTemplatePart>(),
-              type: "linkedProficiency",
-              damage: { type: null },
-              proficiency,
-            });
-
-          return {
-            character,
-            template: {
-              id: rrid<RRDiceTemplate>(),
-              name: skill,
-              notes: "",
-              parts,
-              rollType: null,
-            },
-          };
-        });
-        return { ability: skillMap[skill], templates };
-      }),
+  const savingThrowTemplates = useMemo(
+    () => generateSavingThrowTemplates(characters),
     [characters]
   );
 

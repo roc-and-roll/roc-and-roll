@@ -4,8 +4,12 @@ import {
   RRMultipleRoll,
   RRCharacter,
   proficiencyValueStrings,
+  skillNames,
+  RRDiceTemplatePartDice,
+  skillMap,
+  characterStatNames,
 } from "../shared/state";
-import { assertNever } from "../shared/util";
+import { assertNever, rrid } from "../shared/util";
 import { RRDiceTemplate } from "../shared/validation";
 import { roll } from "./dice-rolling/roll";
 import { modifierFromStat } from "./util";
@@ -125,3 +129,103 @@ export function getModifierForTemplate(
   });
   return returnValue;
 }
+
+function createD20Part(): RRDiceTemplatePartDice {
+  return {
+    id: rrid<RRDiceTemplatePart>(),
+    type: "dice",
+    faces: 20,
+    count: 1,
+    negated: false,
+    modified: "none",
+    damage: { type: null },
+  };
+}
+
+export const generateSkillTemplates = (
+  characters: Pick<RRCharacter, "skills" | "stats" | "attributes" | "id">[]
+) =>
+  [...skillNames].sort().map((skill) => {
+    const templates = characters.map((character) => {
+      const proficiency = character.skills[skill] ?? "notProficient";
+      const parts: RRDiceTemplatePart[] = [createD20Part()];
+      if (
+        typeof proficiency !== "number" &&
+        character.stats[skillMap[skill]] &&
+        modifierFromStat(character.stats[skillMap[skill]]!) !== 0
+      )
+        parts.push({
+          id: rrid<RRDiceTemplatePart>(),
+          type: "linkedStat",
+          name: skillMap[skill],
+          damage: { type: null },
+        });
+      if (proficiency !== "notProficient")
+        parts.push({
+          id: rrid<RRDiceTemplatePart>(),
+          type: "linkedProficiency",
+          damage: { type: null },
+          proficiency,
+        });
+
+      return {
+        character,
+        template: {
+          id: rrid<RRDiceTemplate>(),
+          name: skill,
+          notes: "",
+          parts,
+          rollType: null,
+        },
+      };
+    });
+    return { ability: skillMap[skill], templates };
+  });
+
+export const generateSavingThrowTemplates = (
+  characters: Pick<
+    RRCharacter,
+    "savingThrows" | "stats" | "id" | "attributes"
+  >[]
+) =>
+  characterStatNames.map((statName: typeof characterStatNames[number]) => {
+    const templates = characters.map((character) => {
+      const proficiency = character.savingThrows[statName] ?? "notProficient";
+
+      const parts: RRDiceTemplatePart[] = [createD20Part()];
+      if (
+        typeof proficiency !== "number" &&
+        character.stats[statName] &&
+        modifierFromStat(character.stats[statName]!) !== 0
+      )
+        parts.push({
+          id: rrid<RRDiceTemplatePart>(),
+          type: "linkedStat",
+          name: statName,
+          damage: { type: null },
+        });
+
+      if (proficiency !== "notProficient")
+        parts.push({
+          id: rrid<RRDiceTemplatePart>(),
+          type: "linkedProficiency",
+          damage: { type: null },
+          proficiency,
+        });
+
+      return {
+        character,
+        template: {
+          id: rrid<RRDiceTemplate>(),
+          name: `${statName} Save`,
+          notes: "",
+          parts,
+          rollType: null,
+        },
+      };
+    });
+    return {
+      ability: statName,
+      templates,
+    };
+  });

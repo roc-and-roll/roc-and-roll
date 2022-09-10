@@ -23,7 +23,11 @@ import {
 } from "../../../shared/state";
 import { contrastColor } from "../../util";
 import { RRDie } from "../../../shared/validation";
-import { evaluateDiceTemplatePart } from "../../diceUtils";
+import {
+  evaluateDiceTemplatePart,
+  generateSavingThrowTemplates,
+  generateSkillTemplates,
+} from "../../diceUtils";
 import { useMyActiveCharacters, useMyProps } from "../../myself";
 import { useServerDispatch } from "../../state";
 import { DamageTypeEditor } from "../diceTemplates/DiceTemplateEditors";
@@ -225,7 +229,6 @@ function Die({
 
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
-const empty: RRDie[] = [];
 const MAX_DIST = 30;
 
 const allAffected = (origin: RRDie, candidates: RRDie[]) => {
@@ -250,13 +253,67 @@ export function BetterDice() {
     "dice",
     "id",
     "attributes",
-    "stats"
+    "stats",
+    "savingThrows",
+    "skills"
   )[0];
   const dispatch = useServerDispatch();
   const [selectedIds, setSelectedIds] = useState<RRDiceTemplatePartID[]>([]);
   const lastSelectedTimesRef = useRef<Record<RRDiceTemplatePartID, Date>>({});
 
-  const dice = character?.dice ?? empty;
+  const dice: RRDie[] = useMemo(
+    () =>
+      !character
+        ? []
+        : [
+            ...character.dice,
+            ...generateSavingThrowTemplates([character]).flatMap(
+              (templates, yOffset) => {
+                const template = templates.templates[0]!.template;
+                const y = yOffset * 32 + 24;
+                const labelId: RRDiceTemplatePartID = `RRID/diceTemplatePart/${template.name}`;
+                return [
+                  {
+                    type: "label" as const,
+                    label: template.name,
+                    x: 0,
+                    y,
+                    id: labelId,
+                  },
+                  ...template.parts.flatMap((die, x) => ({
+                    ...die,
+                    x: (x + 1) * 22,
+                    y,
+                  })),
+                ];
+              }
+            ),
+            ...generateSkillTemplates([character]).flatMap(
+              (templates, yOffset) => {
+                const template = templates.templates[0]!.template;
+                const y = (yOffset % 9) * 32 + 24;
+                const x = 100 + Math.floor(yOffset / 9) * 100;
+                const labelId: RRDiceTemplatePartID = `RRID/diceTemplatePart/${template.name}`;
+                return [
+                  {
+                    type: "label" as const,
+                    label: template.name,
+                    x,
+                    y,
+                    id: labelId,
+                  },
+                  ...template.parts.flatMap((die, xOffset) => ({
+                    ...die,
+                    x: x + (xOffset + 1) * 22,
+                    y,
+                  })),
+                ];
+              }
+            ),
+          ],
+    [character]
+  );
+
   const selectedDice = useMemo(
     () => dice.filter((d) => selectedIds.includes(d.id)),
     [dice, selectedIds]
@@ -306,7 +363,7 @@ export function BetterDice() {
           silent: false,
           playerId: myId,
           payload: {
-            tooltip: "",
+            tooltip: rollName,
             rollType: "attack", // TODO
             rollName,
             diceRollTree:
@@ -382,7 +439,7 @@ export function BetterDice() {
 
   const ref = composeRefs<HTMLDivElement>(dropContainerRef, dropRef);
 
-  if (!character) return "No character selected";
+  if (!character) return <span>No character selected</span>;
 
   return (
     <div>
@@ -432,12 +489,19 @@ export function BetterDice() {
       </div>
       <div
         ref={ref}
+        className="text-[0.6rem]"
         style={{
-          height: "200px",
+          height: "300px",
           width: "400px",
         }}
       >
-        {character.dice.map((die) => {
+        <BuiltInTemplates
+          selectedIds={selectedIds}
+          onSelect={onSelectDie}
+          character={character}
+          lastSelectedTimesRef={lastSelectedTimesRef}
+        />
+        {dice.map((die) => {
           return (
             <Die
               lastSelectedTimesRef={lastSelectedTimesRef}
@@ -452,4 +516,23 @@ export function BetterDice() {
       </div>
     </div>
   );
+}
+
+function BuiltInTemplates({
+  character,
+  selectedIds,
+  onSelect,
+  lastSelectedTimesRef,
+}: {
+  character: Pick<
+    RRCharacter,
+    "id" | "attributes" | "savingThrows" | "stats" | "skills"
+  >;
+  selectedIds: RRDiceTemplatePartID[];
+  onSelect: (id: RRDiceTemplatePartID) => void;
+  lastSelectedTimesRef: React.MutableRefObject<
+    Record<RRDiceTemplatePartID, Date>
+  >;
+}) {
+  return <></>;
 }
