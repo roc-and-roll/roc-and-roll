@@ -48,19 +48,17 @@ export function MyselfProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useMyActiveCharacter<T extends (keyof RRCharacter)[]>(
+export function useMyActiveCharacters<T extends (keyof RRCharacter)[]>(
   ...fields: T
-): [] extends T
-  ? RRCharacter | null
-  : Pick<RRCharacter, IterableElement<T>> | null {
-  const selectedCharacters = useMySelectedCharacters(...fields)[0] ?? null;
+): [] extends T ? RRCharacter[] : Pick<RRCharacter, IterableElement<T>>[] {
+  const selectedCharacters = useMySelectedCharacters(...fields);
   const mainCharacter = useMyMainCharacter(...fields);
 
-  return (
-    (selectedCharacters as [] extends T
-      ? RRCharacter | null
-      : Pick<RRCharacter, IterableElement<T>> | null) ?? mainCharacter
-  );
+  return selectedCharacters.length > 0
+    ? selectedCharacters
+    : mainCharacter !== null
+    ? [mainCharacter]
+    : ([] as any); //TODO
 }
 
 function useMyMainCharacter<T extends (keyof RRCharacter)[]>(

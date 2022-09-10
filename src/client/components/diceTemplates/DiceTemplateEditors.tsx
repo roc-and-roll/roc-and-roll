@@ -22,7 +22,7 @@ import {
 } from "../../../shared/state";
 import { empty2Null } from "../../../shared/util";
 import { RRDiceTemplate } from "../../../shared/validation";
-import { useMyActiveCharacter } from "../../myself";
+import { useMyActiveCharacters } from "../../myself";
 import { useServerDispatch } from "../../state";
 import { getProficiencyValueString, signedModifierString } from "../../util";
 import { iconMap } from "../hud/Actions";
@@ -56,7 +56,7 @@ export function DamageTypeEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const selected = useMyActiveCharacter("id")!;
+  const selected = useMyActiveCharacters("id")[0]!;
 
   return (
     <label>
@@ -90,7 +90,7 @@ export function DiceMultipleRollEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const selected = useMyActiveCharacter("id")!;
+  const selected = useMyActiveCharacters("id")[0]!;
 
   return (
     <label>
@@ -127,7 +127,7 @@ export function DiceCountEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const selected = useMyActiveCharacter("id")!;
+  const selected = useMyActiveCharacters("id")[0]!;
 
   return (
     <label>
@@ -160,7 +160,7 @@ export function ModifierNumberEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const selected = useMyActiveCharacter("id")!;
+  const selected = useMyActiveCharacters("id")[0]!;
 
   return (
     <label>
@@ -193,7 +193,7 @@ export function ProficiencyValueEditor({
   categoryId: RRDiceTemplateCategoryID;
 }) {
   const dispatch = useServerDispatch();
-  const selected = useMyActiveCharacter("id")!;
+  const selected = useMyActiveCharacters("id")[0]!;
 
   return (
     <label>
@@ -234,9 +234,9 @@ export function CategoryEditor({
   template: RRDiceTemplate;
 }) {
   const dispatch = useServerDispatch();
-  const selected = useMyActiveCharacter("id", "diceTemplateCategories");
+  const selected = useMyActiveCharacters("id", "diceTemplateCategories")[0];
 
-  if (!selected) return <></>;
+  if (!selected) return null;
 
   return (
     <label>
@@ -286,9 +286,9 @@ export function TemplateSettingsEditor({
   template: RRDiceTemplate;
 }) {
   const dispatch = useServerDispatch();
-  const selected = useMyActiveCharacter("id", "diceTemplateCategories");
+  const selected = useMyActiveCharacters("id", "diceTemplateCategories")[0];
 
-  if (!selected) return <></>;
+  if (!selected) return null;
   return (
     <div>
       <label>

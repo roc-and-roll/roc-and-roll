@@ -5,7 +5,7 @@ import {
   characterAddDiceTemplate,
   characterAddDiceTemplateCategory,
 } from "../../shared/actions";
-import { useMyActiveCharacter, useMyProps } from "../myself";
+import { useMyActiveCharacters, useMyProps } from "../myself";
 import { useServerDispatch } from "../state";
 import { tryConvertDiceRollTreeToDiceTemplateParts } from "../dice-rolling/dice-template-interop";
 import { parseDiceString } from "../dice-rolling/grammar";
@@ -29,7 +29,7 @@ export function DiceInterface() {
     { diceTypes: string[]; bonuses: number | null }[]
   >("DiceInterface/previousRolls", []);
   const myself = useMyProps("id");
-  const character = useMyActiveCharacter(
+  const characters = useMyActiveCharacters(
     "id",
     "diceTemplateCategories",
     "name"
@@ -276,50 +276,55 @@ export function DiceInterface() {
 
       const name =
         (await prompt("Name of the new dice template"))?.trim() ?? "";
-      let categoryId;
-      if (character!.diceTemplateCategories.length < 1) {
-        const newTemplateCategoryAction = characterAddDiceTemplateCategory({
-          id: character!.id,
-          category: {
-            categoryName: "Generated Templates",
-            id: rrid<RRDiceTemplateCategory>(),
-            icon: "wrench",
-            templates: [],
-          },
-        });
 
-        dispatch(newTemplateCategoryAction);
-        categoryId = newTemplateCategoryAction.payload.category.id;
-      } else {
-        categoryId = character!.diceTemplateCategories[0]!.id;
-      }
-      dispatch(
-        characterAddDiceTemplate({
-          id: character!.id,
-          // FIXME should allow to select
-          categoryId,
-          template: {
-            id: rrid<RRDiceTemplate>(),
-            name,
-            notes: "",
-            parts,
-            rollType: "attack",
-          },
-        })
-      );
+      characters.forEach((character) => {
+        let categoryId;
+        if (character.diceTemplateCategories.length < 1) {
+          const newTemplateCategoryAction = characterAddDiceTemplateCategory({
+            id: character.id,
+            category: {
+              categoryName: "Generated Templates",
+              id: rrid<RRDiceTemplateCategory>(),
+              icon: "wrench",
+              templates: [],
+            },
+          });
+
+          dispatch(newTemplateCategoryAction);
+          categoryId = newTemplateCategoryAction.payload.category.id;
+        } else {
+          categoryId = character.diceTemplateCategories[0]!.id;
+        }
+        dispatch(
+          characterAddDiceTemplate({
+            id: character.id,
+            // FIXME should allow to select
+            categoryId,
+            template: {
+              id: rrid<RRDiceTemplate>(),
+              name,
+              notes: "",
+              parts,
+              rollType: "attack",
+            },
+          })
+        );
+      });
     } else {
       dispatch(
-        logEntryDiceRollAdd({
-          silent: false,
-          playerId: myself.id,
-          payload: {
-            characterIds: character ? [character.id] : null,
-            diceRollTree: rollDiceRollTree(diceRollTree),
-            rollType: null,
-            rollName: null,
-            tooltip: null,
-          },
-        })
+        characters.map((character) =>
+          logEntryDiceRollAdd({
+            silent: false,
+            playerId: myself.id,
+            payload: {
+              characterIds: [character.id],
+              diceRollTree: rollDiceRollTree(diceRollTree),
+              rollType: null,
+              rollName: null,
+              tooltip: null,
+            },
+          })
+        )
       );
     }
     const justRolled = { diceTypes: localDiceTypes, bonuses: localBonuses };
@@ -462,7 +467,8 @@ export function DiceInterface() {
                   <DiceInterfaceButton
                     className="w-full"
                     disabled={
-                      !character || (bonuses === null && diceTypes.length === 0)
+                      characters.length === 0 ||
+                      (bonuses === null && diceTypes.length === 0)
                     }
                     onClick={async () => {
                       focusIndexFromRef(tempRef);
@@ -470,9 +476,9 @@ export function DiceInterface() {
                     }}
                     ref={tempRef}
                     title={
-                      character
-                        ? `Creating for ${character.name}`
-                        : "No character selected"
+                      characters.length === 1
+                        ? `Creating for ${characters[0]!.name}`
+                        : "Creating for ${character.length} characters"
                     }
                   >
                     <p>Template</p>

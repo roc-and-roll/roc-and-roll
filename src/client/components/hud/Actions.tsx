@@ -53,7 +53,7 @@ import {
 } from "../../../shared/validation";
 import { useConfirm } from "../../dialog-boxes";
 import {
-  useMyActiveCharacter,
+  useMyActiveCharacters,
   useMyProps,
   useMySelectedCharacters,
 } from "../../myself";
@@ -115,15 +115,16 @@ const buttonClasses =
   "hud-panel max-w-full shrink-0 inline-flex overflow-x-auto snap-x pointer-events-auto";
 
 export const ActionsHUD = React.memo(function ActionsHUDMemoed() {
-  const character = useMyActiveCharacter(
+  const characters = useMyActiveCharacters(
     "id",
     "savingThrows",
     "skills",
     "diceTemplateCategories",
-    "stats"
+    "stats",
+    "attributes"
   );
-  return character ? (
-    <InnerActionsHUD character={character} />
+  return characters.length > 0 ? (
+    <InnerActionsHUD characters={characters} />
   ) : (
     <DicePanelOnly />
   );
@@ -157,12 +158,17 @@ export const DicePanelOnly = function () {
 };
 
 export const InnerActionsHUD = function ({
-  character,
+  characters,
 }: {
-  character: Pick<
+  characters: Pick<
     RRCharacter,
-    "diceTemplateCategories" | "id" | "savingThrows" | "skills" | "stats"
-  >;
+    | "diceTemplateCategories"
+    | "id"
+    | "savingThrows"
+    | "skills"
+    | "stats"
+    | "attributes"
+  >[];
 }) {
   const [active, setActive] = useState<Section>("closed");
   const myself = useMyProps("id", "mainCharacterId");
@@ -177,16 +183,18 @@ export const InnerActionsHUD = function ({
       active !== "Dice Input" &&
       active !== "Skills" &&
       active !== "STs" &&
-      character.diceTemplateCategories.find((cat) => cat.id === active) ===
+      characters.length !== 1 &&
+      characters[0]!.diceTemplateCategories.find((cat) => cat.id === active) ===
         undefined
     ) {
       setActive("closed");
     }
-  }, [character.diceTemplateCategories, active]);
+  }, [active, characters]);
 
   function addTemplateCategory() {
+    if (characters.length !== 1) return;
     const freeIcon = userCategoryIcons.find((userIcon) => {
-      return !character.diceTemplateCategories
+      return !characters[0]!.diceTemplateCategories
         .map(({ icon }: { icon: typeof categoryIcons[number] }) => icon)
         .includes(userIcon);
     });
@@ -196,7 +204,7 @@ export const InnerActionsHUD = function ({
     dispatch({
       actions: [
         characterAddDiceTemplateCategory({
-          id: character.id,
+          id: characters[0]!.id,
           category: {
             id: rrid<RRDiceTemplateCategory>(),
             icon: freeIcon,
@@ -225,79 +233,92 @@ export const InnerActionsHUD = function ({
   const savingThrowTemplates = useMemo(
     () =>
       characterStatNames.map((statName: typeof characterStatNames[number]) => {
-        const proficiency = character.savingThrows[statName] ?? "notProficient";
+        const templates = characters.map((character) => {
+          const proficiency =
+            character.savingThrows[statName] ?? "notProficient";
 
-        const parts: RRDiceTemplatePart[] = [createD20Part()];
-        if (
-          typeof proficiency !== "number" &&
-          character.stats[statName] &&
-          modifierFromStat(character.stats[statName]!) !== 0
-        )
-          parts.push({
-            id: rrid<RRDiceTemplatePart>(),
-            type: "linkedStat",
-            name: statName,
-            damage: { type: null },
-          });
+          const parts: RRDiceTemplatePart[] = [createD20Part()];
+          if (
+            typeof proficiency !== "number" &&
+            character.stats[statName] &&
+            modifierFromStat(character.stats[statName]!) !== 0
+          )
+            parts.push({
+              id: rrid<RRDiceTemplatePart>(),
+              type: "linkedStat",
+              name: statName,
+              damage: { type: null },
+            });
 
-        if (proficiency !== "notProficient")
-          parts.push({
-            id: rrid<RRDiceTemplatePart>(),
-            type: "linkedProficiency",
-            damage: { type: null },
-            proficiency,
-          });
+          if (proficiency !== "notProficient")
+            parts.push({
+              id: rrid<RRDiceTemplatePart>(),
+              type: "linkedProficiency",
+              damage: { type: null },
+              proficiency,
+            });
 
+          return {
+            character,
+            template: {
+              id: rrid<RRDiceTemplate>(),
+              name: `${statName} Save`,
+              notes: "",
+              parts,
+              rollType: null,
+            },
+          };
+        });
         return {
-          id: rrid<RRDiceTemplate>(),
-          name: `${statName} Save`,
-          notes: "",
-          parts,
-          rollType: null,
+          ability: statName,
+          templates,
         };
       }),
-    [character.savingThrows, character.stats]
+    [characters]
   );
 
   const skillTemplates = useMemo(
     () =>
       [...skillNames].sort().map((skill) => {
-        const proficiency = character.skills[skill] ?? "notProficient";
-        const parts: RRDiceTemplatePart[] = [createD20Part()];
-        if (
-          typeof proficiency !== "number" &&
-          character.stats[skillMap[skill]] &&
-          modifierFromStat(character.stats[skillMap[skill]]!) !== 0
-        )
-          parts.push({
-            id: rrid<RRDiceTemplatePart>(),
-            type: "linkedStat",
-            name: skillMap[skill],
-            damage: { type: null },
-          });
-        if (proficiency !== "notProficient")
-          parts.push({
-            id: rrid<RRDiceTemplatePart>(),
-            type: "linkedProficiency",
-            damage: { type: null },
-            proficiency,
-          });
+        const templates = characters.map((character) => {
+          const proficiency = character.skills[skill] ?? "notProficient";
+          const parts: RRDiceTemplatePart[] = [createD20Part()];
+          if (
+            typeof proficiency !== "number" &&
+            character.stats[skillMap[skill]] &&
+            modifierFromStat(character.stats[skillMap[skill]]!) !== 0
+          )
+            parts.push({
+              id: rrid<RRDiceTemplatePart>(),
+              type: "linkedStat",
+              name: skillMap[skill],
+              damage: { type: null },
+            });
+          if (proficiency !== "notProficient")
+            parts.push({
+              id: rrid<RRDiceTemplatePart>(),
+              type: "linkedProficiency",
+              damage: { type: null },
+              proficiency,
+            });
 
-        return {
-          id: rrid<RRDiceTemplate>(),
-          name: skill,
-          notes: "",
-          parts,
-          rollType: null,
-        };
+          return {
+            character,
+            template: {
+              id: rrid<RRDiceTemplate>(),
+              name: skill,
+              notes: "",
+              parts,
+              rollType: null,
+            },
+          };
+        });
+        return { ability: skillMap[skill], templates };
       }),
-    [character.skills, character.stats]
+    [characters]
   );
 
   function renderContent(active: string) {
-    const category = character.diceTemplateCategories.find(
-      (cat) => cat.id === active
-    );
     switch (active) {
       case "Dice Input":
         return <DicePanel />;
@@ -307,8 +328,13 @@ export const InnerActionsHUD = function ({
         return <GeneratedDiceTemplates templates={savingThrowTemplates} />;
       case "closed":
         return <></>;
-      default:
-        return category ? <DiceTemplates category={category} /> : <></>;
+      default: {
+        if (characters.length !== 1) return null;
+        const category = characters[0]!.diceTemplateCategories.find(
+          (cat) => cat.id === active
+        );
+        return category ? <DiceTemplates category={category} /> : null;
+      }
     }
   }
 
@@ -366,26 +392,31 @@ export const InnerActionsHUD = function ({
             <FontAwesomeIcon size="lg" icon={faHandPaper} fixedWidth />
           </Button>
         </RRTooltip>
-        {character.diceTemplateCategories.map((category) => (
-          <DiceTemplateButton
-            key={category.id}
-            category={category}
-            active={active === category.id}
-            onSetActive={() => toggle(category.id)}
-          />
-        ))}
-        {character.diceTemplateCategories.length < userCategoryIcons.length && (
-          <RRTooltip content={"Add Category"} placement="top">
-            <Button
-              unstyled
-              className={actionClasses}
-              onClick={() => {
-                addTemplateCategory();
-              }}
-            >
-              <FontAwesomeIcon size="lg" icon={faPlus} fixedWidth />
-            </Button>
-          </RRTooltip>
+        {characters.length === 1 && (
+          <>
+            {characters[0]!.diceTemplateCategories.map((category) => (
+              <DiceTemplateButton
+                key={category.id}
+                category={category}
+                active={active === category.id}
+                onSetActive={() => toggle(category.id)}
+              />
+            ))}
+            {characters[0]!.diceTemplateCategories.length <
+              userCategoryIcons.length && (
+              <RRTooltip content={"Add Category"} placement="top">
+                <Button
+                  unstyled
+                  className={actionClasses}
+                  onClick={() => {
+                    addTemplateCategory();
+                  }}
+                >
+                  <FontAwesomeIcon size="lg" icon={faPlus} fixedWidth />
+                </Button>
+              </RRTooltip>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -450,7 +481,8 @@ function DiceTemplateCategoryEditor({
 }: {
   category: RRDiceTemplateCategory;
 }) {
-  const character = useMyActiveCharacter("diceTemplateCategories", "id");
+  const character =
+    useMyActiveCharacters("diceTemplateCategories", "id")[0] ?? null;
   const dispatch = useServerDispatch();
   const confirm = useConfirm();
 

@@ -17,7 +17,7 @@ import {
 import { assertNever } from "../../../shared/util";
 import { RRDiceTemplate } from "../../../shared/validation";
 import { proficiencyStringToValue } from "../../diceUtils";
-import { useMyActiveCharacter, useMyProps } from "../../myself";
+import { useMyActiveCharacters, useMyProps } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import { contrastColor, modifierFromStat } from "../../util";
 import { Popover } from "../Popover";
@@ -61,7 +61,7 @@ export const DiceTemplatePartMenuWrapper: React.FC<
 > = ({ part, template, children, categoryId, isTopLevel }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const dispatch = useServerDispatch();
-  const character = useMyActiveCharacter("id")!;
+  const character = useMyActiveCharacters("id")[0]!;
 
   const applyDelete = (part: RRDiceTemplatePart) => {
     isTopLevel

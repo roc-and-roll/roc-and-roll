@@ -90,7 +90,7 @@ export const CharacterPreview = React.memo(
   })
 );
 
-const STACK_FAN_OUT_SIZE = 24;
+const STACK_FAN_OUT_SIZE = 32;
 
 export function CharacterStack({
   characters,
@@ -111,11 +111,14 @@ export function CharacterStack({
   }, [characters.length]);
 
   size ??= DEFAULT_CHARACTER_SIZE;
+  const fanOutSize =
+    (size / DEFAULT_CHARACTER_SIZE) *
+    Math.min(STACK_FAN_OUT_SIZE, characters.length * 4);
   return (
     <div
-      className="relative"
+      className="relative select-none"
       style={{
-        width: size + (characters.length > 1 ? STACK_FAN_OUT_SIZE : 0),
+        width: size + (characters.length > 1 ? fanOutSize : 0),
         height: size,
       }}
       onClick={() =>
@@ -130,7 +133,7 @@ export function CharacterStack({
             left:
               characters.length === 1 || i === 0
                 ? 0 // avoid division by 0
-                : i * (STACK_FAN_OUT_SIZE / (characters.length - 1)),
+                : i * (fanOutSize / (characters.length - 1)),
           }}
         >
           <CharacterPreview character={character} size={size} />
