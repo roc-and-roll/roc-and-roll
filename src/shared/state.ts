@@ -329,6 +329,14 @@ export interface RRDiceTemplatePartLinkedModifier
     }
   > {}
 
+export interface RRDiceTemplatePartLabel
+  extends Extract<
+    IterableElement<RRDiceTemplate["parts"]>,
+    {
+      type: "label";
+    }
+  > {}
+
 export interface RRDiceTemplatePartLinkedProficiency
   extends Extract<
     IterableElement<RRDiceTemplate["parts"]>,

@@ -5,6 +5,7 @@ import {
   characterRemoveDiceTemplate,
   characterUpdateDiceTemplate,
   characterUpdateDiceTemplatePart,
+  characterUpdateDie,
 } from "../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import {
@@ -47,13 +48,15 @@ const updatePartAction = (
   });
 
 export function DamageTypeEditor({
-  part,
+  parts,
   template,
   categoryId,
+  characterId,
 }: {
-  part: RRDiceTemplatePartWithDamage;
-  template: RRDiceTemplate;
-  categoryId: RRDiceTemplateCategoryID;
+  parts: RRDiceTemplatePartWithDamage[];
+  template?: RRDiceTemplate;
+  categoryId?: RRDiceTemplateCategoryID;
+  characterId?: RRCharacterID;
 }) {
   const dispatch = useServerDispatch();
   const selected = useMyActiveCharacters("id")[0]!;
@@ -62,14 +65,22 @@ export function DamageTypeEditor({
     <label>
       Damage Type:
       <Select
-        value={part.damage.type ?? ""}
+        value={parts[0]!.damage.type ?? ""}
         onChange={(damageType) =>
           dispatch({
-            actions: [
-              updatePartAction(selected.id, part.id, categoryId, template, {
-                damage: { type: empty2Null(damageType) },
-              }),
-            ],
+            actions: parts.map((part) =>
+              categoryId && template
+                ? updatePartAction(selected.id, part.id, categoryId, template, {
+                    damage: { type: empty2Null(damageType) },
+                  })
+                : characterUpdateDie({
+                    id: characterId!,
+                    die: {
+                      id: part.id,
+                      changes: { damage: { type: empty2Null(damageType) } },
+                    },
+                  })
+            ),
             optimisticKey: "damageType",
             syncToServerThrottle: 0,
           })

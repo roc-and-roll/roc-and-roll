@@ -11,6 +11,8 @@ import {
   faStreetView,
   faSearch,
   IconDefinition,
+  faDiceD20,
+  faCubes,
 } from "@fortawesome/free-solid-svg-icons";
 import React from "react";
 import { useMyProps } from "../../myself";
@@ -36,6 +38,9 @@ import { DebugSettings } from "./DebugSettings";
 import clsx from "clsx";
 import { Atmosphere } from "../map/atmosphere/Atmosphere";
 import QuickReference from "../quickReference/QuickReference";
+import { useRRSettings } from "../../settings";
+import { DicePanel } from "../diceTemplates/DicePanel";
+import { BetterDice } from "../betterDice/BetterDice";
 
 const tooltipProps: Partial<RRTooltipProps> = {
   placement: "right",
@@ -45,6 +50,7 @@ const tooltipProps: Partial<RRTooltipProps> = {
 interface ToolbarElement {
   id: string;
   content: React.ReactElement;
+  large?: boolean;
   collapsed: boolean;
   gmOnly: boolean;
   icon: IconDefinition;
@@ -68,6 +74,8 @@ export const HUDToolbar = React.memo(function Toolbar() {
   const [activeToolbarElements, setActiveToolbarElements] = useLocalState<
     string[]
   >("activeToolbarElements", []);
+
+  const [{ betterDice }] = useRRSettings();
 
   const toolbarElements: ToolbarElement[] = [
     ...(process.env.NODE_ENV === "development"
@@ -171,13 +179,39 @@ export const HUDToolbar = React.memo(function Toolbar() {
       icon: faStreetView,
       iconTooltip: "Characters",
     },
+    ...(betterDice
+      ? [
+          {
+            id: "diceRolling",
+            collapsed: false,
+            content: <DicePanel />,
+            gmOnly: false,
+            icon: faDiceD20,
+            iconTooltip: "Dice Rolling",
+          },
+          {
+            id: "betterDice",
+            collapsed: false,
+            content: <BetterDice />,
+            gmOnly: false,
+            icon: faCubes,
+            large: true,
+            iconTooltip: "Dice Templates",
+          },
+        ]
+      : []),
   ];
 
   // Disable pointer events on the wrapper div - otherwise you cannot interact
   // with the map, even if the entire toolbar is collapsed. Make sure to
   // re-enable pointer events on all children.
   return (
-    <div className="pointer-events-none absolute bottom-14 left-2 flex items-end h-[calc(100%-6rem)] z-10">
+    <div
+      className={clsx(
+        "pointer-events-none absolute left-2 flex items-end h-[calc(100%-6rem)] z-10",
+        betterDice ? "bottom-2" : "bottom-14"
+      )}
+    >
       <div className="pointer-events-auto flex flex-col hud-panel">
         <RRTooltip
           content={collapsed ? "show more" : "show less"}
@@ -226,7 +260,7 @@ export const HUDToolbar = React.memo(function Toolbar() {
           );
         })}
       </div>
-      <div className="pointer-events-auto w-[420px] overflow-y-auto max-h-full">
+      <div className={clsx("pointer-events-auto overflow-y-auto max-h-full")}>
         {toolbarElements.map(
           (toolbarElement) =>
             (!collapsed || !toolbarElement.collapsed) &&
@@ -234,9 +268,14 @@ export const HUDToolbar = React.memo(function Toolbar() {
             (!toolbarElement.gmOnly || myself.isGM) && (
               <div
                 key={toolbarElement.id}
-                className={clsx("last:mb-0 hud-panel m-2", {
-                  "p-3": !toolbarElement.hidePanel,
-                })}
+                className={clsx(
+                  "last:mb-0 hud-panel m-2",
+                  {
+                    "p-3": !toolbarElement.hidePanel,
+                  },
+
+                  toolbarElement.large ? "w-[800px]" : "w-[420px]"
+                )}
               >
                 {toolbarElement.content}
               </div>

@@ -114,6 +114,19 @@ export function Settings() {
           }
         />
       </label>
+      <label>
+        Use better dice for templates
+        <input
+          type="checkbox"
+          checked={settings.betterDice}
+          onChange={(e) =>
+            setSettings((old) => ({
+              ...old,
+              betterDice: e.target.checked,
+            }))
+          }
+        />
+      </label>
       <div>
         <label>
           Log Entry Titles for Dice Rolls

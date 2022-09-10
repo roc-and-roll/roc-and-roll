@@ -86,7 +86,8 @@ export function evaluateDiceTemplatePart(
           damage: part.damage,
         },
       ];
-    case "template": {
+    case "template":
+    case "label": {
       // Do not evaluate nested templates, since they are evaluated separately
       // if they are selected.
       return [];

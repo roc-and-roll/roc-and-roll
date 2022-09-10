@@ -1,5 +1,11 @@
 import clsx from "clsx";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   logEntryDiceRollAdd,
   characterAddDie,
@@ -7,28 +13,36 @@ import {
 } from "../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import {
-  RRCharacterID,
   RRDiceTemplatePart,
   RRDiceTemplatePartID,
+  RRDiceTemplatePartWithDamage,
+  colorForDamageType,
+  RRCharacter,
+  RRDiceTemplatePartLabel,
 } from "../../../shared/state";
-import { rrid } from "../../../shared/util";
+import { contrastColor } from "../../util";
 import { RRDie } from "../../../shared/validation";
 import { evaluateDiceTemplatePart } from "../../diceUtils";
 import { useMyActiveCharacters, useMyProps } from "../../myself";
 import { useServerDispatch } from "../../state";
+import { DamageTypeEditor } from "../diceTemplates/DiceTemplateEditors";
+import { Popover } from "../Popover";
 import { Button } from "../ui/Button";
+import { D10, D12, D20, D4, D6, D8 } from "./Dice";
+import { DicePicker } from "../diceTemplates/DiceTemplates";
+import { useDrop } from "react-dnd";
+import composeRefs from "@seznam/compose-react-refs";
+import { usePrompt } from "../../dialog-boxes";
 
 function Die({
-  die: { x, y, id },
-  characterId,
-  children,
+  die,
+  character,
   selectedOffset,
   onSelect,
   lastSelectedTimesRef,
 }: {
   die: RRDie;
-  characterId: RRCharacterID;
-  children: React.ReactNode;
+  character: Pick<RRCharacter, "id">;
   selectedOffset: number;
   onSelect: (id: RRDiceTemplatePartID) => void;
   lastSelectedTimesRef: React.MutableRefObject<
@@ -40,11 +54,11 @@ function Die({
   const dispatch = useServerDispatch();
 
   const doSelect = useCallback(() => {
-    const selectedTime = lastSelectedTimesRef.current[id];
+    const selectedTime = lastSelectedTimesRef.current[die.id];
     if (!selectedTime || new Date().getTime() - selectedTime.getTime() > 1000) {
-      onSelect(id);
+      onSelect(die.id);
     }
-  }, [id, onSelect, lastSelectedTimesRef]);
+  }, [die.id, onSelect, lastSelectedTimesRef]);
 
   useEffect(() => {
     if (dragging) {
@@ -54,13 +68,13 @@ function Die({
           actions: [
             characterUpdateDie({
               die: {
-                id,
+                id: die.id,
                 changes: {
-                  x: x + e.clientX - last.current.x,
-                  y: y + e.clientY - last.current.y,
+                  x: die.x + e.clientX - last.current.x,
+                  y: die.y + e.clientY - last.current.y,
                 },
               },
-              id: characterId,
+              id: character.id,
             }),
           ],
           syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
@@ -84,11 +98,96 @@ function Die({
         window.removeEventListener("mouseup", up);
       };
     }
-  }, [characterId, dispatch, dragging, id, doSelect, x, y]);
+  }, [character.id, dispatch, dragging, die.id, doSelect, die.x, die.y]);
+
+  const hasDamageType =
+    die.type === "dice" ||
+    die.type === "linkedModifier" ||
+    die.type === "linkedProficiency" ||
+    die.type === "linkedStat" ||
+    die.type === "modifier";
+
+  const iconForFaces = (faces: number, color: string) => {
+    switch (faces) {
+      case 20:
+        return <D20 color={color} />;
+      case 12:
+        return <D12 color={color} />;
+      case 10:
+        return <D10 color={color} />;
+      case 8:
+        return <D8 color={color} />;
+      case 6:
+        return <D6 color={color} />;
+      case 4:
+        return <D4 color={color} />;
+    }
+  };
+
+  const prompt = usePrompt();
+
+  const editLabel = async () => {
+    const label = await prompt(
+      "New Label?",
+      (die as RRDiceTemplatePartLabel).label
+    );
+    if (label)
+      dispatch(
+        characterUpdateDie({
+          die: {
+            id: die.id,
+            changes: { label },
+          },
+          id: character.id,
+        })
+      );
+  };
+
+  const icon = () => {
+    switch (die.type) {
+      case "dice":
+        return iconForFaces(
+          die.faces,
+          hasDamageType ? colorForDamageType(die.damage.type) : "#fff"
+        );
+      case "modifier":
+        return (
+          <span className="text-white leading-none">
+            {die.number >= 0 && "+"}
+            {die.number}
+          </span>
+        );
+      case "linkedStat":
+        return (
+          <span className="text-white leading-none italic">{die.name}</span>
+        );
+      case "linkedModifier":
+        return (
+          <span className="text-white leading-none italic">{die.name}</span>
+        );
+      case "linkedProficiency":
+        return <span className="text-white leading-none italic">Prof</span>;
+      case "label":
+        return (
+          <span
+            onContextMenu={(e) => {
+              e.preventDefault();
+              void editLabel();
+            }}
+            className="text-white leading-none"
+          >
+            {die.label}
+          </span>
+        );
+      case "template":
+        return null;
+    }
+  };
 
   return (
     <div
       onMouseDown={(e) => {
+        if (e.button !== 0) return;
         e.stopPropagation();
         last.current.x = e.clientX;
         last.current.y = e.clientY;
@@ -103,7 +202,7 @@ function Die({
       style={{
         transform:
           selectedOffset < 0
-            ? `translate(${x}px, ${y}px)`
+            ? `translate(${die.x}px, ${die.y}px)`
             : `translate(${selectedOffset * 32}px, 0px)`,
         position: "absolute",
         cursor: "pointer",
@@ -112,13 +211,13 @@ function Die({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        color: hasDamageType
+          ? contrastColor(colorForDamageType(die.damage.type))
+          : "#000",
       }}
-      className={clsx(
-        "bg-rr-500 select-none",
-        !dragging && "transition-transform"
-      )}
+      className={clsx("select-none", !dragging && "transition-transform")}
     >
-      {children}
+      {icon()}
     </div>
   );
 }
@@ -157,6 +256,11 @@ export function BetterDice() {
   const lastSelectedTimesRef = useRef<Record<RRDiceTemplatePartID, Date>>({});
 
   const dice = character?.dice ?? empty;
+  const selectedDice = useMemo(
+    () => dice.filter((d) => selectedIds.includes(d.id)),
+    [dice, selectedIds]
+  );
+
   const onSelectDie = useCallback(
     (id: RRDiceTemplatePartID) => {
       setSelectedIds((ids) => {
@@ -180,98 +284,153 @@ export function BetterDice() {
     [dice]
   );
 
-  if (!character) return null;
+  const doRoll = useCallback(
+    (crit: boolean = false) => {
+      const parts = selectedIds.flatMap((id) =>
+        evaluateDiceTemplatePart(
+          dice.find((d) => d.id === id)!,
+          "none",
+          crit,
+          character
+        )
+      );
+      const rollName = selectedDice
+        .filter((p) => p.type === "label")
+        .map((p) => (p as RRDiceTemplatePartLabel).label)
+        .join(" ");
+      if (parts.length < 1) return;
 
-  const doRoll = (crit: boolean = false) => {
-    const parts = selectedIds.flatMap((id) =>
-      evaluateDiceTemplatePart(
-        dice.find((d) => d.id === id)!,
-        "none",
-        crit,
-        character
-      )
-    );
-    if (parts.length < 1) return;
+      dispatch(
+        logEntryDiceRollAdd({
+          silent: false,
+          playerId: myId,
+          payload: {
+            tooltip: "",
+            rollType: "attack", // TODO
+            rollName,
+            diceRollTree:
+              parts.length === 1
+                ? parts[0]!
+                : {
+                    type: "term",
+                    operator: "+",
+                    operands: parts,
+                  },
+            characterIds: [character!.id],
+          },
+        })
+      );
 
-    dispatch(
-      logEntryDiceRollAdd({
-        silent: false,
-        playerId: myId,
-        payload: {
-          tooltip: "",
-          rollType: "attack", // TODO
-          rollName: "",
-          diceRollTree:
-            parts.length === 1
-              ? parts[0]!
-              : {
-                  type: "term",
-                  operator: "+",
-                  operands: parts,
-                },
-          characterIds: [character.id],
-        },
-      })
-    );
+      setSelectedIds([]);
+    },
+    [character, dice, dispatch, myId, selectedDice, selectedIds]
+  );
 
+  const clear = () => {
     setSelectedIds([]);
   };
 
-  const roll = () => {
+  const roll = useCallback(() => {
     doRoll(false);
-  };
+  }, [doRoll]);
 
-  const addDie = () => {
-    dispatch(
-      characterAddDie({
-        id: character.id,
-        die: {
-          x: 0,
-          y: 0,
-          type: "dice",
-          modified: "none",
-          faces: 6,
-          count: 1,
-          damage: { type: null },
-          id: rrid<RRDiceTemplatePart>(),
-          negated: false,
-        },
-      })
-    );
-  };
+  useEffect(() => {
+    const keyUp = function (e: KeyboardEvent) {
+      if (e.key === "Shift") roll();
+    };
+    window.addEventListener("keyup", keyUp);
+    return () => window.removeEventListener("keyup", keyUp);
+  }, [roll]);
+
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [addDiceVisible, setAddDiceVisible] = useState(false);
+
+  const dropContainerRef = useRef<HTMLDivElement>(null);
+
+  const [, dropRef] = useDrop<RRDiceTemplatePart, void, never>(
+    () => ({
+      accept: ["diceTemplatePart"],
+      drop: (item, monitor) => {
+        if (!character) return;
+        const topLeft = dropContainerRef.current!.getBoundingClientRect();
+        const dropPosition = monitor.getClientOffset();
+        const x = dropPosition!.x - topLeft.x - 10;
+        const y = dropPosition!.y - topLeft.y - 10;
+
+        const action = characterAddDie({
+          id: character.id,
+          die: { ...item, x, y },
+        });
+        dispatch(action);
+      },
+      canDrop: (_item, monitor) => monitor.isOver({ shallow: true }),
+    }),
+    [dispatch, character]
+  );
+
+  const ref = composeRefs<HTMLDivElement>(dropContainerRef, dropRef);
+
+  if (!character) return null;
 
   return (
-    <div
-      style={{
-        bottom: 0,
-        left: "72px",
-        height: "200px",
-        width: "400px",
-        position: "absolute",
-      }}
-      className="bg-rr-800"
-    >
-      <Button onClick={addDie}>Add Die</Button>
+    <div>
+      {addDiceVisible && (
+        <div className="dice-templates" style={{ maxWidth: "400px" }}>
+          <DicePicker useBetterDice />
+        </div>
+      )}
+      <Button onClick={() => setAddDiceVisible((v) => !v)}>Add Dice</Button>
+      {selectedIds.length > 0 && <Button onClick={clear}>Clear</Button>}
       {selectedIds.length > 0 && <Button onClick={roll}>Roll</Button>}
-      {character.dice.map((die) => {
-        switch (die.type) {
-          case "dice":
-            return (
-              <Die
-                lastSelectedTimesRef={lastSelectedTimesRef}
-                key={die.id}
-                selectedOffset={selectedIds.indexOf(die.id)}
-                characterId={character.id}
-                die={die}
-                onSelect={onSelectDie}
-              >
-                {die.faces}
-              </Die>
-            );
-          default:
-            return null;
-        }
-      })}
+      {selectedIds.length > 0 && (
+        <Popover
+          visible={menuVisible}
+          onClickOutside={() => setMenuVisible(false)}
+          interactive
+          placement="top"
+          content={
+            <div onClick={(e) => e.stopPropagation()}>
+              {selectedDice.every(
+                (part) =>
+                  part.type === "dice" ||
+                  part.type === "linkedModifier" ||
+                  part.type === "linkedProficiency" ||
+                  part.type === "linkedStat" ||
+                  part.type === "modifier"
+              ) && (
+                <DamageTypeEditor
+                  parts={selectedDice as RRDiceTemplatePartWithDamage[]}
+                  characterId={character.id}
+                />
+              )}
+            </div>
+          }
+        >
+          <Button onClick={() => setMenuVisible((visible) => !visible)}>
+            Edit
+          </Button>
+        </Popover>
+      )}
+      <div
+        ref={ref}
+        style={{
+          height: "200px",
+          width: "400px",
+        }}
+      >
+        {character.dice.map((die) => {
+          return (
+            <Die
+              lastSelectedTimesRef={lastSelectedTimesRef}
+              key={die.id}
+              selectedOffset={selectedIds.indexOf(die.id)}
+              character={character}
+              die={die}
+              onSelect={onSelectDie}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

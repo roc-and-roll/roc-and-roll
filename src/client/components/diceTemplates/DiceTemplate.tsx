@@ -153,7 +153,12 @@ function DiceTemplateImpl({
   function sortTemplateParts(a: RRDiceTemplatePart, b: RRDiceTemplatePart) {
     let damageTypeResult = 0;
     //sort by damage type
-    if (a.type !== "template" && b.type !== "template") {
+    if (
+      a.type !== "template" &&
+      b.type !== "template" &&
+      a.type !== "label" &&
+      b.type !== "label"
+    ) {
       damageTypeResult = (a.damage.type ?? "zzzz").localeCompare(
         b.damage.type ?? "zzzz"
       );

@@ -85,7 +85,7 @@ export const DiceTemplatePartMenuWrapper: React.FC<
             part.type === "linkedStat" ||
             part.type === "modifier") && (
             <DamageTypeEditor
-              part={part}
+              parts={[part]}
               template={template}
               categoryId={categoryId}
             />
@@ -266,6 +266,9 @@ export const DiceTemplatePart = React.forwardRef<
           isChildTemplate={true}
         />
       );
+      break;
+    case "label":
+      content = <div className="dice-option">{part.label}</div>;
       break;
     default:
       assertNever(part);

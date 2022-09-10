@@ -14,6 +14,7 @@ import {
   RRDiceTemplatePartLinkedProficiency,
   RRDiceTemplateCategoryID,
   RRDiceTemplatePartLinkedModifier,
+  RRDiceTemplatePartLabel,
 } from "../../../shared/state";
 import { rrid } from "../../../shared/util";
 import {
@@ -253,7 +254,7 @@ export const DiceTemplates = React.memo(function DiceTemplates({
   );
 });
 
-function DicePicker() {
+export function DicePicker({ useBetterDice }: { useBetterDice?: boolean }) {
   const makeDicePart = (faces: number) =>
     ({
       id: rrid<RRDiceTemplatePart>(),
@@ -279,6 +280,12 @@ function DicePicker() {
     type: "linkedModifier" as const,
     damage: { type: null },
     name: "initiative",
+  };
+
+  const labelPart: RRDiceTemplatePartLabel = {
+    id: rrid<RRDiceTemplatePart>(),
+    type: "label" as const,
+    label: "label",
   };
 
   const levelPart: RRDiceTemplatePartLinkedModifier = {
@@ -320,7 +327,14 @@ function DicePicker() {
           );
         })}
       <hr className="solid"></hr>
-      <PickerDiceTemplateNested />
+      {useBetterDice ? (
+        <PickerDiceTemplatePart
+          part={labelPart}
+          onClick={() => setDiceHolder([...diceHolder, labelPart])}
+        />
+      ) : (
+        <PickerDiceTemplateNested />
+      )}
       <hr className="solid"></hr>
       <PickerDiceTemplatePart
         part={initiativePart}

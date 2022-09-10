@@ -182,6 +182,11 @@ export interface _RRDiceTemplate {
         name: typeof characterStatNames[number];
         damage: RRDamageType;
       }
+    | {
+        id: RRDiceTemplatePartID;
+        type: "label";
+        label: string;
+      }
   )[];
   rollType: z.infer<typeof isRollType>;
 }
@@ -192,52 +197,54 @@ const __isDiceTemplateRecursive: z.ZodSchema<_RRDiceTemplate> = z.lazy(
 
 const createBasicDiceTemplatePart = <T>(extra: T) =>
   z.union(
-    withDo({ id: isRRID<RRDiceTemplatePartID>() }, (sharedValidators) => [
-      z.strictObject({
-        ...sharedValidators,
-        ...extra,
-        type: z.literal("dice"),
-        count: z.number().int().min(0),
-        faces: z.number().int().min(0),
-        negated: z.boolean(),
-        damage: isDamageType,
-        modified: z.enum(multipleRollValues),
-      }),
-      z.strictObject({
-        ...sharedValidators,
-        ...extra,
-        type: z.literal("template"),
-        template: __isDiceTemplateRecursive,
-      }),
-      z.strictObject({
-        ...sharedValidators,
-        ...extra,
-        type: z.literal("modifier"),
-        number: z.number().int(),
-        damage: isDamageType,
-      }),
-      z.strictObject({
-        ...sharedValidators,
-        ...extra,
-        type: z.literal("linkedModifier"),
-        name: z.union([z.literal("initiative"), z.literal("level")]),
-        damage: isDamageType,
-      }),
-      z.strictObject({
-        ...sharedValidators,
-        ...extra,
-        type: z.literal("linkedProficiency"),
-        damage: isDamageType,
-        proficiency: isProficiencyValue,
-      }),
-      z.strictObject({
-        ...sharedValidators,
-        ...extra,
-        type: z.literal("linkedStat"),
-        name: z.enum(characterStatNames),
-        damage: isDamageType,
-      }),
-    ])
+    withDo(
+      { ...extra, id: isRRID<RRDiceTemplatePartID>() },
+      (sharedValidators) => [
+        z.strictObject({
+          ...sharedValidators,
+          type: z.literal("dice"),
+          count: z.number().int().min(0),
+          faces: z.number().int().min(0),
+          negated: z.boolean(),
+          damage: isDamageType,
+          modified: z.enum(multipleRollValues),
+        }),
+        z.strictObject({
+          ...sharedValidators,
+          type: z.literal("template"),
+          template: __isDiceTemplateRecursive,
+        }),
+        z.strictObject({
+          ...sharedValidators,
+          type: z.literal("modifier"),
+          number: z.number().int(),
+          damage: isDamageType,
+        }),
+        z.strictObject({
+          ...sharedValidators,
+          type: z.literal("linkedModifier"),
+          name: z.union([z.literal("initiative"), z.literal("level")]),
+          damage: isDamageType,
+        }),
+        z.strictObject({
+          ...sharedValidators,
+          type: z.literal("linkedProficiency"),
+          damage: isDamageType,
+          proficiency: isProficiencyValue,
+        }),
+        z.strictObject({
+          ...sharedValidators,
+          type: z.literal("linkedStat"),
+          name: z.enum(characterStatNames),
+          damage: isDamageType,
+        }),
+        z.strictObject({
+          ...sharedValidators,
+          type: z.literal("label"),
+          label: z.string(),
+        }),
+      ]
+    )
   );
 
 const isDie = createBasicDiceTemplatePart({ x: z.number(), y: z.number() });
