@@ -14,7 +14,7 @@ import {
 import { rrid } from "../../../shared/util";
 import { RRDie } from "../../../shared/validation";
 import { evaluateDiceTemplatePart } from "../../diceUtils";
-import { useMyActiveCharacter, useMyProps } from "../../myself";
+import { useMyActiveCharacters, useMyProps } from "../../myself";
 import { useServerDispatch } from "../../state";
 import { Button } from "../ui/Button";
 
@@ -146,7 +146,12 @@ const allAffected = (origin: RRDie, candidates: RRDie[]) => {
 
 export function BetterDice() {
   const { id: myId } = useMyProps("id");
-  const character = useMyActiveCharacter("dice", "id", "attributes", "stats");
+  const character = useMyActiveCharacters(
+    "dice",
+    "id",
+    "attributes",
+    "stats"
+  )[0];
   const dispatch = useServerDispatch();
   const [selectedIds, setSelectedIds] = useState<RRDiceTemplatePartID[]>([]);
   const lastSelectedTimesRef = useRef<Record<RRDiceTemplatePartID, Date>>({});
