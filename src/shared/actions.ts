@@ -104,6 +104,11 @@ export const characterUpdate =
 export const characterRemove =
   createAction<RRCharacter["id"]>("character/remove");
 
+export const characterUpdateHPRelatively = createAction<{
+  id: RRCharacterID;
+  relativeHP: number;
+}>("character/hp/update/relative");
+
 export const playerUpdateAddCharacterId = createAction<{
   id: RRPlayerID;
   characterId: RRCharacterID;

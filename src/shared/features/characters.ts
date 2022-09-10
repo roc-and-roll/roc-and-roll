@@ -3,6 +3,7 @@ import {
   characterAdd,
   characterUpdate,
   characterRemove,
+  characterUpdateHPRelatively,
   mapObjectRemove,
   characterAddDiceTemplate,
   characterAddDiceTemplateCategory,
@@ -26,6 +27,7 @@ import {
   RRDiceTemplateID,
   RRDiceTemplatePartID,
 } from "../state";
+import { clamp } from "../util";
 import { RRDiceTemplate } from "../validation";
 
 const charactersAdapter = createEntityAdapter<RRCharacter>();
@@ -45,6 +47,29 @@ export const charactersReducer = createReducer(
           );
         }
         return state;
+      })
+
+      .addCase(characterUpdateHPRelatively, (state, action) => {
+        const character = state.entities[action.payload.id];
+        let newTemporaryHP, newHP;
+        if (character) {
+          if (action.payload.relativeHP < 0) {
+            const hpToLose = action.payload.relativeHP * -1;
+
+            newTemporaryHP = Math.max(0, character.temporaryHP - hpToLose);
+            newHP =
+              character.hp - Math.max(0, hpToLose - character.temporaryHP);
+          } else {
+            newHP = character.hp + action.payload.relativeHP;
+          }
+
+          character.hp = clamp(
+            0,
+            newHP,
+            character.maxHP + character.maxHPAdjustment
+          );
+          character.temporaryHP = newTemporaryHP ?? character.temporaryHP;
+        }
       })
 
       .addCase(characterAddSpell, (state, action) => {

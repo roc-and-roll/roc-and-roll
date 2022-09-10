@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { RRCharacter, RRCharacterID } from "../../../../shared/state";
 import { useMyActiveCharacters, useMyProps } from "../../../myself";
 import { useServerDispatch } from "../../../state";
-import { CharacterPreview } from "../../characters/CharacterPreview";
+import {
+  CharacterPreview,
+  CharacterStack,
+} from "../../characters/CharacterPreview";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faClipboard,
@@ -16,18 +19,23 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { SettingsDialog } from "../Toolbar";
 import { RRFontAwesomeIcon } from "../../RRFontAwesomeIcon";
-import { characterUpdate, playerUpdate } from "../../../../shared/actions";
+import {
+  characterUpdate,
+  characterUpdateHPRelatively,
+  playerUpdate,
+} from "../../../../shared/actions";
 import { CharacterEditor } from "../../characters/CharacterEditor";
 import { Popover } from "../../Popover";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../../shared/constants";
 import { useDrag } from "react-dnd";
 import { CombatCardHUD } from "./CombatCard";
-import { TextareaInput } from "../../ui/TextInput";
+import { SmartTextInput, TextareaInput } from "../../ui/TextInput";
 import { useCompendium } from "../../compendium/Compendium";
 import { Spells } from "./Spells";
 import { LimitedUse } from "./LimitedUseSkills";
 import { ConditionsBar } from "./Conditions";
 import { HealthBar } from "./HealthBar";
+import { Button } from "../../ui/Button";
 
 const characterProps = [
   "id",
@@ -51,7 +59,7 @@ export type RRCharacterProps = Pick<RRCharacter, typeof characterProps[number]>;
 export function CharacterHUD() {
   const myself = useMyProps("mainCharacterId", "isGM");
 
-  const character = useMyActiveCharacters()[0] ?? null;
+  const characters = useMyActiveCharacters();
   const { sources: compendiumSources } = useCompendium();
 
   const healthWidth = 250;
@@ -61,76 +69,129 @@ export function CharacterHUD() {
   const [spellsVisible, setSpellsVisible] = useState(false);
   const [combatCardVisible, setCombatCardVisible] = useState(true);
 
-  const hasMatchingMonster =
-    character &&
-    compendiumSources.flatMap(
-      (source) =>
-        source.data.monster?.filter(
-          (monster) => monster.name === character.name
-        ) ?? []
-    ).length > 0;
-
   return (
     <div className="absolute top-0 right-0 pointer-events-none">
-      <div className="flex m-2">
-        {character && (
-          <div style={{ width: healthWidth }} className="m-4 flex flex-col">
-            <HealthBar
-              character={character}
-              isGM={myself.isGM}
-              width={healthWidth}
-            />
-            <ConditionsBar character={character} />
-            <div>
-              <div className="flex justify-end">
-                <div className="pointer-events-auto m-1 flex items-end flex-col">
-                  <FontAwesomeIcon
-                    title="Your skills"
-                    icon={faScroll}
-                    size="1x"
-                    onClick={() => setSkillsVisible(!skillsVisible)}
-                  />
-                </div>
-                <div className="pointer-events-auto m-1 flex items-end flex-col">
-                  <FontAwesomeIcon
-                    title="Notes"
-                    icon={faClipboard}
-                    size="1x"
-                    onClick={() => setNotesVisible(!notesVisible)}
-                  />
-                </div>
-                <div className="pointer-events-auto m-1 flex items-end flex-col">
-                  <FontAwesomeIcon
-                    title="Spells"
-                    icon={faMagic}
-                    size="1x"
-                    onClick={() => setSpellsVisible(!spellsVisible)}
-                  />
-                </div>
-                {hasMatchingMonster && (
-                  <div className="pointer-events-auto m-1 flex items-end flex-col">
-                    <FontAwesomeIcon
-                      title="Combat Card"
-                      icon={faSkull}
-                      size="1x"
-                      onClick={() => setCombatCardVisible(!combatCardVisible)}
-                    />
+      <div className="flex m-2 items-start">
+        {characters.length === 1 &&
+          (() => {
+            const character = characters[0]!;
+
+            const hasMatchingMonster =
+              compendiumSources.flatMap(
+                (source) =>
+                  source.data.monster?.filter(
+                    (monster) => monster.name === character.name
+                  ) ?? []
+              ).length > 0;
+            return (
+              <div
+                style={{ width: healthWidth }}
+                className="mr-4 flex flex-col"
+              >
+                <HealthBar
+                  character={character}
+                  isGM={myself.isGM}
+                  width={healthWidth}
+                />
+                <ConditionsBar character={character} />
+                <div>
+                  <div className="flex justify-end">
+                    <div className="pointer-events-auto m-1 flex items-end flex-col">
+                      <FontAwesomeIcon
+                        title="Your skills"
+                        icon={faScroll}
+                        size="1x"
+                        onClick={() => setSkillsVisible(!skillsVisible)}
+                      />
+                    </div>
+                    <div className="pointer-events-auto m-1 flex items-end flex-col">
+                      <FontAwesomeIcon
+                        title="Notes"
+                        icon={faClipboard}
+                        size="1x"
+                        onClick={() => setNotesVisible(!notesVisible)}
+                      />
+                    </div>
+                    <div className="pointer-events-auto m-1 flex items-end flex-col">
+                      <FontAwesomeIcon
+                        title="Spells"
+                        icon={faMagic}
+                        size="1x"
+                        onClick={() => setSpellsVisible(!spellsVisible)}
+                      />
+                    </div>
+                    {hasMatchingMonster && (
+                      <div className="pointer-events-auto m-1 flex items-end flex-col">
+                        <FontAwesomeIcon
+                          title="Combat Card"
+                          icon={faSkull}
+                          size="1x"
+                          onClick={() =>
+                            setCombatCardVisible(!combatCardVisible)
+                          }
+                        />
+                      </div>
+                    )}
                   </div>
-                )}
+                  {notesVisible && <Notes character={character} />}
+                  {skillsVisible && <LimitedUse character={character} />}
+                  {spellsVisible && <Spells character={character} />}
+                  {combatCardVisible && <CombatCardHUD />}
+                </div>
               </div>
-              {notesVisible && <Notes character={character} />}
-              {skillsVisible && <LimitedUse character={character} />}
-              {spellsVisible && <Spells character={character} />}
-              {combatCardVisible && <CombatCardHUD />}
-            </div>
-          </div>
+            );
+          })()}
+        {characters.length > 1 && (
+          <RelativeHealthEditor characters={characters} />
         )}
         <div className="flex flex-col items-center pointer-events-none min-h-min">
-          <CurrentCharacter character={character} />
-          {character && <AC character={character} />}
-          {character && <SpellSave character={character} />}
+          <CurrentCharacters characters={characters} />
+          {characters.length === 1 && <AC character={characters[0]!} />}
+          {characters.length === 1 && <SpellSave character={characters[0]!} />}
           {<HeroPoint />}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function RelativeHealthEditor({
+  characters,
+}: {
+  characters: RRCharacterProps[];
+}) {
+  const dispatch = useServerDispatch();
+  const [relativeHP, setRelativeHP] = useState("");
+
+  function changeHP(factor: number) {
+    const newValue = parseInt(relativeHP) || 0;
+    dispatch(
+      characters.map((character) =>
+        characterUpdateHPRelatively({
+          id: character.id,
+          relativeHP: newValue * factor,
+        })
+      )
+    );
+  }
+
+  return (
+    <div className="select-auto pointer-events-auto mr-2">
+      <SmartTextInput
+        className="mb-1 border rounded-md px-2 py-1 border-black"
+        value={relativeHP}
+        onChange={setRelativeHP}
+      />
+      <div className="flex">
+        <Button
+          className="flex-grow bg-red-700 mr-1"
+          onClick={() => changeHP(-1)}
+        >
+          damage
+        </Button>
+        <Button className="flex-grow bg-green-700" onClick={() => changeHP(1)}>
+          heal
+        </Button>
       </div>
     </div>
   );
@@ -226,7 +287,7 @@ function SpellSave({ character }: { character: RRCharacterProps }) {
   );
 }
 
-function CurrentCharacter({ character }: { character: RRCharacter | null }) {
+function CurrentCharacters({ characters }: { characters: RRCharacter[] }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const myself = useMyProps("color");
 
@@ -236,8 +297,10 @@ function CurrentCharacter({ character }: { character: RRCharacter | null }) {
         <SettingsDialog onClose={() => setSettingsOpen(false)} />
       )}
       <div className="relative">
-        {character ? (
-          <DraggableCharacterPreview character={character} />
+        {characters.length === 1 ? (
+          <DraggableCharacterPreview character={characters[0]!} />
+        ) : characters.length > 0 ? (
+          <CharacterStack characters={characters} size={128} />
         ) : (
           <RRFontAwesomeIcon
             icon={faUserCircle}
@@ -274,7 +337,7 @@ function DraggableCharacterPreview({ character }: { character: RRCharacter }) {
   return (
     <div
       ref={dragRef}
-      className="token-preview"
+      className="token-preview m-0"
       onClick={() => setEditorVisible(true)}
     >
       <Popover
