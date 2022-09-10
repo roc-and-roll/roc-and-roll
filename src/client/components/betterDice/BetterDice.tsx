@@ -10,6 +10,7 @@ import {
   logEntryDiceRollAdd,
   characterAddDie,
   characterUpdateDie,
+  characterRemoveDie,
 } from "../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../shared/constants";
 import {
@@ -330,6 +331,17 @@ export function BetterDice() {
     setSelectedIds([]);
   };
 
+  const remove = () => {
+    dispatch({
+      actions: selectedIds.map((id) =>
+        characterRemoveDie({ id: character!.id, dieId: id })
+      ),
+      syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+      optimisticKey: "characterRemoveDie",
+    });
+    setSelectedIds([]);
+  };
+
   const roll = useCallback(() => {
     doRoll(false);
   }, [doRoll]);
@@ -370,7 +382,7 @@ export function BetterDice() {
 
   const ref = composeRefs<HTMLDivElement>(dropContainerRef, dropRef);
 
-  if (!character) return null;
+  if (!character) return "No character selected";
 
   return (
     <div>
@@ -379,38 +391,45 @@ export function BetterDice() {
           <DicePicker useBetterDice />
         </div>
       )}
-      <Button onClick={() => setAddDiceVisible((v) => !v)}>Add Dice</Button>
-      {selectedIds.length > 0 && <Button onClick={clear}>Clear</Button>}
-      {selectedIds.length > 0 && <Button onClick={roll}>Roll</Button>}
-      {selectedIds.length > 0 && (
-        <Popover
-          visible={menuVisible}
-          onClickOutside={() => setMenuVisible(false)}
-          interactive
-          placement="top"
-          content={
-            <div onClick={(e) => e.stopPropagation()}>
-              {selectedDice.every(
-                (part) =>
-                  part.type === "dice" ||
-                  part.type === "linkedModifier" ||
-                  part.type === "linkedProficiency" ||
-                  part.type === "linkedStat" ||
-                  part.type === "modifier"
-              ) && (
-                <DamageTypeEditor
-                  parts={selectedDice as RRDiceTemplatePartWithDamage[]}
-                  characterId={character.id}
-                />
-              )}
-            </div>
-          }
-        >
-          <Button onClick={() => setMenuVisible((visible) => !visible)}>
-            Edit
-          </Button>
-        </Popover>
-      )}
+      <div className="flex">
+        <Button onClick={() => setAddDiceVisible((v) => !v)}>Add Dice</Button>
+        {selectedIds.length > 0 && <Button onClick={clear}>Clear</Button>}
+        {selectedIds.length > 0 && <Button onClick={roll}>Roll</Button>}
+        {selectedIds.length > 0 && (
+          <Button onClick={() => doRoll(true)}>Crit!</Button>
+        )}
+        <div style={{ flexGrow: 1 }}></div>
+        {selectedIds.length > 0 && <Button onClick={remove}>Delete</Button>}
+        {selectedIds.length > 0 && (
+          <Popover
+            visible={menuVisible}
+            onClickOutside={() => setMenuVisible(false)}
+            interactive
+            placement="top"
+            content={
+              <div onClick={(e) => e.stopPropagation()}>
+                {selectedDice.every(
+                  (part) =>
+                    part.type === "dice" ||
+                    part.type === "linkedModifier" ||
+                    part.type === "linkedProficiency" ||
+                    part.type === "linkedStat" ||
+                    part.type === "modifier"
+                ) && (
+                  <DamageTypeEditor
+                    parts={selectedDice as RRDiceTemplatePartWithDamage[]}
+                    characterId={character.id}
+                  />
+                )}
+              </div>
+            }
+          >
+            <Button onClick={() => setMenuVisible((visible) => !visible)}>
+              Edit
+            </Button>
+          </Popover>
+        )}
+      </div>
       <div
         ref={ref}
         style={{

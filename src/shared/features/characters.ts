@@ -19,6 +19,7 @@ import {
   characterUpdateSpell,
   characterAddDie,
   characterUpdateDie,
+  characterRemoveDie,
 } from "../actions";
 import {
   EntityCollection,
@@ -184,6 +185,17 @@ export const charactersReducer = createReducer(
         const die = character.dice.find((d) => d.id === action.payload.die.id);
         if (!die) return;
         Object.assign(die, action.payload.die.changes);
+      })
+
+      .addCase(characterRemoveDie, (state, action) => {
+        const character = state.entities[action.payload.id];
+        if (!character) return;
+        const index = character.dice.findIndex(
+          (p) => p.id === action.payload.dieId
+        );
+        if (index >= 0) {
+          character.dice.splice(index, 1);
+        }
       });
   }
 );

@@ -194,6 +194,11 @@ export const characterUpdateDie = createAction<{
   die: Update<RRDie>;
 }>("character/dice/update");
 
+export const characterRemoveDie = createAction<{
+  id: RRCharacterID;
+  dieId: RRDiceTemplatePartID;
+}>("character/dice/remove");
+
 ////////////////////////////////////////////////////////////////////////////////
 // Maps
 ////////////////////////////////////////////////////////////////////////////////
