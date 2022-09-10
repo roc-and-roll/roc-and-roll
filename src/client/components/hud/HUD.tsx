@@ -5,12 +5,15 @@ import { InitiativeHUD } from "./Initiative";
 import { HUDToolbar } from "./Toolbar";
 import { RRColor } from "../../../shared/state";
 import { ActionsHUD } from "./Actions";
+import { BetterDice } from "../betterDice/BetterDice";
+import { useRRSettings } from "../../settings";
 
 export const HUD = React.memo(function HUD({
   mapBackgroundColor,
 }: {
   mapBackgroundColor: RRColor;
 }) {
+  const [{ betterDice }] = useRRSettings();
   return (
     <>
       <Suspense fallback={null}>
@@ -26,7 +29,7 @@ export const HUD = React.memo(function HUD({
         <LogHUD mapBackgroundColor={mapBackgroundColor} />
       </Suspense>
       <Suspense fallback={null}>
-        <ActionsHUD />
+        {!betterDice ? <ActionsHUD /> : <BetterDice />}
       </Suspense>
     </>
   );

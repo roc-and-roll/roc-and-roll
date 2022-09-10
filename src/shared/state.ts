@@ -650,6 +650,7 @@ export function makeCharacter(
     localToMap: null,
     isTemplate: false,
     diceTemplateCategories: [],
+    dice: [],
     notes: "",
     spells: [],
     currentlyConcentratingOn: null,

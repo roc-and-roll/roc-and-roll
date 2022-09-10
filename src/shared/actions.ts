@@ -49,6 +49,7 @@ import type {
   // eslint-disable-next-line unused-imports/no-unused-imports
   _RRDiceTemplate,
   RRDiceTemplateCategory,
+  RRDie,
 } from "./validation";
 
 type Update<T extends { id: RRID }> = OriginalUpdate<T, T["id"]>;
@@ -177,6 +178,16 @@ export const characterAddDiceTemplate = createAction<{
   categoryId: RRDiceTemplateCategoryID;
   template: RRDiceTemplate;
 }>("character/diceTemplateCategories/template/add");
+
+export const characterAddDie = createAction<{
+  id: RRCharacterID;
+  die: RRDie;
+}>("character/dice/add");
+
+export const characterUpdateDie = createAction<{
+  id: RRCharacterID;
+  die: Update<RRDie>;
+}>("character/dice/update");
 
 ////////////////////////////////////////////////////////////////////////////////
 // Maps

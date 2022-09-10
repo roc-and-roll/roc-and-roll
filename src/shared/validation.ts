@@ -190,49 +190,59 @@ const __isDiceTemplateRecursive: z.ZodSchema<_RRDiceTemplate> = z.lazy(
   () => isDiceTemplate
 );
 
-const isDiceTemplatePart = z.union(
-  withDo({ id: isRRID<RRDiceTemplatePartID>() }, (sharedValidators) => [
-    z.strictObject({
-      ...sharedValidators,
-      type: z.literal("dice"),
-      count: z.number().int().min(0),
-      faces: z.number().int().min(0),
-      negated: z.boolean(),
-      damage: isDamageType,
-      modified: z.enum(multipleRollValues),
-    }),
-    z.strictObject({
-      ...sharedValidators,
-      type: z.literal("template"),
-      template: __isDiceTemplateRecursive,
-    }),
-    z.strictObject({
-      ...sharedValidators,
-      type: z.literal("modifier"),
-      number: z.number().int(),
-      damage: isDamageType,
-    }),
-    z.strictObject({
-      ...sharedValidators,
-      type: z.literal("linkedModifier"),
-      name: z.union([z.literal("initiative"), z.literal("level")]),
-      damage: isDamageType,
-    }),
-    z.strictObject({
-      ...sharedValidators,
-      type: z.literal("linkedProficiency"),
-      damage: isDamageType,
-      proficiency: isProficiencyValue,
-    }),
-    z.strictObject({
-      ...sharedValidators,
-      type: z.literal("linkedStat"),
-      name: z.enum(characterStatNames),
-      damage: isDamageType,
-    }),
-  ])
-);
-export type RRDiceTemplatePart = z.infer<typeof isDiceTemplatePart>;
+const createBasicDiceTemplatePart = <T>(extra: T) =>
+  z.union(
+    withDo({ id: isRRID<RRDiceTemplatePartID>() }, (sharedValidators) => [
+      z.strictObject({
+        ...sharedValidators,
+        ...extra,
+        type: z.literal("dice"),
+        count: z.number().int().min(0),
+        faces: z.number().int().min(0),
+        negated: z.boolean(),
+        damage: isDamageType,
+        modified: z.enum(multipleRollValues),
+      }),
+      z.strictObject({
+        ...sharedValidators,
+        ...extra,
+        type: z.literal("template"),
+        template: __isDiceTemplateRecursive,
+      }),
+      z.strictObject({
+        ...sharedValidators,
+        ...extra,
+        type: z.literal("modifier"),
+        number: z.number().int(),
+        damage: isDamageType,
+      }),
+      z.strictObject({
+        ...sharedValidators,
+        ...extra,
+        type: z.literal("linkedModifier"),
+        name: z.union([z.literal("initiative"), z.literal("level")]),
+        damage: isDamageType,
+      }),
+      z.strictObject({
+        ...sharedValidators,
+        ...extra,
+        type: z.literal("linkedProficiency"),
+        damage: isDamageType,
+        proficiency: isProficiencyValue,
+      }),
+      z.strictObject({
+        ...sharedValidators,
+        ...extra,
+        type: z.literal("linkedStat"),
+        name: z.enum(characterStatNames),
+        damage: isDamageType,
+      }),
+    ])
+  );
+
+const isDie = createBasicDiceTemplatePart({ x: z.number(), y: z.number() });
+const isDiceTemplatePart = createBasicDiceTemplatePart({});
+export type RRDie = z.infer<typeof isDie>;
 
 const isDiceTemplate = z.strictObject({
   id: isRRID<RRDiceTemplateID>(),
@@ -419,6 +429,7 @@ export const isSyncedState = z.strictObject({
       visibility: z.enum(["gmOnly", "everyone"] as const),
       localToMap: z.nullable(isRRID<RRMapID>()),
       diceTemplateCategories: z.array(isDiceTemplateCategory),
+      dice: z.array(isDie),
       notes: z.string(),
     })
   ),

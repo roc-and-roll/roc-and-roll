@@ -16,6 +16,8 @@ import {
   characterAddSpell,
   characterDeleteSpell,
   characterUpdateSpell,
+  characterAddDie,
+  characterUpdateDie,
 } from "../actions";
 import {
   EntityCollection,
@@ -143,6 +145,20 @@ export const charactersReducer = createReducer(
         if (index >= 0) {
           template.parts.splice(index, 1);
         }
+      })
+
+      .addCase(characterAddDie, (state, action) => {
+        const character = state.entities[action.payload.id];
+        character?.dice.push(action.payload.die);
+      })
+
+      .addCase(characterUpdateDie, (state, action) => {
+        const character = state.entities[action.payload.id];
+        if (!character) return;
+
+        const die = character.dice.find((d) => d.id === action.payload.die.id);
+        if (!die) return;
+        Object.assign(die, action.payload.die.changes);
       });
   }
 );

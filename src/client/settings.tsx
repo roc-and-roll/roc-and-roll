@@ -16,6 +16,7 @@ export type RRSettings = ReadonlyDeep<{
   focusTokenOnTurnStart: boolean;
   logNames: "verbose" | "playerName" | "characterName";
   yourTurnAnimation: "none" | "color" | "width";
+  betterDice: boolean;
 }>;
 
 const initialSettings: RRSettings = {
@@ -28,6 +29,7 @@ const initialSettings: RRSettings = {
   focusTokenOnTurnStart: false,
   logNames: "characterName",
   yourTurnAnimation: "width",
+  betterDice: false,
 };
 
 const RRSettingsContext = React.createContext<

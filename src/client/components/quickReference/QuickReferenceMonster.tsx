@@ -194,6 +194,7 @@ export const Monster = React.memo(function Monster({
       localToMap: null,
       isTemplate: true,
       diceTemplateCategories: [],
+      dice: [],
       notes: "",
       spells: [], // TODO add spells potentially
       currentlyConcentratingOn: null,
