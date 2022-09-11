@@ -17,12 +17,15 @@ const makeVignetteShader = () =>
     /*cspell:disable*/
     `
 precision mediump float;
+
 varying vec2 vTextureCoord;
 uniform sampler2D uSampler;
+
 uniform float size;
 uniform float amount;
 uniform float focalPointX;
 uniform float focalPointY;
+
 void main() {
   vec4 rgba = texture2D(uSampler, vTextureCoord);
   vec3 rgb = rgba.xyz;

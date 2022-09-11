@@ -47,13 +47,13 @@ export const PixiFilterContext = React.createContext<{
 
 export function PixiGlobalFilters({
   children,
-  backgroundColor,
+  mapBackgroundColor,
   viewPortSize,
   mousedown,
   mousemove,
 }: {
   children: React.ReactNode;
-  backgroundColor: number;
+  mapBackgroundColor: number;
   viewPortSize: RRPoint;
   mousedown?: (e: PIXI.InteractionEvent) => void;
   mousemove?: (e: PIXI.InteractionEvent) => void;
@@ -85,8 +85,10 @@ export function PixiGlobalFilters({
           y={0}
           width={viewPortSize.x}
           height={viewPortSize.y}
-          fill={backgroundColor}
+          fill={mapBackgroundColor}
+          interactive={false}
         />
+        {/* All map content is in here. */}
         {children}
       </Container>
       <AtmosphereMap viewPortSize={viewPortSize} />

@@ -935,7 +935,7 @@ transform,
         >
           <RecoilBridge>
             <PixiGlobalFilters
-              backgroundColor={colorValue(backgroundColor).color}
+              mapBackgroundColor={colorValue(backgroundColor).color}
               viewPortSize={viewPortSize}
               mousedown={rrToPixiHandler(handleMouseDown)}
               mousemove={rrToPixiHandler(handleMapMouseMove)}
