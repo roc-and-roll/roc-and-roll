@@ -30,7 +30,13 @@
       "./tsconfig.e2e.json"
     ]
   },
-  "plugins": ["react", "react-hooks", "@typescript-eslint", "unused-imports"],
+  "plugins": [
+    "react",
+    "react-hooks",
+    "@typescript-eslint",
+    "unused-imports",
+    "import"
+  ],
   "rules": {
     "no-alert": "warn",
     "react/prop-types": "off",
@@ -120,6 +126,14 @@
     {
       "files": ["**/*.test.ts", "**/*.test.tsx"],
       "rules": {}
+    },
+    // For some arance JS / ESM / reason Playwright requires us to use `.js`
+    // extensions when importing .ts files.
+    {
+      "files": ["**/e2e-tests/**/*.ts", "**/e2e-tests/**/*.tsx"],
+      "rules": {
+        "import/extensions": ["error", "ignorePackages"]
+      }
     }
   ]
 }

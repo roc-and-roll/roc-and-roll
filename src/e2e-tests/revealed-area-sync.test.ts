@@ -1,5 +1,5 @@
-import { joinAs, makeGM } from "./helpers";
-import { uiTest } from "./uiTest";
+import { joinAs, makeGM } from "./helpers.js";
+import { uiTest } from "./uiTest.js";
 
 uiTest.skip(
   `revealed map areas are synced`,
