@@ -231,6 +231,8 @@ function MapTokenInner({
   x += getSmallTokenOffset();
   y += getSmallTokenOffset();
 
+  const auraFilter = new PIXI.filters.AlphaFilter(0.5);
+
   const fullTokenRepresentation = (
     position: RRPoint,
     isGhost = false,
@@ -348,16 +350,22 @@ function MapTokenInner({
         // that they are located in the background and still allow users to
         // interact with objects that would otherwise be beneath the auras
         createPixiPortal(
-          character.auras.map((aura, i) => (
-            <Aura
-              key={i}
-              character={character}
-              aura={aura}
-              myself={myself}
-              x={lerpedPosition.x}
-              y={lerpedPosition.y}
-            />
-          )),
+          // Set the alpha channel of the combination of all auras to 0.5, so
+          // that even if a token has a bazillion auras, they still add up to at
+          // most 50% opacity. This is necessary so that an aura by another
+          // overlapping with this token's auras is still visible.
+          <Container filters={[auraFilter]}>
+            {character.auras.map((aura, i) => (
+              <Aura
+                key={i}
+                character={character}
+                aura={aura}
+                myself={myself}
+                x={lerpedPosition.x}
+                y={lerpedPosition.y}
+              />
+            ))}
+          </Container>,
           auraArea
         )}
       {healthBarArea &&
@@ -713,7 +721,7 @@ function Aura({
   const tokenSize = GRID_SIZE * scale;
 
   const size = (aura.size * GRID_SIZE) / 5 + tokenSize / 2;
-  const fill = colorValue(tinycolor(aura.color).setAlpha(0.3));
+  const fill = colorValue(tinycolor(aura.color));
   switch (aura.shape) {
     case "circle":
       return (

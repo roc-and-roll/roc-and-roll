@@ -167,6 +167,8 @@ enum MouseAction {
   MEASURE_DIRECT,
 }
 
+const auraFilter = new PIXI.filters.AlphaFilter(0.7);
+
 export const globalToLocal = (transform: Matrix, p: RRPoint) => {
   const [x, y] = applyToPoint(inverse(transform), [p.x, p.y]);
   return { x, y };
@@ -946,6 +948,7 @@ transform,
                   ref={setAuraArea}
                   interactiveChildren={false}
                   name="auras"
+                  filters={[auraFilter]}
                 />
                 <Container ref={setDefaultArea} name="default" />
                 {gridEnabled && (
