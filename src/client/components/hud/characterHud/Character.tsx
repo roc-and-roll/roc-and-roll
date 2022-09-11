@@ -164,6 +164,7 @@ function RelativeHealthEditor({
   const [relativeHP, setRelativeHP] = useState("");
 
   function changeHP(factor: number) {
+    setRelativeHP("");
     const newValue = parseInt(relativeHP) || 0;
     dispatch(
       characters.map((character) =>
