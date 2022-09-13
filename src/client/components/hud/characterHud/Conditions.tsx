@@ -12,11 +12,13 @@ import {
 import { useServerDispatch } from "../../../state";
 import { conditionIcons } from "../../characters/CharacterEditor";
 import { Popover } from "../../Popover";
+import { useConfirm } from "../../../dialog-boxes";
 import { RRCharacterProps } from "./Character";
 
 export function ConditionsBar({ character }: { character: RRCharacterProps }) {
   const [conditionChooserOpen, setConditionChooserOpen] = useState(false);
   const dispatch = useServerDispatch();
+  const confirm = useConfirm();
 
   const setConditions = (
     updater: React.SetStateAction<RRCharacter["conditions"]>
@@ -53,6 +55,22 @@ export function ConditionsBar({ character }: { character: RRCharacterProps }) {
     <div className="flex flex-wrap flex-row-reverse pointer-events-auto">
       {character.currentlyConcentratingOn && (
         <div
+          onClick={async () => {
+            if (
+              await confirm(
+                `Stop concentrating on ${
+                  character.currentlyConcentratingOn!.name
+                }?`
+              )
+            ) {
+              dispatch(
+                characterUpdate({
+                  id: character.id,
+                  changes: { currentlyConcentratingOn: null },
+                })
+              );
+            }
+          }}
           className={clsx(
             character.currentlyConcentratingOn.roundsLeft <= 1
               ? "bg-red-700"
