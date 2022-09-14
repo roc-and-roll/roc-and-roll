@@ -179,7 +179,7 @@ export const generateSkillTemplates = (
         },
       };
     });
-    return { ability: skillMap[skill], templates };
+    return { ability: skill, templates };
   });
 
 export const generateSavingThrowTemplates = (
