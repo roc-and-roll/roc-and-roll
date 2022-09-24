@@ -721,7 +721,7 @@ function Aura({
   const tokenSize = GRID_SIZE * scale;
 
   const size = (aura.size * GRID_SIZE) / 5 + tokenSize / 2;
-  const fill = colorValue(tinycolor(aura.color));
+  const fill = colorValue(tinycolor(aura.color).setAlpha(0.8));
   switch (aura.shape) {
     case "circle":
       return (
