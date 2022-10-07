@@ -94,7 +94,7 @@ export function ModApi() {
     return () => {
       delete window.MODDING;
     };
-  }, [compendiumSourcesRef, addCompendiumSource]);
+  }, [addCompendiumSource]);
 
   return null;
 }

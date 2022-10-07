@@ -137,7 +137,7 @@ export function useDebounce<A extends unknown[]>(
     return () => {
       debouncer.dispose(forceOnUnmount);
     };
-  }, [debouncer, forceOnUnmountRef]);
+  }, [debouncer]);
 
   return [
     debouncer.debouncedCallback,
@@ -167,7 +167,7 @@ export function useAggregatedDebounce<A extends unknown[]>(
       const args = argHistory.current;
       argHistory.current = [];
       callbackRef.current(args);
-    }, [callbackRef]),
+    }, []),
     debounce,
     forceOnUnmount
   );
@@ -236,15 +236,12 @@ export function useIsolatedValue<V>({
 
   return [
     internalValue,
-    useCallback(
-      (value: V) => {
-        setInternalValue(value);
-        if (reportChangesRef.current) {
-          setExternalValueRef.current(value);
-        }
-      },
-      [setExternalValueRef]
-    ),
+    useCallback((value: V) => {
+      setInternalValue(value);
+      if (reportChangesRef.current) {
+        setExternalValueRef.current(value);
+      }
+    }, []),
     { takeValueRef, reportChangesRef },
   ];
 }
@@ -297,7 +294,7 @@ export function useFieldWithSmartOnChangeTransitions<V, E extends HTMLElement>({
 
       externalOnChangeRef.current(changedValueRef.current.value);
     }
-  }, [externalOnChangeRef]);
+  }, []);
 
   return [
     {
@@ -315,7 +312,7 @@ export function useFieldWithSmartOnChangeTransitions<V, E extends HTMLElement>({
           // transition.
           startTransition(() => externalOnChangeRef.current(value));
         },
-        [setValue, debounceTimeRef, executePending, externalOnChangeRef]
+        [setValue, executePending]
       ),
       onKeyPress: useCallback(
         (e: React.KeyboardEvent<E>) => {

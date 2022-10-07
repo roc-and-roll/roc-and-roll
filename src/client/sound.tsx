@@ -146,7 +146,7 @@ export function useRRComplexSound(
         ((Date.now() - startedAtRef.current) % durationRef.current) / 1000;
       howlRef.current.seek(seekSeconds, soundIdRef.current);
     }
-  }, [durationRef]);
+  }, []);
 
   const play = useCallback(
     (startedAt?: number) => {
@@ -207,16 +207,7 @@ export function useRRComplexSound(
         _play();
       }
     },
-    [
-      globalUserMuteRef,
-      volumeRef,
-      loopRef,
-      urlRef,
-      durationRef,
-      idRef,
-      _play,
-      setLoadingSounds,
-    ]
+    [_play]
   );
 
   useEffect(() => {
@@ -233,7 +224,7 @@ export function useRRComplexSound(
       howlRef.current?.unload();
       howlRef.current = null;
     };
-  }, [idRef, setLoadingSounds]);
+  }, []);
 
   useEffect(() => {
     howlRef.current?.volume(volume);
@@ -253,7 +244,7 @@ export function useRRComplexSound(
     setLoadingSounds((loadingSounds) =>
       setDeleteImmutably(loadingSounds, idRef.current)
     );
-  }, [idRef, setLoadingSounds]);
+  }, []);
 
   useEffect(() => {
     // Stop playback if the url or duration changes.
@@ -264,7 +255,7 @@ export function useRRComplexSound(
   useEffect(() => {
     setLockedSounds(updateLockedSounds(id, state === "error-needs-unlock"));
     return () => setLockedSounds(updateLockedSounds(id, false));
-  }, [state, setLockedSounds, id]);
+  }, [state, id]);
 
   useDebugValue({
     url: urlAndDuration?.url,
@@ -504,7 +495,7 @@ export function useCurrentlyPlayingPlaylistEntryAndSong(
           startedAt: currentSongStartedAt,
           timeRemaining: currentSongTimeRemaining,
         };
-  }, [activeSoundSet?.startedAt, assetsRef, playlist.entries]);
+  }, [activeSoundSet?.startedAt, playlist.entries]);
 
   const [current, setCurrent] =
     useState<CurrentlyPlaylingPlaylistEntryAndSongResult>(() => calculate());

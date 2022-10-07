@@ -176,7 +176,7 @@ function MapTokenInner({
       }
       firstMouseDownPos.current = { x: e.clientX, y: e.clientY };
     },
-    [onStartMove, objectRef]
+    [onStartMove]
   );
   const handleMouseUp = useCallback((e: RRMouseEvent) => {
     if (
@@ -329,7 +329,7 @@ function MapTokenInner({
     return () => {
       stopAnimation();
     };
-  }, [ghostPosition, setGhostPosition, startAnimation, stopAnimation]);
+  }, [ghostPosition, startAnimation, stopAnimation]);
 
   const ghostTokenRef = useRef<PIXI.Container>(null);
 

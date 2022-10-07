@@ -1,4 +1,6 @@
-/* eslint-disable react-hooks/rules-of-hooks */
+// cspell: disable-next-line
+/* eslint-disable @grncdr/react-hooks/rules-of-hooks */
+//
 // Based on the code from a PR by @Svish to react-use
 // https://github.com/streamich/react-use/pull/1438
 // Licensed under the Unlicense.
@@ -104,7 +106,7 @@ export default function useLocalState<T>(
       // If the user is in private mode or has storage restriction
       // localStorage can throw.
     }
-  }, [initializerRef, key, storage]);
+  }, [key, storage]);
 
   return [state, set, remove];
 }

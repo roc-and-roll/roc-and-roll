@@ -32,7 +32,7 @@
   },
   "plugins": [
     "react",
-    "react-hooks",
+    "@grncdr/react-hooks",
     "@typescript-eslint",
     "unused-imports",
     "import"
@@ -73,11 +73,18 @@
     "@typescript-eslint/unbound-method": "off",
     "@typescript-eslint/no-floating-promises": "error",
     "@typescript-eslint/no-empty-function": "off",
-    "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": [
+    "@grncdr/react-hooks/rules-of-hooks": "error",
+    "@grncdr/react-hooks/exhaustive-deps": [
       "error",
       {
-        "additionalHooks": "(useRecoilCallback|useEventCallback|useDrop|useDrag|useGuaranteedMemo)"
+        "additionalHooks": "(useRecoilCallback|useEventCallback|useDrop|useDrag|useGuaranteedMemo)",
+        "staticHooks": {
+          "useLatest": true,
+          "useRecoilState": [false, true],
+          "useSetRecoilState": true,
+          "useServerStateRef": true,
+          "useEventCallback": true
+        }
       }
     ],
     "padding-line-between-statements": [

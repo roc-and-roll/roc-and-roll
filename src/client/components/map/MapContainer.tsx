@@ -166,7 +166,7 @@ export default function MapContainer() {
       entries(stateRef.current).find((player) =>
         player.characterIds.includes(characterId)
       ),
-    [stateRef]
+    []
   );
 
   const addBackgroundImages = async (files: File[], point: RRPoint) => {
@@ -300,15 +300,7 @@ export default function MapContainer() {
           monitor.canDrop() && monitor.getItemType() === NativeTypes.FILE,
       }),
     }),
-    [
-      addBackgroundImagesRef,
-      dispatch,
-      getCharacter,
-      getOwnerOfCharacter,
-      transformRef,
-      mapId,
-      myself,
-    ]
+    [dispatch, getCharacter, getOwnerOfCharacter, transformRef, mapId, myself]
   );
   const dropRef = composeRefs<HTMLDivElement>(dropRef2, dropRef1);
   const initiativeTracker = useServerState((state) => state.initiativeTracker);

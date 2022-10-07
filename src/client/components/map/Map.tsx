@@ -590,7 +590,7 @@ const RRMapViewWithRef = React.forwardRef<
           }
         );
       },
-    [myself, stateRef]
+    [myself]
   );
 
   useEffect(() => {

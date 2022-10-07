@@ -84,7 +84,7 @@ export const MapObjectThatIsNotAToken = React.memo<{
         }
         clickPositionRef.current = { x: e.clientX, y: e.clientY };
       },
-      [onStartMoveRef, canControl]
+      [canControl]
     ),
     onMouseUp: useCallback(
       (e: RRMouseEvent) => {

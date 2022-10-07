@@ -8,5 +8,5 @@ export function useEventCallback<T extends (...args: unknown[]) => unknown>(
   fn: T
 ) {
   const fnRef = useLatest(fn);
-  return useCallback(() => (void 0, fnRef.current)(), [fnRef]);
+  return useCallback(() => (void 0, fnRef.current)(), []);
 }

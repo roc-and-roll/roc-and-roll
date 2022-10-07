@@ -653,14 +653,7 @@ export function useServerStateRef<T>(
     };
     subscribe(subscriber);
     return () => unsubscribe(subscriber);
-  }, [
-    equalityFnRef,
-    onChangeRef,
-    selectedStateRef,
-    selectorRef,
-    subscribe,
-    unsubscribe,
-  ]);
+  }, [subscribe, unsubscribe]);
 
   useEffect(() => {
     const newSelectedState = selector(stateRef.current);
@@ -668,7 +661,7 @@ export function useServerStateRef<T>(
       selectedStateRef.current = newSelectedState;
       onChangeRef.current?.(newSelectedState);
     }
-  }, [onChangeRef, selectedStateRef, selector, stateRef, equalityFn]);
+  }, [selector, stateRef, equalityFn]);
 
   return selectedStateRef;
 }
@@ -744,10 +737,19 @@ export function useServerDispatch() {
     useContext(ServerStateContext);
   const socketRef = useLatest(socket);
 
-  const dispatcherKey = useGuaranteedMemo(
-    () => rrid<{ id: OptimisticActionApplierDispatcherKey }>(),
-    []
+  // Lazy-initialized ref
+  const dispatcherKeyRef = useRef<OptimisticActionApplierDispatcherKey | null>(
+    null
   );
+  function getDispatcherKey(): OptimisticActionApplierDispatcherKey {
+    if (dispatcherKeyRef.current === null) {
+      dispatcherKeyRef.current = rrid<{
+        id: OptimisticActionApplierDispatcherKey;
+      }>();
+    }
+    return dispatcherKeyRef.current;
+  }
+
   const throttledSyncToServerRef = useRef<
     Map<
       string,
@@ -777,7 +779,7 @@ export function useServerDispatch() {
         }
       }
     };
-  }, [socketRef]);
+  }, []);
 
   return useCallback(
     <
@@ -829,7 +831,7 @@ export function useServerDispatch() {
             optimisticApplierDoneOrDiscardedPromises.push(
               addLocalOptimisticActionAppliers([
                 {
-                  dispatcherKey,
+                  dispatcherKey: getDispatcherKey(),
                   optimisticUpdateId: immediateOptimisticUpdateId,
                   actions,
                   key: optimisticKey,
@@ -865,7 +867,7 @@ export function useServerDispatch() {
               discard: discardLocalOptimisticActionAppliers,
             } = addLocalOptimisticActionAppliers([
               {
-                dispatcherKey,
+                dispatcherKey: getDispatcherKey(),
                 optimisticUpdateId: throttledOptimisticUpdateId,
                 actions,
                 key: optimisticKey,
@@ -979,7 +981,7 @@ export function useServerDispatch() {
         },
       };
     },
-    [stateRef, socketRef, addLocalOptimisticActionAppliers, dispatcherKey]
+    [stateRef, addLocalOptimisticActionAppliers]
   );
 }
 

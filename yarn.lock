@@ -1691,6 +1691,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@grncdr/eslint-plugin-react-hooks@npm:^5.0.0-p30d423311.0":
+  version: 5.0.0-p30d423311.0
+  resolution: "@grncdr/eslint-plugin-react-hooks@npm:5.0.0-p30d423311.0"
+  peerDependencies:
+    eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
+  checksum: df108b7cd1d7a61d6890bdf3308f0c3f09846e090b45d256b41a5a972955cbfe1a7df3b4a2f45329b433a2734eab6eb989b7602ec7abb5407ce5c4bc13eaff31
+  languageName: node
+  linkType: hard
+
 "@humanwhocodes/config-array@npm:^0.9.2":
   version: 0.9.2
   resolution: "@humanwhocodes/config-array@npm:0.9.2"
@@ -7695,15 +7704,6 @@ __metadata:
   peerDependencies:
     eslint: ^2 || ^3 || ^4 || ^5 || ^6 || ^7.2.0 || ^8
   checksum: 0bf77ad80339554481eafa2b1967449e1f816b94c7a6f9614ce33fb4083c4e6c050f10d241dd50b4975d47922880a34de1e42ea9d8e6fd663ebb768baa67e655
-  languageName: node
-  linkType: hard
-
-"eslint-plugin-react-hooks@npm:^4.6.0":
-  version: 4.6.0
-  resolution: "eslint-plugin-react-hooks@npm:4.6.0"
-  peerDependencies:
-    eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
-  checksum: 23001801f14c1d16bf0a837ca7970d9dd94e7b560384b41db378b49b6e32dc43d6e2790de1bd737a652a86f81a08d6a91f402525061b47719328f586a57e86c3
   languageName: node
   linkType: hard
 
@@ -14903,6 +14903,7 @@ resolve@^2.0.0-next.3:
     "@fortawesome/free-regular-svg-icons": ^5.15.4
     "@fortawesome/free-solid-svg-icons": ^5.15.4
     "@fortawesome/react-fontawesome": ^0.1.15
+    "@grncdr/eslint-plugin-react-hooks": ^5.0.0-p30d423311.0
     "@jest/create-cache-key-function": ^27.3.1
     "@pixi/particle-emitter": ^5.0.7
     "@playwright/test": ^1.25.2
@@ -14976,7 +14977,6 @@ resolve@^2.0.0-next.3:
     eslint-config-prettier: ^8.5.0
     eslint-plugin-import: ^2.26.0
     eslint-plugin-react: ^7.30.0
-    eslint-plugin-react-hooks: ^4.6.0
     eslint-plugin-unused-imports: ^2.0.0
     express: ^4.17.1
     favicons: ^6.2.2

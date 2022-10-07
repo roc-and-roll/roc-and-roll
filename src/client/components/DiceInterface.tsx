@@ -41,13 +41,15 @@ export function DiceInterface() {
   const [focusIndex, setFocusIndex] = useState({ col: 0, row: 0 });
 
   const prevRollRefs = Array.from({ length: 6 }).map(() =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
+    // cspell: disable-next-line
+    // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
     useRef<HTMLButtonElement>(null)
   );
 
   const secondaryDiceTypes = [4, 6, 8, 10, 12];
   const secondaryDiceRefs = secondaryDiceTypes.map(() =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
+    // cspell: disable-next-line
+    // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
     useRef<HTMLButtonElement>(null)
   );
   const d20Ref = React.useRef<HTMLButtonElement>(null);
@@ -61,11 +63,13 @@ export function DiceInterface() {
   const modTypesRight = [5, 6, 7, 8, 9, 10];
   const modTypes = [...modTypesLeft, ...modTypesRight];
   const modRefsLeft = modTypesLeft.map(() =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
+    // cspell: disable-next-line
+    // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
     useRef<HTMLButtonElement>(null)
   );
   const modRefsRight = modTypesRight.map(() =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
+    // cspell: disable-next-line
+    // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
     useRef<HTMLButtonElement>(null)
   );
   const modRefs = [...modRefsLeft, ...modRefsRight];
@@ -119,7 +123,7 @@ export function DiceInterface() {
     if (currentRef) {
       currentRef.focus();
     }
-  }, [allRefs, focusIndex]);
+  }, [focusIndex]);
 
   function focusIndexFromRef(
     searchedRef: React.RefObject<HTMLButtonElement> | undefined

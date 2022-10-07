@@ -68,7 +68,7 @@ export const MapMusicIndicator = React.memo<{ mapBackgroundColor: RRColor }>(
           })
           .join(", ")
       );
-    }, [serverStateRef, activeMusic]);
+    }, [activeMusic]);
 
     useEffect(() => {
       if (activeSongTitles.length === 0) {

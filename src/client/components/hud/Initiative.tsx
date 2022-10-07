@@ -243,10 +243,8 @@ export function InitiativeHUD() {
     [
       viewPortSizeRef,
       getViewportTranslation,
-      mapObjectsRef,
       canEdit,
       setTargetTransform,
-      charactersRef,
       myself.isGM,
       myself.characterIds,
     ]
@@ -517,8 +515,8 @@ const InitiativeEntry = React.memo<{
         });
       },
     // The useEffect below assumes that this callback never changes, therefore
-    // all dependencies must be refs.
-    [characterIdsRef]
+    // it must not have any dependencies.
+    []
   );
 
   useEffect(() => {
