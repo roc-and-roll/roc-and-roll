@@ -1,3 +1,5 @@
+// cspell: disable-next-line
+/* eslint-disable @grncdr/react-hooks/rules-of-hooks */
 import useLocalState from "./useLocalState";
 
 interface ValidJSON {

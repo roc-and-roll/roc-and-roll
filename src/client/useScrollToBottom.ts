@@ -15,7 +15,8 @@ export function useScrollToBottom<T extends HTMLElement>(deps: unknown[] = []) {
     if (scrollElement) {
       scrollElement.scrollTop = scrollElement.scrollHeight;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // cspell: disable-next-line
+    // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
   }, deps);
 
   useLayoutEffect(() => {

@@ -380,7 +380,8 @@ function makeRoughComponent<
                   seed: realSeed,
                 })
               : null,
-          // eslint-disable-next-line react-hooks/exhaustive-deps
+          // cspell: disable-next-line
+          // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
           [
             generator,
             fill,
@@ -391,16 +392,19 @@ function makeRoughComponent<
             roughness,
             realSeed,
             // TODO
-            // eslint-disable-next-line react-hooks/exhaustive-deps
+            // cspell: disable-next-line
+            // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
             ...Object.values(generatorProps),
           ]
         );
         const hitArea = useMemo(
           () => generateHitArea(generatorProps as C),
-          // eslint-disable-next-line react-hooks/exhaustive-deps
+          // cspell: disable-next-line
+          // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
           [
             // TODO
-            // eslint-disable-next-line react-hooks/exhaustive-deps
+            // cspell: disable-next-line
+            // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
             ...Object.values(generatorProps),
           ]
         );

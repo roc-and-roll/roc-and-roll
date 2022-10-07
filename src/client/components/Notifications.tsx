@@ -128,7 +128,9 @@ function Notification({
     } else {
       setTimeLeft((timeLeft) => timeLeft - (+new Date() - +timerStartTime));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // cspell: disable-next-line
+    // eslint-disable-next-line @grncdr/react-hooks/exhaustive-deps
   }, [frozen]);
 
   useEffect(() => {

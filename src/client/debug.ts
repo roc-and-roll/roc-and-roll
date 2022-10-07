@@ -38,7 +38,8 @@ export function use__DEBUG__getNameOfComponent() {
 
   const react = React;
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  // cspell: disable-next-line
+  // eslint-disable-next-line @grncdr/react-hooks/rules-of-hooks
   return useMemo(
     () =>
       getName(
