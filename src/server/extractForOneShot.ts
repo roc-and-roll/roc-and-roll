@@ -6,11 +6,17 @@ import {
   entries,
   makeDefaultMap,
   RRCharacter,
+  RRInventory,
   RRPlayer,
   RRPlayerID,
   SyncedState,
 } from "../shared/state";
 import { MyStore } from "./setupReduxStore";
+import {
+  InventoryTree,
+  InventoryTreeNode,
+  buildInventoryTree,
+} from "../shared/inventory-tree";
 
 export async function extractForOneShot(
   store: MyStore,
@@ -47,6 +53,15 @@ export async function extractForOneShot(
 
   const defaultMap = makeDefaultMap();
 
+  const playerInventories = players.map((player) => ({
+    playerId: player.id,
+    inventoryIds: player.inventoryIds,
+  }));
+  const inventoryTree = buildInventoryTree(
+    playerInventories,
+    state.inventories
+  );
+
   const exportedState: SyncedState = {
     version: state.version,
     globalSettings: state.globalSettings,
@@ -64,6 +79,7 @@ export async function extractForOneShot(
       ),
       ids: [...playerIds],
     },
+    inventories: filterInventories(inventoryTree, state.inventories),
     characters: filterCharacters(state.characters, players),
     maps: {
       entities: {
@@ -84,6 +100,13 @@ export async function extractForOneShot(
   await writeFile(outputFilePath, JSON.stringify(exportedState), "utf-8");
 }
 
+function fromEntries<K extends string, V>(
+  entries: Array<[K, V]>
+): Record<K, V> {
+  // @ts-expect-error Object.fromEntries types keys as string
+  return Object.fromEntries(entries);
+}
+
 function filterCharacters<T extends RRCharacter>(
   entityCollection: EntityCollection<T>,
   players: RRPlayer[]
@@ -92,12 +115,22 @@ function filterCharacters<T extends RRCharacter>(
     players.some((player) => player.characterIds.includes(entity.id))
   );
 
-  function fromEntries<K extends string, V>(
-    entries: Array<[K, V]>
-  ): Record<K, V> {
-    // @ts-expect-error Object.fromEntries types keys as string
-    return Object.fromEntries(entries);
-  }
+  return {
+    entities: fromEntries(entities.map((entity) => [entity.id, entity])),
+    ids: entities.map((entity) => entity.id),
+  };
+}
+
+function filterInventories(
+  inventoryTree: InventoryTree,
+  entityCollection: EntityCollection<RRInventory>
+): EntityCollection<RRInventory> {
+  const visibleNodes: InventoryTreeNode[] = [];
+  inventoryTree.visit((node) => visibleNodes.push(node));
+
+  const entities = entries(entityCollection).filter((entity) =>
+    visibleNodes.some((node) => node.inventoryId === entity.id)
+  );
 
   return {
     entities: fromEntries(entities.map((entity) => [entity.id, entity])),

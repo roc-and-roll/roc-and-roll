@@ -8,6 +8,7 @@ import {
   faMapSigns,
   faMusic,
   faPhotoVideo,
+  faShoppingBag,
   faStreetView,
   faSearch,
   IconDefinition,
@@ -41,6 +42,7 @@ import QuickReference from "../quickReference/QuickReference";
 import { useRRSettings } from "../../settings";
 import { DicePanel } from "../diceTemplates/DicePanel";
 import { BetterDice } from "../betterDice/BetterDice";
+import { Inventories } from "../inventory/Inventories";
 
 const tooltipProps: Partial<RRTooltipProps> = {
   placement: "right",
@@ -170,6 +172,14 @@ export const HUDToolbar = React.memo(function Toolbar() {
       gmOnly: musicIsGMOnly,
       icon: faMusic,
       iconTooltip: "Music",
+    },
+    {
+      id: "inventories",
+      collapsed: false,
+      content: <Inventories />,
+      gmOnly: false,
+      icon: faShoppingBag,
+      iconTooltip: "Inventory",
     },
     {
       id: "characters",

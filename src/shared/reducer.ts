@@ -20,6 +20,7 @@ import { assetsReducer } from "../shared/features/assets";
 import { globalSettingsReducer } from "../shared/features/globalSettings";
 import { soundSetsReducer } from "./features/soundSets";
 import { initiativeTrackerSetCurrentEntry } from "./actions";
+import { inventoriesReducer } from "./features/inventories";
 
 const baseReducer = combineReducers({
   // Add new slices of state here.
@@ -29,6 +30,7 @@ const baseReducer = combineReducers({
   globalSettings: globalSettingsReducer,
   initiativeTracker: initiativeTrackerReducer,
   players: playersReducer,
+  inventories: inventoriesReducer,
   characters: charactersReducer,
   maps: mapsReducer,
   privateChats: privateChatsReducer,

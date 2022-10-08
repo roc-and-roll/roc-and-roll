@@ -23,6 +23,9 @@ module.exports = {
         "border-wiggle": "border-wiggle 2s ease-in-out infinite",
         "border-color": "border-color 4s ease-in-out infinite",
       },
+      fontSize: {
+        xxs: ".625rem",
+      },
     },
   },
   variants: {
