@@ -28,6 +28,7 @@ export const JoinGame = React.memo(function JoinGame({
       isGM: false,
       characterIds: [],
       favoriteAssetIds: [],
+      inventoryIds: [],
       mainCharacterId: null,
       hasHeroPoint: false,
     });

@@ -41,6 +41,12 @@ import {
   RRDiceTemplatePartID,
   RRCharacterSpellID,
   RRCharacterSpell,
+  RRInventory,
+  RRInventoryID,
+  RRInventoryEntry,
+  RRInventoryEntryID,
+  RRInventoryEntryItem,
+  RRInventoryEntryInventoryLink,
 } from "./state";
 import { rrid, timestamp } from "./util";
 import type {
@@ -76,6 +82,16 @@ export const playerAdd = createAction(
 
 export const playerUpdate = createAction<Update<RRPlayer>>("player/update");
 
+export const playerUpdateAddInventoryId = createAction<{
+  id: RRPlayer["id"];
+  inventoryId: RRInventoryID;
+}>("player/update/inventoryId/add");
+
+export const playerUpdateRemoveInventoryId = createAction<{
+  id: RRPlayer["id"];
+  inventoryId: RRInventoryID;
+}>("player/update/inventoryId/remove");
+
 export const playerUpdateAddFavoriteAssetId = createAction<{
   id: RRPlayerID;
   assetId: RRAssetID;
@@ -87,6 +103,105 @@ export const playerUpdateRemoveFavoriteAssetId = createAction<{
 }>("player/update/assetId/remove");
 
 export const playerRemove = createAction<RRPlayer["id"]>("player/remove");
+
+////////////////////////////////////////////////////////////////////////////////
+// Inventories
+////////////////////////////////////////////////////////////////////////////////
+
+export const inventoryAdd = createAction(
+  "inventory/add",
+  (inventory: Omit<RRInventory, "id">): { payload: RRInventory } => ({
+    payload: { id: rrid<RRInventory>(), ...inventory },
+  })
+);
+
+export const inventoryUpdate =
+  createAction<Update<RRInventory>>("inventory/update");
+
+export const inventoryAddItemEntry = createAction(
+  "inventory/update/entry/item/add",
+  (
+    inventoryId: RRInventoryID,
+    item: Omit<RRInventoryEntryItem, "id" | "addedAt">
+  ): {
+    payload: { inventoryId: RRInventoryID; entry: RRInventoryEntryItem };
+  } => {
+    return {
+      payload: {
+        inventoryId,
+        entry: {
+          ...item,
+          id: rrid<RRInventoryEntry>(),
+          addedAt: timestamp(),
+        },
+      },
+    };
+  }
+);
+
+export const inventoryAddInventoryLinkEntry = createAction(
+  "inventory/update/entry/inventoryLink/add",
+  (
+    inventoryId: RRInventoryID,
+    inventoryLink: Omit<RRInventoryEntryInventoryLink, "id" | "addedAt">
+  ): {
+    payload: {
+      inventoryId: RRInventoryID;
+      entry: RRInventoryEntryInventoryLink;
+    };
+  } => {
+    return {
+      payload: {
+        inventoryId,
+        entry: {
+          ...inventoryLink,
+          id: rrid<RRInventoryEntry>(),
+          addedAt: timestamp(),
+        },
+      },
+    };
+  }
+);
+
+export const inventoryEntryUpdate = createAction<{
+  inventoryId: RRInventoryID;
+  update: Update<RRInventoryEntry>;
+}>("inventory/update/entry/update");
+
+export const inventoryEntryRemove = createAction(
+  "inventory/update/entry/remove",
+  (inventoryId: RRInventoryID, itemId: RRInventoryEntryID) => {
+    return {
+      payload: {
+        inventoryId,
+        itemId,
+      },
+    };
+  }
+);
+
+export const inventoryEntryMove = createAction(
+  "inventory/update/entry/move",
+  (
+    fromInventoryId: RRInventoryID,
+    toInventoryId: RRInventoryID,
+    itemId: RRInventoryEntryID,
+    // null = insert at the end
+    insertBeforeItemId: RRInventoryEntryID | null = null
+  ) => {
+    return {
+      payload: {
+        fromInventoryId,
+        toInventoryId,
+        itemId,
+        insertBeforeItemId,
+      },
+    };
+  }
+);
+
+export const inventoryRemove =
+  createAction<RRInventory["id"]>("inventory/remove");
 
 ////////////////////////////////////////////////////////////////////////////////
 // Characters

@@ -24,6 +24,8 @@ import {
   proficiencyValues,
   categoryIcons,
   RRDiceTemplateCategoryID,
+  RRInventoryID,
+  RRInventoryEntryID,
   isProficiencyValue,
   RRCharacterSpellID,
 } from "./state";
@@ -331,6 +333,7 @@ export const isSyncedState = z.strictObject({
       mainCharacterId: z.nullable(isRRID<RRCharacterID>()),
       favoriteAssetIds: z.array(isRRID<RRAssetID>()),
       hasHeroPoint: z.boolean(),
+      inventoryIds: z.array(isRRID<RRInventoryID>()),
     })
   ),
   characters: isEntityCollection(
@@ -438,6 +441,35 @@ export const isSyncedState = z.strictObject({
       diceTemplateCategories: z.array(isDiceTemplateCategory),
       dice: z.array(isDie),
       notes: z.string(),
+    })
+  ),
+  inventories: isEntityCollection(
+    z.strictObject({
+      id: isRRID<RRInventoryID>(),
+      name: z.string(),
+      visibility: z.enum(["myself", "everyone", "inherited"] as const),
+      entries: isEntityCollection(
+        z.union(
+          withDo(
+            { id: isRRID<RRInventoryEntryID>(), addedAt: isTimestamp },
+            (sharedValidators) => [
+              z.strictObject({
+                ...sharedValidators,
+                type: z.literal("item"),
+                amount: z.number().int().min(0),
+                name: z.string(),
+                weight: z.nullable(z.number()), // lbs
+                notes: z.string(),
+              }),
+              z.strictObject({
+                ...sharedValidators,
+                type: z.literal("inventoryLink"),
+                inventoryId: isRRID<RRInventoryID>(),
+              }),
+            ]
+          )
+        )
+      ),
     })
   ),
   maps: isEntityCollection(
