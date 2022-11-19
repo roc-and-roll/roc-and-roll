@@ -1,11 +1,10 @@
 import React, { SVGProps, useContext, useMemo } from "react";
-import rough from "roughjs/bin/rough";
+import rough from "roughjs";
 import type { Drawable, Options } from "roughjs/bin/core";
-import { RoughGenerator } from "roughjs/bin/generator";
+import type { RoughGenerator } from "roughjs/bin/generator";
 import clsx from "clsx";
 import { RRPoint } from "../../shared/state";
 import { makePoint } from "../../shared/point";
-import { randomSeed } from "roughjs/bin/math";
 import { hashString } from "../../shared/util";
 
 const DEFAULT_ROUGHNESS = 3;
@@ -189,7 +188,7 @@ function makeRoughComponent<C extends object, E extends SVGElement>(
         const realSeed = useMemo(
           () =>
             // Watchout: seed should never be 0
-            seed === undefined ? randomSeed() + 1 : hashString(seed),
+            seed === undefined ? rough.newSeed() + 1 : hashString(seed),
           [seed]
         );
         const drawable = useMemo(

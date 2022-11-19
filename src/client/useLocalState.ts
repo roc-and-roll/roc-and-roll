@@ -37,7 +37,9 @@ export default function useLocalState<T extends JsonValue>(
 export default function useLocalState<T extends JsonValue>(
   key: string,
   initialValue: T,
-  storage: Storage = localStorage
+  storage: Storage | null = typeof window !== "undefined"
+    ? window.localStorage
+    : null
 ): [T, Dispatch<SetStateAction<T>>, () => void] {
   if (!isBrowser) {
     return [initialValue, noop, noop];
@@ -47,6 +49,9 @@ export default function useLocalState<T extends JsonValue>(
   }
 
   const [state, setState] = useState<T>(() => {
+    if (!storage) {
+      return initialValue;
+    }
     try {
       const localStorageValue = storage.getItem(key);
       if (localStorageValue !== null) {
@@ -65,6 +70,9 @@ export default function useLocalState<T extends JsonValue>(
 
   const set: Dispatch<SetStateAction<T>> = useCallback(
     (valOrFunc) => {
+      if (!storage) {
+        throw new Error("Only works on the client");
+      }
       setState((prevState) => {
         const newState =
           typeof valOrFunc === "function" ? valOrFunc(prevState) : valOrFunc;
@@ -83,6 +91,9 @@ export default function useLocalState<T extends JsonValue>(
   );
 
   const remove = useCallback(() => {
+    if (!storage) {
+      throw new Error("Only works on the client");
+    }
     try {
       storage.removeItem(key);
       setState(initialValue);

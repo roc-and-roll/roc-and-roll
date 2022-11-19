@@ -31,7 +31,7 @@ export function render(socket: Socket) {
   }
 }
 
-function Root({ socket }: { socket: Socket }) {
+export function Root({ socket }: { socket: Socket }) {
   // https://reactjs.org/docs/strict-mode.html
   return (
     <StrictMode>

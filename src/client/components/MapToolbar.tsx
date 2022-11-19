@@ -25,7 +25,6 @@ import { SmartColorInput, ColorInput } from "./ui/ColorInput";
 import { Select } from "./ui/Select";
 import { isTriggeredByFormElement } from "../util";
 import { SmartTextInput } from "./ui/TextInput";
-import EmojiPicker from "emoji-picker-react";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../shared/constants";
 // TODO: Lazy loding the emoji picker does not play nicely with Tippy :/
 // const EmojiPicker = React.lazy(
@@ -306,15 +305,7 @@ export const MapToolbar = React.memo<{
         <>
           <Popover
             className="popover-no-padding"
-            content={
-              <EmojiPicker
-                native={true}
-                onEmojiClick={(_, { emoji }) => {
-                  setEmojiPickerVisible(false);
-                  setReactionCode(emoji);
-                }}
-              />
-            }
+            content={null}
             visible={emojiPickerVisible}
             onClickOutside={() => setEmojiPickerVisible(false)}
             interactive

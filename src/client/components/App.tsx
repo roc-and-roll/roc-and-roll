@@ -1,5 +1,3 @@
-import "modern-css-reset";
-import "./global.scss";
 import React, { Suspense, useRef } from "react";
 import { Sidebar } from "./Sidebar";
 import { useLoginLogout } from "../myself";
@@ -16,7 +14,7 @@ import { ConnectionLost } from "./ConnectionLost";
 const MapContainer = React.lazy(
   // TODO: We would really want to use webpackPreload here, but that's not
   // currently supported by the html-webpack-plugin:
-  // https://github.com/jantimon/html-webpack-plugin/issues/1317
+  // https://github.com/jantimon/html-webpack-plugin/issuKes/1317
   () => import(/* webpackPrefetch: true */ "./map/MapContainer")
 );
 

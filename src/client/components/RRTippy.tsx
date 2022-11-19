@@ -1,7 +1,5 @@
 import React from "react";
 import Tippy, { TippyProps } from "@tippyjs/react";
-import "./Popover.scss";
-import "tippy.js/animations/scale-subtle.css";
 
 // From https://gist.github.com/atomiks/520f4b0c7b537202a23a3059d4eec908
 //

@@ -7,7 +7,6 @@ import {
 } from "../../../shared/state";
 import { useMyself } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
-import "./PrivateChats.scss";
 import {
   privateChatAdd,
   privateChatMessageAdd,

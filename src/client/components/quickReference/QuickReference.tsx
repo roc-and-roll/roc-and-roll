@@ -6,7 +6,6 @@ import { IterableElement } from "type-fest";
 import { assertNever } from "../../../shared/util";
 import { useCompendium } from "../compendium/Compendium";
 import { CompendiumSpell, CompendiumTextEntry } from "../compendium/types";
-import "./QuickReference.scss";
 
 export default function QuickReference({ onClose }: { onClose: () => void }) {
   const backdropRef = useRef<HTMLDivElement>(null);
