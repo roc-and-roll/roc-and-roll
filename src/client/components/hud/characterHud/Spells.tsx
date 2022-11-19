@@ -175,12 +175,15 @@ function Spell({
           <FontAwesomeIcon icon={faBook} className="text-xs" />
         )}
       </p>
-      <input
-        type="checkbox"
-        disabled={spell.alwaysPrepared}
-        checked={spell.prepared}
-        onChange={(event) => togglePrepareSpell(event.target.checked, spell.id)}
-      />
+      {!spell.alwaysPrepared && (
+        <input
+          type="checkbox"
+          checked={spell.prepared}
+          onChange={(event) =>
+            togglePrepareSpell(event.target.checked, spell.id)
+          }
+        />
+      )}
     </div>
   );
 }
