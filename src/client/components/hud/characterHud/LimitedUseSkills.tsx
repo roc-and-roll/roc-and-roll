@@ -5,12 +5,14 @@ import React from "react";
 import { characterUpdate } from "../../../../shared/actions";
 import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../../shared/constants";
 import { RRCharacter, RRLimitedUseSkill } from "../../../../shared/state";
+import { useConfirm } from "../../../dialog-boxes";
 import { useServerDispatch } from "../../../state";
 import { Button } from "../../ui/Button";
 import { RRCharacterProps } from "./Character";
 
 export function LimitedUse({ character }: { character: RRCharacterProps }) {
   const dispatch = useServerDispatch();
+  const confirm = useConfirm();
   const setLimitedUseSkills = (
     updater: React.SetStateAction<RRCharacter["limitedUseSkills"]>
   ) =>
@@ -43,15 +45,23 @@ export function LimitedUse({ character }: { character: RRCharacterProps }) {
     ]);
   }
 
-  function takeRest(isLongRest: boolean) {
-    setLimitedUseSkills((skills) =>
-      skills.map((skill) => {
-        let currentUseCount = skill.currentUseCount;
-        if (skill.restoresAt === "shortRest") currentUseCount = 0;
-        else if (isLongRest) currentUseCount = 0;
-        return { ...skill, currentUseCount };
-      })
-    );
+  async function takeRest(isLongRest: boolean) {
+    if (
+      await confirm(
+        `Do you really want to take a ${
+          isLongRest ? "long" : "short"
+        } rest and reset your skills?`
+      )
+    ) {
+      setLimitedUseSkills((skills) =>
+        skills.map((skill) => {
+          let currentUseCount = skill.currentUseCount;
+          if (skill.restoresAt === "shortRest") currentUseCount = 0;
+          else if (isLongRest) currentUseCount = 0;
+          return { ...skill, currentUseCount };
+        })
+      );
+    }
   }
 
   return (
