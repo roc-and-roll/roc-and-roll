@@ -1,5 +1,9 @@
 import React from "react";
-import { assetImageAdd, characterAdd } from "../../../shared/actions";
+import {
+  assetImageAdd,
+  characterAdd,
+  playerUpdateAddCharacterId,
+} from "../../../shared/actions";
 import { randomColor } from "../../../shared/colors";
 import { generateRandomToken, uploadRemoteFile } from "../../files";
 import { useMyProps } from "../../myself";
@@ -54,7 +58,7 @@ export const Monster = React.memo(function Monster({
 }: {
   monster: CompendiumMonster;
 }) {
-  const myself = useMyProps("id", "isGM");
+  const myself = useMyProps("id", "isGM", "characterIds");
   const dispatch = useServerDispatch();
   const lairActions = useLairActions(monster);
 
@@ -192,7 +196,7 @@ export const Monster = React.memo(function Monster({
       tokenImageAssetId: assetImageAddAction.payload.id,
       tokenBorderColor: randomColor(),
       localToMap: null,
-      isTemplate: true,
+      isTemplate: myself.isGM,
       diceTemplateCategories: [],
       dice: [],
       notes: "",
@@ -200,7 +204,14 @@ export const Monster = React.memo(function Monster({
       currentlyConcentratingOn: null,
     });
 
-    dispatch([assetImageAddAction, templateAddAction]);
+    dispatch([
+      assetImageAddAction,
+      templateAddAction,
+      playerUpdateAddCharacterId({
+        id: myself.id,
+        characterId: templateAddAction.payload.id,
+      }),
+    ]);
   }
 
   function renderTextEntries(
@@ -263,11 +274,9 @@ export const Monster = React.memo(function Monster({
       <div className="flex justify-between items-baseline">
         <FontAwesomeIcon icon={faSkull} className="mr-2" />
         <p className="text-2xl flex-1">{monster.name}</p>
-        {myself.isGM && (
-          <Button className="h-8" onClick={addTemplate}>
-            Add To Templates
-          </Button>
-        )}
+        <Button className="h-8" onClick={addTemplate}>
+          Add To {myself.isGM ? "Templates" : "Characters"}
+        </Button>
       </div>
       <dl>
         <dt>Stat Block</dt>
