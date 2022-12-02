@@ -55,7 +55,7 @@ export function LimitedUse({ character }: { character: RRCharacterProps }) {
   }
 
   return (
-    <div className="min-w-full select-none mt-2 bg-black/25 p-1 rounded pointer-events-auto">
+    <div className="min-w-full select-none bg-black/40 p-1 rounded pointer-events-auto">
       <div className="flex justify-end">
         <Button onClick={() => takeRest(true)}>
           <FontAwesomeIcon fixedWidth icon={faBed} />

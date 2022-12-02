@@ -23,7 +23,7 @@ import { RRCharacterProps } from "./Character";
 
 export function Spells({ character }: { character: RRCharacterProps }) {
   return (
-    <div className="min-w-full mt-2 bg-black/25 p-2 rounded pointer-events-auto select-none overflow-y-auto max-h-72">
+    <div className="min-w-full bg-black/40 p-2 rounded pointer-events-auto select-none overflow-y-auto max-h-72">
       {character.spells.length < 1 && (
         <em>No spells yet. Add some from the Quick Reference.</em>
       )}

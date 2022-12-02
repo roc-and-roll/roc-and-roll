@@ -8,34 +8,26 @@ import {
 } from "../../characters/CharacterPreview";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faClipboard,
   faCog,
   faDragon,
   faMagic,
-  faScroll,
   faShieldAlt,
-  faSkull,
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { SettingsDialog } from "../Toolbar";
 import { RRFontAwesomeIcon } from "../../RRFontAwesomeIcon";
 import {
-  characterUpdate,
   characterUpdateHPRelatively,
   playerUpdate,
 } from "../../../../shared/actions";
 import { CharacterEditor } from "../../characters/CharacterEditor";
 import { Popover } from "../../Popover";
-import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME } from "../../../../shared/constants";
 import { useDrag } from "react-dnd";
-import { CombatCardHUD } from "./CombatCard";
-import { SmartTextInput, TextareaInput } from "../../ui/TextInput";
-import { useCompendium } from "../../compendium/Compendium";
-import { Spells } from "./Spells";
-import { LimitedUse } from "./LimitedUseSkills";
+import { SmartTextInput } from "../../ui/TextInput";
 import { ConditionsBar } from "./Conditions";
 import { HealthBar } from "./HealthBar";
 import { Button } from "../../ui/Button";
+import { CharacterPopUps } from "./PopUps";
 
 const characterProps = [
   "id",
@@ -60,14 +52,8 @@ export function CharacterHUD() {
   const myself = useMyProps("mainCharacterId", "isGM");
 
   const characters = useMyActiveCharacters();
-  const { sources: compendiumSources } = useCompendium();
 
   const healthWidth = 250;
-
-  const [skillsVisible, setSkillsVisible] = useState(false);
-  const [notesVisible, setNotesVisible] = useState(false);
-  const [spellsVisible, setSpellsVisible] = useState(false);
-  const [combatCardVisible, setCombatCardVisible] = useState(true);
 
   return (
     <div className="absolute top-0 right-0 pointer-events-none">
@@ -76,13 +62,6 @@ export function CharacterHUD() {
           (() => {
             const character = characters[0]!;
 
-            const hasMatchingMonster =
-              compendiumSources.flatMap(
-                (source) =>
-                  source.data.monster?.filter(
-                    (monster) => monster.name === character.name
-                  ) ?? []
-              ).length > 0;
             return (
               <div
                 style={{ width: healthWidth }}
@@ -94,50 +73,7 @@ export function CharacterHUD() {
                   width={healthWidth}
                 />
                 <ConditionsBar character={character} />
-                <div>
-                  <div className="flex justify-end">
-                    <div className="pointer-events-auto m-1 flex items-end flex-col">
-                      <FontAwesomeIcon
-                        title="Your skills"
-                        icon={faScroll}
-                        size="1x"
-                        onClick={() => setSkillsVisible(!skillsVisible)}
-                      />
-                    </div>
-                    <div className="pointer-events-auto m-1 flex items-end flex-col">
-                      <FontAwesomeIcon
-                        title="Notes"
-                        icon={faClipboard}
-                        size="1x"
-                        onClick={() => setNotesVisible(!notesVisible)}
-                      />
-                    </div>
-                    <div className="pointer-events-auto m-1 flex items-end flex-col">
-                      <FontAwesomeIcon
-                        title="Spells"
-                        icon={faMagic}
-                        size="1x"
-                        onClick={() => setSpellsVisible(!spellsVisible)}
-                      />
-                    </div>
-                    {hasMatchingMonster && (
-                      <div className="pointer-events-auto m-1 flex items-end flex-col">
-                        <FontAwesomeIcon
-                          title="Combat Card"
-                          icon={faSkull}
-                          size="1x"
-                          onClick={() =>
-                            setCombatCardVisible(!combatCardVisible)
-                          }
-                        />
-                      </div>
-                    )}
-                  </div>
-                  {notesVisible && <Notes character={character} />}
-                  {skillsVisible && <LimitedUse character={character} />}
-                  {spellsVisible && <Spells character={character} />}
-                  {combatCardVisible && <CombatCardHUD />}
-                </div>
+                <CharacterPopUps character={character} />
               </div>
             );
           })()}
@@ -194,28 +130,6 @@ function RelativeHealthEditor({
           heal
         </Button>
       </div>
-    </div>
-  );
-}
-
-function Notes({ character }: { character: RRCharacterProps }) {
-  const dispatch = useServerDispatch();
-
-  return (
-    <div className="min-w-full mt-2 bg-black/25 p-1 rounded pointer-events-auto">
-      <TextareaInput
-        placeholder="Character Notes"
-        value={character.notes}
-        onChange={(notes) =>
-          dispatch({
-            actions: [
-              characterUpdate({ id: character.id, changes: { notes } }),
-            ],
-            optimisticKey: "notes",
-            syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-          })
-        }
-      />
     </div>
   );
 }

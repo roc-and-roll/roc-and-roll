@@ -56,7 +56,7 @@ export function CombatCardHUD() {
 
   if (!monster) return null;
   return (
-    <div className="text-xs max-h-72 overflow-y-auto hud-panel p-2 rounded pointer-events-auto">
+    <div className="text-xs max-h-72 overflow-y-auto bg-black/40 p-2 rounded rounded-tr-none pointer-events-auto">
       {monster.speed && (
         <p>
           <Button
