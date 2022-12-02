@@ -396,7 +396,7 @@ function ActivePlaylistPlayerImpl({
   return null;
 }
 
-type CurrentlyPlaylingPlaylistEntryAndSongResult =
+type CurrentlyPlayingPlaylistEntryAndSongResult =
   | null
   | ({
       startedAt: number;
@@ -418,7 +418,7 @@ type CurrentlyPlaylingPlaylistEntryAndSongResult =
 export function useCurrentlyPlayingPlaylistEntryAndSong(
   playlist: RRPlaylist,
   activeSoundSet?: RRActiveSoundSet
-): CurrentlyPlaylingPlaylistEntryAndSongResult {
+): CurrentlyPlayingPlaylistEntryAndSongResult {
   const assetsRef = useServerStateRef((state) => state.assets);
 
   const calculate = useCallback(() => {
@@ -498,7 +498,7 @@ export function useCurrentlyPlayingPlaylistEntryAndSong(
   }, [activeSoundSet?.startedAt, playlist.entries]);
 
   const [current, setCurrent] =
-    useState<CurrentlyPlaylingPlaylistEntryAndSongResult>(() => calculate());
+    useState<CurrentlyPlayingPlaylistEntryAndSongResult>(() => calculate());
 
   useEffect(() => setCurrent(calculate()), [calculate]);
 

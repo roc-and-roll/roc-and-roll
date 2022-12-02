@@ -564,11 +564,11 @@ export const initiativeTrackerEntryLairActionAdd = createAction(
 
 export const initiativeTrackerEntryCharacterUpdate = createAction<
   Update<RRInitiativeTrackerEntryCharacter>
->("initiativetracker/entry/character/update");
+>("initiativeTracker/entry/character/update");
 
 export const initiativeTrackerEntryLairActionUpdate = createAction<
   Update<RRInitiativeTrackerEntryLairAction>
->("initiativetracker/entry/lairaction/update");
+>("initiativeTracker/entry/lairAction/update");
 
 export const initiativeTrackerEntryRemove = createAction<
   RRInitiativeTrackerEntry["id"]

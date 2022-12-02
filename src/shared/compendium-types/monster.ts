@@ -343,7 +343,7 @@ const _isMonster = z.strictObject({
         will: z.optional(z.array(isPotentiallyHiddenTextEntry)),
         daily: z.optional(
           z.strictObject({
-            "3e": z.optional(z.array(isPotentiallyHiddenTextEntry)), // I dont know what the difference between 3 and 3e is, they both seem to mean 3 times per day
+            "3e": z.optional(z.array(isPotentiallyHiddenTextEntry)), // I don't know what the difference between 3 and 3e is, they both seem to mean 3 times per day
             "3": z.optional(z.array(isPotentiallyHiddenTextEntry)),
             "2e": z.optional(z.array(isPotentiallyHiddenTextEntry)),
             "2": z.optional(z.array(isPotentiallyHiddenTextEntry)),
