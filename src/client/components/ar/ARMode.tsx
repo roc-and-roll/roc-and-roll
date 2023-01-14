@@ -1,16 +1,36 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 import io from "socket.io-client";
+import { Matrix4 } from "three";
 import { DebugSettingsContext } from "../hud/DebugSettings";
+import marker1 from "./marker/4x4_1000-1.svg";
+import marker2 from "./marker/4x4_1000-2.svg";
+import marker3 from "./marker/4x4_1000-3.svg";
+import marker4 from "./marker/4x4_1000-4.svg";
+import { MapTransformRef } from "../MapTransformContext";
+import { applyToPoint, inverse } from "transformation-matrix";
+import { useRecoilValue } from "recoil";
+import { useServerDispatch, useServerStateRef } from "../../state";
+import { useMyProps } from "../../myself";
+import {
+  makePoint,
+  pointAdd,
+  pointDistance,
+  pointScale,
+  snapPointToGrid,
+} from "../../../shared/point";
+import { entries, RRCharacter, RRMapID, RRToken } from "../../../shared/state";
+import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME, GRID_SIZE } from "../../../shared/constants";
+import { mapObjectUpdate } from "../../../shared/actions";
 
 type Corner = [number, number];
 type Corners = [Corner, Corner, Corner, Corner];
 
 function center(points: Corners) {
-  const x_center =
-    points.reduce((acc, point) => acc + point[0], 0) / points.length;
-  const y_center =
-    points.reduce((acc, point) => acc + point[1], 0) / points.length;
-  return [x_center, y_center];
+  return [
+    points.reduce((acc, point) => acc + point[0], 0) / points.length,
+    points.reduce((acc, point) => acc + point[1], 0) / points.length,
+  ];
 }
 
 export function ARMode() {
@@ -28,12 +48,12 @@ export function ARMode() {
     }));
   }, [enabled, setSettings]);
 
-  const pointDict = useRef<Record<number, Corners>>({});
+  const [pointDict, setPointDict] = useState<Record<number, Corners>>({});
   const msgCounter = useRef(0);
 
   useEffect(() => {
     if (enabled) {
-      pointDict.current = {};
+      // pointDict.current = {};
       msgCounter.current = 0;
 
       const socket = io("192.168.0.238:3377");
@@ -47,7 +67,8 @@ export function ARMode() {
         ) => {
           msgCounter.current++;
           markers.forEach((marker) => {
-            pointDict.current[marker.id] = marker.points;
+            if (marker.id <= 20)
+              setPointDict((d) => ({ ...d, [marker.id]: marker.points }));
           });
         }
       );
@@ -60,54 +81,239 @@ export function ARMode() {
 
   const isCalibrated = useRef(false);
 
-  useEffect(() => {
-    if (enabled) {
-      const id = setInterval(() => {
-        console.log(pointDict.current);
+  console.log(Object.keys(pointDict));
 
-        if (
-          //  !isCalibrated.current &&
-          pointDict.current[1] &&
-          pointDict.current[2] &&
-          pointDict.current[3] &&
-          pointDict.current[4]
-        ) {
-          isCalibrated.current = true;
-          const dstCorners = [0, 0, 1920, 0, 0, 1080, 1920, 1080];
-          const srcCorners = [
-            center(pointDict.current[1]),
-            center(pointDict.current[2]),
-            center(pointDict.current[3]),
-            center(pointDict.current[4]),
-          ].flat();
-          console.log({ srcCorners, dstCorners });
-          const perspT = require("perspective-transform")(
-            dstCorners,
-            srcCorners
-          );
-          const coeffs = perspT.coeffsInv;
-          console.log(perspT);
+  let perspT, perspT2;
+  if (
+    //  !isCalibrated.current &&
+    pointDict[1] &&
+    pointDict[2] &&
+    pointDict[3] &&
+    pointDict[4] &&
+    pointDict[5] &&
+    pointDict[6]
+  ) {
+    isCalibrated.current = true;
 
-          console.log(
-            Math.max(srcCorners[0], srcCorners[2], srcCorners[4], srcCorners[6])
-          );
-          console.log(
-            Math.max(srcCorners[1], srcCorners[3], srcCorners[5], srcCorners[7])
-          );
+    const x = 0;
+    const y = 0;
+    const w = 1920;
+    const h = 1080;
+    const dstCorners = [x, y, w, y, x, h, w, h];
+    // const dstCorners = [477, 221, 1539, 195, 497, 840, 1544, 839];
 
-          document.body.style.transform = `matrix3d(${coeffs[0]}, ${coeffs[3]}, 0, ${coeffs[6]},
+    const srcCorners = [
+      center(pointDict[5]),
+      center(pointDict[6]),
+      center(pointDict[3]),
+      center(pointDict[4]),
+    ].flat();
+    const srcCorners2 = [
+      center(pointDict[1]),
+      center(pointDict[2]),
+      center(pointDict[3]),
+      center(pointDict[4]),
+    ].flat();
+
+    perspT = require("perspective-transform")(dstCorners, srcCorners);
+    perspT2 = require("perspective-transform")(dstCorners, srcCorners2);
+    const m = (coeffs) =>
+      new Matrix4().fromArray(
+        [
+          coeffs[0],
+          coeffs[3],
+          0,
+          coeffs[6],
+          coeffs[1],
+          coeffs[4],
+          0,
+          coeffs[7],
+          0,
+          0,
+          1,
+          0,
+          coeffs[2],
+          coeffs[5],
+          0,
+          coeffs[8],
+        ],
+        0
+      );
+
+    function threeToCSS(matrix) {
+      var elements = matrix.elements;
+      var css = `matrix3d(${elements[0]}, ${elements[1]}, ${elements[2]}, ${elements[3]},
+                ${elements[4]}, ${elements[5]}, ${elements[6]}, ${elements[7]},
+                ${elements[8]}, ${elements[9]}, ${elements[10]}, ${elements[11]},
+                ${elements[12]}, ${elements[13]}, ${elements[14]}, ${elements[15]})`;
+      return css;
+    }
+
+    const coeffs = m(perspT.coeffs);
+    const coeffs2 = m(perspT2.coeffs);
+    coeffs.multiply(coeffs2.invert());
+
+    document.querySelector(".root")!.style.background = "#000";
+    document.querySelector(".root")!.style.transformOrigin = "0 0";
+    /*const str = `matrix3d(${coeffs[0]}, ${coeffs[3]}, 0, ${coeffs[6]},
   ${coeffs[1]}, ${coeffs[4]}, 0, ${coeffs[7]},
   0, 0, 1, 0, 
   ${coeffs[2]}, ${coeffs[5]}, 0, ${coeffs[8]}
-  )`;
-        }
-      }, 250);
+  )`;*/
+    document.querySelector(".root")!.style.transform = threeToCSS(coeffs);
+  }
 
-      return () => {
-        clearInterval(id);
-      };
-    }
-  }, [enabled]);
+  const transformRef = useContext(MapTransformRef);
+  const { currentMap } = useMyProps("currentMap");
+  const mapObjectsRef = useServerStateRef(
+    (state) => state.maps.entities[currentMap!]!.objects
+  );
+  const charactersRef = useServerStateRef((state) => state.characters.entities);
 
-  return null;
+  const common = {
+    position: "absolute",
+    zIndex: 99999,
+    width: "100px",
+    height: "100px",
+    border: "30px solid white",
+  };
+  return (
+    <>
+      {ReactDOM.createPortal(
+        <>
+          <img src={marker1} style={{ ...common, top: 0, left: 0 }} />
+          <img src={marker2} style={{ ...common, top: 0, right: 0 }} />
+          <img src={marker3} style={{ ...common, bottom: 0, left: 0 }} />
+          <img src={marker4} style={{ ...common, bottom: 0, right: 0 }} />
+        </>,
+        document.body
+      )}
+      {perspT2 &&
+        ReactDOM.createPortal(
+          Object.entries(pointDict)
+            .filter(([id, _]) => parseInt(id) > 6)
+            .map(([id, points]) => {
+              const screenCoordinates = perspT2.transformInverse(
+                ...center(points)
+              );
+              const mapCoordinates = applyToPoint<[number, number]>(
+                inverse(transformRef.current),
+                screenCoordinates
+              );
+
+              let hoveredCharacter: [RRCharacter, RRToken] | null = null;
+
+              for (const object of entries(mapObjectsRef.current)) {
+                if (
+                  object.type === "token" &&
+                  pointDistance(
+                    pointAdd(
+                      object.position,
+                      makePoint(
+                        (charactersRef.current[object.characterId]!.scale *
+                          GRID_SIZE) /
+                          2
+                      )
+                    ),
+                    makePoint(...mapCoordinates)
+                  ) < GRID_SIZE
+                ) {
+                  hoveredCharacter = [
+                    charactersRef.current[object.characterId]!,
+                    object,
+                  ];
+                }
+              }
+
+              return (
+                <Marker
+                  key={id}
+                  id={parseInt(id)}
+                  mapId={currentMap!}
+                  hoveredCharacter={hoveredCharacter}
+                  screenCoordinates={screenCoordinates}
+                  mapCoordinates={mapCoordinates}
+                />
+              );
+            }),
+          document.body
+        )}
+    </>
+  );
+}
+
+function Marker({
+  hoveredCharacter,
+  screenCoordinates,
+  mapCoordinates,
+  mapId,
+  id,
+}: {
+  hoveredCharacter: [RRCharacter, RRToken] | null;
+  screenCoordinates: [number, number];
+  mapCoordinates: [number, number];
+  mapId: RRMapID;
+  id: number;
+}) {
+  const active = !!hoveredCharacter;
+
+  const [firstActive, setFirstActive] = useState<Date | null>(null);
+  const [lastActive, setLastActive] = useState<Date | null>(null);
+
+  if (firstActive === null && active) setFirstActive(new Date());
+  if (!active && !!firstActive && !lastActive) {
+    setFirstActive(null);
+    setLastActive(new Date());
+  }
+
+  const markerSize = active ? GRID_SIZE * 2 : 30;
+
+  const timeout = 3000;
+  const locked = active && firstActive && +new Date() - +firstActive > timeout;
+
+  const dispatch = useServerDispatch();
+
+  if (locked) {
+    dispatch({
+      actions: [
+        mapObjectUpdate(mapId, {
+          id: hoveredCharacter[1].id,
+          changes: { position: makePoint(...mapCoordinates) },
+        }),
+      ],
+      optimisticKey: "position",
+      syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+    });
+  }
+
+  return (
+    <div
+      style={{
+        width: `${markerSize}px`,
+        height: `${markerSize}px`,
+        borderRadius: "9999px",
+        zIndex: 99999999999999,
+        background: active ? "red" : "white",
+        left: screenCoordinates[0] - markerSize / 2,
+        top: screenCoordinates[1] - markerSize / 2,
+        position: "absolute",
+      }}
+    >
+      {id}
+      {active && (
+        <div
+          style={{
+            width: `${markerSize}px`,
+            height: `${markerSize}px`,
+            top: 0,
+            left: 0,
+            position: "absolute",
+            borderRadius: "9999px",
+            background: "#0f0",
+            animation: `reveal-circle ${timeout}ms linear both`,
+          }}
+        ></div>
+      )}
+    </div>
+  );
 }
