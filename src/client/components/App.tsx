@@ -10,6 +10,7 @@ import QuickReferenceWrapper from "./quickReference/QuickReferenceWrapper";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { useServerConnection } from "../state";
 import { ConnectionLost } from "./ConnectionLost";
+import { ARMode } from "./ar/ARMode";
 
 // Load the map lazily to enable code splitting -> the sidebar will load faster.
 const MapContainer = React.lazy(
@@ -59,6 +60,7 @@ const Game = React.memo<{
   return (
     <div className="app-wrapper">
       <ActiveMusicPlayer />
+      <ARMode />
       <Suspense fallback="Map is loading...">
         <main className="app-map">
           <ErrorBoundary>

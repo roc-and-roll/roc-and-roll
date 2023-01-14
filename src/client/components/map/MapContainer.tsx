@@ -773,17 +773,16 @@ export default function MapContainer() {
                   />
                 </Suspense>
                 <Suspense fallback={null}>
-                  {
-                    //<PlayerToolbar myself={myself} players={players} />
-                  }
-                  <MapToolbar
-                    mapId={map.id}
-                    mapSettings={map.settings}
-                    myself={myself}
-                    setEditState={setEditState}
-                  />
                   {!noHUD && (
-                    <HUD mapBackgroundColor={map.settings.backgroundColor} />
+                    <>
+                      <MapToolbar
+                        mapId={map.id}
+                        mapSettings={map.settings}
+                        myself={myself}
+                        setEditState={setEditState}
+                      />
+                      <HUD mapBackgroundColor={map.settings.backgroundColor} />
+                    </>
                   )}
                 </Suspense>
                 {dropProps.nativeFileHovered && (
