@@ -1,0 +1,3 @@
+[submodule "projector/stag"]
+	path = projector/stag
+	url = git@github.com:tom95/stag_ros
