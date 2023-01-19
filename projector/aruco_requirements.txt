@@ -1,0 +1,4 @@
+opencv-python
+Flask
+flask-cors
+Flask-SocketIO

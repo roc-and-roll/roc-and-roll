@@ -2,51 +2,84 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import io from "socket.io-client";
 import { Matrix4 } from "three";
-import { DebugSettingsContext } from "../hud/DebugSettings";
 import marker1 from "./marker/stag_00001.png";
 import marker2 from "./marker/stag_00002.png";
 import marker3 from "./marker/stag_00003.png";
 import marker4 from "./marker/stag_00004.png";
 import { MapTransformRef } from "../MapTransformContext";
 import { applyToPoint, inverse } from "transformation-matrix";
-import { useRecoilValue } from "recoil";
 import { useServerDispatch, useServerStateRef } from "../../state";
 import { useMyProps } from "../../myself";
-import {
-  makePoint,
-  pointAdd,
-  pointDistance,
-  pointScale,
-  snapPointToGrid,
-} from "../../../shared/point";
+import { makePoint, pointAdd, pointDistance } from "../../../shared/point";
 import { entries, RRCharacter, RRMapID, RRToken } from "../../../shared/state";
-import { DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME, GRID_SIZE } from "../../../shared/constants";
+import {
+  DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+  GRID_SIZE,
+} from "../../../shared/constants";
 import { mapObjectUpdate } from "../../../shared/actions";
+import perspectiveTransform from "perspective-transform";
+
+// cspell: words coeffs
 
 type Corner = [number, number];
 type Corners = [Corner, Corner, Corner, Corner];
 
-function center(points: Corners) {
+function center(points: Corners): Corner {
   return [
     points.reduce((acc, point) => acc + point[0], 0) / points.length,
     points.reduce((acc, point) => acc + point[1], 0) / points.length,
   ];
 }
 
-export function ARMode() {
-  const [settings, setSettings] = useContext(DebugSettingsContext);
+function matrixToCSS({ elements }: THREE.Matrix4) {
+  return `matrix3d(
+    ${elements[0]!},  ${elements[1]!},  ${elements[2]!},  ${elements[3]!},
+    ${elements[4]!},  ${elements[5]!},  ${elements[6]!},  ${elements[7]!},
+    ${elements[8]!},  ${elements[9]!},  ${elements[10]!}, ${elements[11]!},
+    ${elements[12]!}, ${elements[13]!}, ${elements[14]!}, ${elements[15]!})`;
+}
+
+const toMatrix = (coeffs: ReturnType<typeof perspectiveTransform>["coeffs"]) =>
+  new Matrix4().fromArray(
+    // prettier-ignore
+    [
+      coeffs[0], coeffs[3], 0, coeffs[6],
+      coeffs[1], coeffs[4], 0, coeffs[7],
+      0,         0,         1, 0,
+      coeffs[2], coeffs[5], 0, coeffs[8],
+    ],
+    0
+  );
+
+export const ARModeContext = React.createContext<{
+  enabled: boolean;
+  setEnabled: (enabled: boolean) => void;
+}>({
+  enabled: false,
+  setEnabled: () => {
+    throw new Error("ARModeContextProvider is missing.");
+  },
+});
+
+export function ARModeContextProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [enabled, setEnabled] = useState(false);
+  return (
+    <ARModeContext.Provider value={{ enabled, setEnabled }}>
+      {children}
+    </ARModeContext.Provider>
+  );
+}
+
+export function ARMode() {
+  const { enabled, setEnabled } = useContext(ARModeContext);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setEnabled(params.get("ar") !== null);
-  }, []);
-
-  useEffect(() => {
-    setSettings((settings) => ({
-      ...settings,
-      noHUD: enabled,
-    }));
-  }, [enabled, setSettings]);
+  }, [setEnabled]);
 
   const [pointDict, setPointDict] = useState<Record<number, Corners>>({});
   const msgCounter = useRef(0);
@@ -79,13 +112,12 @@ export function ARMode() {
     }
   }, [enabled]);
 
-  const isCalibrated = useRef(false);
-
   console.log(Object.keys(pointDict));
 
-  let perspT, perspT2;
+  let transform1: ReturnType<typeof perspectiveTransform> | undefined;
+  let transform2: ReturnType<typeof perspectiveTransform> | undefined;
+
   if (
-    //  !isCalibrated.current &&
     pointDict[1] &&
     pointDict[2] &&
     pointDict[3] &&
@@ -93,74 +125,37 @@ export function ARMode() {
     pointDict[5] &&
     pointDict[6]
   ) {
-    isCalibrated.current = true;
-
     const x = 0;
     const y = 0;
     const w = 1920;
     const h = 1080;
-    const dstCorners = [x, y, w, y, x, h, w, h];
-    // const dstCorners = [477, 221, 1539, 195, 497, 840, 1544, 839];
+    const dstCorners = [x, y, w, y, x, h, w, h] as const;
 
     const srcCorners = [
-      center(pointDict[5]),
-      center(pointDict[6]),
-      center(pointDict[3]),
-      center(pointDict[4]),
-    ].flat();
+      ...center(pointDict[5]),
+      ...center(pointDict[6]),
+      ...center(pointDict[3]),
+      ...center(pointDict[4]),
+    ] as const;
     const srcCorners2 = [
-      center(pointDict[1]),
-      center(pointDict[2]),
-      center(pointDict[3]),
-      center(pointDict[4]),
-    ].flat();
+      ...center(pointDict[1]),
+      ...center(pointDict[2]),
+      ...center(pointDict[3]),
+      ...center(pointDict[4]),
+    ] as const;
 
-    perspT = require("perspective-transform")(dstCorners, srcCorners);
-    perspT2 = require("perspective-transform")(dstCorners, srcCorners2);
-    const m = (coeffs) =>
-      new Matrix4().fromArray(
-        [
-          coeffs[0],
-          coeffs[3],
-          0,
-          coeffs[6],
-          coeffs[1],
-          coeffs[4],
-          0,
-          coeffs[7],
-          0,
-          0,
-          1,
-          0,
-          coeffs[2],
-          coeffs[5],
-          0,
-          coeffs[8],
-        ],
-        0
-      );
+    transform1 = perspectiveTransform(dstCorners, srcCorners);
+    transform2 = perspectiveTransform(dstCorners, srcCorners2);
 
-    function threeToCSS(matrix) {
-      var elements = matrix.elements;
-      var css = `matrix3d(${elements[0]}, ${elements[1]}, ${elements[2]}, ${elements[3]},
-                ${elements[4]}, ${elements[5]}, ${elements[6]}, ${elements[7]},
-                ${elements[8]}, ${elements[9]}, ${elements[10]}, ${elements[11]},
-                ${elements[12]}, ${elements[13]}, ${elements[14]}, ${elements[15]})`;
-      return css;
-    }
-
-    const coeffs = m(perspT.coeffs);
-    const coeffs2 = m(perspT2.coeffs);
+    const coeffs = toMatrix(transform1.coeffs);
+    const coeffs2 = toMatrix(transform2.coeffs);
     coeffs.multiply(coeffs2.invert());
 
-    document.querySelector(".root")!.style.background = "#000";
-    document.querySelector(".root")!.style.transformOrigin = "0 0";
-    /*const str = `matrix3d(${coeffs[0]}, ${coeffs[3]}, 0, ${coeffs[6]},
-  ${coeffs[1]}, ${coeffs[4]}, 0, ${coeffs[7]},
-  0, 0, 1, 0, 
-  ${coeffs[2]}, ${coeffs[5]}, 0, ${coeffs[8]}
-  )`;*/
-    document.querySelector(".root")!.style.transform = threeToCSS(coeffs);
+    const root: HTMLElement = document.querySelector(".root")!;
+
+    root.style.background = "#000";
+    root.style.transformOrigin = "0 0";
+    root.style.transform = matrixToCSS(coeffs);
   }
 
   const transformRef = useContext(MapTransformRef);
@@ -170,30 +165,19 @@ export function ARMode() {
   );
   const charactersRef = useServerStateRef((state) => state.characters.entities);
 
-  const common = {
-    position: "absolute",
-    zIndex: 99999,
-    width: "100px",
-    height: "100px",
-    border: "30px solid white",
-  };
   return (
     <>
-      {ReactDOM.createPortal(
-        <>
-          <img src={marker1} style={{ ...common, top: 0, left: 0 }} />
-          <img src={marker2} style={{ ...common, top: 0, right: 0 }} />
-          <img src={marker3} style={{ ...common, bottom: 0, left: 0 }} />
-          <img src={marker4} style={{ ...common, bottom: 0, right: 0 }} />
-        </>,
-        document.body
-      )}
-      {perspT2 &&
+      <ScreenCornerMarkers />
+      {transform2 &&
         ReactDOM.createPortal(
           Object.entries(pointDict)
             .filter(([id, _]) => parseInt(id) > 6)
             .map(([id, points]) => {
-              const screenCoordinates = perspT2.transformInverse(
+              if (!transform2) {
+                return null;
+              }
+
+              const screenCoordinates = transform2.transformInverse(
                 ...center(points)
               );
               const mapCoordinates = applyToPoint<[number, number]>(
@@ -317,3 +301,23 @@ function Marker({
     </div>
   );
 }
+
+const ScreenCornerMarkers = React.memo(function ScreenCornerMarkers() {
+  const common = {
+    position: "absolute",
+    zIndex: 99999,
+    width: "100px",
+    height: "100px",
+    border: "30px solid white",
+  } as const;
+
+  return ReactDOM.createPortal(
+    <>
+      <img src={marker1} style={{ ...common, top: 0, left: 0 }} />
+      <img src={marker2} style={{ ...common, top: 0, right: 0 }} />
+      <img src={marker3} style={{ ...common, bottom: 0, left: 0 }} />
+      <img src={marker4} style={{ ...common, bottom: 0, right: 0 }} />
+    </>,
+    document.body
+  );
+});

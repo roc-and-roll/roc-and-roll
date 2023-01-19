@@ -1,7 +1,7 @@
 import cv2
-from flask import Flask, render_template
+from flask import Flask
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO
 from threading import Thread
 
 cam = cv2.VideoCapture(3)
@@ -20,7 +20,10 @@ def detect_loop():
         detector = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
         markerCorners, markerIds, _ = cv2.aruco.detectMarkers(img, detector)
         if markerCorners is not None and markerIds is not None:
-            l = [{'id': c[0].tolist()[0], 'points': [list(p.tolist()) for p in list(c[1][0])]} for c in zip(markerIds, markerCorners)]
+            l = [{
+                'id': c[0].tolist()[0],
+                'points': [list(p.tolist()) for p in list(c[1][0])]
+            } for c in zip(markerIds, markerCorners)]
             socketio.emit('points', l)
 
 Thread(target=detect_loop).start()
