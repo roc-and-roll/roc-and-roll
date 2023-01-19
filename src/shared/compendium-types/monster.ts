@@ -201,6 +201,7 @@ export interface CompendiumMonster {
   alignmentPrefix?: any;
   mythic?: any;
   shortName?: any;
+  mythicHeader?: any;
 }
 
 export const isConditionalSpeed = z.strictObject({
@@ -430,6 +431,7 @@ const _isMonster = z.strictObject({
   alignmentPrefix: z.any(),
   mythic: z.any(),
   shortName: z.any(),
+  mythicHeader: z.any(),
 });
 // TypeScript hack to avoid inlining.
 // https://github.com/microsoft/TypeScript/issues/34119
