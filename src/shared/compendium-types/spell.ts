@@ -93,7 +93,7 @@ export interface CompendiumSpell {
   spellAttack?: Array<"R" | "M">;
   miscTags?: string[];
   areaTags?: string[];
-  classes: {
+  classes?: {
     fromClassList?: {
       name: string;
       source: string;
@@ -262,41 +262,43 @@ const _isSpell = z.strictObject({
   spellAttack: z.optional(z.array(z.enum(["R", "M"] as const))),
   miscTags: z.optional(z.array(z.string())),
   areaTags: z.optional(z.array(z.string())),
-  classes: z.strictObject({
-    fromClassList: z.optional(
-      z.array(
-        z.strictObject({
-          name: z.string(),
-          source: z.string(),
-          definedInSource: z.optional(z.string()),
-        })
-      )
-    ),
-    fromClassListVariant: z.optional(
-      z.array(
-        z.strictObject({
-          name: z.string(),
-          source: z.string(),
-          definedInSource: z.optional(z.string()),
-        })
-      )
-    ),
-    fromSubclass: z.optional(
-      z.array(
-        z.strictObject({
-          class: z.strictObject({
+  classes: z.optional(
+    z.strictObject({
+      fromClassList: z.optional(
+        z.array(
+          z.strictObject({
             name: z.string(),
             source: z.string(),
-          }),
-          subclass: z.strictObject({
+            definedInSource: z.optional(z.string()),
+          })
+        )
+      ),
+      fromClassListVariant: z.optional(
+        z.array(
+          z.strictObject({
             name: z.string(),
             source: z.string(),
-            subSubclass: z.optional(z.string()),
-          }),
-        })
-      )
-    ),
-  }),
+            definedInSource: z.optional(z.string()),
+          })
+        )
+      ),
+      fromSubclass: z.optional(
+        z.array(
+          z.strictObject({
+            class: z.strictObject({
+              name: z.string(),
+              source: z.string(),
+            }),
+            subclass: z.strictObject({
+              name: z.string(),
+              source: z.string(),
+              subSubclass: z.optional(z.string()),
+            }),
+          })
+        )
+      ),
+    })
+  ),
   races: z.optional(
     z.array(
       z.strictObject({
