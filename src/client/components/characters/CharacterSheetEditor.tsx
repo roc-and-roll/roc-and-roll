@@ -24,7 +24,7 @@ import { useServerDispatch } from "../../state";
 import { Button } from "../ui/Button";
 import { SmartIntegerInput } from "../ui/TextInput";
 import { getProficiencyValueString, modifierFromStat } from "../../util";
-import { proficiencyStringToValue } from "../../diceUtils";
+import { calculateProficiencyBonus } from "../../diceUtils";
 
 export const CharacterSheetEditor = React.memo<{
   character: RRCharacter;
@@ -143,9 +143,9 @@ function ProficiencyEditor({ character }: { character: RRCharacter }) {
       : typeof proficiency === "number"
       ? proficiency
       : modifierFromStat(character.stats[baseStat]!) +
-        Math.floor(
-          (character.attributes["proficiency"] ?? 0) *
-            proficiencyStringToValue(proficiency ?? "notProficient")
+        calculateProficiencyBonus(
+          character.attributes["proficiency"] ?? 0,
+          proficiency ?? "notProficient"
         );
   }
 

@@ -14,13 +14,28 @@ import { RRDiceTemplate } from "../shared/validation";
 import { roll } from "./dice-rolling/roll";
 import { modifierFromStat } from "./util";
 
-export function proficiencyStringToValue(
-  proficiencyString: typeof proficiencyValueStrings[number]
+export function calculateProficiencyBonus(
+  proficiency: number,
+  proficiencyType: typeof proficiencyValueStrings[number]
 ): number {
-  if (proficiencyString === "notProficient") return 0;
-  else if (proficiencyString === "halfProficient") return 0.5;
-  else if (proficiencyString === "proficient") return 1;
-  else return 2;
+  let multiplier;
+  switch (proficiencyType) {
+    case "doublyProficient":
+      multiplier = 2;
+      break;
+    case "halfProficient":
+      multiplier = 0.5;
+      break;
+    case "notProficient":
+      multiplier = 0;
+      break;
+    case "proficient":
+      multiplier = 1;
+      break;
+    default:
+      assertNever(proficiencyType);
+  }
+  return Math.floor(proficiency * multiplier);
 }
 
 export function evaluateDiceTemplatePart(
@@ -65,9 +80,9 @@ export function evaluateDiceTemplatePart(
           value:
             typeof part.proficiency === "number"
               ? part.proficiency
-              : Math.floor(
-                  (character?.attributes["proficiency"] ?? 0) *
-                    proficiencyStringToValue(part.proficiency)
+              : calculateProficiencyBonus(
+                  character?.attributes["proficiency"] ?? 0,
+                  part.proficiency
                 ),
           damage: part.damage,
         },
@@ -118,9 +133,10 @@ export function getModifierForTemplate(
           returnValue = part.proficiency;
           return;
         }
-        returnValue +=
-          proficiencyStringToValue(part.proficiency) *
-          (character.attributes["proficiency"] ?? 0);
+        returnValue += calculateProficiencyBonus(
+          character.attributes["proficiency"] ?? 0,
+          part.proficiency
+        );
       } else if (part.type === "linkedStat") {
         if (character.stats[part.name] === null) return;
         returnValue += modifierFromStat(character.stats[part.name]!);
