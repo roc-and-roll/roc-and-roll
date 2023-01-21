@@ -37,10 +37,14 @@ export function LimitedUse({ character }: { character: RRCharacterProps }) {
       };
     });
 
-  function doSkill(index: number, skill: RRLimitedUseSkill) {
+  function doSkill(
+    index: number,
+    skill: RRLimitedUseSkill,
+    modifier: number = 1
+  ) {
     setLimitedUseSkills([
       ...character.limitedUseSkills.slice(0, index),
-      { ...skill, currentUseCount: skill.currentUseCount + 1 },
+      { ...skill, currentUseCount: skill.currentUseCount + modifier },
       ...character.limitedUseSkills.slice(index + 1),
     ]);
   }
@@ -86,6 +90,11 @@ export function LimitedUse({ character }: { character: RRCharacterProps }) {
             onClick={() => {
               if (skillUsed) return;
               doSkill(index, skill);
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              if (skill.currentUseCount <= 0) return;
+              doSkill(index, skill, -1);
             }}
           >
             {skill.name}

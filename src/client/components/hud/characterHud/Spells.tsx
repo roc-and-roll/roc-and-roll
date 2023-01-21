@@ -170,12 +170,17 @@ function Spell({
           setSettingsOpen(true);
         }}
       >
-        {spell.name}{" "}
+        {spell.name}
         {spell.isRitual && (
-          <FontAwesomeIcon icon={faBook} className="text-xs" />
+          <>
+            {" "}
+            <FontAwesomeIcon icon={faBook} className="text-xs" title="Ritual" />
+          </>
         )}
       </p>
-      {!spell.alwaysPrepared && (
+      {spell.alwaysPrepared ? (
+        <span title="always prepared">A</span>
+      ) : (
         <input
           type="checkbox"
           checked={spell.prepared}
