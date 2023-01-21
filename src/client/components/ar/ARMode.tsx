@@ -165,6 +165,10 @@ export function ARMode() {
   );
   const charactersRef = useServerStateRef((state) => state.characters.entities);
 
+  if (!enabled) {
+    return null;
+  }
+
   return (
     <>
       <ScreenCornerMarkers />
