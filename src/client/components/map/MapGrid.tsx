@@ -6,6 +6,7 @@ import * as PIXI from "pixi.js";
 import { PRectangle } from "./Primitives";
 import { GRID_SIZE } from "../../../shared/constants";
 import tinycolor from "tinycolor2";
+import { ARModeContext } from "../ar/ARMode";
 
 const makeGridShader = () =>
   new PIXI.Filter(
@@ -16,6 +17,7 @@ precision mediump float;
 
 uniform vec4 color;
 
+uniform float thickness;
 uniform float scale;
 uniform vec2 offset;
 
@@ -28,8 +30,8 @@ void main() {
 
   vec2 coord = gl_FragCoord.xy - offset;
 
-  if (mod(coord.x, pitch.x) < 1. ||
-      mod(coord.y, pitch.y) < 1.) {
+  if (mod(coord.x, pitch.x) < thickness ||
+      mod(coord.y, pitch.y) < thickness) {
     gl_FragColor = color;
   } else {
     gl_FragColor = vec4(0.);
@@ -39,6 +41,7 @@ void main() {
       color: [0, 0, 0, 0.6],
       scale: 1,
       offset: [0, 0],
+      thickness: 1,
     }
   );
 
@@ -47,6 +50,7 @@ export const MapGrid = React.memo<{
   color: RRColor;
 }>(function MapGrid({ transform, color }) {
   const viewPortSize = useContext(ViewPortSizeContext);
+  const { enabled: arModeEnabled } = useContext(ARModeContext);
 
   const gridShader = useMemo(() => makeGridShader(), []);
 
@@ -71,6 +75,10 @@ export const MapGrid = React.memo<{
       -transform.f + viewPortSize.y,
     ];
   }, [gridShader, transform.e, transform.f, viewPortSize.y]);
+
+  useEffect(() => {
+    gridShader.uniforms["thickness"] = arModeEnabled ? 5 : 1;
+  }, [gridShader, arModeEnabled]);
 
   return (
     <PRectangle

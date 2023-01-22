@@ -90,6 +90,7 @@ import { getBoundingBoxForMapObject } from "./geometry/bounding-boxes";
 import { RotatedShape } from "./geometry/RotatedShape";
 import { PixiGlobalFilters } from "./atmosphere/Atmosphere";
 import { MapTransformRef } from "../MapTransformContext";
+import { ARModeContext } from "../ar/ARMode";
 
 type Rectangle = [number, number, number, number];
 
@@ -909,6 +910,7 @@ transform,
       >
         <ContextBridge
           contexts={[
+            ARModeContext,
             ServerStateContext,
             ServerConnectionContext,
             ServerMessagesContext,
