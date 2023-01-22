@@ -1,5 +1,5 @@
 import React from "react";
-import { act, renderHook } from "@testing-library/react-hooks";
+import { act, renderHook } from "@testing-library/react";
 import {
   ServerStateProvider,
   applyStatePatch,
@@ -21,7 +21,6 @@ import {
 } from "../shared/state";
 import { rrid } from "../shared/util";
 import { MockClientSocket } from "./test-utils";
-import { Socket } from "socket.io-client";
 import { SOCKET_DISPATCH_ACTION } from "../shared/constants";
 import util from "util";
 import { setImmediate as realSetImmediate } from "timers";
@@ -32,44 +31,23 @@ function setup<A extends Record<string, unknown>, H>(
 ) {
   const mockSocket = new MockClientSocket();
   const socket = mockSocket.__cast();
-  const wrapper = ({
-    children,
-    socket,
-  }: React.PropsWithChildren<{ socket: Socket }>) => {
-    return (
-      <ServerStateProvider socket={socket}>{children}</ServerStateProvider>
-    );
-  };
 
-  const {
-    result,
-    rerender,
-    unmount,
-    waitFor,
-    waitForNextUpdate,
-    waitForValueToChange,
-  } = renderHook<
-    A & {
-      socket: Socket;
-    },
-    H
-  >((hookArgs) => hookCreator(hookArgs), {
-    wrapper,
-    initialProps: {
-      ...initialProps,
-      socket,
-    },
-  });
+  const { result, rerender, unmount } = renderHook<H, A>(
+    (hookArgs) => hookCreator(hookArgs),
+    {
+      wrapper: ({ children }) => (
+        <ServerStateProvider socket={socket}>{children}</ServerStateProvider>
+      ),
+      initialProps,
+    }
+  );
 
   return {
     mockSocket,
     socket,
     result,
-    rerender: (props: A) => rerender({ ...props, socket }),
+    rerender,
     unmount,
-    waitFor,
-    waitForNextUpdate,
-    waitForValueToChange,
   };
 }
 
@@ -281,8 +259,11 @@ describe("useServerDispatch", () => {
     const { result, rerender, mockSocket } = setup({}, () =>
       useServerDispatch()
     );
+    const dispatch = result.current;
+    expect(typeof dispatch).toBe("function");
 
     rerender({});
+    expect(result.current).toBe(dispatch);
 
     const action = { type: "TEST_ACTION", payload: {} };
 
@@ -300,10 +281,7 @@ describe("useServerDispatch", () => {
     );
 
     rerender({});
-    // The identity of the dispatch function should never change.
-    for (const dispatch of result.all) {
-      expect(dispatch).toBe(result.current);
-    }
+    expect(result.current).toBe(dispatch);
   });
 
   it("dispatches optimistic actions with syncToServerThrottle = 0 immediately", async () => {

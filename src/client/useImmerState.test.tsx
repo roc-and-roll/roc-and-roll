@@ -1,8 +1,8 @@
-import { act, renderHook } from "@testing-library/react-hooks";
+import { act, renderHook } from "@testing-library/react";
 import { Primitive } from "type-fest";
 import { useImmerState } from "./useImmerState";
 
-describe("useDebounce", () => {
+describe("useImmerState", () => {
   interface HookArgs<V> {
     initialValue: V;
   }
@@ -28,7 +28,8 @@ describe("useDebounce", () => {
     });
 
     expect(hook.result.current[0]).toBe(initialValue);
-    expect(typeof hook.result.current[1]).toBe("function");
+    const setter = hook.result.current[1];
+    expect(typeof setter).toBe("function");
 
     let nextValue = {
       a: { aa: 1337 },
@@ -38,6 +39,7 @@ describe("useDebounce", () => {
       hook.result.current[1](nextValue);
     });
     expect(hook.result.current[0]).toBe(nextValue);
+    expect(hook.result.current[1]).toBe(setter);
 
     act(() => {
       hook.result.current[1]((draft) => {
@@ -47,6 +49,7 @@ describe("useDebounce", () => {
     expect(hook.result.current[0]).not.toBe(nextValue);
     expect(hook.result.current[0].a).not.toBe(nextValue.a);
     expect(hook.result.current[0].b).toBe(nextValue.b);
+    expect(hook.result.current[1]).toBe(setter);
 
     nextValue = {
       a: { aa: 3 },
@@ -58,14 +61,6 @@ describe("useDebounce", () => {
       });
     });
     expect(hook.result.current[0]).toBe(nextValue);
-
-    // The identity of the setter should never change.
-    hook.result.all.forEach((r) => {
-      if (!Array.isArray(r)) {
-        fail();
-      }
-
-      expect(hook.result.current[1]).toBe(r[1]);
-    });
+    expect(hook.result.current[1]).toBe(setter);
   });
 });

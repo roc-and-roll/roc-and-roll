@@ -6,9 +6,13 @@ import {
   useDebounce,
   useIsolatedValue,
 } from "./debounce";
-import { renderHook } from "@testing-library/react-hooks";
-import { render, screen, fireEvent } from "@testing-library/react";
-import { act } from "@testing-library/react-hooks";
+import {
+  renderHook,
+  act,
+  render,
+  screen,
+  fireEvent,
+} from "@testing-library/react";
 
 describe("SyncedDebounceMaker", () => {
   const TIME = 100;
@@ -117,7 +121,8 @@ describe("useDebounce", () => {
       forceOnUnmount,
     });
 
-    expect(typeof hook.result.current[0]).toBe("function");
+    const debouncer = hook.result.current[0];
+    expect(typeof debouncer).toBe("function");
 
     jest.runAllTimers();
     expect(Date.now() - START_NOW).toBe(0);
@@ -128,27 +133,32 @@ describe("useDebounce", () => {
       hook.result.current[0](2, "b");
     });
     expect(callback).toBeCalledTimes(0);
+    expect(hook.result.current[0]).toBe(debouncer);
 
     jest.runAllTimers();
     expect(Date.now() - START_NOW).toBe(TIME);
     expect(callback).toBeCalledTimes(1);
     expect(callback).toHaveBeenLastCalledWith(2, "b");
+    expect(hook.result.current[0]).toBe(debouncer);
 
     act(() => {
       hook.result.current[0](3, "c");
     });
     expect(callback).toBeCalledTimes(1);
+    expect(hook.result.current[0]).toBe(debouncer);
 
     jest.runAllTimers();
     expect(Date.now() - START_NOW).toBe(TIME * 2);
     expect(callback).toBeCalledTimes(2);
     expect(callback).toHaveBeenLastCalledWith(3, "c");
+    expect(hook.result.current[0]).toBe(debouncer);
 
     act(() => {
       hook.result.current[0](4, "d");
     });
     expect(callback).toBeCalledTimes(2);
     expect(Date.now() - START_NOW).toBe(TIME * 2);
+    expect(hook.result.current[0]).toBe(debouncer);
 
     hook.unmount();
 
@@ -166,11 +176,6 @@ describe("useDebounce", () => {
     } else {
       expect(callback).toBeCalledTimes(2);
     }
-
-    // The identity of the debounced function should never change.
-    hook.result.all.forEach((r) => {
-      expect(hook.result.current).toBe(r);
-    });
   });
 });
 
@@ -209,7 +214,9 @@ describe("useAggregatedDebounce", () => {
       forceOnUnmount,
     });
 
-    expect(typeof hook.result.current).toBe("function");
+    const debouncer = hook.result.current;
+    expect(typeof debouncer).toBe("function");
+    expect(hook.result.current).toBe(debouncer);
 
     jest.runAllTimers();
     expect(Date.now() - START_NOW).toBe(0);
@@ -221,6 +228,7 @@ describe("useAggregatedDebounce", () => {
     });
     expect(callback).toBeCalledTimes(0);
     expect(Date.now() - START_NOW).toBe(0);
+    expect(hook.result.current).toBe(debouncer);
 
     jest.runAllTimers();
     expect(Date.now() - START_NOW).toBe(TIME);
@@ -235,18 +243,15 @@ describe("useAggregatedDebounce", () => {
     });
     expect(callback).toBeCalledTimes(1);
     expect(Date.now() - START_NOW).toBe(TIME);
+    expect(hook.result.current).toBe(debouncer);
 
     jest.runAllTimers();
     expect(Date.now() - START_NOW).toBe(TIME * 2);
     expect(callback).toBeCalledTimes(2);
     expect(callback).toHaveBeenLastCalledWith([[3, "c"]]);
+    expect(hook.result.current).toBe(debouncer);
 
     hook.unmount();
-
-    // The identity of the debounced function should never change.
-    hook.result.all.forEach((r) => {
-      expect(hook.result.current).toBe(r);
-    });
   });
 });
 
