@@ -60,7 +60,7 @@
     "core-js": "^3.27.2",
     "emoji-picker-react": "^3.4.8",
     "env-paths": "^3.0.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "fbjs": "^3.0.4",
     "file-type": "^16.5.3",
     "fontfaceobserver": "^2.1.0",
