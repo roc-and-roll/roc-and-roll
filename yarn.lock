@@ -8149,13 +8149,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-memoize@npm:^2.5.1":
-  version: 2.5.2
-  resolution: "fast-memoize@npm:2.5.2"
-  checksum: 79fa759719ba4eac7e8c22fb3b0eb3f18f4a31e218c00b1eb4a5b53c5781921133a6b84472d59ec5a6ea8f26ad57b43cd99a350c0547ccce51489bc9a5f0b28d
-  languageName: node
-  linkType: hard
-
 "fastest-levenshtein@npm:^1.0.12":
   version: 1.0.12
   resolution: "fastest-levenshtein@npm:1.0.12"
@@ -14117,15 +14110,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"re-resizable@npm:^6.9.0":
-  version: 6.9.0
-  resolution: "re-resizable@npm:6.9.0"
-  dependencies:
-    fast-memoize: ^2.5.1
+"re-resizable@npm:^6.9.9":
+  version: 6.9.9
+  resolution: "re-resizable@npm:6.9.9"
   peerDependencies:
-    react: ^16.13.1 || ^17.0.0
-    react-dom: ^16.13.1 || ^17.0.0
-  checksum: 994f999ae6e9bd65e45a28c42e132b00b5d319effc4044c8fe89bddff8a631f2c0ce234194981a5117186e787cc80e6d41d1bd7328787672d07f482e2a260d51
+    react: ^16.13.1 || ^17.0.0 || ^18.0.0
+    react-dom: ^16.13.1 || ^17.0.0 || ^18.0.0
+  checksum: a2c8bfe86646fb02d5c9c624b1da26f9e6a5e2f552cd96ce4db690588bee6b21177065ce8e98646c6ca0b1a9c4ce233824b75eb346800d8248ac8a87b40f1b28
   languageName: node
   linkType: hard
 
@@ -15114,7 +15105,7 @@ resolve@^2.0.0-next.3:
     process: ^0.11.10
     prompts: ^2.4.1
     proper-lockfile: ^4.1.2
-    re-resizable: ^6.9.0
+    re-resizable: ^6.9.9
     react: ^18.1.0
     react-beautiful-dnd: ^13.1.1
     react-dnd: ^16.0.1
