@@ -10,7 +10,12 @@ import { MapTransformRef } from "../MapTransformContext";
 import { applyToPoint, inverse } from "transformation-matrix";
 import { useServerDispatch, useServerStateRef } from "../../state";
 import { useMyProps } from "../../myself";
-import { makePoint, pointAdd, pointDistance } from "../../../shared/point";
+import {
+  makePoint,
+  pointAdd,
+  pointDistance,
+  snapPointToGrid,
+} from "../../../shared/point";
 import { entries, RRCharacter, RRMapID, RRToken } from "../../../shared/state";
 import {
   DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
@@ -23,6 +28,10 @@ import perspectiveTransform from "perspective-transform";
 
 type Corner = [number, number];
 type Corners = [Corner, Corner, Corner, Corner];
+interface Observation {
+  time: Date;
+  corners: Corners;
+}
 
 function center(points: Corners): Corner {
   return [
@@ -74,6 +83,8 @@ export function ARModeContextProvider({
   );
 }
 
+const MS_TILL_MARKER_GONE = 1000;
+
 export function ARMode() {
   const { enabled, setEnabled } = useContext(ARModeContext);
   useEffect(() => {
@@ -81,7 +92,7 @@ export function ARMode() {
     setEnabled(params.get("ar") !== null);
   }, [setEnabled]);
 
-  const [pointDict, setPointDict] = useState<Record<number, Corners>>({});
+  const [pointDict, setPointDict] = useState<Record<number, Observation>>({});
   const msgCounter = useRef(0);
 
   useEffect(() => {
@@ -89,7 +100,7 @@ export function ARMode() {
       // pointDict.current = {};
       msgCounter.current = 0;
 
-      const socket = io("192.168.0.238:3377");
+      const socket = io("http://localhost:3377");
       socket.on(
         "points",
         (
@@ -99,9 +110,17 @@ export function ARMode() {
           }>
         ) => {
           msgCounter.current++;
+          const cutoffTime = new Date(+new Date() - MS_TILL_MARKER_GONE);
           markers.forEach((marker) => {
-            if (marker.id <= 20)
-              setPointDict((d) => ({ ...d, [marker.id]: marker.points }));
+            setPointDict((d) => {
+              const calibrating = d[7] && d[7].time > cutoffTime;
+              return marker.id <= 20 && (calibrating || marker.id > 6)
+                ? {
+                    ...d,
+                    [marker.id]: { time: new Date(), corners: marker.points },
+                  }
+                : d;
+            });
           });
         }
       );
@@ -112,10 +131,11 @@ export function ARMode() {
     }
   }, [enabled]);
 
-  console.log(Object.keys(pointDict));
-
   let transform1: ReturnType<typeof perspectiveTransform> | undefined;
   let transform2: ReturnType<typeof perspectiveTransform> | undefined;
+
+  const cutoffTime = new Date(+new Date() - MS_TILL_MARKER_GONE);
+  const calibrating = pointDict[7] && pointDict[7].time > cutoffTime;
 
   if (
     pointDict[1] &&
@@ -132,16 +152,16 @@ export function ARMode() {
     const dstCorners = [x, y, w, y, x, h, w, h] as const;
 
     const srcCorners = [
-      ...center(pointDict[5]),
-      ...center(pointDict[6]),
-      ...center(pointDict[3]),
-      ...center(pointDict[4]),
+      ...center(pointDict[5].corners),
+      ...center(pointDict[6].corners),
+      ...center(pointDict[3].corners),
+      ...center(pointDict[4].corners),
     ] as const;
     const srcCorners2 = [
-      ...center(pointDict[1]),
-      ...center(pointDict[2]),
-      ...center(pointDict[3]),
-      ...center(pointDict[4]),
+      ...center(pointDict[1].corners),
+      ...center(pointDict[2].corners),
+      ...center(pointDict[3].corners),
+      ...center(pointDict[4].corners),
     ] as const;
 
     transform1 = perspectiveTransform(dstCorners, srcCorners);
@@ -151,11 +171,12 @@ export function ARMode() {
     const coeffs2 = toMatrix(transform2.coeffs);
     coeffs.multiply(coeffs2.invert());
 
-    const root: HTMLElement = document.querySelector(".root")!;
-
-    root.style.background = "#000";
-    root.style.transformOrigin = "0 0";
-    root.style.transform = matrixToCSS(coeffs);
+    if (calibrating) {
+      const root: HTMLElement = document.querySelector(".root")!;
+      root.style.background = "#000";
+      root.style.transformOrigin = "0 0";
+      root.style.transform = matrixToCSS(coeffs);
+    }
   }
 
   const transformRef = useContext(MapTransformRef);
@@ -171,18 +192,18 @@ export function ARMode() {
 
   return (
     <>
-      <ScreenCornerMarkers />
+      {calibrating && <ScreenCornerMarkers />}
       {transform2 &&
         ReactDOM.createPortal(
           Object.entries(pointDict)
-            .filter(([id, _]) => parseInt(id) > 6)
+            .filter(([id, _]) => parseInt(id) > 7)
             .map(([id, points]) => {
               if (!transform2) {
                 return null;
               }
 
               const screenCoordinates = transform2.transformInverse(
-                ...center(points)
+                ...center(points.corners)
               );
               const mapCoordinates = applyToPoint<[number, number]>(
                 inverse(transformRef.current),
@@ -218,6 +239,7 @@ export function ARMode() {
                   key={id}
                   id={parseInt(id)}
                   mapId={currentMap!}
+                  active={points.time > cutoffTime}
                   hoveredCharacter={hoveredCharacter}
                   screenCoordinates={screenCoordinates}
                   mapCoordinates={mapCoordinates}
@@ -230,65 +252,104 @@ export function ARMode() {
   );
 }
 
+enum MarkerState {
+  GONE,
+  UNPAIRED,
+  PAIRING,
+  PAIRED,
+}
+
 function Marker({
   hoveredCharacter,
   screenCoordinates,
   mapCoordinates,
   mapId,
+  active,
   id,
 }: {
   hoveredCharacter: [RRCharacter, RRToken] | null;
   screenCoordinates: [number, number];
   mapCoordinates: [number, number];
+  active: boolean;
   mapId: RRMapID;
   id: number;
 }) {
-  const active = !!hoveredCharacter;
+  const hasHovered = !!hoveredCharacter;
+  const [lockedCharacter, setLockedCharacter] = useState<
+    [RRCharacter, RRToken] | null
+  >(null);
+
+  const state = !active
+    ? MarkerState.GONE
+    : !hasHovered && !lockedCharacter
+    ? MarkerState.UNPAIRED
+    : hasHovered && !lockedCharacter
+    ? MarkerState.PAIRING
+    : MarkerState.PAIRED;
 
   const [firstActive, setFirstActive] = useState<Date | null>(null);
-  const [lastActive, setLastActive] = useState<Date | null>(null);
 
-  if (firstActive === null && active) setFirstActive(new Date());
-  if (!active && !!firstActive && !lastActive) {
-    setFirstActive(null);
-    setLastActive(new Date());
+  const MS_TO_PAIR = 1000;
+
+  if (state === MarkerState.PAIRING && firstActive === null) {
+    setFirstActive(new Date());
   }
-
-  const markerSize = active ? GRID_SIZE * 2 : 30;
-
-  const timeout = 3000;
-  const locked = active && firstActive && +new Date() - +firstActive > timeout;
+  if (
+    state === MarkerState.PAIRING &&
+    !!firstActive &&
+    +new Date() - +firstActive > MS_TO_PAIR
+  ) {
+    console.log("Locked", new Date(), firstActive);
+    setLockedCharacter(hoveredCharacter);
+  }
+  if (state === MarkerState.GONE && firstActive !== null) {
+    setFirstActive(null);
+    setLockedCharacter(null);
+  }
 
   const dispatch = useServerDispatch();
 
-  if (locked) {
-    dispatch({
-      actions: [
-        mapObjectUpdate(mapId, {
-          id: hoveredCharacter[1].id,
-          changes: { position: makePoint(...mapCoordinates) },
-        }),
-      ],
-      optimisticKey: "position",
-      syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
-    });
-  }
+  useEffect(() => {
+    if (state === MarkerState.PAIRED) {
+      dispatch({
+        actions: [
+          mapObjectUpdate(mapId, {
+            id: lockedCharacter![1].id,
+            changes: {
+              position: snapPointToGrid(makePoint(...mapCoordinates)),
+            },
+          }),
+        ],
+        optimisticKey: "position",
+        syncToServerThrottle: DEFAULT_SYNC_TO_SERVER_DEBOUNCE_TIME,
+      });
+    }
+  });
 
-  return (
+  const associated =
+    state === MarkerState.PAIRED || state === MarkerState.PAIRING;
+  const markerSize = associated ? GRID_SIZE * 3 : 30;
+  return state === MarkerState.GONE ? null : (
     <div
       style={{
         width: `${markerSize}px`,
         height: `${markerSize}px`,
         borderRadius: "9999px",
         zIndex: 99999999999999,
-        background: active ? "red" : "white",
+        background:
+          state === MarkerState.PAIRING
+            ? "red"
+            : state === MarkerState.PAIRED
+            ? "transparent"
+            : "white",
+        border: state === MarkerState.PAIRED ? "10px solid green" : "none",
         left: screenCoordinates[0] - markerSize / 2,
         top: screenCoordinates[1] - markerSize / 2,
         position: "absolute",
       }}
     >
       {id}
-      {active && (
+      {state === MarkerState.PAIRING && (
         <div
           style={{
             width: `${markerSize}px`,
@@ -298,7 +359,7 @@ function Marker({
             position: "absolute",
             borderRadius: "9999px",
             background: "#0f0",
-            animation: `reveal-circle ${timeout}ms linear both`,
+            animation: `reveal-circle ${MS_TO_PAIR}ms linear both`,
           }}
         ></div>
       )}
@@ -312,7 +373,7 @@ const ScreenCornerMarkers = React.memo(function ScreenCornerMarkers() {
     zIndex: 99999,
     width: "100px",
     height: "100px",
-    border: "30px solid white",
+    border: "0px solid white",
   } as const;
 
   return ReactDOM.createPortal(
