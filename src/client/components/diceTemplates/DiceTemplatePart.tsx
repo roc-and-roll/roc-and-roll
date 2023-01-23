@@ -16,7 +16,7 @@ import {
 } from "../../../shared/state";
 import { assertNever } from "../../../shared/util";
 import { RRDiceTemplate } from "../../../shared/validation";
-import { proficiencyStringToValue } from "../../diceUtils";
+import { calculateProficiencyBonus } from "../../diceUtils";
 import { useMyActiveCharacters, useMyProps } from "../../myself";
 import { useServerDispatch, useServerState } from "../../state";
 import { contrastColor, modifierFromStat } from "../../util";
@@ -220,9 +220,9 @@ export const DiceTemplatePart = React.forwardRef<
             {typeof part.proficiency === "number"
               ? part.proficiency
               : character?.attributes["proficiency"]
-              ? Math.floor(
-                  character.attributes["proficiency"] *
-                    proficiencyStringToValue(part.proficiency)
+              ? calculateProficiencyBonus(
+                  character.attributes["proficiency"],
+                  part.proficiency
                 )
               : null}
           </div>

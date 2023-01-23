@@ -106,7 +106,10 @@ export const SmartIntegerInput = React.forwardRef<
 });
 
 type TextareaInputProps = Omit<
-  React.InputHTMLAttributes<HTMLTextAreaElement>,
+  React.TextareaHTMLAttributes<HTMLTextAreaElement> &
+    // TODO: This should probably not be here, but without it, `enterKeyHint` is
+    // not found.
+    React.InputHTMLAttributes<HTMLTextAreaElement>,
   "value" | "onChange"
 > & {
   value: string;
@@ -116,7 +119,7 @@ type TextareaInputProps = Omit<
 export const TextareaInput = React.forwardRef<
   HTMLTextAreaElement,
   TextareaInputProps
->(function TextareaInput({ className, type, onChange, ...props }, ref) {
+>(function TextareaInput({ className, onChange, ...props }, ref) {
   return (
     <textarea
       ref={ref}

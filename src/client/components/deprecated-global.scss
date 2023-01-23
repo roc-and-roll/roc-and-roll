@@ -326,34 +326,6 @@ a {
   margin: 0 0.5rem 0 0;
 }
 
-.bottom-floats-wrapper {
-  // Without explicitly disabling pointer events, the following problem arises:
-  // Open the chat, but close the log. Now it is impossible to interact with the
-  // map to the right of the chat.
-  pointer-events: none;
-
-  position: absolute;
-  bottom: 0px;
-  right: 0px;
-  width: 100%;
-
-  display: flex;
-  flex-direction: column;
-
-  .bottom-floats-upper {
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
-    padding: 0 4px;
-
-    & > * {
-      pointer-events: auto;
-
-      margin-left: 8px;
-    }
-  }
-}
-
 .dice-template-opener {
   padding: 0.5rem;
   background-color: $bottom-float-background;

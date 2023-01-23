@@ -90,14 +90,9 @@ function CharacterPopUpButton({
         "pointer-events-auto p-2 flex items-end flex-col pb-2 cursor-pointer",
         popUpVisible ? "bg-black/40 rounded-t-md" : ""
       )}
+      onClick={onClick}
     >
-      <FontAwesomeIcon
-        title={title}
-        icon={icon}
-        size="lg"
-        onClick={onClick}
-        fixedWidth
-      />
+      <FontAwesomeIcon title={title} icon={icon} size="lg" fixedWidth />
     </div>
   );
 }
@@ -110,6 +105,8 @@ function Notes({ character }: { character: RRCharacterProps }) {
       <TextareaInput
         placeholder="Character Notes"
         value={character.notes}
+        className="text-xs p-1"
+        rows={10}
         onChange={(notes) =>
           dispatch({
             actions: [

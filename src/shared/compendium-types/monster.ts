@@ -111,7 +111,7 @@ export interface CompendiumMonster {
     cha?: string;
   };
 
-  trait?: { name: string; entries: CompendiumTextEntry[]; type?: any }[];
+  trait?: { name: string; entries: CompendiumTextEntry[]; type?: any }[] | null;
   //cspell: disable-next-line
   spellcasting?: {
     name: string;
@@ -200,6 +200,8 @@ export interface CompendiumMonster {
   isNpc?: any;
   alignmentPrefix?: any;
   mythic?: any;
+  shortName?: any;
+  mythicHeader?: any;
 }
 
 export const isConditionalSpeed = z.strictObject({
@@ -324,13 +326,15 @@ const _isMonster = z.strictObject({
     })
   ),
 
-  trait: z.optional(
-    z.array(
-      z.strictObject({
-        name: z.string(),
-        entries: z.array(isTextEntry),
-        type: z.any(),
-      })
+  trait: z.nullable(
+    z.optional(
+      z.array(
+        z.strictObject({
+          name: z.string(),
+          entries: z.array(isTextEntry),
+          type: z.any(),
+        })
+      )
     )
   ),
   //cspell: disable-next-line
@@ -426,6 +430,8 @@ const _isMonster = z.strictObject({
   isNpc: z.any(),
   alignmentPrefix: z.any(),
   mythic: z.any(),
+  shortName: z.any(),
+  mythicHeader: z.any(),
 });
 // TypeScript hack to avoid inlining.
 // https://github.com/microsoft/TypeScript/issues/34119
