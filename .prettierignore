@@ -6,3 +6,4 @@
 /node_modules
 /**/*.ts.hbs
 /**/*.tsx.hbs
+/projector

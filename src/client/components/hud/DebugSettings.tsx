@@ -14,7 +14,7 @@ const DEFAULT_DEBUG_SETTINGS: DebugSettings = {
   noHUD: false,
 };
 
-const DebugSettingsContext = React.createContext<
+export const DebugSettingsContext = React.createContext<
   [DebugSettings, React.Dispatch<React.SetStateAction<DebugSettings>>]
 >([
   DEFAULT_DEBUG_SETTINGS,

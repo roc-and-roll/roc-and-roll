@@ -85,6 +85,7 @@ import { useDebugSettings } from "../hud/DebugSettings";
 import { useStateWithRef } from "../../useRefState";
 import { identity, Matrix } from "transformation-matrix";
 import { MapTransformRef } from "../MapTransformContext";
+import { ARModeContext } from "../ar/ARMode";
 
 export type MapSnap = "grid-corner" | "grid-center" | "grid" | "none";
 
@@ -722,6 +723,7 @@ export default function MapContainer() {
   const players = useServerState((state) => state.players);
 
   const { mapDebugOverlayActive, noHUD } = useDebugSettings();
+  const { enabled: arModeEnabled } = useContext(ARModeContext);
 
   const [viewPortSize, viewPortSizeRef, setViewPortSize] =
     useStateWithRef<RRPoint>({ x: 0, y: 0 });
@@ -772,20 +774,17 @@ export default function MapContainer() {
                     toolOverlay={toolOverlay}
                   />
                 </Suspense>
-                <Suspense fallback={null}>
-                  {
-                    //<PlayerToolbar myself={myself} players={players} />
-                  }
-                  <MapToolbar
-                    mapId={map.id}
-                    mapSettings={map.settings}
-                    myself={myself}
-                    setEditState={setEditState}
-                  />
-                  {!noHUD && (
+                {!noHUD && !arModeEnabled && (
+                  <Suspense fallback={null}>
+                    <MapToolbar
+                      mapId={map.id}
+                      mapSettings={map.settings}
+                      myself={myself}
+                      setEditState={setEditState}
+                    />
                     <HUD mapBackgroundColor={map.settings.backgroundColor} />
-                  )}
-                </Suspense>
+                  </Suspense>
+                )}
                 {dropProps.nativeFileHovered && (
                   <DropIndicator>
                     <p>drop background images here</p>

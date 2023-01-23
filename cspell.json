@@ -78,6 +78,7 @@
     "package.json",
     ".eslintrc.json",
     "main.yml",
-    "src/shared/namegen.ts"
+    "src/shared/namegen.ts",
+    "projector"
   ]
 }

@@ -15,6 +15,7 @@ import { DialogBoxes, DialogProvider } from "./dialog-boxes";
 import { DebugSettingsContextProvider } from "./components/hud/DebugSettings";
 import { QuickReferenceProvider } from "./components/quickReference/QuickReferenceWrapper";
 import { MapTransformRefProvider } from "./components/MapTransformContext";
+import { ARModeContextProvider } from "./components/ar/ARMode";
 
 export function render(socket: Socket) {
   // Create a new div element, add it to the DOM, and render our app into it.
@@ -30,29 +31,31 @@ function Root({ socket }: { socket: Socket }) {
   // https://reactjs.org/docs/strict-mode.html
   return (
     <RecoilRoot>
-      <DialogProvider>
-        <DebugSettingsContextProvider>
-          <SettingsProvider>
-            <ServerStateProvider socket={socket}>
-              <ServerMessagesProvider socket={socket}>
-                <MyselfProvider>
-                  <CompendiumProvider>
-                    <QuickReferenceProvider>
-                      <DndProvider backend={HTML5Backend}>
-                        <MapTransformRefProvider>
-                          <ModApi />
-                          <App />
-                          <DialogBoxes />
-                        </MapTransformRefProvider>
-                      </DndProvider>
-                    </QuickReferenceProvider>
-                  </CompendiumProvider>
-                </MyselfProvider>
-              </ServerMessagesProvider>
-            </ServerStateProvider>
-          </SettingsProvider>
-        </DebugSettingsContextProvider>
-      </DialogProvider>
+      <ARModeContextProvider>
+        <DialogProvider>
+          <DebugSettingsContextProvider>
+            <SettingsProvider>
+              <ServerStateProvider socket={socket}>
+                <ServerMessagesProvider socket={socket}>
+                  <MyselfProvider>
+                    <CompendiumProvider>
+                      <QuickReferenceProvider>
+                        <DndProvider backend={HTML5Backend}>
+                          <MapTransformRefProvider>
+                            <ModApi />
+                            <App />
+                            <DialogBoxes />
+                          </MapTransformRefProvider>
+                        </DndProvider>
+                      </QuickReferenceProvider>
+                    </CompendiumProvider>
+                  </MyselfProvider>
+                </ServerMessagesProvider>
+              </ServerStateProvider>
+            </SettingsProvider>
+          </DebugSettingsContextProvider>
+        </DialogProvider>
+      </ARModeContextProvider>
     </RecoilRoot>
   );
 }
