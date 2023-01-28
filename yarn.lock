@@ -5651,7 +5651,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"color@npm:^4.0.1, color@npm:^4.2.3":
+"color@npm:^4.2.3":
   version: 4.2.3
   resolution: "color@npm:4.2.3"
   dependencies:
@@ -11396,30 +11396,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-abi@npm:^2.21.0":
-  version: 2.21.0
-  resolution: "node-abi@npm:2.21.0"
-  dependencies:
-    semver: ^5.4.1
-  checksum: a6e4710c3165df14820227008be2a3bd0f50590ce55716ba9e43257359448cdc199763448deb943ab571c23a54a3a4bc82db7359a487e45cdb9f94a7aa690da5
-  languageName: node
-  linkType: hard
-
 "node-abi@npm:^3.3.0":
   version: 3.31.0
   resolution: "node-abi@npm:3.31.0"
   dependencies:
     semver: ^7.3.5
   checksum: 38fa63c689ef50b4b8f576d5f843107e2d25bd7e7d4ed56dc0adb9db7eda945fc433a7a432beca4b9decf62ff05395f0e84f46e7ab7f275f85e5fde213353950
-  languageName: node
-  linkType: hard
-
-"node-addon-api@npm:^4.0.0":
-  version: 4.1.0
-  resolution: "node-addon-api@npm:4.1.0"
-  dependencies:
-    node-gyp: latest
-  checksum: 7aa921be140f60b18f753f2123cc036185c2ff82dda8399e95af31afcc99fa6fee93f735b44ead3fdc83cb0cfa16c186d5b7310ce0d3331e38623e0d8ce0ff0a
   languageName: node
   linkType: hard
 
@@ -11649,7 +11631,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"npmlog@npm:^4.0.1, npmlog@npm:^4.1.2":
+"npmlog@npm:^4.1.2":
   version: 4.1.2
   resolution: "npmlog@npm:4.1.2"
   dependencies:
@@ -12613,29 +12595,6 @@ __metadata:
     picocolors: ^1.0.0
     source-map-js: ^1.0.2
   checksum: e39ac60ccd1542d4f9d93d894048aac0d686b3bb38e927d8386005718e6793dbbb46930f0a523fe382f1bbd843c6d980aaea791252bf5e176180e5a4336d9679
-  languageName: node
-  linkType: hard
-
-"prebuild-install@npm:^6.1.4":
-  version: 6.1.4
-  resolution: "prebuild-install@npm:6.1.4"
-  dependencies:
-    detect-libc: ^1.0.3
-    expand-template: ^2.0.3
-    github-from-package: 0.0.0
-    minimist: ^1.2.3
-    mkdirp-classic: ^0.5.3
-    napi-build-utils: ^1.0.1
-    node-abi: ^2.21.0
-    npmlog: ^4.0.1
-    pump: ^3.0.0
-    rc: ^1.2.7
-    simple-get: ^3.0.3
-    tar-fs: ^2.0.0
-    tunnel-agent: ^0.6.0
-  bin:
-    prebuild-install: bin.js
-  checksum: de4313eda821305912af922700a2db04bb8e77fe8aa9c2788550f1000c026cbefc82da468ec0c0a37764c5417bd8169dbd540928535fb38d00bb9bbd673dd217
   languageName: node
   linkType: hard
 
@@ -13799,7 +13758,7 @@ __metadata:
     sass-loader: ^13.2.0
     secure-json-parse: ^2.4.0
     server-timing: ^3.3.1
-    sharp: ^0.29.0
+    sharp: ^0.30.5
     socket.io: ^4.2.0
     socket.io-client: ^4.2.0
     source-map-support: ^0.5.21
@@ -14045,7 +14004,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^5.4.1, semver@npm:^5.7.1":
+"semver@npm:^5.7.1":
   version: 5.7.1
   resolution: "semver@npm:5.7.1"
   bin:
@@ -14209,20 +14168,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sharp@npm:^0.29.0":
-  version: 0.29.0
-  resolution: "sharp@npm:0.29.0"
+"sharp@npm:^0.30.5":
+  version: 0.30.7
+  resolution: "sharp@npm:0.30.7"
   dependencies:
-    color: ^4.0.1
-    detect-libc: ^1.0.3
-    node-addon-api: ^4.0.0
+    color: ^4.2.3
+    detect-libc: ^2.0.1
+    node-addon-api: ^5.0.0
     node-gyp: latest
-    prebuild-install: ^6.1.4
-    semver: ^7.3.5
-    simple-get: ^3.1.0
+    prebuild-install: ^7.1.1
+    semver: ^7.3.7
+    simple-get: ^4.0.1
     tar-fs: ^2.1.1
     tunnel-agent: ^0.6.0
-  checksum: ca70ee03e3052cef1bb441f80b0a8fd506e397d04c9a124848d6cc363debb3a95f2663bf1ef57994582a63036d540701765a884af8c72444b694319bc3c8d372
+  checksum: bbc63ca3c7ea8a5bff32cd77022cfea30e25a03f5bd031e935924bf6cf0e11e3388e8b0e22b3137bf8816aa73407f1e4fbeb190f3a35605c27ffca9f32b91601
   languageName: node
   linkType: hard
 
@@ -14291,7 +14250,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"simple-get@npm:^3.0.3, simple-get@npm:^3.1.0":
+"simple-get@npm:^3.0.3":
   version: 3.1.0
   resolution: "simple-get@npm:3.1.0"
   dependencies:
