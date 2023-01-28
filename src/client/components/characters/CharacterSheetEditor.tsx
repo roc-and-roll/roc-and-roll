@@ -135,7 +135,7 @@ function ProficiencyEditor({ character }: { character: RRCharacter }) {
   }
 
   function calculateModifierWithProficiency(
-    baseStat: typeof characterStatNames[number],
+    baseStat: (typeof characterStatNames)[number],
     proficiency: proficiencyValues | null
   ) {
     return character.stats[baseStat] === null
@@ -151,7 +151,7 @@ function ProficiencyEditor({ character }: { character: RRCharacter }) {
 
   function changeProficiencyInSavingThrow(
     proficiency: proficiencyValues | null,
-    stat: typeof characterStatNames[number]
+    stat: (typeof characterStatNames)[number]
   ) {
     const newValue =
       typeof proficiency === "number"
@@ -186,7 +186,7 @@ function ProficiencyEditor({ character }: { character: RRCharacter }) {
   }
   function changeProficiencyInSkill(
     proficiency: proficiencyValues | null,
-    skill: typeof skillNames[number]
+    skill: (typeof skillNames)[number]
   ) {
     const newValue =
       typeof proficiency === "number"
@@ -272,7 +272,7 @@ function StatEditor({
   name,
   character,
 }: {
-  name: typeof characterStatNames[number];
+  name: (typeof characterStatNames)[number];
   character: RRCharacter;
 }) {
   const dispatch = useServerDispatch();

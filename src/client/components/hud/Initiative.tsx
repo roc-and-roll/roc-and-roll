@@ -430,7 +430,7 @@ function YourTurn({ endTurnButton }: { endTurnButton: React.ReactNode }) {
 
 const TOKEN_SIZE = 64;
 const myMapProps = ["id", "isGM", "currentMap", "characterIds"] as const;
-type RRPlayerMapProps = Pick<RRPlayer, typeof myMapProps[number]>;
+type RRPlayerMapProps = Pick<RRPlayer, (typeof myMapProps)[number]>;
 
 const InitiativeEntry = React.memo<{
   entry: RRInitiativeTrackerEntry;

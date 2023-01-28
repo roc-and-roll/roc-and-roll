@@ -27,7 +27,9 @@ export const GeneratedDiceTemplates = React.memo(
     templates: abilityTemplates,
   }: {
     templates: {
-      ability: typeof skillNames[number] | typeof characterStatNames[number];
+      ability:
+        | (typeof skillNames)[number]
+        | (typeof characterStatNames)[number];
       templates: {
         character: Pick<RRCharacter, "id" | "attributes" | "stats">;
         template: RRDiceTemplate;
@@ -51,7 +53,7 @@ function GeneratedDiceTemplate({
   abilityTemplate,
 }: {
   abilityTemplate: {
-    ability: typeof skillNames[number] | typeof characterStatNames[number];
+    ability: (typeof skillNames)[number] | (typeof characterStatNames)[number];
     templates: {
       character: Pick<RRCharacter, "id" | "attributes" | "stats">;
       template: RRDiceTemplate;

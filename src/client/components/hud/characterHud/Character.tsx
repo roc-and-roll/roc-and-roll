@@ -46,7 +46,10 @@ const characterProps = [
   "spells",
   "currentlyConcentratingOn",
 ] as const;
-export type RRCharacterProps = Pick<RRCharacter, typeof characterProps[number]>;
+export type RRCharacterProps = Pick<
+  RRCharacter,
+  (typeof characterProps)[number]
+>;
 
 export function CharacterHUD() {
   const myself = useMyProps("mainCharacterId", "isGM");

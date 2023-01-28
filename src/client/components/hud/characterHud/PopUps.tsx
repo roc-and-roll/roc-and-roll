@@ -22,8 +22,8 @@ import { Spells } from "./Spells";
 export function CharacterPopUps({ character }: { character: RRCharacter }) {
   const popUps = ["skills", "notes", "spells", "combatCard", "none"] as const;
   const [popUpVisible, setPopUpVisible] =
-    useState<typeof popUps[number]>("none");
-  function togglePopUpVisible(popUp: typeof popUps[number]) {
+    useState<(typeof popUps)[number]>("none");
+  function togglePopUpVisible(popUp: (typeof popUps)[number]) {
     setPopUpVisible((prev) => (prev === popUp ? "none" : popUp));
   }
   const { sources: compendiumSources } = useCompendium();

@@ -109,6 +109,7 @@
     "@typescript-eslint/no-non-null-asserted-optional-chain": "error",
     "@typescript-eslint/prefer-optional-chain": "warn",
     "@typescript-eslint/prefer-nullish-coalescing": "warn",
+    "react/no-unknown-property": "off",
     "no-restricted-properties": [
       "error",
       {

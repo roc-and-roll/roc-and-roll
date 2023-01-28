@@ -158,7 +158,7 @@ export interface _RRDiceTemplate {
         faces: number;
         negated: boolean;
         damage: RRDamageType;
-        modified: typeof multipleRollValues[number];
+        modified: (typeof multipleRollValues)[number];
       }
     | {
         id: RRDiceTemplatePartID;
@@ -181,7 +181,7 @@ export interface _RRDiceTemplate {
     | {
         id: RRDiceTemplatePartID;
         type: "linkedStat";
-        name: typeof characterStatNames[number];
+        name: (typeof characterStatNames)[number];
         damage: RRDamageType;
       }
     | {

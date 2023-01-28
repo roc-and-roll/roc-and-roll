@@ -16,7 +16,7 @@ import { modifierFromStat } from "./util";
 
 export function calculateProficiencyBonus(
   proficiency: number,
-  proficiencyType: typeof proficiencyValueStrings[number]
+  proficiencyType: (typeof proficiencyValueStrings)[number]
 ): number {
   let multiplier;
   switch (proficiencyType) {
@@ -204,7 +204,7 @@ export const generateSavingThrowTemplates = (
     "savingThrows" | "stats" | "id" | "attributes"
   >[]
 ) =>
-  characterStatNames.map((statName: typeof characterStatNames[number]) => {
+  characterStatNames.map((statName: (typeof characterStatNames)[number]) => {
     const templates = characters.map((character) => {
       const proficiency = character.savingThrows[statName] ?? "notProficient";
 

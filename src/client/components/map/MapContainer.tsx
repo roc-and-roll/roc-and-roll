@@ -117,7 +117,10 @@ export type MapEditState =
     };
 
 const playerToolProps = ["id", "currentMap", "color", "isGM"] as const;
-export type RRPlayerToolProps = Pick<RRPlayer, typeof playerToolProps[number]>;
+export type RRPlayerToolProps = Pick<
+  RRPlayer,
+  (typeof playerToolProps)[number]
+>;
 
 export const ViewPortSizeContext = React.createContext<RRPoint>({ x: 0, y: 0 });
 
@@ -363,8 +366,8 @@ export default function MapContainer() {
                     }),
                   ];
 
-                  //Check if other instances of this token still exist on the map
-                  //in that case dont delete it from the initiative
+                  // Check if other instances of this token still exist on the
+                  // map. If they do, don't delete it from the initiative.
                   if (
                     entries(map.objects).findIndex(
                       (object) =>

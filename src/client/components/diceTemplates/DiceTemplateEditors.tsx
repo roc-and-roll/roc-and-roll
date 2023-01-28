@@ -220,7 +220,7 @@ export function ProficiencyValueEditor({
             })),
           ]}
           value={part.proficiency}
-          onChange={(newValue: typeof proficiencyValueStrings[number]) => {
+          onChange={(newValue: (typeof proficiencyValueStrings)[number]) => {
             return dispatch({
               actions: [
                 updatePartAction(selected.id, part.id, categoryId, template, {

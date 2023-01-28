@@ -237,7 +237,7 @@ export const characterAttributeNames = [
 assert<
   IsExact<
     keyof RRCharacter["attributes"],
-    typeof characterAttributeNames[number]
+    (typeof characterAttributeNames)[number]
   >
 >(true);
 
@@ -252,13 +252,15 @@ export const proficiencyValueStrings = [
   "doublyProficient",
 ] as const;
 
-export type proficiencyValues = typeof proficiencyValueStrings[number] | number;
+export type proficiencyValues =
+  | (typeof proficiencyValueStrings)[number]
+  | number;
 
 assert<IsExact<z.infer<typeof isProficiencyValue>, proficiencyValues>>(true);
 
 export const skillMap: Record<
-  typeof skillNames[number],
-  typeof characterStatNames[number]
+  (typeof skillNames)[number],
+  (typeof characterStatNames)[number]
 > = {
   Athletics: "STR",
   Acrobatics: "DEX",
@@ -301,7 +303,7 @@ export const skillNames = [
   "Persuasion",
 ] as const;
 
-assert<IsExact<keyof RRCharacter["skills"], typeof skillNames[number]>>(true);
+assert<IsExact<keyof RRCharacter["skills"], (typeof skillNames)[number]>>(true);
 
 export const characterStatNames = [
   "STR",
@@ -312,12 +314,15 @@ export const characterStatNames = [
   "CHA",
 ] as const;
 
-assert<IsExact<keyof RRCharacter["stats"], typeof characterStatNames[number]>>(
-  true
-);
+assert<
+  IsExact<keyof RRCharacter["stats"], (typeof characterStatNames)[number]>
+>(true);
 
 assert<
-  IsExact<keyof RRCharacter["savingThrows"], typeof characterStatNames[number]>
+  IsExact<
+    keyof RRCharacter["savingThrows"],
+    (typeof characterStatNames)[number]
+  >
 >(true);
 
 export interface RRDiceTemplatePartTemplate

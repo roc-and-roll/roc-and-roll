@@ -62,7 +62,7 @@ import { RRTooltip } from "../RRTooltip";
 import { Button } from "../ui/Button";
 import { SmartTextInput } from "../ui/TextInput";
 
-export const iconMap: Record<typeof categoryIcons[number], IconDefinition> = {
+export const iconMap: Record<(typeof categoryIcons)[number], IconDefinition> = {
   book: faBook,
   broom: faBroom,
   cat: faCat,
@@ -190,7 +190,7 @@ export const InnerActionsHUD = function ({
     if (characters.length !== 1) return;
     const freeIcon = userCategoryIcons.find((userIcon) => {
       return !characters[0]!.diceTemplateCategories
-        .map(({ icon }: { icon: typeof categoryIcons[number] }) => icon)
+        .map(({ icon }: { icon: (typeof categoryIcons)[number] }) => icon)
         .includes(userIcon);
     });
 
