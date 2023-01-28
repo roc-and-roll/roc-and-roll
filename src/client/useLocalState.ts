@@ -45,7 +45,7 @@ export default function useLocalState<T>(
   storage?: Storage
 ): [T, Dispatch<SetStateAction<T>>, () => void];
 
-export default function useLocalState<T>(
+export default function useLocalState<T extends JsonValue>(
   key: string,
   initializer: T | (() => T),
   storage: Storage = localStorage

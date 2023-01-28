@@ -5816,10 +5816,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"conditional-type-checks@npm:^1.0.5":
-  version: 1.0.5
-  resolution: "conditional-type-checks@npm:1.0.5"
-  checksum: 5653cc87d58d15de2985e20c6132bd034f4ef6793164c0a2c5a9b7e90f34dabaee35517649d85bffa374b0190b588c27c80165bb8f4c23e5a073afc7164c3b9c
+"conditional-type-checks@npm:^1.0.6":
+  version: 1.0.6
+  resolution: "conditional-type-checks@npm:1.0.6"
+  checksum: b851bf25999433c4566ea66e431727e78ff5447b53ea6553e46a2c54f485e3a3542e8afd1b195f277f17d7774be629817e8f82167951f64e1fdfd0dbe04c3f00
   languageName: node
   linkType: hard
 
@@ -13726,7 +13726,7 @@ __metadata:
     commander: ^8.1.0
     compression: ^1.7.4
     concurrently: ^7.6.0
-    conditional-type-checks: ^1.0.5
+    conditional-type-checks: ^1.0.6
     copy-webpack-plugin: ^11.0.0
     core-js: ^3.27.2
     cspell: ^6.19.2
@@ -13809,8 +13809,8 @@ __metadata:
     three: ^0.141.0
     tinycolor2: ^1.4.2
     transformation-matrix: ^2.9.0
-    type-fest: ^2.13.0
-    typescript: ^4.7.3
+    type-fest: ^3.5.3
+    typescript: ^4.9.4
     utf-8-validate: ^5.0.5
     webpack: ^5.75.0
     webpack-bundle-analyzer: ^4.7.0
@@ -15449,10 +15449,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^2.13.0":
-  version: 2.13.0
-  resolution: "type-fest@npm:2.13.0"
-  checksum: 3492384f759fdeaec7eaa07e79f70e777bf825cf8892690642fa9350818df4a8c50fd697fd1239ae7026064af4dd94e4d5eca27e781e0952ff302af0708a2e69
+"type-fest@npm:^3.5.3":
+  version: 3.5.3
+  resolution: "type-fest@npm:3.5.3"
+  checksum: ac52b1a1c695cbbc5e18edf9b15b27d9135611b4be7a50a41ac07bed9687f79a8cad759aa4e17ef74f2ef5a72c503012de6f1a960a132040798ebc588f574f5c
   languageName: node
   linkType: hard
 
@@ -15493,23 +15493,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^4.7.3":
-  version: 4.7.3
-  resolution: "typescript@npm:4.7.3"
+"typescript@npm:^4.9.4":
+  version: 4.9.4
+  resolution: "typescript@npm:4.9.4"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: fd13a1ce53790a36bb8350e1f5e5e384b5f6cb9b0635114a6d01d49cb99916abdcfbc13c7521cdae2f2d3f6d8bc4a8ae7625edf645a04ee940588cd5e7597b2f
+  checksum: e782fb9e0031cb258a80000f6c13530288c6d63f1177ed43f770533fdc15740d271554cdae86701c1dd2c83b082cea808b07e97fd68b38a172a83dbf9e0d0ef9
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^4.7.3#~builtin<compat/typescript>":
-  version: 4.7.3
-  resolution: "typescript@patch:typescript@npm%3A4.7.3#~builtin<compat/typescript>::version=4.7.3&hash=493e53"
+"typescript@patch:typescript@^4.9.4#~builtin<compat/typescript>":
+  version: 4.9.4
+  resolution: "typescript@patch:typescript@npm%3A4.9.4#~builtin<compat/typescript>::version=4.9.4&hash=493e53"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 8257ce7ecbbf9416da60045a76a99d473698ca9e973fa0ddab7137cacb1587255431176cbbcc801a650938c4dc8109ab88355774829a714fabe56a53a2fe4524
+  checksum: 37f6e2c3c5e2aa5934b85b0fddbf32eeac8b1bacf3a5b51d01946936d03f5377fe86255d4e5a4ae628fd0cd553386355ad362c57f13b4635064400f3e8e05b9d
   languageName: node
   linkType: hard
 
