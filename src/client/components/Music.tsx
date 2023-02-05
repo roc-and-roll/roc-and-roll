@@ -4,6 +4,7 @@ import {
   faSpinner,
   faStar,
   faStop,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -11,6 +12,7 @@ import { matchSorter } from "match-sorter";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   assetSongAdd,
+  assetRemove,
   ephemeralMusicAdd,
   ephemeralMusicRemove,
   ephemeralMusicUpdate,
@@ -33,7 +35,7 @@ import { isTabletopAudioAsset } from "../../shared/tabletopAudio";
 import { partition, rrid, timestamp } from "../../shared/util";
 import { useFileUpload } from "../files";
 import { useMyProps } from "../myself";
-import { useAlert, usePrompt } from "../dialog-boxes";
+import { useAlert, useConfirm, usePrompt } from "../dialog-boxes";
 import { useServerDispatch, useServerState } from "../state";
 import { formatDuration, highlightMatching } from "../util";
 import { ActiveSoundSet, SoundSets as SoundSets } from "./SoundSets";
@@ -52,6 +54,7 @@ export interface MusicActions {
     activeSongOrSoundSet: RRActiveSongOrSoundSet,
     volume: number
   ) => void;
+  onDelete: (song: RRAssetSong) => void;
 }
 
 export const Music = React.memo(function Music() {
@@ -144,6 +147,13 @@ export const Music = React.memo(function Music() {
     [dispatch]
   );
 
+  const onDelete = useCallback(
+    (song: RRAssetSong) => {
+      dispatch(assetRemove(song.id));
+    },
+    [dispatch]
+  );
+
   const actions = useMemo(
     () => ({
       onAdd,
@@ -151,8 +161,9 @@ export const Music = React.memo(function Music() {
       onStop,
       onFavorite,
       onSetVolume,
+      onDelete,
     }),
-    [onAdd, onFavorite, onReplace, onSetVolume, onStop]
+    [onAdd, onFavorite, onReplace, onSetVolume, onStop, onDelete]
   );
 
   const prompt = usePrompt();
@@ -339,7 +350,7 @@ const Song = React.memo(function Song({
   audio,
   active,
   filterText,
-  actions: { onAdd, onReplace, onStop, onFavorite, onSetVolume },
+  actions: { onAdd, onReplace, onStop, onFavorite, onSetVolume, onDelete },
   isFavorite,
   inPlayingRow = false,
 }: {
@@ -351,6 +362,7 @@ const Song = React.memo(function Song({
   inPlayingRow?: boolean;
 }) {
   const showTagsAndDescription = filterText.length > 0;
+  const confirm = useConfirm();
 
   const calculateTimeRemaining = useCallback(
     () =>
@@ -374,6 +386,16 @@ const Song = React.memo(function Song({
       return () => clearInterval(id);
     }
   }, [active, calculateTimeRemaining]);
+
+  async function handleDeleteSong(audio: RRAssetSong) {
+    if (
+      await confirm(
+        `Are you sure you want to delete the song "${audio.name}" forever? Note that it might still be in use somewhere. Also note that the asset will currently not be deleted from the server.`
+      )
+    ) {
+      onDelete(audio);
+    }
+  }
 
   return (
     <div className="music-row">
@@ -416,6 +438,14 @@ const Song = React.memo(function Song({
           <Button className="music-button" onClick={() => onReplace(audio)}>
             <FontAwesomeIcon icon={faPlay} />
           </Button>
+          {audio.location.type === "local" && (
+            <Button
+              className="music-button"
+              onClick={() => handleDeleteSong(audio)}
+            >
+              <FontAwesomeIcon icon={faTrash} />
+            </Button>
+          )}
         </>
       )}
     </div>
